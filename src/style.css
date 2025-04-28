@@ -1,0 +1,8 @@
+html {
+	background: url("back.jpg");
+}
+
+#game {
+	display: table;
+	margin: auto;
+}
