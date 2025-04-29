@@ -2,7 +2,14 @@ html {
 	background: url("back.jpg");
 }
 
+body {
+	padding: 0;
+	margin: 0;
+}
+
 #game {
 	display: table;
 	margin: auto;
+	height: calc(100vh - 30px);
+	width: auto;
 }
