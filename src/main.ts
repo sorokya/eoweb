@@ -155,3 +155,10 @@ const render = (now: DOMHighResTimeStamp) => {
 };
 
 requestAnimationFrame(render);
+
+// Tick loop
+setInterval(() => {
+	if (map) {
+		map.tick();
+	}
+}, 100);

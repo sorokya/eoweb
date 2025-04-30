@@ -35,8 +35,12 @@ const LAYER_GFX_MAP = [
 	GfxType.MapOverlay,
 ];
 
+const ANIMATION_TICKS = 6;
+
 export class MapRenderer {
 	emf: Emf;
+	animationFrame = 0;
+	animationTicks = ANIMATION_TICKS;
 
 	constructor(emf: Emf) {
 		this.emf = emf;
@@ -50,7 +54,17 @@ export class MapRenderer {
 		return this.emf.height;
 	}
 
-	update() {}
+	tick() {
+		this.animationTicks -= 1;
+		if (this.animationTicks <= 0) {
+			this.animationFrame += 1;
+			if (this.animationFrame > 3) {
+				this.animationFrame = 0;
+			}
+
+			this.animationTicks = ANIMATION_TICKS;
+		}
+	}
 
 	render(ctx: CanvasRenderingContext2D, player: Vector2) {
 		const playerScreen = isoToScreen(player);
@@ -98,11 +112,11 @@ export class MapRenderer {
 					if (layer === Layer.Ground && bmp.width > TILE_WIDTH) {
 						ctx.drawImage(
 							bmp,
-							0,
+							this.animationFrame * TILE_WIDTH,
 							0,
 							TILE_WIDTH,
 							TILE_HEIGHT,
-							screenX,
+							screenX + TILE_WIDTH + HALF_TILE_WIDTH,
 							screenY,
 							TILE_WIDTH,
 							TILE_HEIGHT,
@@ -156,7 +170,25 @@ export class MapRenderer {
 						HALF_GAME_HEIGHT +
 						offset.y;
 
-					ctx.drawImage(bmp, screenX, screenY);
+					if (
+						bmp.width > 120 &&
+						[Layer.DownWall, Layer.RightWall].includes(layer)
+					) {
+						const frameWidth = bmp.width / 4;
+						ctx.drawImage(
+							bmp,
+							this.animationFrame * frameWidth,
+							0,
+							frameWidth,
+							bmp.height,
+							screenX,
+							screenY,
+							frameWidth,
+							bmp.height,
+						);
+					} else {
+						ctx.drawImage(bmp, screenX, screenY);
+					}
 				}
 			}
 		}
