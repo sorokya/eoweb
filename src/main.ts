@@ -1,13 +1,13 @@
-import { Emf, EoReader } from "eolib";
+import { BigCoords, CharacterMapInfo, Coords, Emf, EoReader } from "eolib";
 import { getBitmapById, GfxType } from "./gfx";
 import { MapRenderer } from "./map";
 import "./style.css";
 import { randomRange } from "./utils/random-range";
 import { padWithZeros } from "./utils/pad-with-zeros";
 import { Vector2 } from "./vector";
+import { GAME_HEIGHT, GAME_WIDTH } from "./consts";
+import { MainCharacterRenderer } from "./character";
 
-const GAME_WIDTH = 800;
-const GAME_HEIGHT = 600;
 const GAME_FPS = 1000 / 60;
 
 const canvas = document.getElementById("game");
@@ -25,7 +25,9 @@ if (!ctx) {
 
 const npcs: { id: number; x: number; y: number }[] = [];
 
-const playerPosition = new Vector2(0, 0);
+const character = new CharacterMapInfo();
+character.coords = new BigCoords();
+const characterRenderer = new MainCharacterRenderer(character);
 
 const held = {
 	up: false,
@@ -58,7 +60,7 @@ window.onkeyup = (e) => {
 	}
 };
 
-for (let i = 0; i < 1000; ++i) {
+for (let i = 0; i < 100; ++i) {
 	const id = randomRange(1, 300);
 	npcs.push({
 		id,
@@ -69,15 +71,14 @@ for (let i = 0; i < 1000; ++i) {
 
 let map: MapRenderer | undefined;
 
-const mapId = 5; //randomRange(1, 282);
-console.log(mapId, "mapId");
+const mapId = randomRange(1, 282);
 
 fetch(`/maps/${padWithZeros(mapId, 5)}.emf`)
 	.then((res) => res.bytes())
 	.then((buf) => {
 		const reader = new EoReader(buf);
 		const emf = Emf.deserialize(reader);
-		map = new MapRenderer(emf, GAME_WIDTH, GAME_HEIGHT);
+		map = new MapRenderer(emf);
 	});
 
 let lastTime: DOMHighResTimeStamp | undefined;
@@ -94,21 +95,21 @@ const render = (now: DOMHighResTimeStamp) => {
 
 	if (map) {
 		if (held.up) {
-			playerPosition.y -= 1;
+			character.coords.y -= 1;
 		} else if (held.down) {
-			playerPosition.y += 1;
+			character.coords.y += 1;
 		}
 
 		if (held.left) {
-			playerPosition.x -= 1;
+			character.coords.x -= 1;
 		} else if (held.right) {
-			playerPosition.x += 1;
+			character.coords.x += 1;
 		}
 
-		playerPosition.x = Math.max(0, playerPosition.x);
-		playerPosition.y = Math.max(0, playerPosition.y);
-		playerPosition.x = Math.min(map.getWidth(), playerPosition.x);
-		playerPosition.y = Math.min(map.getHeight(), playerPosition.y);
+		character.coords.x = Math.max(0, character.coords.x);
+		character.coords.y = Math.max(0, character.coords.y);
+		character.coords.x = Math.min(map.getWidth(), character.coords.x);
+		character.coords.y = Math.min(map.getHeight(), character.coords.y);
 	}
 
 	lastTime = now;
@@ -119,8 +120,10 @@ const render = (now: DOMHighResTimeStamp) => {
 	ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
 	if (map) {
-		map.render(ctx, playerPosition);
+		map.render(ctx, character.coords);
 	}
+
+	characterRenderer.render(ctx);
 
 	/*
   for (const npc of npcs) {
@@ -140,6 +143,13 @@ const render = (now: DOMHighResTimeStamp) => {
     ctx.drawImage(bmp, npc.x, npc.y);
   }
   */
+
+	ctx.fillStyle = "#fff";
+	ctx.fillText(
+		`Map: ${mapId} (${character.coords.x}, ${character.coords.y})`,
+		5,
+		15,
+	);
 
 	requestAnimationFrame(render);
 };

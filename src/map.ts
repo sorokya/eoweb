@@ -1,13 +1,15 @@
 import { Emf } from "eolib";
 import { getBitmapById, GfxType } from "./gfx";
 import { Vector2 } from "./vector";
-import { screenToIso } from "./utils/screen-to-iso";
 import { isoToScreen } from "./utils/iso-to-screen";
-
-const TILE_WIDTH = 64.0;
-const TILE_HEIGHT = 32.0;
-const HALF_TILE_WIDTH = TILE_WIDTH / 2;
-const HALF_TILE_HEIGHT = TILE_HEIGHT / 2;
+import {
+	HALF_GAME_HEIGHT,
+	HALF_GAME_WIDTH,
+	HALF_TILE_HEIGHT,
+	HALF_TILE_WIDTH,
+	TILE_HEIGHT,
+	TILE_WIDTH,
+} from "./consts";
 
 enum Layer {
 	Ground,
@@ -35,17 +37,9 @@ const LAYER_GFX_MAP = [
 
 export class MapRenderer {
 	emf: Emf;
-	screenWidth: number;
-	screenHeight: number;
-	halfScreenWidth: number;
-	halfScreenHeight: number;
 
-	constructor(emf: Emf, screenWidth: number, screenHeight: number) {
+	constructor(emf: Emf) {
 		this.emf = emf;
-		this.screenWidth = screenWidth;
-		this.screenHeight = screenHeight;
-		this.halfScreenWidth = screenWidth / 2;
-		this.halfScreenHeight = screenHeight / 4;
 	}
 
 	getWidth() {
@@ -59,7 +53,7 @@ export class MapRenderer {
 	update() {}
 
 	render(ctx: CanvasRenderingContext2D, player: Vector2) {
-		const playerScreen = isoToScreen(player, TILE_WIDTH, TILE_HEIGHT);
+		const playerScreen = isoToScreen(player);
 		const rangeX = 30;
 		const rangeY = 30;
 
@@ -80,12 +74,20 @@ export class MapRenderer {
 					}
 
 					const offset = this.getOffset(layer, bmp.width, bmp.height);
-					const tileScreen = isoToScreen({ x, y }, TILE_WIDTH, TILE_HEIGHT);
+					const tileScreen = isoToScreen({ x, y });
 
 					const screenX =
-						tileScreen.x - playerScreen.x + this.halfScreenWidth + offset.x;
+						tileScreen.x -
+						HALF_TILE_WIDTH -
+						playerScreen.x +
+						HALF_GAME_WIDTH +
+						offset.x;
 					const screenY =
-						tileScreen.y - playerScreen.y + this.halfScreenHeight + offset.y;
+						tileScreen.y -
+						HALF_TILE_HEIGHT -
+						playerScreen.y +
+						HALF_GAME_HEIGHT +
+						offset.y;
 
 					if (layer === Layer.Shadow) {
 						ctx.globalAlpha = 0.2;
@@ -139,12 +141,20 @@ export class MapRenderer {
 					}
 
 					const offset = this.getOffset(layer, bmp.width, bmp.height);
-					const tileScreen = isoToScreen({ x, y }, TILE_WIDTH, TILE_HEIGHT);
+					const tileScreen = isoToScreen({ x, y });
 
 					const screenX =
-						tileScreen.x - playerScreen.x + this.halfScreenWidth + offset.x;
+						tileScreen.x -
+						HALF_TILE_WIDTH -
+						playerScreen.x +
+						HALF_GAME_WIDTH +
+						offset.x;
 					const screenY =
-						tileScreen.y - playerScreen.y + this.halfScreenHeight + offset.y;
+						tileScreen.y -
+						HALF_TILE_HEIGHT -
+						playerScreen.y +
+						HALF_GAME_HEIGHT +
+						offset.y;
 
 					ctx.drawImage(bmp, screenX, screenY);
 				}
@@ -178,23 +188,26 @@ export class MapRenderer {
 		}
 
 		if (layer in [Layer.Objects, Layer.Overlay, Layer.Overlay2]) {
-			return { x: -2 - width / 2 + HALF_TILE_WIDTH, y: -2 - (height - 32) };
+			return {
+				x: -2 - width / 2 + HALF_TILE_WIDTH,
+				y: -2 - (height - TILE_HEIGHT),
+			};
 		}
 
 		if (layer === Layer.DownWall) {
-			return { x: -32 + HALF_TILE_WIDTH, y: -1 - (height - 32) };
+			return { x: -32 + HALF_TILE_WIDTH, y: -1 - (height - TILE_HEIGHT) };
 		}
 
 		if (layer === Layer.RightWall) {
-			return { x: HALF_TILE_WIDTH, y: -1 - (height - 32) };
+			return { x: HALF_TILE_WIDTH, y: -1 - (height - TILE_HEIGHT) };
 		}
 
 		if (layer === Layer.Roof) {
-			return { x: 0, y: -64 };
+			return { x: 0, y: -TILE_WIDTH };
 		}
 
 		if (layer === Layer.Top) {
-			return { x: 0, y: -32 };
+			return { x: 0, y: -TILE_HEIGHT };
 		}
 
 		return { x: 0, y: 0 };

@@ -1,11 +1,8 @@
+import { HALF_TILE_HEIGHT, HALF_TILE_WIDTH } from "../consts";
 import { Vector2 } from "../vector";
 
-export function screenToIso(
-	sv: Vector2,
-	tileWidth: number,
-	tileHeight: number,
-): Vector2 {
-	const ix = (sv.x / (tileWidth / 2) + sv.y / (tileHeight / 2)) / 2;
-	const iy = (sv.y / (tileHeight / 2) - sv.x / (tileWidth / 2)) / 2;
+export function screenToIso(sv: Vector2): Vector2 {
+	const ix = (sv.x / HALF_TILE_WIDTH + sv.y / HALF_TILE_HEIGHT) / 2;
+	const iy = (sv.y / HALF_TILE_HEIGHT - sv.x / HALF_TILE_WIDTH) / 2;
 	return { x: Math.floor(ix), y: Math.floor(iy) };
 }
