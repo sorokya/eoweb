@@ -1,4 +1,4 @@
-import { BigCoords, CharacterMapInfo, Emf, EoReader } from "eolib";
+import { BigCoords, CharacterMapInfo, Direction, Emf, EoReader } from "eolib";
 import { MapRenderer } from "./map";
 import "./style.css";
 import { randomRange } from "./utils/random-range";
@@ -7,7 +7,7 @@ import { GAME_HEIGHT, GAME_WIDTH } from "./consts";
 import { Vector2 } from "./vector";
 import { getBitmapById, GfxType } from "./gfx";
 import { MovementController } from "./movement-controller";
-import { CharacterRenderer } from "./character";
+import { CharacterRenderer, CharacterState } from "./character";
 
 const GAME_FPS = 1000 / 30;
 
@@ -29,8 +29,8 @@ const npcs: { id: number; x: number; y: number }[] = [];
 const mapInfo = new CharacterMapInfo();
 mapInfo.playerId = 1;
 mapInfo.coords = new BigCoords();
-mapInfo.gender = randomRange(0, 1);
-mapInfo.skin = randomRange(0, 6);
+mapInfo.gender = 1; //randomRange(0, 1);
+mapInfo.skin = 0; //randomRange(0, 6);
 
 const character = new CharacterRenderer(mapInfo);
 
@@ -47,7 +47,7 @@ for (let i = 0; i < 0; ++i) {
 
 let map: MapRenderer | undefined;
 
-const mapId = 5; // randomRange(1, 282);
+const mapId = randomRange(1, 282);
 
 fetch(`/maps/${padWithZeros(mapId, 5)}.emf`)
 	.then((res) => res.bytes())
@@ -55,6 +55,8 @@ fetch(`/maps/${padWithZeros(mapId, 5)}.emf`)
 		const reader = new EoReader(buf);
 		const emf = Emf.deserialize(reader);
 		map = new MapRenderer(emf, 1);
+		character.mapInfo.coords.x = randomRange(0, emf.width);
+		character.mapInfo.coords.y = randomRange(0, emf.height);
 		map.addCharacter(character);
 		movementController.setMapDimensions(emf.width, emf.height);
 

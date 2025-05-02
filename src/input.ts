@@ -3,14 +3,15 @@ export enum Input {
 	Down,
 	Left,
 	Right,
+	SitStand,
 	Unknown = -1,
 }
 
-let directionHeld: boolean[] = [];
+let held: boolean[] = [];
 let lastDirectionHeld: Input[] = [];
 
-export function isDirectionHeld(input: Input): boolean {
-	return directionHeld[input] || false;
+export function isInputHeld(input: Input): boolean {
+	return held[input] || false;
 }
 
 export function getLatestDirectionHeld(): Input | null {
@@ -19,13 +20,17 @@ export function getLatestDirectionHeld(): Input | null {
 }
 
 function updateDirectionHeld(input: Input, down: boolean) {
-	directionHeld[input] = down;
+	held[input] = down;
 	const index = lastDirectionHeld.indexOf(input);
 	if (down) {
 		if (index === -1) lastDirectionHeld.push(input); // track most recent
 	} else {
 		if (index !== -1) lastDirectionHeld.splice(index, 1);
 	}
+}
+
+function updateInputHeld(input: Input, down: boolean) {
+	held[input] = down;
 }
 
 window.addEventListener("keydown", (e) => {
@@ -41,6 +46,9 @@ window.addEventListener("keydown", (e) => {
 			break;
 		case "d":
 			updateDirectionHeld(Input.Right, true);
+			break;
+		case "x":
+			updateInputHeld(Input.SitStand, true);
 			break;
 	}
 });
@@ -58,6 +66,9 @@ window.addEventListener("keyup", (e) => {
 			break;
 		case "d":
 			updateDirectionHeld(Input.Right, false);
+			break;
+		case "x":
+			updateInputHeld(Input.SitStand, false);
 			break;
 	}
 });
