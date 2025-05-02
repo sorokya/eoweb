@@ -1,0 +1,1 @@
+Map 61 - players appear only transparent at 0,0

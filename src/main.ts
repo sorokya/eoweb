@@ -1,14 +1,15 @@
-import { BigCoords, CharacterMapInfo, Coords, Emf, EoReader } from "eolib";
-import { getBitmapById, GfxType } from "./gfx";
+import { BigCoords, CharacterMapInfo, Emf, EoReader } from "eolib";
 import { MapRenderer } from "./map";
 import "./style.css";
 import { randomRange } from "./utils/random-range";
 import { padWithZeros } from "./utils/pad-with-zeros";
-import { Vector2 } from "./vector";
 import { GAME_HEIGHT, GAME_WIDTH } from "./consts";
-import { MainCharacterRenderer } from "./character";
+import { Vector2 } from "./vector";
+import { getBitmapById, GfxType } from "./gfx";
+import { MovementController } from "./movement-controller";
+import { CharacterRenderer } from "./character";
 
-const GAME_FPS = 1000 / 60;
+const GAME_FPS = 1000 / 30;
 
 const canvas = document.getElementById("game");
 if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
@@ -25,42 +26,17 @@ if (!ctx) {
 
 const npcs: { id: number; x: number; y: number }[] = [];
 
-const character = new CharacterMapInfo();
-character.coords = new BigCoords();
-const characterRenderer = new MainCharacterRenderer(character);
+const mapInfo = new CharacterMapInfo();
+mapInfo.playerId = 1;
+mapInfo.coords = new BigCoords();
+mapInfo.gender = randomRange(0, 1);
+mapInfo.skin = randomRange(0, 6);
 
-const held = {
-	up: false,
-	down: false,
-	left: false,
-	right: false,
-};
+const character = new CharacterRenderer(mapInfo);
 
-window.onkeydown = (e) => {
-	if (e.key === "w") {
-		held.up = true;
-	} else if (e.key === "a") {
-		held.left = true;
-	} else if (e.key === "s") {
-		held.down = true;
-	} else if (e.key === "d") {
-		held.right = true;
-	}
-};
+const movementController = new MovementController(character);
 
-window.onkeyup = (e) => {
-	if (e.key === "w") {
-		held.up = false;
-	} else if (e.key === "a") {
-		held.left = false;
-	} else if (e.key === "s") {
-		held.down = false;
-	} else if (e.key === "d") {
-		held.right = false;
-	}
-};
-
-for (let i = 0; i < 100; ++i) {
+for (let i = 0; i < 0; ++i) {
 	const id = randomRange(1, 300);
 	npcs.push({
 		id,
@@ -71,14 +47,28 @@ for (let i = 0; i < 100; ++i) {
 
 let map: MapRenderer | undefined;
 
-const mapId = randomRange(1, 282);
+const mapId = 5; // randomRange(1, 282);
 
 fetch(`/maps/${padWithZeros(mapId, 5)}.emf`)
 	.then((res) => res.bytes())
 	.then((buf) => {
 		const reader = new EoReader(buf);
 		const emf = Emf.deserialize(reader);
-		map = new MapRenderer(emf);
+		map = new MapRenderer(emf, 1);
+		map.addCharacter(character);
+		movementController.setMapDimensions(emf.width, emf.height);
+
+		for (let i = 2; i < 10; ++i) {
+			const info = new CharacterMapInfo();
+			info.playerId = i;
+			info.gender = randomRange(0, 1);
+			info.skin = randomRange(0, 6);
+			info.direction = randomRange(0, 3);
+			info.coords = new BigCoords();
+			info.coords.x = randomRange(0, emf.width);
+			info.coords.y = randomRange(0, emf.height);
+			map.addCharacter(new CharacterRenderer(info));
+		}
 	});
 
 let lastTime: DOMHighResTimeStamp | undefined;
@@ -93,25 +83,6 @@ const render = (now: DOMHighResTimeStamp) => {
 		return;
 	}
 
-	if (map) {
-		if (held.up) {
-			character.coords.y -= 1;
-		} else if (held.down) {
-			character.coords.y += 1;
-		}
-
-		if (held.left) {
-			character.coords.x -= 1;
-		} else if (held.right) {
-			character.coords.x += 1;
-		}
-
-		character.coords.x = Math.max(0, character.coords.x);
-		character.coords.y = Math.max(0, character.coords.y);
-		character.coords.x = Math.min(map.getWidth(), character.coords.x);
-		character.coords.y = Math.min(map.getHeight(), character.coords.y);
-	}
-
 	lastTime = now;
 
 	ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -120,33 +91,29 @@ const render = (now: DOMHighResTimeStamp) => {
 	ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
 	if (map) {
-		map.render(ctx, character.coords);
+		map.render(ctx);
 	}
 
-	characterRenderer.render(ctx);
+	for (const npc of npcs) {
+		const bmp = getBitmapById(GfxType.NPC, (npc.id - 1) * 40 + 1);
+		if (!bmp) {
+			continue;
+		}
 
-	/*
-  for (const npc of npcs) {
-    const bmp = getBitmapById(GfxType.NPC, (npc.id - 1) * 40 + 1);
-    if (!bmp) {
-      continue;
-    }
+		npc.x += randomRange(-1, 1);
+		npc.y += randomRange(-1, 1);
 
-    npc.x += randomRange(-1, 1);
-    npc.y += randomRange(-1, 1);
+		if (npc.x < 0 || npc.y < 0) {
+			npc.x = randomRange(0, GAME_WIDTH);
+			npc.y = randomRange(0, GAME_HEIGHT);
+		}
 
-    if (npc.x < 0 || npc.y < 0) {
-      npc.x = randomRange(0, GAME_WIDTH);
-      npc.y = randomRange(0, GAME_HEIGHT);
-    }
-
-    ctx.drawImage(bmp, npc.x, npc.y);
-  }
-  */
+		ctx.drawImage(bmp, npc.x, npc.y);
+	}
 
 	ctx.fillStyle = "#fff";
 	ctx.fillText(
-		`Map: ${mapId} (${character.coords.x}, ${character.coords.y})`,
+		`Map: ${mapId} (${mapInfo.coords.x}, ${mapInfo.coords.y})`,
 		5,
 		15,
 	);
@@ -156,9 +123,31 @@ const render = (now: DOMHighResTimeStamp) => {
 
 requestAnimationFrame(render);
 
+let mousePosition: Vector2 | undefined;
+
 // Tick loop
 setInterval(() => {
 	if (map) {
 		map.tick();
+		if (mousePosition) {
+			map.setMousePosition(mousePosition);
+		}
 	}
-}, 100);
+	movementController.tick();
+}, 120);
+
+window.onmousemove = (e) => {
+	const rect = canvas.getBoundingClientRect();
+	const scaleX = canvas.width / rect.width;
+	const scaleY = canvas.height / rect.height;
+	mousePosition = {
+		x: Math.min(
+			Math.max(Math.floor((e.clientX - rect.left) * scaleX), 0),
+			canvas.width,
+		),
+		y: Math.min(
+			Math.max(Math.floor((e.clientY - rect.top) * scaleY), 0),
+			canvas.height,
+		),
+	};
+};
