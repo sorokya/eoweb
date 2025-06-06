@@ -1,15 +1,13 @@
-import { BigCoords, CharacterMapInfo, Direction, Emf, EoReader } from "eolib";
+import { BigCoords, CharacterMapInfo, Emf, EoReader } from "eolib";
 import { MapRenderer } from "./map";
 import "./style.css";
 import { randomRange } from "./utils/random-range";
 import { padWithZeros } from "./utils/pad-with-zeros";
-import { GAME_HEIGHT, GAME_WIDTH } from "./consts";
+import { GAME_FPS, GAME_HEIGHT, GAME_WIDTH } from "./consts";
 import { Vector2 } from "./vector";
 import { getBitmapById, GfxType } from "./gfx";
 import { MovementController } from "./movement-controller";
-import { CharacterRenderer, CharacterState } from "./character";
-
-const GAME_FPS = 1000 / 30;
+import { CharacterRenderer } from "./character";
 
 const canvas = document.getElementById("game");
 if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
@@ -60,7 +58,7 @@ fetch(`/maps/${padWithZeros(mapId, 5)}.emf`)
 		map.addCharacter(character);
 		movementController.setMapDimensions(emf.width, emf.height);
 
-		for (let i = 2; i < 10; ++i) {
+		for (let i = 2; i < Math.floor(emf.width / 2); ++i) {
 			const info = new CharacterMapInfo();
 			info.playerId = i;
 			info.gender = randomRange(0, 1);

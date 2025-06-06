@@ -1,7 +1,8 @@
-import { CharacterMapInfo, Emf } from "eolib";
+import { Emf, MapTileSpec } from "eolib";
 import { getBitmapById, GfxType } from "./gfx";
 import { isoToScreen } from "./utils/iso-to-screen";
 import {
+	ANIMATION_TICKS,
 	HALF_GAME_HEIGHT,
 	HALF_GAME_WIDTH,
 	HALF_TILE_HEIGHT,
@@ -47,7 +48,7 @@ const RDG = 0.001; // gap between depth of each row of tiles
 
 const layerDepth = [
 	-3.0 + TDG * 1, // Ground
-	0.0 + TDG * 2, // Objects
+	0.0 + TDG * 3, // Objects
 	0.0 + TDG * 5, // Overlay
 	0.0 + TDG * 6, // Down Wall
 	-RDG + TDG * 7, // Right Wall
@@ -56,7 +57,7 @@ const layerDepth = [
 	-1.0 + TDG * 1, // Shadow
 	1.0 + TDG * 1, // Overlay 2
 	0.0 + TDG * 4, // Characters
-	0.0 + TDG * 3, // Cursor
+	0.0 + TDG * 2, // Cursor
 ];
 
 const LAYER_GFX_MAP = [
@@ -70,8 +71,6 @@ const LAYER_GFX_MAP = [
 	GfxType.Shadows,
 	GfxType.MapOverlay,
 ];
-
-const ANIMATION_TICKS = 6;
 
 export class MapRenderer {
 	emf: Emf;
@@ -168,11 +167,9 @@ export class MapRenderer {
 					}
 				}
 
-				const character = this.characters.find(
+				for (const character of this.characters.filter(
 					(c) => c.mapInfo.coords.x === x && c.mapInfo.coords.y === y,
-				);
-
-				if (character) {
+				)) {
 					if (character.mapInfo.playerId === this.playerId) {
 						playerScreen.x += character.walkOffset.x;
 						playerScreen.y += character.walkOffset.y;
@@ -191,18 +188,32 @@ export class MapRenderer {
 		}
 
 		if (this.mouseCoords) {
-			entities.push({
-				x: this.mouseCoords.x,
-				y: this.mouseCoords.y,
-				layer: Layer.Cursor,
-				type: EntityType.Cursor,
-				typeId: 0,
-				depth: this.calculateDepth(
-					Layer.Cursor,
-					this.mouseCoords.x,
-					this.mouseCoords.y,
-				),
-			});
+			const spec = this.emf.tileSpecRows
+				.find((r) => r.y === this.mouseCoords?.y)
+				?.tiles.find((t) => t.x === this.mouseCoords?.x);
+			if (
+				!spec ||
+				![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec.tileSpec)
+			) {
+				const characterAt = this.characters.some(
+					(c) =>
+						c.mapInfo.coords.x === this.mouseCoords?.x &&
+						c.mapInfo.coords.y === this.mouseCoords?.y,
+				);
+				const typeId = !!spec || characterAt ? 1 : 0;
+				entities.push({
+					x: this.mouseCoords.x,
+					y: this.mouseCoords.y,
+					layer: Layer.Cursor,
+					type: EntityType.Cursor,
+					typeId,
+					depth: this.calculateDepth(
+						Layer.Cursor,
+						this.mouseCoords.x,
+						this.mouseCoords.y,
+					),
+				});
+			}
 		}
 
 		entities.sort((a, b) => a.depth - b.depth);
@@ -216,7 +227,7 @@ export class MapRenderer {
 					this.renderCharacter(entity, playerScreen, ctx);
 					break;
 				case EntityType.Cursor:
-					this.renderCursor(playerScreen, ctx);
+					this.renderCursor(entity, playerScreen, ctx);
 					break;
 			}
 		}
@@ -229,6 +240,9 @@ export class MapRenderer {
 			mainCharacterRenderer.render(ctx, playerScreen);
 			ctx.globalAlpha = 1;
 		}
+
+		ctx.fillStyle = '#fff';
+		ctx.fillText(`Animation ticks: ${this.animationTicks}`, 5, 30);
 	}
 
 	renderTile(
@@ -309,13 +323,19 @@ export class MapRenderer {
 		}
 	}
 
-	renderCursor(playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
+	renderCursor(
+		entity: Entity,
+		playerScreen: Vector2,
+		ctx: CanvasRenderingContext2D,
+	) {
 		const bmp = getBitmapById(GfxType.PostLoginUI, 24);
 		if (bmp && this.mouseCoords) {
 			const tileScreen = isoToScreen({
 				x: this.mouseCoords.x,
 				y: this.mouseCoords.y,
 			});
+
+			const sourceX = entity.typeId * TILE_WIDTH;
 
 			const screenX =
 				tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH;
@@ -325,7 +345,7 @@ export class MapRenderer {
 
 			ctx.drawImage(
 				bmp,
-				0,
+				sourceX,
 				0,
 				TILE_WIDTH,
 				TILE_HEIGHT,
