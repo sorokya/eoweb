@@ -1,4 +1,5 @@
 import { ImGui } from "@zhobo63/imgui-ts";
+import { ImScalar } from "@zhobo63/imgui-ts/src/bind-imgui";
 import mitt, { Emitter } from "mitt";
 
 type ConnectModalEvents = {
@@ -9,7 +10,7 @@ type ConnectModalEvents = {
 export class ConnectModal {
     private emitter: Emitter<ConnectModalEvents>;
     private host: ImGui.ImStringBuffer = new ImGui.ImStringBuffer(256, 'wss://ws.reoserv.net');
-    open: boolean = true;
+    private isOpen: ImScalar<boolean> = [false];
 
     constructor() {
         this.emitter = mitt<ConnectModalEvents>();
@@ -19,7 +20,19 @@ export class ConnectModal {
         this.emitter.on(event, handler);
     }
 
+    open() {
+        this.isOpen[0] = true;
+    }
+
+    close() {
+        this.isOpen[0] = false;
+    }
+
     render() {
+        if (!this.isOpen[0]) {
+            return;
+        }
+
         const io = ImGui.GetIO();
         const windowSize = new ImGui.Vec2(300, 100); // desired size of the window
         const center = new ImGui.Vec2(
@@ -30,7 +43,7 @@ export class ConnectModal {
         ImGui.SetNextWindowSize(windowSize, ImGui.Cond.Once);
         ImGui.SetNextWindowPos(center, ImGui.Cond.Once); // or Cond.Always for hard placement
 
-        ImGui.Begin('Connect to Server', null, ImGui.WindowFlags.NoResize);
+        ImGui.Begin('Connect to Server', this.isOpen, ImGui.WindowFlags.NoResize);
         ImGui.InputText("Host", this.host);
 
         if (ImGui.Button("Connect")) {
@@ -40,7 +53,7 @@ export class ConnectModal {
         ImGui.SameLine();
 
         if (ImGui.Button('Cancel')) {
-            this.emitter.emit('closed');
+            this.isOpen[0] = false;
         }
 
         ImGui.End();

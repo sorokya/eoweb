@@ -1,3 +1,4 @@
 node_modules
 public/gfx*
 public/maps
+dist

@@ -1,24 +1,29 @@
 import { ImGui } from "@zhobo63/imgui-ts";
-import mitt, { Emitter } from "mitt";
-
-type ErrorModalEvents = {
-    'closed': void;
-}
-
+import { ImScalar } from "@zhobo63/imgui-ts/src/bind-imgui";
 export class ErrorModal {
-    private emitter: Emitter<ErrorModalEvents>;
-    private error: string;
+    private title = '';
+    private error = '';
+    private isOpen: ImScalar<boolean> = [false];
 
-    constructor(error: string) {
-        this.emitter = mitt<ErrorModalEvents>();
+    open(error: string, title: string) {
+        if (this.isOpen[0]) {
+            return;
+        }
+
+        this.title = title || 'Error';
         this.error = error;
+        this.isOpen[0] = true;
     }
 
-    on<Event extends keyof ErrorModalEvents>(event: Event, handler: (data: ErrorModalEvents[Event]) => void) {
-        this.emitter.on(event, handler);
+    close() {
+        this.isOpen[0] = false;
     }
 
     render() {
+        if (!this.isOpen[0]) {
+            return;
+        }
+
         const io = ImGui.GetIO();
         const windowSize = new ImGui.Vec2(300, 200); // desired size of the window
         const center = new ImGui.Vec2(
@@ -29,11 +34,13 @@ export class ErrorModal {
         ImGui.SetNextWindowSize(windowSize, ImGui.Cond.Once);
         ImGui.SetNextWindowPos(center, ImGui.Cond.Once); // or Cond.Always for hard placement
 
-        ImGui.Begin('Error');
-        ImGui.Text(this.error);
+        ImGui.Begin(this.title, this.isOpen);
+        ImGui.TextWrapped(this.error);
 
-        if (ImGui.Button('Cancel')) {
-            this.emitter.emit('closed');
+        ImGui.NewLine();
+
+        if (ImGui.Button('OK')) {
+            this.isOpen[0] = false;
         }
 
         ImGui.End();

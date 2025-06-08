@@ -11,7 +11,7 @@ import { Menu } from "./ui/menu";
 import { ConnectModal } from "./ui/connect";
 import { ErrorModal } from "./ui/error";
 import { randomRange } from "./utils/random-range";
-import { PacketBus, PacketLog } from "./bus";
+import { PacketBus } from "./bus";
 import { Client } from "./client";
 import { PacketLogModal, PacketSource } from "./ui/packet-log";
 
@@ -94,9 +94,13 @@ const render = (now: DOMHighResTimeStamp) => {
 	requestAnimationFrame(render);
 };
 
-let connectModal: ConnectModal | null = null;
-let errorModal: ErrorModal | null = null;
+const connectModal = new ConnectModal();
+const errorModal = new ErrorModal();
 const client = new Client();
+
+client.on('error', ({ title, message }) => {
+	errorModal.open(message, title);
+});
 
 const initializeSocket = () => {
 	if (client.bus) {
@@ -112,55 +116,45 @@ const initializeSocket = () => {
 };
 
 const menu = new Menu();
-let receiveCallack: ((data: PacketLog) => void) | null = null;
-let sendCallback: ((data: PacketLog) => void) | null = null;
-menu.on('connect', () => {
-	connectModal = new ConnectModal();
-	connectModal.on('closed', () => {
-		connectModal = null;
+connectModal.on('connect', (host) => {
+	const socket = new WebSocket(host);
+	socket.addEventListener('open', () => {
+		const bus = new PacketBus(socket);
+		bus.on('receive', (data) => {
+			packetLogModal.addEntry({
+				source: PacketSource.Server,
+				...data,
+			});
+		});
+		bus.on('send', (data) => {
+			packetLogModal.addEntry({
+				source: PacketSource.Client,
+				...data,
+			});
+		});
+
+		client.setBus(bus);
+		initializeSocket();
+		connectModal.close();
 	});
 
-	connectModal.on('connect', (host) => {
-		const socket = new WebSocket(host);
-		socket.addEventListener('open', () => {
-			const bus = new PacketBus(socket);
-			receiveCallack = (data) => {
-				if (packetLogModal) {
-					packetLogModal.addEntry({
-						source: PacketSource.Server,
-						...data,
-					});
-				}
-			};
-			bus.on('receive', receiveCallack);
-			sendCallback = (data) => {
-				if (packetLogModal) {
-					packetLogModal.addEntry({
-						source: PacketSource.Client,
-						...data,
-					});
-				}
-			};
-			bus.on('send', sendCallback);
-			client.setBus(bus);
-			initializeSocket();
-			connectModal = null;
-		});
+	socket.addEventListener('close', () => {
+		errorModal.open('The connection to the game server was lost, please try again a later time', 'Lost connection');
+		client.bus = null;
+	});
 
-		socket.addEventListener('close', () => {
-			console.log('Server closed connection..');
-			client.bus = null;
-		});
-
-		socket.addEventListener('error', (e) => {
-			console.error('Websocket Error', e);
-		});
+	socket.addEventListener('error', (e) => {
+		console.error('Websocket Error', e);
 	});
 });
 
-let packetLogModal: PacketLogModal | null = null;
+menu.on('connect', () => {
+	connectModal.open();
+});
+
+const packetLogModal = new PacketLogModal();
 menu.on('packet-log', () => {
-	packetLogModal = new PacketLogModal();
+	packetLogModal.open();
 });
 
 function renderUI(now: number) {
@@ -168,14 +162,9 @@ function renderUI(now: number) {
 	ImGui.NewFrame();
 
 	menu.render();
-
-	if (connectModal) {
-		connectModal.render();
-	}
-
-	if (packetLogModal) {
-		packetLogModal.render();
-	}
+	connectModal.render();
+	packetLogModal.render();
+	errorModal.render();
 
 	ImGui.EndFrame();
 	ImGui.Render();

@@ -1,4 +1,5 @@
 import { ImGui } from "@zhobo63/imgui-ts";
+import { ImScalar } from "@zhobo63/imgui-ts/src/bind-imgui";
 import { PacketAction, PacketFamily } from "eolib";
 
 export enum PacketSource {
@@ -14,15 +15,27 @@ type PacketLogEntry = {
     data: Uint8Array;
 };
 
-
 export class PacketLogModal {
     private log: PacketLogEntry[] = [];
+    private isOpen: ImScalar<boolean> = [false];
+
+    open() {
+        this.isOpen[0] = true;
+    }
+
+    close() {
+        this.isOpen[0] = false;
+    }
 
     addEntry(entry: PacketLogEntry) {
         this.log.push(entry);
     }
 
     render() {
+        if (!this.isOpen[0]) {
+            return;
+        }
+
         const io = ImGui.GetIO();
         const windowSize = new ImGui.Vec2(600, 300); // desired size of the window
         const center = new ImGui.Vec2(
@@ -32,7 +45,7 @@ export class PacketLogModal {
 
         ImGui.SetNextWindowSize(windowSize, ImGui.Cond.Once);
         ImGui.SetNextWindowPos(center, ImGui.Cond.Once); // or Cond.Always for hard placement
-        ImGui.Begin("Packet Log");
+        ImGui.Begin("Packet Log", this.isOpen);
 
         if (ImGui.BeginTable("packet_table", 5, ImGui.TableFlags.Borders | ImGui.TableFlags.RowBg)) {
             ImGui.TableSetupColumn(" ", ImGui.TableColumnFlags.WidthFixed, 10);

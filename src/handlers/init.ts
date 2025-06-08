@@ -1,4 +1,4 @@
-import { ConnectionAcceptClientPacket, EoReader, InitInitServerPacket, InitReply, InitSequenceStart } from "eolib";
+import { ConnectionAcceptClientPacket, EoReader, InitBanType, InitInitServerPacket, InitReply, InitSequenceStart } from "eolib";
 import { Client } from "../client";
 
 export function handleInitInit(client: Client, reader: EoReader) {
@@ -7,6 +7,9 @@ export function handleInitInit(client: Client, reader: EoReader) {
     switch (packet.replyCode) {
         case InitReply.Ok:
             handleInitOk(client, packet.replyCodeData as InitInitServerPacket.ReplyCodeDataOk);
+            break;
+        case InitReply.Banned:
+            handleInitBanned(client, packet.replyCodeData as InitInitServerPacket.ReplyCodeDataBanned);
             break;
     }
 }
@@ -26,4 +29,14 @@ function handleInitOk(client: Client, data: InitInitServerPacket.ReplyCodeDataOk
     packet.serverEncryptionMultiple = data.serverEncryptionMultiple;
     packet.playerId = data.playerId;
     bus.send(packet);
+}
+
+function handleInitBanned(client: Client, data: InitInitServerPacket.ReplyCodeDataBanned) {
+    if (data.banType === InitBanType.Permanent) {
+        client.showError('The server dropped the connection, reason: peramanent ip ban', 'Connection is blocked');
+        return;
+    }
+
+    const banData = data.banTypeData as InitInitServerPacket.ReplyCodeDataBanned.BanTypeData0
+    client.showError(`The server dropped the connection, reason: temporary ip ban. ${banData.minutesRemaining} minutes`, 'Connection is blocked');
 }
