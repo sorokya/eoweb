@@ -1,4 +1,4 @@
-import { CharacterMapInfo, Direction, Gender } from "eolib";
+import { CharacterMapInfo, Direction, Gender, SitState } from "eolib";
 import { getBitmapById, GfxType } from "./gfx";
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from "./consts";
 import { isoToScreen } from "./utils/iso-to-screen";
@@ -30,6 +30,7 @@ export class CharacterRenderer {
 
 	constructor(mapInfo: CharacterMapInfo) {
 		this.mapInfo = mapInfo;
+		this.state = mapInfo.sitState === SitState.Floor ? CharacterState.SitGround : CharacterState.Standing;
 	}
 
 	setState(state: CharacterState) {

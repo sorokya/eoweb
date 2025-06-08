@@ -13,6 +13,8 @@
     "vite": "^6.3.1"
   },
   "dependencies": {
-    "eolib": "^1.0.1"
+    "@zhobo63/imgui-ts": "^0.1.46",
+    "eolib": "^1.0.1",
+    "mitt": "^3.0.1"
   }
 }

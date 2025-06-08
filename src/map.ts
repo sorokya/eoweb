@@ -240,9 +240,6 @@ export class MapRenderer {
 			mainCharacterRenderer.render(ctx, playerScreen);
 			ctx.globalAlpha = 1;
 		}
-
-		ctx.fillStyle = '#fff';
-		ctx.fillText(`Animation ticks: ${this.animationTicks}`, 5, 30);
 	}
 
 	renderTile(

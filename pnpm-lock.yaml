@@ -8,9 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@zhobo63/imgui-ts':
+        specifier: ^0.1.46
+        version: 0.1.46
       eolib:
         specifier: ^1.0.1
         version: 1.0.1
+      mitt:
+        specifier: ^3.0.1
+        version: 3.0.1
     devDependencies:
       typescript:
         specifier: ~5.7.2
@@ -271,11 +277,17 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@types/emscripten@1.40.1':
+    resolution: {integrity: sha512-sr53lnYkQNhjHNN0oJDdUm5564biioI5DuOpycufDVK7D3y+GR3oUswe2rlwY1nPNyusHbrJ9WoTyIHl4/Bpwg==}
+
   '@types/estree@1.0.7':
     resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
 
   '@types/node@22.15.3':
     resolution: {integrity: sha512-lX7HFZeHf4QG/J7tBZqrCAXwz9J5RD56Y6MpP0eJkka8p+K0RY/yBTW7CYFJ4VGCclxqOLKmiGP5juQc6MKgcw==}
+
+  '@zhobo63/imgui-ts@0.1.46':
+    resolution: {integrity: sha512-Nru0eqITDR7r0X7iKg2dhkwKTZTW8WuVxs2XXPIfQD2nTyTADVvurEFkMeE9c/J+rH4bV/oDJwWW74Syko6LXA==}
 
   eolib@1.0.1:
     resolution: {integrity: sha512-Bol+6h62RMlnLwxX0iKorOZpm9s1zLPDoYlPSoa9Hl7bMU0Sn7VNlNihwIbzdwaRFfuUNnSntJOyBn3/cUn58Q==}
@@ -297,6 +309,9 @@ packages:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
+
+  mitt@3.0.1:
+    resolution: {integrity: sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==}
 
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
@@ -515,12 +530,18 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.40.1':
     optional: true
 
+  '@types/emscripten@1.40.1': {}
+
   '@types/estree@1.0.7': {}
 
   '@types/node@22.15.3':
     dependencies:
       undici-types: 6.21.0
     optional: true
+
+  '@zhobo63/imgui-ts@0.1.46':
+    dependencies:
+      '@types/emscripten': 1.40.1
 
   eolib@1.0.1:
     dependencies:
@@ -560,6 +581,8 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
+
+  mitt@3.0.1: {}
 
   nanoid@3.3.11: {}
 

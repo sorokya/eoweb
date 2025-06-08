@@ -8,3 +8,4 @@ export const GAME_HEIGHT = 600;
 export const HALF_GAME_WIDTH = Math.floor(GAME_WIDTH / 2);
 export const HALF_GAME_HEIGHT = Math.floor(GAME_HEIGHT / 2);
 export const ANIMATION_TICKS = 6;
+export const MAX_CHALLENGE = 11_092_110;
