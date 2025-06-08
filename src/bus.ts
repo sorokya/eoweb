@@ -1,4 +1,17 @@
 import { deinterleave, encodeNumber, EoReader, EoWriter, flipMsb, interleave, Packet, PacketAction, PacketFamily, PacketSequencer, SequenceStart, swapMultiples } from "eolib";
+import mitt, { Emitter } from "mitt";
+
+export type PacketLog = {
+    action: PacketAction;
+    family: PacketFamily;
+    data: Uint8Array;
+    timestamp: Date;
+}
+
+type PacketBusEvents = {
+    'send': PacketLog;
+    'receive': PacketLog;
+}
 
 export class PacketBus {
     private socket: WebSocket;
@@ -6,6 +19,7 @@ export class PacketBus {
     private encodeMultiple = 0;
     private decodeMultiple = 0;
     private handlers: Map<PacketFamily, Map<PacketAction, (reader: EoReader) => void>> = new Map();
+    private emitter: Emitter<PacketBusEvents>;
 
     constructor(socket: WebSocket) {
         this.socket = socket;
@@ -21,6 +35,15 @@ export class PacketBus {
                     console.error("Failed to get array buffer", err);
                 });
         });
+        this.emitter = mitt<PacketBusEvents>();
+    }
+
+    on<Event extends keyof PacketBusEvents>(event: Event, handler: (data: PacketBusEvents[Event]) => void) {
+        this.emitter.on(event, handler);
+    }
+
+    off<Event extends keyof PacketBusEvents>(event: Event, handler: (data: PacketBusEvents[Event]) => void) {
+        this.emitter.off(event, handler);
     }
 
     setSequence(sequence: SequenceStart) {
@@ -40,12 +63,18 @@ export class PacketBus {
             swapMultiples(buf, this.decodeMultiple);
         }
 
-        console.log('Received', buf);
-
         const action = buf[0];
         const family = buf[1];
 
         const packetBuf = buf.slice(2);
+
+        this.emitter.emit('receive', {
+            action,
+            family,
+            data: packetBuf,
+            timestamp: new Date(),
+        });
+
         const reader = new EoReader(packetBuf);
         const familyHandlers = this.handlers.get(family);
         if (familyHandlers) {
@@ -69,6 +98,13 @@ export class PacketBus {
         const data = [...buf];
         const sequence = this.sequencer.nextSequence();
 
+        this.emitter.emit('send', {
+            action: packet.action,
+            family: packet.family,
+            data: buf,
+            timestamp: new Date(),
+        });
+
         if (packet.action !== 0xff && packet.family !== 0xff) {
             data.unshift(sequence);
         }
@@ -83,8 +119,6 @@ export class PacketBus {
             flipMsb(temp);
             interleave(temp);
         }
-
-        console.log('Sending', data);
 
         const lengthBytes = encodeNumber(temp.length);
 

@@ -71,7 +71,6 @@ export class MovementController {
 
 		if (this.character.state === CharacterState.Walking) {
 			const walkFrame = Math.abs(this.walkTicks - WALK_TICKS) + 1;
-			console.log('Walk frame', walkFrame);
 
 			const offset = {
 				[Direction.Up]: {

@@ -7,6 +7,7 @@ type MenuEvents = {
     'create-account': void;
     'login': void;
     'help': void;
+    'packet-log': void;
 }
 
 export class Menu {
@@ -40,6 +41,9 @@ export class Menu {
             }
 
             if (ImGui.BeginMenu("Debug")) {
+                if (ImGui.MenuItem('Packet Log')) {
+                    this.emitter.emit('packet-log');
+                }
                 ImGui.EndMenu();
             }
 

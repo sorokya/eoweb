@@ -11,8 +11,9 @@ import { Menu } from "./ui/menu";
 import { ConnectModal } from "./ui/connect";
 import { ErrorModal } from "./ui/error";
 import { randomRange } from "./utils/random-range";
-import { PacketBus } from "./bus";
+import { PacketBus, PacketLog } from "./bus";
 import { Client } from "./client";
+import { PacketLogModal, PacketSource } from "./ui/packet-log";
 
 const canvas = document.getElementById("game");
 if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
@@ -27,6 +28,8 @@ if (!ctx) {
 	throw new Error("Failed to get canvas context!");
 }
 
+ctx.imageSmoothingEnabled = false;
+
 enum GameState {
 	Initial,
 	Login,
@@ -34,7 +37,7 @@ enum GameState {
 	InGame,
 };
 
-let state: GameState = GameState.Initial;
+let state: GameState = GameState.InGame;
 
 const mapInfo = new CharacterMapInfo();
 mapInfo.playerId = 1;
@@ -43,7 +46,7 @@ mapInfo.coords.x = 35;
 mapInfo.coords.y = 41;
 mapInfo.gender = 1;
 mapInfo.skin = 0;
-mapInfo.sitState = SitState.Floor;
+mapInfo.sitState = SitState.Stand;
 
 const character = new CharacterRenderer(mapInfo);
 
@@ -83,6 +86,7 @@ const render = (now: DOMHighResTimeStamp) => {
 
 	switch (state) {
 		case GameState.Initial:
+		case GameState.InGame:
 			renderInitialState(now, ctx);
 			break;
 	}
@@ -108,6 +112,8 @@ const initializeSocket = () => {
 };
 
 const menu = new Menu();
+let receiveCallack: ((data: PacketLog) => void) | null = null;
+let sendCallback: ((data: PacketLog) => void) | null = null;
 menu.on('connect', () => {
 	connectModal = new ConnectModal();
 	connectModal.on('closed', () => {
@@ -117,7 +123,26 @@ menu.on('connect', () => {
 	connectModal.on('connect', (host) => {
 		const socket = new WebSocket(host);
 		socket.addEventListener('open', () => {
-			client.setBus(new PacketBus(socket));
+			const bus = new PacketBus(socket);
+			receiveCallack = (data) => {
+				if (packetLogModal) {
+					packetLogModal.addEntry({
+						source: PacketSource.Server,
+						...data,
+					});
+				}
+			};
+			bus.on('receive', receiveCallack);
+			sendCallback = (data) => {
+				if (packetLogModal) {
+					packetLogModal.addEntry({
+						source: PacketSource.Client,
+						...data,
+					});
+				}
+			};
+			bus.on('send', sendCallback);
+			client.setBus(bus);
 			initializeSocket();
 			connectModal = null;
 		});
@@ -133,6 +158,11 @@ menu.on('connect', () => {
 	});
 });
 
+let packetLogModal: PacketLogModal | null = null;
+menu.on('packet-log', () => {
+	packetLogModal = new PacketLogModal();
+});
+
 function renderUI(now: number) {
 	ImGui_Impl.NewFrame(now);
 	ImGui.NewFrame();
@@ -143,30 +173,10 @@ function renderUI(now: number) {
 		connectModal.render();
 	}
 
-	/*
-	ImGui.Begin("Login");
-
-
-	// Host input
-	ImGui.InputText("Host", host);
-
-	// Username input
-	ImGui.InputText("Username", username);
-
-	// Password input (mask input)
-	ImGui.InputText("Password", password, 256, ImGui.InputTextFlags.Password);
-
-	ImGui.Spacing();
-
-	// Login button
-	if (ImGui.Button("Login")) {
-		loginState.submitted = true;
-		console.log("Logging in with:", loginState);
-		// Perform your connection/auth logic here
+	if (packetLogModal) {
+		packetLogModal.render();
 	}
-		*/
 
-	//ImGui.End();
 	ImGui.EndFrame();
 	ImGui.Render();
 	ImGui_Impl.RenderDrawData(ImGui.GetDrawData());
@@ -176,6 +186,10 @@ function renderInitialState(now: DOMHighResTimeStamp, ctx: CanvasRenderingContex
 	if (map) {
 		map.render(ctx);
 	}
+
+	ctx.fillStyle = '#fff';
+	ctx.font = 'bold 12px serif';
+	ctx.fillText('WASD - Move, X - Sit/Stand', 10, 40);
 }
 
 let mousePosition: Vector2 | undefined;
