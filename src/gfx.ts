@@ -56,7 +56,7 @@ export function getBitmapById(
 
 function loadBitmapById(gfxType: GfxType, resourceId: number) {
 	const img = new Image();
-	img.src = `/gfx${padWithZeros(gfxType, 3)}/${resourceId + 100}.png`;
+	img.src = `/gfx/gfx${padWithZeros(gfxType, 3)}/${resourceId + 100}.png`;
 	img.onload = () => {
 		if (!GFX[gfxType]) {
 			GFX[gfxType] = [];
