@@ -85,6 +85,7 @@ const render = (now: DOMHighResTimeStamp) => {
 	ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
 	switch (state) {
+		// @ts-ignore: Error should go away when state can change
 		case GameState.Initial:
 		case GameState.InGame:
 			renderInitialState(now, ctx);
