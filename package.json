@@ -9,12 +9,12 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "typescript": "~5.7.2",
+    "typescript": "~5.7.3",
     "vite": "^6.3.1"
   },
   "dependencies": {
     "@zhobo63/imgui-ts": "^0.1.46",
-    "eolib": "^1.0.1",
+    "eolib": "^1.0.2",
     "mitt": "^3.0.1"
   }
 }

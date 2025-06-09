@@ -12,14 +12,14 @@ importers:
         specifier: ^0.1.46
         version: 0.1.46
       eolib:
-        specifier: ^1.0.1
-        version: 1.0.1
+        specifier: ^1.0.2
+        version: 1.0.2
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
     devDependencies:
       typescript:
-        specifier: ~5.7.2
+        specifier: ~5.7.3
         version: 5.7.3
       vite:
         specifier: ^6.3.1
@@ -289,8 +289,8 @@ packages:
   '@zhobo63/imgui-ts@0.1.46':
     resolution: {integrity: sha512-Nru0eqITDR7r0X7iKg2dhkwKTZTW8WuVxs2XXPIfQD2nTyTADVvurEFkMeE9c/J+rH4bV/oDJwWW74Syko6LXA==}
 
-  eolib@1.0.1:
-    resolution: {integrity: sha512-Bol+6h62RMlnLwxX0iKorOZpm9s1zLPDoYlPSoa9Hl7bMU0Sn7VNlNihwIbzdwaRFfuUNnSntJOyBn3/cUn58Q==}
+  eolib@1.0.2:
+    resolution: {integrity: sha512-CUHGmm+eHMBEJYD8wDm+yo5WjxGW22PsgXjWM5oyTKU1GYC3+nV5NjZTDg98BMJ8QFm/Cg14CH3F3JB83tfsLQ==}
 
   esbuild@0.25.3:
     resolution: {integrity: sha512-qKA6Pvai73+M2FtftpNKRxJ78GIjmFXFxd/1DVBqGo/qNhLSfv+G12n9pNoWdytJC8U00TrViOwpjT0zgqQS8Q==}
@@ -389,9 +389,6 @@ packages:
         optional: true
       yaml:
         optional: true
-
-  windows-1252@3.0.4:
-    resolution: {integrity: sha512-PxP05UYnSeqhkkcHeT3xhpY/BsMOX6URw4ZW9ljOlhkQ6UZRRj/xvS3o5kG+fwefCztUtW36+DHBBNnWfXPIsw==}
 
 snapshots:
 
@@ -543,9 +540,7 @@ snapshots:
     dependencies:
       '@types/emscripten': 1.40.1
 
-  eolib@1.0.1:
-    dependencies:
-      windows-1252: 3.0.4
+  eolib@1.0.2: {}
 
   esbuild@0.25.3:
     optionalDependencies:
@@ -645,5 +640,3 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.15.3
       fsevents: 2.3.3
-
-  windows-1252@3.0.4: {}
