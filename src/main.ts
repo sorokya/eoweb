@@ -57,9 +57,9 @@ let map: MapRenderer | undefined;
 const mapId = 5;
 
 fetch(`/maps/${padWithZeros(mapId, 5)}.emf`)
-	.then((res) => res.bytes())
+	.then((res) => res.arrayBuffer())
 	.then((buf) => {
-		const reader = new EoReader(buf);
+		const reader = new EoReader(new Uint8Array(buf));
 		const emf = Emf.deserialize(reader);
 		map = new MapRenderer(emf, 1);
 		map.addCharacter(character);
