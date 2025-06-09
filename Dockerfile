@@ -13,7 +13,7 @@ FROM joseluisq/static-web-server:2-alpine
 
 WORKDIR /public
 
-COPY --from=builder /app/dist ./public
+COPY --from=builder /app/dist .
 
 EXPOSE 80
 
