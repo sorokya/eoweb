@@ -11,7 +11,7 @@ RUN pnpm build
 
 FROM joseluisq/static-web-server:2-alpine		
 
-COPY --from=builder /app/dist /var/public/
+COPY --from=builder /app/dist /public
 
 EXPOSE 80
 
