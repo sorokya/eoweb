@@ -1,67 +1,67 @@
-import { padWithZeros } from "./utils/pad-with-zeros";
+import { padWithZeros } from './utils/pad-with-zeros';
 
 export enum GfxType {
-	PreLoginUI = 1,
-	PostLoginUI,
-	MapTiles,
-	MapObjects,
-	MapOverlay,
-	MapWalls,
-	MapWallTop,
-	SkinSprites,
-	MaleHair,
-	FemaleHair,
-	MaleShoes,
-	FemaleShoes,
-	MaleArmor,
-	FemaleArmor,
-	MaleHat,
-	FemaleHat,
-	MaleWeapons,
-	FemaleWeapons,
-	MaleBack,
-	FemaleBack,
-	NPC,
-	Shadows,
-	Items,
-	Spells,
-	SpellIcons,
+  PreLoginUI = 1,
+  PostLoginUI = 2,
+  MapTiles = 3,
+  MapObjects = 4,
+  MapOverlay = 5,
+  MapWalls = 6,
+  MapWallTop = 7,
+  SkinSprites = 8,
+  MaleHair = 9,
+  FemaleHair = 10,
+  MaleShoes = 11,
+  FemaleShoes = 12,
+  MaleArmor = 13,
+  FemaleArmor = 14,
+  MaleHat = 15,
+  FemaleHat = 16,
+  MaleWeapons = 17,
+  FemaleWeapons = 18,
+  MaleBack = 19,
+  FemaleBack = 20,
+  NPC = 21,
+  Shadows = 22,
+  Items = 23,
+  Spells = 24,
+  SpellIcons = 25,
 }
 
 const GFX: HTMLImageElement[][] = [];
 const PENDING: { type: GfxType; id: number }[] = [];
 
 export function getBitmapById(
-	gfxType: GfxType,
-	resourceId: number,
+  gfxType: GfxType,
+  resourceId: number,
 ): HTMLImageElement | null {
-	if (PENDING.some((p) => p.type === gfxType && p.id === resourceId)) {
-		return null;
-	}
+  if (PENDING.some((p) => p.type === gfxType && p.id === resourceId)) {
+    return null;
+  }
 
-	const gfx = GFX[gfxType];
-	if (!gfx) {
-		loadBitmapById(gfxType, resourceId);
-		return null;
-	}
+  const gfx = GFX[gfxType];
+  if (!gfx) {
+    loadBitmapById(gfxType, resourceId);
+    return null;
+  }
 
-	const bmp = gfx[resourceId];
-	if (!bmp) {
-		loadBitmapById(gfxType, resourceId);
-		return null;
-	}
+  const bmp = gfx[resourceId];
+  if (!bmp) {
+    loadBitmapById(gfxType, resourceId);
+    return null;
+  }
 
-	return bmp;
+  return bmp;
 }
 
 function loadBitmapById(gfxType: GfxType, resourceId: number) {
-	const img = new Image();
-	img.src = `/gfx/gfx${padWithZeros(gfxType, 3)}/${resourceId + 100}.png`;
-	img.onload = () => {
-		if (!GFX[gfxType]) {
-			GFX[gfxType] = [];
-		}
+  const img = new Image();
+  img.src = `/gfx/gfx${padWithZeros(gfxType, 3)}/${resourceId + 100}.png`;
+  img.onload = () => {
+    if (!GFX[gfxType]) {
+      GFX[gfxType] = [];
+    }
 
-		GFX[gfxType][resourceId] = img;
-	};
+    GFX[gfxType][resourceId] = img;
+  };
 }
