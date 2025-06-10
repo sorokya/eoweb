@@ -81,10 +81,55 @@ export class MapRenderer {
 	characters: CharacterRenderer[] = [];
 	mousePosition: Vector2 | undefined;
 	mouseCoords: Vector2 | undefined;
+	private tileGraphicCache: (number | null)[][][] = [];
+	private tileSpecCache: (MapTileSpec | null)[][] = [];
 
 	constructor(emf: Emf, playerId: number) {
 		this.emf = emf;
 		this.playerId = playerId;
+		this.buildCaches();
+	}
+
+	private buildCaches() {
+		const width = this.emf.width;
+		const height = this.emf.height;
+
+		this.tileGraphicCache = [];
+		for (let l = 0; l < this.emf.graphicLayers.length; ++l) {
+			const layerCache: (number | null)[][] = [];
+			for (let y = 0; y <= height; ++y) {
+				layerCache[y] = new Array<number | null>(width + 1).fill(null);
+			}
+
+			for (const row of this.emf.graphicLayers[l].graphicRows) {
+				for (const t of row.tiles) {
+					layerCache[row.y][t.x] = t.graphic;
+				}
+			}
+
+			if (l === Layer.Ground && this.emf.fillTile) {
+				for (let y = 0; y <= height; ++y) {
+					for (let x = 0; x <= width; ++x) {
+						if (layerCache[y][x] === null) {
+							layerCache[y][x] = this.emf.fillTile!;
+						}
+					}
+				}
+			}
+
+			this.tileGraphicCache[l] = layerCache;
+		}
+
+		this.tileSpecCache = [];
+		for (let y = 0; y <= height; ++y) {
+			this.tileSpecCache[y] = new Array<MapTileSpec | null>(width + 1).fill(null);
+		}
+
+		for (const row of this.emf.tileSpecRows) {
+			for (const t of row.tiles) {
+				this.tileSpecCache[row.y][t.x] = t.tileSpec;
+			}
+		}
 	}
 
 	setMousePosition(position: Vector2) {
@@ -154,9 +199,15 @@ export class MapRenderer {
 			HALF_GAME_HEIGHT * (1 - ZOOM),
 		);
 		ctx.scale(ZOOM, ZOOM);
-		const diag   = ctx.canvas.width + ctx.canvas.height;
-		const rangeX = Math.ceil(diag / HALF_TILE_WIDTH)  + 2;
-		const rangeY = Math.ceil(diag / HALF_TILE_HEIGHT) + 2;
+		const diag   = Math.hypot(ctx.canvas.width, ctx.canvas.height);
+		const rangeX = Math.min(
+			this.emf.width,
+			Math.ceil(diag / HALF_TILE_WIDTH) + 2,
+		);
+		const rangeY = Math.min(
+			this.emf.height,
+			Math.ceil(diag / HALF_TILE_HEIGHT) + 2,
+		);
 		const entities: Entity[] = [];
 
 		for (let y = player.y - rangeY; y <= player.y + rangeY; ++y) {
@@ -199,12 +250,10 @@ export class MapRenderer {
 		}
 
 		if (this.mouseCoords) {
-			const spec = this.emf.tileSpecRows
-				.find((r) => r.y === this.mouseCoords?.y)
-				?.tiles.find((t) => t.x === this.mouseCoords?.x);
+			const spec = this.getTileSpec(this.mouseCoords.x, this.mouseCoords.y);
 			if (
-				!spec ||
-				![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec.tileSpec)
+				spec === null ||
+				![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)
 			) {
 				const characterAt = this.characters.some(
 					(c) =>
@@ -367,19 +416,14 @@ export class MapRenderer {
 	}
 
 	getGraphicId(layer: number, x: number, y: number): number | null {
-		const tile = this.emf.graphicLayers[layer].graphicRows
-			.find((r) => r.y === y)
-			?.tiles.find((t) => t.x === x);
+		const row = this.tileGraphicCache[layer]?.[y];
+		if (!row) return null;
+		return row[x] ?? null;
+	}
 
-		if (!tile) {
-			if (layer === Layer.Ground && this.emf.fillTile) {
-				return this.emf.fillTile;
-			} else {
-				return null;
-			}
-		}
-
-		return tile.graphic;
+	private getTileSpec(x: number, y: number): MapTileSpec | null {
+		const row = this.tileSpecCache[y];
+		return row ? row[x] ?? null : null;
 	}
 
 	getOffset(
