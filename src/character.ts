@@ -1,6 +1,6 @@
 import { CharacterMapInfo, Direction, Gender, SitState } from "eolib";
 import { getBitmapById, GfxType } from "./gfx";
-import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from "./consts";
+import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from "./game-state";
 import { isoToScreen } from "./utils/iso-to-screen";
 import { Vector2 } from "./vector";
 

@@ -1,5 +1,6 @@
 import { ImGui } from "@zhobo63/imgui-ts";
 import mitt, { Emitter } from "mitt";
+import { zoomIn, zoomOut, zoomReset } from "../main";
 
 type MenuEvents = {
     'connect': void;
@@ -44,6 +45,13 @@ export class Menu {
                 if (ImGui.MenuItem('Packet Log')) {
                     this.emitter.emit('packet-log');
                 }
+                ImGui.EndMenu();
+            }
+
+            if (ImGui.BeginMenu("View")) {
+                if (ImGui.MenuItem("Zoom In",  "Ctrl++")) zoomIn();
+                if (ImGui.MenuItem("Zoom Out", "Ctrl+-")) zoomOut();
+                if (ImGui.MenuItem("Reset Zoom"))         zoomReset();
                 ImGui.EndMenu();
             }
 
