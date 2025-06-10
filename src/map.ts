@@ -3,14 +3,12 @@ import { getBitmapById, GfxType } from "./gfx";
 import { isoToScreen } from "./utils/iso-to-screen";
 import {
 	ANIMATION_TICKS,
-	HALF_GAME_HEIGHT,
-	HALF_GAME_WIDTH,
 	HALF_TILE_HEIGHT,
 	HALF_TILE_WIDTH,
 	TILE_HEIGHT,
 	TILE_WIDTH,
-	ZOOM,
 } from "./consts";
+import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from "./game-state"
 import { Vector2 } from "./vector";
 import { CharacterRenderer } from "./character";
 import { screenToIso } from "./utils/screen-to-iso";
@@ -73,6 +71,8 @@ const LAYER_GFX_MAP = [
 	GfxType.MapOverlay,
 ];
 
+type StaticTile = { bmpId: number; layer: number; depth: number };
+
 export class MapRenderer {
 	emf: Emf;
 	animationFrame = 0;
@@ -81,7 +81,7 @@ export class MapRenderer {
 	characters: CharacterRenderer[] = [];
 	mousePosition: Vector2 | undefined;
 	mouseCoords: Vector2 | undefined;
-	private tileGraphicCache: (number | null)[][][] = [];
+	private staticTileGrid: StaticTile[][][] = [];
 	private tileSpecCache: (MapTileSpec | null)[][] = [];
 
 	constructor(emf: Emf, playerId: number) {
@@ -91,60 +91,44 @@ export class MapRenderer {
 	}
 
 	private buildCaches() {
-		const width = this.emf.width;
-		const height = this.emf.height;
+		const w = this.emf.width, h = this.emf.height;
 
-		this.tileGraphicCache = [];
-		for (let l = 0; l < this.emf.graphicLayers.length; ++l) {
-			const layerCache: (number | null)[][] = [];
-			for (let y = 0; y <= height; ++y) {
-				layerCache[y] = new Array<number | null>(width + 1).fill(null);
-			}
+		this.staticTileGrid = Array.from({ length: h + 1 }, () =>
+			Array.from({ length: w + 1 }, () => [] as StaticTile[]));
 
-			for (const row of this.emf.graphicLayers[l].graphicRows) {
-				for (const t of row.tiles) {
-					layerCache[row.y][t.x] = t.graphic;
+		for (let layer = 0; layer <= 8; layer++) {
+			const layerRows = this.emf.graphicLayers[layer].graphicRows;
+			for (let y = 0; y <= h; y++) {
+				const rowTiles = layerRows.find(r => r.y === y)?.tiles ?? [];
+				for (let x = 0; x <= w; x++) {
+					let id = rowTiles.find(t => t.x === x)?.graphic ?? null;
+					if (id === null && layer === Layer.Ground && this.emf.fillTile) id = this.emf.fillTile;
+					if (id !== null) this.staticTileGrid[y][x].push({
+					bmpId: id,
+					layer,
+					depth: layerDepth[layer] + y * RDG + x * layerDepth.length * TDG,
+					});
 				}
 			}
-
-			if (l === Layer.Ground && this.emf.fillTile) {
-				for (let y = 0; y <= height; ++y) {
-					for (let x = 0; x <= width; ++x) {
-						if (layerCache[y][x] === null) {
-							layerCache[y][x] = this.emf.fillTile!;
-						}
-					}
-				}
-			}
-
-			this.tileGraphicCache[l] = layerCache;
 		}
 
-		this.tileSpecCache = [];
-		for (let y = 0; y <= height; ++y) {
-			this.tileSpecCache[y] = new Array<MapTileSpec | null>(width + 1).fill(null);
-		}
-
-		for (const row of this.emf.tileSpecRows) {
-			for (const t of row.tiles) {
-				this.tileSpecCache[row.y][t.x] = t.tileSpec;
-			}
-		}
+		this.tileSpecCache = Array.from({ length: h + 1 }, () =>
+			new Array<MapTileSpec | null>(w + 1).fill(null));
+		for (const row of this.emf.tileSpecRows)
+			for (const t of row.tiles) this.tileSpecCache[row.y][t.x] = t.tileSpec;
 	}
 
-	setMousePosition(position: Vector2) {
-		const scaled = {
-			x: (position.x - HALF_GAME_WIDTH * (1 - ZOOM)) / ZOOM,
-			y: (position.y - HALF_GAME_HEIGHT * (1 - ZOOM)) / ZOOM,
-		};
-		this.mousePosition = scaled;
 
-		const player = this.getPlayerCoords();
+	setMousePosition(position: Vector2) {
+		this.mousePosition = position;
+
+		const player       = this.getPlayerCoords();
 		const playerScreen = isoToScreen(player);
-		const mouseWorldX = scaled.x - HALF_GAME_WIDTH + playerScreen.x;
-		const mouseWorldY =
-			scaled.y - HALF_GAME_HEIGHT + playerScreen.y + HALF_TILE_HEIGHT;
-		this.mouseCoords = screenToIso({ x: mouseWorldX, y: mouseWorldY });
+
+		const mouseWorldX  = position.x - HALF_GAME_WIDTH  + playerScreen.x;
+		const mouseWorldY  = position.y - HALF_GAME_HEIGHT + playerScreen.y + HALF_TILE_HEIGHT;
+
+		this.mouseCoords   = screenToIso({ x: mouseWorldX, y: mouseWorldY });
 
 		if (this.mouseCoords.x < 0 || this.mouseCoords.y < 0) {
 			this.mouseCoords = undefined;
@@ -193,56 +177,36 @@ export class MapRenderer {
 	render(ctx: CanvasRenderingContext2D) {
 		const player = this.getPlayerCoords();
 		const playerScreen = isoToScreen(player);
-		ctx.save();
-		ctx.translate(
-			HALF_GAME_WIDTH * (1 - ZOOM),
-			HALF_GAME_HEIGHT * (1 - ZOOM),
-		);
-		ctx.scale(ZOOM, ZOOM);
-		const diag   = Math.hypot(ctx.canvas.width, ctx.canvas.height);
-		const rangeX = Math.min(
-			this.emf.width,
-			Math.ceil(diag / HALF_TILE_WIDTH) + 2,
-		);
-		const rangeY = Math.min(
-			this.emf.height,
-			Math.ceil(diag / HALF_TILE_HEIGHT) + 2,
-		);
+		const diag = Math.hypot(ctx.canvas.width, ctx.canvas.height);
+		const rangeX = Math.min(this.emf.width, Math.ceil(diag / HALF_TILE_WIDTH) + 2);
+		const rangeY = Math.min(this.emf.height, Math.ceil(diag / HALF_TILE_HEIGHT) + 2);
 		const entities: Entity[] = [];
 
-		for (let y = player.y - rangeY; y <= player.y + rangeY; ++y) {
+		for (let y = player.y - rangeY; y <= player.y + rangeY; y++) {
 			if (y < 0 || y > this.emf.height) continue;
-			for (let x = player.x - rangeX; x <= player.x + rangeX; ++x) {
+			for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
 				if (x < 0 || x > this.emf.width) continue;
 
-				for (const layer of [0, 1, 2, 3, 4, 5, 6, 7, 8]) {
-					const graphicId = this.getGraphicId(layer, x, y);
-					if (graphicId) {
-						entities.push({
-							x,
-							y,
-							layer,
-							type: EntityType.Tile,
-							typeId: graphicId,
-							depth: this.calculateDepth(layer, x, y),
-						});
-					}
-				}
+				entities.push(
+					...this.staticTileGrid[y][x].map(t => ({
+						x, y,
+						type: EntityType.Tile,
+						typeId: t.bmpId,
+						layer: t.layer,
+						depth: t.depth,
+					}))
+				);
 
-				for (const character of this.characters.filter(
-					(c) => c.mapInfo.coords.x === x && c.mapInfo.coords.y === y,
-				)) {
-					if (character.mapInfo.playerId === this.playerId) {
-						playerScreen.x += character.walkOffset.x;
-						playerScreen.y += character.walkOffset.y;
+				for (const c of this.characters.filter(c => c.mapInfo.coords.x === x && c.mapInfo.coords.y === y)) {
+					if (c.mapInfo.playerId === this.playerId) {
+						playerScreen.x += c.walkOffset.x;
+						playerScreen.y += c.walkOffset.y;
 					}
-
 					entities.push({
-						x,
-						y,
-						layer: Layer.Character,
+						x, y,
 						type: EntityType.Character,
-						typeId: character.mapInfo.playerId,
+						typeId: c.mapInfo.playerId,
+						layer: Layer.Character,
 						depth: this.calculateDepth(Layer.Character, x, y),
 					});
 				}
@@ -251,56 +215,31 @@ export class MapRenderer {
 
 		if (this.mouseCoords) {
 			const spec = this.getTileSpec(this.mouseCoords.x, this.mouseCoords.y);
-			if (
-				spec === null ||
-				![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)
-			) {
-				const characterAt = this.characters.some(
-					(c) =>
-						c.mapInfo.coords.x === this.mouseCoords?.x &&
-						c.mapInfo.coords.y === this.mouseCoords?.y,
-				);
-				const typeId = !!spec || characterAt ? 1 : 0;
+			if (spec === null || ![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)) {
+				const charAt = this.characters.some(c =>
+					c.mapInfo.coords.x === this.mouseCoords!.x &&
+					c.mapInfo.coords.y === this.mouseCoords!.y);
 				entities.push({
 					x: this.mouseCoords.x,
 					y: this.mouseCoords.y,
-					layer: Layer.Cursor,
 					type: EntityType.Cursor,
-					typeId,
-					depth: this.calculateDepth(
-						Layer.Cursor,
-						this.mouseCoords.x,
-						this.mouseCoords.y,
-					),
+					typeId: charAt || spec ? 1 : 0,
+					layer: Layer.Cursor,
+					depth: this.calculateDepth(Layer.Cursor, this.mouseCoords.x, this.mouseCoords.y),
 				});
 			}
 		}
 
 		entities.sort((a, b) => a.depth - b.depth);
 
-		for (const entity of entities) {
-			switch (entity.type) {
-				case EntityType.Tile:
-					this.renderTile(entity, playerScreen, ctx);
-					break;
-				case EntityType.Character:
-					this.renderCharacter(entity, playerScreen, ctx);
-					break;
-				case EntityType.Cursor:
-					this.renderCursor(entity, playerScreen, ctx);
-					break;
-			}
+		for (const e of entities) {
+			if (e.type === EntityType.Tile)      this.renderTile(e, playerScreen, ctx);
+			else if (e.type === EntityType.Character) this.renderCharacter(e, playerScreen, ctx);
+			else                                   this.renderCursor(e, playerScreen, ctx);
 		}
 
-		const mainCharacterRenderer = this.characters.find(
-			(c) => c.mapInfo.playerId === this.playerId,
-		);
-		if (mainCharacterRenderer) {
-			ctx.globalAlpha = 0.4;
-			mainCharacterRenderer.render(ctx, playerScreen);
-			ctx.globalAlpha = 1;
-		}
-		ctx.restore();
+		const main = this.characters.find(c => c.mapInfo.playerId === this.playerId);
+		if (main) { ctx.globalAlpha = 0.4; main.render(ctx, playerScreen); ctx.globalAlpha = 1; }
 	}
 
 	renderTile(
@@ -316,18 +255,12 @@ export class MapRenderer {
 		const offset = this.getOffset(entity.layer, bmp.width, bmp.height);
 		const tileScreen = isoToScreen({ x: entity.x, y: entity.y });
 
-		const screenX =
-			tileScreen.x -
-			HALF_TILE_WIDTH -
-			playerScreen.x +
-			HALF_GAME_WIDTH +
-			offset.x;
-		const screenY =
-			tileScreen.y -
-			HALF_TILE_HEIGHT -
-			playerScreen.y +
-			HALF_GAME_HEIGHT +
-			offset.y;
+		const screenX = Math.round(
+			tileScreen.x - HALF_TILE_WIDTH  - playerScreen.x + HALF_GAME_WIDTH  + offset.x
+		);
+		const screenY = Math.round(
+			tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT + offset.y
+		);
 
 		if (entity.layer === Layer.Shadow) {
 			ctx.globalAlpha = 0.2;
@@ -395,11 +328,12 @@ export class MapRenderer {
 
 			const sourceX = entity.typeId * TILE_WIDTH;
 
-			const screenX =
-				tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH;
-
-			const screenY =
-				tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT;
+			const screenX = Math.round(
+				tileScreen.x - HALF_TILE_WIDTH  - playerScreen.x + HALF_GAME_WIDTH
+			);
+			const screenY = Math.round(
+				tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT
+			);
 
 			ctx.drawImage(
 				bmp,
@@ -416,9 +350,10 @@ export class MapRenderer {
 	}
 
 	getGraphicId(layer: number, x: number, y: number): number | null {
-		const row = this.tileGraphicCache[layer]?.[y];
-		if (!row) return null;
-		return row[x] ?? null;
+		const cell = this.staticTileGrid[y]?.[x];
+		if (!cell) return null;
+		const t = cell.find(t => t.layer === layer);
+		return t ? t.bmpId : null;
 	}
 
 	private getTileSpec(x: number, y: number): MapTileSpec | null {

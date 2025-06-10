@@ -7,13 +7,12 @@ body {
 	margin: 0;
 	height: 100vh;
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: center;
 	overflow: hidden;
 }
 
 @media (max-aspect-ratio: 4/3) {
-	body { align-items: flex-start; }
 	#container {
 		height: 100vh;
 		width: calc(100vh * 4 / 3);
@@ -36,6 +35,7 @@ canvas {
 	position: absolute;
 	top: 0;
 	display: block;
+	image-rendering: pixelated;
 }
 
 #game {
@@ -45,9 +45,8 @@ canvas {
 }
 
 @media (min-aspect-ratio: 16/9) {
-	body       { align-items: flex-start; }
 	#container { height: 100vh; }
-	#game      { transform: translate(-50%, 4%); }
+	#game      { transform: translate(-50%); }
 }
 
 #ui {

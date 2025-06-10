@@ -1,3 +1,5 @@
+import { zoomIn, zoomOut } from "./main";
+
 export enum Input {
 	Up,
 	Down,
@@ -47,6 +49,11 @@ function swipedDir(dx: number, dy: number): Input {
 }
 
 window.addEventListener("keydown", (e) => {
+	if ((e.ctrlKey || e.metaKey) && ["=", "+", "-", "_"].includes(e.key)) {
+		e.preventDefault();
+		if (e.key === "=" || e.key === "+") zoomIn();
+		else                                zoomOut();
+	}
 	switch (e.key) {
 		case "w":
 			updateDirectionHeld(Input.Up, true);
@@ -135,9 +142,6 @@ window.addEventListener(
 	() => {
 		if (activeTouchDir !== null) {
 			updateDirectionHeld(activeTouchDir, false);
-		} else if (touchStartX !== null && touchStartY !== null) {
-			updateInputHeld(Input.SitStand, true);
-			setTimeout(() => updateInputHeld(Input.SitStand, false), 150);
 		}
 
 		touchStartX = touchStartY = null;
@@ -146,3 +150,11 @@ window.addEventListener(
 	},
 	{ passive: false },
 );
+
+window.addEventListener("wheel", e => {
+	if (e.ctrlKey || e.metaKey) {
+		e.preventDefault();
+		if (e.deltaY < 0) zoomIn();
+		else if (e.deltaY > 0) zoomOut();
+	}
+}, { passive: false });

@@ -2,7 +2,7 @@ import { BigCoords, CharacterMapInfo, Emf, EoReader, InitInitClientPacket, SitSt
 import { MapRenderer } from "./map";
 import "./style.css";
 import { padWithZeros } from "./utils/pad-with-zeros";
-import { GAME_FPS, GAME_HEIGHT, GAME_WIDTH, MAX_CHALLENGE } from "./consts";
+import { GAME_FPS, MAX_CHALLENGE } from "./consts";
 import { Vector2 } from "./vector";
 import { MovementController } from "./movement-controller";
 import { CharacterRenderer } from "./character";
@@ -14,23 +14,40 @@ import { randomRange } from "./utils/random-range";
 import { PacketBus } from "./bus";
 import { Client } from "./client";
 import { PacketLogModal, PacketSource } from "./ui/packet-log";
-import { setGameSize, setZoom } from "./consts";
+import { GAME_HEIGHT, GAME_WIDTH, setGameSize, setZoom, ZOOM } from "./game-state";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
 const uiCanvas = document.getElementById("ui")   as HTMLCanvasElement;
 if (!canvas) throw new Error("Canvas not found!");
 if (!uiCanvas) throw new Error("Canvas ui not found!");
 
+let userOverride = false;
+export function zoomIn()  { userOverride = true; setZoom(Math.min(4, ZOOM + 1)); resizeCanvases(); }
+export function zoomOut() { userOverride = true; setZoom(Math.max(1, ZOOM - 1)); resizeCanvases(); }
+export function zoomReset(){ userOverride = false; resizeCanvases(); }
 function resizeCanvases() {
-  const rect = document
-      .getElementById("container")!
-      .getBoundingClientRect();
+  const rect = document.getElementById("container")!.getBoundingClientRect();
 
-  canvas.width  = uiCanvas.width  = rect.width;
-  canvas.height = uiCanvas.height = rect.height;
+  if (!userOverride)
+    setZoom(rect.width >= 1280 ? 2 : 1);
 
-  setGameSize(rect.width, rect.height);
-  setZoom(rect.width >= 1280 ? 1.5 : 1);
+  const w = Math.round(rect.width  / ZOOM);
+  const h = Math.round(rect.height / ZOOM);
+
+  canvas.width  = w;
+  canvas.height = h;
+  uiCanvas.width  = w;
+  uiCanvas.height = h;
+
+  canvas.style.width  = `${w * ZOOM}px`;
+  canvas.style.height = `${h * ZOOM}px`;
+
+  uiCanvas.width  = rect.width;
+  uiCanvas.height = rect.height;
+  uiCanvas.style.width  = `${rect.width}px`;
+  uiCanvas.style.height = `${rect.height}px`;
+
+  setGameSize(w, h);
 }
 resizeCanvases();
 window.addEventListener("resize", resizeCanvases);
