@@ -9,10 +9,15 @@ export let HALF_GAME_WIDTH = GAME_WIDTH  >> 1;
 export let HALF_GAME_HEIGHT = GAME_HEIGHT >> 1;
 export const ANIMATION_TICKS = 6;
 export const MAX_CHALLENGE = 11_092_110;
+export let ZOOM = 1;
 
 export function setGameSize(w: number, h: number): void {
     GAME_WIDTH       = w;
     GAME_HEIGHT      = h;
     HALF_GAME_WIDTH  = w >> 1;
     HALF_GAME_HEIGHT = h >> 1;
+}
+
+export function setZoom(z: number): void {
+    ZOOM = z < 1.5 ? 1 : 2;
 }

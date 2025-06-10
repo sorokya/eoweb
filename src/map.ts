@@ -9,6 +9,7 @@ import {
 	HALF_TILE_WIDTH,
 	TILE_HEIGHT,
 	TILE_WIDTH,
+	ZOOM,
 } from "./consts";
 import { Vector2 } from "./vector";
 import { CharacterRenderer } from "./character";
@@ -87,13 +88,17 @@ export class MapRenderer {
 	}
 
 	setMousePosition(position: Vector2) {
-		this.mousePosition = position;
+		const scaled = {
+			x: (position.x - HALF_GAME_WIDTH * (1 - ZOOM)) / ZOOM,
+			y: (position.y - HALF_GAME_HEIGHT * (1 - ZOOM)) / ZOOM,
+		};
+		this.mousePosition = scaled;
 
 		const player = this.getPlayerCoords();
 		const playerScreen = isoToScreen(player);
-		const mouseWorldX = position.x - HALF_GAME_WIDTH + playerScreen.x;
+		const mouseWorldX = scaled.x - HALF_GAME_WIDTH + playerScreen.x;
 		const mouseWorldY =
-			position.y - HALF_GAME_HEIGHT + playerScreen.y + HALF_TILE_HEIGHT;
+			scaled.y - HALF_GAME_HEIGHT + playerScreen.y + HALF_TILE_HEIGHT;
 		this.mouseCoords = screenToIso({ x: mouseWorldX, y: mouseWorldY });
 
 		if (this.mouseCoords.x < 0 || this.mouseCoords.y < 0) {
@@ -143,6 +148,12 @@ export class MapRenderer {
 	render(ctx: CanvasRenderingContext2D) {
 		const player = this.getPlayerCoords();
 		const playerScreen = isoToScreen(player);
+		ctx.save();
+		ctx.translate(
+			HALF_GAME_WIDTH * (1 - ZOOM),
+			HALF_GAME_HEIGHT * (1 - ZOOM),
+		);
+		ctx.scale(ZOOM, ZOOM);
 		const diag   = ctx.canvas.width + ctx.canvas.height;
 		const rangeX = Math.ceil(diag / HALF_TILE_WIDTH)  + 2;
 		const rangeY = Math.ceil(diag / HALF_TILE_HEIGHT) + 2;
@@ -240,6 +251,7 @@ export class MapRenderer {
 			mainCharacterRenderer.render(ctx, playerScreen);
 			ctx.globalAlpha = 1;
 		}
+		ctx.restore();
 	}
 
 	renderTile(

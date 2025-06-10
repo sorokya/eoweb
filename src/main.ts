@@ -14,7 +14,7 @@ import { randomRange } from "./utils/random-range";
 import { PacketBus } from "./bus";
 import { Client } from "./client";
 import { PacketLogModal, PacketSource } from "./ui/packet-log";
-import { setGameSize } from "./consts";
+import { setGameSize, setZoom } from "./consts";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
 const uiCanvas = document.getElementById("ui")   as HTMLCanvasElement;
@@ -22,31 +22,15 @@ if (!canvas) throw new Error("Canvas not found!");
 if (!uiCanvas) throw new Error("Canvas ui not found!");
 
 function resizeCanvases() {
-  const container = document.getElementById("container") as HTMLElement;
+  const rect = document
+      .getElementById("container")!
+      .getBoundingClientRect();
 
-  container.style.width  = "";
-  container.style.height = "";
+  canvas.width  = uiCanvas.width  = rect.width;
+  canvas.height = uiCanvas.height = rect.height;
 
-  const view = container.getBoundingClientRect();
-  const MAX_W = 1280;
-  const MAX_H = 960;
-
-  let w = view.width;
-  let h = view.height;
-
-  if (w > MAX_W || h > MAX_H) {
-    w = Math.min(w, MAX_W);
-    h = Math.min(h, MAX_H);
-    if (w / h > 4 / 3) w = Math.floor(h * 4 / 3);
-    else               h = Math.floor(w * 3 / 4);
-    container.style.width  = `${w}px`;
-    container.style.height = `${h}px`;
-  }
-
-  canvas.width  = uiCanvas.width  = w;
-  canvas.height = uiCanvas.height = h;
-
-  setGameSize(w, h);
+  setGameSize(rect.width, rect.height);
+  setZoom(rect.width >= 1280 ? 1.5 : 1);
 }
 resizeCanvases();
 window.addEventListener("resize", resizeCanvases);
