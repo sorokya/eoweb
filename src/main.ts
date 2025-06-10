@@ -5,7 +5,7 @@ import { padWithZeros } from "./utils/pad-with-zeros";
 import { GAME_FPS, MAX_CHALLENGE } from "./consts";
 import { Vector2 } from "./vector";
 import { MovementController } from "./movement-controller";
-import { CharacterRenderer } from "./character";
+import { CharacterRenderer, CharacterState } from "./character";
 import { ImGui, ImGui_Impl } from "@zhobo63/imgui-ts";
 import { Menu } from "./ui/menu";
 import { ConnectModal } from "./ui/connect";
@@ -15,6 +15,8 @@ import { PacketBus } from "./bus";
 import { Client } from "./client";
 import { PacketLogModal, PacketSource } from "./ui/packet-log";
 import { GAME_HEIGHT, GAME_WIDTH, setGameSize, setZoom, ZOOM } from "./game-state";
+import { PathFinder } from "./path-finder";
+import { onTap } from "./input";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
 const uiCanvas = document.getElementById("ui")   as HTMLCanvasElement;
@@ -82,6 +84,7 @@ const character = new CharacterRenderer(mapInfo);
 const movementController = new MovementController(character);
 
 let map: MapRenderer | undefined;
+let pathFinder: PathFinder | undefined;
 
 const mapId = 5;
 
@@ -93,6 +96,7 @@ fetch(`/maps/${padWithZeros(mapId, 5)}.emf`)
 		map = new MapRenderer(emf, 1);
 		map.addCharacter(character);
 		movementController.setMapDimensions(emf.width, emf.height);
+		pathFinder = new PathFinder(emf.width, emf.height, (x, y) => !map!.isWalkable(x, y));
 	});
 
 let lastTime: DOMHighResTimeStamp | undefined;
@@ -239,6 +243,27 @@ window.onmousemove = (e) => {
 		),
 	};
 };
+
+onTap(({ x, y }) => handleTap(x, y));
+
+function handleTap(clientX: number, clientY: number) {
+	if (!map || !pathFinder) return;
+	if (character.state === CharacterState.SitGround) return;
+	const rect = canvas.getBoundingClientRect();
+	const scaleX = canvas.width / rect.width;
+	const scaleY = canvas.height / rect.height;
+	const pos = {
+		x: Math.min(Math.max(Math.floor((clientX - rect.left) * scaleX), 0), canvas.width),
+		y: Math.min(Math.max(Math.floor((clientY - rect.top) * scaleY), 0), canvas.height),
+	};
+	map.setMousePosition(pos);
+	if (!map.mouseCoords || !map.isWalkable(map.mouseCoords.x, map.mouseCoords.y)) return;
+	const path = pathFinder.find(
+		{ x: character.mapInfo.coords.x, y: character.mapInfo.coords.y },
+		{ x: map.mouseCoords.x, y: map.mouseCoords.y }
+	);
+	movementController.setPath(path);
+}
 
 window.addEventListener('DOMContentLoaded', async () => {
 	await ImGui.default();
