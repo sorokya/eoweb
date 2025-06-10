@@ -147,6 +147,16 @@ export class MapRenderer {
 		return this.emf.height;
 	}
 
+	isWalkable(x: number, y: number): boolean {
+		if (x < 0 || y < 0 || x > this.emf.width || y > this.emf.height) return false;
+		const spec = this.getTileSpec(x, y);
+		if (spec !== null && [MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)) {
+			return false;
+		}
+		const charAt = this.characters.some(c => c.mapInfo.coords.x === x && c.mapInfo.coords.y === y);
+		return !charAt;
+	}
+
 	tick() {
 		this.animationTicks -= 1;
 		if (this.animationTicks <= 0) {

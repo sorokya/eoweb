@@ -22,6 +22,14 @@ function inputToDirection(input: Input): Direction {
 	}
 }
 
+function coordsToDirection(from: { x: number; y: number }, to: { x: number; y: number }): Direction | null {
+	if (to.x === from.x && to.y === from.y - 1) return Direction.Up;
+	if (to.x === from.x && to.y === from.y + 1) return Direction.Down;
+	if (to.x === from.x - 1 && to.y === from.y) return Direction.Left;
+	if (to.x === from.x + 1 && to.y === from.y) return Direction.Right;
+	return null;
+}
+
 export class MovementController {
 	character: CharacterRenderer;
 	mapWidth = 0;
@@ -29,9 +37,14 @@ export class MovementController {
 	walkTicks = WALK_TICKS;
 	faceTicks = FACE_TICKS;
 	sitTicks = SIT_TICKS;
+	path: { x: number; y: number }[] = [];
 
 	constructor(character: CharacterRenderer) {
 		this.character = character;
+	}
+
+	setPath(path: { x: number; y: number }[]) {
+		this.path = path;
 	}
 
 	setMapDimensions(width: number, height: number) {
@@ -41,10 +54,15 @@ export class MovementController {
 
 	tick() {
 		this.faceTicks = Math.max(this.faceTicks - 1, 0);
+        const latestInput = getLatestDirectionHeld();
 
-		const latestInput = getLatestDirectionHeld();
-		const directionHeld =
-			latestInput !== null ? inputToDirection(latestInput) : null;
+		if (latestInput !== null && isInputHeld(latestInput)) {
+        	this.path = [];
+        }
+
+		const nextStep = this.path[0];
+		const pathDir = nextStep ? coordsToDirection(this.character.mapInfo.coords, nextStep) : null;
+		const directionHeld = pathDir !== null ? pathDir : latestInput !== null ? inputToDirection(latestInput) : null;
 
 		if (
 			this.character.state === CharacterState.Standing &&
@@ -119,6 +137,8 @@ export class MovementController {
 				this.walkTicks = WALK_TICKS;
 				this.sitTicks = SIT_TICKS;
 
+				if (this.path.length > 0) this.path.shift();
+
 				if (
 					directionHeld !== null &&
 					this.character.mapInfo.direction !== directionHeld
@@ -126,8 +146,7 @@ export class MovementController {
 					this.character.mapInfo.direction = directionHeld;
 				}
 
-				// Decide whether to walk again or stand
-				const heldNow = isInputHeld(latestInput ?? -1);
+				const heldNow = this.path.length > 0 || isInputHeld(latestInput ?? -1);
 				if (!heldNow) {
 					this.character.setState(CharacterState.Standing);
 				}

@@ -1,4 +1,5 @@
 import { zoomIn, zoomOut } from "./main";
+import mitt, { Emitter } from "mitt";
 
 export enum Input {
 	Up,
@@ -12,12 +13,26 @@ export enum Input {
 let held: boolean[] = [];
 let lastDirectionHeld: Input[] = [];
 
+type InputEvents = {
+    tap: { x: number; y: number };
+};
+
+const emitter: Emitter<InputEvents> = mitt<InputEvents>();
+
 let touchStartX: number | null = null;
 let touchStartY: number | null = null;
 let touchId: number | null = null;
 let activeTouchDir: Input | null = null;
 
 const DRAG_THRESHOLD = 30;
+
+export function onTap(handler: (pos: { x: number; y: number }) => void) {
+    emitter.on('tap', handler);
+}
+
+export function offTap(handler: (pos: { x: number; y: number }) => void) {
+    emitter.off('tap', handler);
+}
 
 export function isInputHeld(input: Input): boolean {
 	return held[input] || false;
@@ -139,9 +154,19 @@ window.addEventListener(
 
 window.addEventListener(
 	"touchend",
-	() => {
+	(e) => {
 		if (activeTouchDir !== null) {
 			updateDirectionHeld(activeTouchDir, false);
+		}
+
+		const t = Array.from(e.changedTouches).find(c => c.identifier === touchId);
+		if (t && touchStartX !== null && touchStartY !== null) {
+			const dx = t.clientX - touchStartX;
+			const dy = t.clientY - touchStartY;
+			const dist2 = dx * dx + dy * dy;
+			if (dist2 < DRAG_THRESHOLD * DRAG_THRESHOLD) {
+				emitter.emit('tap', { x: t.clientX, y: t.clientY });
+			}
 		}
 
 		touchStartX = touchStartY = null;
@@ -158,3 +183,7 @@ window.addEventListener("wheel", e => {
 		else if (e.deltaY > 0) zoomOut();
 	}
 }, { passive: false });
+
+window.addEventListener('click', (e) => {
+    emitter.emit('tap', { x: e.clientX, y: e.clientY });
+});
