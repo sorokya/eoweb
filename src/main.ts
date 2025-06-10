@@ -12,7 +12,7 @@ import './style.css';
 import { ImGui, ImGui_Impl } from '@zhobo63/imgui-ts';
 import { PacketBus } from './bus';
 import { CharacterRenderer } from './character';
-import { Client } from './client';
+import { Client, GameState } from './client';
 import { GAME_FPS, MAX_CHALLENGE } from './consts';
 import {
   GAME_HEIGHT,
@@ -22,8 +22,10 @@ import {
   setZoom,
 } from './game-state';
 import { MovementController } from './movement-controller';
+import { CharactersModal } from './ui/characters';
 import { ConnectModal } from './ui/connect';
 import { ErrorModal } from './ui/error';
+import { LoginModal } from './ui/login';
 import { Menu } from './ui/menu';
 import { PacketLogModal, PacketSource } from './ui/packet-log';
 import { padWithZeros } from './utils/pad-with-zeros';
@@ -83,15 +85,6 @@ if (!ctx) {
 
 ctx.imageSmoothingEnabled = false;
 
-enum GameState {
-  Initial = 0,
-  Login = 1,
-  LoggedIn = 2,
-  InGame = 3,
-}
-
-const state: GameState = GameState.InGame;
-
 const mapInfo = new CharacterMapInfo();
 mapInfo.playerId = 1;
 mapInfo.coords = new BigCoords();
@@ -137,9 +130,11 @@ const render = (now: DOMHighResTimeStamp) => {
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-  switch (state) {
+  switch (client.state) {
     // @ts-ignore: Error should go away when state can change
     case GameState.Initial:
+    case GameState.Connected:
+    case GameState.LoggedIn:
     case GameState.InGame:
       renderInitialState(now, ctx);
       break;
@@ -150,10 +145,18 @@ const render = (now: DOMHighResTimeStamp) => {
 
 const connectModal = new ConnectModal();
 const errorModal = new ErrorModal();
+const loginModal = new LoginModal();
+const charactersModal = new CharactersModal();
 const client = new Client();
 
 client.on('error', ({ title, message }) => {
   errorModal.open(message, title);
+});
+
+client.on('login', (characters) => {
+  loginModal.close();
+  charactersModal.setCharacters(characters);
+  charactersModal.open();
 });
 
 const initializeSocket = () => {
@@ -209,6 +212,17 @@ menu.on('connect', () => {
   connectModal.open();
 });
 
+menu.on('login', () => {
+  if (client.state !== GameState.Connected) {
+    return;
+  }
+  loginModal.open();
+});
+
+loginModal.on('login', ({ username, password }) => {
+  client.login(username, password);
+});
+
 const packetLogModal = new PacketLogModal();
 menu.on('packet-log', () => {
   packetLogModal.open();
@@ -222,6 +236,8 @@ function renderUI(now: number) {
   connectModal.render();
   packetLogModal.render();
   errorModal.render();
+  loginModal.render();
+  charactersModal.render();
 
   ImGui.EndFrame();
   ImGui.Render();
@@ -247,7 +263,7 @@ let mousePosition: Vector2 | undefined;
 setInterval(() => {
   if (map) {
     map.tick();
-    if (state === GameState.InGame && mousePosition) {
+    if (client.state === GameState.InGame && mousePosition) {
       map.setMousePosition(mousePosition);
     }
   }

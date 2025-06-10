@@ -78,16 +78,17 @@ export class PacketBus {
   }
 
   private handlePacket(buf: Uint8Array) {
-    if (buf[2] !== 0xff && buf[3] !== 0xff) {
-      deinterleave(buf);
-      flipMsb(buf);
-      swapMultiples(buf, this.decodeMultiple);
+    const data = buf.slice(2);
+    if (data[0] !== 0xff && data[1] !== 0xff) {
+      deinterleave(data);
+      flipMsb(data);
+      swapMultiples(data, this.decodeMultiple);
     }
 
-    const action = buf[2];
-    const family = buf[3];
+    const action = data[0];
+    const family = data[1];
 
-    const packetBuf = buf.slice(4);
+    const packetBuf = data.slice(2);
 
     this.emitter.emit('receive', {
       action,

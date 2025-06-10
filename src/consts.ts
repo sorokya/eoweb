@@ -5,3 +5,5 @@ export const HALF_TILE_WIDTH = TILE_WIDTH >> 1;
 export const HALF_TILE_HEIGHT = TILE_HEIGHT >> 1;
 export const ANIMATION_TICKS = 6;
 export const MAX_CHALLENGE = 11_092_110;
+export const MAX_USERNAME_LENGTH = 16;
+export const MAX_PASSWORD_LENGTH = 12;

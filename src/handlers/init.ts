@@ -6,7 +6,7 @@ import {
   InitReply,
   InitSequenceStart,
 } from 'eolib';
-import type { Client } from '../client';
+import { type Client, GameState } from '../client';
 
 export function handleInitInit(client: Client, reader: EoReader) {
   const packet = InitInitServerPacket.deserialize(reader);
@@ -48,6 +48,7 @@ function handleInitOk(
   packet.serverEncryptionMultiple = data.serverEncryptionMultiple;
   packet.playerId = data.playerId;
   bus.send(packet);
+  client.state = GameState.Connected;
 }
 
 function handleInitBanned(
