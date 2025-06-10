@@ -31,6 +31,13 @@ export class CharacterRenderer {
 	constructor(mapInfo: CharacterMapInfo) {
 		this.mapInfo = mapInfo;
 		this.state = mapInfo.sitState === SitState.Floor ? CharacterState.SitGround : CharacterState.Standing;
+		this.preloadSprites();
+	}
+
+	preloadSprites() {
+		getBitmapById(GfxType.SkinSprites, 1); // standing
+		getBitmapById(GfxType.SkinSprites, 2); // walking
+		getBitmapById(GfxType.SkinSprites, 6); // sitting on ground
 	}
 
 	setState(state: CharacterState) {
