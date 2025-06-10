@@ -11,7 +11,6 @@ import { MapRenderer } from './map';
 import './style.css';
 import { ImGui, ImGui_Impl } from '@zhobo63/imgui-ts';
 import { PacketBus } from './bus';
-import { CharacterRenderer } from './character';
 import { Client, GameState } from './client';
 import { GAME_FPS, MAX_CHALLENGE } from './consts';
 import {
@@ -22,6 +21,7 @@ import {
   setZoom,
 } from './game-state';
 import { MovementController } from './movement-controller';
+import { CharacterRenderer } from './rendering/character';
 import { CharactersModal } from './ui/characters';
 import { ConnectModal } from './ui/connect';
 import { ErrorModal } from './ui/error';
@@ -221,6 +221,10 @@ menu.on('login', () => {
 
 loginModal.on('login', ({ username, password }) => {
   client.login(username, password);
+});
+
+charactersModal.on('select-character', (characterId) => {
+  client.selectCharacter(characterId);
 });
 
 const packetLogModal = new PacketLogModal();
