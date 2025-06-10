@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "typescript": "~5.8.3",
-    "vite": "^6.3.1"
+    "vite": "^6.3.5"
   },
   "dependencies": {
     "@zhobo63/imgui-ts": "^0.1.46",
