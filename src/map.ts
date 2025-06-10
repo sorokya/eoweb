@@ -143,9 +143,9 @@ export class MapRenderer {
 	render(ctx: CanvasRenderingContext2D) {
 		const player = this.getPlayerCoords();
 		const playerScreen = isoToScreen(player);
-		const rangeX = 30;
-		const rangeY = 30;
-
+		const diag   = ctx.canvas.width + ctx.canvas.height;
+		const rangeX = Math.ceil(diag / HALF_TILE_WIDTH)  + 2;
+		const rangeY = Math.ceil(diag / HALF_TILE_HEIGHT) + 2;
 		const entities: Entity[] = [];
 
 		for (let y = player.y - rangeY; y <= player.y + rangeY; ++y) {

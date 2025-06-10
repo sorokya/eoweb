@@ -14,14 +14,42 @@ import { randomRange } from "./utils/random-range";
 import { PacketBus } from "./bus";
 import { Client } from "./client";
 import { PacketLogModal, PacketSource } from "./ui/packet-log";
+import { setGameSize } from "./consts";
 
-const canvas = document.getElementById("game");
-if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
-	throw new Error("Canvas not found!");
+const canvas = document.getElementById("game") as HTMLCanvasElement;
+const uiCanvas = document.getElementById("ui")   as HTMLCanvasElement;
+if (!canvas) throw new Error("Canvas not found!");
+if (!uiCanvas) throw new Error("Canvas ui not found!");
+
+function resizeCanvases() {
+  const container = document.getElementById("container") as HTMLElement;
+
+  container.style.width  = "";
+  container.style.height = "";
+
+  const view = container.getBoundingClientRect();
+  const MAX_W = 1280;
+  const MAX_H = 960;
+
+  let w = view.width;
+  let h = view.height;
+
+  if (w > MAX_W || h > MAX_H) {
+    w = Math.min(w, MAX_W);
+    h = Math.min(h, MAX_H);
+    if (w / h > 4 / 3) w = Math.floor(h * 4 / 3);
+    else               h = Math.floor(w * 3 / 4);
+    container.style.width  = `${w}px`;
+    container.style.height = `${h}px`;
+  }
+
+  canvas.width  = uiCanvas.width  = w;
+  canvas.height = uiCanvas.height = h;
+
+  setGameSize(w, h);
 }
-
-canvas.width = GAME_WIDTH;
-canvas.height = GAME_HEIGHT;
+resizeCanvases();
+window.addEventListener("resize", resizeCanvases);
 
 const ctx = canvas.getContext("2d");
 if (!ctx) {
@@ -220,11 +248,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 	ImGui.StyleColorsDark();
 	io.Fonts.AddFontDefault();
 
-	const uiCanvas: HTMLCanvasElement = document.getElementById("ui") as HTMLCanvasElement;
 	const uiCtx = uiCanvas.getContext('webgl2', {
 		alpha: true,
 		premultipliedAlpha: false,
-	});
+	})!;
 	ImGui_Impl.Init(uiCtx);
 
 	requestAnimationFrame(render);
