@@ -31,6 +31,7 @@ import { PacketLogModal, PacketSource } from './ui/packet-log';
 import { padWithZeros } from './utils/pad-with-zeros';
 import { randomRange } from './utils/random-range';
 import type { Vector2 } from './vector';
+import { ChatModal, ChatTab } from './ui/chat';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const uiCanvas = document.getElementById('ui') as HTMLCanvasElement;
@@ -147,9 +148,11 @@ const connectModal = new ConnectModal();
 const errorModal = new ErrorModal();
 const loginModal = new LoginModal();
 const charactersModal = new CharactersModal();
+const chatModal = new ChatModal();
 const client = new Client();
 
 client.on('error', ({ title, message }) => {
+  chatModal.addMessage(ChatTab.Local, `${title} - ${message}`);
   errorModal.open(message, title);
 });
 
@@ -157,6 +160,32 @@ client.on('login', (characters) => {
   loginModal.close();
   charactersModal.setCharacters(characters);
   charactersModal.open();
+});
+
+client.on('selectCharacter', () => {
+  chatModal.addMessage(
+    ChatTab.Local,
+    `System: selected character: ${client.character.name}`,
+  );
+});
+
+client.on('enterGame', ({ news }) => {
+  news.forEach((entry, index) => {
+    if (!entry) {
+      return;
+    }
+
+    if (index === 0) {
+      chatModal.addMessage(ChatTab.Local, entry);
+    } else {
+      chatModal.addMessage(ChatTab.Local, `News: ${entry}`);
+    }
+  });
+
+  chatModal.addMessage(
+    ChatTab.Local,
+    `System: Nearby - Characters: ${client.nearby.characters.length}, NPCs: ${client.nearby.npcs.length}, Items: ${client.nearby.items.length}`,
+  );
 });
 
 const initializeSocket = () => {
@@ -176,6 +205,7 @@ const menu = new Menu();
 connectModal.on('connect', (host) => {
   const socket = new WebSocket(host);
   socket.addEventListener('open', () => {
+	chatModal.addMessage(ChatTab.Local, 'System: web socket connection opened');
     const bus = new PacketBus(socket);
     bus.on('receive', (data) => {
       packetLogModal.addEntry({
@@ -201,6 +231,7 @@ connectModal.on('connect', (host) => {
       'Lost connection',
     );
     client.bus = null;
+	chatModal.addMessage(ChatTab.Local, 'System: web socket connection closed');
   });
 
   socket.addEventListener('error', (e) => {
@@ -242,6 +273,7 @@ function renderUI(now: number) {
   errorModal.render();
   loginModal.render();
   charactersModal.render();
+  chatModal.render();
 
   ImGui.EndFrame();
   ImGui.Render();

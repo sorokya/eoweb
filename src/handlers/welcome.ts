@@ -75,6 +75,7 @@ function handleSelectCharacter(
   packet.characterId = client.character.id;
   packet.sessionId = client.sessionId;
   client.bus.send(packet);
+  client.emit('selectCharacter', undefined);
 }
 
 function handleEnterGame(
@@ -87,4 +88,5 @@ function handleEnterGame(
   client.character.weight = data.weight;
   client.nearby = data.nearby;
   client.state = GameState.InGame;
+  client.emit('enterGame', { news: data.news });
 }

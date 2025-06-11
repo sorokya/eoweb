@@ -18,7 +18,8 @@ import { handleWelcomeReply } from './handlers/welcome';
 type ClientEvents = {
   error: { title: string; message: string };
   login: CharacterSelectionListEntry[];
-  selectCharacter: { news: string[] };
+  selectCharacter: undefined;
+  enterGame: { news: string[] };
 };
 
 export enum GameState {
