@@ -97,13 +97,11 @@ mapInfo.sitState = SitState.Stand;
 
 const character = new CharacterRenderer(mapInfo);
 
-const movementController = new MovementController(character);
+let movementController = new MovementController(character);
 
 let map: MapRenderer | undefined;
 
-const mapId = 5;
-
-fetch(`/maps/${padWithZeros(mapId, 5)}.emf`)
+fetch(`/maps/${padWithZeros(5, 5)}.emf`)
   .then((res) => res.arrayBuffer())
   .then((buf) => {
     const reader = new EoReader(new Uint8Array(buf));
@@ -174,6 +172,16 @@ client.on('selectCharacter', () => {
 });
 
 client.on('enterGame', ({ news }) => {
+  map = new MapRenderer(client.map, client.playerId);
+  for (const character of client.nearby.characters) {
+    const renderer = new CharacterRenderer(character);
+    map.addCharacter(renderer);
+    if (character.playerId === client.playerId) {
+      movementController = new MovementController(renderer);
+      movementController.setMapDimensions(client.map.width, client.map.height);
+    }
+  }
+
   news.forEach((entry, index) => {
     if (!entry) {
       return;
@@ -307,7 +315,9 @@ setInterval(() => {
       map.setMousePosition(mousePosition);
     }
   }
-  movementController.tick();
+  if (client.state === GameState.InGame) {
+    movementController.tick();
+  }
 }, 120);
 
 window.onmousemove = (e) => {
