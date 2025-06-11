@@ -1,10 +1,18 @@
 import {
   type CharacterSelectionListEntry,
+  type Ecf,
+  type Eif,
+  type Emf,
+  type Enf,
+  type Esf,
+  FileType,
   LoginRequestClientPacket,
   NearbyInfo,
   PacketAction,
   PacketFamily,
   type ServerSettings,
+  WelcomeAgreeClientPacket,
+  WelcomeMsgClientPacket,
   WelcomeRequestClientPacket,
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
@@ -14,9 +22,11 @@ import { handleConnectionPlayer } from './handlers/connection';
 import { handleInitInit } from './handlers/init';
 import { handleLoginReply } from './handlers/login';
 import { handleWelcomeReply } from './handlers/welcome';
+import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
 
 type ClientEvents = {
   error: { title: string; message: string };
+  debug: string;
   login: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
@@ -41,9 +51,31 @@ export class Client {
   serverSettings: ServerSettings | null = null;
   motd = '';
   nearby = new NearbyInfo();
+  eif: Eif | null = null;
+  ecf: Ecf | null = null;
+  enf: Enf | null = null;
+  esf: Esf | null = null;
+  map: Emf | null = null;
+  downloadQueue: { type: FileType; id: number }[] = [];
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
+    getEif().then((eif) => {
+      this.eif = eif;
+    });
+    getEcf().then((ecf) => {
+      this.ecf = ecf;
+    });
+    getEnf().then((enf) => {
+      this.enf = enf;
+    });
+    getEsf().then((esf) => {
+      this.esf = esf;
+    });
+  }
+
+  async loadMap(id: number): Promise<void> {
+    this.map = await getEmf(id);
   }
 
   showError(message: string, title = '') {
@@ -104,6 +136,49 @@ export class Client {
   selectCharacter(characterId: number) {
     const packet = new WelcomeRequestClientPacket();
     packet.characterId = characterId;
+    this.bus.send(packet);
+  }
+
+  requestFile(fileType: FileType, id: number) {
+    const packet = new WelcomeAgreeClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.fileType = fileType;
+
+    switch (fileType) {
+      case FileType.Ecf:
+        packet.fileTypeData = new WelcomeAgreeClientPacket.FileTypeDataEcf();
+        packet.fileTypeData.fileId = id;
+        this.emit('debug', 'Loading classes..');
+        break;
+      case FileType.Eif:
+        packet.fileTypeData = new WelcomeAgreeClientPacket.FileTypeDataEif();
+        packet.fileTypeData.fileId = id;
+        this.emit('debug', 'Loading items..');
+        break;
+      case FileType.Enf:
+        packet.fileTypeData = new WelcomeAgreeClientPacket.FileTypeDataEnf();
+        packet.fileTypeData.fileId = id;
+        this.emit('debug', 'Loading NPCs..');
+        break;
+      case FileType.Esf:
+        packet.fileTypeData = new WelcomeAgreeClientPacket.FileTypeDataEsf();
+        packet.fileTypeData.fileId = id;
+        this.emit('debug', 'Loading spells..');
+        break;
+      case FileType.Emf:
+        packet.fileTypeData = new WelcomeAgreeClientPacket.FileTypeDataEmf();
+        packet.fileTypeData.fileId = id;
+        this.emit('debug', 'Loading map..');
+        break;
+    }
+
+    this.bus.send(packet);
+  }
+
+  enterGame() {
+    const packet = new WelcomeMsgClientPacket();
+    packet.characterId = this.character.id;
+    packet.sessionId = this.sessionId;
     this.bus.send(packet);
   }
 }

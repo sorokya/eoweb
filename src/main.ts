@@ -156,6 +156,10 @@ client.on('error', ({ title, message }) => {
   errorModal.open(message, title);
 });
 
+client.on('debug', (message) => {
+  chatModal.addMessage(ChatTab.Local, `System: ${message}`);
+});
+
 client.on('login', (characters) => {
   loginModal.close();
   charactersModal.setCharacters(characters);

@@ -1,5 +1,7 @@
 import {
   type EoReader,
+  FileType,
+  WelcomeAgreeClientPacket,
   WelcomeCode,
   WelcomeMsgClientPacket,
   WelcomeReplyServerPacket,
@@ -70,12 +72,58 @@ function handleSelectCharacter(
   client.character.equipment.ring = data.equipment.ring;
   client.character.equipment.armlet = data.equipment.armlet;
   client.character.equipment.bracer = data.equipment.bracer;
-
-  const packet = new WelcomeMsgClientPacket();
-  packet.characterId = client.character.id;
-  packet.sessionId = client.sessionId;
-  client.bus.send(packet);
   client.emit('selectCharacter', undefined);
+
+  if (
+    !client.ecf ||
+    client.ecf.rid[0] !== data.ecfRid[0] ||
+    client.ecf.rid[1] !== data.ecfRid[1] ||
+    client.ecf.totalClassesCount !== data.ecfLength
+  ) {
+    client.downloadQueue.push({ type: FileType.Ecf, id: 1 });
+  }
+  if (
+    !client.eif ||
+    client.eif.rid[0] !== data.eifRid[0] ||
+    client.eif.rid[1] !== data.eifRid[1] ||
+    client.eif.totalItemsCount !== data.eifLength
+  ) {
+    client.downloadQueue.push({ type: FileType.Eif, id: 1 });
+  }
+  if (
+    !client.enf ||
+    client.enf.rid[0] !== data.enfRid[0] ||
+    client.enf.rid[1] !== data.enfRid[1] ||
+    client.enf.totalNpcsCount !== data.enfLength
+  ) {
+    client.downloadQueue.push({ type: FileType.Enf, id: 1 });
+  }
+  if (
+    !client.esf ||
+    client.esf.rid[0] !== data.esfRid[0] ||
+    client.esf.rid[1] !== data.esfRid[1] ||
+    client.esf.totalSkillsCount !== data.esfLength
+  ) {
+    client.downloadQueue.push({ type: FileType.Esf, id: 1 });
+  }
+
+  client.loadMap(data.mapId).then(() => {
+    if (
+      !client.map ||
+      client.map.rid[0] !== data.mapRid[0] ||
+      client.map.rid[1] !== data.mapRid[1] ||
+      client.map.byteSize !== data.mapFileSize
+    ) {
+      client.downloadQueue.push({ type: FileType.Emf, id: data.mapId });
+    }
+
+    if (client.downloadQueue.length > 0) {
+      const download = client.downloadQueue.pop();
+      client.requestFile(download.type, download.id);
+    } else {
+      client.enterGame();
+    }
+  });
 }
 
 function handleEnterGame(
