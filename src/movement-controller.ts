@@ -1,7 +1,7 @@
 import { Direction } from 'eolib';
-import { type CharacterRenderer, CharacterState } from './character';
 import { HALF_TILE_HEIGHT, HALF_TILE_WIDTH } from './consts';
 import { Input, getLatestDirectionHeld, isInputHeld } from './input';
+import { type CharacterRenderer, CharacterState } from './rendering/character';
 
 const WALK_TICKS = 4;
 const FACE_TICKS = 1;

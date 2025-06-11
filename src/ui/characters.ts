@@ -61,8 +61,7 @@ export class CharactersModal {
 
       const buttonId = `Login##${char.id}`;
       if (ImGui.Button(buttonId)) {
-        console.log(`Logging in as ${char.name}`);
-        // Trigger login here
+        this.emitter.emit('select-character', char.id);
       }
 
       ImGui.SameLine();

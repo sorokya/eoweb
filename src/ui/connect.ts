@@ -11,7 +11,7 @@ export class ConnectModal {
   private emitter: Emitter<ConnectModalEvents>;
   private host: ImGui.ImStringBuffer = new ImGui.ImStringBuffer(
     256,
-    'ws://localhost:8077',
+    'wss://ws.reoserv.net', // 'ws://localhost:8077',
   );
   private isOpen: ImScalar<boolean> = [false];
 

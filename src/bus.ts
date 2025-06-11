@@ -40,7 +40,6 @@ export class PacketBus {
   constructor(socket: WebSocket) {
     this.socket = socket;
     this.sequencer = new PacketSequencer(SequenceStart.zero());
-    this.sequencer.nextSequence();
     this.socket.addEventListener('message', (e) => {
       const promise = e.data.arrayBuffer();
       promise
@@ -128,7 +127,7 @@ export class PacketBus {
     });
 
     if (packet.action !== 0xff && packet.family !== 0xff) {
-      data.unshift(sequence);
+      data.unshift(encodeNumber(sequence)[0]);
     }
 
     data.unshift(packet.family);

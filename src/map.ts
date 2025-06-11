@@ -1,5 +1,4 @@
 import { type Emf, MapTileSpec } from 'eolib';
-import type { CharacterRenderer } from './character';
 import {
   ANIMATION_TICKS,
   HALF_TILE_HEIGHT,
@@ -9,6 +8,7 @@ import {
 } from './consts';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
+import type { CharacterRenderer } from './rendering/character';
 import { isoToScreen } from './utils/iso-to-screen';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
