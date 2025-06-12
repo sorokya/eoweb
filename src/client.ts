@@ -29,6 +29,7 @@ import { registerFaceHandlers } from './handlers/face';
 import { registerWelcomeHandlers } from './handlers/welcome';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerWalkHandlers } from './handlers/walk';
+import { registerSitHandlers } from './handlers/sit';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -118,6 +119,7 @@ export class Client {
     registerAvatarHandlers(this);
     registerFaceHandlers(this);
     registerWalkHandlers(this);
+    registerSitHandlers(this);
   }
 
   login(username: string, password: string) {

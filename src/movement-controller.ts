@@ -13,6 +13,8 @@ import mitt, { type Emitter } from 'mitt';
 type MovementEvents = {
   face: Direction;
   walk: { direction: Direction; coords: Coords; timestamp: number };
+  sit: undefined;
+  stand: undefined;
 };
 
 function inputToDirection(input: Input): Direction {
@@ -182,9 +184,9 @@ export class MovementController {
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
     if (this.sitTicks === 0 && isInputHeld(Input.SitStand)) {
       if (this.character.state === CharacterState.Standing) {
-        this.character.setState(CharacterState.SitGround);
+        this.emitter.emit('sit');
       } else {
-        this.character.setState(CharacterState.Standing);
+        this.emitter.emit('stand');
       }
       this.sitTicks = SIT_TICKS;
     }

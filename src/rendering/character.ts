@@ -98,6 +98,20 @@ export class CharacterRenderer {
         this.setState(CharacterState.Standing);
       }
     }
+
+    if (
+      this.state === CharacterState.Standing &&
+      this.mapInfo.sitState === SitState.Floor
+    ) {
+      this.setState(CharacterState.SitGround);
+    }
+
+    if (
+      this.state === CharacterState.SitGround &&
+      this.mapInfo.sitState === SitState.Stand
+    ) {
+      this.setState(CharacterState.Standing);
+    }
   }
 
   render(ctx: CanvasRenderingContext2D, playerScreen: Vector2) {

@@ -1,11 +1,14 @@
 import {
   BigCoords,
   CharacterMapInfo,
+  Coords,
   Direction,
   Emf,
   EoReader,
   FacePlayerClientPacket,
   InitInitClientPacket,
+  SitAction,
+  SitRequestClientPacket,
   SitState,
   Version,
   WalkAction,
@@ -196,6 +199,22 @@ client.on('enterGame', ({ news }) => {
         packet.walkAction.direction = direction;
         packet.walkAction.coords = coords;
         packet.walkAction.timestamp = timestamp;
+        client.bus.send(packet);
+      });
+
+      movementController.on('sit', () => {
+        const packet = new SitRequestClientPacket();
+        packet.sitAction = SitAction.Sit;
+        packet.sitActionData = new SitRequestClientPacket.SitActionDataSit();
+        packet.sitActionData.cursorCoords = new Coords();
+        packet.sitActionData.cursorCoords.x = 0;
+        packet.sitActionData.cursorCoords.y = 0;
+        client.bus.send(packet);
+      });
+
+      movementController.on('stand', () => {
+        const packet = new SitRequestClientPacket();
+        packet.sitAction = SitAction.Stand;
         client.bus.send(packet);
       });
     }
