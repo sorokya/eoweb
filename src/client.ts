@@ -1,5 +1,7 @@
 import {
   type CharacterSelectionListEntry,
+  type Coords,
+  type Direction,
   type Ecf,
   type Eif,
   type Emf,
@@ -26,6 +28,7 @@ import { registerLoginHandlers } from './handlers/login';
 import { registerFaceHandlers } from './handlers/face';
 import { registerWelcomeHandlers } from './handlers/welcome';
 import { registerPlayersHandlers } from './handlers/players';
+import { registerWalkHandlers } from './handlers/walk';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -33,6 +36,7 @@ type ClientEvents = {
   login: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
+  playerWalk: { playerId: number; direction: Direction; coords: Coords };
 };
 
 export enum GameState {
@@ -113,6 +117,7 @@ export class Client {
     registerPlayersHandlers(this);
     registerAvatarHandlers(this);
     registerFaceHandlers(this);
+    registerWalkHandlers(this);
   }
 
   login(username: string, password: string) {

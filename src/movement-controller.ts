@@ -1,13 +1,18 @@
 import { Direction } from 'eolib';
-import { HALF_TILE_HEIGHT, HALF_TILE_WIDTH } from './consts';
 import { Input, getLatestDirectionHeld, isInputHeld } from './input';
 import { type CharacterRenderer, CharacterState } from './rendering/character';
+import {
+  FACE_TICKS,
+  SIT_TICKS,
+  WALK_HEIGHT_FACTOR,
+  WALK_TICKS,
+  WALK_WIDTH_FACTOR,
+} from './consts';
+import mitt, { type Emitter } from 'mitt';
 
-const WALK_TICKS = 4;
-const FACE_TICKS = 1;
-const SIT_TICKS = 4;
-const WALK_WIDTH_FACTOR = HALF_TILE_WIDTH / 4;
-const WALK_HEIGHT_FACTOR = HALF_TILE_HEIGHT / 4;
+type MovementEvents = {
+  face: Direction;
+};
 
 function inputToDirection(input: Input): Direction {
   switch (input) {
@@ -23,6 +28,7 @@ function inputToDirection(input: Input): Direction {
 }
 
 export class MovementController {
+  private emitter: Emitter<MovementEvents>;
   character: CharacterRenderer;
   mapWidth = 0;
   mapHeight = 0;
@@ -32,6 +38,14 @@ export class MovementController {
 
   constructor(character: CharacterRenderer) {
     this.character = character;
+    this.emitter = mitt<MovementEvents>();
+  }
+
+  on<Event extends keyof MovementEvents>(
+    event: Event,
+    handler: (data: MovementEvents[Event]) => void,
+  ) {
+    this.emitter.on(event, handler);
   }
 
   setMapDimensions(width: number, height: number) {
@@ -56,6 +70,7 @@ export class MovementController {
       ) {
         this.character.mapInfo.direction = directionHeld;
         this.faceTicks = FACE_TICKS;
+        this.emitter.emit('face', directionHeld);
         return;
       }
       if (

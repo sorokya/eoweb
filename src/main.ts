@@ -1,8 +1,10 @@
 import {
   BigCoords,
   CharacterMapInfo,
+  Direction,
   Emf,
   EoReader,
+  FacePlayerClientPacket,
   InitInitClientPacket,
   SitState,
   Version,
@@ -21,7 +23,7 @@ import {
   setZoom,
 } from './game-state';
 import { MovementController } from './movement-controller';
-import { CharacterRenderer } from './rendering/character';
+import { CharacterRenderer, CharacterState } from './rendering/character';
 import { CharactersModal } from './ui/characters';
 import { ConnectModal } from './ui/connect';
 import { ErrorModal } from './ui/error';
@@ -180,6 +182,11 @@ client.on('enterGame', ({ news }) => {
     if (character.playerId === client.playerId) {
       movementController = new MovementController(renderer);
       movementController.setMapDimensions(client.map.width, client.map.height);
+      movementController.on('face', (direction) => {
+        const packet = new FacePlayerClientPacket();
+        packet.direction = direction;
+        client.bus.send(packet);
+      });
     }
   }
 
@@ -199,6 +206,29 @@ client.on('enterGame', ({ news }) => {
     ChatTab.Local,
     `System: Nearby - Characters: ${client.nearby.characters.length}, NPCs: ${client.nearby.npcs.length}, Items: ${client.nearby.items.length}`,
   );
+});
+
+client.on('playerWalk', ({ playerId, coords, direction }) => {
+  const character = map.characters.find((c) => c.mapInfo.playerId === playerId);
+  if (character) {
+    switch (direction) {
+      case Direction.Down:
+        character.mapInfo.coords.y = coords.y - 1;
+        break;
+      case Direction.Left:
+        character.mapInfo.coords.x = coords.x + 1;
+        break;
+      case Direction.Right:
+        character.mapInfo.coords.x = coords.x - 1;
+        break;
+      case Direction.Up:
+        character.mapInfo.coords.y = coords.y + 1;
+        break;
+    }
+
+    character.mapInfo.direction = direction;
+    character.setState(CharacterState.Walking);
+  }
 });
 
 const initializeSocket = () => {
