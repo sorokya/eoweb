@@ -261,6 +261,19 @@ client.on('playerWalk', ({ playerId, coords, direction }) => {
   }
 });
 
+client.on('switchMap', () => {
+  if (movementController.character.state === CharacterState.Walking) {
+    movementController.character.setState(CharacterState.Standing);
+  }
+  map.setMap(client.map);
+});
+
+client.on('refresh', () => {
+  if (movementController.character.state === CharacterState.Walking) {
+    movementController.character.setState(CharacterState.Standing);
+  }
+});
+
 const initializeSocket = () => {
   if (client.bus) {
     const init = new InitInitClientPacket();

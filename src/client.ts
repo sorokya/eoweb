@@ -10,9 +10,9 @@ import {
   FileType,
   LoginRequestClientPacket,
   NearbyInfo,
-  PacketAction,
-  PacketFamily,
   type ServerSettings,
+  WarpAcceptClientPacket,
+  WarpTakeClientPacket,
   WelcomeAgreeClientPacket,
   WelcomeMsgClientPacket,
   WelcomeRequestClientPacket,
@@ -30,6 +30,8 @@ import { registerWelcomeHandlers } from './handlers/welcome';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerWalkHandlers } from './handlers/walk';
 import { registerSitHandlers } from './handlers/sit';
+import { registerWarpHandlers } from './handlers/warp';
+import { registerRefreshHandlers } from './handlers/refresh';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -38,6 +40,8 @@ type ClientEvents = {
   selectCharacter: undefined;
   enterGame: { news: string[] };
   playerWalk: { playerId: number; direction: Direction; coords: Coords };
+  switchMap: undefined;
+  refresh: undefined;
 };
 
 export enum GameState {
@@ -54,6 +58,7 @@ export class Client {
   playerId = 0;
   character = new Character();
   mapId = 5;
+  warpMapId = 0;
   state = GameState.Initial;
   sessionId = 0;
   serverSettings: ServerSettings | null = null;
@@ -120,6 +125,8 @@ export class Client {
     registerFaceHandlers(this);
     registerWalkHandlers(this);
     registerSitHandlers(this);
+    registerWarpHandlers(this);
+    registerRefreshHandlers(this);
   }
 
   login(username: string, password: string) {
@@ -132,6 +139,20 @@ export class Client {
   selectCharacter(characterId: number) {
     const packet = new WelcomeRequestClientPacket();
     packet.characterId = characterId;
+    this.bus.send(packet);
+  }
+
+  requestWarpMap(id: number) {
+    const packet = new WarpTakeClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.mapId = id;
+    this.bus.send(packet);
+  }
+
+  acceptWarp() {
+    const packet = new WarpAcceptClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.mapId = this.warpMapId;
     this.bus.send(packet);
   }
 
