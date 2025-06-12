@@ -23,6 +23,7 @@ import { handleInitInit } from './handlers/init';
 import { handleLoginReply } from './handlers/login';
 import { handleWelcomeReply } from './handlers/welcome';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
+import { handlePlayersAgree } from './handlers/players';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -50,7 +51,7 @@ export class Client {
   sessionId = 0;
   serverSettings: ServerSettings | null = null;
   motd = '';
-  nearby = new NearbyInfo();
+  nearby: NearbyInfo;
   eif: Eif | null = null;
   ecf: Ecf | null = null;
   enf: Enf | null = null;
@@ -72,6 +73,10 @@ export class Client {
     getEsf().then((esf) => {
       this.esf = esf;
     });
+    this.nearby = new NearbyInfo();
+    this.nearby.characters = [];
+    this.nearby.npcs = [];
+    this.nearby.items = [];
   }
 
   async loadMap(id: number): Promise<void> {
@@ -123,6 +128,11 @@ export class Client {
       PacketFamily.Welcome,
       PacketAction.Reply,
       (reader) => handleWelcomeReply(this, reader),
+    );
+    this.bus.registerPacketHandler(
+      PacketFamily.Players,
+      PacketAction.Agree,
+      (reader) => handlePlayersAgree(this, reader),
     );
   }
 

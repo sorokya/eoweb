@@ -106,7 +106,7 @@ fetch(`/maps/${padWithZeros(5, 5)}.emf`)
   .then((buf) => {
     const reader = new EoReader(new Uint8Array(buf));
     const emf = Emf.deserialize(reader);
-    map = new MapRenderer(emf, 1);
+    map = new MapRenderer(client, emf, 1);
     map.addCharacter(character);
     movementController.setMapDimensions(emf.width, emf.height);
   });
@@ -173,7 +173,7 @@ client.on('selectCharacter', () => {
 
 client.on('enterGame', ({ news }) => {
   charactersModal.close();
-  map = new MapRenderer(client.map, client.playerId);
+  map = new MapRenderer(client, client.map, client.playerId);
   for (const character of client.nearby.characters) {
     const renderer = new CharacterRenderer(character);
     map.addCharacter(renderer);
