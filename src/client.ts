@@ -18,14 +18,14 @@ import {
 import mitt, { type Emitter } from 'mitt';
 import type { PacketBus } from './bus';
 import { Character } from './character';
-import { handleConnectionPlayer } from './handlers/connection';
-import { handleInitInit } from './handlers/init';
-import { handleLoginReply } from './handlers/login';
-import { handleWelcomeReply } from './handlers/welcome';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
-import { handlePlayersAgree } from './handlers/players';
-import { handleAvatarRemove } from './handlers/avatar';
-import { handleFacePlayer } from './handlers/face';
+import { registerAvatarHandlers } from './handlers/avatar';
+import { registerInitHandlers } from './handlers/init';
+import { registerConnectionHandlers } from './handlers/connection';
+import { registerLoginHandlers } from './handlers/login';
+import { registerFaceHandlers } from './handlers/face';
+import { registerWelcomeHandlers } from './handlers/welcome';
+import { registerPlayersHandlers } from './handlers/players';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -106,47 +106,13 @@ export class Client {
 
   setBus(bus: PacketBus) {
     this.bus = bus;
-    this.bus.registerPacketHandler(
-      PacketFamily.Init,
-      PacketAction.Init,
-      (reader) => {
-        handleInitInit(this, reader);
-      },
-    );
-    this.bus.registerPacketHandler(
-      PacketFamily.Connection,
-      PacketAction.Player,
-      (reader) => {
-        handleConnectionPlayer(this, reader);
-      },
-    );
-    this.bus.registerPacketHandler(
-      PacketFamily.Login,
-      PacketAction.Reply,
-      (reader) => {
-        handleLoginReply(this, reader);
-      },
-    );
-    this.bus.registerPacketHandler(
-      PacketFamily.Welcome,
-      PacketAction.Reply,
-      (reader) => handleWelcomeReply(this, reader),
-    );
-    this.bus.registerPacketHandler(
-      PacketFamily.Players,
-      PacketAction.Agree,
-      (reader) => handlePlayersAgree(this, reader),
-    );
-    this.bus.registerPacketHandler(
-      PacketFamily.Avatar,
-      PacketAction.Remove,
-      (reader) => handleAvatarRemove(this, reader),
-    );
-    this.bus.registerPacketHandler(
-      PacketFamily.Face,
-      PacketAction.Player,
-      (reader) => handleFacePlayer(this, reader),
-    );
+    registerInitHandlers(this);
+    registerConnectionHandlers(this);
+    registerLoginHandlers(this);
+    registerWelcomeHandlers(this);
+    registerPlayersHandlers(this);
+    registerAvatarHandlers(this);
+    registerFaceHandlers(this);
   }
 
   login(username: string, password: string) {

@@ -1,6 +1,8 @@
 import {
   type EoReader,
   FileType,
+  PacketAction,
+  PacketFamily,
   WelcomeAgreeClientPacket,
   WelcomeCode,
   WelcomeMsgClientPacket,
@@ -8,7 +10,7 @@ import {
 } from 'eolib';
 import { type Client, GameState } from '../client';
 
-export function handleWelcomeReply(client: Client, reader: EoReader) {
+function handleWelcomeReply(client: Client, reader: EoReader) {
   const packet = WelcomeReplyServerPacket.deserialize(reader);
   if (packet.welcomeCode === WelcomeCode.ServerBusy) {
     client.showError('Server is busy', 'Login failed');
@@ -137,4 +139,12 @@ function handleEnterGame(
   client.nearby = data.nearby;
   client.state = GameState.InGame;
   client.emit('enterGame', { news: data.news });
+}
+
+export function registerWelcomeHandlers(client: Client) {
+  client.bus.registerPacketHandler(
+    PacketFamily.Welcome,
+    PacketAction.Reply,
+    (reader) => handleWelcomeReply(client, reader),
+  );
 }

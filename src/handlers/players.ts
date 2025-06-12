@@ -1,7 +1,12 @@
-import { type EoReader, PlayersAgreeServerPacket } from 'eolib';
+import {
+  type EoReader,
+  PacketAction,
+  PacketFamily,
+  PlayersAgreeServerPacket,
+} from 'eolib';
 import type { Client } from '../client';
 
-export function handlePlayersAgree(client: Client, reader: EoReader) {
+function handlePlayersAgree(client: Client, reader: EoReader) {
   const packet = PlayersAgreeServerPacket.deserialize(reader);
   for (const character of packet.nearby.characters) {
     const index = client.nearby.characters.findIndex(
@@ -13,4 +18,12 @@ export function handlePlayersAgree(client: Client, reader: EoReader) {
       client.nearby.characters.push(character);
     }
   }
+}
+
+export function registerPlayersHandlers(client: Client) {
+  client.bus.registerPacketHandler(
+    PacketFamily.Players,
+    PacketAction.Agree,
+    (reader) => handlePlayersAgree(client, reader),
+  );
 }

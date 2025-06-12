@@ -1,7 +1,13 @@
-import { type EoReader, LoginReply, LoginReplyServerPacket } from 'eolib';
+import {
+  type EoReader,
+  LoginReply,
+  LoginReplyServerPacket,
+  PacketAction,
+  PacketFamily,
+} from 'eolib';
 import { type Client, GameState } from '../client';
 
-export function handleLoginReply(client: Client, reader: EoReader) {
+function handleLoginReply(client: Client, reader: EoReader) {
   const packet = LoginReplyServerPacket.deserialize(reader);
   if (packet.replyCode === LoginReply.Banned) {
     client.showError('Account is banned', 'Login failed');
@@ -28,4 +34,12 @@ export function handleLoginReply(client: Client, reader: EoReader) {
   const data = packet.replyCodeData as LoginReplyServerPacket.ReplyCodeDataOk;
   client.state = GameState.LoggedIn;
   client.emit('login', data.characters);
+}
+
+export function registerLoginHandlers(client: Client) {
+  client.bus.registerPacketHandler(
+    PacketFamily.Login,
+    PacketAction.Reply,
+    (reader) => handleLoginReply(client, reader),
+  );
 }
