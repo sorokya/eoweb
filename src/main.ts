@@ -172,6 +172,7 @@ client.on('selectCharacter', () => {
 });
 
 client.on('enterGame', ({ news }) => {
+  charactersModal.close();
   map = new MapRenderer(client.map, client.playerId);
   for (const character of client.nearby.characters) {
     const renderer = new CharacterRenderer(character);
