@@ -93,6 +93,11 @@ export class MapRenderer {
     this.buildCaches();
   }
 
+  setMap(emf: Emf) {
+    this.emf = emf;
+    this.buildCaches();
+  }
+
   private buildCaches() {
     const w = this.emf.width;
     const h = this.emf.height;

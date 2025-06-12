@@ -35,6 +35,10 @@ export function getBitmapById(
   gfxType: GfxType,
   resourceId: number,
 ): HTMLImageElement | null {
+  if (resourceId === 0) {
+    return null;
+  }
+
   if (PENDING.some((p) => p.type === gfxType && p.id === resourceId)) {
     return null;
   }

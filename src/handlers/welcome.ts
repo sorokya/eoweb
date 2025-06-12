@@ -35,6 +35,7 @@ function handleSelectCharacter(
   data: WelcomeReplyServerPacket.WelcomeCodeDataSelectCharacter,
 ) {
   client.sessionId = data.sessionId;
+  client.mapId = data.mapId;
   client.character.id = data.characterId;
   client.character.name = data.name;
   client.character.title = data.title;

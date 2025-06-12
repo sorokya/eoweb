@@ -62,6 +62,12 @@ function handleInitInit(client: Client, reader: EoReader) {
         packet.replyCodeData as InitInitServerPacket.ReplyCodeDataFileEmf,
       );
       break;
+    case InitReply.WarpMap:
+      handleInitWarpMap(
+        client,
+        packet.replyCodeData as InitInitServerPacket.ReplyCodeDataWarpMap,
+      );
+      break;
   }
 }
 
@@ -187,6 +193,16 @@ function handleInitFileEmf(
   } else {
     client.enterGame();
   }
+}
+
+function handleInitWarpMap(
+  client: Client,
+  data: InitInitServerPacket.ReplyCodeDataWarpMap,
+) {
+  const reader = new EoReader(data.mapFile.content);
+  const map = Emf.deserialize(reader);
+  saveEmf(client.warpMapId, map);
+  client.acceptWarp();
 }
 
 export function registerInitHandlers(client: Client) {
