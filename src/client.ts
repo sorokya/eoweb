@@ -25,6 +25,7 @@ import { handleWelcomeReply } from './handlers/welcome';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
 import { handlePlayersAgree } from './handlers/players';
 import { handleAvatarRemove } from './handlers/avatar';
+import { handleFacePlayer } from './handlers/face';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -59,6 +60,7 @@ export class Client {
   esf: Esf | null = null;
   map: Emf | null = null;
   downloadQueue: { type: FileType; id: number }[] = [];
+  unknownPlayerIds: Set<number> = new Set();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -139,6 +141,11 @@ export class Client {
       PacketFamily.Avatar,
       PacketAction.Remove,
       (reader) => handleAvatarRemove(this, reader),
+    );
+    this.bus.registerPacketHandler(
+      PacketFamily.Face,
+      PacketAction.Player,
+      (reader) => handleFacePlayer(this, reader),
     );
   }
 
