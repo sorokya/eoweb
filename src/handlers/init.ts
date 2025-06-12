@@ -10,11 +10,13 @@ import {
   InitInitServerPacket,
   InitReply,
   InitSequenceStart,
+  PacketAction,
+  PacketFamily,
 } from 'eolib';
 import { type Client, GameState } from '../client';
 import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '../db';
 
-export function handleInitInit(client: Client, reader: EoReader) {
+function handleInitInit(client: Client, reader: EoReader) {
   const packet = InitInitServerPacket.deserialize(reader);
   // TODO: Verify server hash.. or don't
   switch (packet.replyCode) {
@@ -185,4 +187,12 @@ function handleInitFileEmf(
   } else {
     client.enterGame();
   }
+}
+
+export function registerInitHandlers(client: Client) {
+  client.bus.registerPacketHandler(
+    PacketFamily.Init,
+    PacketAction.Init,
+    (reader) => handleInitInit(client, reader),
+  );
 }

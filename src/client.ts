@@ -1,5 +1,7 @@
 import {
   type CharacterSelectionListEntry,
+  type Coords,
+  type Direction,
   type Ecf,
   type Eif,
   type Emf,
@@ -18,11 +20,16 @@ import {
 import mitt, { type Emitter } from 'mitt';
 import type { PacketBus } from './bus';
 import { Character } from './character';
-import { handleConnectionPlayer } from './handlers/connection';
-import { handleInitInit } from './handlers/init';
-import { handleLoginReply } from './handlers/login';
-import { handleWelcomeReply } from './handlers/welcome';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
+import { registerAvatarHandlers } from './handlers/avatar';
+import { registerInitHandlers } from './handlers/init';
+import { registerConnectionHandlers } from './handlers/connection';
+import { registerLoginHandlers } from './handlers/login';
+import { registerFaceHandlers } from './handlers/face';
+import { registerWelcomeHandlers } from './handlers/welcome';
+import { registerPlayersHandlers } from './handlers/players';
+import { registerWalkHandlers } from './handlers/walk';
+import { registerSitHandlers } from './handlers/sit';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -30,6 +37,7 @@ type ClientEvents = {
   login: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
+  playerWalk: { playerId: number; direction: Direction; coords: Coords };
 };
 
 export enum GameState {
@@ -50,13 +58,14 @@ export class Client {
   sessionId = 0;
   serverSettings: ServerSettings | null = null;
   motd = '';
-  nearby = new NearbyInfo();
+  nearby: NearbyInfo;
   eif: Eif | null = null;
   ecf: Ecf | null = null;
   enf: Enf | null = null;
   esf: Esf | null = null;
   map: Emf | null = null;
   downloadQueue: { type: FileType; id: number }[] = [];
+  unknownPlayerIds: Set<number> = new Set();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -72,6 +81,10 @@ export class Client {
     getEsf().then((esf) => {
       this.esf = esf;
     });
+    this.nearby = new NearbyInfo();
+    this.nearby.characters = [];
+    this.nearby.npcs = [];
+    this.nearby.items = [];
   }
 
   async loadMap(id: number): Promise<void> {
@@ -98,32 +111,15 @@ export class Client {
 
   setBus(bus: PacketBus) {
     this.bus = bus;
-    this.bus.registerPacketHandler(
-      PacketFamily.Init,
-      PacketAction.Init,
-      (reader) => {
-        handleInitInit(this, reader);
-      },
-    );
-    this.bus.registerPacketHandler(
-      PacketFamily.Connection,
-      PacketAction.Player,
-      (reader) => {
-        handleConnectionPlayer(this, reader);
-      },
-    );
-    this.bus.registerPacketHandler(
-      PacketFamily.Login,
-      PacketAction.Reply,
-      (reader) => {
-        handleLoginReply(this, reader);
-      },
-    );
-    this.bus.registerPacketHandler(
-      PacketFamily.Welcome,
-      PacketAction.Reply,
-      (reader) => handleWelcomeReply(this, reader),
-    );
+    registerInitHandlers(this);
+    registerConnectionHandlers(this);
+    registerLoginHandlers(this);
+    registerWelcomeHandlers(this);
+    registerPlayersHandlers(this);
+    registerAvatarHandlers(this);
+    registerFaceHandlers(this);
+    registerWalkHandlers(this);
+    registerSitHandlers(this);
   }
 
   login(username: string, password: string) {

@@ -1,11 +1,18 @@
 import {
   BigCoords,
   CharacterMapInfo,
+  Coords,
+  Direction,
   Emf,
   EoReader,
+  FacePlayerClientPacket,
   InitInitClientPacket,
+  SitAction,
+  SitRequestClientPacket,
   SitState,
   Version,
+  WalkAction,
+  WalkPlayerClientPacket,
 } from 'eolib';
 import { MapRenderer } from './map';
 import './style.css';
@@ -21,7 +28,7 @@ import {
   setZoom,
 } from './game-state';
 import { MovementController } from './movement-controller';
-import { CharacterRenderer } from './rendering/character';
+import { CharacterRenderer, CharacterState } from './rendering/character';
 import { CharactersModal } from './ui/characters';
 import { ConnectModal } from './ui/connect';
 import { ErrorModal } from './ui/error';
@@ -106,7 +113,7 @@ fetch(`/maps/${padWithZeros(5, 5)}.emf`)
   .then((buf) => {
     const reader = new EoReader(new Uint8Array(buf));
     const emf = Emf.deserialize(reader);
-    map = new MapRenderer(emf, 1);
+    map = new MapRenderer(client, emf, 1);
     map.addCharacter(character);
     movementController.setMapDimensions(emf.width, emf.height);
   });
@@ -172,13 +179,44 @@ client.on('selectCharacter', () => {
 });
 
 client.on('enterGame', ({ news }) => {
-  map = new MapRenderer(client.map, client.playerId);
+  charactersModal.close();
+  map = new MapRenderer(client, client.map, client.playerId);
   for (const character of client.nearby.characters) {
     const renderer = new CharacterRenderer(character);
     map.addCharacter(renderer);
     if (character.playerId === client.playerId) {
       movementController = new MovementController(renderer);
       movementController.setMapDimensions(client.map.width, client.map.height);
+      movementController.on('face', (direction) => {
+        const packet = new FacePlayerClientPacket();
+        packet.direction = direction;
+        client.bus.send(packet);
+      });
+
+      movementController.on('walk', ({ direction, coords, timestamp }) => {
+        const packet = new WalkPlayerClientPacket();
+        packet.walkAction = new WalkAction();
+        packet.walkAction.direction = direction;
+        packet.walkAction.coords = coords;
+        packet.walkAction.timestamp = timestamp;
+        client.bus.send(packet);
+      });
+
+      movementController.on('sit', () => {
+        const packet = new SitRequestClientPacket();
+        packet.sitAction = SitAction.Sit;
+        packet.sitActionData = new SitRequestClientPacket.SitActionDataSit();
+        packet.sitActionData.cursorCoords = new Coords();
+        packet.sitActionData.cursorCoords.x = 0;
+        packet.sitActionData.cursorCoords.y = 0;
+        client.bus.send(packet);
+      });
+
+      movementController.on('stand', () => {
+        const packet = new SitRequestClientPacket();
+        packet.sitAction = SitAction.Stand;
+        client.bus.send(packet);
+      });
     }
   }
 
@@ -198,6 +236,29 @@ client.on('enterGame', ({ news }) => {
     ChatTab.Local,
     `System: Nearby - Characters: ${client.nearby.characters.length}, NPCs: ${client.nearby.npcs.length}, Items: ${client.nearby.items.length}`,
   );
+});
+
+client.on('playerWalk', ({ playerId, coords, direction }) => {
+  const character = map.characters.find((c) => c.mapInfo.playerId === playerId);
+  if (character) {
+    switch (direction) {
+      case Direction.Down:
+        character.mapInfo.coords.y = coords.y - 1;
+        break;
+      case Direction.Left:
+        character.mapInfo.coords.x = coords.x + 1;
+        break;
+      case Direction.Right:
+        character.mapInfo.coords.x = coords.x - 1;
+        break;
+      case Direction.Up:
+        character.mapInfo.coords.y = coords.y + 1;
+        break;
+    }
+
+    character.mapInfo.direction = direction;
+    character.setState(CharacterState.Walking);
+  }
 });
 
 const initializeSocket = () => {

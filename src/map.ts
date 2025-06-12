@@ -8,10 +8,11 @@ import {
 } from './consts';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
-import type { CharacterRenderer } from './rendering/character';
+import { CharacterRenderer } from './rendering/character';
 import { isoToScreen } from './utils/iso-to-screen';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
+import type { Client } from './client';
 
 enum EntityType {
   Tile = 0,
@@ -75,6 +76,7 @@ type StaticTile = { bmpId: number; layer: number; depth: number };
 
 export class MapRenderer {
   emf: Emf;
+  client: Client;
   animationFrame = 0;
   animationTicks = ANIMATION_TICKS;
   playerId: number;
@@ -84,7 +86,8 @@ export class MapRenderer {
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
 
-  constructor(emf: Emf, playerId: number) {
+  constructor(client: Client, emf: Emf, playerId: number) {
+    this.client = client;
     this.emf = emf;
     this.playerId = playerId;
     this.buildCaches();
@@ -161,6 +164,23 @@ export class MapRenderer {
       }
 
       this.animationTicks = ANIMATION_TICKS;
+    }
+
+    this.characters = this.characters.filter((c) =>
+      this.client.nearby.characters.some(
+        (c2) => c2.playerId === c.mapInfo.playerId,
+      ),
+    );
+
+    for (const character of this.client.nearby.characters) {
+      const existing = this.characters.find(
+        (c) => c.mapInfo.playerId === character.playerId,
+      );
+      if (existing) {
+        existing.mapInfo = character;
+      } else {
+        this.characters.push(new CharacterRenderer(character));
+      }
     }
 
     for (const character of this.characters) {
