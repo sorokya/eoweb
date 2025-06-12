@@ -24,6 +24,7 @@ import { handleLoginReply } from './handlers/login';
 import { handleWelcomeReply } from './handlers/welcome';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
 import { handlePlayersAgree } from './handlers/players';
+import { handleAvatarRemove } from './handlers/avatar';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -133,6 +134,11 @@ export class Client {
       PacketFamily.Players,
       PacketAction.Agree,
       (reader) => handlePlayersAgree(this, reader),
+    );
+    this.bus.registerPacketHandler(
+      PacketFamily.Avatar,
+      PacketAction.Remove,
+      (reader) => handleAvatarRemove(this, reader),
     );
   }
 
