@@ -8,6 +8,8 @@ import {
   InitInitClientPacket,
   SitState,
   Version,
+  WalkAction,
+  WalkPlayerClientPacket,
 } from 'eolib';
 import { MapRenderer } from './map';
 import './style.css';
@@ -185,6 +187,15 @@ client.on('enterGame', ({ news }) => {
       movementController.on('face', (direction) => {
         const packet = new FacePlayerClientPacket();
         packet.direction = direction;
+        client.bus.send(packet);
+      });
+
+      movementController.on('walk', ({ direction, coords, timestamp }) => {
+        const packet = new WalkPlayerClientPacket();
+        packet.walkAction = new WalkAction();
+        packet.walkAction.direction = direction;
+        packet.walkAction.coords = coords;
+        packet.walkAction.timestamp = timestamp;
         client.bus.send(packet);
       });
     }
