@@ -1,14 +1,10 @@
-import { Coords, Direction } from 'eolib';
+import { type Coords, Direction } from 'eolib';
 import { Input, getLatestDirectionHeld, isInputHeld } from './input';
 import { type CharacterRenderer, CharacterState } from './rendering/character';
-import {
-  FACE_TICKS,
-  SIT_TICKS,
-  WALK_HEIGHT_FACTOR,
-  WALK_TICKS,
-  WALK_WIDTH_FACTOR,
-} from './consts';
+import { FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
 import mitt, { type Emitter } from 'mitt';
+import { getNextCoords } from './utils/get-next-coords';
+import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 
 type MovementEvents = {
   face: Direction;
@@ -38,6 +34,7 @@ export class MovementController {
   walkTicks = WALK_TICKS;
   faceTicks = FACE_TICKS;
   sitTicks = SIT_TICKS;
+  freeze = false;
 
   constructor(character: CharacterRenderer) {
     this.character = character;
@@ -58,17 +55,20 @@ export class MovementController {
 
   tick() {
     this.faceTicks = Math.max(this.faceTicks - 1, 0);
+    this.walkTicks = Math.max(this.walkTicks - 1, 0);
+
+    if (this.freeze) {
+      return;
+    }
 
     const latestInput = getLatestDirectionHeld();
     const directionHeld =
       latestInput !== null ? inputToDirection(latestInput) : null;
 
-    if (
-      this.character.state === CharacterState.Standing &&
-      this.faceTicks === 0
-    ) {
+    if (this.character.state === CharacterState.Standing) {
       if (
         directionHeld !== null &&
+        this.faceTicks === 0 &&
         this.character.mapInfo.direction !== directionHeld
       ) {
         this.character.mapInfo.direction = directionHeld;
@@ -76,109 +76,29 @@ export class MovementController {
         this.emitter.emit('face', directionHeld);
         return;
       }
+
       if (
         directionHeld !== null &&
-        this.character.mapInfo.direction === directionHeld
+        this.character.mapInfo.direction === directionHeld &&
+        this.walkTicks === 0
       ) {
         this.character.setState(CharacterState.Walking);
         this.walkTicks = WALK_TICKS;
         this.faceTicks = FACE_TICKS;
         this.sitTicks = SIT_TICKS;
 
-        const coords = new Coords();
-        switch (directionHeld) {
-          case Direction.Down:
-            coords.x = this.character.mapInfo.coords.x;
-            coords.y = this.character.mapInfo.coords.y + 1;
-            break;
-          case Direction.Left:
-            coords.x = this.character.mapInfo.coords.x - 1;
-            coords.y = this.character.mapInfo.coords.y;
-            break;
-          case Direction.Right:
-            coords.x = this.character.mapInfo.coords.x + 1;
-            coords.y = this.character.mapInfo.coords.y;
-            break;
-          case Direction.Up:
-            coords.x = this.character.mapInfo.coords.x;
-            coords.y = this.character.mapInfo.coords.y - 1;
-            break;
-        }
-
         this.emitter.emit('walk', {
           direction: directionHeld,
           timestamp: getTimestamp(),
-          coords,
+          coords: getNextCoords(
+            bigCoordsToCoords(this.character.mapInfo.coords),
+            directionHeld,
+            this.mapWidth,
+            this.mapHeight,
+          ),
         });
         return;
       }
-    }
-
-    if (this.character.state === CharacterState.Walking) {
-      const walkFrame = Math.abs(this.walkTicks - WALK_TICKS) + 1;
-
-      const offset = {
-        [Direction.Up]: {
-          x: WALK_WIDTH_FACTOR * walkFrame,
-          y: -WALK_HEIGHT_FACTOR * walkFrame,
-        },
-        [Direction.Down]: {
-          x: -WALK_WIDTH_FACTOR * walkFrame,
-          y: WALK_HEIGHT_FACTOR * walkFrame,
-        },
-        [Direction.Left]: {
-          x: -WALK_WIDTH_FACTOR * walkFrame,
-          y: -WALK_HEIGHT_FACTOR * walkFrame,
-        },
-        [Direction.Right]: {
-          x: WALK_WIDTH_FACTOR * walkFrame,
-          y: WALK_HEIGHT_FACTOR * walkFrame,
-        },
-      }[this.character.mapInfo.direction];
-
-      this.character.walkOffset = offset;
-      this.walkTicks = Math.max(this.walkTicks - 1, 0);
-
-      if (this.walkTicks === 0) {
-        const pos = this.character.mapInfo.coords;
-        switch (this.character.mapInfo.direction) {
-          case Direction.Up:
-            pos.y -= 1;
-            break;
-          case Direction.Down:
-            pos.y += 1;
-            break;
-          case Direction.Left:
-            pos.x -= 1;
-            break;
-          case Direction.Right:
-            pos.x += 1;
-            break;
-        }
-
-        // Clamp within bounds
-        pos.x = Math.min(this.mapWidth, Math.max(0, pos.x));
-        pos.y = Math.min(this.mapHeight, Math.max(0, pos.y));
-
-        this.character.walkOffset = { x: 0, y: 0 };
-        this.walkTicks = WALK_TICKS;
-        this.sitTicks = SIT_TICKS;
-
-        if (
-          directionHeld !== null &&
-          this.character.mapInfo.direction !== directionHeld
-        ) {
-          this.character.mapInfo.direction = directionHeld;
-        }
-
-        // Decide whether to walk again or stand
-        const heldNow = isInputHeld(latestInput ?? -1);
-        if (!heldNow) {
-          this.character.setState(CharacterState.Standing);
-        }
-      }
-
-      return;
     }
 
     this.sitTicks = Math.max(this.sitTicks - 1, 0);

@@ -39,6 +39,8 @@ import { padWithZeros } from './utils/pad-with-zeros';
 import { randomRange } from './utils/random-range';
 import type { Vector2 } from './vector';
 import { ChatModal, ChatTab } from './ui/chat';
+import { getPrevCoords } from './utils/get-prev-coords';
+import { coordsToBigCoords } from './utils/coords-to-big-coords';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const uiCanvas = document.getElementById('ui') as HTMLCanvasElement;
@@ -185,6 +187,7 @@ client.on('enterGame', ({ news }) => {
     const renderer = new CharacterRenderer(character);
     map.addCharacter(renderer);
     if (character.playerId === client.playerId) {
+      renderer.isPlayer = true;
       movementController = new MovementController(renderer);
       movementController.setMapDimensions(client.map.width, client.map.height);
       movementController.on('face', (direction) => {
@@ -241,34 +244,22 @@ client.on('enterGame', ({ news }) => {
 client.on('playerWalk', ({ playerId, coords, direction }) => {
   const character = map.characters.find((c) => c.mapInfo.playerId === playerId);
   if (character) {
-    switch (direction) {
-      case Direction.Down:
-        character.mapInfo.coords.y = coords.y - 1;
-        break;
-      case Direction.Left:
-        character.mapInfo.coords.x = coords.x + 1;
-        break;
-      case Direction.Right:
-        character.mapInfo.coords.x = coords.x - 1;
-        break;
-      case Direction.Up:
-        character.mapInfo.coords.y = coords.y + 1;
-        break;
-    }
-
+    character.mapInfo.coords = coordsToBigCoords(
+      getPrevCoords(coords, direction, map.emf.width, map.emf.height),
+    );
     character.mapInfo.direction = direction;
     character.setState(CharacterState.Walking);
   }
 });
 
 client.on('switchMap', () => {
-  if (movementController.character.state === CharacterState.Walking) {
-    movementController.character.setState(CharacterState.Standing);
-  }
   map.setMap(client.map);
 });
 
 client.on('refresh', () => {
+  movementController.character.mapInfo = client.nearby.characters.find(
+    (c) => c.playerId === client.playerId,
+  );
   if (movementController.character.state === CharacterState.Walking) {
     movementController.character.setState(CharacterState.Standing);
   }
@@ -391,6 +382,14 @@ setInterval(() => {
   }
   if (client.state === GameState.InGame) {
     movementController.tick();
+
+    if (client.warpQueued) {
+      movementController.freeze = true;
+      if (movementController.character.state !== CharacterState.Walking) {
+        client.acceptWarp();
+        movementController.freeze = false;
+      }
+    }
   }
 }, 120);
 

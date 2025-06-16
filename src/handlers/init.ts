@@ -202,7 +202,7 @@ function handleInitWarpMap(
   const reader = new EoReader(data.mapFile.content);
   const map = Emf.deserialize(reader);
   saveEmf(client.warpMapId, map);
-  client.acceptWarp();
+  client.warpQueued = true;
 }
 
 export function registerInitHandlers(client: Client) {

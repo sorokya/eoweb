@@ -59,6 +59,7 @@ export class Client {
   character = new Character();
   mapId = 5;
   warpMapId = 0;
+  warpQueued = false;
   state = GameState.Initial;
   sessionId = 0;
   serverSettings: ServerSettings | null = null;
@@ -154,6 +155,7 @@ export class Client {
     packet.sessionId = this.sessionId;
     packet.mapId = this.warpMapId;
     this.bus.send(packet);
+    this.warpQueued = false;
   }
 
   requestFile(fileType: FileType, id: number) {

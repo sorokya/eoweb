@@ -16,7 +16,7 @@ function handleWarpRequest(client: Client, reader: EoReader) {
 
   switch (packet.warpType) {
     case WarpType.Local: {
-      client.acceptWarp();
+      client.warpQueued = true;
       break;
     }
     case WarpType.MapSwitch: {
@@ -32,7 +32,7 @@ function handleWarpRequest(client: Client, reader: EoReader) {
           client.requestWarpMap(packet.mapId);
           return;
         }
-        client.acceptWarp();
+        client.warpQueued = true;
       });
       break;
     }
