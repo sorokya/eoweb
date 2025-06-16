@@ -24,6 +24,7 @@ const CHARACTER_SIT_GROUND_HEIGHT = 43;
 const WALK_ANIMATION_FRAMES = 4;
 
 export class CharacterRenderer {
+  isPlayer = false;
   mapInfo: CharacterMapInfo;
   state: CharacterState = CharacterState.Standing;
   animationFrame = 0;
@@ -74,8 +75,8 @@ export class CharacterRenderer {
           y: WALK_HEIGHT_FACTOR * walkFrame,
         },
       }[this.mapInfo.direction];
-      this.walkTicks = Math.max(this.walkTicks - 1, 0);
 
+      this.walkTicks = Math.max(this.walkTicks - 1, 0);
       if (this.walkTicks === 0) {
         const pos = this.mapInfo.coords;
         switch (this.mapInfo.direction) {
@@ -272,6 +273,12 @@ export class CharacterRenderer {
 
     const startX =
       this.mapInfo.gender === Gender.Female ? 0 : CHARACTER_WALKING_WIDTH * 8;
+
+    if (this.state === CharacterState.Walking) {
+      console.log(
+        `Character: ${this.mapInfo.name} frame: ${this.animationFrame}`,
+      );
+    }
 
     const sourceX =
       startX +
