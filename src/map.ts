@@ -1,4 +1,4 @@
-import { type Emf, MapTileSpec } from 'eolib';
+import { type Emf, MapTileSpec, type NearbyInfo } from 'eolib';
 import {
   ANIMATION_TICKS,
   HALF_TILE_HEIGHT,
@@ -150,6 +150,22 @@ export class MapRenderer {
 
   addCharacter(character: CharacterRenderer) {
     this.characters.push(character);
+  }
+
+  setNearby(nearby: NearbyInfo) {
+    this.characters = this.characters.filter((c) =>
+      nearby.characters.some((c2) => c2.playerId === c.mapInfo.playerId),
+    );
+    for (const character of nearby.characters) {
+      const existing = this.characters.find(
+        (c) => c.mapInfo.playerId === character.playerId,
+      );
+      if (existing) {
+        existing.mapInfo = character;
+      } else {
+        this.characters.push(new CharacterRenderer(character));
+      }
+    }
   }
 
   getWidth() {

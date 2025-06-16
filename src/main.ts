@@ -257,6 +257,7 @@ client.on('switchMap', () => {
 });
 
 client.on('refresh', () => {
+  map.setNearby(client.nearby);
   movementController.character.mapInfo = client.nearby.characters.find(
     (c) => c.playerId === client.playerId,
   );
