@@ -8,12 +8,14 @@ import {
 } from './consts';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
-import { CharacterRenderer } from './rendering/character';
+import { CharacterRenderer, CharacterState } from './rendering/character';
 import { isoToScreen } from './utils/iso-to-screen';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 import type { Client } from './client';
 import { NpcRenderer } from './rendering/npc';
+import { getPrevCoords } from './utils/get-prev-coords';
+import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 
 enum EntityType {
   Tile = 0,
@@ -224,7 +226,19 @@ export class MapRenderer {
     const info = this.client.nearby.characters.find(
       (c) => c.playerId === this.playerId,
     );
-    return info ? info.coords : { x: 0, y: 0 };
+    if (!info) return { x: 0, y: 0 };
+
+    const renderer = this.characters.find((c) => c.playerId === this.playerId);
+    if (renderer && renderer.state === CharacterState.Walking) {
+      return getPrevCoords(
+        bigCoordsToCoords(info.coords),
+        info.direction,
+        this.emf.width,
+        this.emf.height,
+      );
+    }
+
+    return info.coords;
   }
 
   render(ctx: CanvasRenderingContext2D) {
