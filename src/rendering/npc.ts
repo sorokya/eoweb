@@ -1,9 +1,9 @@
-import type { NpcMapInfo } from 'eolib';
+import { Direction, type NpcMapInfo } from 'eolib';
 import { getBitmapById, GfxType } from '../gfx';
 import { getEnf } from '../db';
 import type { Vector2 } from '../vector';
 import { isoToScreen } from '../utils/iso-to-screen';
-import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
+import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
 
 export enum NpcState {
   Idle = 0,
@@ -36,7 +36,13 @@ export class NpcRenderer {
   }
 
   render(ctx: CanvasRenderingContext2D, playerScreen: Vector2) {
-    const bmp = getBitmapById(GfxType.NPC, (this.graphicId - 1) * 40 + 1);
+    const offset = [Direction.Down, Direction.Right].includes(
+      this.mapInfo.direction,
+    )
+      ? 1
+      : 3;
+
+    const bmp = getBitmapById(GfxType.NPC, (this.graphicId - 1) * 40 + offset);
     if (!bmp) {
       return;
     }
@@ -48,6 +54,22 @@ export class NpcRenderer {
     const screenY =
       screenCoords.y - bmp.height - playerScreen.y + HALF_GAME_HEIGHT;
 
-    ctx.drawImage(bmp, screenX, screenY);
+    const mirrored = [Direction.Right, Direction.Up].includes(
+      this.mapInfo.direction,
+    );
+
+    if (mirrored) {
+      ctx.save(); // Save the current context state
+      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
+      ctx.scale(-1, 1); // Flip horizontally
+    }
+
+    const drawX = mirrored ? GAME_WIDTH - screenX - bmp.width : screenX;
+
+    ctx.drawImage(bmp, drawX, screenY);
+
+    if (mirrored) {
+      ctx.restore();
+    }
   }
 }
