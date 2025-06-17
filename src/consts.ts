@@ -1,4 +1,4 @@
-export const GAME_FPS = 100 / 1000;
+export const GAME_FPS = 1000 / 8;
 export const TILE_WIDTH = 64;
 export const TILE_HEIGHT = 32;
 export const HALF_TILE_WIDTH = TILE_WIDTH >> 1;
