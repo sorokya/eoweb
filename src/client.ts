@@ -32,6 +32,7 @@ import { registerWalkHandlers } from './handlers/walk';
 import { registerSitHandlers } from './handlers/sit';
 import { registerWarpHandlers } from './handlers/warp';
 import { registerRefreshHandlers } from './handlers/refresh';
+import { registerNpcHandlers } from './handlers/npc';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -40,6 +41,7 @@ type ClientEvents = {
   selectCharacter: undefined;
   enterGame: { news: string[] };
   playerWalk: { playerId: number; direction: Direction; coords: Coords };
+  npcWalk: { npcIndex: number; direction: Direction; coords: Coords };
   switchMap: undefined;
   refresh: undefined;
 };
@@ -128,6 +130,7 @@ export class Client {
     registerSitHandlers(this);
     registerWarpHandlers(this);
     registerRefreshHandlers(this);
+    registerNpcHandlers(this);
   }
 
   login(username: string, password: string) {

@@ -223,6 +223,8 @@ client.on('enterGame', ({ news }) => {
     }
   }
 
+  map.setNearby(client.nearby);
+
   news.forEach((entry, index) => {
     if (!entry) {
       return;
@@ -252,11 +254,21 @@ client.on('playerWalk', ({ playerId, coords, direction }) => {
   }
 });
 
+client.on('npcWalk', ({ npcIndex, coords, direction }) => {
+  const npc = map.npcs.find((n) => n.mapInfo.index === npcIndex);
+  if (npc) {
+    npc.mapInfo.coords = coords;
+    npc.mapInfo.direction = direction;
+  }
+});
+
 client.on('switchMap', () => {
   map.setMap(client.map);
+  map.setNearby(client.nearby);
 });
 
 client.on('refresh', () => {
+  map.setNearby(client.nearby);
   movementController.character.mapInfo = client.nearby.characters.find(
     (c) => c.playerId === client.playerId,
   );
