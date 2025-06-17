@@ -223,6 +223,8 @@ client.on('enterGame', ({ news }) => {
     }
   }
 
+  map.setNearby(client.nearby);
+
   news.forEach((entry, index) => {
     if (!entry) {
       return;
@@ -254,6 +256,7 @@ client.on('playerWalk', ({ playerId, coords, direction }) => {
 
 client.on('switchMap', () => {
   map.setMap(client.map);
+  map.setNearby(client.nearby);
 });
 
 client.on('refresh', () => {

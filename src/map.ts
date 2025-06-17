@@ -13,11 +13,13 @@ import { isoToScreen } from './utils/iso-to-screen';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 import type { Client } from './client';
+import { NpcRenderer } from './rendering/npc';
 
 enum EntityType {
   Tile = 0,
   Character = 1,
   Cursor = 2,
+  Npc = 3,
 }
 
 type Entity = {
@@ -41,6 +43,7 @@ enum Layer {
   Overlay2 = 8,
   Character = 9,
   Cursor = 10,
+  Npc = 11,
 }
 
 const TDG = 0.00000001; // gap between depth of each tile on a layer
@@ -49,15 +52,16 @@ const RDG = 0.001; // gap between depth of each row of tiles
 const layerDepth = [
   -3.0 + TDG * 1, // Ground
   0.0 + TDG * 3, // Objects
-  0.0 + TDG * 5, // Overlay
-  0.0 + TDG * 6, // Down Wall
-  -RDG + TDG * 7, // Right Wall
-  0.0 + TDG * 8, // Roof
+  0.0 + TDG * 6, // Overlay
+  0.0 + TDG * 7, // Down Wall
+  -RDG + TDG * 8, // Right Wall
+  0.0 + TDG * 9, // Roof
   0.0 + TDG * 1, // Top
   -1.0 + TDG * 1, // Shadow
   1.0 + TDG * 1, // Overlay 2
   0.0 + TDG * 4, // Characters
   0.0 + TDG * 2, // Cursor
+  0.0 + TDG * 5, // NPC
 ];
 
 const LAYER_GFX_MAP = [
@@ -81,6 +85,7 @@ export class MapRenderer {
   animationTicks = ANIMATION_TICKS;
   playerId: number;
   characters: CharacterRenderer[] = [];
+  npcs: NpcRenderer[] = [];
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   private staticTileGrid: StaticTile[][][] = [];
@@ -164,6 +169,18 @@ export class MapRenderer {
         existing.mapInfo = character;
       } else {
         this.characters.push(new CharacterRenderer(character));
+      }
+    }
+
+    this.npcs = this.npcs.filter((n) =>
+      nearby.npcs.some((n2) => n2.index === n.mapInfo.index),
+    );
+    for (const npc of nearby.npcs) {
+      const existing = this.npcs.find((n) => n.mapInfo.index === npc.index);
+      if (existing) {
+        existing.mapInfo = npc;
+      } else {
+        this.npcs.push(new NpcRenderer(npc));
       }
     }
   }
@@ -266,6 +283,19 @@ export class MapRenderer {
             depth: this.calculateDepth(Layer.Character, x, y),
           });
         }
+
+        for (const n of this.npcs.filter(
+          (n) => n.mapInfo.coords.x === x && n.mapInfo.coords.y === y,
+        )) {
+          entities.push({
+            x,
+            y,
+            type: EntityType.Npc,
+            typeId: n.mapInfo.index,
+            layer: Layer.Npc,
+            depth: this.calculateDepth(Layer.Npc, x, y),
+          });
+        }
       }
     }
 
@@ -301,6 +331,7 @@ export class MapRenderer {
       if (e.type === EntityType.Tile) this.renderTile(e, playerScreen, ctx);
       else if (e.type === EntityType.Character)
         this.renderCharacter(e, playerScreen, ctx);
+      else if (e.type === EntityType.Npc) this.renderNpc(e, playerScreen, ctx);
       else this.renderCursor(e, playerScreen, ctx);
     }
 
@@ -389,6 +420,17 @@ export class MapRenderer {
     const renderer = this.characters.find(
       (c) => c.mapInfo.playerId === entity.typeId,
     );
+    if (renderer) {
+      renderer.render(ctx, playerScreen);
+    }
+  }
+
+  renderNpc(
+    entity: Entity,
+    playerScreen: Vector2,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const renderer = this.npcs.find((n) => n.mapInfo.index === entity.typeId);
     if (renderer) {
       renderer.render(ctx, playerScreen);
     }
