@@ -4,6 +4,7 @@ import { type CharacterRenderer, CharacterState } from './rendering/character';
 import { FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
 import mitt, { type Emitter } from 'mitt';
 import { getNextCoords } from './utils/get-next-coords';
+import { coordsToBigCoords } from './utils/coords-to-big-coords';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 
 type MovementEvents = {
@@ -82,6 +83,17 @@ export class MovementController {
         this.character.mapInfo.direction === directionHeld &&
         this.walkTicks === 0
       ) {
+        const next = getNextCoords(
+          bigCoordsToCoords(this.character.mapInfo.coords),
+          directionHeld,
+          this.mapWidth,
+          this.mapHeight,
+        );
+
+        // Optimistically update the player's position locally
+        this.character.mapInfo.coords = coordsToBigCoords(next);
+        this.character.mapInfo.direction = directionHeld;
+
         this.character.setState(CharacterState.Walking);
         this.walkTicks = WALK_TICKS;
         this.faceTicks = FACE_TICKS;
@@ -90,12 +102,7 @@ export class MovementController {
         this.emitter.emit('walk', {
           direction: directionHeld,
           timestamp: getTimestamp(),
-          coords: getNextCoords(
-            bigCoordsToCoords(this.character.mapInfo.coords),
-            directionHeld,
-            this.mapWidth,
-            this.mapHeight,
-          ),
+          coords: next,
         });
         return;
       }
