@@ -39,7 +39,6 @@ import { padWithZeros } from './utils/pad-with-zeros';
 import { randomRange } from './utils/random-range';
 import type { Vector2 } from './vector';
 import { ChatModal, ChatTab } from './ui/chat';
-import { getPrevCoords } from './utils/get-prev-coords';
 import { coordsToBigCoords } from './utils/coords-to-big-coords';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -88,6 +87,7 @@ function resizeCanvases() {
 resizeCanvases();
 window.addEventListener('resize', resizeCanvases);
 
+const client = new Client();
 const ctx = canvas.getContext('2d');
 if (!ctx) {
   throw new Error('Failed to get canvas context!');
@@ -104,7 +104,8 @@ mapInfo.gender = 1;
 mapInfo.skin = 0;
 mapInfo.sitState = SitState.Stand;
 
-const character = new CharacterRenderer(mapInfo);
+client.nearby.characters.push(mapInfo);
+const character = new CharacterRenderer(client, mapInfo.playerId);
 
 let movementController = new MovementController(character);
 
@@ -156,7 +157,6 @@ const errorModal = new ErrorModal();
 const loginModal = new LoginModal();
 const charactersModal = new CharactersModal();
 const chatModal = new ChatModal();
-const client = new Client();
 
 client.on('error', ({ title, message }) => {
   chatModal.addMessage(ChatTab.Local, `${title} - ${message}`);
@@ -184,7 +184,7 @@ client.on('enterGame', ({ news }) => {
   charactersModal.close();
   map = new MapRenderer(client, client.map, client.playerId);
   for (const character of client.nearby.characters) {
-    const renderer = new CharacterRenderer(character);
+    const renderer = new CharacterRenderer(client, character.playerId);
     map.addCharacter(renderer);
     if (character.playerId === client.playerId) {
       renderer.isPlayer = true;
@@ -244,19 +244,17 @@ client.on('enterGame', ({ news }) => {
 });
 
 client.on('playerWalk', ({ playerId, coords, direction }) => {
-  const character = map.characters.find((c) => c.mapInfo.playerId === playerId);
-  if (character) {
-    character.mapInfo.coords = coordsToBigCoords(
-      getPrevCoords(coords, direction, map.emf.width, map.emf.height),
-    );
+  const character = map.characters.find((c) => c.playerId === playerId);
+  if (character && character.mapInfo) {
+    character.mapInfo.coords = coordsToBigCoords(coords);
     character.mapInfo.direction = direction;
     character.setState(CharacterState.Walking);
   }
 });
 
 client.on('npcWalk', ({ npcIndex, coords, direction }) => {
-  const npc = map.npcs.find((n) => n.mapInfo.index === npcIndex);
-  if (npc) {
+  const npc = map.npcs.find((n) => n.index === npcIndex);
+  if (npc && npc.mapInfo) {
     npc.mapInfo.coords = coords;
     npc.mapInfo.direction = direction;
   }
@@ -269,9 +267,6 @@ client.on('switchMap', () => {
 
 client.on('refresh', () => {
   map.setNearby(client.nearby);
-  movementController.character.mapInfo = client.nearby.characters.find(
-    (c) => c.playerId === client.playerId,
-  );
   if (movementController.character.state === CharacterState.Walking) {
     movementController.character.setState(CharacterState.Standing);
   }

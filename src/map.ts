@@ -159,28 +159,24 @@ export class MapRenderer {
 
   setNearby(nearby: NearbyInfo) {
     this.characters = this.characters.filter((c) =>
-      nearby.characters.some((c2) => c2.playerId === c.mapInfo.playerId),
+      nearby.characters.some((c2) => c2.playerId === c.playerId),
     );
     for (const character of nearby.characters) {
-      const existing = this.characters.find(
-        (c) => c.mapInfo.playerId === character.playerId,
-      );
-      if (existing) {
-        existing.mapInfo = character;
-      } else {
-        this.characters.push(new CharacterRenderer(character));
+      const existing = this.characters.find((c) => c.playerId === character.playerId);
+      if (!existing) {
+        this.characters.push(
+          new CharacterRenderer(this.client, character.playerId),
+        );
       }
     }
 
     this.npcs = this.npcs.filter((n) =>
-      nearby.npcs.some((n2) => n2.index === n.mapInfo.index),
+      nearby.npcs.some((n2) => n2.index === n.index),
     );
     for (const npc of nearby.npcs) {
-      const existing = this.npcs.find((n) => n.mapInfo.index === npc.index);
-      if (existing) {
-        existing.mapInfo = npc;
-      } else {
-        this.npcs.push(new NpcRenderer(npc));
+      const existing = this.npcs.find((n) => n.index === npc.index);
+      if (!existing) {
+        this.npcs.push(new NpcRenderer(this.client, npc.index));
       }
     }
   }
@@ -205,19 +201,13 @@ export class MapRenderer {
     }
 
     this.characters = this.characters.filter((c) =>
-      this.client.nearby.characters.some(
-        (c2) => c2.playerId === c.mapInfo.playerId,
-      ),
+      this.client.nearby.characters.some((c2) => c2.playerId === c.playerId),
     );
 
     for (const character of this.client.nearby.characters) {
-      const existing = this.characters.find(
-        (c) => c.mapInfo.playerId === character.playerId,
-      );
-      if (existing) {
-        existing.mapInfo = character;
-      } else {
-        this.characters.push(new CharacterRenderer(character));
+      const existing = this.characters.find((c) => c.playerId === character.playerId);
+      if (!existing) {
+        this.characters.push(new CharacterRenderer(this.client, character.playerId));
       }
     }
 
@@ -231,10 +221,10 @@ export class MapRenderer {
   }
 
   getPlayerCoords() {
-    const playerCharacter = this.characters.find(
-      (c) => c.mapInfo.playerId === this.playerId,
+    const info = this.client.nearby.characters.find(
+      (c) => c.playerId === this.playerId,
     );
-    return playerCharacter ? playerCharacter.mapInfo.coords : { x: 0, y: 0 };
+    return info ? info.coords : { x: 0, y: 0 };
   }
 
   render(ctx: CanvasRenderingContext2D) {
@@ -267,34 +257,38 @@ export class MapRenderer {
           })),
         );
 
-        for (const c of this.characters.filter(
-          (c) => c.mapInfo.coords.x === x && c.mapInfo.coords.y === y,
-        )) {
-          if (c.mapInfo.playerId === this.playerId) {
-            playerScreen.x += c.walkOffset.x;
-            playerScreen.y += c.walkOffset.y;
+        for (const c of this.characters) {
+          const info = c.mapInfo;
+          if (!info) continue;
+          if (info.coords.x === x && info.coords.y === y) {
+            if (c.playerId === this.playerId) {
+              playerScreen.x += c.walkOffset.x;
+              playerScreen.y += c.walkOffset.y;
+            }
+            entities.push({
+              x,
+              y,
+              type: EntityType.Character,
+              typeId: c.playerId,
+              layer: Layer.Character,
+              depth: this.calculateDepth(Layer.Character, x, y),
+            });
           }
-          entities.push({
-            x,
-            y,
-            type: EntityType.Character,
-            typeId: c.mapInfo.playerId,
-            layer: Layer.Character,
-            depth: this.calculateDepth(Layer.Character, x, y),
-          });
         }
 
-        for (const n of this.npcs.filter(
-          (n) => n.mapInfo.coords.x === x && n.mapInfo.coords.y === y,
-        )) {
-          entities.push({
-            x,
-            y,
-            type: EntityType.Npc,
-            typeId: n.mapInfo.index,
-            layer: Layer.Npc,
-            depth: this.calculateDepth(Layer.Npc, x, y),
-          });
+        for (const n of this.npcs) {
+          const nInfo = n.mapInfo;
+          if (!nInfo) continue;
+          if (nInfo.coords.x === x && nInfo.coords.y === y) {
+            entities.push({
+              x,
+              y,
+              type: EntityType.Npc,
+              typeId: n.index,
+              layer: Layer.Npc,
+              depth: this.calculateDepth(Layer.Npc, x, y),
+            });
+          }
         }
       }
     }
@@ -305,11 +299,14 @@ export class MapRenderer {
         spec === null ||
         ![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)
       ) {
-        const charAt = this.characters.some(
-          (c) =>
-            c.mapInfo.coords.x === this.mouseCoords.x &&
-            c.mapInfo.coords.y === this.mouseCoords.y,
-        );
+        const charAt = this.characters.some((c) => {
+          const info = c.mapInfo;
+          return (
+            info !== undefined &&
+            info.coords.x === this.mouseCoords.x &&
+            info.coords.y === this.mouseCoords.y
+          );
+        });
         entities.push({
           x: this.mouseCoords.x,
           y: this.mouseCoords.y,
@@ -335,12 +332,10 @@ export class MapRenderer {
       else this.renderCursor(e, playerScreen, ctx);
     }
 
-    const main = this.characters.find(
-      (c) => c.mapInfo.playerId === this.playerId,
-    );
+    const main = this.characters.find((c) => c.playerId === this.playerId);
     if (main) {
       ctx.globalAlpha = 0.4;
-      main.render(ctx, playerScreen);
+      main.render(ctx, playerScreen, this.emf.width, this.emf.height);
       ctx.globalAlpha = 1;
     }
   }
@@ -417,11 +412,9 @@ export class MapRenderer {
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
   ) {
-    const renderer = this.characters.find(
-      (c) => c.mapInfo.playerId === entity.typeId,
-    );
+    const renderer = this.characters.find((c) => c.playerId === entity.typeId);
     if (renderer) {
-      renderer.render(ctx, playerScreen);
+      renderer.render(ctx, playerScreen, this.emf.width, this.emf.height);
     }
   }
 
@@ -430,7 +423,7 @@ export class MapRenderer {
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
   ) {
-    const renderer = this.npcs.find((n) => n.mapInfo.index === entity.typeId);
+    const renderer = this.npcs.find((n) => n.index === entity.typeId);
     if (renderer) {
       renderer.render(ctx, playerScreen);
     }
