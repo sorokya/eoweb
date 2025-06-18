@@ -17,6 +17,7 @@ function handleFacePlayer(client: Client, reader: EoReader) {
   }
 
   character.direction = packet.direction;
+  client.characterAnimations.delete(packet.playerId);
 }
 
 export function registerFaceHandlers(client: Client) {

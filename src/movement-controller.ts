@@ -1,10 +1,10 @@
-import { type Coords, Direction, SitState } from 'eolib';
+import { Direction, SitState } from 'eolib';
 import { Input, getLatestDirectionHeld, isInputHeld } from './input';
-import { FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
+import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
 import { getNextCoords } from './utils/get-next-coords';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 import type { Client } from './client';
-import { CharacterWalkAnimation } from './character';
+import { CharacterAttackAnimation, CharacterWalkAnimation } from './character';
 
 function inputToDirection(input: Input): Direction {
   switch (input) {
@@ -24,6 +24,8 @@ export class MovementController {
   walkTicks = WALK_TICKS;
   faceTicks = FACE_TICKS;
   sitTicks = SIT_TICKS;
+  attackTicks = ATTACK_TICKS;
+
   freeze = false;
 
   constructor(client: Client) {
@@ -34,6 +36,7 @@ export class MovementController {
     this.faceTicks = Math.max(this.faceTicks - 1, 0);
     this.walkTicks = Math.max(this.walkTicks - 1, 0);
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
+    this.attackTicks = Math.max(this.attackTicks - 1, 0);
 
     if (this.freeze) {
       return;
@@ -76,7 +79,6 @@ export class MovementController {
           return;
         }
 
-
         this.client.characterAnimations.set(
           character.playerId,
           new CharacterWalkAnimation(from, to, directionHeld),
@@ -88,6 +90,7 @@ export class MovementController {
         this.walkTicks = WALK_TICKS;
         this.faceTicks = FACE_TICKS;
         this.sitTicks = SIT_TICKS;
+        this.attackTicks = ATTACK_TICKS;
         return;
       }
     }
@@ -99,6 +102,19 @@ export class MovementController {
         this.client.stand();
       }
       this.sitTicks = SIT_TICKS;
+    }
+
+    if (
+      !this.attackTicks &&
+      isInputHeld(Input.Attack) &&
+      character.sitState === SitState.Stand
+    ) {
+      this.client.characterAnimations.set(
+        character.playerId,
+        new CharacterAttackAnimation(character.direction),
+      );
+      this.client.attack(character.direction, getTimestamp());
+      this.attackTicks = ATTACK_TICKS;
     }
   }
 }

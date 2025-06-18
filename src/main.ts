@@ -19,6 +19,7 @@ import { Menu } from './ui/menu';
 import { PacketLogModal, PacketSource } from './ui/packet-log';
 import { randomRange } from './utils/random-range';
 import { ChatModal, ChatTab } from './ui/chat';
+import { playSfxById, SfxId } from './sfx';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const uiCanvas = document.getElementById('ui') as HTMLCanvasElement;
@@ -102,6 +103,7 @@ const chatModal = new ChatModal();
 const client = new Client();
 
 client.on('error', ({ title, message }) => {
+  playSfxById(SfxId.Banned);
   chatModal.addMessage(ChatTab.Local, `${title} - ${message}`);
   errorModal.open(message, title);
 });
@@ -111,6 +113,7 @@ client.on('debug', (message) => {
 });
 
 client.on('login', (characters) => {
+  playSfxById(SfxId.Login);
   loginModal.close();
   charactersModal.setCharacters(characters);
   charactersModal.open();
@@ -195,20 +198,24 @@ connectModal.on('connect', (host) => {
 
 menu.on('connect', () => {
   connectModal.open();
+  playSfxById(SfxId.ButtonClick);
 });
 
 menu.on('login', () => {
   if (client.state !== GameState.Connected) {
     return;
   }
+  playSfxById(SfxId.ButtonClick);
   loginModal.open();
 });
 
 loginModal.on('login', ({ username, password }) => {
+  playSfxById(SfxId.ButtonClick);
   client.login(username, password);
 });
 
 charactersModal.on('select-character', (characterId) => {
+  playSfxById(SfxId.ButtonClick);
   client.selectCharacter(characterId);
 });
 

@@ -1,5 +1,6 @@
 import {
   AdminLevel,
+  AttackUseClientPacket,
   CharacterBaseStats,
   type CharacterMapInfo,
   CharacterSecondaryStats,
@@ -38,7 +39,7 @@ import {
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
 import type { PacketBus } from './bus';
-import type { CharacterAnimation } from './character';
+import { CharacterWalkAnimation, type CharacterAnimation } from './character';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
 import { registerAvatarHandlers } from './handlers/avatar';
 import { registerInitHandlers } from './handlers/init';
@@ -65,6 +66,10 @@ import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { GfxType, loadBitmapById } from './gfx';
 import type { ChatTab } from './ui/chat';
 import { registerTalkHandlers } from './handlers/talk';
+import { Dir } from '@zhobo63/imgui-ts/src/imgui';
+import { registerAttackHandlers } from './handlers/attack';
+import { registerArenaHandlers } from './handlers/arena';
+import { playSfxById, SfxId } from './sfx';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -161,6 +166,7 @@ export class Client {
   private preloadCharacterSprites() {
     loadBitmapById(GfxType.SkinSprites, 1); // standing
     loadBitmapById(GfxType.SkinSprites, 2); // walking
+    loadBitmapById(GfxType.SkinSprites, 3); // attacking
     loadBitmapById(GfxType.SkinSprites, 6); // sitting on ground
   }
 
@@ -240,7 +246,7 @@ export class Client {
         endedCharacterAnimations.push(id);
         continue;
       }
-      if (id === this.playerId) {
+      if (id === this.playerId && animation instanceof CharacterWalkAnimation) {
         playerWalking = true;
       }
       animation.tick();
@@ -308,6 +314,8 @@ export class Client {
     registerNpcHandlers(this);
     registerRangeHandlers(this);
     registerTalkHandlers(this);
+    registerAttackHandlers(this);
+    registerArenaHandlers(this);
   }
 
   canWalk(coords: Coords): boolean {
@@ -466,6 +474,14 @@ export class Client {
     packet.walkAction.coords = coords;
     packet.walkAction.timestamp = timestamp;
     this.bus.send(packet);
+  }
+
+  attack(direction: Direction, timestamp: number) {
+    const packet = new AttackUseClientPacket();
+    packet.direction = direction;
+    packet.timestamp = timestamp;
+    this.bus.send(packet);
+    playSfxById(SfxId.PunchAttack);
   }
 
   sit() {

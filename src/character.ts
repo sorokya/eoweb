@@ -1,7 +1,12 @@
 import { type CharacterMapInfo, type Coords, Direction, Gender } from 'eolib';
 import {
+  ATTACK_ANIMATION_FRAMES,
+  ATTACK_TICKS,
+  CHARACTER_ATTACK_WIDTH,
+  CHARACTER_HEIGHT,
   CHARACTER_WALKING_HEIGHT,
   CHARACTER_WALKING_WIDTH,
+  HALF_CHARACTER_ATTACK_WIDTH,
   HALF_CHARACTER_WALKING_WIDTH,
   WALK_ANIMATION_FRAMES,
   WALK_HEIGHT_FACTOR,
@@ -170,6 +175,104 @@ export class CharacterWalkAnimation extends CharacterAnimation {
       screenY,
       CHARACTER_WALKING_WIDTH,
       CHARACTER_WALKING_HEIGHT,
+    );
+
+    if (mirrored) {
+      ctx.restore();
+    }
+  }
+}
+
+export class CharacterAttackAnimation extends CharacterAnimation {
+  direction: Direction;
+  animationFrame = 0;
+
+  constructor(direction: Direction) {
+    super();
+    this.ticks = ATTACK_TICKS;
+    this.direction = direction;
+  }
+
+  tick() {
+    switch (this.ticks) {
+      case 5:
+        this.animationFrame = 0;
+        break;
+      default:
+        this.animationFrame = 1;
+        break;
+    }
+
+    this.ticks = Math.max(this.ticks - 1, 0);
+  }
+
+  render(
+    character: CharacterMapInfo,
+    playerScreen: Vector2,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const bmp = getBitmapById(GfxType.SkinSprites, 3);
+    if (!bmp) {
+      return;
+    }
+
+    const startX =
+      character.gender === Gender.Female ? 0 : CHARACTER_ATTACK_WIDTH * 4;
+
+    const sourceX =
+      startX +
+      ([Direction.Up, Direction.Left].includes(character.direction)
+        ? CHARACTER_ATTACK_WIDTH * ATTACK_ANIMATION_FRAMES
+        : 0) +
+      CHARACTER_ATTACK_WIDTH * this.animationFrame;
+    const sourceY = character.skin * CHARACTER_HEIGHT;
+
+    const screenCoords = isoToScreen(character.coords);
+
+    // TODO: This isn't correct, but it's close enough for now
+    const additionalOffset = {
+      x: [Direction.Up, Direction.Right].includes(this.direction) ? 2 : -2,
+      y: 5,
+    };
+
+    const screenX =
+      screenCoords.x -
+      HALF_CHARACTER_ATTACK_WIDTH -
+      playerScreen.x +
+      HALF_GAME_WIDTH +
+      additionalOffset.x;
+
+    const screenY =
+      screenCoords.y -
+      CHARACTER_HEIGHT -
+      playerScreen.y +
+      HALF_GAME_HEIGHT +
+      additionalOffset.y;
+
+    const mirrored = [Direction.Right, Direction.Up].includes(
+      character.direction,
+    );
+
+    if (mirrored) {
+      ctx.save(); // Save the current context state
+      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
+      ctx.scale(-1, 1); // Flip horizontally
+    }
+
+    const drawX = mirrored
+      ? GAME_WIDTH - screenX - CHARACTER_ATTACK_WIDTH
+      : screenX;
+
+    ctx.drawImage(
+      bmp,
+      sourceX,
+      sourceY,
+      CHARACTER_ATTACK_WIDTH,
+      CHARACTER_HEIGHT,
+      drawX,
+      screenY,
+      CHARACTER_ATTACK_WIDTH,
+      CHARACTER_HEIGHT,
     );
 
     if (mirrored) {

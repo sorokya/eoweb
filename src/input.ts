@@ -6,6 +6,7 @@ export enum Input {
   Left = 2,
   Right = 3,
   SitStand = 4,
+  Attack = 5,
   Unknown = -1,
 }
 
@@ -74,6 +75,9 @@ window.addEventListener('keydown', (e) => {
     case 'x':
       updateInputHeld(Input.SitStand, true);
       break;
+    case ' ':
+      updateInputHeld(Input.Attack, true);
+      break;
   }
 });
 
@@ -93,6 +97,9 @@ window.addEventListener('keyup', (e) => {
       break;
     case 'x':
       updateInputHeld(Input.SitStand, false);
+      break;
+    case ' ':
+      updateInputHeld(Input.Attack, false);
       break;
   }
 });

@@ -3,9 +3,11 @@ import {
   PacketAction,
   PacketFamily,
   TalkPlayerServerPacket,
+  TalkServerServerPacket,
 } from 'eolib';
 import type { Client } from '../client';
 import { ChatTab } from '../ui/chat';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleTalkPlayer(client: Client, reader: EoReader) {
   const packet = TalkPlayerServerPacket.deserialize(reader);
@@ -23,10 +25,25 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
   });
 }
 
+function handleTalkServer(client: Client, reader: EoReader) {
+  const packet = TalkServerServerPacket.deserialize(reader);
+  client.emit('chat', {
+    name: 'Server',
+    tab: ChatTab.Local,
+    message: packet.message,
+  });
+  playSfxById(SfxId.ServerMessage);
+}
+
 export function registerTalkHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Talk,
     PacketAction.Player,
     (reader) => handleTalkPlayer(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Talk,
+    PacketAction.Server,
+    (reader) => handleTalkServer(client, reader),
   );
 }
