@@ -9,7 +9,6 @@ import type { Client } from '../client';
 function handleRefreshReply(client: Client, reader: EoReader) {
   const packet = RefreshReplyServerPacket.deserialize(reader);
   client.nearby = packet.nearby;
-  client.emit('refresh', undefined);
 }
 
 export function registerRefreshHandlers(client: Client) {

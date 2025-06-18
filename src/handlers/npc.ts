@@ -13,11 +13,6 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     if (npc) {
       npc.coords = position.coords;
       npc.direction = position.direction;
-      client.emit('npcWalk', {
-        npcIndex: position.npcIndex,
-        direction: position.direction,
-        coords: position.coords,
-      });
     }
   }
 }
