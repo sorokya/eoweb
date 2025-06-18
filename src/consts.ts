@@ -22,3 +22,4 @@ export const ANIMATION_TICKS = 6;
 export const MAX_CHALLENGE = 11_092_110;
 export const MAX_USERNAME_LENGTH = 16;
 export const MAX_PASSWORD_LENGTH = 12;
+export const NPC_IDLE_ANIMATION_TICKS = 2;

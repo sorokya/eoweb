@@ -15,6 +15,7 @@ import {
   HALF_CHARACTER_WIDTH,
   HALF_TILE_HEIGHT,
   HALF_TILE_WIDTH,
+  NPC_IDLE_ANIMATION_TICKS,
   TILE_HEIGHT,
   TILE_WIDTH,
 } from './consts';
@@ -23,7 +24,6 @@ import { GfxType, getBitmapById } from './gfx';
 import { isoToScreen } from './utils/iso-to-screen';
 import type { Vector2 } from './vector';
 import type { Client } from './client';
-import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { CharacterWalkAnimation } from './character';
 
 enum EntityType {
@@ -93,6 +93,8 @@ export class MapRenderer {
   client: Client;
   animationFrame = 0;
   animationTicks = ANIMATION_TICKS;
+  npcIdleAnimationTicks = NPC_IDLE_ANIMATION_TICKS;
+  npcIdleAnimationFrame = 0;
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
 
@@ -138,6 +140,12 @@ export class MapRenderer {
     if (!this.animationTicks) {
       this.animationFrame = (this.animationFrame + 1) % 3;
       this.animationTicks = ANIMATION_TICKS;
+    }
+
+    this.npcIdleAnimationTicks = Math.max(this.npcIdleAnimationTicks - 1, 0);
+    if (!this.npcIdleAnimationTicks) {
+      this.npcIdleAnimationFrame = (this.npcIdleAnimationFrame + 1) % 2;
+      this.npcIdleAnimationTicks = NPC_IDLE_ANIMATION_TICKS;
     }
   }
 
@@ -539,9 +547,13 @@ export class MapRenderer {
       return;
     }
 
-    const offset = [Direction.Down, Direction.Right].includes(npc.direction)
+    let offset = [Direction.Down, Direction.Right].includes(npc.direction)
       ? 1
       : 3;
+
+    if (meta.animatedStanding) {
+      offset += this.npcIdleAnimationFrame;
+    }
 
     const bmp = getBitmapById(
       GfxType.NPC,
