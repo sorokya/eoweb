@@ -1,4 +1,8 @@
-import { InitInitClientPacket, Version } from 'eolib';
+import {
+  AccountCreateClientPacket,
+  InitInitClientPacket,
+  Version,
+} from 'eolib';
 import './style.css';
 import { ImGui, ImGui_Impl } from '@zhobo63/imgui-ts';
 import { PacketBus } from './bus';
@@ -20,6 +24,7 @@ import { PacketLogModal, PacketSource } from './ui/packet-log';
 import { randomRange } from './utils/random-range';
 import { ChatModal, ChatTab } from './ui/chat';
 import { playSfxById, SfxId } from './sfx';
+import { CreateAccountModal } from './ui/create-account';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const uiCanvas = document.getElementById('ui') as HTMLCanvasElement;
@@ -98,18 +103,23 @@ const render = (now: DOMHighResTimeStamp) => {
 const connectModal = new ConnectModal();
 const errorModal = new ErrorModal();
 const loginModal = new LoginModal();
+const createAccountModal = new CreateAccountModal();
 const charactersModal = new CharactersModal();
 const chatModal = new ChatModal();
 const client = new Client();
 
 client.on('error', ({ title, message }) => {
-  playSfxById(SfxId.Banned);
   chatModal.addMessage(ChatTab.Local, `${title} - ${message}`);
   errorModal.open(message, title);
 });
 
 client.on('debug', (message) => {
   chatModal.addMessage(ChatTab.Local, `System: ${message}`);
+});
+
+client.on('accountCreated', () => {
+  errorModal.open('Your account has been created', 'Success');
+  createAccountModal.close();
 });
 
 client.on('login', (characters) => {
@@ -160,6 +170,7 @@ const initializeSocket = () => {
 
 const menu = new Menu();
 connectModal.on('connect', (host) => {
+  playSfxById(SfxId.ButtonClick);
   const socket = new WebSocket(host);
   socket.addEventListener('open', () => {
 	chatModal.addMessage(ChatTab.Local, 'System: web socket connection opened');
@@ -201,17 +212,33 @@ menu.on('connect', () => {
   playSfxById(SfxId.ButtonClick);
 });
 
-menu.on('login', () => {
+menu.on('create-account', () => {
+  playSfxById(SfxId.ButtonClick);
   if (client.state !== GameState.Connected) {
+    connectModal.open();
     return;
   }
+
+  createAccountModal.open();
+});
+
+menu.on('login', () => {
   playSfxById(SfxId.ButtonClick);
+  if (client.state !== GameState.Connected) {
+    connectModal.open();
+    return;
+  }
   loginModal.open();
 });
 
 loginModal.on('login', ({ username, password }) => {
   playSfxById(SfxId.ButtonClick);
   client.login(username, password);
+});
+
+createAccountModal.on('createAccount', (data) => {
+  playSfxById(SfxId.ButtonClick);
+  client.requestAccountCreation(data);
 });
 
 charactersModal.on('select-character', (characterId) => {
@@ -233,6 +260,7 @@ function renderUI(now: number) {
   packetLogModal.render();
   errorModal.render();
   loginModal.render();
+  createAccountModal.render();
   charactersModal.render();
   chatModal.render();
 

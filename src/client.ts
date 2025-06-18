@@ -1,4 +1,5 @@
 import {
+  AccountRequestClientPacket,
   AdminLevel,
   AttackUseClientPacket,
   CharacterBaseStats,
@@ -70,6 +71,7 @@ import { Dir } from '@zhobo63/imgui-ts/src/imgui';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerArenaHandlers } from './handlers/arena';
 import { playSfxById, SfxId } from './sfx';
+import { registerAccountHandlers } from './handlers/account';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -78,6 +80,7 @@ type ClientEvents = {
   selectCharacter: undefined;
   enterGame: { news: string[] };
   chat: { name: string; tab: ChatTab; message: string };
+  accountCreated: undefined;
 };
 
 export enum GameState {
@@ -88,9 +91,19 @@ export enum GameState {
   InGame = 4,
 }
 
+type AccountCreateData = {
+  username: string;
+  password: string;
+  confirmPassword: string;
+  name: string;
+  location: string;
+  email: string;
+};
+
 export class Client {
   private emitter: Emitter<ClientEvents>;
   bus: PacketBus | null = null;
+  accountCreateData: AccountCreateData | null = null;
   playerId = 0;
   characterId = 0;
   name = '';
@@ -316,6 +329,7 @@ export class Client {
     registerTalkHandlers(this);
     registerAttackHandlers(this);
     registerArenaHandlers(this);
+    registerAccountHandlers(this);
   }
 
   canWalk(coords: Coords): boolean {
@@ -368,6 +382,13 @@ export class Client {
     }
 
     return true;
+  }
+
+  requestAccountCreation(data: AccountCreateData) {
+    this.accountCreateData = data;
+    const packet = new AccountRequestClientPacket();
+    packet.username = data.username;
+    this.bus.send(packet);
   }
 
   login(username: string, password: string) {
