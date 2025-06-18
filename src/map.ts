@@ -95,7 +95,6 @@ export class MapRenderer {
   animationTicks = ANIMATION_TICKS;
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
-  private npcMetadata = getNpcMetaData();
 
   constructor(client: Client) {
     this.client = client;
@@ -160,7 +159,9 @@ export class MapRenderer {
 
     const player = this.getPlayerCoords();
     let playerScreen = isoToScreen(player);
-    const mainCharacterAnimation = this.client.characterAnimations.get(this.client.playerId);
+    const mainCharacterAnimation = this.client.characterAnimations.get(
+      this.client.playerId,
+    );
     if (mainCharacterAnimation instanceof CharacterWalkAnimation) {
       playerScreen = isoToScreen(mainCharacterAnimation.from);
       playerScreen.x += mainCharacterAnimation.walkOffset.x;
@@ -515,15 +516,6 @@ export class MapRenderer {
     }
   }
 
-  getNpcMetadata(graphicId: number): NPCMetadata {
-    const data = this.npcMetadata.get(graphicId);
-    if (data) {
-      return data;
-    }
-
-    return new NPCMetadata(0, 0, 0, 0, false, 0);
-  }
-
   renderNpc(
     entity: Entity,
     playerScreen: Vector2,
@@ -536,6 +528,14 @@ export class MapRenderer {
 
     const record = this.client.getEnfRecordById(npc.id);
     if (!record) {
+      return;
+    }
+
+    const meta = this.client.getNpcMetadata(record.graphicId);
+
+    const animation = this.client.npcAnimations.get(npc.index);
+    if (animation) {
+      animation.render(record.graphicId, npc, meta, playerScreen, ctx);
       return;
     }
 
@@ -552,7 +552,6 @@ export class MapRenderer {
     }
 
     const screenCoords = isoToScreen(npc.coords);
-    const meta = this.getNpcMetadata(record.graphicId);
     const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
 
     const screenX =

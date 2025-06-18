@@ -57,6 +57,8 @@ import { isoToScreen } from './utils/iso-to-screen';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { screenToIso } from './utils/screen-to-iso';
 import { MovementController } from './movement-controller';
+import type { NpcAnimation } from './npc';
+import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -121,9 +123,11 @@ export class Client {
   downloadQueue: { type: FileType; id: number }[] = [];
   unknownPlayerIds: Set<number> = new Set();
   characterAnimations: Map<number, CharacterAnimation> = new Map();
+  npcAnimations: Map<number, NpcAnimation> = new Map();
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
+  npcMetadata = getNpcMetaData();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -157,6 +161,15 @@ export class Client {
 
   getNpcByIndex(index: number): NpcMapInfo | undefined {
     return this.nearby.npcs.find((n) => n.index === index);
+  }
+
+  getNpcMetadata(graphicId: number): NPCMetadata {
+    const data = this.npcMetadata.get(graphicId);
+    if (data) {
+      return data;
+    }
+
+    return new NPCMetadata(0, 0, 0, 0, false, 0);
   }
 
   getEnfRecordById(id: number): EnfRecord | undefined {
@@ -196,16 +209,28 @@ export class Client {
   tick() {
     this.movementController.tick();
     this.mapRenderer.tick();
-    const ended: number[] = [];
+    const endedCharacterAnimations: number[] = [];
     for (const [id, animation] of this.characterAnimations) {
       if (!animation.ticks) {
-        ended.push(id);
+        endedCharacterAnimations.push(id);
         continue;
       }
       animation.tick();
     }
-    for (const id of ended) {
+    for (const id of endedCharacterAnimations) {
       this.characterAnimations.delete(id);
+    }
+
+    const endedNpcAnimations: number[] = [];
+    for (const [id, animation] of this.npcAnimations) {
+      if (!animation.ticks) {
+        endedNpcAnimations.push(id);
+        continue;
+      }
+      animation.tick();
+    }
+    for (const id of endedNpcAnimations) {
+      this.npcAnimations.delete(id);
     }
 
     if (this.warpQueued) {
