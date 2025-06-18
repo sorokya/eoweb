@@ -140,6 +140,17 @@ function handleEnterGame(
   client.nearby = data.nearby;
   client.state = GameState.InGame;
   client.emit('enterGame', { news: data.news });
+
+  const loaded = [];
+  for (const npc of client.nearby.npcs) {
+    if (loaded.includes(npc.id)) {
+      continue;
+    }
+
+    client.preloadNpcSprites(npc.id);
+
+    loaded.push(npc.id);
+  }
 }
 
 export function registerWelcomeHandlers(client: Client) {

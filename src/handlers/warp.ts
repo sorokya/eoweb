@@ -49,6 +49,17 @@ function handleWarpAgree(client: Client, reader: EoReader) {
       client.mapRenderer.buildCaches();
     });
   }
+
+  const loaded = [];
+  for (const npc of client.nearby.npcs) {
+    if (loaded.includes(npc.id)) {
+      continue;
+    }
+
+    client.preloadNpcSprites(npc.id);
+
+    loaded.push(npc.id);
+  }
 }
 
 export function registerWarpHandlers(client: Client) {

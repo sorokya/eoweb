@@ -1,7 +1,10 @@
 import {
+  AccountRequestClientPacket,
   AdminLevel,
+  AttackUseClientPacket,
   CharacterBaseStats,
   type CharacterMapInfo,
+  CharacterRequestClientPacket,
   CharacterSecondaryStats,
   type CharacterSelectionListEntry,
   Coords,
@@ -15,15 +18,20 @@ import {
   type Esf,
   FacePlayerClientPacket,
   FileType,
+  type Gender,
   type Item,
   LoginRequestClientPacket,
+  MapTileSpec,
   NearbyInfo,
   type NpcMapInfo,
+  NpcRangeRequestClientPacket,
+  PlayerRangeRequestClientPacket,
   RangeRequestClientPacket,
   type ServerSettings,
   SitAction,
   SitRequestClientPacket,
   type Spell,
+  TalkReportClientPacket,
   WalkAction,
   WalkPlayerClientPacket,
   WarpAcceptClientPacket,
@@ -35,7 +43,7 @@ import {
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
 import type { PacketBus } from './bus';
-import type { CharacterAnimation } from './character';
+import { CharacterWalkAnimation, type CharacterAnimation } from './character';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
 import { registerAvatarHandlers } from './handlers/avatar';
 import { registerInitHandlers } from './handlers/init';
@@ -51,7 +59,7 @@ import { registerRefreshHandlers } from './handlers/refresh';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerRangeHandlers } from './handlers/range';
 import { MapRenderer } from './map';
-import { HALF_TILE_HEIGHT } from './consts';
+import { HALF_TILE_HEIGHT, MAX_CHARACTER_NAME_LENGTH } from './consts';
 import type { Vector2 } from './vector';
 import { isoToScreen } from './utils/iso-to-screen';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
@@ -59,13 +67,25 @@ import { screenToIso } from './utils/screen-to-iso';
 import { MovementController } from './movement-controller';
 import type { NpcAnimation } from './npc';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
+import { GfxType, loadBitmapById } from './gfx';
+import { ChatTab } from './ui/chat';
+import { registerTalkHandlers } from './handlers/talk';
+import { Dir } from '@zhobo63/imgui-ts/src/imgui';
+import { registerAttackHandlers } from './handlers/attack';
+import { registerArenaHandlers } from './handlers/arena';
+import { playSfxById, SfxId } from './sfx';
+import { registerAccountHandlers } from './handlers/account';
+import { registerCharacterHandlers } from './handlers/character';
 
 type ClientEvents = {
   error: { title: string; message: string };
   debug: string;
   login: CharacterSelectionListEntry[];
+  characterCreated: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
+  chat: { name: string; tab: ChatTab; message: string };
+  accountCreated: undefined;
 };
 
 export enum GameState {
@@ -76,9 +96,28 @@ export enum GameState {
   InGame = 4,
 }
 
+type AccountCreateData = {
+  username: string;
+  password: string;
+  confirmPassword: string;
+  name: string;
+  location: string;
+  email: string;
+};
+
+type CharacterCreateData = {
+  name: string;
+  gender: Gender;
+  hairStyle: number;
+  hairColor: number;
+  skin: number;
+};
+
 export class Client {
   private emitter: Emitter<ClientEvents>;
   bus: PacketBus | null = null;
+  accountCreateData: AccountCreateData | null = null;
+  characterCreateData: CharacterCreateData | null = null;
   playerId = 0;
   characterId = 0;
   name = '';
@@ -121,7 +160,6 @@ export class Client {
   map: Emf | null = null;
   mapRenderer: MapRenderer;
   downloadQueue: { type: FileType; id: number }[] = [];
-  unknownPlayerIds: Set<number> = new Set();
   characterAnimations: Map<number, CharacterAnimation> = new Map();
   npcAnimations: Map<number, NpcAnimation> = new Map();
   mousePosition: Vector2 | undefined;
@@ -149,6 +187,25 @@ export class Client {
     this.nearby.items = [];
     this.mapRenderer = new MapRenderer(this);
     this.movementController = new MovementController(this);
+    this.preloadCharacterSprites();
+  }
+
+  private preloadCharacterSprites() {
+    loadBitmapById(GfxType.SkinSprites, 1); // standing
+    loadBitmapById(GfxType.SkinSprites, 2); // walking
+    loadBitmapById(GfxType.SkinSprites, 3); // attacking
+    loadBitmapById(GfxType.SkinSprites, 6); // sitting on ground
+  }
+
+  preloadNpcSprites(id: number) {
+    const record = this.getEnfRecordById(id);
+    if (!record) {
+      return;
+    }
+
+    for (let i = 1; i <= 18; ++i) {
+      loadBitmapById(GfxType.NPC, (record.graphicId - 1) * 40 + i);
+    }
   }
 
   getCharacterById(id: number): CharacterMapInfo | undefined {
@@ -210,10 +267,14 @@ export class Client {
     this.movementController.tick();
     this.mapRenderer.tick();
     const endedCharacterAnimations: number[] = [];
+    let playerWalking = false;
     for (const [id, animation] of this.characterAnimations) {
       if (!animation.ticks) {
         endedCharacterAnimations.push(id);
         continue;
+      }
+      if (id === this.playerId && animation instanceof CharacterWalkAnimation) {
+        playerWalking = true;
       }
       animation.tick();
     }
@@ -233,7 +294,7 @@ export class Client {
       this.npcAnimations.delete(id);
     }
 
-    if (this.warpQueued) {
+    if (this.warpQueued && !playerWalking) {
       this.acceptWarp();
     }
   }
@@ -279,6 +340,99 @@ export class Client {
     registerRefreshHandlers(this);
     registerNpcHandlers(this);
     registerRangeHandlers(this);
+    registerTalkHandlers(this);
+    registerAttackHandlers(this);
+    registerArenaHandlers(this);
+    registerAccountHandlers(this);
+    registerCharacterHandlers(this);
+  }
+
+  canWalk(coords: Coords): boolean {
+    if (
+      this.nearby.npcs.some(
+        (n) => n.coords.x === coords.x && n.coords.y === coords.y,
+      )
+    ) {
+      return false;
+    }
+
+    // TODO: Ghost
+    if (
+      this.nearby.characters.some(
+        (c) => c.coords.x === coords.x && c.coords.y === coords.y,
+      )
+    ) {
+      return false;
+    }
+
+    const spec = this.map.tileSpecRows
+      .find((r) => r.y === coords.y)
+      ?.tiles.find((t) => t.x === coords.x);
+    if (
+      spec &&
+      [
+        MapTileSpec.Wall,
+        MapTileSpec.ChairDown,
+        MapTileSpec.ChairLeft,
+        MapTileSpec.ChairRight,
+        MapTileSpec.ChairUp,
+        MapTileSpec.ChairDownRight,
+        MapTileSpec.ChairUpLeft,
+        MapTileSpec.ChairAll,
+        MapTileSpec.Chest,
+        MapTileSpec.BankVault,
+        MapTileSpec.Edge,
+        MapTileSpec.Board1,
+        MapTileSpec.Board2,
+        MapTileSpec.Board3,
+        MapTileSpec.Board4,
+        MapTileSpec.Board5,
+        MapTileSpec.Board6,
+        MapTileSpec.Board7,
+        MapTileSpec.Board8,
+        MapTileSpec.Jukebox,
+      ].includes(spec.tileSpec)
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  requestAccountCreation(data: AccountCreateData) {
+    this.accountCreateData = data;
+    const packet = new AccountRequestClientPacket();
+    packet.username = data.username;
+    this.bus.send(packet);
+  }
+
+  requestCharacterCreation(data: CharacterCreateData) {
+    if (
+      data.name.trim().length < 4 ||
+      data.name.trim().length > MAX_CHARACTER_NAME_LENGTH
+    ) {
+      this.showError('Invalid character name');
+      return;
+    }
+
+    this.characterCreateData = data;
+    this.bus.send(new CharacterRequestClientPacket());
+  }
+
+  chat(message: string) {
+    if (!message) {
+      return;
+    }
+
+    const packet = new TalkReportClientPacket();
+    packet.message = message;
+    this.bus.send(packet);
+
+    this.emit('chat', {
+      name: this.name,
+      tab: ChatTab.Local,
+      message,
+    });
   }
 
   login(username: string, password: string) {
@@ -360,6 +514,18 @@ export class Client {
     this.bus.send(packet);
   }
 
+  requestCharacterRange(playerIds: number[]) {
+    const packet = new PlayerRangeRequestClientPacket();
+    packet.playerIds = playerIds;
+    this.bus.send(packet);
+  }
+
+  requestNpcRange(npcIndexes: number[]) {
+    const packet = new NpcRangeRequestClientPacket();
+    packet.npcIndexes = npcIndexes;
+    this.bus.send(packet);
+  }
+
   face(direction: Direction) {
     const packet = new FacePlayerClientPacket();
     packet.direction = direction;
@@ -373,6 +539,14 @@ export class Client {
     packet.walkAction.coords = coords;
     packet.walkAction.timestamp = timestamp;
     this.bus.send(packet);
+  }
+
+  attack(direction: Direction, timestamp: number) {
+    const packet = new AttackUseClientPacket();
+    packet.direction = direction;
+    packet.timestamp = timestamp;
+    this.bus.send(packet);
+    playSfxById(SfxId.PunchAttack);
   }
 
   sit() {

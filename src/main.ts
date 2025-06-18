@@ -1,4 +1,8 @@
-import { InitInitClientPacket, Version } from 'eolib';
+import {
+  AccountCreateClientPacket,
+  InitInitClientPacket,
+  Version,
+} from 'eolib';
 import './style.css';
 import { ImGui, ImGui_Impl } from '@zhobo63/imgui-ts';
 import { PacketBus } from './bus';
@@ -19,6 +23,9 @@ import { Menu } from './ui/menu';
 import { PacketLogModal, PacketSource } from './ui/packet-log';
 import { randomRange } from './utils/random-range';
 import { ChatModal, ChatTab } from './ui/chat';
+import { playSfxById, SfxId } from './sfx';
+import { CreateAccountModal } from './ui/create-account';
+import { CreateCharacterModal } from './ui/create-character';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const uiCanvas = document.getElementById('ui') as HTMLCanvasElement;
@@ -97,9 +104,15 @@ const render = (now: DOMHighResTimeStamp) => {
 const connectModal = new ConnectModal();
 const errorModal = new ErrorModal();
 const loginModal = new LoginModal();
+const createAccountModal = new CreateAccountModal();
 const charactersModal = new CharactersModal();
+const createCharacterModal = new CreateCharacterModal();
 const chatModal = new ChatModal();
 const client = new Client();
+
+chatModal.on('chat', (message) => {
+  client.chat(message.trim().substring(0, 300));
+});
 
 client.on('error', ({ title, message }) => {
   chatModal.addMessage(ChatTab.Local, `${title} - ${message}`);
@@ -110,10 +123,22 @@ client.on('debug', (message) => {
   chatModal.addMessage(ChatTab.Local, `System: ${message}`);
 });
 
+client.on('accountCreated', () => {
+  errorModal.open('Your account has been created', 'Success');
+  createAccountModal.close();
+});
+
 client.on('login', (characters) => {
+  playSfxById(SfxId.Login);
   loginModal.close();
   charactersModal.setCharacters(characters);
   charactersModal.open();
+});
+
+client.on('characterCreated', (characters) => {
+  createCharacterModal.close();
+  charactersModal.setCharacters(characters);
+  errorModal.open('Your character has been created', 'Success');
 });
 
 client.on('selectCharacter', () => {
@@ -121,6 +146,10 @@ client.on('selectCharacter', () => {
     ChatTab.Local,
     `System: selected character: ${client.name}`,
   );
+});
+
+client.on('chat', ({ name, tab, message }) => {
+  chatModal.addMessage(tab, `${name}: ${message}`);
 });
 
 client.on('enterGame', ({ news }) => {
@@ -153,6 +182,7 @@ const initializeSocket = () => {
 
 const menu = new Menu();
 connectModal.on('connect', (host) => {
+  playSfxById(SfxId.ButtonClick);
   const socket = new WebSocket(host);
   socket.addEventListener('open', () => {
 	chatModal.addMessage(ChatTab.Local, 'System: web socket connection opened');
@@ -191,21 +221,51 @@ connectModal.on('connect', (host) => {
 
 menu.on('connect', () => {
   connectModal.open();
+  playSfxById(SfxId.ButtonClick);
+});
+
+menu.on('create-account', () => {
+  playSfxById(SfxId.ButtonClick);
+  if (client.state !== GameState.Connected) {
+    connectModal.open();
+    return;
+  }
+
+  createAccountModal.open();
 });
 
 menu.on('login', () => {
+  playSfxById(SfxId.ButtonClick);
   if (client.state !== GameState.Connected) {
+    connectModal.open();
     return;
   }
   loginModal.open();
 });
 
 loginModal.on('login', ({ username, password }) => {
+  playSfxById(SfxId.ButtonClick);
   client.login(username, password);
 });
 
+createAccountModal.on('createAccount', (data) => {
+  playSfxById(SfxId.ButtonClick);
+  client.requestAccountCreation(data);
+});
+
 charactersModal.on('select-character', (characterId) => {
+  playSfxById(SfxId.ButtonClick);
   client.selectCharacter(characterId);
+});
+
+charactersModal.on('create-character', () => {
+  playSfxById(SfxId.ButtonClick);
+  createCharacterModal.open();
+});
+
+createCharacterModal.on('createCharacter', (data) => {
+  playSfxById(SfxId.ButtonClick);
+  client.requestCharacterCreation(data);
 });
 
 const packetLogModal = new PacketLogModal();
@@ -222,8 +282,10 @@ function renderUI(now: number) {
   packetLogModal.render();
   errorModal.render();
   loginModal.render();
+  createAccountModal.render();
   charactersModal.render();
   chatModal.render();
+  createCharacterModal.render();
 
   ImGui.EndFrame();
   ImGui.Render();

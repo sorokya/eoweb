@@ -29,17 +29,12 @@ export enum GfxType {
 }
 
 const GFX: HTMLImageElement[][] = [];
-const PENDING: { type: GfxType; id: number }[] = [];
 
 export function getBitmapById(
   gfxType: GfxType,
   resourceId: number,
 ): HTMLImageElement | null {
-  if (resourceId === 0) {
-    return null;
-  }
-
-  if (PENDING.some((p) => p.type === gfxType && p.id === resourceId)) {
+  if (resourceId < 1) {
     return null;
   }
 
@@ -58,7 +53,11 @@ export function getBitmapById(
   return bmp;
 }
 
-function loadBitmapById(gfxType: GfxType, resourceId: number) {
+export function loadBitmapById(gfxType: GfxType, resourceId: number) {
+  if (GFX[gfxType]?.[resourceId]) {
+    return;
+  }
+
   const img = new Image();
   img.src = `/gfx/gfx${padWithZeros(gfxType, 3)}/${resourceId + 100}.png`;
   img.onload = () => {

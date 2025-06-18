@@ -107,7 +107,7 @@ export class NpcWalkAnimation extends NpcAnimation {
     }
 
     const drawX = mirrored
-      ? GAME_WIDTH - screenX - bmp.width - meta.xOffset
+      ? GAME_WIDTH - screenX - bmp.width + meta.xOffset
       : screenX + meta.xOffset;
     const drawY = screenY - meta.yOffset;
 

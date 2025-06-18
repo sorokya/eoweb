@@ -95,6 +95,7 @@ export class MapRenderer {
   animationTicks = ANIMATION_TICKS;
   npcIdleAnimationTicks = NPC_IDLE_ANIMATION_TICKS;
   npcIdleAnimationFrame = 0;
+  private buildingCache = false;
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
 
@@ -103,6 +104,7 @@ export class MapRenderer {
   }
 
   buildCaches() {
+    this.buildingCache = true;
     const w = this.client.map.width;
     const h = this.client.map.height;
 
@@ -133,12 +135,14 @@ export class MapRenderer {
     );
     for (const row of this.client.map.tileSpecRows)
       for (const t of row.tiles) this.tileSpecCache[row.y][t.x] = t.tileSpec;
+
+    this.buildingCache = false;
   }
 
   tick() {
     this.animationTicks = Math.max(this.animationTicks - 1, 0);
     if (!this.animationTicks) {
-      this.animationFrame = (this.animationFrame + 1) % 3;
+      this.animationFrame = (this.animationFrame + 1) % 3; // TODO: This might not be the right number of frames
       this.animationTicks = ANIMATION_TICKS;
     }
 
@@ -161,7 +165,7 @@ export class MapRenderer {
   }
 
   render(ctx: CanvasRenderingContext2D) {
-    if (!this.client.map) {
+    if (!this.client.map || this.buildingCache) {
       return;
     }
 
@@ -578,7 +582,7 @@ export class MapRenderer {
     }
 
     const drawX = mirrored
-      ? GAME_WIDTH - screenX - bmp.width - meta.xOffset
+      ? GAME_WIDTH - screenX - bmp.width + meta.xOffset
       : screenX + meta.xOffset;
     const drawY = screenY - meta.yOffset;
 
