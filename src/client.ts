@@ -17,6 +17,7 @@ import {
   FileType,
   type Item,
   LoginRequestClientPacket,
+  MapTileSpec,
   NearbyInfo,
   type NpcMapInfo,
   NpcRangeRequestClientPacket,
@@ -307,6 +308,58 @@ export class Client {
     registerNpcHandlers(this);
     registerRangeHandlers(this);
     registerTalkHandlers(this);
+  }
+
+  canWalk(coords: Coords): boolean {
+    if (
+      this.nearby.npcs.some(
+        (n) => n.coords.x === coords.x && n.coords.y === coords.y,
+      )
+    ) {
+      return false;
+    }
+
+    // TODO: Ghost
+    if (
+      this.nearby.characters.some(
+        (c) => c.coords.x === coords.x && c.coords.y === coords.y,
+      )
+    ) {
+      return false;
+    }
+
+    const spec = this.map.tileSpecRows
+      .find((r) => r.y === coords.y)
+      ?.tiles.find((t) => t.x === coords.x);
+    if (
+      spec &&
+      [
+        MapTileSpec.Wall,
+        MapTileSpec.ChairDown,
+        MapTileSpec.ChairLeft,
+        MapTileSpec.ChairRight,
+        MapTileSpec.ChairUp,
+        MapTileSpec.ChairDownRight,
+        MapTileSpec.ChairUpLeft,
+        MapTileSpec.ChairAll,
+        MapTileSpec.Chest,
+        MapTileSpec.BankVault,
+        MapTileSpec.Edge,
+        MapTileSpec.Board1,
+        MapTileSpec.Board2,
+        MapTileSpec.Board3,
+        MapTileSpec.Board4,
+        MapTileSpec.Board5,
+        MapTileSpec.Board6,
+        MapTileSpec.Board7,
+        MapTileSpec.Board8,
+        MapTileSpec.Jukebox,
+      ].includes(spec.tileSpec)
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   login(username: string, password: string) {

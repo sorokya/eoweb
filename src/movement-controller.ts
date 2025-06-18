@@ -71,6 +71,12 @@ export class MovementController {
           this.client.map.width,
           this.client.map.height,
         );
+
+        if (!this.client.canWalk(to)) {
+          return;
+        }
+
+
         this.client.characterAnimations.set(
           character.playerId,
           new CharacterWalkAnimation(from, to, directionHeld),
