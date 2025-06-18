@@ -195,6 +195,10 @@ export class MapRenderer {
       for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
         if (x < 0 || x > this.client.map.width) continue;
 
+        if (!this.staticTileGrid[y]?.[x]) {
+          return;
+        }
+
         entities.push(
           ...this.staticTileGrid[y][x].map((t) => ({
             x,
