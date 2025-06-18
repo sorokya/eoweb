@@ -110,6 +110,10 @@ const createCharacterModal = new CreateCharacterModal();
 const chatModal = new ChatModal();
 const client = new Client();
 
+chatModal.on('chat', (message) => {
+  client.chat(message.trim().substring(0, 300));
+});
+
 client.on('error', ({ title, message }) => {
   chatModal.addMessage(ChatTab.Local, `${title} - ${message}`);
   errorModal.open(message, title);

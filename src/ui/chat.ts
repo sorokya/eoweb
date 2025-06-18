@@ -1,4 +1,5 @@
 import { ImGui } from '@zhobo63/imgui-ts';
+import mitt, { type Emitter } from 'mitt';
 
 export enum ChatTab {
   Local = 'Local',
@@ -8,7 +9,12 @@ export enum ChatTab {
   System = 'System',
 }
 
+type ChatModalEvents = {
+  chat: string;
+};
+
 export class ChatModal {
+  private emitter: Emitter<ChatModalEvents>;
   private currentTab: ChatTab = ChatTab.Local;
   private chatMessages: Record<ChatTab, string[]> = {
     [ChatTab.Local]: [],
@@ -18,6 +24,17 @@ export class ChatModal {
     [ChatTab.System]: [],
   };
   private chatInputBuffer = new ImGui.ImStringBuffer(256);
+
+  constructor() {
+    this.emitter = mitt<ChatModalEvents>();
+  }
+
+  on<Event extends keyof ChatModalEvents>(
+    event: Event,
+    handler: (data: ChatModalEvents[Event]) => void,
+  ) {
+    this.emitter.on(event, handler);
+  }
 
   addMessage(tab: ChatTab, message: string) {
     this.chatMessages[tab].push(message);
@@ -58,7 +75,7 @@ export class ChatModal {
     ) {
       const msg = this.chatInputBuffer.buffer.trim();
       if (msg.length > 0) {
-        this.chatMessages[this.currentTab].push(`You: ${msg}`);
+        this.emitter.emit('chat', msg);
         this.chatInputBuffer.buffer = '';
       }
     }

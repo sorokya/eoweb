@@ -31,6 +31,7 @@ import {
   SitAction,
   SitRequestClientPacket,
   type Spell,
+  TalkReportClientPacket,
   WalkAction,
   WalkPlayerClientPacket,
   WarpAcceptClientPacket,
@@ -67,7 +68,7 @@ import { MovementController } from './movement-controller';
 import type { NpcAnimation } from './npc';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { GfxType, loadBitmapById } from './gfx';
-import type { ChatTab } from './ui/chat';
+import { ChatTab } from './ui/chat';
 import { registerTalkHandlers } from './handlers/talk';
 import { Dir } from '@zhobo63/imgui-ts/src/imgui';
 import { registerAttackHandlers } from './handlers/attack';
@@ -416,6 +417,22 @@ export class Client {
 
     this.characterCreateData = data;
     this.bus.send(new CharacterRequestClientPacket());
+  }
+
+  chat(message: string) {
+    if (!message) {
+      return;
+    }
+
+    const packet = new TalkReportClientPacket();
+    packet.message = message;
+    this.bus.send(packet);
+
+    this.emit('chat', {
+      name: this.name,
+      tab: ChatTab.Local,
+      message,
+    });
   }
 
   login(username: string, password: string) {
