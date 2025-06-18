@@ -95,7 +95,7 @@ export class MapRenderer {
   animationTicks = ANIMATION_TICKS;
   npcIdleAnimationTicks = NPC_IDLE_ANIMATION_TICKS;
   npcIdleAnimationFrame = 0;
-  private buildingCache = false;
+  buildingCache = false;
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
 
@@ -104,7 +104,6 @@ export class MapRenderer {
   }
 
   buildCaches() {
-    this.buildingCache = true;
     const w = this.client.map.width;
     const h = this.client.map.height;
 
