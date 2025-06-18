@@ -1,25 +1,41 @@
 import {
+  AdminLevel,
+  CharacterBaseStats,
+  type CharacterMapInfo,
+  CharacterSecondaryStats,
   type CharacterSelectionListEntry,
-  type Coords,
+  Coords,
   type Direction,
   type Ecf,
   type Eif,
   type Emf,
   type Enf,
+  type EnfRecord,
+  EquipmentPaperdoll,
   type Esf,
+  FacePlayerClientPacket,
   FileType,
+  type Item,
   LoginRequestClientPacket,
   NearbyInfo,
+  type NpcMapInfo,
+  RangeRequestClientPacket,
   type ServerSettings,
+  SitAction,
+  SitRequestClientPacket,
+  type Spell,
+  WalkAction,
+  WalkPlayerClientPacket,
   WarpAcceptClientPacket,
   WarpTakeClientPacket,
+  Weight,
   WelcomeAgreeClientPacket,
   WelcomeMsgClientPacket,
   WelcomeRequestClientPacket,
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
 import type { PacketBus } from './bus';
-import { Character } from './character';
+import type { CharacterAnimation } from './character';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
 import { registerAvatarHandlers } from './handlers/avatar';
 import { registerInitHandlers } from './handlers/init';
@@ -33,6 +49,16 @@ import { registerSitHandlers } from './handlers/sit';
 import { registerWarpHandlers } from './handlers/warp';
 import { registerRefreshHandlers } from './handlers/refresh';
 import { registerNpcHandlers } from './handlers/npc';
+import { registerRangeHandlers } from './handlers/range';
+import { MapRenderer } from './map';
+import { HALF_TILE_HEIGHT } from './consts';
+import type { Vector2 } from './vector';
+import { isoToScreen } from './utils/iso-to-screen';
+import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
+import { screenToIso } from './utils/screen-to-iso';
+import { MovementController } from './movement-controller';
+import type { NpcAnimation } from './npc';
+import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -40,10 +66,6 @@ type ClientEvents = {
   login: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
-  playerWalk: { playerId: number; direction: Direction; coords: Coords };
-  npcWalk: { npcIndex: number; direction: Direction; coords: Coords };
-  switchMap: undefined;
-  refresh: undefined;
 };
 
 export enum GameState {
@@ -58,7 +80,32 @@ export class Client {
   private emitter: Emitter<ClientEvents>;
   bus: PacketBus | null = null;
   playerId = 0;
-  character = new Character();
+  characterId = 0;
+  name = '';
+  title = '';
+  guildName = '';
+  guildTag = '';
+  guildRank = 0;
+  guildRankName = '';
+  classId = 0;
+  admin = AdminLevel.Player;
+  level = 0;
+  experience = 0;
+  usage = 0;
+  hp = 0;
+  maxHp = 0;
+  tp = 0;
+  maxTp = 0;
+  maxSp = 0;
+  statPoints = 0;
+  skillPoints = 0;
+  karma = 0;
+  baseStats = new CharacterBaseStats();
+  secondaryStats = new CharacterSecondaryStats();
+  equipment = new EquipmentPaperdoll();
+  items: Item[] = [];
+  spells: Spell[] = [];
+  weight = new Weight();
   mapId = 5;
   warpMapId = 0;
   warpQueued = false;
@@ -72,8 +119,15 @@ export class Client {
   enf: Enf | null = null;
   esf: Esf | null = null;
   map: Emf | null = null;
+  mapRenderer: MapRenderer;
   downloadQueue: { type: FileType; id: number }[] = [];
   unknownPlayerIds: Set<number> = new Set();
+  characterAnimations: Map<number, CharacterAnimation> = new Map();
+  npcAnimations: Map<number, NpcAnimation> = new Map();
+  mousePosition: Vector2 | undefined;
+  mouseCoords: Vector2 | undefined;
+  movementController: MovementController;
+  npcMetadata = getNpcMetaData();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -93,6 +147,99 @@ export class Client {
     this.nearby.characters = [];
     this.nearby.npcs = [];
     this.nearby.items = [];
+    this.mapRenderer = new MapRenderer(this);
+    this.movementController = new MovementController(this);
+  }
+
+  getCharacterById(id: number): CharacterMapInfo | undefined {
+    return this.nearby.characters.find((c) => c.playerId === id);
+  }
+
+  getPlayerCharacter(): CharacterMapInfo | undefined {
+    return this.nearby.characters.find((c) => c.playerId === this.playerId);
+  }
+
+  getNpcByIndex(index: number): NpcMapInfo | undefined {
+    return this.nearby.npcs.find((n) => n.index === index);
+  }
+
+  getNpcMetadata(graphicId: number): NPCMetadata {
+    const data = this.npcMetadata.get(graphicId);
+    if (data) {
+      return data;
+    }
+
+    return new NPCMetadata(0, 0, 0, 0, false, 0);
+  }
+
+  getEnfRecordById(id: number): EnfRecord | undefined {
+    if (!this.enf) {
+      return;
+    }
+
+    return this.enf.npcs[id - 1];
+  }
+
+  getPlayerCoords() {
+    const playerCharacter = this.getPlayerCharacter();
+    if (playerCharacter) {
+      return { x: playerCharacter.coords.x, y: playerCharacter.coords.y };
+    }
+
+    return { x: 0, y: 0 };
+  }
+
+  setMousePosition(position: Vector2) {
+    this.mousePosition = position;
+
+    const player = this.getPlayerCoords();
+    const playerScreen = isoToScreen(player);
+
+    const mouseWorldX = position.x - HALF_GAME_WIDTH + playerScreen.x;
+    const mouseWorldY =
+      position.y - HALF_GAME_HEIGHT + playerScreen.y + HALF_TILE_HEIGHT;
+
+    this.mouseCoords = screenToIso({ x: mouseWorldX, y: mouseWorldY });
+
+    if (this.mouseCoords.x < 0 || this.mouseCoords.y < 0) {
+      this.mouseCoords = undefined;
+    }
+  }
+
+  tick() {
+    this.movementController.tick();
+    this.mapRenderer.tick();
+    const endedCharacterAnimations: number[] = [];
+    for (const [id, animation] of this.characterAnimations) {
+      if (!animation.ticks) {
+        endedCharacterAnimations.push(id);
+        continue;
+      }
+      animation.tick();
+    }
+    for (const id of endedCharacterAnimations) {
+      this.characterAnimations.delete(id);
+    }
+
+    const endedNpcAnimations: number[] = [];
+    for (const [id, animation] of this.npcAnimations) {
+      if (!animation.ticks) {
+        endedNpcAnimations.push(id);
+        continue;
+      }
+      animation.tick();
+    }
+    for (const id of endedNpcAnimations) {
+      this.npcAnimations.delete(id);
+    }
+
+    if (this.warpQueued) {
+      this.acceptWarp();
+    }
+  }
+
+  render(ctx: CanvasRenderingContext2D) {
+    this.mapRenderer.render(ctx);
   }
 
   async loadMap(id: number): Promise<void> {
@@ -131,6 +278,7 @@ export class Client {
     registerWarpHandlers(this);
     registerRefreshHandlers(this);
     registerNpcHandlers(this);
+    registerRangeHandlers(this);
   }
 
   login(username: string, password: string) {
@@ -199,8 +347,47 @@ export class Client {
 
   enterGame() {
     const packet = new WelcomeMsgClientPacket();
-    packet.characterId = this.character.id;
+    packet.characterId = this.characterId;
     packet.sessionId = this.sessionId;
+    this.bus.send(packet);
+    this.mapRenderer.buildCaches();
+  }
+
+  rangeRequest(playerIds: number[], npcIndexes: number[]) {
+    const packet = new RangeRequestClientPacket();
+    packet.playerIds = playerIds;
+    packet.npcIndexes = npcIndexes;
+    this.bus.send(packet);
+  }
+
+  face(direction: Direction) {
+    const packet = new FacePlayerClientPacket();
+    packet.direction = direction;
+    this.bus.send(packet);
+  }
+
+  walk(direction: Direction, coords: Coords, timestamp: number) {
+    const packet = new WalkPlayerClientPacket();
+    packet.walkAction = new WalkAction();
+    packet.walkAction.direction = direction;
+    packet.walkAction.coords = coords;
+    packet.walkAction.timestamp = timestamp;
+    this.bus.send(packet);
+  }
+
+  sit() {
+    const packet = new SitRequestClientPacket();
+    packet.sitAction = SitAction.Sit;
+    packet.sitActionData = new SitRequestClientPacket.SitActionDataSit();
+    packet.sitActionData.cursorCoords = new Coords();
+    packet.sitActionData.cursorCoords.x = 0;
+    packet.sitActionData.cursorCoords.y = 0;
+    this.bus.send(packet);
+  }
+
+  stand() {
+    const packet = new SitRequestClientPacket();
+    packet.sitAction = SitAction.Stand;
     this.bus.send(packet);
   }
 }

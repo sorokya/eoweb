@@ -1,20 +1,4 @@
-import {
-  BigCoords,
-  CharacterMapInfo,
-  Coords,
-  Direction,
-  Emf,
-  EoReader,
-  FacePlayerClientPacket,
-  InitInitClientPacket,
-  SitAction,
-  SitRequestClientPacket,
-  SitState,
-  Version,
-  WalkAction,
-  WalkPlayerClientPacket,
-} from 'eolib';
-import { MapRenderer } from './map';
+import { InitInitClientPacket, Version } from 'eolib';
 import './style.css';
 import { ImGui, ImGui_Impl } from '@zhobo63/imgui-ts';
 import { PacketBus } from './bus';
@@ -27,20 +11,14 @@ import {
   setGameSize,
   setZoom,
 } from './game-state';
-import { MovementController } from './movement-controller';
-import { CharacterRenderer, CharacterState } from './rendering/character';
 import { CharactersModal } from './ui/characters';
 import { ConnectModal } from './ui/connect';
 import { ErrorModal } from './ui/error';
 import { LoginModal } from './ui/login';
 import { Menu } from './ui/menu';
 import { PacketLogModal, PacketSource } from './ui/packet-log';
-import { padWithZeros } from './utils/pad-with-zeros';
 import { randomRange } from './utils/random-range';
-import type { Vector2 } from './vector';
 import { ChatModal, ChatTab } from './ui/chat';
-import { getPrevCoords } from './utils/get-prev-coords';
-import { coordsToBigCoords } from './utils/coords-to-big-coords';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const uiCanvas = document.getElementById('ui') as HTMLCanvasElement;
@@ -95,31 +73,6 @@ if (!ctx) {
 
 ctx.imageSmoothingEnabled = false;
 
-const mapInfo = new CharacterMapInfo();
-mapInfo.playerId = 1;
-mapInfo.coords = new BigCoords();
-mapInfo.coords.x = 35;
-mapInfo.coords.y = 41;
-mapInfo.gender = 1;
-mapInfo.skin = 0;
-mapInfo.sitState = SitState.Stand;
-
-const character = new CharacterRenderer(mapInfo);
-
-let movementController = new MovementController(character);
-
-let map: MapRenderer | undefined;
-
-fetch(`/maps/${padWithZeros(5, 5)}.emf`)
-  .then((res) => res.arrayBuffer())
-  .then((buf) => {
-    const reader = new EoReader(new Uint8Array(buf));
-    const emf = Emf.deserialize(reader);
-    map = new MapRenderer(client, emf, 1);
-    map.addCharacter(character);
-    movementController.setMapDimensions(emf.width, emf.height);
-  });
-
 let lastTime: DOMHighResTimeStamp | undefined;
 const render = (now: DOMHighResTimeStamp) => {
   renderUI(now);
@@ -137,17 +90,7 @@ const render = (now: DOMHighResTimeStamp) => {
 
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-  switch (client.state) {
-    // @ts-ignore: Error should go away when state can change
-    case GameState.Initial:
-    case GameState.Connected:
-    case GameState.LoggedIn:
-    case GameState.InGame:
-      renderInitialState(now, ctx);
-      break;
-  }
-
+  client.render(ctx);
   requestAnimationFrame(render);
 };
 
@@ -176,55 +119,12 @@ client.on('login', (characters) => {
 client.on('selectCharacter', () => {
   chatModal.addMessage(
     ChatTab.Local,
-    `System: selected character: ${client.character.name}`,
+    `System: selected character: ${client.name}`,
   );
 });
 
 client.on('enterGame', ({ news }) => {
   charactersModal.close();
-  map = new MapRenderer(client, client.map, client.playerId);
-  for (const character of client.nearby.characters) {
-    const renderer = new CharacterRenderer(character);
-    map.addCharacter(renderer);
-    if (character.playerId === client.playerId) {
-      renderer.isPlayer = true;
-      movementController = new MovementController(renderer);
-      movementController.setMapDimensions(client.map.width, client.map.height);
-      movementController.on('face', (direction) => {
-        const packet = new FacePlayerClientPacket();
-        packet.direction = direction;
-        client.bus.send(packet);
-      });
-
-      movementController.on('walk', ({ direction, coords, timestamp }) => {
-        const packet = new WalkPlayerClientPacket();
-        packet.walkAction = new WalkAction();
-        packet.walkAction.direction = direction;
-        packet.walkAction.coords = coords;
-        packet.walkAction.timestamp = timestamp;
-        client.bus.send(packet);
-      });
-
-      movementController.on('sit', () => {
-        const packet = new SitRequestClientPacket();
-        packet.sitAction = SitAction.Sit;
-        packet.sitActionData = new SitRequestClientPacket.SitActionDataSit();
-        packet.sitActionData.cursorCoords = new Coords();
-        packet.sitActionData.cursorCoords.x = 0;
-        packet.sitActionData.cursorCoords.y = 0;
-        client.bus.send(packet);
-      });
-
-      movementController.on('stand', () => {
-        const packet = new SitRequestClientPacket();
-        packet.sitAction = SitAction.Stand;
-        client.bus.send(packet);
-      });
-    }
-  }
-
-  map.setNearby(client.nearby);
-
   news.forEach((entry, index) => {
     if (!entry) {
       return;
@@ -236,45 +136,6 @@ client.on('enterGame', ({ news }) => {
       chatModal.addMessage(ChatTab.Local, `News: ${entry}`);
     }
   });
-
-  chatModal.addMessage(
-    ChatTab.Local,
-    `System: Nearby - Characters: ${client.nearby.characters.length}, NPCs: ${client.nearby.npcs.length}, Items: ${client.nearby.items.length}`,
-  );
-});
-
-client.on('playerWalk', ({ playerId, coords, direction }) => {
-  const character = map.characters.find((c) => c.mapInfo.playerId === playerId);
-  if (character) {
-    character.mapInfo.coords = coordsToBigCoords(
-      getPrevCoords(coords, direction, map.emf.width, map.emf.height),
-    );
-    character.mapInfo.direction = direction;
-    character.setState(CharacterState.Walking);
-  }
-});
-
-client.on('npcWalk', ({ npcIndex, coords, direction }) => {
-  const npc = map.npcs.find((n) => n.mapInfo.index === npcIndex);
-  if (npc) {
-    npc.mapInfo.coords = coords;
-    npc.mapInfo.direction = direction;
-  }
-});
-
-client.on('switchMap', () => {
-  map.setMap(client.map);
-  map.setNearby(client.nearby);
-});
-
-client.on('refresh', () => {
-  map.setNearby(client.nearby);
-  movementController.character.mapInfo = client.nearby.characters.find(
-    (c) => c.playerId === client.playerId,
-  );
-  if (movementController.character.state === CharacterState.Walking) {
-    movementController.character.setState(CharacterState.Standing);
-  }
 });
 
 const initializeSocket = () => {
@@ -369,24 +230,10 @@ function renderUI(now: number) {
   ImGui_Impl.RenderDrawData(ImGui.GetDrawData());
 }
 
-function renderInitialState(
-  now: DOMHighResTimeStamp,
-  ctx: CanvasRenderingContext2D,
-) {
-  if (map) {
-    map.render(ctx);
-  }
-
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 12px serif';
-  ctx.fillText('WASD - Move, X - Sit/Stand', 10, 40);
-}
-
-let mousePosition: Vector2 | undefined;
-
 // Tick loop
 setInterval(() => {
-  if (map) {
+  client.tick();
+  /*if (map) {
     map.tick();
     if (client.state === GameState.InGame && mousePosition) {
       map.setMousePosition(mousePosition);
@@ -403,13 +250,14 @@ setInterval(() => {
       }
     }
   }
+    */
 }, 120);
 
-window.onmousemove = (e) => {
+window.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
-  mousePosition = {
+  client.setMousePosition({
     x: Math.min(
       Math.max(Math.floor((e.clientX - rect.left) * scaleX), 0),
       canvas.width,
@@ -418,8 +266,8 @@ window.onmousemove = (e) => {
       Math.max(Math.floor((e.clientY - rect.top) * scaleY), 0),
       canvas.height,
     ),
-  };
-};
+  });
+});
 
 window.addEventListener('DOMContentLoaded', async () => {
   await ImGui.default();

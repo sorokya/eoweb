@@ -1,17 +1,10 @@
-import { type Coords, Direction } from 'eolib';
+import { type Coords, Direction, SitState } from 'eolib';
 import { Input, getLatestDirectionHeld, isInputHeld } from './input';
-import { type CharacterRenderer, CharacterState } from './rendering/character';
 import { FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
-import mitt, { type Emitter } from 'mitt';
 import { getNextCoords } from './utils/get-next-coords';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
-
-type MovementEvents = {
-  face: Direction;
-  walk: { direction: Direction; coords: Coords; timestamp: number };
-  sit: undefined;
-  stand: undefined;
-};
+import type { Client } from './client';
+import { CharacterWalkAnimation } from './character';
 
 function inputToDirection(input: Input): Direction {
   switch (input) {
@@ -27,37 +20,27 @@ function inputToDirection(input: Input): Direction {
 }
 
 export class MovementController {
-  private emitter: Emitter<MovementEvents>;
-  character: CharacterRenderer;
-  mapWidth = 0;
-  mapHeight = 0;
+  private client: Client;
   walkTicks = WALK_TICKS;
   faceTicks = FACE_TICKS;
   sitTicks = SIT_TICKS;
   freeze = false;
 
-  constructor(character: CharacterRenderer) {
-    this.character = character;
-    this.emitter = mitt<MovementEvents>();
-  }
-
-  on<Event extends keyof MovementEvents>(
-    event: Event,
-    handler: (data: MovementEvents[Event]) => void,
-  ) {
-    this.emitter.on(event, handler);
-  }
-
-  setMapDimensions(width: number, height: number) {
-    this.mapWidth = width;
-    this.mapHeight = height;
+  constructor(client: Client) {
+    this.client = client;
   }
 
   tick() {
     this.faceTicks = Math.max(this.faceTicks - 1, 0);
     this.walkTicks = Math.max(this.walkTicks - 1, 0);
+    this.sitTicks = Math.max(this.sitTicks - 1, 0);
 
     if (this.freeze) {
+      return;
+    }
+
+    const character = this.client.getPlayerCharacter();
+    if (!character) {
       return;
     }
 
@@ -65,48 +48,49 @@ export class MovementController {
     const directionHeld =
       latestInput !== null ? inputToDirection(latestInput) : null;
 
-    if (this.character.state === CharacterState.Standing) {
+    const animation = this.client.characterAnimations.get(character.playerId);
+    const walking = animation instanceof CharacterWalkAnimation;
+
+    if (character.sitState === SitState.Stand && directionHeld !== null) {
       if (
-        directionHeld !== null &&
-        this.faceTicks === 0 &&
-        this.character.mapInfo.direction !== directionHeld
+        !walking &&
+        !this.faceTicks &&
+        character.direction !== directionHeld
       ) {
-        this.character.mapInfo.direction = directionHeld;
+        character.direction = directionHeld;
+        this.client.face(directionHeld);
         this.faceTicks = FACE_TICKS;
-        this.emitter.emit('face', directionHeld);
         return;
       }
 
-      if (
-        directionHeld !== null &&
-        this.character.mapInfo.direction === directionHeld &&
-        this.walkTicks === 0
-      ) {
-        this.character.setState(CharacterState.Walking);
+      if (!this.walkTicks) {
+        const from = bigCoordsToCoords(character.coords);
+        const to = getNextCoords(
+          from,
+          directionHeld,
+          this.client.map.width,
+          this.client.map.height,
+        );
+        this.client.characterAnimations.set(
+          character.playerId,
+          new CharacterWalkAnimation(from, to, directionHeld),
+        );
+        character.direction = directionHeld;
+        character.coords.x = to.x;
+        character.coords.y = to.y;
+        this.client.walk(directionHeld, to, getTimestamp());
         this.walkTicks = WALK_TICKS;
         this.faceTicks = FACE_TICKS;
         this.sitTicks = SIT_TICKS;
-
-        this.emitter.emit('walk', {
-          direction: directionHeld,
-          timestamp: getTimestamp(),
-          coords: getNextCoords(
-            bigCoordsToCoords(this.character.mapInfo.coords),
-            directionHeld,
-            this.mapWidth,
-            this.mapHeight,
-          ),
-        });
         return;
       }
     }
 
-    this.sitTicks = Math.max(this.sitTicks - 1, 0);
-    if (this.sitTicks === 0 && isInputHeld(Input.SitStand)) {
-      if (this.character.state === CharacterState.Standing) {
-        this.emitter.emit('sit');
+    if (!this.sitTicks && isInputHeld(Input.SitStand)) {
+      if (character.sitState === SitState.Stand) {
+        this.client.sit();
       } else {
-        this.emitter.emit('stand');
+        this.client.stand();
       }
       this.sitTicks = SIT_TICKS;
     }
