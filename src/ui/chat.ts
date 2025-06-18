@@ -41,7 +41,7 @@ export class ChatModal {
     ImGui.BeginChild('ChatLog', new ImGui.Vec2(400, 200), true);
     const messages = this.chatMessages[this.currentTab];
     for (const msg of messages) {
-      ImGui.TextUnformatted(msg);
+      ImGui.TextWrapped(msg);
     }
     ImGui.EndChild();
 

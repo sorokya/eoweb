@@ -123,6 +123,10 @@ client.on('selectCharacter', () => {
   );
 });
 
+client.on('chat', ({ name, tab, message }) => {
+  chatModal.addMessage(tab, `${name}: ${message}`);
+});
+
 client.on('enterGame', ({ news }) => {
   charactersModal.close();
   news.forEach((entry, index) => {

@@ -19,6 +19,8 @@ import {
   LoginRequestClientPacket,
   NearbyInfo,
   type NpcMapInfo,
+  NpcRangeRequestClientPacket,
+  PlayerRangeRequestClientPacket,
   RangeRequestClientPacket,
   type ServerSettings,
   SitAction,
@@ -59,6 +61,9 @@ import { screenToIso } from './utils/screen-to-iso';
 import { MovementController } from './movement-controller';
 import type { NpcAnimation } from './npc';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
+import { GfxType, loadBitmapById } from './gfx';
+import type { ChatTab } from './ui/chat';
+import { registerTalkHandlers } from './handlers/talk';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -66,6 +71,7 @@ type ClientEvents = {
   login: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
+  chat: { name: string; tab: ChatTab; message: string };
 };
 
 export enum GameState {
@@ -121,7 +127,6 @@ export class Client {
   map: Emf | null = null;
   mapRenderer: MapRenderer;
   downloadQueue: { type: FileType; id: number }[] = [];
-  unknownPlayerIds: Set<number> = new Set();
   characterAnimations: Map<number, CharacterAnimation> = new Map();
   npcAnimations: Map<number, NpcAnimation> = new Map();
   mousePosition: Vector2 | undefined;
@@ -149,6 +154,24 @@ export class Client {
     this.nearby.items = [];
     this.mapRenderer = new MapRenderer(this);
     this.movementController = new MovementController(this);
+    this.preloadCharacterSprites();
+  }
+
+  private preloadCharacterSprites() {
+    loadBitmapById(GfxType.SkinSprites, 1); // standing
+    loadBitmapById(GfxType.SkinSprites, 2); // walking
+    loadBitmapById(GfxType.SkinSprites, 6); // sitting on ground
+  }
+
+  preloadNpcSprites(id: number) {
+    const record = this.getEnfRecordById(id);
+    if (!record) {
+      return;
+    }
+
+    for (let i = 1; i <= 18; ++i) {
+      loadBitmapById(GfxType.NPC, (record.graphicId - 1) * 40 + i);
+    }
   }
 
   getCharacterById(id: number): CharacterMapInfo | undefined {
@@ -283,6 +306,7 @@ export class Client {
     registerRefreshHandlers(this);
     registerNpcHandlers(this);
     registerRangeHandlers(this);
+    registerTalkHandlers(this);
   }
 
   login(username: string, password: string) {
@@ -360,6 +384,18 @@ export class Client {
   rangeRequest(playerIds: number[], npcIndexes: number[]) {
     const packet = new RangeRequestClientPacket();
     packet.playerIds = playerIds;
+    packet.npcIndexes = npcIndexes;
+    this.bus.send(packet);
+  }
+
+  requestCharacterRange(playerIds: number[]) {
+    const packet = new PlayerRangeRequestClientPacket();
+    packet.playerIds = playerIds;
+    this.bus.send(packet);
+  }
+
+  requestNpcRange(npcIndexes: number[]) {
+    const packet = new NpcRangeRequestClientPacket();
     packet.npcIndexes = npcIndexes;
     this.bus.send(packet);
   }

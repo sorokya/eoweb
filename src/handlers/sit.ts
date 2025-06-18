@@ -16,7 +16,7 @@ function handleSitPlayer(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.unknownPlayerIds.add(packet.playerId);
+    client.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -32,7 +32,7 @@ function handleSitRemove(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.unknownPlayerIds.add(packet.playerId);
+    client.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -47,7 +47,7 @@ function handleSitClose(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.unknownPlayerIds.add(packet.playerId);
+    client.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -62,7 +62,7 @@ function handleSitReply(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.unknownPlayerIds.add(packet.playerId);
+    client.requestCharacterRange([packet.playerId]);
     return;
   }
 
