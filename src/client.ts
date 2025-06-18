@@ -210,10 +210,14 @@ export class Client {
     this.movementController.tick();
     this.mapRenderer.tick();
     const endedCharacterAnimations: number[] = [];
+    let playerWalking = false;
     for (const [id, animation] of this.characterAnimations) {
       if (!animation.ticks) {
         endedCharacterAnimations.push(id);
         continue;
+      }
+      if (id === this.playerId) {
+        playerWalking = true;
       }
       animation.tick();
     }
@@ -233,7 +237,7 @@ export class Client {
       this.npcAnimations.delete(id);
     }
 
-    if (this.warpQueued) {
+    if (this.warpQueued && !playerWalking) {
       this.acceptWarp();
     }
   }
