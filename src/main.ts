@@ -25,6 +25,7 @@ import { randomRange } from './utils/random-range';
 import { ChatModal, ChatTab } from './ui/chat';
 import { playSfxById, SfxId } from './sfx';
 import { CreateAccountModal } from './ui/create-account';
+import { CreateCharacterModal } from './ui/create-character';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const uiCanvas = document.getElementById('ui') as HTMLCanvasElement;
@@ -105,6 +106,7 @@ const errorModal = new ErrorModal();
 const loginModal = new LoginModal();
 const createAccountModal = new CreateAccountModal();
 const charactersModal = new CharactersModal();
+const createCharacterModal = new CreateCharacterModal();
 const chatModal = new ChatModal();
 const client = new Client();
 
@@ -127,6 +129,12 @@ client.on('login', (characters) => {
   loginModal.close();
   charactersModal.setCharacters(characters);
   charactersModal.open();
+});
+
+client.on('characterCreated', (characters) => {
+  createCharacterModal.close();
+  charactersModal.setCharacters(characters);
+  errorModal.open('Your character has been created', 'Success');
 });
 
 client.on('selectCharacter', () => {
@@ -246,6 +254,16 @@ charactersModal.on('select-character', (characterId) => {
   client.selectCharacter(characterId);
 });
 
+charactersModal.on('create-character', () => {
+  playSfxById(SfxId.ButtonClick);
+  createCharacterModal.open();
+});
+
+createCharacterModal.on('createCharacter', (data) => {
+  playSfxById(SfxId.ButtonClick);
+  client.requestCharacterCreation(data);
+});
+
 const packetLogModal = new PacketLogModal();
 menu.on('packet-log', () => {
   packetLogModal.open();
@@ -263,6 +281,7 @@ function renderUI(now: number) {
   createAccountModal.render();
   charactersModal.render();
   chatModal.render();
+  createCharacterModal.render();
 
   ImGui.EndFrame();
   ImGui.Render();

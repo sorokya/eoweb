@@ -4,6 +4,7 @@ import {
   AttackUseClientPacket,
   CharacterBaseStats,
   type CharacterMapInfo,
+  CharacterRequestClientPacket,
   CharacterSecondaryStats,
   type CharacterSelectionListEntry,
   Coords,
@@ -17,6 +18,7 @@ import {
   type Esf,
   FacePlayerClientPacket,
   FileType,
+  type Gender,
   type Item,
   LoginRequestClientPacket,
   MapTileSpec,
@@ -56,7 +58,7 @@ import { registerRefreshHandlers } from './handlers/refresh';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerRangeHandlers } from './handlers/range';
 import { MapRenderer } from './map';
-import { HALF_TILE_HEIGHT } from './consts';
+import { HALF_TILE_HEIGHT, MAX_CHARACTER_NAME_LENGTH } from './consts';
 import type { Vector2 } from './vector';
 import { isoToScreen } from './utils/iso-to-screen';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
@@ -72,11 +74,13 @@ import { registerAttackHandlers } from './handlers/attack';
 import { registerArenaHandlers } from './handlers/arena';
 import { playSfxById, SfxId } from './sfx';
 import { registerAccountHandlers } from './handlers/account';
+import { registerCharacterHandlers } from './handlers/character';
 
 type ClientEvents = {
   error: { title: string; message: string };
   debug: string;
   login: CharacterSelectionListEntry[];
+  characterCreated: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
   chat: { name: string; tab: ChatTab; message: string };
@@ -100,10 +104,19 @@ type AccountCreateData = {
   email: string;
 };
 
+type CharacterCreateData = {
+  name: string;
+  gender: Gender;
+  hairStyle: number;
+  hairColor: number;
+  skin: number;
+};
+
 export class Client {
   private emitter: Emitter<ClientEvents>;
   bus: PacketBus | null = null;
   accountCreateData: AccountCreateData | null = null;
+  characterCreateData: CharacterCreateData | null = null;
   playerId = 0;
   characterId = 0;
   name = '';
@@ -330,6 +343,7 @@ export class Client {
     registerAttackHandlers(this);
     registerArenaHandlers(this);
     registerAccountHandlers(this);
+    registerCharacterHandlers(this);
   }
 
   canWalk(coords: Coords): boolean {
@@ -389,6 +403,19 @@ export class Client {
     const packet = new AccountRequestClientPacket();
     packet.username = data.username;
     this.bus.send(packet);
+  }
+
+  requestCharacterCreation(data: CharacterCreateData) {
+    if (
+      data.name.trim().length < 4 ||
+      data.name.trim().length > MAX_CHARACTER_NAME_LENGTH
+    ) {
+      this.showError('Invalid character name');
+      return;
+    }
+
+    this.characterCreateData = data;
+    this.bus.send(new CharacterRequestClientPacket());
   }
 
   login(username: string, password: string) {

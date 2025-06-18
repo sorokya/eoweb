@@ -5,6 +5,7 @@ import mitt, { type Emitter } from 'mitt';
 
 type CharactersModalEvents = {
   'select-character': number;
+  'create-character': undefined;
 };
 
 export class CharactersModal {
@@ -83,8 +84,7 @@ export class CharactersModal {
     ImGui.SameLine();
 
     if (ImGui.Button('New character')) {
-      console.log('New character clicked');
-      // Trigger new character creation
+      this.emitter.emit('create-character', undefined);
     }
 
     ImGui.End();
