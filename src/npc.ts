@@ -10,6 +10,7 @@ import { getBitmapById, GfxType } from './gfx';
 import { isoToScreen } from './utils/iso-to-screen';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import type { NPCMetadata } from './utils/get-npc-metadata';
+import { setNpcRectangle } from './collision';
 
 export abstract class NpcAnimation {
   ticks: number;
@@ -86,12 +87,13 @@ export class NpcWalkAnimation extends NpcAnimation {
 
     const screenCoords = isoToScreen(this.from);
     const mirrored = [Direction.Right, Direction.Up].includes(this.direction);
-    const screenX =
+    const screenX = Math.floor(
       screenCoords.x -
-      bmp.width / 2 -
-      playerScreen.x +
-      HALF_GAME_WIDTH +
-      this.walkOffset.x;
+        bmp.width / 2 -
+        playerScreen.x +
+        HALF_GAME_WIDTH +
+        this.walkOffset.x,
+    );
 
     const screenY =
       screenCoords.y -
@@ -106,12 +108,20 @@ export class NpcWalkAnimation extends NpcAnimation {
       ctx.scale(-1, 1); // Flip horizontally
     }
 
-    const drawX = mirrored
-      ? GAME_WIDTH - screenX - bmp.width + meta.xOffset
-      : screenX + meta.xOffset;
-    const drawY = screenY - meta.yOffset;
+    const drawX = Math.floor(
+      mirrored
+        ? GAME_WIDTH - screenX - bmp.width + meta.xOffset
+        : screenX + meta.xOffset,
+    );
+    const drawY = Math.floor(screenY - meta.yOffset);
 
     ctx.drawImage(bmp, drawX, drawY);
+
+    setNpcRectangle(npc.index, {
+      position: { x: screenX, y: drawY },
+      width: bmp.width,
+      height: bmp.height,
+    });
 
     if (mirrored) {
       ctx.restore();
