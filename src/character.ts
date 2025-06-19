@@ -17,7 +17,7 @@ import type { Vector2 } from './vector';
 import { getBitmapById, GfxType } from './gfx';
 import { isoToScreen } from './utils/iso-to-screen';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
-import { setCharacterRectangle } from './collision';
+import { Rectangle, setCharacterRectangle } from './collision';
 
 export abstract class CharacterAnimation {
   ticks: number;
@@ -180,11 +180,14 @@ export class CharacterWalkAnimation extends CharacterAnimation {
       CHARACTER_WALKING_HEIGHT,
     );
 
-    setCharacterRectangle(character.playerId, {
-      position: { x: screenX, y: screenY },
-      width: CHARACTER_WALKING_WIDTH,
-      height: CHARACTER_WALKING_HEIGHT,
-    });
+    setCharacterRectangle(
+      character.playerId,
+      new Rectangle(
+        { x: screenX, y: screenY },
+        CHARACTER_WALKING_WIDTH,
+        CHARACTER_WALKING_HEIGHT,
+      ),
+    );
 
     if (mirrored) {
       ctx.restore();
@@ -286,11 +289,14 @@ export class CharacterAttackAnimation extends CharacterAnimation {
       CHARACTER_HEIGHT,
     );
 
-    setCharacterRectangle(character.playerId, {
-      position: { x: screenX, y: screenY },
-      width: CHARACTER_ATTACK_WIDTH,
-      height: CHARACTER_HEIGHT,
-    });
+    setCharacterRectangle(
+      character.playerId,
+      new Rectangle(
+        { x: screenX, y: screenY },
+        CHARACTER_ATTACK_WIDTH,
+        CHARACTER_HEIGHT,
+      ),
+    );
 
     if (mirrored) {
       ctx.restore();

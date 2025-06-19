@@ -10,7 +10,7 @@ import { getBitmapById, GfxType } from './gfx';
 import { isoToScreen } from './utils/iso-to-screen';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import type { NPCMetadata } from './utils/get-npc-metadata';
-import { setNpcRectangle } from './collision';
+import { Rectangle, setNpcRectangle } from './collision';
 
 export abstract class NpcAnimation {
   ticks: number;
@@ -117,11 +117,10 @@ export class NpcWalkAnimation extends NpcAnimation {
 
     ctx.drawImage(bmp, drawX, drawY);
 
-    setNpcRectangle(npc.index, {
-      position: { x: screenX, y: drawY },
-      width: bmp.width,
-      height: bmp.height,
-    });
+    setNpcRectangle(
+      npc.index,
+      new Rectangle({ x: screenX, y: drawY }, bmp.width, bmp.height),
+    );
 
     if (mirrored) {
       ctx.restore();

@@ -1,9 +1,12 @@
 import type { Vector2 } from './vector';
 
-type Rectangle = {
-  position: Vector2;
-  width: number;
-  height: number;
+export class Rectangle {
+  depth = 0;
+  constructor(
+    public position: Vector2,
+    public width: number,
+    public height: number,
+  ) {}
 };
 
 type EntityRect = {
@@ -39,10 +42,12 @@ export function setCharacterRectangle(playerId: number, rectangle: Rectangle) {
       belowIds.push(id);
     }
   });
+  rectangle.depth = belowIds.length;
   characterRectangles.set(playerId, rectangle);
-  for (const id of belowIds) {
-    characterRectangles.delete(id);
-  }
+}
+
+export function getCharacterRectangle(playerId: number): Rectangle | undefined {
+  return characterRectangles.get(playerId);
 }
 
 export function forEachCharacterRect(
@@ -53,12 +58,14 @@ export function forEachCharacterRect(
 
 export function getCharacterIntersecting(point: Vector2): EntityRect | null {
   let found = -1;
-  let rect = null;
+  let rect: Rectangle | null = null;
   characterRectangles.forEach((rectangle, id) => {
-    if (pointIntersectRect(point, rectangle)) {
+    if (
+      pointIntersectRect(point, rectangle) ||
+      (rect && rect.depth < rectangle.depth)
+    ) {
       found = id;
       rect = rectangle;
-      return false;
     }
   });
 
@@ -79,20 +86,24 @@ export function setNpcRectangle(index: number, rectangle: Rectangle) {
       belowIds.push(id);
     }
   });
+  rectangle.depth = belowIds.length;
   npcRectangles.set(index, rectangle);
-  for (const id of belowIds) {
-    npcRectangles.delete(id);
-  }
+}
+
+export function getNpcRectangle(index: number): Rectangle | undefined {
+  return npcRectangles.get(index);
 }
 
 export function getNpcIntersecting(point: Vector2): EntityRect | null {
-  let rect = null;
+  let rect: Rectangle | null = null;
   let found = -1;
   npcRectangles.forEach((rectangle, index) => {
-    if (pointIntersectRect(point, rectangle)) {
+    if (
+      pointIntersectRect(point, rectangle) ||
+      (rect && rect.depth < rectangle.depth)
+    ) {
       found = index;
       rect = rectangle;
-      return false;
     }
   });
 

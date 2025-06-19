@@ -3,7 +3,7 @@ import {
   Direction,
   Gender,
   MapTileSpec,
-  RecoverTargetGroupServerPacket,
+  type NpcMapInfo,
   SitState,
 } from 'eolib';
 import {
@@ -28,7 +28,10 @@ import type { Client } from './client';
 import { CharacterWalkAnimation } from './character';
 import {
   getCharacterIntersecting,
+  getCharacterRectangle,
   getNpcIntersecting,
+  getNpcRectangle,
+  Rectangle,
   setCharacterRectangle,
   setNpcRectangle,
 } from './collision';
@@ -477,17 +480,43 @@ export class MapRenderer {
     const animation = this.client.characterAnimations.get(character.playerId);
     if (animation) {
       animation.render(character, playerScreen, ctx);
+      this.renderCharacterChatBubble(character, ctx);
       return;
     }
 
     if (character.sitState === SitState.Floor) {
       this.renderCharacterFloor(character, playerScreen, ctx);
+      this.renderCharacterChatBubble(character, ctx);
       return;
     }
 
     // TODO: Chair
 
     this.renderCharacterStanding(character, playerScreen, ctx);
+    this.renderCharacterChatBubble(character, ctx);
+  }
+
+  renderCharacterChatBubble(
+    character: CharacterMapInfo,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const balloon = this.client.characterChats.get(character.playerId);
+    if (!balloon) {
+      return;
+    }
+
+    const rect = getCharacterRectangle(character.playerId);
+    if (!rect) {
+      return;
+    }
+
+    balloon.render(
+      {
+        x: rect.position.x + rect.width / 2,
+        y: rect.position.y - 4,
+      },
+      ctx,
+    );
   }
 
   renderCharacterFloor(
@@ -573,11 +602,14 @@ export class MapRenderer {
       CHARACTER_SIT_GROUND_HEIGHT,
     );
 
-    setCharacterRectangle(character.playerId, {
-      position: { x: screenY, y: screenY },
-      width: CHARACTER_SIT_GROUND_WIDTH,
-      height: CHARACTER_SIT_GROUND_HEIGHT,
-    });
+    setCharacterRectangle(
+      character.playerId,
+      new Rectangle(
+        { x: screenY, y: screenY },
+        CHARACTER_SIT_GROUND_WIDTH,
+        CHARACTER_SIT_GROUND_HEIGHT,
+      ),
+    );
 
     if (mirrored) {
       ctx.restore();
@@ -638,11 +670,14 @@ export class MapRenderer {
       CHARACTER_HEIGHT,
     );
 
-    setCharacterRectangle(character.playerId, {
-      position: { x: screenX, y: screenY },
-      width: CHARACTER_WIDTH,
-      height: CHARACTER_HEIGHT,
-    });
+    setCharacterRectangle(
+      character.playerId,
+      new Rectangle(
+        { x: screenX, y: screenY },
+        CHARACTER_WIDTH,
+        CHARACTER_HEIGHT,
+      ),
+    );
 
     if (mirrored) {
       ctx.restore();
@@ -669,6 +704,7 @@ export class MapRenderer {
     const animation = this.client.npcAnimations.get(npc.index);
     if (animation) {
       animation.render(record.graphicId, npc, meta, playerScreen, ctx);
+      this.renderNpcChatBubble(npc, ctx);
       return;
     }
 
@@ -691,8 +727,9 @@ export class MapRenderer {
     const screenCoords = isoToScreen(npc.coords);
     const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
 
-    const screenX =
-      Math.floor(screenCoords.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH);
+    const screenX = Math.floor(
+      screenCoords.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+    );
     const screenY =
       screenCoords.y - (bmp.height - 23) - playerScreen.y + HALF_GAME_HEIGHT;
 
@@ -711,15 +748,36 @@ export class MapRenderer {
 
     ctx.drawImage(bmp, drawX, drawY);
 
-    setNpcRectangle(npc.index, {
-      position: { x: screenX, y: drawY },
-      width: bmp.width,
-      height: bmp.height,
-    });
+    setNpcRectangle(
+      npc.index,
+      new Rectangle({ x: screenX, y: drawY }, bmp.width, bmp.height),
+    );
 
     if (mirrored) {
       ctx.restore();
     }
+
+    this.renderNpcChatBubble(npc, ctx);
+  }
+
+  renderNpcChatBubble(npc: NpcMapInfo, ctx: CanvasRenderingContext2D) {
+    const balloon = this.client.npcChats.get(npc.index);
+    if (!balloon) {
+      return;
+    }
+
+    const rect = getNpcRectangle(npc.index);
+    if (!rect) {
+      return;
+    }
+
+    balloon.render(
+      {
+        x: rect.position.x + rect.width / 2,
+        y: rect.position.y - 4,
+      },
+      ctx,
+    );
   }
 
   renderCursor(

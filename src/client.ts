@@ -70,12 +70,12 @@ import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { GfxType, loadBitmapById } from './gfx';
 import { ChatTab } from './ui/chat';
 import { registerTalkHandlers } from './handlers/talk';
-import { Dir } from '@zhobo63/imgui-ts/src/imgui';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerArenaHandlers } from './handlers/arena';
 import { playSfxById, SfxId } from './sfx';
 import { registerAccountHandlers } from './handlers/account';
 import { registerCharacterHandlers } from './handlers/character';
+import { ChatBubble } from './chat-bubble';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -162,6 +162,8 @@ export class Client {
   downloadQueue: { type: FileType; id: number }[] = [];
   characterAnimations: Map<number, CharacterAnimation> = new Map();
   npcAnimations: Map<number, NpcAnimation> = new Map();
+  characterChats: Map<number, ChatBubble> = new Map();
+  npcChats: Map<number, ChatBubble> = new Map();
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
@@ -269,7 +271,10 @@ export class Client {
     const endedCharacterAnimations: number[] = [];
     let playerWalking = false;
     for (const [id, animation] of this.characterAnimations) {
-      if (!animation.ticks) {
+      if (
+        !animation.ticks ||
+        !this.nearby.characters.some((c) => c.playerId === id)
+      ) {
         endedCharacterAnimations.push(id);
         continue;
       }
@@ -284,7 +289,7 @@ export class Client {
 
     const endedNpcAnimations: number[] = [];
     for (const [id, animation] of this.npcAnimations) {
-      if (!animation.ticks) {
+      if (!animation.ticks || !this.nearby.npcs.some((n) => n.index === id)) {
         endedNpcAnimations.push(id);
         continue;
       }
@@ -292,6 +297,33 @@ export class Client {
     }
     for (const id of endedNpcAnimations) {
       this.npcAnimations.delete(id);
+    }
+
+    const endedCharacterChatBubbles: number[] = [];
+    for (const [id, bubble] of this.characterChats) {
+      if (
+        !bubble.ticks ||
+        !this.nearby.characters.some((c) => c.playerId === id)
+      ) {
+        endedCharacterChatBubbles.push(id);
+        continue;
+      }
+      bubble.tick();
+    }
+    for (const id of endedCharacterChatBubbles) {
+      this.characterChats.delete(id);
+    }
+
+    const endedNpcChatBubbles: number[] = [];
+    for (const [id, bubble] of this.npcChats) {
+      if (!bubble.ticks || !this.nearby.npcs.some((n) => n.index === id)) {
+        endedNpcChatBubbles.push(id);
+        continue;
+      }
+      bubble.tick();
+    }
+    for (const id of endedNpcChatBubbles) {
+      this.npcChats.delete(id);
     }
 
     if (this.warpQueued && !playerWalking) {
@@ -427,6 +459,8 @@ export class Client {
     const packet = new TalkReportClientPacket();
     packet.message = message;
     this.bus.send(packet);
+
+    this.characterChats.set(this.playerId, new ChatBubble(message));
 
     this.emit('chat', {
       name: this.name,

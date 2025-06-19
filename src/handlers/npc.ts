@@ -12,6 +12,7 @@ import {
 import type { Client } from '../client';
 import { NpcWalkAnimation } from '../npc';
 import { ChatTab } from '../ui/chat';
+import { ChatBubble } from '../chat-bubble';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
   const packet = NpcPlayerServerPacket.deserialize(reader);
@@ -44,6 +45,8 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     if (!record) {
       continue;
     }
+
+    client.npcChats.set(npc.index, new ChatBubble(chat.message));
 
     client.emit('chat', {
       name: record.name,
@@ -101,6 +104,8 @@ function handleNpcDialog(client: Client, reader: EoReader) {
   if (!record) {
     return;
   }
+
+  client.npcChats.set(npc.index, new ChatBubble(packet.message));
 
   client.emit('chat', {
     name: record.name,
