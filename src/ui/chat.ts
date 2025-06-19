@@ -60,14 +60,11 @@ export class ChatModal {
     for (const msg of messages) {
       ImGui.TextWrapped(msg);
     }
+    ImGui.SetScrollHereY(1.0);
     ImGui.EndChild();
 
     // Message input box
-    ImGui.InputText(
-      '##chatInput',
-      this.chatInputBuffer,
-      ImGui.InputTextFlags.EnterReturnsTrue,
-    );
+    ImGui.InputText('##chatInput', this.chatInputBuffer);
     ImGui.SameLine();
     if (
       ImGui.Button('Send') ||
