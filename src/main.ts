@@ -111,7 +111,7 @@ const chatModal = new ChatModal();
 const client = new Client();
 
 chatModal.on('chat', (message) => {
-  client.chat(message.trim().substring(0, 300));
+  client.chat(message.trim());
 });
 
 client.on('error', ({ title, message }) => {
