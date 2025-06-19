@@ -1,3 +1,4 @@
+import { ImGui } from '@zhobo63/imgui-ts';
 import { zoomIn, zoomOut } from './main';
 
 export enum Input {
@@ -54,6 +55,11 @@ function swipedDir(dx: number, dy: number): Input {
 }
 
 window.addEventListener('keydown', (e) => {
+  const io = ImGui.GetIO();
+  if (io.WantCaptureKeyboard) {
+    return;
+  }
+
   if ((e.ctrlKey || e.metaKey) && ['=', '+', '-', '_'].includes(e.key)) {
     e.preventDefault();
     if (e.key === '=' || e.key === '+') zoomIn();
@@ -61,44 +67,69 @@ window.addEventListener('keydown', (e) => {
   }
   switch (e.key) {
     case 'w':
+    case 'W':
+    case 'ArrowUp':
       updateDirectionHeld(Input.Up, true);
       break;
     case 'a':
+    case 'A':
+    case 'ArrowLeft':
       updateDirectionHeld(Input.Left, true);
       break;
     case 's':
+    case 'S':
+    case 'ArrowDown':
       updateDirectionHeld(Input.Down, true);
       break;
     case 'd':
+    case 'D':
+    case 'ArrowRight':
       updateDirectionHeld(Input.Right, true);
       break;
     case 'x':
+    case 'X':
       updateInputHeld(Input.SitStand, true);
       break;
     case ' ':
+    case 'Control':
       updateInputHeld(Input.Attack, true);
       break;
   }
 });
 
 window.addEventListener('keyup', (e) => {
+  const io = ImGui.GetIO();
+  if (io.WantCaptureKeyboard) {
+    return;
+  }
+
   switch (e.key) {
     case 'w':
+    case 'W':
+    case 'ArrowUp':
       updateDirectionHeld(Input.Up, false);
       break;
     case 'a':
+    case 'A':
+    case 'ArrowLeft':
       updateDirectionHeld(Input.Left, false);
       break;
     case 's':
+    case 'S':
+    case 'ArrowDown':
       updateDirectionHeld(Input.Down, false);
       break;
     case 'd':
+    case 'D':
+    case 'ArrowRight':
       updateDirectionHeld(Input.Right, false);
       break;
     case 'x':
+    case 'X':
       updateInputHeld(Input.SitStand, false);
       break;
     case ' ':
+    case 'Control':
       updateInputHeld(Input.Attack, false);
       break;
   }

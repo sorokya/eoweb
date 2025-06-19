@@ -185,7 +185,12 @@ connectModal.on('connect', (host) => {
   playSfxById(SfxId.ButtonClick);
   const socket = new WebSocket(host);
   socket.addEventListener('open', () => {
-	chatModal.addMessage(ChatTab.Local, 'System: web socket connection opened');
+    chatModal.addMessage(ChatTab.Local, 'System: web socket connection opened');
+    if (next === 'create') {
+      createAccountModal.open();
+    } else if (next === 'login') {
+      loginModal.open();
+    }
     const bus = new PacketBus(socket);
     bus.on('receive', (data) => {
       packetLogModal.addEntry({
@@ -211,7 +216,7 @@ connectModal.on('connect', (host) => {
       'Lost connection',
     );
     client.bus = null;
-	chatModal.addMessage(ChatTab.Local, 'System: web socket connection closed');
+    chatModal.addMessage(ChatTab.Local, 'System: web socket connection closed');
   });
 
   socket.addEventListener('error', (e) => {
@@ -224,10 +229,13 @@ menu.on('connect', () => {
   playSfxById(SfxId.ButtonClick);
 });
 
+let next: 'login' | 'create' | '' = '';
+
 menu.on('create-account', () => {
   playSfxById(SfxId.ButtonClick);
   if (client.state !== GameState.Connected) {
     connectModal.open();
+    next = 'create';
     return;
   }
 
@@ -238,6 +246,7 @@ menu.on('login', () => {
   playSfxById(SfxId.ButtonClick);
   if (client.state !== GameState.Connected) {
     connectModal.open();
+    next = 'login';
     return;
   }
   loginModal.open();
@@ -295,24 +304,6 @@ function renderUI(now: number) {
 // Tick loop
 setInterval(() => {
   client.tick();
-  /*if (map) {
-    map.tick();
-    if (client.state === GameState.InGame && mousePosition) {
-      map.setMousePosition(mousePosition);
-    }
-  }
-  if (client.state === GameState.InGame) {
-    movementController.tick();
-
-    if (client.warpQueued) {
-      movementController.freeze = true;
-      if (movementController.character.state !== CharacterState.Walking) {
-        client.acceptWarp();
-        movementController.freeze = false;
-      }
-    }
-  }
-    */
 }, 120);
 
 window.addEventListener('mousemove', (e) => {

@@ -53,6 +53,28 @@ export class MovementController {
 
     const animation = this.client.characterAnimations.get(character.playerId);
     const walking = animation instanceof CharacterWalkAnimation;
+    const attacking = animation instanceof CharacterAttackAnimation;
+
+    if (attacking) {
+      return;
+    }
+
+    if (
+      !this.attackTicks &&
+      isInputHeld(Input.Attack) &&
+      character.sitState === SitState.Stand
+    ) {
+      if (walking) {
+        return;
+      }
+      this.client.characterAnimations.set(
+        character.playerId,
+        new CharacterAttackAnimation(character.direction),
+      );
+      this.client.attack(character.direction, getTimestamp());
+      this.attackTicks = ATTACK_TICKS;
+      return;
+    }
 
     if (character.sitState === SitState.Stand && directionHeld !== null) {
       if (
@@ -90,7 +112,6 @@ export class MovementController {
         this.walkTicks = WALK_TICKS;
         this.faceTicks = FACE_TICKS;
         this.sitTicks = SIT_TICKS;
-        this.attackTicks = ATTACK_TICKS;
         return;
       }
     }
@@ -102,19 +123,6 @@ export class MovementController {
         this.client.stand();
       }
       this.sitTicks = SIT_TICKS;
-    }
-
-    if (
-      !this.attackTicks &&
-      isInputHeld(Input.Attack) &&
-      character.sitState === SitState.Stand
-    ) {
-      this.client.characterAnimations.set(
-        character.playerId,
-        new CharacterAttackAnimation(character.direction),
-      );
-      this.client.attack(character.direction, getTimestamp());
-      this.attackTicks = ATTACK_TICKS;
     }
   }
 }
