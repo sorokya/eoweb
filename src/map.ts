@@ -295,6 +295,68 @@ export class MapRenderer {
       this.renderCharacter(main, playerScreen, ctx);
       ctx.globalAlpha = 1;
     }
+
+    if (this.client.mouseCoords) {
+      const characterAt = this.client.nearby.characters.find(
+        (c) =>
+          c.coords.x === this.client.mouseCoords.x &&
+          c.coords.y === this.client.mouseCoords.y,
+      );
+
+      if (characterAt) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px Arial';
+        let name = characterAt.name;
+        if (characterAt.guildTag !== '   ') {
+          name += ` ${characterAt.guildTag}`;
+        }
+        const metrics = ctx.measureText(name);
+        const position = isoToScreen(this.client.mouseCoords);
+        ctx.fillText(
+          name,
+          Math.floor(
+            position.x - metrics.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+          ),
+          Math.floor(
+            position.y - playerScreen.y - CHARACTER_HEIGHT + HALF_GAME_HEIGHT,
+          ),
+        );
+        return;
+      }
+
+      const npcAt = this.client.nearby.npcs.find(
+        (n) =>
+          n.coords.x === this.client.mouseCoords.x &&
+          n.coords.y === this.client.mouseCoords.y,
+      );
+
+      if (npcAt) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px Arial';
+        const position = isoToScreen(this.client.mouseCoords);
+        const data = this.client.getEnfRecordById(npcAt.id);
+        if (!data) {
+          return;
+        }
+
+        const metrics = ctx.measureText(data.name);
+        const bmp = getBitmapById(GfxType.NPC, (data.graphicId - 1) * 40 + 1);
+        if (!bmp) {
+          return;
+        }
+
+        ctx.fillText(
+          data.name,
+          Math.floor(
+            position.x - metrics.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+          ),
+          Math.floor(
+            position.y - playerScreen.y - bmp.height + HALF_GAME_HEIGHT,
+          ),
+        );
+        return;
+      }
+    }
   }
 
   renderTile(

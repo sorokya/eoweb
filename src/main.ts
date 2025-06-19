@@ -191,6 +191,8 @@ connectModal.on('connect', (host) => {
     } else if (next === 'login') {
       loginModal.open();
     }
+
+    next = '';
     const bus = new PacketBus(socket);
     bus.on('receive', (data) => {
       packetLogModal.addEntry({
