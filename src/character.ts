@@ -17,6 +17,7 @@ import type { Vector2 } from './vector';
 import { getBitmapById, GfxType } from './gfx';
 import { isoToScreen } from './utils/iso-to-screen';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
+import { Rectangle, setCharacterRectangle } from './collision';
 
 export abstract class CharacterAnimation {
   ticks: number;
@@ -135,21 +136,23 @@ export class CharacterWalkAnimation extends CharacterAnimation {
       }
     }
 
-    const screenX =
+    const screenX = Math.floor(
       screenCoords.x -
-      HALF_CHARACTER_WALKING_WIDTH -
-      playerScreen.x +
-      HALF_GAME_WIDTH +
-      this.walkOffset.x +
-      additionalOffset.x;
+        HALF_CHARACTER_WALKING_WIDTH -
+        playerScreen.x +
+        HALF_GAME_WIDTH +
+        this.walkOffset.x +
+        additionalOffset.x,
+    );
 
-    const screenY =
+    const screenY = Math.floor(
       screenCoords.y -
-      CHARACTER_WALKING_HEIGHT -
-      playerScreen.y +
-      HALF_GAME_HEIGHT +
-      this.walkOffset.y +
-      additionalOffset.y;
+        CHARACTER_WALKING_HEIGHT -
+        playerScreen.y +
+        HALF_GAME_HEIGHT +
+        this.walkOffset.y +
+        additionalOffset.y,
+    );
 
     const mirrored = [Direction.Right, Direction.Up].includes(
       character.direction,
@@ -161,9 +164,9 @@ export class CharacterWalkAnimation extends CharacterAnimation {
       ctx.scale(-1, 1); // Flip horizontally
     }
 
-    const drawX = mirrored
-      ? GAME_WIDTH - screenX - CHARACTER_WALKING_WIDTH
-      : screenX;
+    const drawX = Math.floor(
+      mirrored ? GAME_WIDTH - screenX - CHARACTER_WALKING_WIDTH : screenX,
+    );
 
     ctx.drawImage(
       bmp,
@@ -175,6 +178,15 @@ export class CharacterWalkAnimation extends CharacterAnimation {
       screenY,
       CHARACTER_WALKING_WIDTH,
       CHARACTER_WALKING_HEIGHT,
+    );
+
+    setCharacterRectangle(
+      character.playerId,
+      new Rectangle(
+        { x: screenX, y: screenY },
+        CHARACTER_WALKING_WIDTH,
+        CHARACTER_WALKING_HEIGHT,
+      ),
     );
 
     if (mirrored) {
@@ -235,19 +247,21 @@ export class CharacterAttackAnimation extends CharacterAnimation {
       y: 5,
     };
 
-    const screenX =
+    const screenX = Math.floor(
       screenCoords.x -
-      HALF_CHARACTER_ATTACK_WIDTH -
-      playerScreen.x +
-      HALF_GAME_WIDTH +
-      additionalOffset.x;
+        HALF_CHARACTER_ATTACK_WIDTH -
+        playerScreen.x +
+        HALF_GAME_WIDTH +
+        additionalOffset.x,
+    );
 
-    const screenY =
+    const screenY = Math.floor(
       screenCoords.y -
-      CHARACTER_HEIGHT -
-      playerScreen.y +
-      HALF_GAME_HEIGHT +
-      additionalOffset.y;
+        CHARACTER_HEIGHT -
+        playerScreen.y +
+        HALF_GAME_HEIGHT +
+        additionalOffset.y,
+    );
 
     const mirrored = [Direction.Right, Direction.Up].includes(
       character.direction,
@@ -259,9 +273,9 @@ export class CharacterAttackAnimation extends CharacterAnimation {
       ctx.scale(-1, 1); // Flip horizontally
     }
 
-    const drawX = mirrored
-      ? GAME_WIDTH - screenX - CHARACTER_ATTACK_WIDTH
-      : screenX;
+    const drawX = Math.floor(
+      mirrored ? GAME_WIDTH - screenX - CHARACTER_ATTACK_WIDTH : screenX,
+    );
 
     ctx.drawImage(
       bmp,
@@ -273,6 +287,15 @@ export class CharacterAttackAnimation extends CharacterAnimation {
       screenY,
       CHARACTER_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
+    );
+
+    setCharacterRectangle(
+      character.playerId,
+      new Rectangle(
+        { x: screenX, y: screenY },
+        CHARACTER_ATTACK_WIDTH,
+        CHARACTER_HEIGHT,
+      ),
     );
 
     if (mirrored) {

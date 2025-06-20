@@ -2,6 +2,8 @@ import { ImGui } from '@zhobo63/imgui-ts';
 import type { ImScalar } from '@zhobo63/imgui-ts/src/bind-imgui';
 import { PacketAction, PacketFamily } from 'eolib';
 
+const MAX_ENTRIES = 50;
+
 export enum PacketSource {
   Client = 0,
   Server = 1,
@@ -29,6 +31,9 @@ export class PacketLogModal {
 
   addEntry(entry: PacketLogEntry) {
     this.log.push(entry);
+    if (this.log.length > MAX_ENTRIES) {
+      this.log.splice(0, this.log.length - MAX_ENTRIES);
+    }
   }
 
   render() {
@@ -82,6 +87,8 @@ export class PacketLogModal {
         ImGui.TableSetColumnIndex(4);
         ImGui.Text(this.formatTime(entry.timestamp));
       }
+
+      ImGui.SetScrollHereY();
 
       ImGui.EndTable();
     }

@@ -8,6 +8,7 @@ import {
 import type { Client } from '../client';
 import { ChatTab } from '../ui/chat';
 import { playSfxById, SfxId } from '../sfx';
+import { ChatBubble } from '../chat-bubble';
 
 function handleTalkPlayer(client: Client, reader: EoReader) {
   const packet = TalkPlayerServerPacket.deserialize(reader);
@@ -17,6 +18,8 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
   if (!character) {
     return;
   }
+
+  client.characterChats.set(character.playerId, new ChatBubble(packet.message));
 
   client.emit('chat', {
     name: character.name,
