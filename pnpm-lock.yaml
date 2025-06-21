@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@zhobo63/imgui-ts':
-        specifier: ^0.1.46
-        version: 0.1.46
       eolib:
         specifier: ^1.0.2
         version: 1.0.2
@@ -336,17 +333,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@types/emscripten@1.40.1':
-    resolution: {integrity: sha512-sr53lnYkQNhjHNN0oJDdUm5564biioI5DuOpycufDVK7D3y+GR3oUswe2rlwY1nPNyusHbrJ9WoTyIHl4/Bpwg==}
-
   '@types/estree@1.0.7':
     resolution: {integrity: sha512-w28IoSUCJpidD/TGviZwwMJckNESJZXFu7NBZ5YJ4mEUnNraUn9Pm8HSZm/jDF1pDWYKspWE7oVphigUPRakIQ==}
 
   '@types/node@22.15.3':
     resolution: {integrity: sha512-lX7HFZeHf4QG/J7tBZqrCAXwz9J5RD56Y6MpP0eJkka8p+K0RY/yBTW7CYFJ4VGCclxqOLKmiGP5juQc6MKgcw==}
-
-  '@zhobo63/imgui-ts@0.1.46':
-    resolution: {integrity: sha512-Nru0eqITDR7r0X7iKg2dhkwKTZTW8WuVxs2XXPIfQD2nTyTADVvurEFkMeE9c/J+rH4bV/oDJwWW74Syko6LXA==}
 
   eolib@1.0.2:
     resolution: {integrity: sha512-CUHGmm+eHMBEJYD8wDm+yo5WjxGW22PsgXjWM5oyTKU1GYC3+nV5NjZTDg98BMJ8QFm/Cg14CH3F3JB83tfsLQ==}
@@ -624,18 +615,12 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.42.0':
     optional: true
 
-  '@types/emscripten@1.40.1': {}
-
   '@types/estree@1.0.7': {}
 
   '@types/node@22.15.3':
     dependencies:
       undici-types: 6.21.0
     optional: true
-
-  '@zhobo63/imgui-ts@0.1.46':
-    dependencies:
-      '@types/emscripten': 1.40.1
 
   eolib@1.0.2: {}
 
