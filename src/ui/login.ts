@@ -24,6 +24,7 @@ export class LoginForm extends Base {
     this.username.value = '';
     this.password.value = '';
     this.container.classList.remove('hidden');
+    this.username.focus();
   }
 
   constructor() {
@@ -35,6 +36,8 @@ export class LoginForm extends Base {
         username: this.username.value.trim(),
         password: this.password.value.trim(),
       });
+      this.password.value = '';
+      this.password.focus();
       return false;
     });
     this.btnCancel.addEventListener('click', () => {
