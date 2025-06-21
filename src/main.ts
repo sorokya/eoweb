@@ -27,6 +27,7 @@ import { CharacterSelect } from './ui/character-select';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { ExitGame } from './ui/exit-game';
 import { SmallConfirm } from './ui/small-confirm';
+import { CreateAccountForm } from './ui/create-account';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
@@ -95,13 +96,21 @@ const render = (now: DOMHighResTimeStamp) => {
 const client = new Client();
 
 client.on('error', ({ title, message }) => {
-  smallAlertLargeHeader.setContent(message, title);
+  smallAlertLargeHeader.setContent(message, title || 'Error');
   smallAlertLargeHeader.show();
 });
 
 client.on('debug', (message) => {});
 
-client.on('accountCreated', () => {});
+client.on('accountCreated', () => {
+  smallAlertLargeHeader.setContent(
+    'Use your new account name and password to login to the game',
+    'Welcome',
+  );
+  smallAlertLargeHeader.show();
+  createAccountForm.hide();
+  mainMenu.show();
+});
 
 client.on('login', (characters) => {
   playSfxById(SfxId.Login);
@@ -126,7 +135,7 @@ const initializeSocket = (next: 'login' | 'create') => {
   socket.addEventListener('open', () => {
     mainMenu.hide();
     if (next === 'create') {
-      //createAccountModal.open();
+      createAccountForm.show();
     } else if (next === 'login') {
       loginForm.show();
     }
@@ -182,6 +191,7 @@ const initializeSocket = (next: 'login' | 'create') => {
 
 const mainMenu = new MainMenu();
 const loginForm = new LoginForm();
+const createAccountForm = new CreateAccountForm();
 const characterSelect = new CharacterSelect();
 const smallAlertLargeHeader = new SmallAlertLargeHeader();
 const exitGame = new ExitGame();
@@ -221,7 +231,22 @@ mainMenu.on('create-account', () => {
     initializeSocket('create');
   } else {
     mainMenu.hide();
+    createAccountForm.show();
   }
+});
+
+createAccountForm.on('cancel', () => {
+  createAccountForm.hide();
+  mainMenu.show();
+});
+
+createAccountForm.on('error', ({ title, message }) => {
+  smallAlertLargeHeader.setContent(message, title);
+  smallAlertLargeHeader.show();
+});
+
+createAccountForm.on('create', (data) => {
+  client.requestAccountCreation(data);
 });
 
 loginForm.on('login', ({ username, password }) => {

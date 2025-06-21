@@ -152,6 +152,32 @@ input[type="password"] {
   justify-content: center;
 }
 
+#create-account-form {
+  display: flex;
+  flex-flow: column;
+  align-self: center;
+  margin: auto;
+}
+
+#create-account-form form {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#create-account-form form > div {
+  display: flex;
+  flex-flow: column;
+  gap: 5px;
+}
+
+#create-account-form .buttons {
+  display: flex;
+  flex-flow: row;
+  gap: 2px;
+}
+
 #character-select {
   display: flex;
   flex-flow: column;
@@ -298,6 +324,70 @@ input[type="password"] {
   position: absolute;
   top: 0;
   right: 0;
+}
+
+.img-label {
+  --bg-url: "";
+  --bg-x: 0;
+  --bg-y: 0;
+  --width: 0;
+  --height: 0;
+
+  display: block;
+  background-color: transparent;
+  /* biome-ignore lint/suspicious/noShorthandPropertyOverrides: CSS variables */
+  background: var(--bg-url) var(--bg-x) var(--bg-y);
+  width: var(--width);
+  height: var(--height);
+  user-select: none;
+}
+
+.img-label[data-id="account-name"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --width: 149px;
+  --height: 16px;
+}
+
+.img-label[data-id="password"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: -17px;
+  --width: 149px;
+  --height: 12px;
+}
+
+.img-label[data-id="confirm-password"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: -29px;
+  --width: 149px;
+  --height: 16px;
+}
+
+.img-label[data-id="real-name"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: -44px;
+  --width: 149px;
+  --height: 16px;
+}
+
+.img-label[data-id="location"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: -58px;
+  --width: 149px;
+  --height: 16px;
+}
+
+.img-label[data-id="email"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: -76px;
+  --width: 149px;
+  --height: 16px;
 }
 
 .img-btn {

@@ -106,7 +106,6 @@ export enum GameState {
 type AccountCreateData = {
   username: string;
   password: string;
-  confirmPassword: string;
   name: string;
   location: string;
   email: string;
