@@ -24,6 +24,7 @@ import { playSfxById, SfxId } from './sfx';
 import { MainMenu } from './ui/main-menu';
 import { LoginForm } from './ui/login';
 import { CharacterSelect } from './ui/character-select';
+import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
@@ -91,7 +92,10 @@ const render = (now: DOMHighResTimeStamp) => {
 
 const client = new Client();
 
-client.on('error', ({ title, message }) => {});
+client.on('error', ({ title, message }) => {
+  smallAlertLargeHeader.setContent(message, title);
+  smallAlertLargeHeader.show();
+});
 
 client.on('debug', (message) => {});
 
@@ -145,7 +149,7 @@ const initializeSocket = (next: 'login' | 'create') => {
 
     const init = new InitInitClientPacket();
     init.challenge = randomRange(1, MAX_CHALLENGE);
-    init.hdid = '161726351';
+    init.hdid = '111111111';
     init.version = new Version();
     init.version.major = 0;
     init.version.minor = 0;
@@ -154,10 +158,18 @@ const initializeSocket = (next: 'login' | 'create') => {
   });
 
   socket.addEventListener('close', () => {
-    /*errorModal.open(
+    const uiElements = document.querySelectorAll('#ui>div');
+    for (const el of uiElements) {
+      el.classList.add('hidden');
+    }
+
+    mainMenu.show();
+    client.state = GameState.Initial;
+    smallAlertLargeHeader.setContent(
       'The connection to the game server was lost, please try again a later time',
       'Lost connection',
-    );*/
+    );
+    smallAlertLargeHeader.show();
     client.bus = null;
   });
 
@@ -169,6 +181,7 @@ const initializeSocket = (next: 'login' | 'create') => {
 const mainMenu = new MainMenu();
 const loginForm = new LoginForm();
 const characterSelect = new CharacterSelect();
+const smallAlertLargeHeader = new SmallAlertLargeHeader();
 
 mainMenu.on('play-game', () => {
   mainMenu.hide();

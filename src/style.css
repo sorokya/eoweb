@@ -211,6 +211,47 @@ input[type="password"] {
   align-self: center;
 }
 
+#cover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1); /* optional dimming effect */
+  z-index: 1000; /* higher than game UI, lower than modal */
+}
+
+#small-alert {
+  position: absolute;
+  background: url("/gfx/gfx001/118.png");
+  width: 290px;
+  height: 157px;
+  color: #f0f0c8;
+  user-select: none;
+  z-index: 1010;
+}
+
+#small-alert .title {
+  position: absolute;
+  left: 58px;
+  top: 22px;
+  width: 210px;
+}
+
+#small-alert .message {
+  position: absolute;
+  left: 20px;
+  top: 56px;
+  width: 252px;
+  height: 55px;
+}
+
+#small-alert button {
+  position: absolute;
+  top: 113px;
+  right: 18px;
+}
+
 .img-btn {
   --bg-url: "";
   --bg-x: 0;
@@ -351,6 +392,16 @@ input[type="password"] {
   --bg-y: -87px;
   --hover-x: -91px;
   --hover-y: -87px;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="ok"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -116px;
+  --hover-x: -91px;
+  --hover-y: -116px;
   --width: 91px;
   --height: 29px;
 }

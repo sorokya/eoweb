@@ -13,6 +13,7 @@
   <div id="container">
     <canvas id="game"></canvas>
     <div id="ui">
+      <div id="cover" class="hidden"></div>
       <div id="main-menu" class="">
         <div id="main-menu-logo">
           <img src="logo.png"/>
@@ -39,7 +40,7 @@
             <span class="name"></span>
             <span class="level"></span>
             <div class="buttons">
-              <button class="img-btn" type="submit" data-id="login"></button>
+              <button class="img-btn" type="button" data-id="login"></button>
               <button class="img-btn" type="button" data-id="delete"></button>
             </div>
           </div>
@@ -47,7 +48,7 @@
             <span class="name"></span>
             <span class="level"></span>
             <div class="buttons">
-              <button class="img-btn" type="submit" data-id="login"></button>
+              <button class="img-btn" type="button" data-id="login"></button>
               <button class="img-btn" type="button" data-id="delete"></button>
             </div>
           </div>
@@ -55,17 +56,25 @@
             <span class="name"></span>
             <span class="level"></span>
             <div class="buttons">
-              <button class="img-btn" type="submit" data-id="login"></button>
+              <button class="img-btn" type="button" data-id="login"></button>
               <button class="img-btn" type="button" data-id="delete"></button>
             </div>
           </div>
         </div>
         <div class="buttons">
-          <button class="img-btn" type="submit" data-id="create"></button>
-          <button class="img-btn" type="submit" data-id="password"></button>
+          <button class="img-btn" type="button" data-id="create"></button>
+          <button class="img-btn" type="button" data-id="password"></button>
           <button class="img-btn" type="button" data-id="cancel-big"></button>
         </div>
       </div>
+
+
+      <div id="small-alert" class="hidden">
+        <span class="title"></span>
+        <span class="message"></span>
+        <button class="img-btn" type="button" data-id="ok"></button>
+      </div>
+
     </div>
   </div>
   <script type="module" src="/src/main.ts"></script>
