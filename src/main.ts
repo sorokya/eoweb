@@ -1,7 +1,6 @@
 import {
   BigCoords,
   CharacterMapInfo,
-  Coords,
   Emf,
   EoReader,
   Gender,
@@ -22,6 +21,9 @@ import {
 } from './game-state';
 import { randomRange } from './utils/random-range';
 import { playSfxById, SfxId } from './sfx';
+import { MainMenu } from './ui/main-menu';
+import { LoginForm } from './ui/login';
+import { CharacterSelect } from './ui/character-select';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
@@ -97,6 +99,9 @@ client.on('accountCreated', () => {});
 
 client.on('login', (characters) => {
   playSfxById(SfxId.Login);
+  loginForm.hide();
+  characterSelect.setCharacters(characters);
+  characterSelect.show();
 });
 
 client.on('characterCreated', (characters) => {});
@@ -105,10 +110,39 @@ client.on('selectCharacter', () => {});
 
 client.on('chat', ({ name, tab, message }) => {});
 
-client.on('enterGame', ({ news }) => {});
+client.on('enterGame', ({ news }) => {
+  characterSelect.hide();
+});
 
-const initializeSocket = () => {
-  if (client.bus) {
+const initializeSocket = (next: 'login' | 'create') => {
+  const socket = new WebSocket('ws://localhost:8077');
+  socket.addEventListener('open', () => {
+    if (next === 'create') {
+      //createAccountModal.open();
+    } else if (next === 'login') {
+      loginForm.show();
+    }
+
+    const bus = new PacketBus(socket);
+    bus.on('receive', (data) => {
+      /*
+      packetLogModal.addEntry({
+        source: PacketSource.Server,
+        ...data,
+      });
+      */
+    });
+    bus.on('send', (data) => {
+      /*
+      packetLogModal.addEntry({
+        source: PacketSource.Client,
+        ...data,
+      });
+      */
+    });
+
+    client.setBus(bus);
+
     const init = new InitInitClientPacket();
     init.challenge = randomRange(1, MAX_CHALLENGE);
     init.hdid = '161726351';
@@ -117,8 +151,59 @@ const initializeSocket = () => {
     init.version.minor = 0;
     init.version.patch = 28;
     client.bus.send(init);
-  }
+  });
+
+  socket.addEventListener('close', () => {
+    /*errorModal.open(
+      'The connection to the game server was lost, please try again a later time',
+      'Lost connection',
+    );*/
+    client.bus = null;
+  });
+
+  socket.addEventListener('error', (e) => {
+    console.error('Websocket Error', e);
+  });
 };
+
+const mainMenu = new MainMenu();
+const loginForm = new LoginForm();
+const characterSelect = new CharacterSelect();
+
+mainMenu.on('play-game', () => {
+  mainMenu.hide();
+  if (client.state === GameState.Initial) {
+    initializeSocket('login');
+  } else {
+    loginForm.show();
+  }
+});
+
+mainMenu.on('create-account', () => {
+  mainMenu.hide();
+  if (client.state === GameState.Initial) {
+    initializeSocket('create');
+  }
+});
+
+loginForm.on('login', ({ username, password }) => {
+  client.login(username, password);
+});
+
+loginForm.on('cancel', () => {
+  loginForm.hide();
+  mainMenu.show();
+});
+
+characterSelect.on('cancel', () => {
+  client.disconnect();
+  characterSelect.hide();
+  mainMenu.show();
+});
+
+characterSelect.on('selectCharacter', (id) => {
+  client.selectCharacter(id);
+});
 
 // Tick loop
 setInterval(() => {

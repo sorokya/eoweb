@@ -76,6 +76,8 @@ function handleInitOk(
   data: InitInitServerPacket.ReplyCodeDataOk,
 ) {
   client.playerId = data.playerId;
+  // Hack to keep pre-game UI stable
+  client.nearby.characters[0].playerId = data.playerId;
   const bus = client.bus;
   if (!bus) {
     throw new Error('Bus is null');

@@ -69,7 +69,6 @@ import { MovementController } from './movement-controller';
 import type { NpcAnimation } from './npc';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { GfxType, loadBitmapById } from './gfx';
-import { ChatTab } from './ui/chat';
 import { registerTalkHandlers } from './handlers/talk';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerArenaHandlers } from './handlers/arena';
@@ -80,6 +79,10 @@ import { ChatBubble } from './chat-bubble';
 import { Door } from './door';
 import { registerDoorHandlers } from './handlers/door';
 import { getDoorIntersecting } from './collision';
+
+export enum ChatTab {
+  Local = 0,
+}
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -665,5 +668,9 @@ export class Client {
     const packet = new SitRequestClientPacket();
     packet.sitAction = SitAction.Stand;
     this.bus.send(packet);
+  }
+
+  disconnect() {
+    this.bus.disconnect();
   }
 }

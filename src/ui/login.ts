@@ -1,80 +1,52 @@
-import { ImGui } from '@zhobo63/imgui-ts';
-import type { ImScalar } from '@zhobo63/imgui-ts/src/bind-imgui';
-import mitt, { type Emitter } from 'mitt';
-import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH } from '../consts';
+import mitt from 'mitt';
+import { playSfxById, SfxId } from '../sfx';
+import { Base } from './base-ui';
 
-type LoginModalEvents = {
+type Events = {
   login: { username: string; password: string };
+  cancel: undefined;
 };
 
-export class LoginModal {
-  private emitter: Emitter<LoginModalEvents>;
-  private username: ImGui.ImStringBuffer = new ImGui.ImStringBuffer(
-    MAX_USERNAME_LENGTH,
-    '',
+export class LoginForm extends Base {
+  protected container = document.getElementById('login-form');
+  private form: HTMLFormElement = this.container.querySelector('form');
+  private username: HTMLInputElement =
+    this.container.querySelector('#login-username');
+  private password: HTMLInputElement =
+    this.container.querySelector('#login-password');
+  private btnCancel: HTMLButtonElement = this.container.querySelector(
+    'button[data-id="cancel"]',
   );
-  private password: ImGui.ImStringBuffer = new ImGui.ImStringBuffer(
-    MAX_PASSWORD_LENGTH,
-    '',
-  );
-  private isOpen: ImScalar<boolean> = [false];
+
+  private emitter = mitt<Events>();
+
+  show() {
+    this.username.value = '';
+    this.password.value = '';
+    this.container.classList.remove('hidden');
+  }
 
   constructor() {
-    this.emitter = mitt<LoginModalEvents>();
+    super();
+    this.form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('login', {
+        username: this.username.value.trim(),
+        password: this.password.value.trim(),
+      });
+      return false;
+    });
+    this.btnCancel.addEventListener('click', () => {
+      playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('cancel', undefined);
+    });
   }
 
-  on<Event extends keyof LoginModalEvents>(
+  on<Event extends keyof Events>(
     event: Event,
-    handler: (data: LoginModalEvents[Event]) => void,
+    handler: (data: Events[Event]) => void,
   ) {
     this.emitter.on(event, handler);
-  }
-
-  open() {
-    this.isOpen[0] = true;
-  }
-
-  close() {
-    this.isOpen[0] = false;
-  }
-
-  render() {
-    if (!this.isOpen[0]) {
-      return;
-    }
-
-    const io = ImGui.GetIO();
-    const windowSize = new ImGui.Vec2(300, 100); // desired size of the window
-    const center = new ImGui.Vec2(
-      io.DisplaySize.x / 2 - windowSize.x / 2,
-      io.DisplaySize.y / 2 - windowSize.y / 2,
-    );
-
-    ImGui.SetNextWindowSize(windowSize, ImGui.Cond.Once);
-    ImGui.SetNextWindowPos(center, ImGui.Cond.Once); // or Cond.Always for hard placement
-
-    ImGui.Begin('Login', this.isOpen, ImGui.WindowFlags.NoResize);
-    ImGui.InputText('Username', this.username);
-    ImGui.InputText(
-      'Password',
-      this.password,
-      MAX_PASSWORD_LENGTH,
-      ImGui.InputTextFlags.Password,
-    );
-
-    if (ImGui.Button('Login')) {
-      this.emitter.emit('login', {
-        username: this.username.buffer,
-        password: this.password.buffer,
-      });
-    }
-
-    ImGui.SameLine();
-
-    if (ImGui.Button('Cancel')) {
-      this.isOpen[0] = false;
-    }
-
-    ImGui.End();
   }
 }

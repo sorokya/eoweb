@@ -64,7 +64,7 @@ canvas {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 #main-menu {
@@ -110,6 +110,107 @@ canvas {
   }
 }
 
+#login-form {
+  background: url("/gfx/gfx001/102.png");
+  width: 320px;
+  height: 159px;
+  margin: auto;
+  position: relative;
+}
+
+input[type="text"],
+input[type="password"] {
+  background: #a38269;
+  color: #000;
+  border: 1px solid #000;
+  outline: none;
+}
+
+#login-username {
+  position: absolute;
+  top: 35px;
+  left: 130px;
+  width: 138px;
+  height: 17px;
+}
+
+#login-password {
+  position: absolute;
+  top: 72px;
+  left: 130px;
+  width: 138px;
+  height: 17px;
+}
+
+#login-form .buttons {
+  position: absolute;
+  bottom: 20px;
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  justify-content: center;
+}
+
+#character-select {
+  display: flex;
+  flex-flow: column;
+  align-self: center;
+  margin: auto;
+  gap: 20px;
+}
+
+#character-select .characters {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  gap: 2px;
+}
+
+@media screen and (min-width: 840px) {
+  #character-select .characters {
+    flex-flow: row;
+  }
+}
+
+#character-select .character {
+  background: url("/gfx/gfx001/111.png");
+  width: 276px;
+  height: 123px;
+  position: relative;
+  user-select: none;
+}
+
+#character-select .character > .buttons {
+  position: absolute;
+  bottom: 8px;
+  left: 160px;
+  display: flex;
+  gap: 2px;
+  flex-flow: column;
+}
+
+#character-select .character .name {
+  position: absolute;
+  top: 30px;
+  left: 160px;
+  width: 90px;
+  text-align: center;
+  color: #b4a08c;
+  font-size: 12px;
+}
+
+#character-select .character .level {
+  position: absolute;
+  top: 98px;
+  left: 30px;
+  color: #b4a08c;
+  font-size: 12px;
+}
+
+#character-select > .buttons {
+  align-self: center;
+}
+
 .img-btn {
   --bg-url: "";
   --bg-x: 0;
@@ -134,7 +235,7 @@ canvas {
 }
 
 /* Specific buttons */
-  .img-btn[data-id="create-account"] {
+.img-btn[data-id="create-account"] {
   --bg-url: url("/gfx/gfx001/113.png");
   --bg-x: 0;
   --bg-y: 0;
@@ -162,4 +263,94 @@ canvas {
   --hover-y: -80px;
   --width: 180px;
   --height: 40px;
+}
+
+.img-btn[data-id="create"] {
+  --bg-url: url("/gfx/gfx001/114.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --hover-x: -120px;
+  --hover-y: 0;
+  --width: 120px;
+  --height: 40px;
+}
+
+.img-btn[data-id="cancel-big"] {
+  --bg-url: url("/gfx/gfx001/114.png");
+  --bg-x: 0;
+  --bg-y: -40px;
+  --hover-x: -120px;
+  --hover-y: -40px;
+  --width: 120px;
+  --height: 40px;
+}
+
+.img-btn[data-id="connect-big"] {
+  --bg-url: url("/gfx/gfx001/114.png");
+  --bg-x: 0;
+  --bg-y: -80px;
+  --hover-x: -120px;
+  --hover-y: -80px;
+  --width: 120px;
+  --height: 40px;
+}
+
+.img-btn[data-id="password"] {
+  --bg-url: url("/gfx/gfx001/114.png");
+  --bg-x: 0;
+  --bg-y: -120px;
+  --hover-x: -120px;
+  --hover-y: -120px;
+  --width: 120px;
+  --height: 40px;
+}
+
+.img-btn[data-id="play-game"] {
+  --bg-url: url("/gfx/gfx001/113.png");
+  --bg-x: 0;
+  --bg-y: -40px;
+  --hover-x: -180px;
+  --hover-y: -40px;
+  --width: 180px;
+  --height: 40px;
+}
+
+.img-btn[data-id="connect"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --hover-x: -91px;
+  --hover-y: -0;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="cancel"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -29px;
+  --hover-x: -91px;
+  --hover-y: -29px;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="login"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -58px;
+  --hover-x: -91px;
+  --hover-y: -58px;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="delete"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -87px;
+  --hover-x: -91px;
+  --hover-y: -87px;
+  --width: 91px;
+  --height: 29px;
 }
