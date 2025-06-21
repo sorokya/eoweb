@@ -1,10 +1,15 @@
 import {
-  AccountCreateClientPacket,
+  BigCoords,
+  CharacterMapInfo,
+  Coords,
+  Emf,
+  EoReader,
+  Gender,
   InitInitClientPacket,
+  SitState,
   Version,
 } from 'eolib';
 import './style.css';
-import { ImGui, ImGui_Impl } from '@zhobo63/imgui-ts';
 import { PacketBus } from './bus';
 import { Client, GameState } from './client';
 import { GAME_FPS, MAX_CHALLENGE } from './consts';
@@ -15,22 +20,11 @@ import {
   setGameSize,
   setZoom,
 } from './game-state';
-import { CharactersModal } from './ui/characters';
-import { ConnectModal } from './ui/connect';
-import { ErrorModal } from './ui/error';
-import { LoginModal } from './ui/login';
-import { Menu } from './ui/menu';
-import { PacketLogModal, PacketSource } from './ui/packet-log';
 import { randomRange } from './utils/random-range';
-import { ChatModal, ChatTab } from './ui/chat';
 import { playSfxById, SfxId } from './sfx';
-import { CreateAccountModal } from './ui/create-account';
-import { CreateCharacterModal } from './ui/create-character';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
-const uiCanvas = document.getElementById('ui') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
-if (!uiCanvas) throw new Error('Canvas ui not found!');
 
 let userOverride = false;
 export function zoomIn() {
@@ -57,16 +51,9 @@ function resizeCanvases() {
 
   canvas.width = w;
   canvas.height = h;
-  uiCanvas.width = w;
-  uiCanvas.height = h;
 
   canvas.style.width = `${w * ZOOM}px`;
   canvas.style.height = `${h * ZOOM}px`;
-
-  uiCanvas.width = rect.width;
-  uiCanvas.height = rect.height;
-  uiCanvas.style.width = `${rect.width}px`;
-  uiCanvas.style.height = `${rect.height}px`;
 
   setGameSize(w, h);
 }
@@ -82,7 +69,6 @@ ctx.imageSmoothingEnabled = false;
 
 let lastTime: DOMHighResTimeStamp | undefined;
 const render = (now: DOMHighResTimeStamp) => {
-  renderUI(now);
   if (!lastTime) {
     lastTime = now;
   }
@@ -101,71 +87,25 @@ const render = (now: DOMHighResTimeStamp) => {
   requestAnimationFrame(render);
 };
 
-const connectModal = new ConnectModal();
-const errorModal = new ErrorModal();
-const loginModal = new LoginModal();
-const createAccountModal = new CreateAccountModal();
-const charactersModal = new CharactersModal();
-const createCharacterModal = new CreateCharacterModal();
-const chatModal = new ChatModal();
 const client = new Client();
 
-chatModal.on('chat', (message) => {
-  client.chat(message.trim());
-});
+client.on('error', ({ title, message }) => {});
 
-client.on('error', ({ title, message }) => {
-  chatModal.addMessage(ChatTab.Local, `${title} - ${message}`);
-  errorModal.open(message, title);
-});
+client.on('debug', (message) => {});
 
-client.on('debug', (message) => {
-  chatModal.addMessage(ChatTab.Local, `System: ${message}`);
-});
-
-client.on('accountCreated', () => {
-  errorModal.open('Your account has been created', 'Success');
-  createAccountModal.close();
-});
+client.on('accountCreated', () => {});
 
 client.on('login', (characters) => {
   playSfxById(SfxId.Login);
-  loginModal.close();
-  charactersModal.setCharacters(characters);
-  charactersModal.open();
 });
 
-client.on('characterCreated', (characters) => {
-  createCharacterModal.close();
-  charactersModal.setCharacters(characters);
-  errorModal.open('Your character has been created', 'Success');
-});
+client.on('characterCreated', (characters) => {});
 
-client.on('selectCharacter', () => {
-  chatModal.addMessage(
-    ChatTab.Local,
-    `System: selected character: ${client.name}`,
-  );
-});
+client.on('selectCharacter', () => {});
 
-client.on('chat', ({ name, tab, message }) => {
-  chatModal.addMessage(tab, `${name}: ${message}`);
-});
+client.on('chat', ({ name, tab, message }) => {});
 
-client.on('enterGame', ({ news }) => {
-  charactersModal.close();
-  news.forEach((entry, index) => {
-    if (!entry) {
-      return;
-    }
-
-    if (index === 0) {
-      chatModal.addMessage(ChatTab.Local, entry);
-    } else {
-      chatModal.addMessage(ChatTab.Local, `News: ${entry}`);
-    }
-  });
-});
+client.on('enterGame', ({ news }) => {});
 
 const initializeSocket = () => {
   if (client.bus) {
@@ -179,136 +119,6 @@ const initializeSocket = () => {
     client.bus.send(init);
   }
 };
-
-const menu = new Menu();
-connectModal.on('connect', (host) => {
-  playSfxById(SfxId.ButtonClick);
-  const socket = new WebSocket(host);
-  socket.addEventListener('open', () => {
-    chatModal.addMessage(ChatTab.Local, 'System: web socket connection opened');
-    if (next === 'create') {
-      createAccountModal.open();
-    } else if (next === 'login') {
-      loginModal.open();
-    }
-
-    next = '';
-    const bus = new PacketBus(socket);
-    bus.on('receive', (data) => {
-      packetLogModal.addEntry({
-        source: PacketSource.Server,
-        ...data,
-      });
-    });
-    bus.on('send', (data) => {
-      packetLogModal.addEntry({
-        source: PacketSource.Client,
-        ...data,
-      });
-    });
-
-    client.setBus(bus);
-    initializeSocket();
-    connectModal.close();
-  });
-
-  socket.addEventListener('close', () => {
-    errorModal.open(
-      'The connection to the game server was lost, please try again a later time',
-      'Lost connection',
-    );
-    client.bus = null;
-    chatModal.addMessage(ChatTab.Local, 'System: web socket connection closed');
-  });
-
-  socket.addEventListener('error', (e) => {
-    console.error('Websocket Error', e);
-  });
-});
-
-menu.on('connect', () => {
-  connectModal.open();
-  playSfxById(SfxId.ButtonClick);
-});
-
-let next: 'login' | 'create' | '' = '';
-
-menu.on('create-account', () => {
-  playSfxById(SfxId.ButtonClick);
-  if (client.state !== GameState.Connected) {
-    connectModal.open();
-    next = 'create';
-    return;
-  }
-
-  createAccountModal.open();
-});
-
-menu.on('login', () => {
-  playSfxById(SfxId.ButtonClick);
-  if (client.state !== GameState.Connected) {
-    connectModal.open();
-    next = 'login';
-    return;
-  }
-  loginModal.open();
-});
-
-loginModal.on('login', ({ username, password }) => {
-  playSfxById(SfxId.ButtonClick);
-  client.login(username, password);
-});
-
-createAccountModal.on('createAccount', (data) => {
-  playSfxById(SfxId.ButtonClick);
-  client.requestAccountCreation(data);
-});
-
-charactersModal.on('select-character', (characterId) => {
-  playSfxById(SfxId.ButtonClick);
-  client.selectCharacter(characterId);
-});
-
-charactersModal.on('create-character', () => {
-  playSfxById(SfxId.ButtonClick);
-  createCharacterModal.open();
-});
-
-createCharacterModal.on('createCharacter', (data) => {
-  playSfxById(SfxId.ButtonClick);
-  client.requestCharacterCreation(data);
-});
-
-const packetLogModal = new PacketLogModal();
-menu.on('packet-log', () => {
-  packetLogModal.open();
-});
-
-let imguiClockMs = 0;
-let lastRafNow = 0;
-function renderUI(now: number) {
-  if (!lastRafNow) lastRafNow = now;
-  const dtMs = Math.max(now - lastRafNow, 1);
-  lastRafNow = now;
-  imguiClockMs += dtMs;
-
-  ImGui_Impl.NewFrame(imguiClockMs);
-  ImGui.NewFrame();
-
-  menu.render();
-  connectModal.render();
-  packetLogModal.render();
-  errorModal.render();
-  loginModal.render();
-  createAccountModal.render();
-  charactersModal.render();
-  chatModal.render();
-  createCharacterModal.render();
-
-  ImGui.EndFrame();
-  ImGui.Render();
-  ImGui_Impl.RenderDrawData(ImGui.GetDrawData());
-}
 
 // Tick loop
 setInterval(() => {
@@ -336,24 +146,22 @@ window.addEventListener('click', (e) => {
 });
 
 window.addEventListener('DOMContentLoaded', async () => {
-  await ImGui.default();
+  const response = await fetch('/maps/00005.emf');
+  const map = await response.arrayBuffer();
+  const reader = new EoReader(new Uint8Array(map));
+  const emf = Emf.deserialize(reader);
+  client.setMap(emf);
 
-  ImGui.CHECKVERSION();
-  ImGui.CreateContext();
-  const io: ImGui.IO = ImGui.GetIO();
-  ImGui.StyleColorsDark();
-  io.Fonts.AddFontDefault();
-
-  const uiCtx = uiCanvas.getContext('webgl2', {
-    alpha: true,
-    premultipliedAlpha: false,
-  });
-
-  if (!uiCtx) {
-    throw new Error('Failed to get webgl2 context');
-  }
-
-  ImGui_Impl.Init(uiCtx);
+  client.playerId = 1;
+  const character = new CharacterMapInfo();
+  character.playerId = 1;
+  character.coords = new BigCoords();
+  character.coords.x = 35;
+  character.coords.y = 38;
+  character.gender = Gender.Male;
+  character.sitState = SitState.Floor;
+  character.skin = 0;
+  client.nearby.characters = [character];
 
   requestAnimationFrame(render);
 });

@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/favicon-32.png">
   <meta name="viewport"
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>EO Web Client</title>
@@ -11,7 +12,16 @@
 <body>
   <div id="container">
     <canvas id="game"></canvas>
-    <canvas id="ui"></canvas>
+    <div id="ui">
+      <div id="main-menu">
+        <div id="main-menu-logo">
+          <img src="logo.png"/>
+        </div>
+        <button class="img-btn" type="button" data-id="create-account"></button>
+        <button class="img-btn" type="button" data-id="play-game"></button>
+        <button class="img-btn" type="button" data-id="view-credits"></button>
+      </div>
+    </div>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>

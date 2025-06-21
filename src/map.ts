@@ -26,7 +26,7 @@ import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
 import { isoToScreen } from './utils/iso-to-screen';
 import type { Vector2 } from './vector';
-import type { Client } from './client';
+import { GameState, type Client } from './client';
 import { CharacterWalkAnimation } from './character';
 import {
   getCharacterIntersecting,
@@ -223,35 +223,37 @@ export class MapRenderer {
           })),
         );
 
-        for (const c of this.client.nearby.characters.filter(
-          (c) => c.coords.x === x && c.coords.y === y,
-        )) {
-          entities.push({
-            x,
-            y,
-            type: EntityType.Character,
-            typeId: c.playerId,
-            layer: Layer.Character,
-            depth: this.calculateDepth(Layer.Character, x, y),
-          });
-        }
+        if (this.client.state === GameState.InGame) {
+          for (const c of this.client.nearby.characters.filter(
+            (c) => c.coords.x === x && c.coords.y === y,
+          )) {
+            entities.push({
+              x,
+              y,
+              type: EntityType.Character,
+              typeId: c.playerId,
+              layer: Layer.Character,
+              depth: this.calculateDepth(Layer.Character, x, y),
+            });
+          }
 
-        for (const n of this.client.nearby.npcs.filter(
-          (n) => n.coords.x === x && n.coords.y === y,
-        )) {
-          entities.push({
-            x,
-            y,
-            type: EntityType.Npc,
-            typeId: n.index,
-            layer: Layer.Npc,
-            depth: this.calculateDepth(Layer.Npc, x, y),
-          });
+          for (const n of this.client.nearby.npcs.filter(
+            (n) => n.coords.x === x && n.coords.y === y,
+          )) {
+            entities.push({
+              x,
+              y,
+              type: EntityType.Npc,
+              typeId: n.index,
+              layer: Layer.Npc,
+              depth: this.calculateDepth(Layer.Npc, x, y),
+            });
+          }
         }
       }
     }
 
-    if (this.client.mouseCoords) {
+    if (this.client.mouseCoords && this.client.state === GameState.InGame) {
       const spec = this.getTileSpec(
         this.client.mouseCoords.x,
         this.client.mouseCoords.y,

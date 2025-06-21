@@ -357,6 +357,7 @@ export class Client {
     this.characterChats.clear();
     this.npcChats.clear();
     if (this.map) {
+      this.mapRenderer.buildCaches();
       this.loadDoors();
     }
   }
@@ -606,7 +607,6 @@ export class Client {
     packet.characterId = this.characterId;
     packet.sessionId = this.sessionId;
     this.bus.send(packet);
-    this.mapRenderer.buildCaches();
   }
 
   rangeRequest(playerIds: number[], npcIndexes: number[]) {
