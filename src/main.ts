@@ -284,8 +284,15 @@ menu.on('packet-log', () => {
   packetLogModal.open();
 });
 
+let imguiClockMs = 0;
+let lastRafNow = 0;
 function renderUI(now: number) {
-  ImGui_Impl.NewFrame(now);
+  if (!lastRafNow) lastRafNow = now;
+  const dtMs = Math.max(now - lastRafNow, 1);
+  lastRafNow = now;
+  imguiClockMs += dtMs;
+
+  ImGui_Impl.NewFrame(imguiClockMs);
   ImGui.NewFrame();
 
   menu.render();
