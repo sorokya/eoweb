@@ -193,6 +193,10 @@ export class CharacterWalkAnimation extends CharacterAnimation {
       ctx.restore();
     }
   }
+
+  isOnLastFrame(): boolean {
+    return this.ticks === 0.3;
+  }
 }
 
 export class CharacterAttackAnimation extends CharacterAnimation {
