@@ -113,6 +113,7 @@ canvas {
 
 #login-form {
   background: url("/gfx/gfx001/102.png");
+  background-color: #000;
   width: 320px;
   height: 159px;
   margin: auto;
@@ -201,6 +202,7 @@ input[type="password"] {
 
 #character-select .character {
   background: url("/gfx/gfx001/111.png");
+  background-color: #000;
   width: 276px;
   height: 123px;
   position: relative;
@@ -238,6 +240,46 @@ input[type="password"] {
   align-self: center;
 }
 
+#create-character-form {
+  position: absolute;
+  width: 360px;
+  height: 240px;
+  background-color: #000;
+  background-image: url("/gfx/gfx001/120.png");
+  z-index: 1010;
+}
+
+#create-character-name {
+  background: transparent;
+  border: none;
+  position: absolute;
+  color: #b4a08c;
+  top: 58px;
+  left: 82px;
+  width: 130px;
+}
+
+#create-character-form .buttons {
+  position: absolute;
+  display: flex;
+  gap: 2px;
+  bottom: 16px;
+  right: 19px;
+}
+
+#create-character-toggles {
+  position: absolute;
+  display: flex;
+  flex-flow: column;
+  top: 84px;
+  left: 170px;
+  gap: 9px;
+}
+
+#create-character-toggles > div {
+  display: flex;
+}
+
 #cover {
   position: fixed;
   top: 0;
@@ -261,10 +303,11 @@ input[type="password"] {
 #small-alert {
   position: absolute;
   background: url("/gfx/gfx001/118.png");
+  background-color: #000;
   width: 290px;
   height: 157px;
   user-select: none;
-  z-index: 1010;
+  z-index: 1020;
 }
 
 #small-alert .title {
@@ -291,10 +334,11 @@ input[type="password"] {
 #small-confirm {
   position: absolute;
   background: url("/gfx/gfx001/123.png");
+  background-color: #000;
   width: 290px;
   height: 125px;
   user-select: none;
-  z-index: 1010;
+  z-index: 1020;
 }
 
 #small-confirm .title {
@@ -388,6 +432,38 @@ input[type="password"] {
   --bg-y: -76px;
   --width: 149px;
   --height: 16px;
+}
+
+.img-label[data-id="gender"] {
+  --bg-url: url("/gfx/gfx001/122.png");
+  --bg-x: 0;
+  --bg-y: -38px;
+  --width: 23px;
+  --height: 18px;
+}
+
+.img-label[data-id="hair-color"] {
+  --bg-url: url("/gfx/gfx001/122.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --width: 23px;
+  --height: 18px;
+}
+
+.img-label[data-id="hair-style"] {
+  --bg-url: url("/gfx/gfx001/122.png");
+  --bg-x: 0;
+  --bg-y: -20px;
+  --width: 23px;
+  --height: 18px;
+}
+
+.img-label[data-id="skin"] {
+  --bg-url: url("/gfx/gfx001/122.png");
+  --bg-x: -46px;
+  --bg-y: -38px;
+  --width: 23px;
+  --height: 18px;
 }
 
 .img-btn {
@@ -552,4 +628,15 @@ input[type="password"] {
   --hover-y: -53px;
   --width: 51px;
   --height: 53px;
+}
+
+.img-btn[data-id="toggle-arrow"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx001/122.png");
+  --bg-x: -184px;
+  --bg-y: -39px;
+  --hover-x: -205px;
+  --hover-y: -39px;
+  --width: 21px;
+  --height: 18px;
 }

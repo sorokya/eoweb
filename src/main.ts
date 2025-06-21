@@ -28,6 +28,7 @@ import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { ExitGame } from './ui/exit-game';
 import { SmallConfirm } from './ui/small-confirm';
 import { CreateAccountForm } from './ui/create-account';
+import { CreateCharacterForm } from './ui/create-character';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
@@ -119,7 +120,15 @@ client.on('login', (characters) => {
   characterSelect.show();
 });
 
-client.on('characterCreated', (characters) => {});
+client.on('characterCreated', (characters) => {
+  createCharacterForm.hide();
+  smallAlertLargeHeader.setContent(
+    'Your character has been created',
+    'Success',
+  );
+  smallAlertLargeHeader.show();
+  characterSelect.setCharacters(characters);
+});
 
 client.on('selectCharacter', () => {});
 
@@ -193,6 +202,7 @@ const mainMenu = new MainMenu();
 const loginForm = new LoginForm();
 const createAccountForm = new CreateAccountForm();
 const characterSelect = new CharacterSelect();
+const createCharacterForm = new CreateCharacterForm();
 const smallAlertLargeHeader = new SmallAlertLargeHeader();
 const exitGame = new ExitGame();
 const smallConfirm = new SmallConfirm();
@@ -266,6 +276,19 @@ characterSelect.on('cancel', () => {
 
 characterSelect.on('selectCharacter', (id) => {
   client.selectCharacter(id);
+});
+
+characterSelect.on('error', ({ title, message }) => {
+  smallAlertLargeHeader.setContent(message, title);
+  smallAlertLargeHeader.show();
+});
+
+characterSelect.on('create', () => {
+  createCharacterForm.show();
+});
+
+createCharacterForm.on('create', (data) => {
+  client.requestCharacterCreation(data);
 });
 
 // Tick loop
