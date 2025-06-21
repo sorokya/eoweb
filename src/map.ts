@@ -1,5 +1,6 @@
 import {
   type CharacterMapInfo,
+  Coords,
   Direction,
   Gender,
   MapTileSpec,
@@ -405,7 +406,22 @@ export class MapRenderer {
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
   ) {
-    const bmp = getBitmapById(LAYER_GFX_MAP[entity.layer], entity.typeId);
+    let bmpOffset = 0;
+
+    if (entity.layer === Layer.DownWall || entity.layer === Layer.RightWall) {
+      const coords = new Coords();
+      coords.x = entity.x;
+      coords.y = entity.y;
+      const door = this.client.getDoor(coords);
+      if (door?.open) {
+        bmpOffset = 1;
+      }
+    }
+
+    const bmp = getBitmapById(
+      LAYER_GFX_MAP[entity.layer],
+      entity.typeId + bmpOffset,
+    );
     if (!bmp) {
       return;
     }

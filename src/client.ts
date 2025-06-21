@@ -9,6 +9,7 @@ import {
   type CharacterSelectionListEntry,
   Coords,
   type Direction,
+  DoorOpenClientPacket,
   type Ecf,
   type Eif,
   type Emf,
@@ -76,6 +77,8 @@ import { playSfxById, SfxId } from './sfx';
 import { registerAccountHandlers } from './handlers/account';
 import { registerCharacterHandlers } from './handlers/character';
 import { ChatBubble } from './chat-bubble';
+import { Door } from './door';
+import { registerDoorHandlers } from './handlers/door';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -168,6 +171,7 @@ export class Client {
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
   npcMetadata = getNpcMetaData();
+  doors: Door[] = [];
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -326,6 +330,18 @@ export class Client {
       this.npcChats.delete(id);
     }
 
+    for (const door of this.doors) {
+      if (!door.open) {
+        continue;
+      }
+
+      door.openTicks = Math.max(door.openTicks - 1, 0);
+      if (!door.openTicks) {
+        door.open = false;
+        playSfxById(SfxId.DoorClose);
+      }
+    }
+
     if (this.warpQueued && !playerWalking) {
       this.acceptWarp();
     }
@@ -335,8 +351,46 @@ export class Client {
     this.mapRenderer.render(ctx);
   }
 
+  setMap(map: Emf) {
+    this.map = map;
+    this.characterChats.clear();
+    this.npcChats.clear();
+    this.loadDoors();
+  }
+
+  loadDoors() {
+    this.doors = [];
+    for (const warpRow of this.map.warpRows) {
+      for (const warpTile of warpRow.tiles) {
+        if (warpTile.warp.door) {
+          const coords = new Coords();
+          coords.x = warpTile.x;
+          coords.y = warpRow.y;
+          this.doors.push(new Door(coords));
+        }
+      }
+    }
+  }
+
+  getDoor(coords: Coords): Door | undefined {
+    return this.doors.find(
+      (d) => d.coords.x === coords.x && d.coords.y === coords.y,
+    );
+  }
+
+  openDoor(coords: Coords) {
+    const door = this.getDoor(coords);
+    if (!door || door.open) {
+      return;
+    }
+
+    const packet = new DoorOpenClientPacket();
+    packet.coords = coords;
+    this.bus.send(packet);
+  }
+
   async loadMap(id: number): Promise<void> {
-    this.map = await getEmf(id);
+    this.setMap(await getEmf(id));
   }
 
   showError(message: string, title = '') {
@@ -377,6 +431,7 @@ export class Client {
     registerArenaHandlers(this);
     registerAccountHandlers(this);
     registerCharacterHandlers(this);
+    registerDoorHandlers(this);
   }
 
   canWalk(coords: Coords): boolean {

@@ -184,7 +184,7 @@ function handleInitFileEmf(
   data: InitInitServerPacket.ReplyCodeDataFileEmf,
 ) {
   const reader = new EoReader(data.mapFile.content);
-  client.map = Emf.deserialize(reader);
+  client.setMap(Emf.deserialize(reader));
   saveEmf(client.mapId, client.map);
 
   if (client.downloadQueue.length > 0) {
