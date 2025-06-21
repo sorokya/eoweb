@@ -97,6 +97,13 @@ export class MovementController {
           this.client.map.height,
         );
 
+        const door = this.client.getDoor(to);
+        if (door && !door.open) {
+          this.client.openDoor(to);
+          this.walkTicks = WALK_TICKS;
+          return;
+        }
+
         if (!this.client.canWalk(to)) {
           return;
         }

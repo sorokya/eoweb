@@ -45,7 +45,7 @@ function handleWarpAgree(client: Client, reader: EoReader) {
   if (client.mapId !== client.warpMapId) {
     getEmf(client.warpMapId).then((map) => {
       client.mapId = client.warpMapId;
-      client.map = map;
+      client.setMap(map);
       client.mapRenderer.buildingCache = true;
       client.mapRenderer.buildCaches();
     });

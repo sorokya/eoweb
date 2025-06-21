@@ -28,3 +28,5 @@ export const MAX_USERNAME_LENGTH = 16;
 export const MAX_PASSWORD_LENGTH = 12;
 export const MAX_CHARACTER_NAME_LENGTH = 12;
 export const NPC_IDLE_ANIMATION_TICKS = 2;
+export const DOOR_OPEN_TICKS = 25;
+export const DOOR_HEIGHT = 110;

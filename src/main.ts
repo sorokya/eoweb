@@ -52,8 +52,8 @@ function resizeCanvases() {
 
   if (!userOverride) setZoom(rect.width >= 1280 ? 2 : 1);
 
-  const w = Math.round(rect.width / ZOOM);
-  const h = Math.round(rect.height / ZOOM);
+  const w = Math.floor(rect.width / ZOOM);
+  const h = Math.floor(rect.height / ZOOM);
 
   canvas.width = w;
   canvas.height = h;
@@ -284,8 +284,15 @@ menu.on('packet-log', () => {
   packetLogModal.open();
 });
 
+let imguiClockMs = 0;
+let lastRafNow = 0;
 function renderUI(now: number) {
-  ImGui_Impl.NewFrame(now);
+  if (!lastRafNow) lastRafNow = now;
+  const dtMs = Math.max(now - lastRafNow, 1);
+  lastRafNow = now;
+  imguiClockMs += dtMs;
+
+  ImGui_Impl.NewFrame(imguiClockMs);
   ImGui.NewFrame();
 
   menu.render();
@@ -322,6 +329,10 @@ window.addEventListener('mousemove', (e) => {
       canvas.height,
     ),
   });
+});
+
+window.addEventListener('click', (e) => {
+  client.handleClick();
 });
 
 window.addEventListener('DOMContentLoaded', async () => {
