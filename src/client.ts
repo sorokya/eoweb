@@ -79,6 +79,7 @@ import { registerCharacterHandlers } from './handlers/character';
 import { ChatBubble } from './chat-bubble';
 import { Door } from './door';
 import { registerDoorHandlers } from './handlers/door';
+import { getDoorIntersecting } from './collision';
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -432,6 +433,16 @@ export class Client {
     registerAccountHandlers(this);
     registerCharacterHandlers(this);
     registerDoorHandlers(this);
+  }
+
+  handleClick() {
+    const doorAt = getDoorIntersecting(this.mousePosition);
+    if (doorAt) {
+      const door = this.getDoor(doorAt);
+      if (door && !door.open) {
+        this.openDoor(doorAt);
+      }
+    }
   }
 
   canWalk(coords: Coords): boolean {

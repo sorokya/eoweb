@@ -1,3 +1,4 @@
+import type { Coords } from 'eolib';
 import type { Vector2 } from './vector';
 
 export class Rectangle {
@@ -16,6 +17,7 @@ type EntityRect = {
 
 const characterRectangles: Map<number, Rectangle> = new Map();
 const npcRectangles: Map<number, Rectangle> = new Map();
+const doorRectangles: Map<Coords, Rectangle> = new Map();
 
 function rectIntersect(a: Rectangle, b: Rectangle): boolean {
   return (
@@ -48,12 +50,6 @@ export function setCharacterRectangle(playerId: number, rectangle: Rectangle) {
 
 export function getCharacterRectangle(playerId: number): Rectangle | undefined {
   return characterRectangles.get(playerId);
-}
-
-export function forEachCharacterRect(
-  callback: (rectangle: Rectangle, id: number) => undefined,
-) {
-  characterRectangles.forEach(callback);
 }
 
 export function getCharacterIntersecting(point: Vector2): EntityRect | null {
@@ -117,7 +113,26 @@ export function getNpcIntersecting(point: Vector2): EntityRect | null {
   return null;
 }
 
+export function setDoorRectangle(coords: Coords, rectangle: Rectangle) {
+  doorRectangles.set(coords, rectangle);
+}
+
+export function getDoorRectangle(coords: Coords): Rectangle | undefined {
+  return doorRectangles.get(coords);
+}
+
+export function getDoorIntersecting(point: Vector2): Coords | null {
+  for (const [coords, rectangle] of doorRectangles) {
+    if (pointIntersectRect(point, rectangle)) {
+      return coords;
+    }
+  }
+
+  return null;
+}
+
 export function clearRectangles() {
   characterRectangles.clear();
   npcRectangles.clear();
+  doorRectangles.clear();
 }

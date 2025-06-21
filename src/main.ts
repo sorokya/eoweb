@@ -52,8 +52,8 @@ function resizeCanvases() {
 
   if (!userOverride) setZoom(rect.width >= 1280 ? 2 : 1);
 
-  const w = Math.round(rect.width / ZOOM);
-  const h = Math.round(rect.height / ZOOM);
+  const w = Math.floor(rect.width / ZOOM);
+  const h = Math.floor(rect.height / ZOOM);
 
   canvas.width = w;
   canvas.height = h;
@@ -322,6 +322,10 @@ window.addEventListener('mousemove', (e) => {
       canvas.height,
     ),
   });
+});
+
+window.addEventListener('click', (e) => {
+  client.handleClick();
 });
 
 window.addEventListener('DOMContentLoaded', async () => {

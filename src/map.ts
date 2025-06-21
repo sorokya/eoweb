@@ -13,6 +13,7 @@ import {
   CHARACTER_SIT_GROUND_HEIGHT,
   CHARACTER_SIT_GROUND_WIDTH,
   CHARACTER_WIDTH,
+  DOOR_HEIGHT,
   HALF_CHARACTER_SIT_GROUND_WIDTH,
   HALF_CHARACTER_WIDTH,
   HALF_TILE_HEIGHT,
@@ -34,6 +35,7 @@ import {
   getNpcRectangle,
   Rectangle,
   setCharacterRectangle,
+  setDoorRectangle,
   setNpcRectangle,
 } from './collision';
 
@@ -406,13 +408,16 @@ export class MapRenderer {
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
   ) {
+    const coords = new Coords();
+    coords.x = entity.x;
+    coords.y = entity.y;
+
     let bmpOffset = 0;
+    let isDoor = false;
 
     if (entity.layer === Layer.DownWall || entity.layer === Layer.RightWall) {
-      const coords = new Coords();
-      coords.x = entity.x;
-      coords.y = entity.y;
       const door = this.client.getDoor(coords);
+      isDoor = !!door;
       if (door?.open) {
         bmpOffset = 1;
       }
@@ -429,20 +434,31 @@ export class MapRenderer {
     const offset = this.getOffset(entity.layer, bmp.width, bmp.height);
     const tileScreen = isoToScreen({ x: entity.x, y: entity.y });
 
-    const screenX = Math.round(
+    const screenX = Math.floor(
       tileScreen.x -
         HALF_TILE_WIDTH -
         playerScreen.x +
         HALF_GAME_WIDTH +
         offset.x,
     );
-    const screenY = Math.round(
+    const screenY = Math.floor(
       tileScreen.y -
         HALF_TILE_HEIGHT -
         playerScreen.y +
         HALF_GAME_HEIGHT +
         offset.y,
     );
+
+    if (isDoor) {
+      setDoorRectangle(
+        coords,
+        new Rectangle(
+          { x: screenX, y: screenY + bmp.height - DOOR_HEIGHT },
+          bmp.width,
+          DOOR_HEIGHT,
+        ),
+      );
+    }
 
     if (entity.layer === Layer.Shadow) {
       ctx.globalAlpha = 0.2;
@@ -810,10 +826,10 @@ export class MapRenderer {
 
       const sourceX = entity.typeId * TILE_WIDTH;
 
-      const screenX = Math.round(
+      const screenX = Math.floor(
         tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
       );
-      const screenY = Math.round(
+      const screenY = Math.floor(
         tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
       );
 
