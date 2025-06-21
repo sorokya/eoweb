@@ -356,7 +356,9 @@ export class Client {
     this.map = map;
     this.characterChats.clear();
     this.npcChats.clear();
-    this.loadDoors();
+    if (this.map) {
+      this.loadDoors();
+    }
   }
 
   loadDoors() {
