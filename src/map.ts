@@ -301,6 +301,10 @@ export class MapRenderer {
       }
     }
 
+    if (this.client.state !== GameState.InGame) {
+      return;
+    }
+
     const main = entities.find(
       (e) =>
         e.type === EntityType.Character && e.typeId === this.client.playerId,

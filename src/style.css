@@ -10,6 +10,7 @@ body {
   align-items: flex-start;
   justify-content: center;
   overflow: hidden;
+  font-family: sans-serif;
 }
 
 @media (max-aspect-ratio: 4 / 3) {
@@ -221,12 +222,21 @@ input[type="password"] {
   z-index: 1000; /* higher than game UI, lower than modal */
 }
 
+.title {
+  font-size: 13px;
+  color: #f0f0c8;
+}
+
+.message {
+  font-size: 12px;
+  color: #fff;
+}
+
 #small-alert {
   position: absolute;
   background: url("/gfx/gfx001/118.png");
   width: 290px;
   height: 157px;
-  color: #f0f0c8;
   user-select: none;
   z-index: 1010;
 }
@@ -250,6 +260,44 @@ input[type="password"] {
   position: absolute;
   top: 113px;
   right: 18px;
+}
+
+#small-confirm {
+  position: absolute;
+  background: url("/gfx/gfx001/123.png");
+  width: 290px;
+  height: 125px;
+  user-select: none;
+  z-index: 1010;
+}
+
+#small-confirm .title {
+  position: absolute;
+  left: 18px;
+  top: 11px;
+  width: 258px;
+}
+
+#small-confirm .message {
+  position: absolute;
+  left: 18px;
+  top: 40px;
+  width: 255px;
+  height: 40px;
+}
+
+#small-confirm .buttons {
+  position: absolute;
+  bottom: 14px;
+  right: 17px;
+  display: flex;
+  gap: 2px;
+}
+
+#exit-game {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .img-btn {
@@ -404,4 +452,14 @@ input[type="password"] {
   --hover-y: -116px;
   --width: 91px;
   --height: 29px;
+}
+
+.img-btn[data-id="exit-game"] {
+  --bg-url: url("/gfx/gfx001/124.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --hover-x: 0;
+  --hover-y: -53px;
+  --width: 51px;
+  --height: 53px;
 }

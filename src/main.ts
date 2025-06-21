@@ -25,6 +25,8 @@ import { MainMenu } from './ui/main-menu';
 import { LoginForm } from './ui/login';
 import { CharacterSelect } from './ui/character-select';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
+import { ExitGame } from './ui/exit-game';
+import { SmallConfirm } from './ui/small-confirm';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
@@ -116,11 +118,13 @@ client.on('chat', ({ name, tab, message }) => {});
 
 client.on('enterGame', ({ news }) => {
   characterSelect.hide();
+  exitGame.show();
 });
 
 const initializeSocket = (next: 'login' | 'create') => {
   const socket = new WebSocket('ws://localhost:8077');
   socket.addEventListener('open', () => {
+    mainMenu.hide();
     if (next === 'create') {
       //createAccountModal.open();
     } else if (next === 'login') {
@@ -158,18 +162,16 @@ const initializeSocket = (next: 'login' | 'create') => {
   });
 
   socket.addEventListener('close', () => {
-    const uiElements = document.querySelectorAll('#ui>div');
-    for (const el of uiElements) {
-      el.classList.add('hidden');
-    }
-
+    hideAllUi();
     mainMenu.show();
-    client.state = GameState.Initial;
-    smallAlertLargeHeader.setContent(
-      'The connection to the game server was lost, please try again a later time',
-      'Lost connection',
-    );
-    smallAlertLargeHeader.show();
+    if (client.state !== GameState.Initial) {
+      client.state = GameState.Initial;
+      smallAlertLargeHeader.setContent(
+        'The connection to the game server was lost, please try again a later time',
+        'Lost connection',
+      );
+      smallAlertLargeHeader.show();
+    }
     client.bus = null;
   });
 
@@ -182,20 +184,43 @@ const mainMenu = new MainMenu();
 const loginForm = new LoginForm();
 const characterSelect = new CharacterSelect();
 const smallAlertLargeHeader = new SmallAlertLargeHeader();
+const exitGame = new ExitGame();
+const smallConfirm = new SmallConfirm();
+
+const hideAllUi = () => {
+  const uiElements = document.querySelectorAll('#ui>div');
+  for (const el of uiElements) {
+    el.classList.add('hidden');
+  }
+};
+
+exitGame.on('click', () => {
+  smallConfirm.setContent(
+    'Are you sure you want to exit the game?',
+    'Exit game',
+  );
+  smallConfirm.setCallback(() => {
+    client.disconnect();
+    hideAllUi();
+    mainMenu.show();
+  });
+  smallConfirm.show();
+});
 
 mainMenu.on('play-game', () => {
-  mainMenu.hide();
   if (client.state === GameState.Initial) {
     initializeSocket('login');
   } else {
+    mainMenu.hide();
     loginForm.show();
   }
 });
 
 mainMenu.on('create-account', () => {
-  mainMenu.hide();
   if (client.state === GameState.Initial) {
     initializeSocket('create');
+  } else {
+    mainMenu.hide();
   }
 });
 

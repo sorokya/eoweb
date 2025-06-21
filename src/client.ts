@@ -671,6 +671,7 @@ export class Client {
   }
 
   disconnect() {
+    this.state = GameState.Initial;
     this.bus.disconnect();
   }
 }
