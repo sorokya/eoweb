@@ -61,7 +61,11 @@ import { registerRefreshHandlers } from './handlers/refresh';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerRangeHandlers } from './handlers/range';
 import { MapRenderer } from './map';
-import { HALF_TILE_HEIGHT, MAX_CHARACTER_NAME_LENGTH } from './consts';
+import {
+  HALF_TILE_HEIGHT,
+  MAX_CHARACTER_NAME_LENGTH,
+  MAX_CHAT_LENGTH,
+} from './consts';
 import type { Vector2 } from './vector';
 import { isoToScreen } from './utils/iso-to-screen';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
@@ -538,16 +542,18 @@ export class Client {
       return;
     }
 
+    const trimmed = message.substring(0, MAX_CHAT_LENGTH);
+
     const packet = new TalkReportClientPacket();
-    packet.message = message;
+    packet.message = trimmed;
     this.bus.send(packet);
 
-    this.characterChats.set(this.playerId, new ChatBubble(message));
+    this.characterChats.set(this.playerId, new ChatBubble(trimmed));
 
     this.emit('chat', {
       name: this.name,
       tab: ChatTab.Local,
-      message,
+      message: trimmed,
     });
   }
 

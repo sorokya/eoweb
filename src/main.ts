@@ -153,6 +153,10 @@ client.on('chat', ({ name, tab, message }) => {
 });
 
 client.on('enterGame', ({ news }) => {
+  for (const line of news) {
+    chat.addMessage(line);
+  }
+
   characterSelect.hide();
   exitGame.show();
   chat.show();

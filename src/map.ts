@@ -348,7 +348,7 @@ export class MapRenderer {
     }
 
     ctx.fillStyle = '#fff';
-    ctx.font = '12px Arial';
+    ctx.font = '12px w95fa';
     let name = characterAt.name;
     if (characterAt.guildTag !== '   ') {
       name += ` ${characterAt.guildTag}`;
@@ -387,7 +387,7 @@ export class MapRenderer {
     }
 
     ctx.fillStyle = '#fff';
-    ctx.font = '12px Arial';
+    ctx.font = '12px w95fa';
 
     const position = isoToScreen(npcAt.coords);
     const data = this.client.getEnfRecordById(npcAt.id);

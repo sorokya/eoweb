@@ -14,6 +14,9 @@ export class Chat extends Base {
   private chatWindow = this.container.querySelector('#local-chat');
   private message: HTMLInputElement = this.container.querySelector('input');
   private emitter = mitt<Events>();
+  private btnToggle: HTMLButtonElement =
+    this.container.querySelector('#btn-toggle-chat');
+  private collapsed = false;
 
   addMessage(message: string) {
     const li = document.createElement('li');
@@ -48,6 +51,16 @@ export class Chat extends Base {
 
     this.message.addEventListener('blur', () => {
       this.emitter.emit('blur', undefined);
+    });
+
+    this.btnToggle.addEventListener('click', () => {
+      if (this.collapsed) {
+        this.chatWindow.classList.remove('hidden');
+        this.collapsed = false;
+      } else {
+        this.chatWindow.classList.add('hidden');
+        this.collapsed = true;
+      }
     });
   }
 
