@@ -444,7 +444,6 @@ input[type="password"] {
   background: #111111;
   color: #fff;
   width: 400px;
-  height: 220px;
   opacity: 0.8;
   padding: 5px 10px;
 }
@@ -454,6 +453,12 @@ input[type="password"] {
   color: #fff;
   width: 100%;
   margin-bottom: 5px;
+}
+
+#btn-toggle-chat {
+  background: none;
+  color: #fff;
+  float: right;
 }
 
 #chat-tab-bar button {
@@ -468,7 +473,7 @@ input[type="password"] {
 #local-chat {
   list-style: none;
   padding: 0 5px;
-  max-height: 160px;
+  height: 100px;
   overflow-y: scroll;
 }
 
