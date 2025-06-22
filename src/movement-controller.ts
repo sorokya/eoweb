@@ -6,7 +6,7 @@ import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 import { GameState, type Client } from './client';
 import { CharacterAttackAnimation, CharacterWalkAnimation } from './character';
 
-function inputToDirection(input: Input): Direction {
+export function inputToDirection(input: Input): Direction {
   switch (input) {
     case Input.Up:
       return Direction.Up;
@@ -38,7 +38,7 @@ export class MovementController {
     this.faceTicks = Math.max(this.faceTicks - 1, 0);
     this.walkTicks = Math.max(this.walkTicks - 1, 0);
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
-    this.attackTicks = Math.max(this.attackTicks - 1, 0);
+    this.attackTicks = Math.max(this.attackTicks - 1, -1);
     this.directionExpireTicks = Math.max(this.directionExpireTicks - 1, 0);
 
     if (
@@ -71,7 +71,7 @@ export class MovementController {
     }
 
     if (
-      !this.attackTicks &&
+      this.attackTicks <= 0 &&
       isInputHeld(Input.Attack) &&
       character.sitState === SitState.Stand
     ) {
@@ -90,12 +90,6 @@ export class MovementController {
     }
 
     if (character.sitState === SitState.Stand && directionHeld !== null) {
-      this.lastDirectionHeld = directionHeld;
-      this.directionExpireTicks = 2;
-      if (walking) {
-        return;
-      }
-
       if (
         !walking &&
         !this.faceTicks &&
