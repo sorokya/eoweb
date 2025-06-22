@@ -45,7 +45,6 @@ import {
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
 import type { PacketBus } from './bus';
-import { CharacterWalkAnimation, type CharacterAnimation } from './character';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
 import { registerAvatarHandlers } from './handlers/avatar';
 import { registerInitHandlers } from './handlers/init';
@@ -71,7 +70,7 @@ import { isoToScreen } from './utils/iso-to-screen';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { screenToIso } from './utils/screen-to-iso';
 import { MovementController } from './movement-controller';
-import type { NpcAnimation } from './npc';
+import type { NpcAnimation } from './render/npc-base-animation';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { GfxType, loadBitmapById } from './gfx';
 import { registerTalkHandlers } from './handlers/talk';
@@ -84,6 +83,8 @@ import { ChatBubble } from './chat-bubble';
 import { Door } from './door';
 import { registerDoorHandlers } from './handlers/door';
 import { getDoorIntersecting } from './collision';
+import type { CharacterAnimation } from './render/character-base-animation';
+import { CharacterWalkAnimation } from './render/character-walk';
 
 export enum ChatTab {
   Local = 0,

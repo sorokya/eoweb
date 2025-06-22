@@ -4,7 +4,8 @@ import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
 import { getNextCoords } from './utils/get-next-coords';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 import { GameState, type Client } from './client';
-import { CharacterAttackAnimation, CharacterWalkAnimation } from './character';
+import { CharacterWalkAnimation } from './render/character-walk';
+import { CharacterAttackAnimation } from './render/character-attack';
 
 export function inputToDirection(input: Input): Direction {
   switch (input) {

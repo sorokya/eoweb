@@ -1,28 +1,17 @@
 import { type Coords, Direction, type NpcMapInfo } from 'eolib';
+import { setNpcRectangle, Rectangle } from '../collision';
 import {
-  WALK_ANIMATION_FRAMES,
-  WALK_HEIGHT_FACTOR,
   WALK_TICKS,
+  WALK_ANIMATION_FRAMES,
   WALK_WIDTH_FACTOR,
-} from './consts';
-import type { Vector2 } from './vector';
-import { getBitmapById, GfxType } from './gfx';
-import { isoToScreen } from './utils/iso-to-screen';
-import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
-import type { NPCMetadata } from './utils/get-npc-metadata';
-import { Rectangle, setNpcRectangle } from './collision';
-
-export abstract class NpcAnimation {
-  ticks: number;
-  abstract tick(): void;
-  abstract render(
-    graphicId: number,
-    npc: NpcMapInfo,
-    meta: NPCMetadata,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ): void;
-}
+  WALK_HEIGHT_FACTOR,
+} from '../consts';
+import { HALF_GAME_WIDTH, HALF_GAME_HEIGHT, GAME_WIDTH } from '../game-state';
+import { getBitmapById, GfxType } from '../gfx';
+import type { NPCMetadata } from '../utils/get-npc-metadata';
+import { isoToScreen } from '../utils/iso-to-screen';
+import type { Vector2 } from '../vector';
+import { NpcAnimation } from './npc-base-animation';
 
 export class NpcWalkAnimation extends NpcAnimation {
   from: Coords;

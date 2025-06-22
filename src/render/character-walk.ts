@@ -1,41 +1,23 @@
-import { type CharacterMapInfo, type Coords, Direction, Gender } from 'eolib';
+import { type Coords, Direction, type CharacterMapInfo, Gender } from 'eolib';
 import {
-  ATTACK_ANIMATION_FRAMES,
-  ATTACK_TICKS,
-  CHARACTER_ATTACK_WIDTH,
-  CHARACTER_HEIGHT,
+  setCharacterRectangle,
+  Rectangle,
+  getCharacterRectangle,
+} from '../collision';
+import {
+  WALK_TICKS,
+  WALK_ANIMATION_FRAMES,
+  WALK_WIDTH_FACTOR,
+  WALK_HEIGHT_FACTOR,
+  HALF_CHARACTER_WALKING_WIDTH,
   CHARACTER_WALKING_HEIGHT,
   CHARACTER_WALKING_WIDTH,
-  HALF_CHARACTER_ATTACK_WIDTH,
-  HALF_CHARACTER_WALKING_WIDTH,
-  WALK_ANIMATION_FRAMES,
-  WALK_HEIGHT_FACTOR,
-  WALK_TICKS,
-  WALK_WIDTH_FACTOR,
-} from './consts';
-import type { Vector2 } from './vector';
-import { getBitmapById, GfxType } from './gfx';
-import { isoToScreen } from './utils/iso-to-screen';
-import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
-import {
-  getCharacterRectangle,
-  Rectangle,
-  setCharacterRectangle,
-} from './collision';
-
-export abstract class CharacterAnimation {
-  ticks: number;
-  abstract tick(): void;
-  abstract render(
-    character: CharacterMapInfo,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ): void;
-  abstract calculateRenderPosition(
-    character: CharacterMapInfo,
-    playerScreen: Vector2,
-  ): void;
-}
+} from '../consts';
+import { HALF_GAME_WIDTH, HALF_GAME_HEIGHT, GAME_WIDTH } from '../game-state';
+import { getBitmapById, GfxType } from '../gfx';
+import { isoToScreen } from '../utils/iso-to-screen';
+import type { Vector2 } from '../vector';
+import { CharacterAnimation } from './character-base-animation';
 
 export class CharacterWalkAnimation extends CharacterAnimation {
   from: Coords;
@@ -155,11 +137,7 @@ export class CharacterWalkAnimation extends CharacterAnimation {
     );
   }
 
-  render(
-    character: CharacterMapInfo,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ) {
+  render(character: CharacterMapInfo, ctx: CanvasRenderingContext2D) {
     const bmp = getBitmapById(GfxType.SkinSprites, 2);
     if (!bmp) {
       return;
@@ -216,130 +194,5 @@ export class CharacterWalkAnimation extends CharacterAnimation {
 
   isOnLastFrame(): boolean {
     return this.ticks === 0.3;
-  }
-}
-
-export class CharacterAttackAnimation extends CharacterAnimation {
-  direction: Direction;
-  animationFrame = 0;
-
-  constructor(direction: Direction) {
-    super();
-    this.ticks = ATTACK_TICKS;
-    this.direction = direction;
-  }
-
-  tick() {
-    switch (this.ticks) {
-      case 5:
-        this.animationFrame = 0;
-        break;
-      default:
-        this.animationFrame = 1;
-        break;
-    }
-
-    this.ticks = Math.max(this.ticks - 1, 0);
-  }
-
-  calculateRenderPosition(
-    character: CharacterMapInfo,
-    playerScreen: Vector2,
-  ): void {
-    const screenCoords = isoToScreen(character.coords);
-
-    // TODO: This isn't correct, but it's close enough for now
-    const additionalOffset = {
-      x: [Direction.Up, Direction.Right].includes(this.direction) ? 2 : -2,
-      y: 5,
-    };
-
-    const screenX = Math.floor(
-      screenCoords.x -
-        HALF_CHARACTER_ATTACK_WIDTH -
-        playerScreen.x +
-        HALF_GAME_WIDTH +
-        additionalOffset.x,
-    );
-
-    const screenY = Math.floor(
-      screenCoords.y -
-        CHARACTER_HEIGHT -
-        playerScreen.y +
-        HALF_GAME_HEIGHT +
-        additionalOffset.y,
-    );
-
-    const mirrored = [Direction.Right, Direction.Up].includes(
-      character.direction,
-    );
-
-    setCharacterRectangle(
-      character.playerId,
-      new Rectangle(
-        { x: screenX, y: screenY },
-        CHARACTER_ATTACK_WIDTH,
-        CHARACTER_HEIGHT,
-      ),
-    );
-  }
-
-  render(
-    character: CharacterMapInfo,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    const bmp = getBitmapById(GfxType.SkinSprites, 3);
-    if (!bmp) {
-      return;
-    }
-
-    const rect = getCharacterRectangle(character.playerId);
-    if (!rect) {
-      return;
-    }
-
-    const mirrored = [Direction.Right, Direction.Up].includes(
-      character.direction,
-    );
-
-    if (mirrored) {
-      ctx.save(); // Save the current context state
-      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
-      ctx.scale(-1, 1); // Flip horizontally
-    }
-
-    const drawX = Math.floor(
-      mirrored
-        ? GAME_WIDTH - rect.position.x - CHARACTER_ATTACK_WIDTH
-        : rect.position.x,
-    );
-
-    const startX =
-      character.gender === Gender.Female ? 0 : CHARACTER_ATTACK_WIDTH * 4;
-
-    const sourceX =
-      startX +
-      ([Direction.Up, Direction.Left].includes(character.direction)
-        ? CHARACTER_ATTACK_WIDTH * ATTACK_ANIMATION_FRAMES
-        : 0) +
-      CHARACTER_ATTACK_WIDTH * this.animationFrame;
-    const sourceY = character.skin * CHARACTER_HEIGHT;
-
-    ctx.drawImage(
-      bmp,
-      sourceX,
-      sourceY,
-      CHARACTER_ATTACK_WIDTH,
-      CHARACTER_HEIGHT,
-      drawX,
-      rect.position.y,
-      CHARACTER_ATTACK_WIDTH,
-      CHARACTER_HEIGHT,
-    );
-
-    if (mirrored) {
-      ctx.restore();
-    }
   }
 }
