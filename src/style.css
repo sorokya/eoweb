@@ -497,11 +497,12 @@ input[type="password"] {
 
 #mobile-controls {
   opacity: 0.8;
-  user-select: none;
 }
 
+#mobile-controls,
 #mobile-controls * {
   user-select: none;
+  -webkit-user-select: none;
 }
 
 #joystick-container {
