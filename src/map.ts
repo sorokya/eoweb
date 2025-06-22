@@ -1,43 +1,38 @@
-import {
-  type CharacterMapInfo,
-  Coords,
-  Direction,
-  Gender,
-  MapTileSpec,
-  type NpcMapInfo,
-  SitState,
-} from 'eolib';
+import { type CharacterMapInfo, Coords, MapTileSpec, SitState } from 'eolib';
 import {
   ANIMATION_TICKS,
-  CHARACTER_HEIGHT,
-  CHARACTER_SIT_GROUND_HEIGHT,
-  CHARACTER_SIT_GROUND_WIDTH,
-  CHARACTER_WIDTH,
   DOOR_HEIGHT,
-  HALF_CHARACTER_SIT_GROUND_WIDTH,
-  HALF_CHARACTER_WIDTH,
   HALF_TILE_HEIGHT,
   HALF_TILE_WIDTH,
   NPC_IDLE_ANIMATION_TICKS,
   TILE_HEIGHT,
   TILE_WIDTH,
 } from './consts';
-import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
+import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
 import { isoToScreen } from './utils/iso-to-screen';
 import type { Vector2 } from './vector';
 import { GameState, type Client } from './client';
-import { CharacterWalkAnimation } from './character';
 import {
   getCharacterIntersecting,
-  getCharacterRectangle,
   getNpcIntersecting,
-  getNpcRectangle,
   Rectangle,
-  setCharacterRectangle,
   setDoorRectangle,
-  setNpcRectangle,
 } from './collision';
+import { CharacterWalkAnimation } from './render/character-walk';
+import { CharacterAttackAnimation } from './render/character-attack';
+import { renderCharacterHair } from './render/character-hair';
+import {
+  calculateCharacterRenderPositionStanding,
+  renderCharacterStanding,
+} from './render/character-standing';
+import { renderCharacterChatBubble } from './render/character-chat-bubble';
+import {
+  calculateCharacterRenderPositionFloor,
+  renderCharacterFloor,
+} from './render/character-floor';
+import { renderNpc } from './render/npc';
+import { renderNpcChatBubble } from './render/npc-chat-bubble';
 
 enum EntityType {
   Tile = 0,
@@ -292,9 +287,9 @@ export class MapRenderer {
         case EntityType.Character:
           this.renderCharacter(e, playerScreen, ctx);
           break;
-        case EntityType.Npc:
-          this.renderNpc(e, playerScreen, ctx);
+        case EntityType.Npc: {
           break;
+        }
         case EntityType.Cursor:
           this.renderCursor(e, playerScreen, ctx);
           break;
@@ -515,219 +510,46 @@ export class MapRenderer {
       return;
     }
 
+    const bubble = this.client.characterChats.get(character.playerId);
+
     const animation = this.client.characterAnimations.get(character.playerId);
     if (animation) {
-      animation.render(character, playerScreen, ctx);
-      this.renderCharacterChatBubble(character, ctx);
+      const walking = animation instanceof CharacterWalkAnimation;
+      const attacking = animation instanceof CharacterAttackAnimation;
+      animation.calculateRenderPosition(character, playerScreen);
+      this.renderCharacterBehindLayers(character, ctx, walking, attacking);
+      animation.render(character, ctx);
+      this.renderCharacterLayers(
+        character,
+        ctx,
+        animation.animationFrame,
+        walking,
+        attacking,
+      );
+      renderCharacterChatBubble(bubble, character, ctx);
       return;
     }
 
     if (character.sitState === SitState.Floor) {
-      this.renderCharacterFloor(character, playerScreen, ctx);
-      this.renderCharacterChatBubble(character, ctx);
+      calculateCharacterRenderPositionFloor(character, playerScreen);
+      this.renderCharacterBehindLayers(character, ctx, false, false);
+      renderCharacterFloor(character, ctx);
+      this.renderCharacterLayers(character, ctx, 0, false, false);
+      renderCharacterChatBubble(bubble, character, ctx);
       return;
     }
 
     // TODO: Chair
 
-    this.renderCharacterStanding(character, playerScreen, ctx);
-    this.renderCharacterChatBubble(character, ctx);
+    calculateCharacterRenderPositionStanding(character, playerScreen);
+    this.renderCharacterBehindLayers(character, ctx, false, false);
+    renderCharacterStanding(character, ctx);
+    renderCharacterChatBubble(bubble, character, ctx);
+    this.renderCharacterLayers(character, ctx, 0, false, false);
   }
 
-  renderCharacterChatBubble(
-    character: CharacterMapInfo,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    const balloon = this.client.characterChats.get(character.playerId);
-    if (!balloon) {
-      return;
-    }
-
-    const rect = getCharacterRectangle(character.playerId);
-    if (!rect) {
-      return;
-    }
-
-    balloon.render(
-      {
-        x: rect.position.x + rect.width / 2,
-        y: rect.position.y - 4,
-      },
-      ctx,
-    );
-  }
-
-  renderCharacterFloor(
-    character: CharacterMapInfo,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    const bmp = getBitmapById(GfxType.SkinSprites, 6);
-    if (!bmp) {
-      return;
-    }
-
-    const startX =
-      character.gender === Gender.Female ? 0 : CHARACTER_SIT_GROUND_WIDTH * 2;
-    const sourceX =
-      startX +
-      ([Direction.Up, Direction.Left].includes(character.direction)
-        ? CHARACTER_SIT_GROUND_WIDTH
-        : 0);
-    const sourceY = character.skin * CHARACTER_SIT_GROUND_HEIGHT;
-
-    const screenCoords = isoToScreen(character.coords);
-
-    const additionalOffset = { x: 0, y: 0 };
-    switch (character.direction) {
-      case Direction.Up:
-        additionalOffset.x = 2;
-        additionalOffset.y = 11;
-        break;
-      case Direction.Down:
-        additionalOffset.x = -4;
-        additionalOffset.y = 8;
-        break;
-      case Direction.Left:
-        additionalOffset.x = -2;
-        additionalOffset.y = 12;
-        break;
-      case Direction.Right:
-        additionalOffset.x = 4;
-        additionalOffset.y = 8;
-        break;
-    }
-
-    const screenX = Math.floor(
-      screenCoords.x -
-        HALF_CHARACTER_SIT_GROUND_WIDTH -
-        playerScreen.x +
-        HALF_GAME_WIDTH +
-        additionalOffset.x,
-    );
-
-    const screenY = Math.floor(
-      screenCoords.y -
-        CHARACTER_SIT_GROUND_HEIGHT -
-        playerScreen.y +
-        HALF_GAME_HEIGHT +
-        additionalOffset.y,
-    );
-
-    const mirrored = [Direction.Right, Direction.Up].includes(
-      character.direction,
-    );
-
-    if (mirrored) {
-      ctx.save(); // Save the current context state
-      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
-      ctx.scale(-1, 1); // Flip horizontally
-    }
-
-    const drawX = Math.floor(
-      mirrored ? GAME_WIDTH - screenX - CHARACTER_SIT_GROUND_WIDTH : screenX,
-    );
-
-    ctx.drawImage(
-      bmp,
-      sourceX,
-      sourceY,
-      CHARACTER_SIT_GROUND_WIDTH,
-      CHARACTER_SIT_GROUND_HEIGHT,
-      drawX,
-      screenY,
-      CHARACTER_SIT_GROUND_WIDTH,
-      CHARACTER_SIT_GROUND_HEIGHT,
-    );
-
-    setCharacterRectangle(
-      character.playerId,
-      new Rectangle(
-        { x: screenY, y: screenY },
-        CHARACTER_SIT_GROUND_WIDTH,
-        CHARACTER_SIT_GROUND_HEIGHT,
-      ),
-    );
-
-    if (mirrored) {
-      ctx.restore();
-    }
-  }
-
-  renderCharacterStanding(
-    character: CharacterMapInfo,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    const bmp = getBitmapById(GfxType.SkinSprites, 1);
-    if (!bmp) {
-      return;
-    }
-
-    const startX = character.gender === Gender.Female ? 0 : CHARACTER_WIDTH * 2;
-    const sourceX =
-      startX +
-      ([Direction.Up, Direction.Left].includes(character.direction)
-        ? CHARACTER_WIDTH
-        : 0);
-    const sourceY = character.skin * CHARACTER_HEIGHT;
-
-    const screenCoords = isoToScreen(character.coords);
-
-    const screenX = Math.floor(
-      screenCoords.x - HALF_CHARACTER_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
-    );
-
-    const screenY = Math.floor(
-      screenCoords.y - CHARACTER_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT + 4,
-    );
-
-    const mirrored = [Direction.Right, Direction.Up].includes(
-      character.direction,
-    );
-
-    if (mirrored) {
-      ctx.save(); // Save the current context state
-      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
-      ctx.scale(-1, 1); // Flip horizontally
-    }
-
-    const drawX = Math.floor(
-      mirrored ? GAME_WIDTH - screenX - CHARACTER_WIDTH : screenX,
-    );
-
-    ctx.drawImage(
-      bmp,
-      sourceX,
-      sourceY,
-      CHARACTER_WIDTH,
-      CHARACTER_HEIGHT,
-      drawX,
-      screenY,
-      CHARACTER_WIDTH,
-      CHARACTER_HEIGHT,
-    );
-
-    setCharacterRectangle(
-      character.playerId,
-      new Rectangle(
-        { x: screenX, y: screenY },
-        CHARACTER_WIDTH,
-        CHARACTER_HEIGHT,
-      ),
-    );
-
-    if (mirrored) {
-      ctx.restore();
-    }
-  }
-
-  renderNpc(
-    entity: Entity,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    const npc = this.client.getNpcByIndex(entity.typeId);
+  renderNpc(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
+    const npc = this.client.getNpcByIndex(e.typeId);
     if (!npc) {
       return;
     }
@@ -738,84 +560,34 @@ export class MapRenderer {
     }
 
     const meta = this.client.getNpcMetadata(record.graphicId);
+    const bubble = this.client.npcChats.get(npc.index);
 
     const animation = this.client.npcAnimations.get(npc.index);
     if (animation) {
       animation.render(record.graphicId, npc, meta, playerScreen, ctx);
-      this.renderNpcChatBubble(npc, ctx);
+      renderNpcChatBubble(bubble, npc, ctx);
       return;
     }
 
-    let offset = [Direction.Down, Direction.Right].includes(npc.direction)
-      ? 1
-      : 3;
-
-    if (meta.animatedStanding) {
-      offset += this.npcIdleAnimationFrame;
-    }
-
-    const bmp = getBitmapById(
-      GfxType.NPC,
-      (record.graphicId - 1) * 40 + offset,
-    );
-    if (!bmp) {
-      return;
-    }
-
-    const screenCoords = isoToScreen(npc.coords);
-    const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
-
-    const screenX = Math.floor(
-      screenCoords.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
-    );
-    const screenY =
-      screenCoords.y - (bmp.height - 23) - playerScreen.y + HALF_GAME_HEIGHT;
-
-    if (mirrored) {
-      ctx.save(); // Save the current context state
-      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
-      ctx.scale(-1, 1); // Flip horizontally
-    }
-
-    const drawX = Math.floor(
-      mirrored
-        ? GAME_WIDTH - screenX - bmp.width + meta.xOffset
-        : screenX + meta.xOffset,
-    );
-    const drawY = Math.floor(screenY - meta.yOffset);
-
-    ctx.drawImage(bmp, drawX, drawY);
-
-    setNpcRectangle(
-      npc.index,
-      new Rectangle({ x: screenX, y: drawY }, bmp.width, bmp.height),
-    );
-
-    if (mirrored) {
-      ctx.restore();
-    }
-
-    this.renderNpcChatBubble(npc, ctx);
+    renderNpc(npc, record, meta, this.npcIdleAnimationFrame, playerScreen, ctx);
+    renderNpcChatBubble(bubble, npc, ctx);
   }
 
-  renderNpcChatBubble(npc: NpcMapInfo, ctx: CanvasRenderingContext2D) {
-    const balloon = this.client.npcChats.get(npc.index);
-    if (!balloon) {
-      return;
-    }
+  renderCharacterBehindLayers(
+    character: CharacterMapInfo,
+    ctx: CanvasRenderingContext2D,
+    walking: boolean,
+    attacking: boolean,
+  ) {}
 
-    const rect = getNpcRectangle(npc.index);
-    if (!rect) {
-      return;
-    }
-
-    balloon.render(
-      {
-        x: rect.position.x + rect.width / 2,
-        y: rect.position.y - 4,
-      },
-      ctx,
-    );
+  renderCharacterLayers(
+    character: CharacterMapInfo,
+    ctx: CanvasRenderingContext2D,
+    animationFrame: number,
+    walking: boolean,
+    attacking: boolean,
+  ) {
+    renderCharacterHair(character, ctx, animationFrame, walking, attacking);
   }
 
   renderCursor(

@@ -10,7 +10,7 @@ import {
   PacketFamily,
 } from 'eolib';
 import { type Client, ChatTab } from '../client';
-import { NpcWalkAnimation } from '../npc';
+import { NpcWalkAnimation } from '../render/npc-walk';
 import { ChatBubble } from '../chat-bubble';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {

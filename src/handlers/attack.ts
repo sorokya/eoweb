@@ -5,8 +5,8 @@ import {
   type EoReader,
 } from 'eolib';
 import type { Client } from '../client';
-import { CharacterAttackAnimation } from '../character';
 import { playSfxById, SfxId } from '../sfx';
+import { CharacterAttackAnimation } from '../render/character-attack';
 
 function handleAttackPlayer(client: Client, reader: EoReader) {
   const packet = AttackPlayerServerPacket.deserialize(reader);
