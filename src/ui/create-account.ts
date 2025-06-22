@@ -35,8 +35,8 @@ export class CreateAccountForm extends Base {
   private btnCancel: HTMLButtonElement = this.container.querySelector(
     'button[data-id="cancel-big"]',
   );
-
   private emitter = mitt<Events>();
+  private formElements: (HTMLInputElement | HTMLButtonElement)[];
 
   show() {
     this.username.value = '';
@@ -51,6 +51,17 @@ export class CreateAccountForm extends Base {
 
   constructor() {
     super();
+    
+    this.formElements = [
+      this.username, 
+      this.password, 
+      this.confirmPassword, 
+      this.name, 
+      this.location, 
+      this.email, 
+      this.btnCreate, 
+      this.btnCancel
+    ];
 
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
@@ -59,9 +70,7 @@ export class CreateAccountForm extends Base {
 
     this.form.addEventListener('submit', (e) => {
       e.preventDefault();
-
       playSfxById(SfxId.ButtonClick);
-
       const username = this.username.value.trim();
       const password = this.password.value.trim();
       const confirmPassword = this.confirmPassword.value.trim();
@@ -109,8 +118,27 @@ export class CreateAccountForm extends Base {
         location,
         email,
       });
-
       return false;
+    });
+
+    this.setupTabTrapping();
+  }
+
+  private setupTabTrapping() {
+    this.formElements.forEach((element, index) => {
+      element.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Tab' && !this.container.classList.contains('hidden')) {
+          e.preventDefault();
+          
+          if (e.shiftKey) {
+            const prevIndex = index === 0 ? this.formElements.length - 1 : index - 1;
+            this.formElements[prevIndex].focus();
+          } else {
+            const nextIndex = index === this.formElements.length - 1 ? 0 : index + 1;
+            this.formElements[nextIndex].focus();
+          }
+        }
+      });
     });
   }
 

@@ -19,6 +19,7 @@ export class LoginForm extends Base {
   );
 
   private emitter = mitt<Events>();
+  private formElements: (HTMLInputElement | HTMLButtonElement)[];
 
   show() {
     this.username.value = '';
@@ -29,6 +30,9 @@ export class LoginForm extends Base {
 
   constructor() {
     super();
+    
+    this.formElements = [this.username, this.password, this.btnCancel];
+
     this.form.addEventListener('submit', (e) => {
       e.preventDefault();
       playSfxById(SfxId.ButtonClick);
@@ -40,9 +44,30 @@ export class LoginForm extends Base {
       this.password.focus();
       return false;
     });
+
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('cancel', undefined);
+    });
+
+    this.setupTabTrapping();
+  }
+
+  private setupTabTrapping() {
+    this.formElements.forEach((element, index) => {
+      element.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Tab' && !this.container.classList.contains('hidden')) {
+          e.preventDefault();
+          
+          if (e.shiftKey) {
+            const prevIndex = index === 0 ? this.formElements.length - 1 : index - 1;
+            this.formElements[prevIndex].focus();
+          } else {
+            const nextIndex = index === this.formElements.length - 1 ? 0 : index + 1;
+            this.formElements[nextIndex].focus();
+          }
+        }
+      });
     });
   }
 
