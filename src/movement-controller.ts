@@ -62,31 +62,31 @@ export class MovementController {
 
     if (attacking) {
       return;
-    }
-
-    if (directionHeld !== null) {
-      this.lastDirectionHeld = directionHeld;
-    }
+    } 
 
     if (
       !this.attackTicks &&
       isInputHeld(Input.Attack) &&
       character.sitState === SitState.Stand
     ) {
-      if (walking) {
+      if (!walking) {
+        this.client.characterAnimations.set(
+          character.playerId,
+          new CharacterAttackAnimation(character.direction),
+        );
+        character.direction = this.lastDirectionHeld;
+        this.client.attack(this.lastDirectionHeld, getTimestamp());
+        this.attackTicks = ATTACK_TICKS;
         return;
       }
-      this.client.characterAnimations.set(
-        character.playerId,
-        new CharacterAttackAnimation(character.direction),
-      );
-      character.direction = this.lastDirectionHeld;
-      this.client.attack(this.lastDirectionHeld, getTimestamp());
-      this.attackTicks = ATTACK_TICKS;
-      return;
     }
 
     if (character.sitState === SitState.Stand && directionHeld !== null) {
+      this.lastDirectionHeld = directionHeld;
+      if (walking) {
+        return;
+      }
+
       if (
         !walking &&
         !this.faceTicks &&
