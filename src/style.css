@@ -489,9 +489,13 @@ input[type="password"] {
   word-break: break-all;
 }
 
+#mobile-controls {
+  opacity: 0.8;
+}
+
 #joystick-container {
   position: absolute;
-  bottom: 1%;
+  bottom: 5%;
   left: 5%;
   width: 120px;
   height: 120px;
@@ -502,18 +506,22 @@ input[type="password"] {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background-color: transparent;
+  background-image: url("/move.png");
+  background-size: cover;
   position: absolute;
 }
 
 #joystick-thumb {
-  width: 40px;
-  height: 40px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
   position: absolute;
-  left: 40px;
-  top: 40px;
+  background-color: transparent;
+  background-image: url("/move-circle.png");
+  background-size: cover;
+  left: 20px;
+  top: 20px;
   transform: translate(0, 0);
 }
 
@@ -521,20 +529,28 @@ input[type="password"] {
   position: absolute;
   bottom: 1%;
   right: 10%;
-  width: 120px;
+  width: 170px;
   height: 120px;
   touch-action: none;
   display: flex;
 }
 
 #mobile-actions-container button {
-  background: transparent;
   border: none;
   outline: none;
+  height: 84px;
+  width: 84px;
+  background-color: transparent;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
-#mobile-actions-container img {
-  height: 84px;
+#btn-attack {
+  background-image: url("/attack.png");
+}
+
+#btn-toggle-sit {
+  background-image: url("/sit.png");
 }
 
 .img-label {
