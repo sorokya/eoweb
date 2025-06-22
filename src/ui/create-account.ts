@@ -52,7 +52,6 @@ export class CreateAccountForm extends Base {
   constructor() {
     super();
     
-    // Initialize form elements array
     this.formElements = [
       this.username, 
       this.password, 
@@ -122,23 +121,19 @@ export class CreateAccountForm extends Base {
       return false;
     });
 
-    // Setup tab trapping - only trap when form is visible
     this.setupTabTrapping();
   }
 
   private setupTabTrapping() {
     this.formElements.forEach((element, index) => {
       element.addEventListener('keydown', (e: KeyboardEvent) => {
-        // Only trap tabs when the form is visible
         if (e.key === 'Tab' && !this.container.classList.contains('hidden')) {
           e.preventDefault();
           
           if (e.shiftKey) {
-            // Shift+Tab: go to previous element (or last if at first)
             const prevIndex = index === 0 ? this.formElements.length - 1 : index - 1;
             this.formElements[prevIndex].focus();
           } else {
-            // Tab: go to next element (or first if at last)
             const nextIndex = index === this.formElements.length - 1 ? 0 : index + 1;
             this.formElements[nextIndex].focus();
           }
