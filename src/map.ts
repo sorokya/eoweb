@@ -33,6 +33,7 @@ import {
 } from './render/character-floor';
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
+import { renderCharacterHairBehind } from './render/character-hair-behind';
 
 enum EntityType {
   Tile = 0,
@@ -517,7 +518,13 @@ export class MapRenderer {
       const walking = animation instanceof CharacterWalkAnimation;
       const attacking = animation instanceof CharacterAttackAnimation;
       animation.calculateRenderPosition(character, playerScreen);
-      this.renderCharacterBehindLayers(character, ctx, walking, attacking);
+      this.renderCharacterBehindLayers(
+        character,
+        ctx,
+        animation.animationFrame,
+        walking,
+        attacking,
+      );
       animation.render(character, ctx);
       this.renderCharacterLayers(
         character,
@@ -532,7 +539,7 @@ export class MapRenderer {
 
     if (character.sitState === SitState.Floor) {
       calculateCharacterRenderPositionFloor(character, playerScreen);
-      this.renderCharacterBehindLayers(character, ctx, false, false);
+      this.renderCharacterBehindLayers(character, ctx, 0, false, false);
       renderCharacterFloor(character, ctx);
       this.renderCharacterLayers(character, ctx, 0, false, false);
       renderCharacterChatBubble(bubble, character, ctx);
@@ -542,7 +549,7 @@ export class MapRenderer {
     // TODO: Chair
 
     calculateCharacterRenderPositionStanding(character, playerScreen);
-    this.renderCharacterBehindLayers(character, ctx, false, false);
+    this.renderCharacterBehindLayers(character, ctx, 0, false, false);
     renderCharacterStanding(character, ctx);
     renderCharacterChatBubble(bubble, character, ctx);
     this.renderCharacterLayers(character, ctx, 0, false, false);
@@ -576,9 +583,18 @@ export class MapRenderer {
   renderCharacterBehindLayers(
     character: CharacterMapInfo,
     ctx: CanvasRenderingContext2D,
+    animationFrame: number,
     walking: boolean,
     attacking: boolean,
-  ) {}
+  ) {
+    renderCharacterHairBehind(
+      character,
+      ctx,
+      animationFrame,
+      walking,
+      attacking,
+    );
+  }
 
   renderCharacterLayers(
     character: CharacterMapInfo,

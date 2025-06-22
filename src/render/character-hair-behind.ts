@@ -67,7 +67,7 @@ const FEMALE_SIT_FLOOR_OFFSETS = {
   [Direction.Right]: { x: -2, y: -2 },
 };
 
-export function renderCharacterHair(
+export function renderCharacterHairBehind(
   character: CharacterMapInfo,
   ctx: CanvasRenderingContext2D,
   animationFrame: number,
@@ -82,7 +82,7 @@ export function renderCharacterHair(
   const offset =
     2 *
     ([Direction.Down, Direction.Right].includes(character.direction) ? 0 : 1);
-  const gfxId = baseGfxId + 2 + offset;
+  const gfxId = baseGfxId + 1 + offset;
   const bmp = getBitmapById(
     character.gender === Gender.Female ? GfxType.FemaleHair : GfxType.MaleHair,
     gfxId,
