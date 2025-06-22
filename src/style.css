@@ -500,6 +500,10 @@ input[type="password"] {
   user-select: none;
 }
 
+#mobile-controls * {
+  user-select: none;
+}
+
 #joystick-container {
   position: absolute;
   bottom: 5%;
