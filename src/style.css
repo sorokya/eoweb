@@ -4,7 +4,7 @@ html {
 
 @font-face {
   font-family: w95fa;
-  src: url("w95fa.woff2") format("woff2"), url("w95fa.woff") format("woff");
+  src: url("/w95fa.woff2");
   font-weight: normal;
   font-style: normal;
 }
