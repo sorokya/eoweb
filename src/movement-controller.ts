@@ -25,6 +25,7 @@ export class MovementController {
   faceTicks = FACE_TICKS;
   sitTicks = SIT_TICKS;
   attackTicks = ATTACK_TICKS;
+  lastDirectionHeld: Direction | null = null;
 
   freeze = false;
 
@@ -63,6 +64,10 @@ export class MovementController {
       return;
     }
 
+    if (directionHeld !== null) {
+      this.lastDirectionHeld = directionHeld;
+    }
+
     if (
       !this.attackTicks &&
       isInputHeld(Input.Attack) &&
@@ -75,7 +80,8 @@ export class MovementController {
         character.playerId,
         new CharacterAttackAnimation(character.direction),
       );
-      this.client.attack(character.direction, getTimestamp());
+      character.direction = this.lastDirectionHeld;
+      this.client.attack(this.lastDirectionHeld, getTimestamp());
       this.attackTicks = ATTACK_TICKS;
       return;
     }
@@ -92,7 +98,12 @@ export class MovementController {
         return;
       }
 
-      if (!this.walkTicks || (walking && directionHeld !== character.direction && (animation as CharacterWalkAnimation).isOnLastFrame())) {
+      if (
+        !this.walkTicks ||
+        (walking &&
+          directionHeld !== character.direction &&
+          (animation as CharacterWalkAnimation).isOnLastFrame())
+      ) {
         const from = bigCoordsToCoords(character.coords);
         const to = getNextCoords(
           from,
