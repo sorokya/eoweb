@@ -280,6 +280,63 @@ input[type="password"] {
   display: flex;
 }
 
+#change-password-form {
+  position: absolute;
+  width: 360px;
+  height: 240px;
+  background-color: #000;
+  background-image: url("/gfx/gfx001/121.png");
+  z-index: 1010;
+}
+
+#change-password-form input[name="username"] {
+  background: transparent;
+  border: none;
+  position: absolute;
+  color: #b4a08c;
+  top: 62px;
+  left: 200px;
+  width: 130px;
+}
+
+#change-password-form input[name="old-password"] {
+  background: transparent;
+  border: none;
+  position: absolute;
+  color: #b4a08c;
+  top: 92px;
+  left: 200px;
+  width: 130px;
+}
+
+#change-password-form input[name="new-password"] {
+  background: transparent;
+  border: none;
+  position: absolute;
+  color: #b4a08c;
+  top: 122px;
+  left: 200px;
+  width: 130px;
+}
+
+#change-password-form input[name="confirm-new-password"] {
+  background: transparent;
+  border: none;
+  position: absolute;
+  color: #b4a08c;
+  top: 152px;
+  left: 200px;
+  width: 130px;
+}
+
+#change-password-form .buttons {
+  position: absolute;
+  display: flex;
+  gap: 2px;
+  bottom: 16px;
+  right: 19px;
+}
+
 #cover {
   position: fixed;
   top: 0;

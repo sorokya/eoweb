@@ -11,7 +11,7 @@ import {
 import './style.css';
 import { PacketBus } from './bus';
 import { Client, GameState } from './client';
-import { GAME_FPS, MAX_CHALLENGE } from './consts';
+import { GAME_FPS, HOST, MAX_CHALLENGE } from './consts';
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
@@ -31,8 +31,9 @@ import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { Chat } from './ui/chat';
 import { capitalize } from './utils/capitalize';
-import { inputToDirection, MovementController } from './movement-controller';
+import { inputToDirection } from './movement-controller';
 import { getLatestDirectionHeld, Input } from './input';
+import { ChangePasswordForm } from './ui/change-password';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
@@ -157,8 +158,17 @@ client.on('enterGame', ({ news }) => {
   chat.show();
 });
 
+client.on('passwordChanged', () => {
+  changePasswordForm.hide();
+  smallAlertLargeHeader.setContent(
+    'Your password has been changed, please use your new password next time you login.',
+    'Password changed',
+  );
+  smallAlertLargeHeader.show();
+});
+
 const initializeSocket = (next: 'login' | 'create') => {
-  const socket = new WebSocket('wss://ws.reoserv.net');
+  const socket = new WebSocket(HOST);
   socket.addEventListener('open', () => {
     mainMenu.hide();
     if (next === 'create') {
@@ -221,6 +231,7 @@ const loginForm = new LoginForm();
 const createAccountForm = new CreateAccountForm();
 const characterSelect = new CharacterSelect();
 const createCharacterForm = new CreateCharacterForm();
+const changePasswordForm = new ChangePasswordForm();
 const smallAlertLargeHeader = new SmallAlertLargeHeader();
 const exitGame = new ExitGame();
 const smallConfirm = new SmallConfirm();
@@ -293,6 +304,10 @@ characterSelect.on('cancel', () => {
   mainMenu.show();
 });
 
+characterSelect.on('changePassword', () => {
+  changePasswordForm.show();
+});
+
 characterSelect.on('selectCharacter', (id) => {
   client.selectCharacter(id);
 });
@@ -309,6 +324,18 @@ characterSelect.on('create', () => {
 createCharacterForm.on('create', (data) => {
   client.requestCharacterCreation(data);
 });
+
+changePasswordForm.on('error', ({ title, message }) => {
+  smallAlertLargeHeader.setContent(message, title);
+  smallAlertLargeHeader.show();
+});
+
+changePasswordForm.on(
+  'changePassword',
+  ({ username, oldPassword, newPassword }) => {
+    client.changePassword(username, oldPassword, newPassword);
+  },
+);
 
 chat.on('chat', (message) => {
   client.chat(message);
@@ -373,4 +400,3 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   requestAnimationFrame(render);
 });
-

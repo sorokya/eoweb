@@ -19,10 +19,13 @@ function handleAccountReply(client: Client, reader: EoReader) {
       client.showError('That account name is not approved');
       return;
     case AccountReply.ChangeFailed:
-      client.showError('There was an error processing your request');
+      client.showError(
+        'The account name or old password you provided do not match with our database.',
+        'Request denied',
+      );
       return;
     case AccountReply.Changed:
-      client.showError('Your password has been changed', 'Success');
+      client.emit('passwordChanged', undefined);
       return;
     case AccountReply.RequestDenied:
       client.showError('Your request was denied');
