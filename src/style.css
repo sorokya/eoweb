@@ -2,6 +2,13 @@ html {
   background: url("/back.jpg");
 }
 
+@font-face {
+  font-family: w95fa;
+  src: url("w95fa.woff2") format("woff2"), url("w95fa.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
 body {
   padding: 0;
   margin: 0;
@@ -10,7 +17,11 @@ body {
   align-items: flex-start;
   justify-content: center;
   overflow: hidden;
-  font-family: sans-serif;
+}
+
+* {
+  /* biome-ignore lint/a11y/useGenericFontNames: Only custom font!! */
+  font-family: w95fa !important;
 }
 
 @media (max-aspect-ratio: 4 / 3) {
@@ -456,13 +467,14 @@ input[type="password"] {
 
 #local-chat {
   list-style: none;
-  padding: 0;
+  padding: 0 5px;
   max-height: 160px;
   overflow-y: scroll;
 }
 
 #local-chat li {
   padding: 0;
+  word-break: break-all;
 }
 
 .img-label {

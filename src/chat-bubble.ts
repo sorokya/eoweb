@@ -3,7 +3,7 @@ import type { Vector2 } from './vector';
 const softLimit = 100;
 const hardLimit = 150;
 const padding = 6;
-const lineHeight = 10;
+const lineHeight = 12;
 const radius = 6;
 const triangleHeight = 6;
 const triangleWidth = 10;
@@ -26,7 +26,7 @@ export class ChatBubble {
   }
 
   render(position: Vector2, ctx: CanvasRenderingContext2D) {
-    ctx.font = '8pt Arial';
+    ctx.font = '10pt w95fa';
     ctx.globalAlpha = 0.5;
 
     if (!this.lines.length) {
@@ -37,7 +37,7 @@ export class ChatBubble {
           Math.max(...this.lines.map((line) => ctx.measureText(line).width)),
         ) +
         padding * 2;
-      this.height = lineHeight * this.lines.length + padding * 2;
+      this.height = lineHeight * this.lines.length + padding * 2 - 5;
     }
 
     const x = position.x - this.width / 2;
