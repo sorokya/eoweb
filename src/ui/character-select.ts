@@ -8,6 +8,7 @@ type Events = {
   cancel: undefined;
   selectCharacter: number;
   create: undefined;
+  changePassword: undefined;
   error: { title: string; message: string };
 };
 
@@ -89,6 +90,7 @@ export class CharacterSelect extends Base {
 
     this.btnPassword.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('changePassword', undefined);
     });
 
     this.btnCancel.addEventListener('click', () => {

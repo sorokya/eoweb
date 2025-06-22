@@ -24,7 +24,7 @@
       </div>
 
       <div id="login-form" class="hidden">
-        <form>
+        <form autocomplete="off">
           <input type="text" id="login-username"/>
           <input type="password" id="login-password"/>
           <div class="buttons">
@@ -35,7 +35,7 @@
       </div>
 
       <div id="create-account-form" class="hidden">
-        <form>
+        <form autocomplete="off">
           <div>
             <div>
               <label for="create-username" class="img-label" data-id="account-name"></label>
@@ -104,7 +104,7 @@
       </div>
 
       <div id="create-character-form" class="hidden">
-        <form>
+        <form autocomplete="off">
           <input type="text" id="create-character-name"/>
           <div id="create-character-toggles">
             <div>
@@ -131,12 +131,25 @@
         </form>
       </div>
 
+      <div id="change-password-form" class="hidden">
+        <form autocomplete="off">
+          <input type="text" name="username" />
+          <input type="password" name="old-password" />
+          <input type="password" name="new-password" />
+          <input type="password" name="confirm-new-password" />
+          <div class="buttons">
+            <button class="img-btn" type="submit" data-id="ok"></button>
+            <button class="img-btn" type="button" data-id="cancel"></button>
+          </div>
+        </form>
+      </div>
+
       <div id="exit-game" class="hidden">
           <button class="img-btn" type="button" data-id="exit-game"></button>
       </div>
 
       <div id="chat" class="hidden">
-        <form>
+        <form autocomplete="off">
           <input type="text" id="chat-message"/>
           <input type="submit" class="hidden"/>
           <div id="chat-tab-bar">

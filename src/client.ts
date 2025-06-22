@@ -1,4 +1,5 @@
 import {
+  AccountAgreeClientPacket,
   AccountRequestClientPacket,
   AdminLevel,
   AttackUseClientPacket,
@@ -93,6 +94,7 @@ type ClientEvents = {
   enterGame: { news: string[] };
   chat: { name: string; tab: ChatTab; message: string };
   accountCreated: undefined;
+  passwordChanged: undefined;
 };
 
 export enum GameState {
@@ -521,6 +523,14 @@ export class Client {
 
     this.characterCreateData = data;
     this.bus.send(new CharacterRequestClientPacket());
+  }
+
+  changePassword(username: string, oldPassword: string, newPassword: string) {
+    const packet = new AccountAgreeClientPacket();
+    packet.username = username;
+    packet.oldPassword = oldPassword;
+    packet.newPassword = newPassword;
+    this.bus.send(packet);
   }
 
   chat(message: string) {
