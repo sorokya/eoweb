@@ -34,9 +34,13 @@ import { capitalize } from './utils/capitalize';
 import { inputToDirection } from './movement-controller';
 import { getLatestDirectionHeld, Input } from './input';
 import { ChangePasswordForm } from './ui/change-password';
+import { MobileControls } from './ui/mobile-controls';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
+
+const client = new Client();
+const mobileControls = new MobileControls();
 
 let userOverride = false;
 export function zoomIn() {
@@ -66,6 +70,12 @@ function resizeCanvases() {
 
   canvas.style.width = `${w * ZOOM}px`;
   canvas.style.height = `${h * ZOOM}px`;
+
+  if (client.state === GameState.InGame && rect.width < 940) {
+    mobileControls.show();
+  } else {
+    mobileControls.hide();
+  }
 
   setGameSize(w, h);
 }
@@ -109,8 +119,6 @@ const render = (now: DOMHighResTimeStamp) => {
   client.render(ctx);
   requestAnimationFrame(render);
 };
-
-const client = new Client();
 
 client.on('error', ({ title, message }) => {
   smallAlertLargeHeader.setContent(message, title || 'Error');
@@ -160,6 +168,7 @@ client.on('enterGame', ({ news }) => {
   characterSelect.hide();
   exitGame.show();
   chat.show();
+  resizeCanvases();
 });
 
 client.on('passwordChanged', () => {
@@ -362,6 +371,22 @@ window.addEventListener('keyup', (e) => {
   if (client.state === GameState.InGame && e.key === 'Enter') {
     chat.focus();
   }
+});
+
+window.addEventListener('touchmove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  client.setMousePosition({
+    x: Math.min(
+      Math.max(Math.floor((e.touches[0].clientX - rect.left) * scaleX), 0),
+      canvas.width,
+    ),
+    y: Math.min(
+      Math.max(Math.floor((e.touches[0].clientY - rect.top) * scaleY), 0),
+      canvas.height,
+    ),
+  });
 });
 
 window.addEventListener('mousemove', (e) => {

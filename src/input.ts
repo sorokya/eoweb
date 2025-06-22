@@ -44,13 +44,10 @@ function updateInputHeld(input: Input, down: boolean) {
 }
 
 function swipedDir(dx: number, dy: number): Input {
-  return dx < 0
-    ? dy < 0
-      ? Input.Left
-      : Input.Down
-    : dy < 0
-      ? Input.Up
-      : Input.Right;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    return dx < 0 ? Input.Left : Input.Right;
+  }
+  return dy < 0 ? Input.Up : Input.Down;
 }
 
 window.addEventListener('keydown', (e) => {
@@ -124,65 +121,100 @@ window.addEventListener('keyup', (e) => {
   }
 });
 
-window.addEventListener(
-  'touchstart',
-  (e) => {
-    const t = e.changedTouches[0];
-    touchStartX = t.clientX;
-    touchStartY = t.clientY;
-    touchId = t.identifier;
-    activeTouchDir = null;
-  },
-  { passive: false },
-);
+const joystickContainer = document.getElementById('joystick-container');
+const thumb = document.getElementById('joystick-thumb');
 
-window.addEventListener(
-  'touchmove',
-  (e) => {
-    if (touchId === null) return;
+let inputVector = { x: 0, y: 0 };
+const maxRadius = 40;
 
-    const t = Array.from(e.changedTouches).find(
-      (c) => c.identifier === touchId,
-    );
-    if (!t || touchStartX === null || touchStartY === null) return;
+joystickContainer.addEventListener('touchstart', (e) => {
+  const t = e.changedTouches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+  touchId = t.identifier;
+  activeTouchDir = null;
+  handleTouchMove(e);
+});
 
-    const dx = t.clientX - touchStartX;
-    const dy = t.clientY - touchStartY;
-    const dist2 = dx * dx + dy * dy;
+joystickContainer.addEventListener('touchmove', (e) => {
+  handleTouchMove(e);
+  e.preventDefault();
+});
 
-    if (dist2 < DRAG_THRESHOLD * DRAG_THRESHOLD) {
-      if (activeTouchDir !== null) {
-        updateDirectionHeld(activeTouchDir, false);
-        activeTouchDir = null;
-      }
-      return;
-    }
+joystickContainer.addEventListener('touchend', () => {
+  inputVector = { x: 0, y: 0 };
+  thumb.style.transform = 'translate(0px, 0px)';
+  if (activeTouchDir !== null) {
+    updateDirectionHeld(activeTouchDir, false);
+  }
 
-    const dir = swipedDir(dx, dy);
-    if (dir !== activeTouchDir) {
-      if (activeTouchDir !== null) updateDirectionHeld(activeTouchDir, false);
-      updateDirectionHeld(dir, true);
-      activeTouchDir = dir;
-    }
+  touchStartX = touchStartY = null;
+  touchId = null;
+  activeTouchDir = null;
+});
 
-    e.preventDefault(); // block page scroll/zoom
-  },
-  { passive: false },
-);
+function handleTouchMove(e: TouchEvent) {
+  const rect = joystickContainer.getBoundingClientRect();
+  const touch = e.touches[0];
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
 
-window.addEventListener(
-  'touchend',
-  () => {
+  let dx = touch.clientX - centerX;
+  let dy = touch.clientY - centerY;
+
+  const distance = Math.min(Math.sqrt(dx * dx + dy * dy), maxRadius);
+
+  const angle = Math.atan2(dy, dx);
+  const clampedX = Math.cos(angle) * distance;
+  const clampedY = Math.sin(angle) * distance;
+
+  inputVector.x = clampedX / maxRadius;
+  inputVector.y = clampedY / maxRadius;
+
+  thumb.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+
+  if (touchId === null) return;
+
+  const t = Array.from(e.changedTouches).find((c) => c.identifier === touchId);
+  if (!t || touchStartX === null || touchStartY === null) return;
+
+  dx = t.clientX - touchStartX;
+  dy = t.clientY - touchStartY;
+  const dist2 = dx * dx + dy * dy;
+
+  if (dist2 < DRAG_THRESHOLD * DRAG_THRESHOLD) {
     if (activeTouchDir !== null) {
       updateDirectionHeld(activeTouchDir, false);
+      activeTouchDir = null;
     }
+    return;
+  }
 
-    touchStartX = touchStartY = null;
-    touchId = null;
-    activeTouchDir = null;
-  },
-  { passive: false },
-);
+  const dir = swipedDir(dx, dy);
+  if (dir !== activeTouchDir) {
+    if (activeTouchDir !== null) updateDirectionHeld(activeTouchDir, false);
+    updateDirectionHeld(dir, true);
+    activeTouchDir = dir;
+  }
+}
+
+const btnAttack = document.getElementById('btn-attack');
+btnAttack.addEventListener('touchstart', () => {
+  updateInputHeld(Input.Attack, true);
+});
+
+btnAttack.addEventListener('touchend', () => {
+  updateInputHeld(Input.Attack, false);
+});
+
+const btnSit = document.getElementById('btn-toggle-sit');
+btnSit.addEventListener('touchstart', () => {
+  updateInputHeld(Input.SitStand, true);
+});
+
+btnSit.addEventListener('touchend', () => {
+  updateInputHeld(Input.SitStand, false);
+});
 
 window.addEventListener(
   'wheel',
@@ -195,3 +227,9 @@ window.addEventListener(
   },
   { passive: false },
 );
+
+window.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  return false;
+});
