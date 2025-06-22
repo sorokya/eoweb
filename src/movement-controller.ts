@@ -26,6 +26,7 @@ export class MovementController {
   sitTicks = SIT_TICKS;
   attackTicks = ATTACK_TICKS;
   lastDirectionHeld: Direction | null = null;
+  directionExpireTicks = 2;
 
   freeze = false;
 
@@ -38,6 +39,7 @@ export class MovementController {
     this.walkTicks = Math.max(this.walkTicks - 1, 0);
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
     this.attackTicks = Math.max(this.attackTicks - 1, 0);
+    this.directionExpireTicks = Math.max(this.directionExpireTicks - 1, 0);
 
     if (
       this.freeze ||
@@ -62,7 +64,11 @@ export class MovementController {
 
     if (attacking) {
       return;
-    } 
+    }
+
+    if (!this.directionExpireTicks && this.lastDirectionHeld !== null) {
+      this.lastDirectionHeld = null;
+    }
 
     if (
       !this.attackTicks &&
@@ -74,8 +80,10 @@ export class MovementController {
           character.playerId,
           new CharacterAttackAnimation(character.direction),
         );
-        character.direction = this.lastDirectionHeld;
-        this.client.attack(this.lastDirectionHeld, getTimestamp());
+        if (this.lastDirectionHeld !== null) {
+          character.direction = this.lastDirectionHeld;
+        }
+        this.client.attack(character.direction, getTimestamp());
         this.attackTicks = ATTACK_TICKS;
         return;
       }
@@ -83,6 +91,7 @@ export class MovementController {
 
     if (character.sitState === SitState.Stand && directionHeld !== null) {
       this.lastDirectionHeld = directionHeld;
+      this.directionExpireTicks = 2;
       if (walking) {
         return;
       }
