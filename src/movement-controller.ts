@@ -3,7 +3,7 @@ import { Input, getLatestDirectionHeld, isInputHeld } from './input';
 import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
 import { getNextCoords } from './utils/get-next-coords';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
-import { GameState, type Client } from './client';
+import type { Client } from './client';
 import { CharacterAttackAnimation, CharacterWalkAnimation } from './character';
 
 function inputToDirection(input: Input): Direction {
@@ -27,6 +27,10 @@ export class MovementController {
   attackTicks = ATTACK_TICKS;
 
   freeze = false;
+  
+  // Buffers direction changes during walk cooldown
+  // e.g. Walking north, tap east, buffers east until walkTicks = 0
+  private bufferedDirection: Direction | null = null;
 
   constructor(client: Client) {
     this.client = client;
@@ -38,11 +42,7 @@ export class MovementController {
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
     this.attackTicks = Math.max(this.attackTicks - 1, 0);
 
-    if (
-      this.freeze ||
-      this.client.state !== GameState.InGame ||
-      this.client.typing
-    ) {
+    if (this.freeze) {
       return;
     }
 
@@ -80,23 +80,43 @@ export class MovementController {
       return;
     }
 
-    if (character.sitState === SitState.Stand && directionHeld !== null) {
+    // Buffer direction changes only (not same direction)
+    // e.g. Moving up, press right during cooldown, buffer right for immediate execution
+    if (directionHeld !== null && this.walkTicks > 0 && character.direction !== directionHeld) {
+      this.bufferedDirection = directionHeld;
+      console.log(`📥 BUFFERED: direction ${directionHeld} (face change, walkTicks: ${this.walkTicks})`);
+      return;
+    }
+
+    // Use buffered direction when walk cooldown expires
+    // e.g. walkTicks reaches 0, execute buffered direction instead of waiting for new input
+    const targetDirection = this.bufferedDirection || directionHeld;
+    if (this.bufferedDirection && this.walkTicks === 0) {
+      console.log(`🚀 RELEASING BUFFER: direction ${this.bufferedDirection}`);
+      this.bufferedDirection = null;
+    }
+
+    if (character.sitState === SitState.Stand && targetDirection !== null) {
+      // Face new direction if different from current
+      // e.g. Facing north, want to go east, face east first
       if (
         !walking &&
         !this.faceTicks &&
-        character.direction !== directionHeld
+        character.direction !== targetDirection
       ) {
-        character.direction = directionHeld;
-        this.client.face(directionHeld);
+        character.direction = targetDirection;
+        this.client.face(targetDirection);
         this.faceTicks = FACE_TICKS;
         return;
       }
 
-      if (!this.walkTicks || (walking && directionHeld !== character.direction && (animation as CharacterWalkAnimation).isOnLastFrame())) {
+      // Walk in target direction when cooldown expires
+      // e.g. walkTicks = 0 and facing correct direction, move forward
+      if (!this.walkTicks) {
         const from = bigCoordsToCoords(character.coords);
         const to = getNextCoords(
           from,
-          directionHeld,
+          targetDirection,
           this.client.map.width,
           this.client.map.height,
         );
@@ -114,14 +134,13 @@ export class MovementController {
 
         this.client.characterAnimations.set(
           character.playerId,
-          new CharacterWalkAnimation(from, to, directionHeld),
+          new CharacterWalkAnimation(from, to, targetDirection),
         );
-        character.direction = directionHeld;
+        character.direction = targetDirection;
         character.coords.x = to.x;
         character.coords.y = to.y;
-        this.client.walk(directionHeld, to, getTimestamp());
+        this.client.walk(targetDirection, to, getTimestamp());
         this.walkTicks = WALK_TICKS;
-        this.faceTicks = FACE_TICKS;
         this.sitTicks = SIT_TICKS;
         return;
       }
