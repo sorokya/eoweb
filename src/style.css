@@ -438,9 +438,16 @@ input[type="password"] {
   right: 0;
 }
 
+@media screen and (min-width: 940px) {
+  #chat {
+    top: unset !important;
+    bottom: 0;
+  }
+}
+
 #chat {
   position: absolute;
-  bottom: 0;
+  top: 0;
   background: #111111;
   color: #fff;
   width: 400px;
@@ -480,6 +487,54 @@ input[type="password"] {
 #local-chat li {
   padding: 0;
   word-break: break-all;
+}
+
+#joystick-container {
+  position: absolute;
+  bottom: 1%;
+  left: 5%;
+  width: 120px;
+  height: 120px;
+  touch-action: none;
+}
+
+#joystick-base {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  position: absolute;
+}
+
+#joystick-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  position: absolute;
+  left: 40px;
+  top: 40px;
+  transform: translate(0, 0);
+}
+
+#mobile-actions-container {
+  position: absolute;
+  bottom: 1%;
+  right: 10%;
+  width: 120px;
+  height: 120px;
+  touch-action: none;
+  display: flex;
+}
+
+#mobile-actions-container button {
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+#mobile-actions-container img {
+  height: 84px;
 }
 
 .img-label {
