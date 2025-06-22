@@ -438,6 +438,12 @@ input[type="password"] {
   right: 0;
 }
 
+@media screen and (min-width: 470px) {
+  #chat {
+    width: 300px !important;
+  }
+}
+
 @media screen and (min-width: 940px) {
   #chat {
     top: unset !important;
@@ -449,8 +455,8 @@ input[type="password"] {
   position: absolute;
   top: 0;
   background: #111111;
+  width: 200px;
   color: #fff;
-  width: 400px;
   opacity: 0.8;
   padding: 5px 10px;
 }
@@ -480,7 +486,7 @@ input[type="password"] {
 #local-chat {
   list-style: none;
   padding: 0 5px;
-  height: 100px;
+  height: 130px;
   overflow-y: scroll;
 }
 
@@ -491,6 +497,7 @@ input[type="password"] {
 
 #mobile-controls {
   opacity: 0.8;
+  user-select: none;
 }
 
 #joystick-container {
