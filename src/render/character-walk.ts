@@ -23,7 +23,6 @@ export class CharacterWalkAnimation extends CharacterAnimation {
   from: Coords;
   to: Coords;
   direction: Direction;
-  animationFrame = 0;
   walkOffset = { x: 0, y: 0 };
 
   constructor(from: Coords, to: Coords, direction: Direction) {

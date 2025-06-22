@@ -19,7 +19,6 @@ import { CharacterAnimation } from './character-base-animation';
 
 export class CharacterAttackAnimation extends CharacterAnimation {
   direction: Direction;
-  animationFrame = 0;
 
   constructor(direction: Direction) {
     super();
@@ -49,8 +48,19 @@ export class CharacterAttackAnimation extends CharacterAnimation {
     // TODO: This isn't correct, but it's close enough for now
     const additionalOffset = {
       x: [Direction.Up, Direction.Right].includes(this.direction) ? 2 : -2,
-      y: 5,
+      y: 4,
     };
+
+    if (character.gender === Gender.Female) {
+      switch (this.direction) {
+        case Direction.Up:
+        case Direction.Right:
+          additionalOffset.x -= 1;
+          break;
+        default:
+          additionalOffset.x += 1;
+      }
+    }
 
     const screenX = Math.floor(
       screenCoords.x -
@@ -66,10 +76,6 @@ export class CharacterAttackAnimation extends CharacterAnimation {
         playerScreen.y +
         HALF_GAME_HEIGHT +
         additionalOffset.y,
-    );
-
-    const mirrored = [Direction.Right, Direction.Up].includes(
-      character.direction,
     );
 
     setCharacterRectangle(

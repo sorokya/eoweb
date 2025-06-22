@@ -1,11 +1,69 @@
-import { type CharacterMapInfo, Direction, Gender } from 'eolib';
+import { type CharacterMapInfo, Direction, Gender, SitState } from 'eolib';
 import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
 import { getBitmapById, GfxType } from '../gfx';
+import type { Vector2 } from '../vector';
+
+const STANDING_OFFSETS = {
+  [Direction.Up]: { x: 0, y: 0 },
+  [Direction.Down]: { x: -2, y: 0 },
+  [Direction.Left]: { x: -2, y: 0 },
+  [Direction.Right]: { x: 0, y: 0 },
+};
+
+const WALKING_OFFSETS = {
+  [Direction.Up]: { x: 0, y: 1 },
+  [Direction.Down]: { x: -1, y: 1 },
+  [Direction.Left]: { x: -2, y: 1 },
+  [Direction.Right]: { x: -1, y: 1 },
+};
+
+const FEMALE_ATTACK_FRAME_0_OFFSETS = {
+  [Direction.Up]: { x: -1, y: 0 },
+  [Direction.Down]: { x: -1, y: 0 },
+  [Direction.Left]: { x: -1, y: 0 },
+  [Direction.Right]: { x: -1, y: 0 },
+};
+
+const MALE_ATTACK_FRAME_0_OFFSETS = {
+  [Direction.Up]: { x: -2, y: 0 },
+  [Direction.Down]: { x: 0, y: 0 },
+  [Direction.Left]: { x: 0, y: 0 },
+  [Direction.Right]: { x: -2, y: 0 },
+};
+
+const FEMALE_ATTACK_FRAME_1_OFFSETS = {
+  [Direction.Up]: { x: 3, y: 1 },
+  [Direction.Down]: { x: -5, y: 5 },
+  [Direction.Left]: { x: -5, y: 1 },
+  [Direction.Right]: { x: 3, y: 4 },
+};
+
+const MALE_ATTACK_FRAME_1_OFFSETS = {
+  [Direction.Up]: { x: 1, y: 0 },
+  [Direction.Down]: { x: -6, y: 4 },
+  [Direction.Left]: { x: -4, y: 1 },
+  [Direction.Right]: { x: 4, y: 4 },
+};
+
+const MALE_SIT_FLOOR_OFFSETS = {
+  [Direction.Up]: { x: -5, y: 0 },
+  [Direction.Down]: { x: 2, y: 0 },
+  [Direction.Left]: { x: 3, y: 0 },
+  [Direction.Right]: { x: -3, y: 0 },
+};
+
+const FEMALE_SIT_FLOOR_OFFSETS = {
+  [Direction.Up]: { x: -4, y: -2 },
+  [Direction.Down]: { x: 0, y: -2 },
+  [Direction.Left]: { x: 2, y: -2 },
+  [Direction.Right]: { x: -2, y: -2 },
+};
 
 export function renderCharacterHair(
   character: CharacterMapInfo,
   ctx: CanvasRenderingContext2D,
+  animationFrame: number,
   walking: boolean,
   attacking: boolean,
 ) {
@@ -43,53 +101,36 @@ export function renderCharacterHair(
       (character.gender === Gender.Female ? 1 : 0),
   );
 
-  if (walking) {
-    switch (character.direction) {
-      case Direction.Up:
-        screenY += 1;
-        break;
-      case Direction.Down:
-        screenX -= 1;
-        screenY += 1;
-        break;
-      case Direction.Left:
-        screenX -= 2;
-        screenY += 1;
-        break;
-      case Direction.Right:
-        screenX -= 1;
-        screenY += 1;
-        break;
-    }
-  } else if (attacking) {
-    switch (character.direction) {
-      case Direction.Up:
-        screenX -= 1;
-        screenY += 1;
-        break;
-      case Direction.Down:
-        screenX -= 1;
-        screenY += 1;
-        break;
-      case Direction.Left:
-        screenX -= 1;
-        screenY += 1;
-        break;
-      case Direction.Right:
-        screenX -= 1;
-        screenY += 1;
-        break;
-    }
-  } else {
-    switch (character.direction) {
-      case Direction.Down:
-        screenX -= 2;
-        break;
-      case Direction.Left:
-        screenX -= 2;
-        break;
-    }
+  const { direction, gender, sitState } = character;
+
+  let additionalOffset: Vector2;
+  switch (true) {
+    case walking:
+      additionalOffset = WALKING_OFFSETS[direction];
+      break;
+    case attacking:
+      additionalOffset =
+        gender === Gender.Female
+          ? animationFrame
+            ? FEMALE_ATTACK_FRAME_1_OFFSETS[direction]
+            : FEMALE_ATTACK_FRAME_0_OFFSETS[direction]
+          : animationFrame
+            ? MALE_ATTACK_FRAME_1_OFFSETS[direction]
+            : MALE_ATTACK_FRAME_0_OFFSETS[direction];
+      break;
+    case sitState === SitState.Floor:
+      additionalOffset =
+        gender === Gender.Female
+          ? FEMALE_SIT_FLOOR_OFFSETS[direction]
+          : MALE_SIT_FLOOR_OFFSETS[direction];
+      break;
+    default:
+      additionalOffset = STANDING_OFFSETS[direction];
+      break;
   }
+
+  screenX += additionalOffset.x;
+  screenY += additionalOffset.y;
 
   const mirrored = [Direction.Right, Direction.Up].includes(
     character.direction,

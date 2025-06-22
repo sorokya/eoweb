@@ -519,7 +519,13 @@ export class MapRenderer {
       animation.calculateRenderPosition(character, playerScreen);
       this.renderCharacterBehindLayers(character, ctx, walking, attacking);
       animation.render(character, ctx);
-      this.renderCharacterLayers(character, ctx, walking, attacking);
+      this.renderCharacterLayers(
+        character,
+        ctx,
+        animation.animationFrame,
+        walking,
+        attacking,
+      );
       renderCharacterChatBubble(bubble, character, ctx);
       return;
     }
@@ -528,7 +534,7 @@ export class MapRenderer {
       calculateCharacterRenderPositionFloor(character, playerScreen);
       this.renderCharacterBehindLayers(character, ctx, false, false);
       renderCharacterFloor(character, ctx);
-      this.renderCharacterLayers(character, ctx, false, false);
+      this.renderCharacterLayers(character, ctx, 0, false, false);
       renderCharacterChatBubble(bubble, character, ctx);
       return;
     }
@@ -539,7 +545,7 @@ export class MapRenderer {
     this.renderCharacterBehindLayers(character, ctx, false, false);
     renderCharacterStanding(character, ctx);
     renderCharacterChatBubble(bubble, character, ctx);
-    this.renderCharacterLayers(character, ctx, false, false);
+    this.renderCharacterLayers(character, ctx, 0, false, false);
   }
 
   renderNpc(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
@@ -577,10 +583,11 @@ export class MapRenderer {
   renderCharacterLayers(
     character: CharacterMapInfo,
     ctx: CanvasRenderingContext2D,
+    animationFrame: number,
     walking: boolean,
     attacking: boolean,
   ) {
-    renderCharacterHair(character, ctx, walking, attacking);
+    renderCharacterHair(character, ctx, animationFrame, walking, attacking);
   }
 
   renderCursor(

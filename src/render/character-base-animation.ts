@@ -3,6 +3,7 @@ import type { Vector2 } from '../vector';
 
 export abstract class CharacterAnimation {
   ticks: number;
+  animationFrame = 0;
   abstract tick(): void;
   abstract render(
     character: CharacterMapInfo,
