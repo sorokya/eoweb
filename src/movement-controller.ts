@@ -3,7 +3,7 @@ import { Input, getLatestDirectionHeld, isInputHeld } from './input';
 import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
 import { getNextCoords } from './utils/get-next-coords';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
-import type { Client } from './client';
+import { GameState, type Client } from './client';
 import { CharacterAttackAnimation, CharacterWalkAnimation } from './character';
 
 function inputToDirection(input: Input): Direction {
@@ -38,7 +38,11 @@ export class MovementController {
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
     this.attackTicks = Math.max(this.attackTicks - 1, 0);
 
-    if (this.freeze) {
+    if (
+      this.freeze ||
+      this.client.state !== GameState.InGame ||
+      this.client.typing
+    ) {
       return;
     }
 

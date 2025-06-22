@@ -1,82 +1,60 @@
-import { ImGui } from '@zhobo63/imgui-ts';
-import mitt, { type Emitter } from 'mitt';
+import mitt, { Emitter } from 'mitt';
+import { Base } from './base-ui';
 
-export enum ChatTab {
-  Local = 'Local',
-  Global = 'Global',
-  Party = 'Party',
-  Guild = 'Guild',
-  System = 'System',
-}
-
-type ChatModalEvents = {
+type Events = {
+  click: undefined;
   chat: string;
+  focus: undefined;
+  blur: undefined;
 };
 
-export class ChatModal {
-  private emitter: Emitter<ChatModalEvents>;
-  private currentTab: ChatTab = ChatTab.Local;
-  private chatMessages: Record<ChatTab, string[]> = {
-    [ChatTab.Local]: [],
-    [ChatTab.Global]: [],
-    [ChatTab.Party]: [],
-    [ChatTab.Guild]: [],
-    [ChatTab.System]: [],
-  };
-  private chatInputBuffer = new ImGui.ImStringBuffer(256);
+export class Chat extends Base {
+  protected container = document.getElementById('chat');
+  private form: HTMLFormElement = this.container.querySelector('form');
+  private chatWindow = this.container.querySelector('#local-chat');
+  private message: HTMLInputElement = this.container.querySelector('input');
+  private emitter = mitt<Events>();
+
+  addMessage(message: string) {
+    const li = document.createElement('li');
+    li.innerText = message;
+    this.chatWindow.appendChild(li);
+    this.chatWindow.scrollTo(0, this.chatWindow.scrollHeight);
+  }
+
+  focus() {
+    this.message.focus();
+  }
 
   constructor() {
-    this.emitter = mitt<ChatModalEvents>();
+    super();
+    this.form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.emitter.emit('chat', this.message.value);
+      this.message.value = '';
+      return false;
+    });
+
+    this.message.addEventListener('keyup', (e) => {
+      if (e.key === 'Escape') {
+        this.message.value = '';
+        this.message.blur();
+      }
+    });
+
+    this.message.addEventListener('focus', () => {
+      this.emitter.emit('focus', undefined);
+    });
+
+    this.message.addEventListener('blur', () => {
+      this.emitter.emit('blur', undefined);
+    });
   }
 
-  on<Event extends keyof ChatModalEvents>(
+  on<Event extends keyof Events>(
     event: Event,
-    handler: (data: ChatModalEvents[Event]) => void,
+    handler: (data: Events[Event]) => void,
   ) {
     this.emitter.on(event, handler);
-  }
-
-  addMessage(tab: ChatTab, message: string) {
-    this.chatMessages[tab].push(message);
-  }
-
-  render() {
-    ImGui.Begin('Chat', null, ImGui.WindowFlags.AlwaysAutoResize);
-
-    // Tab bar
-    if (ImGui.BeginTabBar('ChatTabs')) {
-      for (const tab of Object.values(ChatTab)) {
-        if (ImGui.BeginTabItem(tab as string)) {
-          this.currentTab = tab as ChatTab;
-          ImGui.EndTabItem();
-        }
-      }
-      ImGui.EndTabBar();
-    }
-
-    // Scrollable message log
-    ImGui.BeginChild('ChatLog', new ImGui.Vec2(400, 200), true);
-    const messages = this.chatMessages[this.currentTab];
-    for (const msg of messages) {
-      ImGui.TextWrapped(msg);
-    }
-    ImGui.SetScrollHereY(1.0);
-    ImGui.EndChild();
-
-    // Message input box
-    ImGui.InputText('##chatInput', this.chatInputBuffer);
-    ImGui.SameLine();
-    if (
-      ImGui.Button('Send') ||
-      (ImGui.IsItemFocused() && ImGui.IsKeyPressed(ImGui.Key.Enter))
-    ) {
-      const msg = this.chatInputBuffer.buffer.trim();
-      if (msg.length > 0) {
-        this.emitter.emit('chat', msg);
-        this.chatInputBuffer.buffer = '';
-      }
-    }
-
-    ImGui.End();
   }
 }

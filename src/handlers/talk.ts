@@ -5,8 +5,7 @@ import {
   TalkPlayerServerPacket,
   TalkServerServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { ChatTab } from '../ui/chat';
+import { ChatTab, type Client } from '../client';
 import { playSfxById, SfxId } from '../sfx';
 import { ChatBubble } from '../chat-bubble';
 

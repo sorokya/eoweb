@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/favicon-32.png">
   <meta name="viewport"
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>EO Web Client</title>
@@ -11,7 +12,162 @@
 <body>
   <div id="container">
     <canvas id="game"></canvas>
-    <canvas id="ui"></canvas>
+    <div id="ui">
+      <div id="cover" class="hidden"></div>
+      <div id="main-menu" class="">
+        <div id="main-menu-logo">
+          <img src="logo.png"/>
+        </div>
+        <button class="img-btn" type="button" data-id="create-account"></button>
+        <button class="img-btn" type="button" data-id="play-game"></button>
+        <button class="img-btn" type="button" data-id="view-credits"></button>
+      </div>
+
+      <div id="login-form" class="hidden">
+        <form>
+          <input type="text" id="login-username"/>
+          <input type="password" id="login-password"/>
+          <div class="buttons">
+            <button class="img-btn" type="submit" data-id="connect"></button>
+            <button class="img-btn" type="button" data-id="cancel"></button>
+          </div>
+        </form>
+      </div>
+
+      <div id="create-account-form" class="hidden">
+        <form>
+          <div>
+            <div>
+              <label for="create-username" class="img-label" data-id="account-name"></label>
+              <input type="text" id="create-username"/>
+            </div>
+            <div>
+              <label for="create-password" class="img-label" data-id="password"></label>
+              <input type="password" id="create-password"/>
+            </div>
+            <div>
+              <label for="create-confirm-password" class="img-label" data-id="confirm-password"></label>
+              <input type="password" id="create-confirm-password"/>
+            </div>
+            <div>
+              <label for="create-name" class="img-label" data-id="real-name"></label>
+              <input type="text" id="create-name"/>
+            </div>
+            <div>
+              <label for="create-location" class="img-label" data-id="location"></label>
+              <input type="text" id="create-location"/>
+            </div>
+            <div>
+              <label for="create-email" class="img-label" data-id="email"></label>
+              <input type="text" id="create-email"/>
+            </div>
+          </div>
+          <div class="buttons">
+            <button class="img-btn" type="submit" data-id="create"></button>
+            <button class="img-btn" type="button" data-id="cancel-big"></button>
+          </div>
+        </form>
+      </div>
+
+      <div id="character-select" class="hidden">
+        <div class="characters">
+          <div class="character">
+            <span class="name"></span>
+            <span class="level"></span>
+            <div class="buttons">
+              <button class="img-btn" type="button" data-id="login"></button>
+              <button class="img-btn" type="button" data-id="delete"></button>
+            </div>
+          </div>
+          <div class="character">
+            <span class="name"></span>
+            <span class="level"></span>
+            <div class="buttons">
+              <button class="img-btn" type="button" data-id="login"></button>
+              <button class="img-btn" type="button" data-id="delete"></button>
+            </div>
+          </div>
+          <div class="character">
+            <span class="name"></span>
+            <span class="level"></span>
+            <div class="buttons">
+              <button class="img-btn" type="button" data-id="login"></button>
+              <button class="img-btn" type="button" data-id="delete"></button>
+            </div>
+          </div>
+        </div>
+        <div class="buttons">
+          <button class="img-btn" type="button" data-id="create"></button>
+          <button class="img-btn" type="button" data-id="password"></button>
+          <button class="img-btn" type="button" data-id="cancel-big"></button>
+        </div>
+      </div>
+
+      <div id="create-character-form" class="hidden">
+        <form>
+          <input type="text" id="create-character-name"/>
+          <div id="create-character-toggles">
+            <div>
+              <div class="img-label" data-id="gender"></div>
+              <button class="img-btn" type="button" data-id="toggle-arrow" data-toggle="gender"></button>
+            </div>
+            <div>
+              <div class="img-label" data-id="hair-style"></div>
+              <button class="img-btn" type="button" data-id="toggle-arrow" data-toggle="hair-style"></button>
+            </div>
+            <div>
+              <div class="img-label" data-id="hair-color"></div>
+              <button class="img-btn" type="button" data-id="toggle-arrow" data-toggle="hair-color"></button>
+            </div>
+            <div>
+              <div class="img-label" data-id="skin"></div>
+              <button class="img-btn" type="button" data-id="toggle-arrow" data-toggle="skin"></button>
+            </div>
+          </div>
+          <div class="buttons">
+            <button class="img-btn" type="submit" data-id="ok"></button>
+            <button class="img-btn" type="button" data-id="cancel"></button>
+          </div>
+        </form>
+      </div>
+
+      <div id="exit-game" class="hidden">
+          <button class="img-btn" type="button" data-id="exit-game"></button>
+      </div>
+
+      <div id="chat" class="hidden">
+        <form>
+          <input type="text" id="chat-message"/>
+          <input type="submit" class="hidden"/>
+          <div id="chat-tab-bar">
+            <button id="btn-chat-tab-local" class="active" disabled>Local</button>
+            <button id="btn-chat-tab-global" disabled>Global</button>
+            <button id="btn-chat-tab-group" disabled>Group</button>
+            <button id="btn-chat-tab-system" disabled>System</button>
+          </div>
+          <ul id="local-chat"></ul>
+          <ul id="global-chat"></ul>
+          <ul id="group-chat"></ul>
+          <ul id="system-chat"></ul>
+        </form>
+      </div>
+
+      <div id="small-alert" class="hidden">
+        <span class="title"></span>
+        <span class="message"></span>
+        <button class="img-btn" type="button" data-id="ok"></button>
+      </div>
+
+      <div id="small-confirm" class="hidden">
+        <span class="title"></span>
+        <span class="message"></span>
+        <div class="buttons">
+          <button class="img-btn" type="button" data-id="ok"></button>
+          <button class="img-btn" type="button" data-id="cancel"></button>
+        </div>
+      </div>
+
+    </div>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>

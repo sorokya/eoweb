@@ -57,8 +57,8 @@ export function getCharacterIntersecting(point: Vector2): EntityRect | null {
   let rect: Rectangle | null = null;
   characterRectangles.forEach((rectangle, id) => {
     if (
-      pointIntersectRect(point, rectangle) ||
-      (rect && rect.depth < rectangle.depth)
+      pointIntersectRect(point, rectangle) &&
+      (!rect || rect.depth < rectangle.depth)
     ) {
       found = id;
       rect = rectangle;
@@ -95,8 +95,8 @@ export function getNpcIntersecting(point: Vector2): EntityRect | null {
   let found = -1;
   npcRectangles.forEach((rectangle, index) => {
     if (
-      pointIntersectRect(point, rectangle) ||
-      (rect && rect.depth < rectangle.depth)
+      pointIntersectRect(point, rectangle) &&
+      (!rect || rect.depth < rectangle.depth)
     ) {
       found = index;
       rect = rectangle;

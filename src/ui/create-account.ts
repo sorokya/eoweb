@@ -1,115 +1,123 @@
-import { ImGui } from '@zhobo63/imgui-ts';
-import type { ImScalar } from '@zhobo63/imgui-ts/src/bind-imgui';
-import mitt, { type Emitter } from 'mitt';
-import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH } from '../consts';
+import mitt from 'mitt';
+import { Base } from './base-ui';
+import { playSfxById, SfxId } from '../sfx';
 
-type CreateAccountModalEvents = {
-  createAccount: {
+type Events = {
+  cancel: undefined;
+  error: { title: string; message: string };
+  create: {
     username: string;
     password: string;
-    confirmPassword: string;
     name: string;
     location: string;
     email: string;
   };
 };
 
-export class CreateAccountModal {
-  private emitter: Emitter<CreateAccountModalEvents>;
-  private username: ImGui.ImStringBuffer = new ImGui.ImStringBuffer(
-    MAX_USERNAME_LENGTH,
-    '',
+export class CreateAccountForm extends Base {
+  protected container = document.getElementById('create-account-form');
+  private form: HTMLFormElement = this.container.querySelector('form');
+  private username: HTMLInputElement =
+    this.container.querySelector('#create-username');
+  private password: HTMLInputElement =
+    this.container.querySelector('#create-password');
+  private confirmPassword: HTMLInputElement = this.container.querySelector(
+    '#create-confirm-password',
+  );
+  private name: HTMLInputElement = this.container.querySelector('#create-name');
+  private location: HTMLInputElement =
+    this.container.querySelector('#create-location');
+  private email: HTMLInputElement =
+    this.container.querySelector('#create-email');
+  private btnCreate: HTMLButtonElement = this.container.querySelector(
+    'button[data-id="create"]',
+  );
+  private btnCancel: HTMLButtonElement = this.container.querySelector(
+    'button[data-id="cancel-big"]',
   );
 
-  private password: ImGui.ImStringBuffer = new ImGui.ImStringBuffer(
-    MAX_PASSWORD_LENGTH,
-    '',
-  );
+  private emitter = mitt<Events>();
 
-  private confirmPassword: ImGui.ImStringBuffer = new ImGui.ImStringBuffer(
-    MAX_PASSWORD_LENGTH,
-    '',
-  );
-
-  private name: ImGui.ImStringBuffer = new ImGui.ImStringBuffer(255, '');
-
-  private location: ImGui.ImStringBuffer = new ImGui.ImStringBuffer(255, '');
-
-  private email: ImGui.ImStringBuffer = new ImGui.ImStringBuffer(255, '');
-
-  private isOpen: ImScalar<boolean> = [false];
+  show() {
+    this.username.value = '';
+    this.password.value = '';
+    this.confirmPassword.value = '';
+    this.name.value = '';
+    this.location.value = '';
+    this.email.value = '';
+    this.container.classList.remove('hidden');
+    this.username.focus();
+  }
 
   constructor() {
-    this.emitter = mitt<CreateAccountModalEvents>();
+    super();
+
+    this.btnCancel.addEventListener('click', () => {
+      playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('cancel');
+    });
+
+    this.form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      playSfxById(SfxId.ButtonClick);
+
+      const username = this.username.value.trim();
+      const password = this.password.value.trim();
+      const confirmPassword = this.confirmPassword.value.trim();
+      const name = this.name.value.trim();
+      const location = this.location.value.trim();
+      const email = this.email.value.trim();
+
+      if (
+        !username ||
+        !password ||
+        !confirmPassword ||
+        !name ||
+        !location ||
+        !email
+      ) {
+        this.emitter.emit('error', {
+          title: 'Wrong input',
+          message:
+            'Some of the fields are still empty. Fill in all the fields and try again',
+        });
+        return false;
+      }
+
+      if (password !== confirmPassword) {
+        this.emitter.emit('error', {
+          title: 'Wrong password',
+          message:
+            'The two passwords you provided are not the same, please try again.',
+        });
+        return false;
+      }
+
+      if (!email.includes('@') || !email.includes('.')) {
+        this.emitter.emit('error', {
+          title: 'Wrong input',
+          message: 'Enter a valid email address.',
+        });
+        return false;
+      }
+
+      this.emitter.emit('create', {
+        username,
+        password,
+        name,
+        location,
+        email,
+      });
+
+      return false;
+    });
   }
 
-  on<Event extends keyof CreateAccountModalEvents>(
+  on<Event extends keyof Events>(
     event: Event,
-    handler: (data: CreateAccountModalEvents[Event]) => void,
+    handler: (data: Events[Event]) => void,
   ) {
     this.emitter.on(event, handler);
-  }
-
-  open() {
-    this.isOpen[0] = true;
-  }
-
-  close() {
-    this.isOpen[0] = false;
-  }
-
-  render() {
-    if (!this.isOpen[0]) {
-      return;
-    }
-
-    const io = ImGui.GetIO();
-    const windowSize = new ImGui.Vec2(400, 200); // desired size of the window
-    const center = new ImGui.Vec2(
-      io.DisplaySize.x / 2 - windowSize.x / 2,
-      io.DisplaySize.y / 2 - windowSize.y / 2,
-    );
-
-    ImGui.SetNextWindowSize(windowSize, ImGui.Cond.Once);
-    ImGui.SetNextWindowPos(center, ImGui.Cond.Once); // or Cond.Always for hard placement
-
-    ImGui.Begin('Create Account', this.isOpen, ImGui.WindowFlags.NoResize);
-    ImGui.InputText('Account name', this.username);
-    ImGui.InputText(
-      'Password',
-      this.password,
-      MAX_PASSWORD_LENGTH,
-      ImGui.InputTextFlags.Password,
-    );
-
-    ImGui.InputText(
-      'Confirm password',
-      this.confirmPassword,
-      MAX_PASSWORD_LENGTH,
-      ImGui.InputTextFlags.Password,
-    );
-
-    ImGui.InputText('Real name', this.name);
-    ImGui.InputText('Location', this.location);
-    ImGui.InputText('Email', this.email);
-
-    if (ImGui.Button('Create')) {
-      this.emitter.emit('createAccount', {
-        username: this.username.buffer,
-        password: this.password.buffer,
-        confirmPassword: this.confirmPassword.buffer,
-        name: this.name.buffer,
-        email: this.email.buffer,
-        location: this.location.buffer,
-      });
-    }
-
-    ImGui.SameLine();
-
-    if (ImGui.Button('Cancel')) {
-      this.isOpen[0] = false;
-    }
-
-    ImGui.End();
   }
 }

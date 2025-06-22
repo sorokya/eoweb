@@ -1,10 +1,14 @@
 import {
-  AccountCreateClientPacket,
+  BigCoords,
+  CharacterMapInfo,
+  Emf,
+  EoReader,
+  Gender,
   InitInitClientPacket,
+  SitState,
   Version,
 } from 'eolib';
 import './style.css';
-import { ImGui, ImGui_Impl } from '@zhobo63/imgui-ts';
 import { PacketBus } from './bus';
 import { Client, GameState } from './client';
 import { GAME_FPS, MAX_CHALLENGE } from './consts';
@@ -15,22 +19,21 @@ import {
   setGameSize,
   setZoom,
 } from './game-state';
-import { CharactersModal } from './ui/characters';
-import { ConnectModal } from './ui/connect';
-import { ErrorModal } from './ui/error';
-import { LoginModal } from './ui/login';
-import { Menu } from './ui/menu';
-import { PacketLogModal, PacketSource } from './ui/packet-log';
 import { randomRange } from './utils/random-range';
-import { ChatModal, ChatTab } from './ui/chat';
 import { playSfxById, SfxId } from './sfx';
-import { CreateAccountModal } from './ui/create-account';
-import { CreateCharacterModal } from './ui/create-character';
+import { MainMenu } from './ui/main-menu';
+import { LoginForm } from './ui/login';
+import { CharacterSelect } from './ui/character-select';
+import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
+import { ExitGame } from './ui/exit-game';
+import { SmallConfirm } from './ui/small-confirm';
+import { CreateAccountForm } from './ui/create-account';
+import { CreateCharacterForm } from './ui/create-character';
+import { Chat } from './ui/chat';
+import { capitalize } from './utils/capitalize';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
-const uiCanvas = document.getElementById('ui') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
-if (!uiCanvas) throw new Error('Canvas ui not found!');
 
 let userOverride = false;
 export function zoomIn() {
@@ -57,16 +60,9 @@ function resizeCanvases() {
 
   canvas.width = w;
   canvas.height = h;
-  uiCanvas.width = w;
-  uiCanvas.height = h;
 
   canvas.style.width = `${w * ZOOM}px`;
   canvas.style.height = `${h * ZOOM}px`;
-
-  uiCanvas.width = rect.width;
-  uiCanvas.height = rect.height;
-  uiCanvas.style.width = `${rect.width}px`;
-  uiCanvas.style.height = `${rect.height}px`;
 
   setGameSize(w, h);
 }
@@ -82,7 +78,6 @@ ctx.imageSmoothingEnabled = false;
 
 let lastTime: DOMHighResTimeStamp | undefined;
 const render = (now: DOMHighResTimeStamp) => {
-  renderUI(now);
   if (!lastTime) {
     lastTime = now;
   }
@@ -101,219 +96,229 @@ const render = (now: DOMHighResTimeStamp) => {
   requestAnimationFrame(render);
 };
 
-const connectModal = new ConnectModal();
-const errorModal = new ErrorModal();
-const loginModal = new LoginModal();
-const createAccountModal = new CreateAccountModal();
-const charactersModal = new CharactersModal();
-const createCharacterModal = new CreateCharacterModal();
-const chatModal = new ChatModal();
 const client = new Client();
 
-chatModal.on('chat', (message) => {
-  client.chat(message.trim());
-});
-
 client.on('error', ({ title, message }) => {
-  chatModal.addMessage(ChatTab.Local, `${title} - ${message}`);
-  errorModal.open(message, title);
+  smallAlertLargeHeader.setContent(message, title || 'Error');
+  smallAlertLargeHeader.show();
 });
 
-client.on('debug', (message) => {
-  chatModal.addMessage(ChatTab.Local, `System: ${message}`);
-});
+client.on('debug', (message) => {});
 
 client.on('accountCreated', () => {
-  errorModal.open('Your account has been created', 'Success');
-  createAccountModal.close();
+  smallAlertLargeHeader.setContent(
+    'Use your new account name and password to login to the game',
+    'Welcome',
+  );
+  smallAlertLargeHeader.show();
+  createAccountForm.hide();
+  mainMenu.show();
 });
 
 client.on('login', (characters) => {
   playSfxById(SfxId.Login);
-  loginModal.close();
-  charactersModal.setCharacters(characters);
-  charactersModal.open();
+  loginForm.hide();
+  characterSelect.setCharacters(characters);
+  characterSelect.show();
 });
 
 client.on('characterCreated', (characters) => {
-  createCharacterModal.close();
-  charactersModal.setCharacters(characters);
-  errorModal.open('Your character has been created', 'Success');
+  createCharacterForm.hide();
+  smallAlertLargeHeader.setContent(
+    'Your character has been created',
+    'Success',
+  );
+  smallAlertLargeHeader.show();
+  characterSelect.setCharacters(characters);
 });
 
-client.on('selectCharacter', () => {
-  chatModal.addMessage(
-    ChatTab.Local,
-    `System: selected character: ${client.name}`,
-  );
-});
+client.on('selectCharacter', () => {});
 
 client.on('chat', ({ name, tab, message }) => {
-  chatModal.addMessage(tab, `${name}: ${message}`);
+  chat.addMessage(`${capitalize(name)}: ${message}`);
 });
 
 client.on('enterGame', ({ news }) => {
-  charactersModal.close();
-  news.forEach((entry, index) => {
-    if (!entry) {
-      return;
-    }
-
-    if (index === 0) {
-      chatModal.addMessage(ChatTab.Local, entry);
-    } else {
-      chatModal.addMessage(ChatTab.Local, `News: ${entry}`);
-    }
-  });
+  characterSelect.hide();
+  exitGame.show();
+  chat.show();
 });
 
-const initializeSocket = () => {
-  if (client.bus) {
+const initializeSocket = (next: 'login' | 'create') => {
+  const socket = new WebSocket('ws://localhost:8077');
+  socket.addEventListener('open', () => {
+    mainMenu.hide();
+    if (next === 'create') {
+      createAccountForm.show();
+    } else if (next === 'login') {
+      loginForm.show();
+    }
+
+    const bus = new PacketBus(socket);
+    bus.on('receive', (data) => {
+      /*
+      packetLogModal.addEntry({
+        source: PacketSource.Server,
+        ...data,
+      });
+      */
+    });
+    bus.on('send', (data) => {
+      /*
+      packetLogModal.addEntry({
+        source: PacketSource.Client,
+        ...data,
+      });
+      */
+    });
+
+    client.setBus(bus);
+
     const init = new InitInitClientPacket();
     init.challenge = randomRange(1, MAX_CHALLENGE);
-    init.hdid = '161726351';
+    init.hdid = '111111111';
     init.version = new Version();
     init.version.major = 0;
     init.version.minor = 0;
     init.version.patch = 28;
     client.bus.send(init);
-  }
-};
-
-const menu = new Menu();
-connectModal.on('connect', (host) => {
-  playSfxById(SfxId.ButtonClick);
-  const socket = new WebSocket(host);
-  socket.addEventListener('open', () => {
-    chatModal.addMessage(ChatTab.Local, 'System: web socket connection opened');
-    if (next === 'create') {
-      createAccountModal.open();
-    } else if (next === 'login') {
-      loginModal.open();
-    }
-
-    next = '';
-    const bus = new PacketBus(socket);
-    bus.on('receive', (data) => {
-      packetLogModal.addEntry({
-        source: PacketSource.Server,
-        ...data,
-      });
-    });
-    bus.on('send', (data) => {
-      packetLogModal.addEntry({
-        source: PacketSource.Client,
-        ...data,
-      });
-    });
-
-    client.setBus(bus);
-    initializeSocket();
-    connectModal.close();
   });
 
   socket.addEventListener('close', () => {
-    errorModal.open(
-      'The connection to the game server was lost, please try again a later time',
-      'Lost connection',
-    );
+    hideAllUi();
+    mainMenu.show();
+    if (client.state !== GameState.Initial) {
+      client.state = GameState.Initial;
+      smallAlertLargeHeader.setContent(
+        'The connection to the game server was lost, please try again a later time',
+        'Lost connection',
+      );
+      smallAlertLargeHeader.show();
+    }
     client.bus = null;
-    chatModal.addMessage(ChatTab.Local, 'System: web socket connection closed');
   });
 
   socket.addEventListener('error', (e) => {
     console.error('Websocket Error', e);
   });
-});
+};
 
-menu.on('connect', () => {
-  connectModal.open();
-  playSfxById(SfxId.ButtonClick);
-});
+const mainMenu = new MainMenu();
+const loginForm = new LoginForm();
+const createAccountForm = new CreateAccountForm();
+const characterSelect = new CharacterSelect();
+const createCharacterForm = new CreateCharacterForm();
+const smallAlertLargeHeader = new SmallAlertLargeHeader();
+const exitGame = new ExitGame();
+const smallConfirm = new SmallConfirm();
+const chat = new Chat();
 
-let next: 'login' | 'create' | '' = '';
-
-menu.on('create-account', () => {
-  playSfxById(SfxId.ButtonClick);
-  if (client.state !== GameState.Connected) {
-    connectModal.open();
-    next = 'create';
-    return;
+const hideAllUi = () => {
+  const uiElements = document.querySelectorAll('#ui>div');
+  for (const el of uiElements) {
+    el.classList.add('hidden');
   }
+};
 
-  createAccountModal.open();
+exitGame.on('click', () => {
+  smallConfirm.setContent(
+    'Are you sure you want to exit the game?',
+    'Exit game',
+  );
+  smallConfirm.setCallback(() => {
+    client.disconnect();
+    hideAllUi();
+    mainMenu.show();
+  });
+  smallConfirm.show();
 });
 
-menu.on('login', () => {
-  playSfxById(SfxId.ButtonClick);
-  if (client.state !== GameState.Connected) {
-    connectModal.open();
-    next = 'login';
-    return;
+mainMenu.on('play-game', () => {
+  if (client.state === GameState.Initial) {
+    initializeSocket('login');
+  } else {
+    mainMenu.hide();
+    loginForm.show();
   }
-  loginModal.open();
 });
 
-loginModal.on('login', ({ username, password }) => {
-  playSfxById(SfxId.ButtonClick);
-  client.login(username, password);
+mainMenu.on('create-account', () => {
+  if (client.state === GameState.Initial) {
+    initializeSocket('create');
+  } else {
+    mainMenu.hide();
+    createAccountForm.show();
+  }
 });
 
-createAccountModal.on('createAccount', (data) => {
-  playSfxById(SfxId.ButtonClick);
+createAccountForm.on('cancel', () => {
+  createAccountForm.hide();
+  mainMenu.show();
+});
+
+createAccountForm.on('error', ({ title, message }) => {
+  smallAlertLargeHeader.setContent(message, title);
+  smallAlertLargeHeader.show();
+});
+
+createAccountForm.on('create', (data) => {
   client.requestAccountCreation(data);
 });
 
-charactersModal.on('select-character', (characterId) => {
-  playSfxById(SfxId.ButtonClick);
-  client.selectCharacter(characterId);
+loginForm.on('login', ({ username, password }) => {
+  client.login(username, password);
 });
 
-charactersModal.on('create-character', () => {
-  playSfxById(SfxId.ButtonClick);
-  createCharacterModal.open();
+loginForm.on('cancel', () => {
+  loginForm.hide();
+  mainMenu.show();
 });
 
-createCharacterModal.on('createCharacter', (data) => {
-  playSfxById(SfxId.ButtonClick);
+characterSelect.on('cancel', () => {
+  client.disconnect();
+  characterSelect.hide();
+  mainMenu.show();
+});
+
+characterSelect.on('selectCharacter', (id) => {
+  client.selectCharacter(id);
+});
+
+characterSelect.on('error', ({ title, message }) => {
+  smallAlertLargeHeader.setContent(message, title);
+  smallAlertLargeHeader.show();
+});
+
+characterSelect.on('create', () => {
+  createCharacterForm.show();
+});
+
+createCharacterForm.on('create', (data) => {
   client.requestCharacterCreation(data);
 });
 
-const packetLogModal = new PacketLogModal();
-menu.on('packet-log', () => {
-  packetLogModal.open();
+chat.on('chat', (message) => {
+  client.chat(message);
 });
 
-let imguiClockMs = 0;
-let lastRafNow = 0;
-function renderUI(now: number) {
-  if (!lastRafNow) lastRafNow = now;
-  const dtMs = Math.max(now - lastRafNow, 1);
-  lastRafNow = now;
-  imguiClockMs += dtMs;
+chat.on('focus', () => {
+  client.typing = true;
+});
 
-  ImGui_Impl.NewFrame(imguiClockMs);
-  ImGui.NewFrame();
-
-  menu.render();
-  connectModal.render();
-  packetLogModal.render();
-  errorModal.render();
-  loginModal.render();
-  createAccountModal.render();
-  charactersModal.render();
-  chatModal.render();
-  createCharacterModal.render();
-
-  ImGui.EndFrame();
-  ImGui.Render();
-  ImGui_Impl.RenderDrawData(ImGui.GetDrawData());
-}
+chat.on('blur', () => {
+  client.typing = false;
+});
 
 // Tick loop
 setInterval(() => {
   client.tick();
 }, 120);
+
+window.addEventListener('keyup', (e) => {
+  if (client.state === GameState.InGame && e.key === 'Enter') {
+    chat.focus();
+  }
+});
 
 window.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
@@ -336,24 +341,22 @@ window.addEventListener('click', (e) => {
 });
 
 window.addEventListener('DOMContentLoaded', async () => {
-  await ImGui.default();
+  const response = await fetch('/maps/00005.emf');
+  const map = await response.arrayBuffer();
+  const reader = new EoReader(new Uint8Array(map));
+  const emf = Emf.deserialize(reader);
+  client.setMap(emf);
 
-  ImGui.CHECKVERSION();
-  ImGui.CreateContext();
-  const io: ImGui.IO = ImGui.GetIO();
-  ImGui.StyleColorsDark();
-  io.Fonts.AddFontDefault();
-
-  const uiCtx = uiCanvas.getContext('webgl2', {
-    alpha: true,
-    premultipliedAlpha: false,
-  });
-
-  if (!uiCtx) {
-    throw new Error('Failed to get webgl2 context');
-  }
-
-  ImGui_Impl.Init(uiCtx);
+  client.playerId = 1;
+  const character = new CharacterMapInfo();
+  character.playerId = 1;
+  character.coords = new BigCoords();
+  character.coords.x = 35;
+  character.coords.y = 38;
+  character.gender = Gender.Male;
+  character.sitState = SitState.Floor;
+  character.skin = 0;
+  client.nearby.characters = [character];
 
   requestAnimationFrame(render);
 });

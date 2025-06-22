@@ -55,11 +55,6 @@ function swipedDir(dx: number, dy: number): Input {
 }
 
 window.addEventListener('keydown', (e) => {
-  const io = ImGui.GetIO();
-  if (io.WantCaptureKeyboard) {
-    return;
-  }
-
   if ((e.ctrlKey || e.metaKey) && ['=', '+', '-', '_'].includes(e.key)) {
     e.preventDefault();
     if (e.key === '=' || e.key === '+') zoomIn();
@@ -98,11 +93,6 @@ window.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('keyup', (e) => {
-  const io = ImGui.GetIO();
-  if (io.WantCaptureKeyboard) {
-    return;
-  }
-
   switch (e.key) {
     case 'w':
     case 'W':

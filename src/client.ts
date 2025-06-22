@@ -69,7 +69,6 @@ import { MovementController } from './movement-controller';
 import type { NpcAnimation } from './npc';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { GfxType, loadBitmapById } from './gfx';
-import { ChatTab } from './ui/chat';
 import { registerTalkHandlers } from './handlers/talk';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerArenaHandlers } from './handlers/arena';
@@ -80,6 +79,10 @@ import { ChatBubble } from './chat-bubble';
 import { Door } from './door';
 import { registerDoorHandlers } from './handlers/door';
 import { getDoorIntersecting } from './collision';
+
+export enum ChatTab {
+  Local = 0,
+}
 
 type ClientEvents = {
   error: { title: string; message: string };
@@ -103,7 +106,6 @@ export enum GameState {
 type AccountCreateData = {
   username: string;
   password: string;
-  confirmPassword: string;
   name: string;
   location: string;
   email: string;
@@ -173,6 +175,7 @@ export class Client {
   movementController: MovementController;
   npcMetadata = getNpcMetaData();
   doors: Door[] = [];
+  typing = false;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -357,6 +360,7 @@ export class Client {
     this.characterChats.clear();
     this.npcChats.clear();
     if (this.map) {
+      this.mapRenderer.buildCaches();
       this.loadDoors();
     }
   }
@@ -606,7 +610,6 @@ export class Client {
     packet.characterId = this.characterId;
     packet.sessionId = this.sessionId;
     this.bus.send(packet);
-    this.mapRenderer.buildCaches();
   }
 
   rangeRequest(playerIds: number[], npcIndexes: number[]) {
@@ -665,5 +668,10 @@ export class Client {
     const packet = new SitRequestClientPacket();
     packet.sitAction = SitAction.Stand;
     this.bus.send(packet);
+  }
+
+  disconnect() {
+    this.state = GameState.Initial;
+    this.bus.disconnect();
   }
 }

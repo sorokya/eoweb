@@ -9,9 +9,8 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
+import { type Client, ChatTab } from '../client';
 import { NpcWalkAnimation } from '../npc';
-import { ChatTab } from '../ui/chat';
 import { ChatBubble } from '../chat-bubble';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {

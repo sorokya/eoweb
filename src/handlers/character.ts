@@ -1,8 +1,4 @@
 import {
-  AccountCreateClientPacket,
-  AccountReply,
-  AccountReplySequenceStart,
-  AccountReplyServerPacket,
   CharacterCreateClientPacket,
   CharacterReply,
   CharacterReplyServerPacket,
@@ -16,13 +12,16 @@ function handleCharacterReply(client: Client, reader: EoReader) {
   const packet = CharacterReplyServerPacket.deserialize(reader);
   switch (packet.replyCode) {
     case CharacterReply.Exists:
-      client.showError('A character with that name already exists');
+      client.showError('A character with that name already exists', 'Request denied');
       return;
     case CharacterReply.NotApproved:
-      client.showError('That character name is not approved');
+      client.showError('That character name is not approved', 'Request denied');
       return;
     case CharacterReply.Full:
-      client.showError('You have too many characters');
+      client.showError(
+        'You can only have 3 characters. Please delete a character and try again.',
+        'Request denied',
+      );
       return;
     case CharacterReply.Deleted:
       client.showError('Your character has been deleted', 'Success');

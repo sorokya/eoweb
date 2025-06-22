@@ -60,11 +60,8 @@ export class PacketBus {
     this.emitter.on(event, handler);
   }
 
-  off<Event extends keyof PacketBusEvents>(
-    event: Event,
-    handler: (data: PacketBusEvents[Event]) => void,
-  ) {
-    this.emitter.off(event, handler);
+  disconnect() {
+    this.socket.close();
   }
 
   setSequence(sequence: SequenceStart) {
