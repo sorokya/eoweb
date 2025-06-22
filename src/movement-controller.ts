@@ -6,7 +6,7 @@ import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 import { GameState, type Client } from './client';
 import { CharacterAttackAnimation, CharacterWalkAnimation } from './character';
 
-function inputToDirection(input: Input): Direction {
+export function inputToDirection(input: Input): Direction {
   switch (input) {
     case Input.Up:
       return Direction.Up;
@@ -25,6 +25,8 @@ export class MovementController {
   faceTicks = FACE_TICKS;
   sitTicks = SIT_TICKS;
   attackTicks = ATTACK_TICKS;
+  lastDirectionHeld: Direction | null = null;
+  directionExpireTicks = 2;
 
   freeze = false;
 
@@ -36,7 +38,8 @@ export class MovementController {
     this.faceTicks = Math.max(this.faceTicks - 1, 0);
     this.walkTicks = Math.max(this.walkTicks - 1, 0);
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
-    this.attackTicks = Math.max(this.attackTicks - 1, 0);
+    this.attackTicks = Math.max(this.attackTicks - 1, -1);
+    this.directionExpireTicks = Math.max(this.directionExpireTicks - 1, 0);
 
     if (
       this.freeze ||
@@ -63,21 +66,27 @@ export class MovementController {
       return;
     }
 
+    if (!this.directionExpireTicks && this.lastDirectionHeld !== null) {
+      this.lastDirectionHeld = null;
+    }
+
     if (
-      !this.attackTicks &&
+      this.attackTicks <= 0 &&
       isInputHeld(Input.Attack) &&
       character.sitState === SitState.Stand
     ) {
-      if (walking) {
+      if (!walking) {
+        this.client.characterAnimations.set(
+          character.playerId,
+          new CharacterAttackAnimation(character.direction),
+        );
+        if (this.lastDirectionHeld !== null) {
+          character.direction = this.lastDirectionHeld;
+        }
+        this.client.attack(character.direction, getTimestamp());
+        this.attackTicks = ATTACK_TICKS;
         return;
       }
-      this.client.characterAnimations.set(
-        character.playerId,
-        new CharacterAttackAnimation(character.direction),
-      );
-      this.client.attack(character.direction, getTimestamp());
-      this.attackTicks = ATTACK_TICKS;
-      return;
     }
 
     if (character.sitState === SitState.Stand && directionHeld !== null) {
@@ -92,7 +101,12 @@ export class MovementController {
         return;
       }
 
-      if (!this.walkTicks || (walking && directionHeld !== character.direction && (animation as CharacterWalkAnimation).isOnLastFrame())) {
+      if (
+        !this.walkTicks ||
+        (walking &&
+          directionHeld !== character.direction &&
+          (animation as CharacterWalkAnimation).isOnLastFrame())
+      ) {
         const from = bigCoordsToCoords(character.coords);
         const to = getNextCoords(
           from,

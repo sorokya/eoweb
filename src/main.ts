@@ -31,6 +31,8 @@ import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { Chat } from './ui/chat';
 import { capitalize } from './utils/capitalize';
+import { inputToDirection, MovementController } from './movement-controller';
+import { getLatestDirectionHeld, Input } from './input';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
@@ -89,6 +91,17 @@ const render = (now: DOMHighResTimeStamp) => {
   }
 
   lastTime = now;
+
+  if (client.movementController.attackTicks < 0) {
+    const latestInput = getLatestDirectionHeld();
+    const directionHeld =
+      latestInput !== null ? inputToDirection(latestInput) : null;
+
+    if (directionHeld !== null) {
+      client.movementController.lastDirectionHeld = directionHeld;
+      client.movementController.directionExpireTicks = 2;
+    }
+  }
 
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -360,3 +373,4 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   requestAnimationFrame(render);
 });
+
