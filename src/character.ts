@@ -17,7 +17,11 @@ import type { Vector2 } from './vector';
 import { getBitmapById, GfxType } from './gfx';
 import { isoToScreen } from './utils/iso-to-screen';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
-import { Rectangle, setCharacterRectangle } from './collision';
+import {
+  getCharacterRectangle,
+  Rectangle,
+  setCharacterRectangle,
+} from './collision';
 
 export abstract class CharacterAnimation {
   ticks: number;
@@ -26,6 +30,10 @@ export abstract class CharacterAnimation {
     character: CharacterMapInfo,
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
+  ): void;
+  abstract calculateRenderPosition(
+    character: CharacterMapInfo,
+    playerScreen: Vector2,
   ): void;
 }
 
@@ -72,27 +80,10 @@ export class CharacterWalkAnimation extends CharacterAnimation {
     this.ticks = Math.max(this.ticks - 1, 0);
   }
 
-  render(
+  calculateRenderPosition(
     character: CharacterMapInfo,
     playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    const bmp = getBitmapById(GfxType.SkinSprites, 2);
-    if (!bmp) {
-      return;
-    }
-
-    const startX =
-      character.gender === Gender.Female ? 0 : CHARACTER_WALKING_WIDTH * 8;
-
-    const sourceX =
-      startX +
-      ([Direction.Up, Direction.Left].includes(character.direction)
-        ? CHARACTER_WALKING_WIDTH * WALK_ANIMATION_FRAMES
-        : 0) +
-      CHARACTER_WALKING_WIDTH * this.animationFrame;
-    const sourceY = character.skin * CHARACTER_WALKING_HEIGHT;
-
+  ): void {
     const screenCoords = isoToScreen(this.from);
 
     const additionalOffset = { x: 0, y: 0 };
@@ -154,6 +145,31 @@ export class CharacterWalkAnimation extends CharacterAnimation {
         additionalOffset.y,
     );
 
+    setCharacterRectangle(
+      character.playerId,
+      new Rectangle(
+        { x: screenX, y: screenY },
+        CHARACTER_WALKING_WIDTH,
+        CHARACTER_WALKING_HEIGHT,
+      ),
+    );
+  }
+
+  render(
+    character: CharacterMapInfo,
+    playerScreen: Vector2,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const bmp = getBitmapById(GfxType.SkinSprites, 2);
+    if (!bmp) {
+      return;
+    }
+
+    const rect = getCharacterRectangle(character.playerId);
+    if (!rect) {
+      return;
+    }
+
     const mirrored = [Direction.Right, Direction.Up].includes(
       character.direction,
     );
@@ -164,8 +180,21 @@ export class CharacterWalkAnimation extends CharacterAnimation {
       ctx.scale(-1, 1); // Flip horizontally
     }
 
+    const startX =
+      character.gender === Gender.Female ? 0 : CHARACTER_WALKING_WIDTH * 8;
+
+    const sourceX =
+      startX +
+      ([Direction.Up, Direction.Left].includes(character.direction)
+        ? CHARACTER_WALKING_WIDTH * WALK_ANIMATION_FRAMES
+        : 0) +
+      CHARACTER_WALKING_WIDTH * this.animationFrame;
+    const sourceY = character.skin * CHARACTER_WALKING_HEIGHT;
+
     const drawX = Math.floor(
-      mirrored ? GAME_WIDTH - screenX - CHARACTER_WALKING_WIDTH : screenX,
+      mirrored
+        ? GAME_WIDTH - CHARACTER_WALKING_WIDTH - rect.position.x
+        : rect.position.x,
     );
 
     ctx.drawImage(
@@ -175,18 +204,9 @@ export class CharacterWalkAnimation extends CharacterAnimation {
       CHARACTER_WALKING_WIDTH,
       CHARACTER_WALKING_HEIGHT,
       drawX,
-      screenY,
+      rect.position.y,
       CHARACTER_WALKING_WIDTH,
       CHARACTER_WALKING_HEIGHT,
-    );
-
-    setCharacterRectangle(
-      character.playerId,
-      new Rectangle(
-        { x: screenX, y: screenY },
-        CHARACTER_WALKING_WIDTH,
-        CHARACTER_WALKING_HEIGHT,
-      ),
     );
 
     if (mirrored) {
@@ -222,27 +242,10 @@ export class CharacterAttackAnimation extends CharacterAnimation {
     this.ticks = Math.max(this.ticks - 1, 0);
   }
 
-  render(
+  calculateRenderPosition(
     character: CharacterMapInfo,
     playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    const bmp = getBitmapById(GfxType.SkinSprites, 3);
-    if (!bmp) {
-      return;
-    }
-
-    const startX =
-      character.gender === Gender.Female ? 0 : CHARACTER_ATTACK_WIDTH * 4;
-
-    const sourceX =
-      startX +
-      ([Direction.Up, Direction.Left].includes(character.direction)
-        ? CHARACTER_ATTACK_WIDTH * ATTACK_ANIMATION_FRAMES
-        : 0) +
-      CHARACTER_ATTACK_WIDTH * this.animationFrame;
-    const sourceY = character.skin * CHARACTER_HEIGHT;
-
+  ): void {
     const screenCoords = isoToScreen(character.coords);
 
     // TODO: This isn't correct, but it's close enough for now
@@ -271,6 +274,35 @@ export class CharacterAttackAnimation extends CharacterAnimation {
       character.direction,
     );
 
+    setCharacterRectangle(
+      character.playerId,
+      new Rectangle(
+        { x: screenX, y: screenY },
+        CHARACTER_ATTACK_WIDTH,
+        CHARACTER_HEIGHT,
+      ),
+    );
+  }
+
+  render(
+    character: CharacterMapInfo,
+    playerScreen: Vector2,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const bmp = getBitmapById(GfxType.SkinSprites, 3);
+    if (!bmp) {
+      return;
+    }
+
+    const rect = getCharacterRectangle(character.playerId);
+    if (!rect) {
+      return;
+    }
+
+    const mirrored = [Direction.Right, Direction.Up].includes(
+      character.direction,
+    );
+
     if (mirrored) {
       ctx.save(); // Save the current context state
       ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
@@ -278,8 +310,21 @@ export class CharacterAttackAnimation extends CharacterAnimation {
     }
 
     const drawX = Math.floor(
-      mirrored ? GAME_WIDTH - screenX - CHARACTER_ATTACK_WIDTH : screenX,
+      mirrored
+        ? GAME_WIDTH - rect.position.x - CHARACTER_ATTACK_WIDTH
+        : rect.position.x,
     );
+
+    const startX =
+      character.gender === Gender.Female ? 0 : CHARACTER_ATTACK_WIDTH * 4;
+
+    const sourceX =
+      startX +
+      ([Direction.Up, Direction.Left].includes(character.direction)
+        ? CHARACTER_ATTACK_WIDTH * ATTACK_ANIMATION_FRAMES
+        : 0) +
+      CHARACTER_ATTACK_WIDTH * this.animationFrame;
+    const sourceY = character.skin * CHARACTER_HEIGHT;
 
     ctx.drawImage(
       bmp,
@@ -288,18 +333,9 @@ export class CharacterAttackAnimation extends CharacterAnimation {
       CHARACTER_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
       drawX,
-      screenY,
+      rect.position.y,
       CHARACTER_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
-    );
-
-    setCharacterRectangle(
-      character.playerId,
-      new Rectangle(
-        { x: screenX, y: screenY },
-        CHARACTER_ATTACK_WIDTH,
-        CHARACTER_HEIGHT,
-      ),
     );
 
     if (mirrored) {

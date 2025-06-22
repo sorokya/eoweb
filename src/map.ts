@@ -27,7 +27,7 @@ import { GfxType, getBitmapById } from './gfx';
 import { isoToScreen } from './utils/iso-to-screen';
 import type { Vector2 } from './vector';
 import { GameState, type Client } from './client';
-import { CharacterWalkAnimation } from './character';
+import { CharacterAttackAnimation, CharacterWalkAnimation } from './character';
 import {
   getCharacterIntersecting,
   getCharacterRectangle,
@@ -517,21 +517,159 @@ export class MapRenderer {
 
     const animation = this.client.characterAnimations.get(character.playerId);
     if (animation) {
+      const walking = animation instanceof CharacterWalkAnimation;
+      const attacking = animation instanceof CharacterAttackAnimation;
+      animation.calculateRenderPosition(character, playerScreen);
+      //this.renderCharacterBehindLayers(character, ctx, walking, attacking);
       animation.render(character, playerScreen, ctx);
+      this.renderCharacterLayers(character, ctx, walking, attacking);
       this.renderCharacterChatBubble(character, ctx);
       return;
     }
 
     if (character.sitState === SitState.Floor) {
+      this.calculateCharacterRenderPositionFloor(character, playerScreen);
+      this.renderCharacterBehindLayers(character, ctx, false, false);
       this.renderCharacterFloor(character, playerScreen, ctx);
+      this.renderCharacterLayers(character, ctx, false, false);
       this.renderCharacterChatBubble(character, ctx);
       return;
     }
 
     // TODO: Chair
 
+    this.calculateCharacterRenderPositionStanding(character, playerScreen);
+    this.renderCharacterBehindLayers(character, ctx, false, false);
     this.renderCharacterStanding(character, playerScreen, ctx);
     this.renderCharacterChatBubble(character, ctx);
+    this.renderCharacterLayers(character, ctx, false, false);
+  }
+
+  renderCharacterBehindLayers(
+    character: CharacterMapInfo,
+    ctx: CanvasRenderingContext2D,
+    walking: boolean,
+    attacking: boolean,
+  ) {}
+
+  renderCharacterLayers(
+    character: CharacterMapInfo,
+    ctx: CanvasRenderingContext2D,
+    walking: boolean,
+    attacking: boolean,
+  ) {
+    this.renderCharacterHair(character, ctx, walking, attacking);
+  }
+
+  renderCharacterHair(
+    character: CharacterMapInfo,
+    ctx: CanvasRenderingContext2D,
+    walking: boolean,
+    attacking: boolean,
+  ) {
+    if (character.hairStyle <= 0) {
+      return;
+    }
+
+    const baseGfxId = (character.hairStyle - 1) * 40 + character.hairColor * 4;
+    const offset =
+      2 *
+      ([Direction.Down, Direction.Right].includes(character.direction) ? 0 : 1);
+    const gfxId = baseGfxId + 2 + offset;
+    const bmp = getBitmapById(
+      character.gender === Gender.Female
+        ? GfxType.FemaleHair
+        : GfxType.MaleHair,
+      gfxId,
+    );
+
+    if (!bmp) {
+      return;
+    }
+
+    const rect = getCharacterRectangle(character.playerId);
+    if (!rect) {
+      return;
+    }
+
+    let screenX = Math.floor(
+      rect.position.x + rect.width / 2 - bmp.width / 2 + 1,
+    );
+
+    let screenY = Math.floor(
+      rect.position.y -
+        bmp.height +
+        41 +
+        (character.gender === Gender.Female ? 1 : 0),
+    );
+
+    if (walking) {
+      switch (character.direction) {
+        case Direction.Up:
+          screenY += 1;
+          break;
+        case Direction.Down:
+          screenX -= 1;
+          screenY += 1;
+          break;
+        case Direction.Left:
+          screenX -= 2;
+          screenY += 1;
+          break;
+        case Direction.Right:
+          screenX -= 1;
+          screenY += 1;
+          break;
+      }
+    } else if (attacking) {
+      switch (character.direction) {
+        case Direction.Up:
+          screenX -= 1;
+          screenY += 1;
+          break;
+        case Direction.Down:
+          screenX -= 1;
+          screenY += 1;
+          break;
+        case Direction.Left:
+          screenX -= 1;
+          screenY += 1;
+          break;
+        case Direction.Right:
+          screenX -= 1;
+          screenY += 1;
+          break;
+      }
+    } else {
+      switch (character.direction) {
+        case Direction.Down:
+          screenX -= 2;
+          break;
+        case Direction.Left:
+          screenX -= 2;
+          break;
+      }
+    }
+
+    const mirrored = [Direction.Right, Direction.Up].includes(
+      character.direction,
+    );
+
+    if (mirrored) {
+      ctx.save(); // Save the current context state
+      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
+      ctx.scale(-1, 1); // Flip horizontally
+    }
+
+    const drawX = Math.floor(
+      mirrored ? GAME_WIDTH - screenX - bmp.width : screenX,
+    );
+
+    ctx.drawImage(bmp, drawX, screenY);
+
+    if (mirrored) {
+      ctx.restore();
+    }
   }
 
   renderCharacterChatBubble(
@@ -557,25 +695,10 @@ export class MapRenderer {
     );
   }
 
-  renderCharacterFloor(
+  calculateCharacterRenderPositionFloor(
     character: CharacterMapInfo,
     playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
   ) {
-    const bmp = getBitmapById(GfxType.SkinSprites, 6);
-    if (!bmp) {
-      return;
-    }
-
-    const startX =
-      character.gender === Gender.Female ? 0 : CHARACTER_SIT_GROUND_WIDTH * 2;
-    const sourceX =
-      startX +
-      ([Direction.Up, Direction.Left].includes(character.direction)
-        ? CHARACTER_SIT_GROUND_WIDTH
-        : 0);
-    const sourceY = character.skin * CHARACTER_SIT_GROUND_HEIGHT;
-
     const screenCoords = isoToScreen(character.coords);
 
     const additionalOffset = { x: 0, y: 0 };
@@ -614,6 +737,40 @@ export class MapRenderer {
         additionalOffset.y,
     );
 
+    setCharacterRectangle(
+      character.playerId,
+      new Rectangle(
+        { x: screenX, y: screenY },
+        CHARACTER_SIT_GROUND_WIDTH,
+        CHARACTER_SIT_GROUND_HEIGHT,
+      ),
+    );
+  }
+
+  renderCharacterFloor(
+    character: CharacterMapInfo,
+    playerScreen: Vector2,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const bmp = getBitmapById(GfxType.SkinSprites, 6);
+    if (!bmp) {
+      return;
+    }
+
+    const rect = getCharacterRectangle(character.playerId);
+    if (!rect) {
+      return;
+    }
+
+    const startX =
+      character.gender === Gender.Female ? 0 : CHARACTER_SIT_GROUND_WIDTH * 2;
+    const sourceX =
+      startX +
+      ([Direction.Up, Direction.Left].includes(character.direction)
+        ? CHARACTER_SIT_GROUND_WIDTH
+        : 0);
+    const sourceY = character.skin * CHARACTER_SIT_GROUND_HEIGHT;
+
     const mirrored = [Direction.Right, Direction.Up].includes(
       character.direction,
     );
@@ -625,7 +782,9 @@ export class MapRenderer {
     }
 
     const drawX = Math.floor(
-      mirrored ? GAME_WIDTH - screenX - CHARACTER_SIT_GROUND_WIDTH : screenX,
+      mirrored
+        ? GAME_WIDTH - rect.position.x - CHARACTER_SIT_GROUND_WIDTH
+        : rect.position.x,
     );
 
     ctx.drawImage(
@@ -635,18 +794,9 @@ export class MapRenderer {
       CHARACTER_SIT_GROUND_WIDTH,
       CHARACTER_SIT_GROUND_HEIGHT,
       drawX,
-      screenY,
+      rect.position.y,
       CHARACTER_SIT_GROUND_WIDTH,
       CHARACTER_SIT_GROUND_HEIGHT,
-    );
-
-    setCharacterRectangle(
-      character.playerId,
-      new Rectangle(
-        { x: screenY, y: screenY },
-        CHARACTER_SIT_GROUND_WIDTH,
-        CHARACTER_SIT_GROUND_HEIGHT,
-      ),
     );
 
     if (mirrored) {
@@ -654,24 +804,10 @@ export class MapRenderer {
     }
   }
 
-  renderCharacterStanding(
+  calculateCharacterRenderPositionStanding(
     character: CharacterMapInfo,
     playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
   ) {
-    const bmp = getBitmapById(GfxType.SkinSprites, 1);
-    if (!bmp) {
-      return;
-    }
-
-    const startX = character.gender === Gender.Female ? 0 : CHARACTER_WIDTH * 2;
-    const sourceX =
-      startX +
-      ([Direction.Up, Direction.Left].includes(character.direction)
-        ? CHARACTER_WIDTH
-        : 0);
-    const sourceY = character.skin * CHARACTER_HEIGHT;
-
     const screenCoords = isoToScreen(character.coords);
 
     const screenX = Math.floor(
@@ -686,6 +822,43 @@ export class MapRenderer {
       character.direction,
     );
 
+    setCharacterRectangle(
+      character.playerId,
+      new Rectangle(
+        { x: screenX, y: screenY },
+        CHARACTER_WIDTH,
+        CHARACTER_HEIGHT,
+      ),
+    );
+  }
+
+  renderCharacterStanding(
+    character: CharacterMapInfo,
+    playerScreen: Vector2,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const bmp = getBitmapById(GfxType.SkinSprites, 1);
+    if (!bmp) {
+      return;
+    }
+
+    const rect = getCharacterRectangle(character.playerId);
+    if (!rect) {
+      return;
+    }
+
+    const startX = character.gender === Gender.Female ? 0 : CHARACTER_WIDTH * 2;
+    const sourceX =
+      startX +
+      ([Direction.Up, Direction.Left].includes(character.direction)
+        ? CHARACTER_WIDTH
+        : 0);
+    const sourceY = character.skin * CHARACTER_HEIGHT;
+
+    const mirrored = [Direction.Right, Direction.Up].includes(
+      character.direction,
+    );
+
     if (mirrored) {
       ctx.save(); // Save the current context state
       ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
@@ -693,7 +866,7 @@ export class MapRenderer {
     }
 
     const drawX = Math.floor(
-      mirrored ? GAME_WIDTH - screenX - CHARACTER_WIDTH : screenX,
+      mirrored ? GAME_WIDTH - rect.position.x - CHARACTER_WIDTH : rect.position.x,
     );
 
     ctx.drawImage(
@@ -703,18 +876,9 @@ export class MapRenderer {
       CHARACTER_WIDTH,
       CHARACTER_HEIGHT,
       drawX,
-      screenY,
+      rect.position.y,
       CHARACTER_WIDTH,
       CHARACTER_HEIGHT,
-    );
-
-    setCharacterRectangle(
-      character.playerId,
-      new Rectangle(
-        { x: screenX, y: screenY },
-        CHARACTER_WIDTH,
-        CHARACTER_HEIGHT,
-      ),
     );
 
     if (mirrored) {
