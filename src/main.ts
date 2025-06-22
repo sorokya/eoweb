@@ -58,12 +58,19 @@ export function zoomReset() {
   resizeCanvases();
 }
 function resizeCanvases() {
-  const rect = document.getElementById('container')?.getBoundingClientRect();
+  const container = document.getElementById('container');
+  if (!container) return;
 
-  if (!userOverride) setZoom(rect.width >= 1280 ? 2 : 1);
+  // Prefer visualViewport for accurate mobile height
+  const viewportWidth =
+    window.visualViewport?.width ?? container.getBoundingClientRect().width;
+  const viewportHeight =
+    window.visualViewport?.height ?? container.getBoundingClientRect().height;
 
-  const w = Math.floor(rect.width / ZOOM);
-  const h = Math.floor(rect.height / ZOOM);
+  if (!userOverride) setZoom(viewportWidth >= 1280 ? 2 : 1);
+
+  const w = Math.floor(viewportWidth / ZOOM);
+  const h = Math.floor(viewportHeight / ZOOM);
 
   canvas.width = w;
   canvas.height = h;
@@ -71,7 +78,7 @@ function resizeCanvases() {
   canvas.style.width = `${w * ZOOM}px`;
   canvas.style.height = `${h * ZOOM}px`;
 
-  if (client.state === GameState.InGame && rect.width < 940) {
+  if (client.state === GameState.InGame && viewportWidth < 940) {
     mobileControls.show();
   } else {
     mobileControls.hide();
@@ -373,21 +380,26 @@ window.addEventListener('keyup', (e) => {
   }
 });
 
-window.addEventListener('touchmove', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  client.setMousePosition({
-    x: Math.min(
-      Math.max(Math.floor((e.touches[0].clientX - rect.left) * scaleX), 0),
-      canvas.width,
-    ),
-    y: Math.min(
-      Math.max(Math.floor((e.touches[0].clientY - rect.top) * scaleY), 0),
-      canvas.height,
-    ),
-  });
-});
+window.addEventListener(
+  'touchmove',
+  (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    client.setMousePosition({
+      x: Math.min(
+        Math.max(Math.floor((e.touches[0].clientX - rect.left) * scaleX), 0),
+        canvas.width,
+      ),
+      y: Math.min(
+        Math.max(Math.floor((e.touches[0].clientY - rect.top) * scaleY), 0),
+        canvas.height,
+      ),
+    });
+    e.preventDefault();
+  },
+  { passive: false },
+);
 
 window.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();

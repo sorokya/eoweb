@@ -1,0 +1,21 @@
+{
+  "name": "EO Web",
+  "short_name": "EO Web",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "description": "Endless Online Web Edition",
+  "icons": [
+    {
+      "src": "favicon-196.png",
+      "sizes": "196x196",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon-228.png",
+      "sizes": "228x228",
+      "type": "image/png"
+    }
+  ]
+}
