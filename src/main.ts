@@ -145,7 +145,7 @@ client.on('enterGame', ({ news }) => {
 });
 
 const initializeSocket = (next: 'login' | 'create') => {
-  const socket = new WebSocket('ws://localhost:8077');
+  const socket = new WebSocket('wss://ws.reoserv.net');
   socket.addEventListener('open', () => {
     mainMenu.hide();
     if (next === 'create') {
