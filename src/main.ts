@@ -29,6 +29,8 @@ import { ExitGame } from './ui/exit-game';
 import { SmallConfirm } from './ui/small-confirm';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
+import { Chat } from './ui/chat';
+import { capitalize } from './utils/capitalize';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
@@ -132,11 +134,14 @@ client.on('characterCreated', (characters) => {
 
 client.on('selectCharacter', () => {});
 
-client.on('chat', ({ name, tab, message }) => {});
+client.on('chat', ({ name, tab, message }) => {
+  chat.addMessage(`${capitalize(name)}: ${message}`);
+});
 
 client.on('enterGame', ({ news }) => {
   characterSelect.hide();
   exitGame.show();
+  chat.show();
 });
 
 const initializeSocket = (next: 'login' | 'create') => {
@@ -206,6 +211,7 @@ const createCharacterForm = new CreateCharacterForm();
 const smallAlertLargeHeader = new SmallAlertLargeHeader();
 const exitGame = new ExitGame();
 const smallConfirm = new SmallConfirm();
+const chat = new Chat();
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -291,10 +297,28 @@ createCharacterForm.on('create', (data) => {
   client.requestCharacterCreation(data);
 });
 
+chat.on('chat', (message) => {
+  client.chat(message);
+});
+
+chat.on('focus', () => {
+  client.typing = true;
+});
+
+chat.on('blur', () => {
+  client.typing = false;
+});
+
 // Tick loop
 setInterval(() => {
   client.tick();
 }, 120);
+
+window.addEventListener('keyup', (e) => {
+  if (client.state === GameState.InGame && e.key === 'Enter') {
+    chat.focus();
+  }
+});
 
 window.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();

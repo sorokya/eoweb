@@ -370,6 +370,44 @@ input[type="password"] {
   right: 0;
 }
 
+#chat {
+  position: absolute;
+  bottom: 0;
+  background: #111111;
+  color: #fff;
+  width: 400px;
+  height: 220px;
+  opacity: 0.8;
+  padding: 5px 10px;
+}
+
+#chat-message {
+  background: #000;
+  color: #fff;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+#chat-tab-bar button {
+  background: none;
+  color: #adadad;
+}
+
+#chat-tab-bar button.active {
+  color: #fff;
+}
+
+#local-chat {
+  list-style: none;
+  padding: 0;
+  max-height: 160px;
+  overflow-y: scroll;
+}
+
+#local-chat li {
+  padding: 0;
+}
+
 .img-label {
   --bg-url: "";
   --bg-x: 0;

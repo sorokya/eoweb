@@ -175,6 +175,7 @@ export class Client {
   movementController: MovementController;
   npcMetadata = getNpcMetaData();
   doors: Door[] = [];
+  typing = false;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();

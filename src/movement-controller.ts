@@ -38,7 +38,11 @@ export class MovementController {
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
     this.attackTicks = Math.max(this.attackTicks - 1, 0);
 
-    if (this.freeze || this.client.state !== GameState.InGame) {
+    if (
+      this.freeze ||
+      this.client.state !== GameState.InGame ||
+      this.client.typing
+    ) {
       return;
     }
 

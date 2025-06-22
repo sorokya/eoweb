@@ -135,6 +135,23 @@
           <button class="img-btn" type="button" data-id="exit-game"></button>
       </div>
 
+      <div id="chat" class="hidden">
+        <form>
+          <input type="text" id="chat-message"/>
+          <input type="submit" class="hidden"/>
+          <div id="chat-tab-bar">
+            <button id="btn-chat-tab-local" class="active" disabled>Local</button>
+            <button id="btn-chat-tab-global" disabled>Global</button>
+            <button id="btn-chat-tab-group" disabled>Group</button>
+            <button id="btn-chat-tab-system" disabled>System</button>
+          </div>
+          <ul id="local-chat"></ul>
+          <ul id="global-chat"></ul>
+          <ul id="group-chat"></ul>
+          <ul id="system-chat"></ul>
+        </form>
+      </div>
+
       <div id="small-alert" class="hidden">
         <span class="title"></span>
         <span class="message"></span>
