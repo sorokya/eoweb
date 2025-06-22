@@ -101,6 +101,10 @@ export class MovementController {
         return;
       }
 
+      if (this.client.warpQueued) {
+        return;
+      }
+
       if (
         !this.walkTicks ||
         (walking &&

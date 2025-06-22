@@ -583,6 +583,7 @@ export class Client {
     packet.mapId = this.warpMapId;
     this.bus.send(packet);
     this.warpQueued = false;
+    this.movementController.freeze = true;
   }
 
   requestFile(fileType: FileType, id: number) {
