@@ -88,7 +88,7 @@ export class MovementController {
         return;
       }
 
-      if (!this.walkTicks) {
+      if (!this.walkTicks || (walking && directionHeld !== character.direction && (animation as CharacterWalkAnimation).isOnLastFrame())) {
         const from = bigCoordsToCoords(character.coords);
         const to = getNextCoords(
           from,
