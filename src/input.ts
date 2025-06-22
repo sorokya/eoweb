@@ -1,4 +1,3 @@
-import { ImGui } from '@zhobo63/imgui-ts';
 import { zoomIn, zoomOut } from './main';
 
 export enum Input {
