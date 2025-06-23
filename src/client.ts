@@ -184,6 +184,7 @@ export class Client {
   npcMetadata = getNpcMetaData();
   doors: Door[] = [];
   typing = false;
+  pingStart = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();

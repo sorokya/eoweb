@@ -19,7 +19,6 @@ import {
   ZOOM,
   setGameSize,
   setZoom,
-  setPingStart,
 } from './game-state';
 import { randomRange } from './utils/random-range';
 import { playSfxById, SfxId } from './sfx';
@@ -370,7 +369,7 @@ chat.on('chat', (message) => {
 });
 
 chat.on('ping', () => {
-  setPingStart(new Date());
+  client.pingStart = new Date().getTime();
   client.bus.send(new MessagePingClientPacket());
 });
 

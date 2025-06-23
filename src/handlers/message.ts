@@ -2,11 +2,10 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import { PING_START } from '../game-state';
 import { ChatTab, type Client } from '../client';
 
 function handleMessagePing(client: Client) {
-    const delta = new Date().getTime() - PING_START;
+    const delta = new Date().getTime() - client.pingStart;
     client.emit('chat', {
         name: "System",
         tab: ChatTab.Local,

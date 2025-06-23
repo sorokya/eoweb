@@ -14,8 +14,3 @@ export function setGameSize(w: number, h: number): void {
 export function setZoom(z: number): void {
   ZOOM = z;
 }
-
-export let PING_START = 0;
-export function setPingStart(start: Date): void {
-  PING_START = start.getTime();
-}
