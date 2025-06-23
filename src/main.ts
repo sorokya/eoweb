@@ -7,6 +7,7 @@ import {
   InitInitClientPacket,
   SitState,
   Version,
+  MessagePingClientPacket,
 } from 'eolib';
 import './style.css';
 import { PacketBus } from './bus';
@@ -18,6 +19,7 @@ import {
   ZOOM,
   setGameSize,
   setZoom,
+  setPingStart,
 } from './game-state';
 import { randomRange } from './utils/random-range';
 import { playSfxById, SfxId } from './sfx';
@@ -365,6 +367,11 @@ changePasswordForm.on(
 
 chat.on('chat', (message) => {
   client.chat(message);
+});
+
+chat.on('ping', () => {
+  setPingStart(new Date());
+  client.bus.send(new MessagePingClientPacket());
 });
 
 chat.on('focus', () => {

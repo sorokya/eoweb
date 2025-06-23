@@ -53,6 +53,7 @@ import { registerLoginHandlers } from './handlers/login';
 import { registerFaceHandlers } from './handlers/face';
 import { registerWelcomeHandlers } from './handlers/welcome';
 import { registerPlayersHandlers } from './handlers/players';
+import { registerMessageHandlers } from './handlers/message';
 import { registerWalkHandlers } from './handlers/walk';
 import { registerSitHandlers } from './handlers/sit';
 import { registerWarpHandlers } from './handlers/warp';
@@ -432,6 +433,7 @@ export class Client {
     registerLoginHandlers(this);
     registerWelcomeHandlers(this);
     registerPlayersHandlers(this);
+    registerMessageHandlers(this);
     registerAvatarHandlers(this);
     registerFaceHandlers(this);
     registerWalkHandlers(this);
