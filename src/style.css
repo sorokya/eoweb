@@ -247,6 +247,12 @@ input[type="password"] {
   font-size: 12px;
 }
 
+#character-select .character .preview {
+  position: absolute;
+  top: 24px;
+  left: 70px;
+}
+
 #character-select > .buttons {
   align-self: center;
 }
@@ -258,6 +264,12 @@ input[type="password"] {
   background-color: #000;
   background-image: url("/gfx/gfx001/120.png");
   z-index: 1010;
+}
+
+#create-character-preview {
+  position: absolute;
+  top: 92px;
+  right: 68px;
 }
 
 #create-character-name {

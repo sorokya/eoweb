@@ -15,6 +15,7 @@ import type { Vector2 } from './vector';
 import { GameState, type Client } from './client';
 import {
   getCharacterIntersecting,
+  getCharacterRectangle,
   getNpcIntersecting,
   Rectangle,
   setDoorRectangle,
@@ -107,9 +108,24 @@ export class MapRenderer {
   buildingCache = false;
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
+  private mainCharacterCanvas: HTMLCanvasElement;
+  private mainCharacterCtx: CanvasRenderingContext2D;
+  private characterCanvas: HTMLCanvasElement;
+  private characterCtx: CanvasRenderingContext2D;
 
   constructor(client: Client) {
     this.client = client;
+    this.characterCanvas = document.createElement('canvas');
+    this.characterCtx = this.characterCanvas.getContext('2d');
+    this.mainCharacterCanvas = document.createElement('canvas');
+    this.mainCharacterCtx = this.mainCharacterCanvas.getContext('2d');
+  }
+
+  resizeCanvas(width: number, height: number) {
+    this.mainCharacterCanvas.width = width;
+    this.mainCharacterCanvas.height = height;
+    this.characterCanvas.width = width;
+    this.characterCanvas.height = height;
   }
 
   buildCaches() {
@@ -258,11 +274,37 @@ export class MapRenderer {
         spec === null ||
         ![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)
       ) {
-        const charAt = this.client.nearby.characters.some(
-          (c) =>
-            c.coords.x === this.client.mouseCoords.x &&
-            c.coords.y === this.client.mouseCoords.y,
-        );
+        const charAt =
+          [
+            MapTileSpec.Chest,
+            MapTileSpec.ChairAll,
+            MapTileSpec.ChairDown,
+            MapTileSpec.ChairDownRight,
+            MapTileSpec.ChairLeft,
+            MapTileSpec.ChairRight,
+            MapTileSpec.ChairUp,
+            MapTileSpec.ChairUpLeft,
+            MapTileSpec.BankVault,
+            MapTileSpec.Jukebox,
+            MapTileSpec.Board1,
+            MapTileSpec.Board2,
+            MapTileSpec.Board3,
+            MapTileSpec.Board4,
+            MapTileSpec.Board5,
+            MapTileSpec.Board6,
+            MapTileSpec.Board7,
+            MapTileSpec.Board8,
+          ].includes(spec) ||
+          this.client.nearby.characters.some(
+            (c) =>
+              c.coords.x === this.client.mouseCoords.x &&
+              c.coords.y === this.client.mouseCoords.y,
+          ) ||
+          this.client.nearby.npcs.some(
+            (n) =>
+              n.coords.x === this.client.mouseCoords.x &&
+              n.coords.y === this.client.mouseCoords.y,
+          );
         entities.push({
           x: this.client.mouseCoords.x,
           y: this.client.mouseCoords.y,
@@ -289,6 +331,7 @@ export class MapRenderer {
           this.renderCharacter(e, playerScreen, ctx);
           break;
         case EntityType.Npc: {
+          this.renderNpc(e, playerScreen, ctx);
           break;
         }
         case EntityType.Cursor:
@@ -307,7 +350,7 @@ export class MapRenderer {
     );
     if (main) {
       ctx.globalAlpha = 0.4;
-      this.renderCharacter(main, playerScreen, ctx);
+      ctx.drawImage(this.mainCharacterCanvas, 0, 0);
       ctx.globalAlpha = 1;
     }
 
@@ -357,7 +400,11 @@ export class MapRenderer {
         position.x - metrics.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
       ),
       Math.floor(
-        position.y - playerScreen.y - entityRect.rect.height + HALF_GAME_HEIGHT,
+        position.y -
+          playerScreen.y -
+          8 -
+          entityRect.rect.height +
+          HALF_GAME_HEIGHT,
       ),
     );
 
@@ -511,48 +558,68 @@ export class MapRenderer {
       return;
     }
 
-    const bubble = this.client.characterChats.get(character.playerId);
-
     const animation = this.client.characterAnimations.get(character.playerId);
     if (animation) {
-      const walking = animation instanceof CharacterWalkAnimation;
-      const attacking = animation instanceof CharacterAttackAnimation;
       animation.calculateRenderPosition(character, playerScreen);
-      this.renderCharacterBehindLayers(
-        character,
-        ctx,
-        animation.animationFrame,
-        walking,
-        attacking,
-      );
-      animation.render(character, ctx);
-      this.renderCharacterLayers(
-        character,
-        ctx,
-        animation.animationFrame,
-        walking,
-        attacking,
-      );
-      renderCharacterChatBubble(bubble, character, ctx);
-      return;
-    }
-
-    if (character.sitState === SitState.Floor) {
+    } else if (character.sitState === SitState.Floor) {
       calculateCharacterRenderPositionFloor(character, playerScreen);
-      this.renderCharacterBehindLayers(character, ctx, 0, false, false);
-      renderCharacterFloor(character, ctx);
-      this.renderCharacterLayers(character, ctx, 0, false, false);
-      renderCharacterChatBubble(bubble, character, ctx);
+    } else {
+      calculateCharacterRenderPositionStanding(character, playerScreen);
+    }
+
+    const rect = getCharacterRectangle(character.playerId);
+    if (!rect) {
       return;
     }
 
-    // TODO: Chair
+    const characterCtx =
+      entity.typeId === this.client.playerId
+        ? this.mainCharacterCtx
+        : this.characterCtx;
 
-    calculateCharacterRenderPositionStanding(character, playerScreen);
-    this.renderCharacterBehindLayers(character, ctx, 0, false, false);
-    renderCharacterStanding(character, ctx);
+    characterCtx.clearRect(
+      0,
+      0,
+      this.characterCanvas.width,
+      this.characterCanvas.height,
+    );
+
+    const bubble = this.client.characterChats.get(character.playerId);
+    const frame = animation?.animationFrame || 0;
+    const walking = animation instanceof CharacterWalkAnimation;
+    const attacking = animation instanceof CharacterAttackAnimation;
+
+    this.renderCharacterBehindLayers(
+      character,
+      characterCtx,
+      frame,
+      walking,
+      attacking,
+    );
+
+    if (animation) {
+      animation.render(character, characterCtx);
+    } else if (character.sitState === SitState.Floor) {
+      renderCharacterFloor(character, characterCtx);
+    } else {
+      renderCharacterStanding(character, characterCtx);
+    }
+
+    this.renderCharacterLayers(
+      character,
+      characterCtx,
+      frame,
+      walking,
+      attacking,
+    );
+
+    if (entity.typeId === this.client.playerId) {
+      ctx.drawImage(this.mainCharacterCanvas, 0, 0);
+    } else {
+      ctx.drawImage(this.characterCanvas, 0, 0);
+    }
+
     renderCharacterChatBubble(bubble, character, ctx);
-    this.renderCharacterLayers(character, ctx, 0, false, false);
   }
 
   renderNpc(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
@@ -611,6 +678,15 @@ export class MapRenderer {
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
   ) {
+    if (
+      this.client.mouseCoords.x < 0 ||
+      this.client.mouseCoords.x > this.client.map.width ||
+      this.client.mouseCoords.y < 0 ||
+      this.client.mouseCoords.y > this.client.map.height
+    ) {
+      return;
+    }
+
     const bmp = getBitmapById(GfxType.PostLoginUI, 24);
     if (bmp && this.client.mouseCoords) {
       const tileScreen = isoToScreen({

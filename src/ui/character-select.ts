@@ -1,8 +1,17 @@
 import mitt from 'mitt';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
-import type { CharacterSelectionListEntry } from 'eolib';
+import {
+  CharacterMapInfo,
+  Direction,
+  type CharacterSelectionListEntry,
+} from 'eolib';
 import { capitalize } from '../utils/capitalize';
+import { renderCharacterHairBehind } from '../render/character-hair-behind';
+import { renderCharacterStanding } from '../render/character-standing';
+import { renderCharacterHair } from '../render/character-hair';
+import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../consts';
+import { setCharacterRectangle, Rectangle } from '../collision';
 
 type Events = {
   cancel: undefined;
@@ -11,6 +20,8 @@ type Events = {
   changePassword: undefined;
   error: { title: string; message: string };
 };
+
+let lastTime: DOMHighResTimeStamp | undefined;
 
 export class CharacterSelect extends Base {
   protected container = document.getElementById('character-select');
@@ -23,15 +34,79 @@ export class CharacterSelect extends Base {
   private btnCancel: HTMLButtonElement = this.container.querySelector(
     'button[data-id="cancel-big"]',
   );
+  private characters: CharacterSelectionListEntry[] = [];
+  private canvas: HTMLCanvasElement;
+  private ctx: CanvasRenderingContext2D;
+  private open = false;
 
   private emitter = mitt<Events>();
 
   private onLogin: ((e: Event) => undefined)[] = [];
   private onDelete: ((e: Event) => undefined)[] = [];
-  private characterCount = 0;
+
+  show() {
+    this.container.classList.remove('hidden');
+    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
+    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    this.open = true;
+    window.requestAnimationFrame((now) => {
+      this.render(now);
+    });
+  }
+
+  hide() {
+    this.container.classList.add('hidden');
+    this.open = false;
+  }
+
+  render(now: DOMHighResTimeStamp) {
+    if (!lastTime) {
+      lastTime = now;
+    }
+
+    const ellapsed = now - lastTime;
+    if (ellapsed < GAME_FPS) {
+      requestAnimationFrame((n) => {
+        this.render(n);
+      });
+      return;
+    }
+
+    lastTime = now;
+
+    let index = 0;
+    for (const character of this.characters) {
+      const mapInfo = new CharacterMapInfo();
+      mapInfo.playerId = 0;
+      mapInfo.gender = character.gender;
+      mapInfo.skin = character.skin;
+      mapInfo.direction = Direction.Down;
+      mapInfo.hairColor = character.hairColor;
+      mapInfo.hairStyle = character.hairStyle;
+
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      renderCharacterHairBehind(mapInfo, this.ctx, 0, false, false);
+      renderCharacterStanding(mapInfo, this.ctx);
+      renderCharacterHair(mapInfo, this.ctx, 0, false, false);
+
+      const preview: HTMLImageElement = this.container.querySelectorAll(
+        '.preview',
+      )[index] as HTMLImageElement;
+      if (preview) {
+        preview.src = this.canvas.toDataURL();
+      }
+      index++;
+    }
+
+    if (this.open) {
+      window.requestAnimationFrame((now) => {
+        this.render(now);
+      });
+    }
+  }
 
   setCharacters(characters: CharacterSelectionListEntry[]) {
-    this.characterCount = characters.length;
+    this.characters = characters;
     const characterBoxes = this.container.querySelectorAll('.character');
     let index = 0;
     for (const box of characterBoxes) {
@@ -73,10 +148,20 @@ export class CharacterSelect extends Base {
   constructor() {
     super();
 
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = CHARACTER_WIDTH;
+    this.canvas.height = CHARACTER_HEIGHT + 20;
+    this.ctx = this.canvas.getContext('2d');
+
+    setCharacterRectangle(
+      0,
+      new Rectangle({ x: 0, y: 10 }, CHARACTER_WIDTH, CHARACTER_HEIGHT + 20),
+    );
+
     this.btnCreate.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
 
-      if (this.characterCount >= 3) {
+      if (this.characters.length >= 3) {
         this.emitter.emit('error', {
           title: 'Request denied',
           message:
