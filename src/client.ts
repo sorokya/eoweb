@@ -32,6 +32,7 @@ import {
   type ServerSettings,
   SitAction,
   SitRequestClientPacket,
+  SitState,
   type Spell,
   TalkReportClientPacket,
   WalkAction,
@@ -455,6 +456,19 @@ export class Client {
       if (door && !door.open) {
         this.openDoor(doorAt);
       }
+      return;
+    }
+
+    if ([SitState.Floor, SitState.Chair].includes(this.getPlayerCharacter()?.sitState)) {
+      this.movementController.sitTicks = 0;
+      let packet = new SitRequestClientPacket();
+      packet.sitAction = SitAction.Stand;
+      packet.sitActionData = new SitRequestClientPacket.SitActionDataSit();
+      packet.sitActionData.cursorCoords = new Coords();
+      packet.sitActionData.cursorCoords.x = this.mouseCoords?.x ?? 0;
+      packet.sitActionData.cursorCoords.y = this.mouseCoords?.y ?? 0;
+      this.bus?.send(packet);
+      return;
     }
   }
 
