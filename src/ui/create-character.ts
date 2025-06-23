@@ -2,7 +2,7 @@ import { CharacterMapInfo, Direction, Gender } from 'eolib';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 import mitt from 'mitt';
-import { CHARACTER_HEIGHT, CHARACTER_WIDTH } from '../consts';
+import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../consts';
 import { renderCharacterStanding } from '../render/character-standing';
 import { Rectangle, setCharacterRectangle } from '../collision';
 import { renderCharacterHairBehind } from '../render/character-hair-behind';
@@ -12,6 +12,7 @@ const MAX_GENDER = 2;
 const MAX_HAIR_STYLE = 20;
 const MAX_HAIR_COLOR = 10;
 const MAX_SKIN = 4;
+let lastTime: DOMHighResTimeStamp | undefined;
 
 type Events = {
   create: {
@@ -65,11 +66,11 @@ export class CreateCharacterForm extends Base {
   );
   private character: CharacterMapInfo;
 
-  gender = 0;
-  hairStyle = 0;
-  hairColor = 0;
-  skin = 0;
-  open = false;
+  private gender = 0;
+  private hairStyle = 0;
+  private hairColor = 0;
+  private skin = 0;
+  private open = false;
 
   on<Event extends keyof Events>(
     event: Event,
@@ -78,7 +79,21 @@ export class CreateCharacterForm extends Base {
     this.emitter.on(event, handler);
   }
 
-  render() {
+  render(now: DOMHighResTimeStamp) {
+    if (!lastTime) {
+      lastTime = now;
+    }
+
+    const ellapsed = now - lastTime;
+    if (ellapsed < GAME_FPS) {
+      requestAnimationFrame((n) => {
+        this.render(n);
+      });
+      return;
+    }
+
+    lastTime = now;
+
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     renderCharacterHairBehind(this.character, this.ctx, 0, false, false);
     renderCharacterStanding(this.character, this.ctx);
@@ -86,8 +101,8 @@ export class CreateCharacterForm extends Base {
     this.preview.src = this.canvas.toDataURL();
 
     if (this.open) {
-      window.requestAnimationFrame(() => {
-        this.render();
+      window.requestAnimationFrame((now) => {
+        this.render(now);
       });
     }
   }
@@ -109,8 +124,8 @@ export class CreateCharacterForm extends Base {
     this.skin = 0;
     this.open = true;
     this.updateIcons();
-    window.requestAnimationFrame(() => {
-      this.render();
+    window.requestAnimationFrame((now) => {
+      this.render(now);
     });
   }
 

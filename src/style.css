@@ -247,6 +247,12 @@ input[type="password"] {
   font-size: 12px;
 }
 
+#character-select .character .preview {
+  position: absolute;
+  top: 24px;
+  left: 70px;
+}
+
 #character-select > .buttons {
   align-self: center;
 }
