@@ -78,6 +78,8 @@ function resizeCanvases() {
   canvas.style.width = `${w * ZOOM}px`;
   canvas.style.height = `${h * ZOOM}px`;
 
+  client.mapRenderer.resizeCanvas(w, h);
+
   if (client.state === GameState.InGame && viewportWidth < 940) {
     mobileControls.show();
   } else {
