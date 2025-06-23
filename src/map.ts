@@ -289,6 +289,7 @@ export class MapRenderer {
           this.renderCharacter(e, playerScreen, ctx);
           break;
         case EntityType.Npc: {
+          this.renderNpc(e, playerScreen, ctx);
           break;
         }
         case EntityType.Cursor:
