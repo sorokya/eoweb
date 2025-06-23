@@ -34,15 +34,6 @@ export class Chat extends Base {
     super();
     this.form.addEventListener('submit', (e) => {
       e.preventDefault();
-      if (this.message.value.length > 0) {
-        if (this.message.value[0] === '#') {
-          if (this.message.value.substring(1, this.message.value.length) === 'ping') {
-            this.emitter.emit('ping');
-            this.message.value = '';
-            return;
-          }
-        }
-      }
       this.emitter.emit('chat', this.message.value);
       this.message.value = '';
       return false;

@@ -216,6 +216,8 @@ btnSit.addEventListener('touchend', () => {
   updateInputHeld(Input.SitStand, false);
 });
 
+
+
 window.addEventListener(
   'wheel',
   (e) => {

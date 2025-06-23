@@ -102,6 +102,7 @@ type ClientEvents = {
   serverChat: { message: string, sfxId?: SfxId | null };
   accountCreated: undefined;
   passwordChanged: undefined;
+  ping: undefined;
 };
 
 export enum GameState {
@@ -546,6 +547,16 @@ export class Client {
     if (!message) {
       return;
     }
+
+
+  if (message.length > 0) {
+    if (message[0] === '#') {
+      if (message.substring(1, message.length) === 'ping') {
+        this.emit('ping', undefined);
+        return;
+      }
+    }
+  }
 
     const trimmed = message.substring(0, MAX_CHAT_LENGTH);
 
