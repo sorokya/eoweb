@@ -249,8 +249,8 @@ input[type="password"] {
 
 #character-select .character .preview {
   position: absolute;
-  top: 24px;
-  left: 70px;
+  top: 15px;
+  left: 50px;
 }
 
 #character-select > .buttons {
@@ -268,8 +268,8 @@ input[type="password"] {
 
 #create-character-preview {
   position: absolute;
-  top: 92px;
-  right: 68px;
+  top: 75px;
+  right: 47px;
 }
 
 #create-character-name {

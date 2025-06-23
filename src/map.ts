@@ -35,6 +35,7 @@ import {
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
 import { renderCharacterHairBehind } from './render/character-hair-behind';
+import { renderCharacterBoots } from './render/character-boots';
 
 enum EntityType {
   Tile = 0,
@@ -671,6 +672,7 @@ export class MapRenderer {
     attacking: boolean,
   ) {
     renderCharacterHair(character, ctx, animationFrame, walking, attacking);
+    renderCharacterBoots(character, ctx, animationFrame, walking, attacking); 
   }
 
   renderCursor(

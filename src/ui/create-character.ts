@@ -2,7 +2,12 @@ import { CharacterMapInfo, Direction, Gender } from 'eolib';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 import mitt from 'mitt';
-import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../consts';
+import {
+  CHARACTER_HEIGHT,
+  CHARACTER_WIDTH,
+  GAME_FPS,
+  HALF_CHARACTER_WIDTH,
+} from '../consts';
 import { renderCharacterStanding } from '../render/character-standing';
 import { Rectangle, setCharacterRectangle } from '../collision';
 import { renderCharacterHairBehind } from '../render/character-hair-behind';
@@ -146,13 +151,17 @@ export class CreateCharacterForm extends Base {
     super();
 
     this.canvas = document.createElement('canvas');
-    this.canvas.width = CHARACTER_WIDTH;
-    this.canvas.height = CHARACTER_HEIGHT + 20;
+    this.canvas.width = CHARACTER_WIDTH + 40;
+    this.canvas.height = CHARACTER_HEIGHT + 40;
     this.ctx = this.canvas.getContext('2d');
 
     setCharacterRectangle(
       0,
-      new Rectangle({ x: 0, y: 10 }, CHARACTER_WIDTH, CHARACTER_HEIGHT + 20),
+      new Rectangle(
+        { x: this.canvas.width / 2 - HALF_CHARACTER_WIDTH, y: 20 },
+        CHARACTER_WIDTH,
+        CHARACTER_HEIGHT,
+      ),
     );
 
     this.character = new CharacterMapInfo();

@@ -4,14 +4,21 @@ import { Base } from './base-ui';
 import {
   CharacterMapInfo,
   Direction,
+  EquipmentMapInfo,
   type CharacterSelectionListEntry,
 } from 'eolib';
 import { capitalize } from '../utils/capitalize';
 import { renderCharacterHairBehind } from '../render/character-hair-behind';
 import { renderCharacterStanding } from '../render/character-standing';
 import { renderCharacterHair } from '../render/character-hair';
-import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../consts';
+import {
+  CHARACTER_HEIGHT,
+  CHARACTER_WIDTH,
+  GAME_FPS,
+  HALF_CHARACTER_WIDTH,
+} from '../consts';
 import { setCharacterRectangle, Rectangle } from '../collision';
+import { renderCharacterBoots } from '../render/character-boots';
 
 type Events = {
   cancel: undefined;
@@ -81,17 +88,20 @@ export class CharacterSelect extends Base {
     let index = 0;
     for (const character of this.characters) {
       const mapInfo = new CharacterMapInfo();
-      mapInfo.playerId = 0;
+      mapInfo.playerId = 1;
       mapInfo.gender = character.gender;
       mapInfo.skin = character.skin;
       mapInfo.direction = Direction.Down;
       mapInfo.hairColor = character.hairColor;
       mapInfo.hairStyle = character.hairStyle;
+      mapInfo.equipment = new EquipmentMapInfo();
+      mapInfo.equipment.boots = character.equipment.boots;
 
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       renderCharacterHairBehind(mapInfo, this.ctx, 0, false, false);
       renderCharacterStanding(mapInfo, this.ctx);
       renderCharacterHair(mapInfo, this.ctx, 0, false, false);
+      renderCharacterBoots(mapInfo, this.ctx, 0, false, false);
 
       const preview: HTMLImageElement = this.container.querySelectorAll(
         '.preview',
@@ -153,13 +163,22 @@ export class CharacterSelect extends Base {
     super();
 
     this.canvas = document.createElement('canvas');
-    this.canvas.width = CHARACTER_WIDTH;
-    this.canvas.height = CHARACTER_HEIGHT + 20;
+    const w = CHARACTER_WIDTH + 40;
+    const h = CHARACTER_HEIGHT + 40;
+    this.canvas.width = w;
+    this.canvas.height = h;
     this.ctx = this.canvas.getContext('2d');
 
     setCharacterRectangle(
-      0,
-      new Rectangle({ x: 0, y: 10 }, CHARACTER_WIDTH, CHARACTER_HEIGHT + 20),
+      1,
+      new Rectangle(
+        {
+          x: w / 2 - HALF_CHARACTER_WIDTH,
+          y: 20,
+        },
+        CHARACTER_WIDTH,
+        CHARACTER_HEIGHT,
+      ),
     );
 
     this.btnCreate.addEventListener('click', () => {
