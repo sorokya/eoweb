@@ -306,11 +306,6 @@ export class MapRenderer {
 
     entities.sort((a, b) => a.depth - b.depth);
 
-    const npc0 = entities.find(
-      (e) => e.type === EntityType.Npc && e.typeId === 0,
-    );
-    console.log('Rendering npc 0?', !!npc0);
-
     for (const e of entities) {
       switch (e.type) {
         case EntityType.Tile:
