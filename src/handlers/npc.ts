@@ -62,6 +62,10 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
 function handleNpcAgree(client: Client, reader: EoReader) {
   const packet = NpcAgreeServerPacket.deserialize(reader);
   for (const npc of packet.npcs) {
+    // TODO: Remove after eolib-2.0 is released
+    if (!npc.id) {
+      continue;
+    }
     const existing = client.nearby.npcs.find((n) => n.index === npc.index);
     if (existing) {
       existing.coords = npc.coords;
