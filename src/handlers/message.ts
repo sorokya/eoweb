@@ -5,12 +5,11 @@ import {
 import { ChatTab, type Client } from '../client';
 
 function handleMessagePing(client: Client) {
-    const delta = new Date().getTime() - client.pingStart;
-    client.emit('chat', {
-        name: "System",
-        tab: ChatTab.Local,
-        message: `${delta}ms ping`
-    })
+  const delta = new Date().getTime() - client.pingStart;
+  
+  client.emit('serverChat', {
+    message: `${delta}ms ping`
+  })
 }
 
 export function registerMessageHandlers(client: Client) {

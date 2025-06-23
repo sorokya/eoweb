@@ -11,7 +11,7 @@ import {
 } from 'eolib';
 import './style.css';
 import { PacketBus } from './bus';
-import { Client, GameState } from './client';
+import { ChatTab, Client, GameState } from './client';
 import { GAME_FPS, HOST, MAX_CHALLENGE } from './consts';
 import {
   GAME_HEIGHT,
@@ -152,6 +152,15 @@ client.on('login', (characters) => {
   loginForm.hide();
   characterSelect.setCharacters(characters);
   characterSelect.show();
+});
+
+client.on('serverChat', ({ message, sfxId }) => {
+  client.emit('chat', {
+    name: 'Server',
+    tab: ChatTab.Local,
+    message: message,
+  });
+  playSfxById(sfxId || SfxId.ServerMessage);
 });
 
 client.on('characterCreated', (characters) => {

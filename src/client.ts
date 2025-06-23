@@ -99,6 +99,7 @@ type ClientEvents = {
   selectCharacter: undefined;
   enterGame: { news: string[] };
   chat: { name: string; tab: ChatTab; message: string };
+  serverChat: { message: string, sfxId?: SfxId | null };
   accountCreated: undefined;
   passwordChanged: undefined;
 };
