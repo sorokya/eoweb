@@ -280,6 +280,11 @@ export class MapRenderer {
 
     entities.sort((a, b) => a.depth - b.depth);
 
+    const npc0 = entities.find(
+      (e) => e.type === EntityType.Npc && e.typeId === 0,
+    );
+    console.log('Rendering npc 0?', !!npc0);
+
     for (const e of entities) {
       switch (e.type) {
         case EntityType.Tile:
@@ -358,7 +363,11 @@ export class MapRenderer {
         position.x - metrics.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
       ),
       Math.floor(
-        position.y - playerScreen.y - entityRect.rect.height + HALF_GAME_HEIGHT,
+        position.y -
+          playerScreen.y -
+          8 -
+          entityRect.rect.height +
+          HALF_GAME_HEIGHT,
       ),
     );
 
@@ -559,11 +568,14 @@ export class MapRenderer {
   renderNpc(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
     const npc = this.client.getNpcByIndex(e.typeId);
     if (!npc) {
+      console.log('Npc not found');
       return;
     }
 
     const record = this.client.getEnfRecordById(npc.id);
     if (!record) {
+      console.log('Npc record not found');
+      console.log(npc);
       return;
     }
 
