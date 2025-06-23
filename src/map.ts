@@ -258,10 +258,36 @@ export class MapRenderer {
         spec === null ||
         ![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)
       ) {
-        const charAt = this.client.nearby.characters.some(
+        const charAt =
+          [
+            MapTileSpec.Chest,
+            MapTileSpec.ChairAll,
+            MapTileSpec.ChairDown,
+            MapTileSpec.ChairDownRight,
+            MapTileSpec.ChairLeft,
+            MapTileSpec.ChairRight,
+            MapTileSpec.ChairUp,
+            MapTileSpec.ChairUpLeft,
+            MapTileSpec.BankVault,
+            MapTileSpec.Jukebox,
+            MapTileSpec.Board1,
+            MapTileSpec.Board2,
+            MapTileSpec.Board3,
+            MapTileSpec.Board4,
+            MapTileSpec.Board5,
+            MapTileSpec.Board6,
+            MapTileSpec.Board7,
+            MapTileSpec.Board8,
+          ].includes(spec) ||
+          this.client.nearby.characters.some(
           (c) =>
             c.coords.x === this.client.mouseCoords.x &&
             c.coords.y === this.client.mouseCoords.y,
+          ) ||
+          this.client.nearby.npcs.some(
+            (n) =>
+              n.coords.x === this.client.mouseCoords.x &&
+              n.coords.y === this.client.mouseCoords.y,
         );
         entities.push({
           x: this.client.mouseCoords.x,
