@@ -1,7 +1,12 @@
-import type { Gender } from 'eolib';
+import { CharacterMapInfo, Direction, Gender } from 'eolib';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 import mitt from 'mitt';
+import { CHARACTER_HEIGHT, CHARACTER_WIDTH } from '../consts';
+import { renderCharacterStanding } from '../render/character-standing';
+import { Rectangle, setCharacterRectangle } from '../collision';
+import { renderCharacterHairBehind } from '../render/character-hair-behind';
+import { renderCharacterHair } from '../render/character-hair';
 
 const MAX_GENDER = 2;
 const MAX_HAIR_STYLE = 20;
@@ -23,6 +28,11 @@ export class CreateCharacterForm extends Base {
   private emitter = mitt<Events>();
   private cover = document.getElementById('cover');
   private form: HTMLFormElement = this.container.querySelector('form');
+  private preview: HTMLImageElement = this.container.querySelector(
+    '#create-character-preview',
+  );
+  private canvas: HTMLCanvasElement;
+  private ctx: CanvasRenderingContext2D;
   private name: HTMLInputElement = this.container.querySelector(
     '#create-character-name',
   );
@@ -53,11 +63,13 @@ export class CreateCharacterForm extends Base {
   private lblSkin: HTMLDivElement = this.container.querySelector(
     'div[data-id="skin"]',
   );
+  private character: CharacterMapInfo;
 
   gender = 0;
   hairStyle = 0;
   hairColor = 0;
   skin = 0;
+  open = false;
 
   on<Event extends keyof Events>(
     event: Event,
@@ -66,16 +78,46 @@ export class CreateCharacterForm extends Base {
     this.emitter.on(event, handler);
   }
 
+  render() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    renderCharacterHairBehind(this.character, this.ctx, 0, false, false);
+    renderCharacterStanding(this.character, this.ctx);
+    renderCharacterHair(this.character, this.ctx, 0, false, false);
+    this.preview.src = this.canvas.toDataURL();
+
+    if (this.open) {
+      window.requestAnimationFrame(() => {
+        this.render();
+      });
+    }
+  }
+
   show() {
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
     this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
     this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    this.name.value = '';
+    this.character.gender = Gender.Female;
+    this.character.skin = 0;
+    this.character.direction = Direction.Down;
+    this.character.hairStyle = 1;
+    this.character.hairColor = 0;
+    this.gender = 0;
+    this.hairStyle = 0;
+    this.hairColor = 0;
+    this.skin = 0;
+    this.open = true;
+    this.updateIcons();
+    window.requestAnimationFrame(() => {
+      this.render();
+    });
   }
 
   hide() {
     this.container.classList.add('hidden');
     this.cover.classList.add('hidden');
+    this.open = false;
   }
 
   private updateIcons() {
@@ -87,10 +129,46 @@ export class CreateCharacterForm extends Base {
 
   constructor() {
     super();
+
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = CHARACTER_WIDTH;
+    this.canvas.height = CHARACTER_HEIGHT + 20;
+    this.ctx = this.canvas.getContext('2d');
+
+    setCharacterRectangle(
+      0,
+      new Rectangle({ x: 0, y: 10 }, CHARACTER_WIDTH, CHARACTER_HEIGHT + 20),
+    );
+
+    this.character = new CharacterMapInfo();
+    this.character.playerId = 0;
+    this.character.gender = Gender.Female;
+    this.character.skin = 0;
+    this.character.direction = Direction.Down;
+    this.character.hairStyle = 1;
+    this.character.hairColor = 0;
+
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.hide();
       this.cover.classList.add('hidden');
+    });
+
+    this.preview.addEventListener('click', () => {
+      switch (this.character.direction) {
+        case Direction.Up:
+          this.character.direction = Direction.Right;
+          break;
+        case Direction.Down:
+          this.character.direction = Direction.Left;
+          break;
+        case Direction.Left:
+          this.character.direction = Direction.Up;
+          break;
+        case Direction.Right:
+          this.character.direction = Direction.Down;
+          break;
+      }
     });
 
     this.form.addEventListener('submit', (e) => {
@@ -105,7 +183,7 @@ export class CreateCharacterForm extends Base {
       this.emitter.emit('create', {
         name,
         gender: this.gender as Gender,
-        hairStyle: this.hairStyle,
+        hairStyle: this.hairStyle + 1,
         hairColor: this.hairColor,
         skin: this.skin,
       });
@@ -116,24 +194,28 @@ export class CreateCharacterForm extends Base {
     this.btnToggleGender.addEventListener('click', () => {
       playSfxById(SfxId.TextBoxFocus);
       this.gender = incrementOrWrap(this.gender, MAX_GENDER);
+      this.character.gender = this.gender as Gender;
       this.updateIcons();
     });
 
     this.btnToggleHairStyle.addEventListener('click', () => {
       playSfxById(SfxId.TextBoxFocus);
       this.hairStyle = incrementOrWrap(this.hairStyle, MAX_HAIR_STYLE);
+      this.character.hairStyle = this.hairStyle + 1;
       this.updateIcons();
     });
 
     this.btnToggleHairColor.addEventListener('click', () => {
       playSfxById(SfxId.TextBoxFocus);
       this.hairColor = incrementOrWrap(this.hairColor, MAX_HAIR_COLOR);
+      this.character.hairColor = this.hairColor;
       this.updateIcons();
     });
 
     this.btnToggleSkin.addEventListener('click', () => {
       playSfxById(SfxId.TextBoxFocus);
       this.skin = incrementOrWrap(this.skin, MAX_SKIN);
+      this.character.skin = this.skin;
       this.updateIcons();
     });
   }

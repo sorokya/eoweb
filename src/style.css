@@ -260,6 +260,12 @@ input[type="password"] {
   z-index: 1010;
 }
 
+#create-character-preview {
+  position: absolute;
+  top: 92px;
+  right: 68px;
+}
+
 #create-character-name {
   background: transparent;
   border: none;
