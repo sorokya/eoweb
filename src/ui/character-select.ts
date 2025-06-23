@@ -49,6 +49,10 @@ export class CharacterSelect extends Base {
     this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
     this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
     this.open = true;
+    for (const el of this.container.querySelectorAll('.preview')) {
+      const image = el as HTMLImageElement;
+      image.src = '';
+    }
     window.requestAnimationFrame((now) => {
       this.render(now);
     });
