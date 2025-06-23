@@ -297,6 +297,10 @@ mainMenu.on('create-account', () => {
   }
 });
 
+mainMenu.on('view-credits', () => {
+  window.open('https://github.com/sorokya/eoweb', '_blank');
+});
+
 createAccountForm.on('cancel', () => {
   createAccountForm.hide();
   mainMenu.show();
