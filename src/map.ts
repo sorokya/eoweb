@@ -624,6 +624,15 @@ export class MapRenderer {
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
   ) {
+    if (
+      this.client.mouseCoords.x < 0 ||
+      this.client.mouseCoords.x > this.client.map.width ||
+      this.client.mouseCoords.y < 0 ||
+      this.client.mouseCoords.y > this.client.map.height
+    ) {
+      return;
+    }
+
     const bmp = getBitmapById(GfxType.PostLoginUI, 24);
     if (bmp && this.client.mouseCoords) {
       const tileScreen = isoToScreen({
