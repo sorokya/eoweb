@@ -6,7 +6,6 @@ type Events = {
   chat: string;
   focus: undefined;
   blur: undefined;
-  ping: undefined;
 };
 
 export class Chat extends Base {

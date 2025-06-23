@@ -163,6 +163,11 @@ client.on('serverChat', ({ message, sfxId }) => {
   playSfxById(sfxId || SfxId.ServerMessage);
 });
 
+client.on('ping', () => {
+  client.pingStart = new Date().getTime();
+  client.bus.send(new MessagePingClientPacket());
+});
+
 client.on('characterCreated', (characters) => {
   createCharacterForm.hide();
   smallAlertLargeHeader.setContent(
@@ -375,11 +380,6 @@ changePasswordForm.on(
 
 chat.on('chat', (message) => {
   client.chat(message);
-});
-
-chat.on('ping', () => {
-  client.pingStart = new Date().getTime();
-  client.bus.send(new MessagePingClientPacket());
 });
 
 chat.on('focus', () => {
