@@ -8,7 +8,7 @@ export class Rectangle {
     public width: number,
     public height: number,
   ) {}
-};
+}
 
 type EntityRect = {
   id: number;

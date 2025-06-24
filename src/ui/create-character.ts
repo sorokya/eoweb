@@ -1,17 +1,17 @@
 import { CharacterMapInfo, Direction, Gender } from 'eolib';
-import { playSfxById, SfxId } from '../sfx';
-import { Base } from './base-ui';
 import mitt from 'mitt';
+import { Rectangle, setCharacterRectangle } from '../collision';
 import {
   CHARACTER_HEIGHT,
   CHARACTER_WIDTH,
   GAME_FPS,
   HALF_CHARACTER_WIDTH,
 } from '../consts';
-import { renderCharacterStanding } from '../render/character-standing';
-import { Rectangle, setCharacterRectangle } from '../collision';
-import { renderCharacterHairBehind } from '../render/character-hair-behind';
 import { renderCharacterHair } from '../render/character-hair';
+import { renderCharacterHairBehind } from '../render/character-hair-behind';
+import { renderCharacterStanding } from '../render/character-standing';
+import { playSfxById, SfxId } from '../sfx';
+import { Base } from './base-ui';
 
 const MAX_GENDER = 2;
 const MAX_HAIR_STYLE = 20;

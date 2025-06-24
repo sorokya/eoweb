@@ -1,12 +1,12 @@
 import {
   DoorOpenServerPacket,
+  type EoReader,
   PacketAction,
   PacketFamily,
-  type EoReader,
 } from 'eolib';
 import type { Client } from '../client';
-import { playSfxById, SfxId } from '../sfx';
 import { DOOR_OPEN_TICKS } from '../consts';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleDoorOpen(client: Client, reader: EoReader) {
   const packet = DoorOpenServerPacket.deserialize(reader);

@@ -15,26 +15,26 @@ import { GAME_FPS, HOST, MAX_CHALLENGE } from './consts';
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
-  ZOOM,
   setGameSize,
   setZoom,
+  ZOOM,
 } from './game-state';
-import { randomRange } from './utils/random-range';
+import { getLatestDirectionHeld } from './input';
+import { inputToDirection } from './movement-controller';
 import { playSfxById, SfxId } from './sfx';
-import { MainMenu } from './ui/main-menu';
-import { LoginForm } from './ui/login';
+import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
-import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
-import { ExitGame } from './ui/exit-game';
-import { SmallConfirm } from './ui/small-confirm';
+import { Chat } from './ui/chat';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
-import { Chat } from './ui/chat';
-import { capitalize } from './utils/capitalize';
-import { inputToDirection } from './movement-controller';
-import { getLatestDirectionHeld, Input } from './input';
-import { ChangePasswordForm } from './ui/change-password';
+import { ExitGame } from './ui/exit-game';
+import { LoginForm } from './ui/login';
+import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
+import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
+import { SmallConfirm } from './ui/small-confirm';
+import { capitalize } from './utils/capitalize';
+import { randomRange } from './utils/random-range';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
@@ -134,7 +134,7 @@ client.on('error', ({ title, message }) => {
   smallAlertLargeHeader.show();
 });
 
-client.on('debug', (message) => {});
+client.on('debug', (_message) => {});
 
 client.on('accountCreated', () => {
   smallAlertLargeHeader.setContent(
@@ -165,7 +165,7 @@ client.on('characterCreated', (characters) => {
 
 client.on('selectCharacter', () => {});
 
-client.on('chat', ({ name, tab, message }) => {
+client.on('chat', ({ name, tab: _, message }) => {
   chat.addMessage(`${capitalize(name)}: ${message}`);
 });
 
@@ -200,7 +200,7 @@ const initializeSocket = (next: 'login' | 'create') => {
     }
 
     const bus = new PacketBus(socket);
-    bus.on('receive', (data) => {
+    bus.on('receive', (_data) => {
       /*
       packetLogModal.addEntry({
         source: PacketSource.Server,
@@ -208,7 +208,7 @@ const initializeSocket = (next: 'login' | 'create') => {
       });
       */
     });
-    bus.on('send', (data) => {
+    bus.on('send', (_data) => {
       /*
       packetLogModal.addEntry({
         source: PacketSource.Client,
@@ -423,7 +423,7 @@ window.addEventListener('mousemove', (e) => {
   });
 });
 
-window.addEventListener('click', (e) => {
+window.addEventListener('click', (_e) => {
   client.handleClick();
 });
 

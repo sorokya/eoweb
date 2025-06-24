@@ -1,6 +1,6 @@
 import mitt from 'mitt';
-import { Base } from './base-ui';
 import { playSfxById, SfxId } from '../sfx';
+import { Base } from './base-ui';
 
 type Events = {
   cancel: undefined;

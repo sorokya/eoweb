@@ -1,11 +1,11 @@
 import { Direction, SitState } from 'eolib';
-import { Input, getLatestDirectionHeld, isInputHeld } from './input';
+import { type Client, GameState } from './client';
 import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
-import { getNextCoords } from './utils/get-next-coords';
-import { bigCoordsToCoords } from './utils/big-coords-to-coords';
-import { GameState, type Client } from './client';
-import { CharacterWalkAnimation } from './render/character-walk';
+import { getLatestDirectionHeld, Input, isInputHeld } from './input';
 import { CharacterAttackAnimation } from './render/character-attack';
+import { CharacterWalkAnimation } from './render/character-walk';
+import { bigCoordsToCoords } from './utils/big-coords-to-coords';
+import { getNextCoords } from './utils/get-next-coords';
 
 export function inputToDirection(input: Input): Direction {
   switch (input) {

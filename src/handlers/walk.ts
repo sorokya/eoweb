@@ -1,5 +1,4 @@
 import {
-  Coords,
   type EoReader,
   PacketAction,
   PacketFamily,
@@ -7,9 +6,9 @@ import {
   WalkReplyServerPacket,
 } from 'eolib';
 import type { Client } from '../client';
+import { CharacterWalkAnimation } from '../render/character-walk';
 import { getPrevCoords } from '../utils/get-prev-coords';
 import { inRange } from '../utils/range';
-import { CharacterWalkAnimation } from '../render/character-walk';
 
 function handleWalkPlayer(client: Client, reader: EoReader) {
   const packet = WalkPlayerServerPacket.deserialize(reader);

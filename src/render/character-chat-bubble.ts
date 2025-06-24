@@ -1,6 +1,6 @@
 import type { CharacterMapInfo } from 'eolib';
-import { getCharacterRectangle } from '../collision';
 import type { ChatBubble } from '../chat-bubble';
+import { getCharacterRectangle } from '../collision';
 
 export function renderCharacterChatBubble(
   bubble: ChatBubble,

@@ -5,9 +5,9 @@ import {
   TalkPlayerServerPacket,
   TalkServerServerPacket,
 } from 'eolib';
+import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatBubble } from '../chat-bubble';
 
 function handleTalkPlayer(client: Client, reader: EoReader) {
   const packet = TalkPlayerServerPacket.deserialize(reader);

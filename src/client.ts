@@ -46,46 +46,46 @@ import {
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
 import type { PacketBus } from './bus';
-import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
-import { registerAvatarHandlers } from './handlers/avatar';
-import { registerInitHandlers } from './handlers/init';
-import { registerConnectionHandlers } from './handlers/connection';
-import { registerLoginHandlers } from './handlers/login';
-import { registerFaceHandlers } from './handlers/face';
-import { registerWelcomeHandlers } from './handlers/welcome';
-import { registerPlayersHandlers } from './handlers/players';
-import { registerWalkHandlers } from './handlers/walk';
-import { registerSitHandlers } from './handlers/sit';
-import { registerWarpHandlers } from './handlers/warp';
-import { registerRefreshHandlers } from './handlers/refresh';
-import { registerNpcHandlers } from './handlers/npc';
-import { registerRangeHandlers } from './handlers/range';
-import { MapRenderer } from './map';
+import { ChatBubble } from './chat-bubble';
+import { getDoorIntersecting } from './collision';
 import {
   HALF_TILE_HEIGHT,
   MAX_CHARACTER_NAME_LENGTH,
   MAX_CHAT_LENGTH,
 } from './consts';
-import type { Vector2 } from './vector';
-import { isoToScreen } from './utils/iso-to-screen';
-import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
-import { screenToIso } from './utils/screen-to-iso';
-import { MovementController } from './movement-controller';
-import type { NpcAnimation } from './render/npc-base-animation';
-import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
-import { GfxType, loadBitmapById } from './gfx';
-import { registerTalkHandlers } from './handlers/talk';
-import { registerAttackHandlers } from './handlers/attack';
-import { registerArenaHandlers } from './handlers/arena';
-import { playSfxById, SfxId } from './sfx';
-import { registerAccountHandlers } from './handlers/account';
-import { registerCharacterHandlers } from './handlers/character';
-import { ChatBubble } from './chat-bubble';
+import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
 import { Door } from './door';
+import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
+import { GfxType, loadBitmapById } from './gfx';
+import { registerAccountHandlers } from './handlers/account';
+import { registerArenaHandlers } from './handlers/arena';
+import { registerAttackHandlers } from './handlers/attack';
+import { registerAvatarHandlers } from './handlers/avatar';
+import { registerCharacterHandlers } from './handlers/character';
+import { registerConnectionHandlers } from './handlers/connection';
 import { registerDoorHandlers } from './handlers/door';
-import { getDoorIntersecting } from './collision';
+import { registerFaceHandlers } from './handlers/face';
+import { registerInitHandlers } from './handlers/init';
+import { registerLoginHandlers } from './handlers/login';
+import { registerNpcHandlers } from './handlers/npc';
+import { registerPlayersHandlers } from './handlers/players';
+import { registerRangeHandlers } from './handlers/range';
+import { registerRefreshHandlers } from './handlers/refresh';
+import { registerSitHandlers } from './handlers/sit';
+import { registerTalkHandlers } from './handlers/talk';
+import { registerWalkHandlers } from './handlers/walk';
+import { registerWarpHandlers } from './handlers/warp';
+import { registerWelcomeHandlers } from './handlers/welcome';
+import { MapRenderer } from './map';
+import { MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterWalkAnimation } from './render/character-walk';
+import type { NpcAnimation } from './render/npc-base-animation';
+import { playSfxById, SfxId } from './sfx';
+import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
+import { isoToScreen } from './utils/iso-to-screen';
+import { screenToIso } from './utils/screen-to-iso';
+import type { Vector2 } from './vector';
 
 export enum ChatTab {
   Local = 0,
@@ -459,7 +459,11 @@ export class Client {
       return;
     }
 
-    if ([SitState.Floor, SitState.Chair].includes(this.getPlayerCharacter()?.sitState)) {
+    if (
+      [SitState.Floor, SitState.Chair].includes(
+        this.getPlayerCharacter()?.sitState,
+      )
+    ) {
       this.stand();
       return;
     }

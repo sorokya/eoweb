@@ -12,7 +12,10 @@ function handleCharacterReply(client: Client, reader: EoReader) {
   const packet = CharacterReplyServerPacket.deserialize(reader);
   switch (packet.replyCode) {
     case CharacterReply.Exists:
-      client.showError('A character with that name already exists', 'Request denied');
+      client.showError(
+        'A character with that name already exists',
+        'Request denied',
+      );
       return;
     case CharacterReply.NotApproved:
       client.showError('That character name is not approved', 'Request denied');
