@@ -32,6 +32,7 @@ import {
   type ServerSettings,
   SitAction,
   SitRequestClientPacket,
+  SitState,
   type Spell,
   TalkReportClientPacket,
   WalkAction,
@@ -455,6 +456,12 @@ export class Client {
       if (door && !door.open) {
         this.openDoor(doorAt);
       }
+      return;
+    }
+
+    if ([SitState.Floor, SitState.Chair].includes(this.getPlayerCharacter()?.sitState)) {
+      this.stand();
+      return;
     }
   }
 
