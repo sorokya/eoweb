@@ -1,4 +1,4 @@
-import mitt, { Emitter } from 'mitt';
+import mitt from 'mitt';
 import { Base } from './base-ui';
 
 type Events = {

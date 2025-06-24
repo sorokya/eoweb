@@ -1,20 +1,20 @@
-import { type Coords, Direction, type CharacterMapInfo, Gender } from 'eolib';
+import { type CharacterMapInfo, type Coords, Direction, Gender } from 'eolib';
 import {
-  setCharacterRectangle,
-  Rectangle,
   getCharacterRectangle,
+  Rectangle,
+  setCharacterRectangle,
 } from '../collision';
 import {
-  WALK_TICKS,
-  WALK_ANIMATION_FRAMES,
-  WALK_WIDTH_FACTOR,
-  WALK_HEIGHT_FACTOR,
-  HALF_CHARACTER_WALKING_WIDTH,
   CHARACTER_WALKING_HEIGHT,
   CHARACTER_WALKING_WIDTH,
+  HALF_CHARACTER_WALKING_WIDTH,
+  WALK_ANIMATION_FRAMES,
+  WALK_HEIGHT_FACTOR,
+  WALK_TICKS,
+  WALK_WIDTH_FACTOR,
 } from '../consts';
-import { HALF_GAME_WIDTH, HALF_GAME_HEIGHT, GAME_WIDTH } from '../game-state';
-import { getBitmapById, GfxType } from '../gfx';
+import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
+import { GfxType, getBitmapById } from '../gfx';
 import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
 import { CharacterAnimation } from './character-base-animation';

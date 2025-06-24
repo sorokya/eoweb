@@ -1,6 +1,6 @@
 import type { NpcMapInfo } from 'eolib';
-import { getNpcRectangle } from '../collision';
 import type { ChatBubble } from '../chat-bubble';
+import { getNpcRectangle } from '../collision';
 
 export function renderNpcChatBubble(
   bubble: ChatBubble,

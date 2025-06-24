@@ -3,9 +3,7 @@ import {
   FileType,
   PacketAction,
   PacketFamily,
-  WelcomeAgreeClientPacket,
   WelcomeCode,
-  WelcomeMsgClientPacket,
   WelcomeReplyServerPacket,
 } from 'eolib';
 import { type Client, GameState } from '../client';

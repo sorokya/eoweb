@@ -9,9 +9,9 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import { type Client, ChatTab } from '../client';
-import { NpcWalkAnimation } from '../render/npc-walk';
 import { ChatBubble } from '../chat-bubble';
+import { ChatTab, type Client } from '../client';
+import { NpcWalkAnimation } from '../render/npc-walk';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
   const packet = NpcPlayerServerPacket.deserialize(reader);

@@ -1,8 +1,8 @@
 import {
   AvatarRemoveServerPacket,
+  type EoReader,
   PacketAction,
   PacketFamily,
-  type EoReader,
 } from 'eolib';
 import type { Client } from '../client';
 

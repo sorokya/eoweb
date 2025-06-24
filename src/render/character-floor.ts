@@ -1,18 +1,18 @@
 import { type CharacterMapInfo, Direction, Gender } from 'eolib';
 import {
-  setCharacterRectangle,
-  Rectangle,
   getCharacterRectangle,
+  Rectangle,
+  setCharacterRectangle,
 } from '../collision';
 import {
-  HALF_CHARACTER_SIT_GROUND_WIDTH,
   CHARACTER_SIT_GROUND_HEIGHT,
   CHARACTER_SIT_GROUND_WIDTH,
+  HALF_CHARACTER_SIT_GROUND_WIDTH,
 } from '../consts';
-import { HALF_GAME_WIDTH, HALF_GAME_HEIGHT, GAME_WIDTH } from '../game-state';
+import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
+import { GfxType, getBitmapById } from '../gfx';
 import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
-import { getBitmapById, GfxType } from '../gfx';
 
 export function calculateCharacterRenderPositionFloor(
   character: CharacterMapInfo,

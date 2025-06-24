@@ -1,7 +1,7 @@
 import { type CharacterMapInfo, Direction, Gender, SitState } from 'eolib';
 import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
-import { getBitmapById, GfxType } from '../gfx';
+import { GfxType, getBitmapById } from '../gfx';
 import type { Vector2 } from '../vector';
 
 const STANDING_OFFSETS = {

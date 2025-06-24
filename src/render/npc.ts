@@ -1,10 +1,10 @@
 import { Direction, type EnfRecord, type NpcMapInfo } from 'eolib';
-import { setNpcRectangle, Rectangle } from '../collision';
-import { HALF_GAME_WIDTH, HALF_GAME_HEIGHT, GAME_WIDTH } from '../game-state';
-import { getBitmapById, GfxType } from '../gfx';
+import { Rectangle, setNpcRectangle } from '../collision';
+import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
+import { GfxType, getBitmapById } from '../gfx';
+import type { NPCMetadata } from '../utils/get-npc-metadata';
 import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
-import type { NPCMetadata } from '../utils/get-npc-metadata';
 
 export function renderNpc(
   npc: NpcMapInfo,

@@ -1,16 +1,16 @@
-import { type CharacterMapInfo, Gender, Direction } from 'eolib';
+import { type CharacterMapInfo, Direction, Gender } from 'eolib';
 import {
-  setCharacterRectangle,
-  Rectangle,
   getCharacterRectangle,
+  Rectangle,
+  setCharacterRectangle,
 } from '../collision';
 import {
-  HALF_CHARACTER_WIDTH,
   CHARACTER_HEIGHT,
   CHARACTER_WIDTH,
+  HALF_CHARACTER_WIDTH,
 } from '../consts';
-import { HALF_GAME_WIDTH, HALF_GAME_HEIGHT, GAME_WIDTH } from '../game-state';
-import { getBitmapById, GfxType } from '../gfx';
+import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
+import { GfxType, getBitmapById } from '../gfx';
 import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
 
