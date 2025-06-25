@@ -67,6 +67,20 @@ const FEMALE_SIT_FLOOR_OFFSETS = {
   [Direction.Right]: { x: -2, y: -2 },
 };
 
+const MALE_SIT_CHAIR_OFFSETS = {
+  [Direction.Up]: { x: -3, y: 0 },
+  [Direction.Down]: { x: 1, y: 0 },
+  [Direction.Left]: { x: 1, y: 0 },
+  [Direction.Right]: { x: -3, y: 0 },
+};
+
+const FEMALE_SIT_CHAIR_OFFSETS = {
+  [Direction.Up]: { x: -3, y: -2 },
+  [Direction.Down]: { x: 0, y: -2 },
+  [Direction.Left]: { x: 1, y: -2 },
+  [Direction.Right]: { x: -2, y: -2 },
+};
+
 export function renderCharacterHair(
   character: CharacterMapInfo,
   ctx: CanvasRenderingContext2D,
@@ -133,6 +147,12 @@ export function renderCharacterHair(
         gender === Gender.Female
           ? FEMALE_SIT_FLOOR_OFFSETS[direction]
           : MALE_SIT_FLOOR_OFFSETS[direction];
+      break;
+    case sitState === SitState.Chair:
+      additionalOffset =
+        gender === Gender.Female
+          ? FEMALE_SIT_CHAIR_OFFSETS[direction]
+          : MALE_SIT_CHAIR_OFFSETS[direction];
       break;
     default:
       additionalOffset = STANDING_OFFSETS[direction];

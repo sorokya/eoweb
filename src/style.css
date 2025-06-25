@@ -847,3 +847,14 @@ input[type="password"] {
   --width: 21px;
   --height: 18px;
 }
+
+#offset-tweaker {
+  color: #fff;
+  position: absolute;
+  top: 20px;
+  right: 100px;
+}
+
+#offset-tweaker input {
+  width: 40px;
+}

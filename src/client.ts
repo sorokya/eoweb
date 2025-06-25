@@ -503,6 +503,10 @@ export class Client {
   }
 
   handleClick() {
+    if (this.state !== GameState.InGame) {
+      return;
+    }
+
     const doorAt = getDoorIntersecting(this.mousePosition);
     if (doorAt) {
       const door = this.getDoor(doorAt);
