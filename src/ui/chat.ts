@@ -25,6 +25,10 @@ export class Chat extends Base {
     this.chatWindow.scrollTo(0, this.chatWindow.scrollHeight);
   }
 
+  clear() {
+    this.chatWindow.innerHTML = '';
+  }
+
   focus() {
     this.message.focus();
   }
@@ -71,3 +75,4 @@ export class Chat extends Base {
     this.emitter.on(event, handler);
   }
 }
+
