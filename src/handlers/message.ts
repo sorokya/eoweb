@@ -2,10 +2,10 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import { ChatTab, type Client } from '../client';
+import type { Client } from '../client';
 
 function handleMessagePing(client: Client) {
-  const delta = new Date().getTime() - client.pingStart;
+  const delta = Date.now() - client.pingStart;
   
   client.emit('serverChat', {
     message: `${delta}ms ping`

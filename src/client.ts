@@ -682,7 +682,7 @@ export class Client {
 
 
   if (message.startsWith("#ping") && message.length === 5) {
-    this.pingStart = new Date().getTime(); 
+    this.pingStart = Date.now(); 
     this.bus.send(new MessagePingClientPacket());
     return;
   }
