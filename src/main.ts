@@ -6,8 +6,7 @@ import {
   Gender,
   InitInitClientPacket,
   SitState,
-  Version,
-  MessagePingClientPacket,
+  Version
 } from 'eolib';
 import './style.css';
 import { PacketBus } from './bus';
@@ -161,11 +160,6 @@ client.on('serverChat', ({ message, sfxId }) => {
     message: message,
   });
   playSfxById(sfxId || SfxId.ServerMessage);
-});
-
-client.on('ping', () => {
-  client.pingStart = new Date().getTime();
-  client.bus.send(new MessagePingClientPacket());
 });
 
 client.on('characterCreated', (characters) => {

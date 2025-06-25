@@ -24,6 +24,7 @@ import {
   type Item,
   LoginRequestClientPacket,
   MapTileSpec,
+  MessagePingClientPacket,
   NearbyInfo,
   type NpcMapInfo,
   NpcRangeRequestClientPacket,
@@ -560,13 +561,10 @@ export class Client {
     }
 
 
-  if (message.length > 0) {
-    if (message[0] === '#') {
-      if (message.substring(1, message.length) === 'ping') {
-        this.emit('ping', undefined);
-        return;
-      }
-    }
+  if (message.startsWith("#ping") && message.length === 5) {
+    this.pingStart = new Date().getTime(); 
+    this.bus.send(new MessagePingClientPacket());
+    return;
   }
 
     const trimmed = message.substring(0, MAX_CHAT_LENGTH);
