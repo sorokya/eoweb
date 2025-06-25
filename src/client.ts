@@ -14,6 +14,7 @@ import {
   DoorOpenClientPacket,
   type Ecf,
   type Eif,
+  type EifRecord,
   type Emf,
   type Enf,
   type EnfRecord,
@@ -255,6 +256,14 @@ export class Client {
     }
 
     return this.enf.npcs[id - 1];
+  }
+
+  getEifRecordById(id: number): EifRecord | undefined {
+    if (!this.eif) {
+      return;
+    }
+
+    return this.eif.items[id - 1];
   }
 
   getPlayerCoords() {

@@ -577,6 +577,152 @@ input[type="password"] {
   background-image: url("/sit.png");
 }
 
+#in-game-menu {
+  position: absolute;
+  right: 0;
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  justify-content: center;
+}
+
+#inventory {
+  position: absolute;
+  bottom: 30px;
+  height: 130px;
+  width: 380px;
+  padding: 3px 0;
+  border-radius: 5px;
+  border: 1px solid #000;
+  left: calc(50vw - 190px);
+  background: #7b5a29;
+  cursor: move;
+  user-select: none;
+}
+
+#inventory .grid {
+  width: 365px;
+  height: 109px;
+  margin: 3px auto;
+  background: url("/gfx/gfx002/144.png") -9px -6px #000;
+  cursor: default;
+  display: grid;
+  grid-template-columns: repeat(14, 23px);
+  grid-template-rows: repeat(4, 23px);
+  gap: 3px;
+  padding-left: 4px;
+  padding-top: 3px;
+}
+
+#inventory .item {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#inventory .item .tooltip {
+  position: absolute;
+  bottom: 100%; /* Position above the item */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: black;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#inventory .item:hover .tooltip {
+  opacity: 0.8;
+}
+
+#inventory .item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(248, 248, 190, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+#inventory .item:hover::before {
+  opacity: 0.3 !important;
+}
+
+#inventory .item img {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+#inventory .item[data-size="Size1x1"] {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+#inventory .item[data-size="Size1x2"] {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+
+#inventory .item[data-size="Size1x3"] {
+  grid-column: span 1;
+  grid-row: span 3;
+}
+
+#inventory .item[data-size="Size1x4"] {
+  grid-column: span 1;
+  grid-row: span 4;
+}
+
+#inventory .item[data-size="Size2x1"] {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+
+#inventory .item[data-size="Size2x2"] {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+#inventory .item[data-size="Size2x3"] {
+  grid-column: span 2;
+  grid-row: span 3;
+}
+
+#inventory .item[data-size="Size2x4"] {
+  grid-column: span 2;
+  grid-row: span 4;
+}
+
+#inventory .tabs {
+  display: flex;
+  margin-left: 5px;
+  gap: 1px;
+}
+#inventory .tabs button {
+  background: transparent;
+  border: 1px solid #000;
+  border-bottom: none;
+  color: #8a8a8a;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+#inventory .tabs button.active {
+  color: #cccccc;
+}
+
 .img-label {
   --bg-url: "";
   --bg-x: 0;
@@ -846,6 +992,72 @@ input[type="password"] {
   --hover-y: -39px;
   --width: 21px;
   --height: 18px;
+}
+
+.img-btn[data-id="inventory"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --hover-x: -36px;
+  --hover-y: 0;
+  --width: 36px;
+  --height: 19px;
+}
+
+.img-btn[data-id="map"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: -19px;
+  --hover-x: -36px;
+  --hover-y: -19px;
+  --width: 36px;
+  --height: 19px;
+}
+
+.img-btn[data-id="spells"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: -38px;
+  --hover-x: -36px;
+  --hover-y: -38px;
+  --width: 36px;
+  --height: 19px;
+}
+
+.img-btn[data-id="stats"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: -95px;
+  --hover-x: -36px;
+  --hover-y: -95px;
+  --width: 36px;
+  --height: 19px;
+}
+
+.img-btn[data-id="online"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: -114px;
+  --hover-x: -36px;
+  --hover-y: -114px;
+  --width: 36px;
+  --height: 19px;
+}
+
+.img-btn[data-id="party"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: -133px;
+  --hover-x: -36px;
+  --hover-y: -133px;
+  --width: 36px;
+  --height: 19px;
 }
 
 #offset-tweaker {
