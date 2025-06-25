@@ -273,6 +273,7 @@ exitGame.on('click', () => {
   );
   smallConfirm.setCallback(() => {
     client.disconnect();
+    chat.clear();
     hideAllUi();
     mainMenu.show();
   });
@@ -326,6 +327,7 @@ loginForm.on('cancel', () => {
 
 characterSelect.on('cancel', () => {
   client.disconnect();
+  chat.clear();
   characterSelect.hide();
   mainMenu.show();
 });
