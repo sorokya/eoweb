@@ -1,4 +1,11 @@
-import { MapTileSpec, PacketAction, PacketFamily } from 'eolib';
+import {
+  EffectSpecServerPacket,
+  EoReader,
+  MapDamageType,
+  MapTileSpec,
+  PacketAction,
+  PacketFamily,
+} from 'eolib';
 import type { Client } from '../client';
 import { playSfxById, SfxId } from '../sfx';
 import { getDistance } from '../utils/range';
@@ -43,10 +50,31 @@ function handleEffectReport(client: Client) {
   }
 }
 
+function handleEffectSpec(client: Client, reader: EoReader) {
+  const packet = EffectSpecServerPacket.deserialize(reader);
+  if (packet.mapDamageType === MapDamageType.TpDrain) {
+    const data =
+      packet.mapDamageTypeData as EffectSpecServerPacket.MapDamageTypeDataTpDrain;
+    client.tp = data.tp;
+    playSfxById(SfxId.MapEffectTPDrain);
+    return;
+  }
+
+  const data =
+    packet.mapDamageTypeData as EffectSpecServerPacket.MapDamageTypeDataSpikes;
+  client.hp = data.hp;
+  playSfxById(SfxId.Spikes);
+}
+
 export function registerEffectHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Effect,
     PacketAction.Report,
     () => handleEffectReport(client),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Effect,
+    PacketAction.Spec,
+    (reader) => handleEffectSpec(client, reader),
   );
 }
