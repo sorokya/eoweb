@@ -502,6 +502,26 @@ export class Client {
     registerDoorHandlers(this);
   }
 
+  occupied(coords: Vector2): boolean {
+    if (
+      this.nearby.characters.some(
+        (c) => c.coords.x === coords.x && c.coords.y === coords.y,
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      this.nearby.npcs.some(
+        (n) => n.coords.x === coords.x && n.coords.y === coords.y,
+      )
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
   handleClick() {
     if (this.state !== GameState.InGame) {
       return;
@@ -516,7 +536,10 @@ export class Client {
       return;
     }
 
-    if (this.isFacingChairAt(this.mouseCoords)) {
+    if (
+      this.isFacingChairAt(this.mouseCoords) &&
+      !this.occupied(this.mouseCoords)
+    ) {
       const coords = new Coords();
       coords.x = this.mouseCoords.x;
       coords.y = this.mouseCoords.y;

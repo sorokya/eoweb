@@ -127,7 +127,7 @@ export class MovementController {
           return;
         }
 
-        if (this.client.isFacingChairAt(to)) {
+        if (this.client.isFacingChairAt(to) && !this.client.occupied(to)) {
           this.client.sitChair(to);
           return;
         }
