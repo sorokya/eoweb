@@ -449,4 +449,3 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   requestAnimationFrame(render);
 });
-

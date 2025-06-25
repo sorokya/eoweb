@@ -75,4 +75,3 @@ export class Chat extends Base {
     this.emitter.on(event, handler);
   }
 }
-
