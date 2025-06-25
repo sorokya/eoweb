@@ -6,7 +6,7 @@ import {
   Gender,
   InitInitClientPacket,
   SitState,
-  Version
+  Version,
 } from 'eolib';
 import './style.css';
 import { PacketBus } from './bus';

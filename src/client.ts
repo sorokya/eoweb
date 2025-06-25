@@ -49,7 +49,6 @@ import {
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
 import type { PacketBus } from './bus';
-import { registerMessageHandlers } from './handlers/message';
 import { ChatBubble } from './chat-bubble';
 import { getDoorIntersecting } from './collision';
 import {
@@ -73,6 +72,7 @@ import { registerEffectHandlers } from './handlers/effect';
 import { registerFaceHandlers } from './handlers/face';
 import { registerInitHandlers } from './handlers/init';
 import { registerLoginHandlers } from './handlers/login';
+import { registerMessageHandlers } from './handlers/message';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerRangeHandlers } from './handlers/range';
@@ -106,7 +106,7 @@ type ClientEvents = {
   selectCharacter: undefined;
   enterGame: { news: string[] };
   chat: { name: string; tab: ChatTab; message: string };
-  serverChat: { message: string, sfxId?: SfxId | null };
+  serverChat: { message: string; sfxId?: SfxId | null };
   accountCreated: undefined;
   passwordChanged: undefined;
   ping: undefined;
@@ -680,12 +680,11 @@ export class Client {
       return;
     }
 
-
-  if (message.startsWith("#ping") && message.length === 5) {
-    this.pingStart = Date.now(); 
-    this.bus.send(new MessagePingClientPacket());
-    return;
-  }
+    if (message.startsWith('#ping') && message.length === 5) {
+      this.pingStart = Date.now();
+      this.bus.send(new MessagePingClientPacket());
+      return;
+    }
 
     const trimmed = message.substring(0, MAX_CHAT_LENGTH);
 
