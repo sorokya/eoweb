@@ -183,6 +183,7 @@ client.on('enterGame', ({ news }) => {
   //offsetTweaker.show();
   inGameMenu.show();
   resizeCanvases();
+  inventory.loadPositions();
   inventory.show();
 });
 

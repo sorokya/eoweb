@@ -190,7 +190,7 @@ export class Inventory extends Base {
     );
   }
 
-  private loadPositions() {
+  loadPositions() {
     const json = localStorage.getItem(`${this.client.name}-inventory`);
     if (!json) {
       this.setInitialItemPositions();
@@ -198,6 +198,41 @@ export class Inventory extends Base {
     }
 
     this.positions = JSON.parse(json);
+
+    let changed = false;
+    for (let i = this.positions.length - 1; i >= 0; --i) {
+      const position = this.positions[i];
+      if (
+        position.id !== 1 &&
+        !this.client.items.some((i) => i.id === position.id)
+      ) {
+        this.positions.splice(i, 1);
+        changed = true;
+      }
+    }
+
+    for (const item of this.client.items) {
+      const record = this.client.getEifRecordById(item.id);
+      if (!record) {
+        continue;
+      }
+
+      const existing = this.positions.find((p) => p.id === item.id);
+      if (!existing) {
+        changed = true;
+        const position = this.getNextAvailablePosition(
+          item.id,
+          ITEM_SIZE[record.size],
+        );
+        if (position) {
+          this.positions.push(position);
+        }
+      }
+    }
+
+    if (changed) {
+      this.savePositions();
+    }
   }
 
   private setInitialItemPositions() {
