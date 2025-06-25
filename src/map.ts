@@ -484,6 +484,15 @@ export class MapRenderer {
       if (spec === MapTileSpec.TimedSpikes && !this.timedSpikesTicks) {
         return;
       }
+
+      if (
+        spec === MapTileSpec.HiddenSpikes &&
+        !this.client.nearby.characters.some(
+          (c) => c.coords.x === entity.x && c.coords.y === entity.y,
+        )
+      ) {
+        return;
+      }
     }
 
     const bmp = getBitmapById(
