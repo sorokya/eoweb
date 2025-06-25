@@ -1,7 +1,9 @@
 import {
   EffectSpecServerPacket,
-  EoReader,
+  EffectUseServerPacket,
+  type EoReader,
   MapDamageType,
+  MapEffect,
   MapTileSpec,
   PacketAction,
   PacketFamily,
@@ -66,6 +68,17 @@ function handleEffectSpec(client: Client, reader: EoReader) {
   playSfxById(SfxId.Spikes);
 }
 
+function handleEffectUse(client: Client, reader: EoReader) {
+  const packet = EffectUseServerPacket.deserialize(reader);
+  if (packet.effect === MapEffect.Quake) {
+    const data = packet.effectData as EffectUseServerPacket.EffectDataQuake;
+    client.quakeTicks = 3 * data.quakeStrength + 10;
+    client.quakePower = 4 * data.quakeStrength + 10;
+    client.quakeOffset = 0;
+    playSfxById(SfxId.Earthquake);
+  }
+}
+
 export function registerEffectHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Effect,
@@ -76,5 +89,10 @@ export function registerEffectHandlers(client: Client) {
     PacketFamily.Effect,
     PacketAction.Spec,
     (reader) => handleEffectSpec(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Effect,
+    PacketAction.Use,
+    (reader) => handleEffectUse(client, reader),
   );
 }

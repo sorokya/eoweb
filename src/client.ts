@@ -88,6 +88,7 @@ import type { NpcAnimation } from './render/npc-base-animation';
 import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
+import { randomRange } from './utils/random-range';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 
@@ -188,6 +189,9 @@ export class Client {
   npcMetadata = getNpcMetaData();
   doors: Door[] = [];
   typing = false;
+  quakeTicks = 0;
+  quakePower = 0;
+  quakeOffset = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -368,6 +372,23 @@ export class Client {
 
     if (this.warpQueued && !playerWalking) {
       this.acceptWarp();
+    }
+
+    if (this.quakeTicks) {
+      this.quakeTicks = Math.max(this.quakeTicks - 1, 0);
+      if (this.quakePower) {
+        this.quakeOffset = randomRange(0, this.quakePower);
+      } else {
+        this.quakeOffset = 0;
+      }
+
+      if (randomRange(0, 1) >= 1) {
+        this.quakeOffset = -this.quakeOffset;
+      }
+
+      if (!this.quakeTicks) {
+        this.quakeOffset = 0;
+      }
     }
   }
 

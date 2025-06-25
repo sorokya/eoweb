@@ -211,6 +211,8 @@ export class MapRenderer {
       playerScreen.y += mainCharacterAnimation.walkOffset.y;
     }
 
+    playerScreen.x += this.client.quakeOffset;
+
     const diag = Math.hypot(ctx.canvas.width, ctx.canvas.height);
     const rangeX = Math.min(
       this.client.map.width,
