@@ -20,6 +20,10 @@ import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { renderCharacterBoots } from './render/character-boots';
+import {
+  calculateCharacterRenderPositionChair,
+  renderCharacterChair,
+} from './render/character-chair';
 import { renderCharacterChatBubble } from './render/character-chat-bubble';
 import {
   calculateCharacterRenderPositionFloor,
@@ -564,6 +568,8 @@ export class MapRenderer {
       animation.calculateRenderPosition(character, playerScreen);
     } else if (character.sitState === SitState.Floor) {
       calculateCharacterRenderPositionFloor(character, playerScreen);
+    } else if (character.sitState === SitState.Chair) {
+      calculateCharacterRenderPositionChair(character, playerScreen);
     } else {
       calculateCharacterRenderPositionStanding(character, playerScreen);
     }
@@ -602,6 +608,8 @@ export class MapRenderer {
       animation.render(character, characterCtx);
     } else if (character.sitState === SitState.Floor) {
       renderCharacterFloor(character, characterCtx);
+    } else if (character.sitState === SitState.Chair) {
+      renderCharacterChair(character, characterCtx);
     } else {
       renderCharacterStanding(character, characterCtx);
     }

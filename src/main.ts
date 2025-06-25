@@ -31,6 +31,7 @@ import { ExitGame } from './ui/exit-game';
 import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
+import { OffsetTweaker } from './ui/offset-tweaker';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallConfirm } from './ui/small-confirm';
 import { capitalize } from './utils/capitalize';
@@ -177,6 +178,7 @@ client.on('enterGame', ({ news }) => {
   characterSelect.hide();
   exitGame.show();
   chat.show();
+  //offsetTweaker.show();
   resizeCanvases();
 });
 
@@ -258,6 +260,8 @@ const smallAlertLargeHeader = new SmallAlertLargeHeader();
 const exitGame = new ExitGame();
 const smallConfirm = new SmallConfirm();
 const chat = new Chat();
+// biome-ignore lint/correctness/noUnusedVariables: Only used sometimes
+const offsetTweaker = new OffsetTweaker();
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
