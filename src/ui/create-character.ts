@@ -76,6 +76,9 @@ export class CreateCharacterForm extends Base {
   private hairColor = 0;
   private skin = 0;
   private open = false;
+  isOpen(): boolean {
+    return this.open;
+  }
 
   on<Event extends keyof Events>(
     event: Event,

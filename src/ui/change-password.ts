@@ -32,6 +32,11 @@ export class ChangePasswordForm extends Base {
     'button[data-id="cancel"]',
   );
 
+  private open = false;
+  isOpen(): boolean {
+    return this.open;
+  }
+
   on<Event extends keyof Events>(
     event: Event,
     handler: (data: Events[Event]) => void,
@@ -40,6 +45,7 @@ export class ChangePasswordForm extends Base {
   }
 
   show() {
+    this.open = true;
     this.username.value = '';
     this.oldPassword.value = '';
     this.newPassword.value = '';
@@ -52,6 +58,7 @@ export class ChangePasswordForm extends Base {
   }
 
   hide() {
+    this.open = false;
     this.container.classList.add('hidden');
     this.cover.classList.add('hidden');
   }

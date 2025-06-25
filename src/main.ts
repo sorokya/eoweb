@@ -401,6 +401,15 @@ window.addEventListener('keyup', (e) => {
   if (client.state === GameState.InGame && e.key === 'Enter') {
     chat.focus();
   }
+
+  if (
+    client.state === GameState.LoggedIn &&
+    !changePasswordForm.isOpen() &&
+    !createCharacterForm.isOpen() &&
+    ['1', '2', '3'].includes(e.key)
+  ) {
+    characterSelect.selectCharacter(Number.parseInt(e.key, 10));
+  }
 });
 
 window.addEventListener(
