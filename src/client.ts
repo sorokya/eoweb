@@ -3,6 +3,7 @@ import {
   AccountRequestClientPacket,
   AdminLevel,
   AttackUseClientPacket,
+  ChairRequestClientPacket,
   CharacterBaseStats,
   type CharacterMapInfo,
   CharacterRequestClientPacket,
@@ -13,6 +14,7 @@ import {
   DoorOpenClientPacket,
   type Ecf,
   type Eif,
+  type EifRecord,
   type Emf,
   type Enf,
   type EnfRecord,
@@ -63,9 +65,11 @@ import { registerAccountHandlers } from './handlers/account';
 import { registerArenaHandlers } from './handlers/arena';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerAvatarHandlers } from './handlers/avatar';
+import { registerChairHandlers } from './handlers/chair';
 import { registerCharacterHandlers } from './handlers/character';
 import { registerConnectionHandlers } from './handlers/connection';
 import { registerDoorHandlers } from './handlers/door';
+import { registerEffectHandlers } from './handlers/effect';
 import { registerFaceHandlers } from './handlers/face';
 import { registerInitHandlers } from './handlers/init';
 import { registerLoginHandlers } from './handlers/login';
@@ -86,6 +90,7 @@ import type { NpcAnimation } from './render/npc-base-animation';
 import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
+import { randomRange } from './utils/random-range';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 
@@ -189,6 +194,9 @@ export class Client {
   doors: Door[] = [];
   typing = false;
   pingStart = 0;
+  quakeTicks = 0;
+  quakePower = 0;
+  quakeOffset = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -258,6 +266,14 @@ export class Client {
     }
 
     return this.enf.npcs[id - 1];
+  }
+
+  getEifRecordById(id: number): EifRecord | undefined {
+    if (!this.eif) {
+      return;
+    }
+
+    return this.eif.items[id - 1];
   }
 
   getPlayerCoords() {
@@ -362,6 +378,23 @@ export class Client {
     if (this.warpQueued && !playerWalking) {
       this.acceptWarp();
     }
+
+    if (this.quakeTicks) {
+      this.quakeTicks = Math.max(this.quakeTicks - 1, 0);
+      if (this.quakePower) {
+        this.quakeOffset = randomRange(0, this.quakePower);
+      } else {
+        this.quakeOffset = 0;
+      }
+
+      if (randomRange(0, 1) >= 1) {
+        this.quakeOffset = -this.quakeOffset;
+      }
+
+      if (!this.quakeTicks) {
+        this.quakeOffset = 0;
+      }
+    }
   }
 
   render(ctx: CanvasRenderingContext2D) {
@@ -409,6 +442,56 @@ export class Client {
     this.bus.send(packet);
   }
 
+  isFacingChairAt(coords: Vector2): boolean {
+    const spec = this.map.tileSpecRows
+      .find((r) => r.y === coords.y)
+      ?.tiles.find((t) => t.x === coords.x);
+
+    if (!spec) {
+      return false;
+    }
+
+    const playerAt = this.getPlayerCoords();
+
+    switch (spec.tileSpec) {
+      case MapTileSpec.ChairAll:
+        return [
+          { x: coords.x + 1, y: coords.y },
+          { x: coords.x - 1, y: coords.y },
+          { x: coords.x, y: coords.y + 1 },
+          { x: coords.x, y: coords.y - 1 },
+        ].includes(playerAt);
+      case MapTileSpec.ChairDownRight:
+        return [
+          { x: coords.x + 1, y: coords.y },
+          { x: coords.x, y: coords.y + 1 },
+        ].includes(playerAt);
+      case MapTileSpec.ChairDown:
+        return playerAt.x === coords.x && playerAt.y === coords.y + 1;
+      case MapTileSpec.ChairLeft:
+        return playerAt.x === coords.x - 1 && playerAt.y === coords.y;
+      case MapTileSpec.ChairRight:
+        return playerAt.x === coords.x + 1 && playerAt.y === coords.y;
+      case MapTileSpec.ChairUp:
+        return playerAt.x === coords.x && playerAt.y === coords.y - 1;
+      case MapTileSpec.ChairUpLeft:
+        return [
+          { x: coords.x + 1, y: coords.y },
+          { x: coords.x, y: coords.y - 1 },
+        ].includes(playerAt);
+    }
+
+    return false;
+  }
+
+  sitChair(coords: Coords) {
+    const packet = new ChairRequestClientPacket();
+    packet.sitAction = SitAction.Sit;
+    packet.sitActionData = new ChairRequestClientPacket.SitActionDataSit();
+    packet.sitActionData.coords = coords;
+    this.bus.send(packet);
+  }
+
   async loadMap(id: number): Promise<void> {
     this.setMap(await getEmf(id));
   }
@@ -443,6 +526,7 @@ export class Client {
     registerFaceHandlers(this);
     registerWalkHandlers(this);
     registerSitHandlers(this);
+    registerChairHandlers(this);
     registerWarpHandlers(this);
     registerRefreshHandlers(this);
     registerNpcHandlers(this);
@@ -453,15 +537,51 @@ export class Client {
     registerAccountHandlers(this);
     registerCharacterHandlers(this);
     registerDoorHandlers(this);
+    registerEffectHandlers(this);
+  }
+
+  occupied(coords: Vector2): boolean {
+    if (
+      this.nearby.characters.some(
+        (c) => c.coords.x === coords.x && c.coords.y === coords.y,
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      this.nearby.npcs.some(
+        (n) => n.coords.x === coords.x && n.coords.y === coords.y,
+      )
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   handleClick() {
+    if (this.state !== GameState.InGame) {
+      return;
+    }
+
     const doorAt = getDoorIntersecting(this.mousePosition);
     if (doorAt) {
       const door = this.getDoor(doorAt);
       if (door && !door.open) {
         this.openDoor(doorAt);
       }
+      return;
+    }
+
+    if (
+      this.isFacingChairAt(this.mouseCoords) &&
+      !this.occupied(this.mouseCoords)
+    ) {
+      const coords = new Coords();
+      coords.x = this.mouseCoords.x;
+      coords.y = this.mouseCoords.y;
+      this.sitChair(coords);
       return;
     }
 

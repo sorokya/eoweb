@@ -20,6 +20,10 @@ import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { renderCharacterBoots } from './render/character-boots';
+import {
+  calculateCharacterRenderPositionChair,
+  renderCharacterChair,
+} from './render/character-chair';
 import { renderCharacterChatBubble } from './render/character-chat-bubble';
 import {
   calculateCharacterRenderPositionFloor,
@@ -104,6 +108,7 @@ export class MapRenderer {
   client: Client;
   animationFrame = 0;
   animationTicks = ANIMATION_TICKS;
+  timedSpikesTicks = 0;
   npcIdleAnimationTicks = NPC_IDLE_ANIMATION_TICKS;
   npcIdleAnimationFrame = 0;
   buildingCache = false;
@@ -166,6 +171,7 @@ export class MapRenderer {
 
   tick() {
     this.animationTicks = Math.max(this.animationTicks - 1, 0);
+    this.timedSpikesTicks = Math.max(this.timedSpikesTicks - 1, 0);
     if (!this.animationTicks) {
       this.animationFrame = (this.animationFrame + 1) % 3; // TODO: This might not be the right number of frames
       this.animationTicks = ANIMATION_TICKS;
@@ -204,6 +210,8 @@ export class MapRenderer {
       playerScreen.x += mainCharacterAnimation.walkOffset.x;
       playerScreen.y += mainCharacterAnimation.walkOffset.y;
     }
+
+    playerScreen.x += this.client.quakeOffset;
 
     const diag = Math.hypot(ctx.canvas.width, ctx.canvas.height);
     const rangeX = Math.min(
@@ -473,6 +481,22 @@ export class MapRenderer {
       }
     }
 
+    if (entity.layer === Layer.Objects) {
+      const spec = this.getTileSpec(entity.x, entity.y);
+      if (spec === MapTileSpec.TimedSpikes && !this.timedSpikesTicks) {
+        return;
+      }
+
+      if (
+        spec === MapTileSpec.HiddenSpikes &&
+        !this.client.nearby.characters.some(
+          (c) => c.coords.x === entity.x && c.coords.y === entity.y,
+        )
+      ) {
+        return;
+      }
+    }
+
     const bmp = getBitmapById(
       LAYER_GFX_MAP[entity.layer],
       entity.typeId + bmpOffset,
@@ -564,6 +588,8 @@ export class MapRenderer {
       animation.calculateRenderPosition(character, playerScreen);
     } else if (character.sitState === SitState.Floor) {
       calculateCharacterRenderPositionFloor(character, playerScreen);
+    } else if (character.sitState === SitState.Chair) {
+      calculateCharacterRenderPositionChair(character, playerScreen);
     } else {
       calculateCharacterRenderPositionStanding(character, playerScreen);
     }
@@ -602,6 +628,8 @@ export class MapRenderer {
       animation.render(character, characterCtx);
     } else if (character.sitState === SitState.Floor) {
       renderCharacterFloor(character, characterCtx);
+    } else if (character.sitState === SitState.Chair) {
+      renderCharacterChair(character, characterCtx);
     } else {
       renderCharacterStanding(character, characterCtx);
     }
