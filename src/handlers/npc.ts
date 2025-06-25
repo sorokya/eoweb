@@ -5,6 +5,7 @@ import {
   NpcDialogServerPacket,
   NpcJunkServerPacket,
   NpcPlayerServerPacket,
+  NpcReplyServerPacket,
   NpcSpecServerPacket,
   PacketAction,
   PacketFamily,
@@ -12,6 +13,7 @@ import {
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
 import { NpcWalkAnimation } from '../render/npc-walk';
+import { HealthBar } from '../render/health-bar';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
   const packet = NpcPlayerServerPacket.deserialize(reader);
@@ -22,6 +24,8 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
       unknownNpcsIndexes.add(position.npcIndex);
       continue;
     }
+
+    client.npcHealthBars.set(npc.index, new HealthBar(100, 0));
 
     npc.direction = position.direction;
     if (npc.coords !== position.coords) {
@@ -73,6 +77,8 @@ function handleNpcAgree(client: Client, reader: EoReader) {
     } else {
       client.nearby.npcs.push(npc);
       client.preloadNpcSprites(npc.id);
+
+      client.npcHealthBars.set(npc.index, new HealthBar(100, 0));
     }
   }
 }
@@ -117,6 +123,21 @@ function handleNpcDialog(client: Client, reader: EoReader) {
   });
 }
 
+function handleNpcDamage(client: Client, reader: EoReader) {
+  const packet = NpcReplyServerPacket.deserialize(reader);
+  const npc = client.nearby.npcs.find((n) => n.index === packet.npcIndex);
+  if (!npc) {
+    return;
+  }
+
+  const record = client.getEnfRecordById(npc.id);
+  if (!record) {
+    return;
+  }
+
+  client.npcHealthBars.set(npc.index, new HealthBar(packet.hpPercentage, packet.damage));
+}
+
 export function registerNpcHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Npc,
@@ -147,5 +168,10 @@ export function registerNpcHandlers(client: Client) {
     PacketFamily.Npc,
     PacketAction.Dialog,
     (reader) => handleNpcDialog(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Npc,
+    PacketAction.Reply,
+    (reader) => handleNpcDamage(client, reader)
   );
 }

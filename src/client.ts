@@ -93,6 +93,8 @@ import { isoToScreen } from './utils/iso-to-screen';
 import { randomRange } from './utils/random-range';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
+import { HealthBar } from './render/health-bar';
+import { registerRecoverHandlers } from './handlers/recover';
 
 export enum ChatTab {
   Local = 0,
@@ -186,6 +188,8 @@ export class Client {
   npcAnimations: Map<number, NpcAnimation> = new Map();
   characterChats: Map<number, ChatBubble> = new Map();
   npcChats: Map<number, ChatBubble> = new Map();
+  npcHealthBars: Map<number, HealthBar> = new Map();
+  characterHealthBars: Map<number, HealthBar> = new Map();
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
@@ -350,6 +354,22 @@ export class Client {
       this.characterChats.delete(id);
     }
 
+    //const endedHealthBars: number[] = [];
+    for (const [id, healthBar] of this.npcHealthBars) {
+      if (
+        !this.nearby.npcs.some((n) => n.index === id) ||
+        healthBar.ticks <= 0
+      ) {
+        //this.healthBars.delete(id);
+        //endedHealthBars.push(id);
+        continue;
+      }
+      healthBar.tick();
+    }
+    // for (const id of endedHealthBars) {
+    //   this.healthBars.delete(id);
+    // }
+
     const endedNpcChatBubbles: number[] = [];
     for (const [id, bubble] of this.npcChats) {
       if (!bubble.ticks || !this.nearby.npcs.some((n) => n.index === id)) {
@@ -404,6 +424,8 @@ export class Client {
     this.map = map;
     this.characterChats.clear();
     this.npcChats.clear();
+    this.npcHealthBars.clear();
+    this.characterHealthBars.clear();
     if (this.map) {
       this.mapRenderer.buildCaches();
       this.loadDoors();
@@ -520,6 +542,7 @@ export class Client {
     registerLoginHandlers(this);
     registerWelcomeHandlers(this);
     registerPlayersHandlers(this);
+    registerRecoverHandlers(this);
     registerMessageHandlers(this);
     registerAvatarHandlers(this);
     registerFaceHandlers(this);
@@ -682,6 +705,13 @@ export class Client {
     if (message.startsWith('#ping') && message.length === 5) {
       this.pingStart = Date.now();
       this.bus.send(new MessagePingClientPacket());
+      return;
+    }
+
+    if (message.startsWith('#loc')) {
+      this.emit('serverChat', {
+        message: `${this.mapId} x:${this.getPlayerCoords().x} y:${this.getPlayerCoords().y}`,
+      });
       return;
     }
 

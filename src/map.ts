@@ -1,4 +1,4 @@
-import { type CharacterMapInfo, Coords, MapTileSpec, SitState } from 'eolib';
+import { type CharacterMapInfo, Coords, MapTileSpec, NpcMapInfo, SitState } from 'eolib';
 import { type Client, GameState } from './client';
 import {
   getCharacterIntersecting,
@@ -40,6 +40,8 @@ import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
 import { isoToScreen } from './utils/iso-to-screen';
 import type { Vector2 } from './vector';
+import { HealthBar } from './render/health-bar';
+import { renderNpcHealthBar } from './render/npc-health-bar';
 
 enum EntityType {
   Tile = 0,
@@ -664,16 +666,17 @@ export class MapRenderer {
 
     const meta = this.client.getNpcMetadata(record.graphicId);
     const bubble = this.client.npcChats.get(npc.index);
+    const healthBar = this.client.npcHealthBars.get(npc.index);
 
     const animation = this.client.npcAnimations.get(npc.index);
     if (animation) {
       animation.render(record.graphicId, npc, meta, playerScreen, ctx);
-      renderNpcChatBubble(bubble, npc, ctx);
-      return;
+    } else {
+      renderNpc(npc, record, meta, this.npcIdleAnimationFrame, playerScreen, ctx);
     }
-
-    renderNpc(npc, record, meta, this.npcIdleAnimationFrame, playerScreen, ctx);
+    
     renderNpcChatBubble(bubble, npc, ctx);
+    renderNpcHealthBar(healthBar, npc, ctx);
   }
 
   renderCharacterBehindLayers(
