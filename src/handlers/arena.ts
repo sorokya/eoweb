@@ -11,22 +11,17 @@ import { playSfxById, SfxId } from '../sfx';
 
 function handleArenaUse(client: Client, reader: EoReader) {
   const packet = ArenaUseServerPacket.deserialize(reader);
-  client.emit('chat', {
-    name: 'Server',
-    tab: ChatTab.Local,
+  client.emit('serverChat', {
     message: `${packet.playersCount} player(s) were launched, now fight! -server`,
   });
-  playSfxById(SfxId.ServerMessage);
 }
 
 function handleArenaAccept(client: Client, reader: EoReader) {
   const packet = ArenaAcceptServerPacket.deserialize(reader);
-  client.emit('chat', {
-    name: 'Server',
-    tab: ChatTab.Local,
+  client.emit('serverChat', {
     message: `${packet.killerName} won the arena event! -server`,
+    sfxId: SfxId.ArenaWin,
   });
-  playSfxById(SfxId.ArenaWin);
 }
 
 function handleArenaSpec(client: Client, reader: EoReader) {
@@ -44,13 +39,10 @@ function handleArenaSpec(client: Client, reader: EoReader) {
 }
 
 function handleArenaDrop(client: Client) {
-  client.emit('chat', {
-    name: 'Server',
-    tab: ChatTab.Local,
-    message:
-      'New round is delayed, there are still players inside the arena -server',
+  client.emit('serverChat', {
+    message: 'New round is delayed, there are still players inside the arena',
+    sfxId: SfxId.ArenaTickSound,
   });
-  playSfxById(SfxId.ArenaTickSound);
 }
 
 export function registerArenaHandlers(client: Client) {

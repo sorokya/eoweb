@@ -26,6 +26,7 @@ import {
   type Item,
   LoginRequestClientPacket,
   MapTileSpec,
+  MessagePingClientPacket,
   NearbyInfo,
   type NpcMapInfo,
   NpcRangeRequestClientPacket,
@@ -71,6 +72,7 @@ import { registerEffectHandlers } from './handlers/effect';
 import { registerFaceHandlers } from './handlers/face';
 import { registerInitHandlers } from './handlers/init';
 import { registerLoginHandlers } from './handlers/login';
+import { registerMessageHandlers } from './handlers/message';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerRangeHandlers } from './handlers/range';
@@ -104,6 +106,7 @@ type ClientEvents = {
   selectCharacter: undefined;
   enterGame: { news: string[] };
   chat: { name: string; tab: ChatTab; message: string };
+  serverChat: { message: string; sfxId?: SfxId | null };
   accountCreated: undefined;
   passwordChanged: undefined;
 };
@@ -189,6 +192,7 @@ export class Client {
   npcMetadata = getNpcMetaData();
   doors: Door[] = [];
   typing = false;
+  pingStart = 0;
   quakeTicks = 0;
   quakePower = 0;
   quakeOffset = 0;
@@ -516,6 +520,7 @@ export class Client {
     registerLoginHandlers(this);
     registerWelcomeHandlers(this);
     registerPlayersHandlers(this);
+    registerMessageHandlers(this);
     registerAvatarHandlers(this);
     registerFaceHandlers(this);
     registerWalkHandlers(this);
@@ -671,6 +676,12 @@ export class Client {
 
   chat(message: string) {
     if (!message) {
+      return;
+    }
+
+    if (message.startsWith('#ping') && message.length === 5) {
+      this.pingStart = Date.now();
+      this.bus.send(new MessagePingClientPacket());
       return;
     }
 
