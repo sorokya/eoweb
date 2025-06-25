@@ -67,6 +67,7 @@ import { registerChairHandlers } from './handlers/chair';
 import { registerCharacterHandlers } from './handlers/character';
 import { registerConnectionHandlers } from './handlers/connection';
 import { registerDoorHandlers } from './handlers/door';
+import { registerEffectHandlers } from './handlers/effect';
 import { registerFaceHandlers } from './handlers/face';
 import { registerInitHandlers } from './handlers/init';
 import { registerLoginHandlers } from './handlers/login';
@@ -509,6 +510,7 @@ export class Client {
     registerAccountHandlers(this);
     registerCharacterHandlers(this);
     registerDoorHandlers(this);
+    registerEffectHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
