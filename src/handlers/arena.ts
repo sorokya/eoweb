@@ -1,11 +1,10 @@
 import {
   ArenaAcceptServerPacket,
-  ArenaDropServerPacket,
   ArenaSpecServerPacket,
   ArenaUseServerPacket,
+  type EoReader,
   PacketAction,
   PacketFamily,
-  type EoReader,
 } from 'eolib';
 import { ChatTab, type Client } from '../client';
 import { playSfxById, SfxId } from '../sfx';

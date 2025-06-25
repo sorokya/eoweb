@@ -8,7 +8,7 @@ export class Cursor {
     this.coords = screenToIso(mousePosition);
   }
 
-  render(ctx: CanvasRenderingContext2D) {
+  render(_ctx: CanvasRenderingContext2D) {
     if (this.coords) {
     }
   }

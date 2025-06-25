@@ -1,15 +1,15 @@
 import {
+  deinterleave,
   EoReader,
   EoWriter,
+  encodeNumber,
+  flipMsb,
+  interleave,
   type Packet,
   type PacketAction,
   type PacketFamily,
   PacketSequencer,
   SequenceStart,
-  deinterleave,
-  encodeNumber,
-  flipMsb,
-  interleave,
   swapMultiples,
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';

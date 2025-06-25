@@ -1,4 +1,12 @@
 import { type CharacterMapInfo, Coords, MapTileSpec, SitState } from 'eolib';
+import { type Client, GameState } from './client';
+import {
+  getCharacterIntersecting,
+  getCharacterRectangle,
+  getNpcIntersecting,
+  Rectangle,
+  setDoorRectangle,
+} from './collision';
 import {
   ANIMATION_TICKS,
   DOOR_HEIGHT,
@@ -10,32 +18,24 @@ import {
 } from './consts';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
-import { isoToScreen } from './utils/iso-to-screen';
-import type { Vector2 } from './vector';
-import { GameState, type Client } from './client';
-import {
-  getCharacterIntersecting,
-  getCharacterRectangle,
-  getNpcIntersecting,
-  Rectangle,
-  setDoorRectangle,
-} from './collision';
-import { CharacterWalkAnimation } from './render/character-walk';
 import { CharacterAttackAnimation } from './render/character-attack';
-import { renderCharacterHair } from './render/character-hair';
-import {
-  calculateCharacterRenderPositionStanding,
-  renderCharacterStanding,
-} from './render/character-standing';
+import { renderCharacterBoots } from './render/character-boots';
 import { renderCharacterChatBubble } from './render/character-chat-bubble';
 import {
   calculateCharacterRenderPositionFloor,
   renderCharacterFloor,
 } from './render/character-floor';
+import { renderCharacterHair } from './render/character-hair';
+import { renderCharacterHairBehind } from './render/character-hair-behind';
+import {
+  calculateCharacterRenderPositionStanding,
+  renderCharacterStanding,
+} from './render/character-standing';
+import { CharacterWalkAnimation } from './render/character-walk';
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
-import { renderCharacterHairBehind } from './render/character-hair-behind';
-import { renderCharacterBoots } from './render/character-boots';
+import { isoToScreen } from './utils/iso-to-screen';
+import type { Vector2 } from './vector';
 
 enum EntityType {
   Tile = 0,
@@ -672,7 +672,7 @@ export class MapRenderer {
     attacking: boolean,
   ) {
     renderCharacterHair(character, ctx, animationFrame, walking, attacking);
-    renderCharacterBoots(character, ctx, animationFrame, walking, attacking); 
+    renderCharacterBoots(character, ctx, animationFrame, walking, attacking);
   }
 
   renderCursor(

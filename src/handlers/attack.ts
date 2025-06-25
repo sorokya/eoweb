@@ -1,12 +1,12 @@
 import {
   AttackPlayerServerPacket,
+  type EoReader,
   PacketAction,
   PacketFamily,
-  type EoReader,
 } from 'eolib';
 import type { Client } from '../client';
-import { playSfxById, SfxId } from '../sfx';
 import { CharacterAttackAnimation } from '../render/character-attack';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleAttackPlayer(client: Client, reader: EoReader) {
   const packet = AttackPlayerServerPacket.deserialize(reader);
