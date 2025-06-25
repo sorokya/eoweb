@@ -28,6 +28,8 @@ import { Chat } from './ui/chat';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
+import { InGameMenu } from './ui/in-game-menu';
+import { Inventory } from './ui/inventory';
 import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
@@ -179,7 +181,10 @@ client.on('enterGame', ({ news }) => {
   exitGame.show();
   chat.show();
   //offsetTweaker.show();
+  inGameMenu.show();
   resizeCanvases();
+  inventory.loadPositions();
+  inventory.show();
 });
 
 client.on('passwordChanged', () => {
@@ -262,6 +267,8 @@ const smallConfirm = new SmallConfirm();
 const chat = new Chat();
 // biome-ignore lint/correctness/noUnusedVariables: Only used sometimes
 const offsetTweaker = new OffsetTweaker();
+const inGameMenu = new InGameMenu();
+const inventory = new Inventory(client);
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -381,6 +388,10 @@ chat.on('blur', () => {
   client.typing = false;
 });
 
+inGameMenu.on('toggle-inventory', () => {
+  inventory.toggle();
+});
+
 // Tick loop
 setInterval(() => {
   client.tick();
@@ -389,6 +400,15 @@ setInterval(() => {
 window.addEventListener('keyup', (e) => {
   if (client.state === GameState.InGame && e.key === 'Enter') {
     chat.focus();
+  }
+
+  if (
+    client.state === GameState.LoggedIn &&
+    !changePasswordForm.isOpen() &&
+    !createCharacterForm.isOpen() &&
+    ['1', '2', '3'].includes(e.key)
+  ) {
+    characterSelect.selectCharacter(Number.parseInt(e.key, 10));
   }
 });
 

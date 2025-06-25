@@ -46,6 +46,10 @@ export class CharacterSelect extends Base {
   private ctx: CanvasRenderingContext2D;
   private open = false;
 
+  isOpen(): boolean {
+    return this.open;
+  }
+
   private emitter = mitt<Events>();
 
   private onLogin: ((e: Event) => undefined)[] = [];
@@ -205,6 +209,14 @@ export class CharacterSelect extends Base {
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('cancel', undefined);
     });
+  }
+
+  selectCharacter(index: number) {
+    const character = this.characters[index - 1];
+    if (character) {
+      playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('selectCharacter', character.id);
+    }
   }
 
   on<Event extends keyof Events>(
