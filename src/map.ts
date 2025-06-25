@@ -108,6 +108,7 @@ export class MapRenderer {
   client: Client;
   animationFrame = 0;
   animationTicks = ANIMATION_TICKS;
+  timedSpikesTicks = 0;
   npcIdleAnimationTicks = NPC_IDLE_ANIMATION_TICKS;
   npcIdleAnimationFrame = 0;
   buildingCache = false;
@@ -170,6 +171,7 @@ export class MapRenderer {
 
   tick() {
     this.animationTicks = Math.max(this.animationTicks - 1, 0);
+    this.timedSpikesTicks = Math.max(this.timedSpikesTicks - 1, 0);
     if (!this.animationTicks) {
       this.animationFrame = (this.animationFrame + 1) % 3; // TODO: This might not be the right number of frames
       this.animationTicks = ANIMATION_TICKS;
@@ -474,6 +476,22 @@ export class MapRenderer {
       isDoor = !!door;
       if (door?.open) {
         bmpOffset = 1;
+      }
+    }
+
+    if (entity.layer === Layer.Objects) {
+      const spec = this.getTileSpec(entity.x, entity.y);
+      if (spec === MapTileSpec.TimedSpikes && !this.timedSpikesTicks) {
+        return;
+      }
+
+      if (
+        spec === MapTileSpec.HiddenSpikes &&
+        !this.client.nearby.characters.some(
+          (c) => c.coords.x === entity.x && c.coords.y === entity.y,
+        )
+      ) {
+        return;
       }
     }
 

@@ -103,17 +103,18 @@ export enum SfxId {
 
 const SFX: HTMLAudioElement[] = [];
 
-export function playSfxById(id: SfxId) {
+export function playSfxById(id: SfxId, volume = 1.0) {
   const sfx = SFX[id];
   if (!sfx) {
-    loadSfxById(id);
+    loadSfxById(id, true, volume);
     return;
   }
 
+  sfx.volume = volume;
   sfx.play();
 }
 
-export function loadSfxById(id: SfxId, play = true) {
+export function loadSfxById(id: SfxId, play = true, volume = 1.0) {
   if (SFX[id]) {
     return;
   }
@@ -122,6 +123,7 @@ export function loadSfxById(id: SfxId, play = true) {
   sfx.src = `/sfx/sfx${padWithZeros(id, 3)}.wav`;
   sfx.addEventListener('loadeddata', () => {
     if (play) {
+      sfx.volume = volume;
       sfx.play();
     }
     SFX[id] = sfx;
