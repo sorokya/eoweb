@@ -109,7 +109,6 @@ type ClientEvents = {
   serverChat: { message: string; sfxId?: SfxId | null };
   accountCreated: undefined;
   passwordChanged: undefined;
-  ping: undefined;
 };
 
 export enum GameState {
