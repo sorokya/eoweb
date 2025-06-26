@@ -13,13 +13,15 @@ const MISS_RECT = { x: 132, y: 28, width: 30, height: 11 };
 export class HealthBar {
   percentage: number;
   damage: number;
+  heal: number;
   ticks = 9;
   textCanvas = document.createElement('canvas');
   textCtx = this.textCanvas.getContext('2d');
 
-  constructor(percentage: number, damage: number) {
+  constructor(percentage: number, damage: number, heal = 0) {
     this.percentage = percentage;
     this.damage = damage;
+    this.heal = heal;
   }
 
   tick() {
@@ -67,7 +69,8 @@ export class HealthBar {
       HEALTH_BAR_HEIGHT,
     );
 
-    if (!this.damage) {
+    const amount = this.damage || this.heal;
+    if (!amount) {
       ctx.drawImage(
         bmp,
         MISS_RECT.x,
@@ -82,8 +85,8 @@ export class HealthBar {
       return;
     }
 
-    const damageAsText = this.damage.toString();
-    const chars = damageAsText.split('');
+    const amountAsText = amount.toString();
+    const chars = amountAsText.split('');
     this.textCanvas.width = chars.length * NUMBER_WIDTH;
     this.textCanvas.height = NUMBER_HEIGHT;
 
@@ -95,7 +98,7 @@ export class HealthBar {
       this.textCtx.drawImage(
         bmp,
         HEALTH_BAR_WIDTH + number * NUMBER_WIDTH,
-        EMPTY_BACKGROUND_START,
+        EMPTY_BACKGROUND_START + (this.heal > 0 ? NUMBER_HEIGHT : 0),
         NUMBER_WIDTH,
         NUMBER_HEIGHT,
         index * NUMBER_WIDTH,
