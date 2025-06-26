@@ -35,6 +35,25 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     }
   }
 
+  for (const attack of packet.attacks) {
+    const npc = client.nearby.npcs.find((n) => attack.npcIndex === n.index);
+    if (!npc) {
+      unknownNpcsIndexes.add(attack.npcIndex);
+      continue;
+    }
+
+    npc.direction = attack.direction;
+    /*client.npcAnimations.set(
+      npc.index,
+      new NpcWalkAnimation(npc.coords, position.coords, position.direction),
+    );
+    */
+    client.characterHealthBars.set(
+      attack.playerId,
+      new HealthBar(attack.hpPercentage, attack.damage),
+    );
+  }
+
   for (const chat of packet.chats) {
     const npc = client.nearby.npcs.find((n) => chat.npcIndex === n.index);
     if (!npc) {

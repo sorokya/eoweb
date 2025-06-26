@@ -354,19 +354,34 @@ export class Client {
       this.characterChats.delete(id);
     }
 
-    const endedHealthBars: number[] = [];
+    const endedNpcHealthBars: number[] = [];
     for (const [id, healthBar] of this.npcHealthBars) {
       if (
         !this.nearby.npcs.some((n) => n.index === id) ||
         healthBar.ticks <= 0
       ) {
-        endedHealthBars.push(id);
+        endedNpcHealthBars.push(id);
         continue;
       }
       healthBar.tick();
     }
-    for (const id of endedHealthBars) {
+    for (const id of endedNpcHealthBars) {
       this.npcHealthBars.delete(id);
+    }
+
+    const endedCharacterHealthBars: number[] = [];
+    for (const [id, healthBar] of this.characterHealthBars) {
+      if (
+        !this.nearby.characters.some((c) => c.playerId === id) ||
+        healthBar.ticks <= 0
+      ) {
+        endedCharacterHealthBars.push(id);
+        continue;
+      }
+      healthBar.tick();
+    }
+    for (const id of endedCharacterHealthBars) {
+      this.characterHealthBars.delete(id);
     }
 
     const endedNpcChatBubbles: number[] = [];

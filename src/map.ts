@@ -31,6 +31,7 @@ import {
 } from './render/character-floor';
 import { renderCharacterHair } from './render/character-hair';
 import { renderCharacterHairBehind } from './render/character-hair-behind';
+import { renderCharacterHealthBar } from './render/character-health-bar';
 import {
   calculateCharacterRenderPositionStanding,
   renderCharacterStanding,
@@ -613,6 +614,7 @@ export class MapRenderer {
     );
 
     const bubble = this.client.characterChats.get(character.playerId);
+    const healthBar = this.client.characterHealthBars.get(character.playerId);
     const frame = animation?.animationFrame || 0;
     const walking = animation instanceof CharacterWalkAnimation;
     const attacking = animation instanceof CharacterAttackAnimation;
@@ -650,6 +652,7 @@ export class MapRenderer {
     }
 
     renderCharacterChatBubble(bubble, character, ctx);
+    renderCharacterHealthBar(healthBar, character, ctx);
   }
 
   renderNpc(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
