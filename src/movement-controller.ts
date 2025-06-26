@@ -63,7 +63,7 @@ export class MovementController {
     const walking = animation instanceof CharacterWalkAnimation;
     const attacking = animation instanceof CharacterAttackAnimation;
 
-    if (attacking) {
+    if (attacking && animation.ticks > 2) {
       return;
     }
 
@@ -88,6 +88,10 @@ export class MovementController {
         this.attackTicks = ATTACK_TICKS;
         return;
       }
+    }
+
+    if (attacking && animation.ticks > 1) {
+      return;
     }
 
     if (character.sitState === SitState.Stand && directionHeld !== null) {
