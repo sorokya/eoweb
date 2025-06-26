@@ -47,10 +47,18 @@ export class HealthBar {
       HEALTH_BAR_WIDTH,
       HEALTH_BAR_HEIGHT,
     );
+
+    let startY = GREEN_BAR_START;
+    if (this.percentage < 25) {
+      startY = GREEN_BAR_START + HEALTH_BAR_HEIGHT + HEALTH_BAR_HEIGHT;
+    } else if (this.percentage < 50) {
+      startY = GREEN_BAR_START + HEALTH_BAR_HEIGHT;
+    }
+
     ctx.drawImage(
       bmp,
       0,
-      GREEN_BAR_START,
+      startY,
       hpWidth,
       HEALTH_BAR_HEIGHT,
       x,
