@@ -190,7 +190,7 @@ client.on('enterGame', ({ news }) => {
   characterSelect.hide();
   exitGame.show();
   chat.show();
-  //offsetTweaker.show();
+  offsetTweaker.show();
   inGameMenu.show();
   resizeCanvases();
   inventory.loadPositions();

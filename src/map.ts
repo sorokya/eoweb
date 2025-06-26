@@ -18,6 +18,7 @@ import {
 } from './consts';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
+import { renderCharacterArmor } from './render/character-armor';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { renderCharacterBoots } from './render/character-boots';
 import {
@@ -833,7 +834,8 @@ export class MapRenderer {
     attacking: boolean,
   ) {
     renderCharacterHair(character, ctx, animationFrame, walking, attacking);
-    renderCharacterBoots(character, ctx, animationFrame, walking, attacking);
+    renderCharacterArmor(character, ctx, animationFrame, walking, attacking);
+    //renderCharacterBoots(character, ctx, animationFrame, walking, attacking);
   }
 
   renderCursor(
