@@ -25,8 +25,6 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
       continue;
     }
 
-    client.npcHealthBars.set(npc.index, new HealthBar(100, 0));
-
     npc.direction = position.direction;
     if (npc.coords !== position.coords) {
       client.npcAnimations.set(
@@ -77,8 +75,6 @@ function handleNpcAgree(client: Client, reader: EoReader) {
     } else {
       client.nearby.npcs.push(npc);
       client.preloadNpcSprites(npc.id);
-
-      client.npcHealthBars.set(npc.index, new HealthBar(100, 0));
     }
   }
 }
