@@ -2,6 +2,7 @@ import {
   Coords,
   type Direction,
   type EoReader,
+  ItemMapInfo,
   NpcAcceptServerPacket,
   NpcDialogServerPacket,
   NpcJunkServerPacket,
@@ -111,6 +112,15 @@ function handleNpcSpec(client: Client, reader: EoReader) {
   client.nearby.npcs = client.nearby.npcs.filter(
     (n) => n.index !== packet.npcKilledData.npcIndex,
   );
+
+  if (packet.npcKilledData.dropIndex) {
+    const item = new ItemMapInfo();
+    item.uid = packet.npcKilledData.dropIndex;
+    item.id = packet.npcKilledData.dropId;
+    item.coords = packet.npcKilledData.dropCoords;
+    item.amount = packet.npcKilledData.dropAmount;
+    client.nearby.items.push(item);
+  }
 }
 
 function handleNpcAccept(client: Client, reader: EoReader) {
@@ -118,6 +128,15 @@ function handleNpcAccept(client: Client, reader: EoReader) {
   client.nearby.npcs = client.nearby.npcs.filter(
     (n) => n.index !== packet.npcKilledData.npcIndex,
   );
+
+  if (packet.npcKilledData.dropIndex) {
+    const item = new ItemMapInfo();
+    item.uid = packet.npcKilledData.dropIndex;
+    item.id = packet.npcKilledData.dropId;
+    item.coords = packet.npcKilledData.dropCoords;
+    item.amount = packet.npcKilledData.dropAmount;
+    client.nearby.items.push(item);
+  }
 }
 
 function handleNpcJunk(client: Client, reader: EoReader) {

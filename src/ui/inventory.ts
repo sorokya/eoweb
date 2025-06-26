@@ -1,4 +1,5 @@
 import { type EifRecord, ItemSize, ItemSpecial, ItemType } from 'eolib';
+import mitt from 'mitt';
 import type { Client } from '../client';
 import { playSfxById, SfxId } from '../sfx';
 import type { Vector2 } from '../vector';
@@ -27,8 +28,13 @@ const ITEM_SIZE = {
   [ItemSize.Size2x4]: { x: 2, y: 4 },
 };
 
+type Events = {
+  dropItem: number;
+};
+
 export class Inventory extends Base {
   private client: Client;
+  private emitter = mitt<Events>();
   protected container = document.querySelector('#inventory');
   private grid: HTMLDivElement = this.container.querySelector('.grid');
   private positions: ItemPosition[] = [];
@@ -37,6 +43,11 @@ export class Inventory extends Base {
   constructor(client: Client) {
     super();
     this.client = client;
+
+    this.client.on('inventoryChanged', () => {
+      this.loadPositions();
+      this.render();
+    });
 
     const btnTab1: HTMLButtonElement = this.container.querySelector(
       '.tabs > button:nth-child(1)',
@@ -81,6 +92,40 @@ export class Inventory extends Base {
 
       this.tryMoveItem(itemId, gridX, gridY);
     });
+
+    const canvas = document.getElementById('game') as HTMLCanvasElement;
+    const uiContainer = document.getElementById('ui');
+    uiContainer.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      client.setMousePosition({
+        x: Math.min(
+          Math.max(Math.floor((e.clientX - rect.left) * scaleX), 0),
+          canvas.width,
+        ),
+        y: Math.min(
+          Math.max(Math.floor((e.clientY - rect.top) * scaleY), 0),
+          canvas.height,
+        ),
+      });
+    });
+
+    uiContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const itemId = Number(e.dataTransfer?.getData('text/plain'));
+      if (!Number.isNaN(itemId) && itemId > 0) {
+        this.emitter.emit('dropItem', itemId);
+      }
+    });
+  }
+
+  on<Event extends keyof Events>(
+    event: Event,
+    handler: (data: Events[Event]) => void,
+  ) {
+    this.emitter.on(event, handler);
   }
 
   private tryMoveItem(itemId: number, x: number, y: number) {

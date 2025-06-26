@@ -48,6 +48,7 @@ enum EntityType {
   Character = 1,
   Cursor = 2,
   Npc = 3,
+  Item = 4,
 }
 
 type Entity = {
@@ -72,6 +73,7 @@ enum Layer {
   Character = 9,
   Cursor = 10,
   Npc = 11,
+  Item = 12,
 }
 
 const TDG = 0.00000001; // gap between depth of each tile on a layer
@@ -79,17 +81,18 @@ const RDG = 0.001; // gap between depth of each row of tiles
 
 const layerDepth = [
   -3.0 + TDG * 1, // Ground
-  0.0 + TDG * 3, // Objects
-  0.0 + TDG * 6, // Overlay
-  0.0 + TDG * 7, // Down Wall
-  -RDG + TDG * 8, // Right Wall
-  0.0 + TDG * 9, // Roof
+  0.0 + TDG * 4, // Objects
+  0.0 + TDG * 7, // Overlay
+  0.0 + TDG * 8, // Down Wall
+  -RDG + TDG * 9, // Right Wall
+  0.0 + TDG * 10, // Roof
   0.0 + TDG * 1, // Top
   -1.0 + TDG * 1, // Shadow
   1.0 + TDG * 1, // Overlay 2
-  0.0 + TDG * 4, // Characters
+  0.0 + TDG * 5, // Characters
   0.0 + TDG * 2, // Cursor
-  0.0 + TDG * 5, // NPC
+  0.0 + TDG * 6, // NPC
+  0.0 + TDG * 3, // Item
 ];
 
 const LAYER_GFX_MAP = [
@@ -272,6 +275,19 @@ export class MapRenderer {
               depth: this.calculateDepth(Layer.Npc, x, y),
             });
           }
+
+          for (const i of this.client.nearby.items.filter(
+            (i) => i.coords.x === x && i.coords.y === y,
+          )) {
+            entities.push({
+              x,
+              y,
+              type: EntityType.Item,
+              typeId: i.uid,
+              layer: Layer.Item,
+              depth: this.calculateDepth(Layer.Item, x, y),
+            });
+          }
         }
       }
     }
@@ -285,7 +301,9 @@ export class MapRenderer {
         spec === null ||
         ![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)
       ) {
-        const charAt =
+        let typeId = 0;
+
+        if (
           [
             MapTileSpec.Chest,
             MapTileSpec.ChairAll,
@@ -315,12 +333,24 @@ export class MapRenderer {
             (n) =>
               n.coords.x === this.client.mouseCoords.x &&
               n.coords.y === this.client.mouseCoords.y,
-          );
+          )
+        ) {
+          typeId = 1;
+        } else if (
+          this.client.nearby.items.some(
+            (i) =>
+              i.coords.x === this.client.mouseCoords.x &&
+              i.coords.y === this.client.mouseCoords.y,
+          )
+        ) {
+          typeId = 2;
+        }
+
         entities.push({
           x: this.client.mouseCoords.x,
           y: this.client.mouseCoords.y,
           type: EntityType.Cursor,
-          typeId: charAt || spec ? 1 : 0,
+          typeId,
           layer: Layer.Cursor,
           depth: this.calculateDepth(
             Layer.Cursor,
@@ -341,10 +371,12 @@ export class MapRenderer {
         case EntityType.Character:
           this.renderCharacter(e, playerScreen, ctx);
           break;
-        case EntityType.Npc: {
+        case EntityType.Npc:
           this.renderNpc(e, playerScreen, ctx);
           break;
-        }
+        case EntityType.Item:
+          this.renderItem(e, playerScreen, ctx);
+          break;
         case EntityType.Cursor:
           this.renderCursor(e, playerScreen, ctx);
           break;
@@ -376,6 +408,10 @@ export class MapRenderer {
     let rendered = this.renderCharacterNameTag(playerScreen, ctx);
     if (!rendered) {
       rendered = this.renderNpcNameTag(playerScreen, ctx);
+    }
+
+    if (!rendered && this.client.mouseCoords) {
+      this.renderItemNameTag(playerScreen, ctx);
     }
   }
 
@@ -457,6 +493,48 @@ export class MapRenderer {
       ),
       Math.floor(
         position.y - playerScreen.y - entityRect.rect.height + HALF_GAME_HEIGHT,
+      ),
+    );
+
+    return true;
+  }
+
+  renderItemNameTag(
+    playerScreen: Vector2,
+    ctx: CanvasRenderingContext2D,
+  ): boolean {
+    const item = this.client.nearby.items.find(
+      (i) =>
+        i.coords.x === this.client.mouseCoords.x &&
+        i.coords.y === this.client.mouseCoords.y,
+    );
+    if (!item) {
+      return false;
+    }
+
+    const data = this.client.getEifRecordById(item.id);
+    if (!data) {
+      return;
+    }
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px w95fa';
+
+    const position = isoToScreen(item.coords);
+    const name =
+      item.id === 1
+        ? `${item.amount} ${data.name}`
+        : item.amount > 1
+          ? `${data.name} x${item.amount}`
+          : data.name;
+    const metrics = ctx.measureText(name);
+    ctx.fillText(
+      name,
+      Math.floor(
+        position.x - metrics.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+      ),
+      Math.floor(
+        position.y - playerScreen.y - TILE_HEIGHT + 10 + HALF_GAME_HEIGHT,
       ),
     );
 
@@ -686,6 +764,49 @@ export class MapRenderer {
 
     renderNpcChatBubble(bubble, npc, ctx);
     renderNpcHealthBar(healthBar, npc, ctx);
+  }
+
+  renderItem(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
+    const item = this.client.getItemByIndex(e.typeId);
+    if (!item) {
+      return;
+    }
+
+    const record = this.client.getEifRecordById(item.id);
+    if (!record) {
+      return;
+    }
+
+    let gfxId = record.graphicId * 2 - 1;
+    if (item.id === 1) {
+      const offset =
+        item.amount >= 100_000
+          ? 4
+          : item.amount >= 10_000
+            ? 3
+            : item.amount >= 100
+              ? 2
+              : item.amount >= 2
+                ? 1
+                : 0;
+      gfxId = 269 + 2 * offset;
+    }
+
+    const bmp = getBitmapById(GfxType.Items, gfxId);
+    if (!bmp) {
+      return;
+    }
+
+    const tileScreen = isoToScreen(item.coords);
+
+    const screenX = Math.floor(
+      tileScreen.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+    );
+    const screenY = Math.floor(
+      tileScreen.y - bmp.height / 2 - playerScreen.y + HALF_GAME_HEIGHT,
+    );
+
+    ctx.drawImage(bmp, screenX, screenY);
   }
 
   renderCharacterBehindLayers(
