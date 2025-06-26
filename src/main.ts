@@ -5,6 +5,7 @@ import {
   EoReader,
   Gender,
   InitInitClientPacket,
+  ItemSpecial,
   SitState,
   Version,
 } from 'eolib';
@@ -399,6 +400,29 @@ chat.on('blur', () => {
 
 inGameMenu.on('toggle-inventory', () => {
   inventory.toggle();
+});
+
+inventory.on('dropItem', (itemId) => {
+  const item = client.items.find((i) => i.id === itemId);
+  if (!item) {
+    return;
+  }
+
+  if (!client.cursorInDropRange()) {
+    return;
+  }
+
+  const record = client.getEifRecordById(itemId);
+  if (!record) {
+    return;
+  }
+
+  if (record.special === ItemSpecial.Lore) {
+    // TODO: alert
+    return;
+  }
+
+  client.dropItem(itemId, 1, client.mouseCoords);
 });
 
 // Tick loop

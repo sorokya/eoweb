@@ -3,6 +3,7 @@ import {
   AccountRequestClientPacket,
   AdminLevel,
   AttackUseClientPacket,
+  ByteCoords,
   ChairRequestClientPacket,
   CharacterBaseStats,
   type CharacterMapInfo,
@@ -24,6 +25,7 @@ import {
   FileType,
   type Gender,
   type Item,
+  ItemDropClientPacket,
   ItemGetClientPacket,
   type ItemMapInfo,
   LoginRequestClientPacket,
@@ -40,6 +42,7 @@ import {
   SitState,
   type Spell,
   TalkReportClientPacket,
+  ThreeItem,
   WalkAction,
   WalkPlayerClientPacket,
   WarpAcceptClientPacket,
@@ -610,13 +613,14 @@ export class Client {
       return;
     }
 
-    const item = this.nearby.items.find(
+    const itemsAtCoords = this.nearby.items.filter(
       (i) =>
         i.coords.x === this.mouseCoords.x && i.coords.y === this.mouseCoords.y,
     );
-    if (item) {
+    itemsAtCoords.sort((a, b) => b.uid - a.uid);
+    if (itemsAtCoords.length) {
       const packet = new ItemGetClientPacket();
-      packet.itemIndex = item.uid;
+      packet.itemIndex = itemsAtCoords[0].uid;
       this.bus.send(packet);
     }
 
@@ -896,5 +900,82 @@ export class Client {
   disconnect() {
     this.state = GameState.Initial;
     this.bus.disconnect();
+  }
+
+  cursorInDropRange(): boolean {
+    if (!this.mouseCoords) {
+      return false;
+    }
+
+    const spec = this.map.tileSpecRows
+      .find((r) => r.y === this.mouseCoords.y)
+      ?.tiles.find((t) => t.x === this.mouseCoords.x);
+    if (
+      spec &&
+      [
+        MapTileSpec.Wall,
+        MapTileSpec.ChairDown,
+        MapTileSpec.ChairLeft,
+        MapTileSpec.ChairRight,
+        MapTileSpec.ChairUp,
+        MapTileSpec.ChairDownRight,
+        MapTileSpec.ChairUpLeft,
+        MapTileSpec.ChairAll,
+        MapTileSpec.Chest,
+        MapTileSpec.BankVault,
+        MapTileSpec.Edge,
+        MapTileSpec.Board1,
+        MapTileSpec.Board2,
+        MapTileSpec.Board3,
+        MapTileSpec.Board4,
+        MapTileSpec.Board5,
+        MapTileSpec.Board6,
+        MapTileSpec.Board7,
+        MapTileSpec.Board8,
+        MapTileSpec.Jukebox,
+      ].includes(spec.tileSpec)
+    ) {
+      return false;
+    }
+
+    const player = this.getPlayerCoords();
+    const validCoords = [
+      player,
+      { x: player.x + 1, y: player.y }, // Right
+      { x: player.x + 1, y: player.y + 1 }, // Down Right
+      { x: player.x - 1, y: player.y }, // Left
+      { x: player.x - 1, y: player.y - 1 }, // Up Left
+      { x: player.x - 1, y: player.y + 1 }, // Down Left
+      { x: player.x, y: player.y - 1 }, // Down
+      { x: player.x + 1, y: player.y - 1 }, // Up Right
+      { x: player.x, y: player.y - 1 }, // Up
+      { x: player.x, y: player.y - 2 }, // Up + 1
+      { x: player.x, y: player.y + 2 }, // Down + 1
+      { x: player.x - 2, y: player.y }, // Left + 1
+      { x: player.x + 2, y: player.y }, // Right + 1
+    ];
+
+    return validCoords.some(
+      (c) => c.x === this.mouseCoords.x && c.y === this.mouseCoords.y,
+    );
+  }
+
+  dropItem(id: number, amount: number, coords: Vector2) {
+    const item = this.items.find((i) => i.id === id);
+    if (!item) {
+      return;
+    }
+
+    const actualAmount = Math.min(amount, item.amount);
+    if (actualAmount) {
+      const packet = new ItemDropClientPacket();
+      packet.item = new ThreeItem();
+      packet.item.id = item.id;
+      packet.item.amount = actualAmount;
+      packet.coords = new ByteCoords();
+      packet.coords.x = coords.x + 1;
+      packet.coords.y = coords.y + 1;
+      this.bus.send(packet);
+    }
   }
 }

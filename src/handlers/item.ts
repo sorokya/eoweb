@@ -2,6 +2,7 @@ import {
   type EoReader,
   Item,
   ItemAddServerPacket,
+  ItemDropServerPacket,
   ItemGetServerPacket,
   ItemMapInfo,
   ItemRemoveServerPacket,
@@ -55,6 +56,29 @@ function handleItemGet(client: Client, reader: EoReader) {
   client.emit('inventoryChanged', undefined);
 }
 
+function handleItemDrop(client: Client, reader: EoReader) {
+  const packet = ItemDropServerPacket.deserialize(reader);
+  const mapItem = new ItemMapInfo();
+  mapItem.uid = packet.itemIndex;
+  mapItem.id = packet.droppedItem.id;
+  mapItem.amount = packet.droppedItem.amount;
+  mapItem.coords = packet.coords;
+  client.nearby.items.push(mapItem);
+
+  client.weight = packet.weight;
+
+  if (packet.remainingAmount) {
+    const item = client.items.find((i) => i.id === packet.droppedItem.id);
+    if (item) {
+      item.amount = packet.remainingAmount;
+    }
+  } else {
+    client.items = client.items.filter((i) => i.id !== packet.droppedItem.id);
+  }
+
+  client.emit('inventoryChanged', undefined);
+}
+
 export function registerItemHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Item,
@@ -70,5 +94,10 @@ export function registerItemHandlers(client: Client) {
     PacketFamily.Item,
     PacketAction.Get,
     (reader) => handleItemGet(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Item,
+    PacketAction.Drop,
+    (reader) => handleItemDrop(client, reader),
   );
 }
