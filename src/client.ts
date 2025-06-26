@@ -24,6 +24,7 @@ import {
   FileType,
   type Gender,
   type Item,
+  type ItemMapInfo,
   LoginRequestClientPacket,
   MapTileSpec,
   MessagePingClientPacket,
@@ -253,6 +254,10 @@ export class Client {
 
   getNpcByIndex(index: number): NpcMapInfo | undefined {
     return this.nearby.npcs.find((n) => n.index === index);
+  }
+
+  getItemByIndex(index: number): ItemMapInfo | undefined {
+    return this.nearby.items.find((i) => i.uid === index);
   }
 
   getNpcMetadata(graphicId: number): NPCMetadata {
