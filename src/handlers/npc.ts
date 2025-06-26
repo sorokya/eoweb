@@ -108,21 +108,31 @@ function handleNpcAgree(client: Client, reader: EoReader) {
 
 function handleNpcSpec(client: Client, reader: EoReader) {
   const packet = NpcSpecServerPacket.deserialize(reader);
-  client.nearby.npcs = client.nearby.npcs.filter(
-    (n) => n.index !== packet.npcKilledData.npcIndex,
-  );
+  client.npcHealthBars.set(packet.npcKilledData.npcIndex, new HealthBar(0, packet.npcKilledData.damage));
+  // TODO: remove from nearby npcs after death animation
+  setTimeout(() => {
+    client.nearby.npcs = client.nearby.npcs.filter(
+      (n) => n.index !== packet.npcKilledData.npcIndex,
+    );
+  }, 1000);
 }
 
 function handleNpcAccept(client: Client, reader: EoReader) {
   const packet = NpcAcceptServerPacket.deserialize(reader);
-  client.nearby.npcs = client.nearby.npcs.filter(
-    (n) => n.index !== packet.npcKilledData.npcIndex,
-  );
+  client.npcHealthBars.set(packet.npcKilledData.npcIndex, new HealthBar(0, packet.npcKilledData.damage));
+  // TODO: remove from nearby npcs after death animation
+  setTimeout(() => {
+    client.nearby.npcs = client.nearby.npcs.filter(
+      (n) => n.index !== packet.npcKilledData.npcIndex,
+    );
+  }, 1000);
 }
 
 function handleNpcJunk(client: Client, reader: EoReader) {
   const packet = NpcJunkServerPacket.deserialize(reader);
-  client.nearby.npcs = client.nearby.npcs.filter((n) => n.id !== packet.npcId);
+  client.nearby.npcs = client.nearby.npcs.filter(
+    ((n) => n.id !== packet.npcId),
+  );
 }
 
 function handleNpcDialog(client: Client, reader: EoReader) {
