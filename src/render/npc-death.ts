@@ -26,10 +26,9 @@ export class NpcDeathAnimation extends NpcAnimation {
     ctx: CanvasRenderingContext2D,
   ) {
     const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
-    const frame = this.animationFrame + 1;
-    const offset = downRight ? frame + 12 : frame + 14;
+    const frame = downRight ? 1 : 3;
 
-    const bmp = getBitmapById(GfxType.NPC, (graphicId - 1) * 40 + offset);
+    const bmp = getBitmapById(GfxType.NPC, (graphicId - 1) * 40 + frame);
     if (!bmp) {
       return;
     }
