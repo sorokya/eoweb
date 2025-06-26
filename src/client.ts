@@ -24,6 +24,7 @@ import {
   FileType,
   type Gender,
   type Item,
+  ItemGetClientPacket,
   type ItemMapInfo,
   LoginRequestClientPacket,
   MapTileSpec,
@@ -113,6 +114,7 @@ type ClientEvents = {
   serverChat: { message: string; sfxId?: SfxId | null };
   accountCreated: undefined;
   passwordChanged: undefined;
+  inventoryChanged: undefined;
 };
 
 export enum GameState {
@@ -606,6 +608,16 @@ export class Client {
   handleClick() {
     if (this.state !== GameState.InGame) {
       return;
+    }
+
+    const item = this.nearby.items.find(
+      (i) =>
+        i.coords.x === this.mouseCoords.x && i.coords.y === this.mouseCoords.y,
+    );
+    if (item) {
+      const packet = new ItemGetClientPacket();
+      packet.itemIndex = item.uid;
+      this.bus.send(packet);
     }
 
     const doorAt = getDoorIntersecting(this.mousePosition);

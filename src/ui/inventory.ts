@@ -38,6 +38,11 @@ export class Inventory extends Base {
     super();
     this.client = client;
 
+    this.client.on('inventoryChanged', () => {
+      this.loadPositions();
+      this.render();
+    });
+
     const btnTab1: HTMLButtonElement = this.container.querySelector(
       '.tabs > button:nth-child(1)',
     );

@@ -1,6 +1,8 @@
 import {
   type EoReader,
+  Item,
   ItemAddServerPacket,
+  ItemGetServerPacket,
   ItemMapInfo,
   ItemRemoveServerPacket,
   PacketAction,
@@ -32,6 +34,27 @@ function handleItemRemove(client: Client, reader: EoReader) {
   );
 }
 
+function handleItemGet(client: Client, reader: EoReader) {
+  const packet = ItemGetServerPacket.deserialize(reader);
+  client.nearby.items = client.nearby.items.filter(
+    (i) => i.uid !== packet.takenItemIndex,
+  );
+
+  client.weight = packet.weight;
+
+  const existingItem = client.items.find((i) => i.id === packet.takenItem.id);
+  if (existingItem) {
+    existingItem.amount += packet.takenItem.amount;
+  } else {
+    const item = new Item();
+    item.id = packet.takenItem.id;
+    item.amount = packet.takenItem.amount;
+    client.items.push(item);
+  }
+
+  client.emit('inventoryChanged', undefined);
+}
+
 export function registerItemHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Item,
@@ -42,5 +65,10 @@ export function registerItemHandlers(client: Client) {
     PacketFamily.Item,
     PacketAction.Remove,
     (reader) => handleItemRemove(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Item,
+    PacketAction.Get,
+    (reader) => handleItemGet(client, reader),
   );
 }
