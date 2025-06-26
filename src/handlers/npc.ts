@@ -1,17 +1,23 @@
 import {
+  Coords,
+  type Direction,
   type EoReader,
   NpcAcceptServerPacket,
-  NpcAgreeServerPacket,
   NpcDialogServerPacket,
   NpcJunkServerPacket,
+  NpcMapInfo,
   NpcPlayerServerPacket,
+  NpcReplyServerPacket,
   NpcSpecServerPacket,
   PacketAction,
   PacketFamily,
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
+import { HealthBar } from '../render/health-bar';
+import { NpcAttackAnimation } from '../render/npc-attack';
 import { NpcWalkAnimation } from '../render/npc-walk';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
   const packet = NpcPlayerServerPacket.deserialize(reader);
@@ -31,6 +37,22 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
       );
       npc.coords = position.coords;
     }
+  }
+
+  for (const attack of packet.attacks) {
+    const npc = client.nearby.npcs.find((n) => attack.npcIndex === n.index);
+    if (!npc) {
+      unknownNpcsIndexes.add(attack.npcIndex);
+      continue;
+    }
+
+    npc.direction = attack.direction;
+    playSfxById(SfxId.PunchAttack);
+    client.npcAnimations.set(npc.index, new NpcAttackAnimation());
+    client.characterHealthBars.set(
+      attack.playerId,
+      new HealthBar(attack.hpPercentage, attack.damage),
+    );
   }
 
   for (const chat of packet.chats) {
@@ -60,19 +82,26 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
 }
 
 function handleNpcAgree(client: Client, reader: EoReader) {
-  const packet = NpcAgreeServerPacket.deserialize(reader);
-  for (const npc of packet.npcs) {
-    // TODO: Remove after eolib-2.0 is released
-    if (!npc.id) {
-      continue;
-    }
-    const existing = client.nearby.npcs.find((n) => n.index === npc.index);
+  // TODO: Remove after eolib-2.0 is released
+  const numOfNpcs = reader.getChar();
+  for (let i = 0; i < numOfNpcs; ++i) {
+    const index = reader.getChar();
+    const id = reader.getShort();
+    const coords = Coords.deserialize(reader);
+    const direction = reader.getChar() as Direction;
+
+    const existing = client.nearby.npcs.find((n) => n.index === index);
     if (existing) {
-      existing.coords = npc.coords;
-      existing.direction = npc.direction;
+      existing.coords = coords;
+      existing.direction = direction;
     } else {
-      client.nearby.npcs.push(npc);
-      client.preloadNpcSprites(npc.id);
+      const info = new NpcMapInfo();
+      info.index = index;
+      info.id = id;
+      info.direction = direction;
+      info.coords = coords;
+      client.nearby.npcs.push(info);
+      client.preloadNpcSprites(info.id);
     }
   }
 }
@@ -117,6 +146,24 @@ function handleNpcDialog(client: Client, reader: EoReader) {
   });
 }
 
+function handleNpcReply(client: Client, reader: EoReader) {
+  const packet = NpcReplyServerPacket.deserialize(reader);
+  const npc = client.nearby.npcs.find((n) => n.index === packet.npcIndex);
+  if (!npc) {
+    return;
+  }
+
+  const record = client.getEnfRecordById(npc.id);
+  if (!record) {
+    return;
+  }
+
+  client.npcHealthBars.set(
+    npc.index,
+    new HealthBar(packet.hpPercentage, packet.damage),
+  );
+}
+
 export function registerNpcHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Npc,
@@ -147,5 +194,10 @@ export function registerNpcHandlers(client: Client) {
     PacketFamily.Npc,
     PacketAction.Dialog,
     (reader) => handleNpcDialog(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Npc,
+    PacketAction.Reply,
+    (reader) => handleNpcReply(client, reader),
   );
 }

@@ -76,6 +76,7 @@ import { registerMessageHandlers } from './handlers/message';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerRangeHandlers } from './handlers/range';
+import { registerRecoverHandlers } from './handlers/recover';
 import { registerRefreshHandlers } from './handlers/refresh';
 import { registerSitHandlers } from './handlers/sit';
 import { registerTalkHandlers } from './handlers/talk';
@@ -86,6 +87,7 @@ import { MapRenderer } from './map';
 import { MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterWalkAnimation } from './render/character-walk';
+import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
 import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
@@ -186,6 +188,8 @@ export class Client {
   npcAnimations: Map<number, NpcAnimation> = new Map();
   characterChats: Map<number, ChatBubble> = new Map();
   npcChats: Map<number, ChatBubble> = new Map();
+  npcHealthBars: Map<number, HealthBar> = new Map();
+  characterHealthBars: Map<number, HealthBar> = new Map();
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
@@ -350,6 +354,36 @@ export class Client {
       this.characterChats.delete(id);
     }
 
+    const endedNpcHealthBars: number[] = [];
+    for (const [id, healthBar] of this.npcHealthBars) {
+      if (
+        !this.nearby.npcs.some((n) => n.index === id) ||
+        healthBar.ticks <= 0
+      ) {
+        endedNpcHealthBars.push(id);
+        continue;
+      }
+      healthBar.tick();
+    }
+    for (const id of endedNpcHealthBars) {
+      this.npcHealthBars.delete(id);
+    }
+
+    const endedCharacterHealthBars: number[] = [];
+    for (const [id, healthBar] of this.characterHealthBars) {
+      if (
+        !this.nearby.characters.some((c) => c.playerId === id) ||
+        healthBar.ticks <= 0
+      ) {
+        endedCharacterHealthBars.push(id);
+        continue;
+      }
+      healthBar.tick();
+    }
+    for (const id of endedCharacterHealthBars) {
+      this.characterHealthBars.delete(id);
+    }
+
     const endedNpcChatBubbles: number[] = [];
     for (const [id, bubble] of this.npcChats) {
       if (!bubble.ticks || !this.nearby.npcs.some((n) => n.index === id)) {
@@ -404,6 +438,8 @@ export class Client {
     this.map = map;
     this.characterChats.clear();
     this.npcChats.clear();
+    this.npcHealthBars.clear();
+    this.characterHealthBars.clear();
     if (this.map) {
       this.mapRenderer.buildCaches();
       this.loadDoors();
@@ -520,6 +556,7 @@ export class Client {
     registerLoginHandlers(this);
     registerWelcomeHandlers(this);
     registerPlayersHandlers(this);
+    registerRecoverHandlers(this);
     registerMessageHandlers(this);
     registerAvatarHandlers(this);
     registerFaceHandlers(this);
@@ -682,6 +719,13 @@ export class Client {
     if (message.startsWith('#ping') && message.length === 5) {
       this.pingStart = Date.now();
       this.bus.send(new MessagePingClientPacket());
+      return;
+    }
+
+    if (message.startsWith('#loc')) {
+      this.emit('serverChat', {
+        message: `${this.mapId} x:${this.getPlayerCoords().x} y:${this.getPlayerCoords().y}`,
+      });
       return;
     }
 

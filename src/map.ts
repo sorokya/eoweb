@@ -31,6 +31,7 @@ import {
 } from './render/character-floor';
 import { renderCharacterHair } from './render/character-hair';
 import { renderCharacterHairBehind } from './render/character-hair-behind';
+import { renderCharacterHealthBar } from './render/character-health-bar';
 import {
   calculateCharacterRenderPositionStanding,
   renderCharacterStanding,
@@ -38,6 +39,7 @@ import {
 import { CharacterWalkAnimation } from './render/character-walk';
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
+import { renderNpcHealthBar } from './render/npc-health-bar';
 import { isoToScreen } from './utils/iso-to-screen';
 import type { Vector2 } from './vector';
 
@@ -612,6 +614,7 @@ export class MapRenderer {
     );
 
     const bubble = this.client.characterChats.get(character.playerId);
+    const healthBar = this.client.characterHealthBars.get(character.playerId);
     const frame = animation?.animationFrame || 0;
     const walking = animation instanceof CharacterWalkAnimation;
     const attacking = animation instanceof CharacterAttackAnimation;
@@ -649,6 +652,7 @@ export class MapRenderer {
     }
 
     renderCharacterChatBubble(bubble, character, ctx);
+    renderCharacterHealthBar(healthBar, character, ctx);
   }
 
   renderNpc(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
@@ -664,16 +668,24 @@ export class MapRenderer {
 
     const meta = this.client.getNpcMetadata(record.graphicId);
     const bubble = this.client.npcChats.get(npc.index);
+    const healthBar = this.client.npcHealthBars.get(npc.index);
 
     const animation = this.client.npcAnimations.get(npc.index);
     if (animation) {
       animation.render(record.graphicId, npc, meta, playerScreen, ctx);
-      renderNpcChatBubble(bubble, npc, ctx);
-      return;
+    } else {
+      renderNpc(
+        npc,
+        record,
+        meta,
+        this.npcIdleAnimationFrame,
+        playerScreen,
+        ctx,
+      );
     }
 
-    renderNpc(npc, record, meta, this.npcIdleAnimationFrame, playerScreen, ctx);
     renderNpcChatBubble(bubble, npc, ctx);
+    renderNpcHealthBar(healthBar, npc, ctx);
   }
 
   renderCharacterBehindLayers(

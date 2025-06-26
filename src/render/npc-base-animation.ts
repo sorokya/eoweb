@@ -4,6 +4,7 @@ import type { Vector2 } from '../vector';
 
 export abstract class NpcAnimation {
   ticks: number;
+  animationFrame = 0;
   abstract tick(): void;
   abstract render(
     graphicId: number,
