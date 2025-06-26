@@ -214,7 +214,7 @@ client.on('enterGame', ({ news }) => {
   chat.show();
   hud.setStats(client);
   hud.show();
-  //offsetTweaker.show();
+  offsetTweaker.show();
   inGameMenu.show();
   resizeCanvases();
   inventory.loadPositions();
