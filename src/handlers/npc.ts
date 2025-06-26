@@ -77,6 +77,15 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     });
   }
 
+  for (const attack of packet.attacks) {
+    if (attack.playerId === client.playerId) {
+      // This attack hit the player - update HP
+      const newHp = Math.round((attack.hpPercentage / 100) * client.maxHp);
+      client.hp = newHp;
+      client.emit('statsUpdate', { hp: client.hp, tp: client.tp });
+    }
+  }
+
   if (unknownNpcsIndexes.size) {
     client.requestNpcRange(Array.from(unknownNpcsIndexes));
   }

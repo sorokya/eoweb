@@ -245,6 +245,31 @@
       </div>
 
     </div>
+
+       <div id="hud" class="hidden">
+  <div class="hud-container">
+
+    <!-- Heart-based HP Bar -->
+    <div class="stat-container">
+      <div class="stat-label">HP</div>
+      <div id="heart-bar" class="bar-container">
+        <!-- empty hearts (background) -->
+        <div id="heart-empty" class="heart-sprite"></div>
+        <!-- full hearts (clipped by container width) -->
+        <div id="heart-fill"  class="heart-sprite"></div>
+        <!-- numeric overlay (optional) -->
+        <div id="health-text" class="bar-text">0/0</div>
+      </div>
+    </div>
+
+    <!-- ▼ HP-only drop-down ▼ -->
+<div id="stats-dropdown" class="stats-dropdown hidden">
+  <div id="stat-hp">HP: 0/0</div>
+</div>
+
+
+
+  </div>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>
