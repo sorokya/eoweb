@@ -190,7 +190,6 @@ export class Client {
   characterChats: Map<number, ChatBubble> = new Map();
   npcChats: Map<number, ChatBubble> = new Map();
   npcHealthBars: Map<number, HealthBar> = new Map();
-  dyingNpcs: number[] = [];
   characterHealthBars: Map<number, HealthBar> = new Map();
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
