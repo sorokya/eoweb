@@ -29,6 +29,7 @@ import { Chat } from './ui/chat';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
+import { HUD } from './ui/hud';
 import { InGameMenu } from './ui/in-game-menu';
 import { Inventory } from './ui/inventory';
 import { LoginForm } from './ui/login';
@@ -212,6 +213,7 @@ client.on('enterGame', ({ news }) => {
   characterSelect.hide();
   exitGame.show();
   chat.show();
+  hud.show();
   //offsetTweaker.show();
   inGameMenu.show();
   resizeCanvases();
@@ -270,6 +272,7 @@ const initializeSocket = (next: 'login' | 'create') => {
 
   socket.addEventListener('close', () => {
     hideAllUi();
+    hud.hide();
     mainMenu.show();
     if (client.state !== GameState.Initial) {
       client.state = GameState.Initial;
@@ -301,6 +304,7 @@ const chat = new Chat();
 const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
+const hud = new HUD(client);
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -317,6 +321,7 @@ exitGame.on('click', () => {
   smallConfirm.setCallback(() => {
     client.disconnect();
     chat.clear();
+    hud.hide();
     hideAllUi();
     mainMenu.show();
   });
@@ -372,6 +377,7 @@ characterSelect.on('cancel', () => {
   client.disconnect();
   chat.clear();
   characterSelect.hide();
+  hud.hide();
   mainMenu.show();
 });
 
