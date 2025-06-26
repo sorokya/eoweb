@@ -1,9 +1,11 @@
 import {
+  Coords,
+  type Direction,
   type EoReader,
   NpcAcceptServerPacket,
-  NpcAgreeServerPacket,
   NpcDialogServerPacket,
   NpcJunkServerPacket,
+  NpcMapInfo,
   NpcPlayerServerPacket,
   NpcReplyServerPacket,
   NpcSpecServerPacket,
@@ -13,7 +15,9 @@ import {
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
 import { HealthBar } from '../render/health-bar';
+import { NpcAttackAnimation } from '../render/npc-attack';
 import { NpcWalkAnimation } from '../render/npc-walk';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
   const packet = NpcPlayerServerPacket.deserialize(reader);
@@ -43,11 +47,8 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     }
 
     npc.direction = attack.direction;
-    /*client.npcAnimations.set(
-      npc.index,
-      new NpcWalkAnimation(npc.coords, position.coords, position.direction),
-    );
-    */
+    playSfxById(SfxId.PunchAttack);
+    client.npcAnimations.set(npc.index, new NpcAttackAnimation());
     client.characterHealthBars.set(
       attack.playerId,
       new HealthBar(attack.hpPercentage, attack.damage),
@@ -81,19 +82,26 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
 }
 
 function handleNpcAgree(client: Client, reader: EoReader) {
-  const packet = NpcAgreeServerPacket.deserialize(reader);
-  for (const npc of packet.npcs) {
-    // TODO: Remove after eolib-2.0 is released
-    if (!npc.id) {
-      continue;
-    }
-    const existing = client.nearby.npcs.find((n) => n.index === npc.index);
+  // TODO: Remove after eolib-2.0 is released
+  const numOfNpcs = reader.getChar();
+  for (let i = 0; i < numOfNpcs; ++i) {
+    const index = reader.getChar();
+    const id = reader.getShort();
+    const coords = Coords.deserialize(reader);
+    const direction = reader.getChar() as Direction;
+
+    const existing = client.nearby.npcs.find((n) => n.index === index);
     if (existing) {
-      existing.coords = npc.coords;
-      existing.direction = npc.direction;
+      existing.coords = coords;
+      existing.direction = direction;
     } else {
-      client.nearby.npcs.push(npc);
-      client.preloadNpcSprites(npc.id);
+      const info = new NpcMapInfo();
+      info.index = index;
+      info.id = id;
+      info.direction = direction;
+      info.coords = coords;
+      client.nearby.npcs.push(info);
+      client.preloadNpcSprites(info.id);
     }
   }
 }
