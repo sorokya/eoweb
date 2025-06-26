@@ -1,6 +1,6 @@
-import { CharacterMapInfo } from "eolib";
-import { HealthBar } from "./health-bar";
-import { getCharacterRectangle } from "../collision";
+import type { CharacterMapInfo } from 'eolib';
+import { getCharacterRectangle } from '../collision';
+import type { HealthBar } from './health-bar';
 
 export function renderCharacterHealthBar(
   hpBar: HealthBar,

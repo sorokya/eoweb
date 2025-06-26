@@ -12,8 +12,8 @@ import {
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
-import { NpcWalkAnimation } from '../render/npc-walk';
 import { HealthBar } from '../render/health-bar';
+import { NpcWalkAnimation } from '../render/npc-walk';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
   const packet = NpcPlayerServerPacket.deserialize(reader);
@@ -131,7 +131,10 @@ function handleNpcDamage(client: Client, reader: EoReader) {
     return;
   }
 
-  client.npcHealthBars.set(npc.index, new HealthBar(packet.hpPercentage, packet.damage));
+  client.npcHealthBars.set(
+    npc.index,
+    new HealthBar(packet.hpPercentage, packet.damage),
+  );
 }
 
 export function registerNpcHandlers(client: Client) {
@@ -168,6 +171,6 @@ export function registerNpcHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Npc,
     PacketAction.Reply,
-    (reader) => handleNpcDamage(client, reader)
+    (reader) => handleNpcDamage(client, reader),
   );
 }

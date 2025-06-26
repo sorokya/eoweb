@@ -6,10 +6,8 @@ import {
 } from 'eolib';
 import type { Client } from '../client';
 
-function handlePlayerRecover(client: Client, reader: EoReader) {
-  const packet = RecoverPlayerServerPacket.deserialize(reader);
-  
-  
+function handlePlayerRecover(_client: Client, reader: EoReader) {
+  const _packet = RecoverPlayerServerPacket.deserialize(reader);
 }
 
 export function registerRecoverHandlers(client: Client) {
@@ -19,5 +17,3 @@ export function registerRecoverHandlers(client: Client) {
     (reader) => handlePlayerRecover(client, reader),
   );
 }
-
-  

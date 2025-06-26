@@ -76,6 +76,7 @@ import { registerMessageHandlers } from './handlers/message';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerRangeHandlers } from './handlers/range';
+import { registerRecoverHandlers } from './handlers/recover';
 import { registerRefreshHandlers } from './handlers/refresh';
 import { registerSitHandlers } from './handlers/sit';
 import { registerTalkHandlers } from './handlers/talk';
@@ -86,6 +87,7 @@ import { MapRenderer } from './map';
 import { MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterWalkAnimation } from './render/character-walk';
+import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
 import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
@@ -93,8 +95,6 @@ import { isoToScreen } from './utils/iso-to-screen';
 import { randomRange } from './utils/random-range';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
-import { HealthBar } from './render/health-bar';
-import { registerRecoverHandlers } from './handlers/recover';
 
 export enum ChatTab {
   Local = 0,
@@ -354,21 +354,20 @@ export class Client {
       this.characterChats.delete(id);
     }
 
-    //const endedHealthBars: number[] = [];
+    const endedHealthBars: number[] = [];
     for (const [id, healthBar] of this.npcHealthBars) {
       if (
         !this.nearby.npcs.some((n) => n.index === id) ||
         healthBar.ticks <= 0
       ) {
-        //this.healthBars.delete(id);
-        //endedHealthBars.push(id);
+        endedHealthBars.push(id);
         continue;
       }
       healthBar.tick();
     }
-    // for (const id of endedHealthBars) {
-    //   this.healthBars.delete(id);
-    // }
+    for (const id of endedHealthBars) {
+      this.npcHealthBars.delete(id);
+    }
 
     const endedNpcChatBubbles: number[] = [];
     for (const [id, bubble] of this.npcChats) {

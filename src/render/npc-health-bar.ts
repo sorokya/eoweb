@@ -1,6 +1,6 @@
-import { NpcMapInfo } from "eolib";
-import { HealthBar } from "./health-bar";
-import { getNpcRectangle } from "../collision";
+import type { NpcMapInfo } from 'eolib';
+import { getNpcRectangle } from '../collision';
+import type { HealthBar } from './health-bar';
 
 export function renderNpcHealthBar(
   hpBar: HealthBar,

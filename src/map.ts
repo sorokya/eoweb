@@ -1,4 +1,4 @@
-import { type CharacterMapInfo, Coords, MapTileSpec, NpcMapInfo, SitState } from 'eolib';
+import { type CharacterMapInfo, Coords, MapTileSpec, SitState } from 'eolib';
 import { type Client, GameState } from './client';
 import {
   getCharacterIntersecting,
@@ -38,10 +38,9 @@ import {
 import { CharacterWalkAnimation } from './render/character-walk';
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
+import { renderNpcHealthBar } from './render/npc-health-bar';
 import { isoToScreen } from './utils/iso-to-screen';
 import type { Vector2 } from './vector';
-import { HealthBar } from './render/health-bar';
-import { renderNpcHealthBar } from './render/npc-health-bar';
 
 enum EntityType {
   Tile = 0,
@@ -672,9 +671,16 @@ export class MapRenderer {
     if (animation) {
       animation.render(record.graphicId, npc, meta, playerScreen, ctx);
     } else {
-      renderNpc(npc, record, meta, this.npcIdleAnimationFrame, playerScreen, ctx);
+      renderNpc(
+        npc,
+        record,
+        meta,
+        this.npcIdleAnimationFrame,
+        playerScreen,
+        ctx,
+      );
     }
-    
+
     renderNpcChatBubble(bubble, npc, ctx);
     renderNpcHealthBar(healthBar, npc, ctx);
   }
