@@ -89,6 +89,7 @@ import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterWalkAnimation } from './render/character-walk';
 import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
+import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
@@ -189,6 +190,7 @@ export class Client {
   characterChats: Map<number, ChatBubble> = new Map();
   npcChats: Map<number, ChatBubble> = new Map();
   npcHealthBars: Map<number, HealthBar> = new Map();
+  dyingNpcs: number[] = [];
   characterHealthBars: Map<number, HealthBar> = new Map();
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
@@ -336,6 +338,9 @@ export class Client {
       animation.tick();
     }
     for (const id of endedNpcAnimations) {
+      if (this.npcAnimations.get(id) instanceof NpcDeathAnimation) {
+        this.nearby.npcs = this.nearby.npcs.filter((n) => n.index !== id);
+      }
       this.npcAnimations.delete(id);
     }
 

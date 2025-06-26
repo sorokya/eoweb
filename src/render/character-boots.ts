@@ -19,10 +19,10 @@ const FEMALE_WALKING_OFFSETS = {
 };
 
 const MALE_WALKING_OFFSETS = {
-  [Direction.Up]: { x: 0, y: 0 },
-  [Direction.Down]: { x: 1, y: 0 },
-  [Direction.Left]: { x: 0, y: 0 },
-  [Direction.Right]: { x: -1, y: 0 },
+  [Direction.Up]: { x: 0, y: 1 },
+  [Direction.Down]: { x: 1, y: 1 },
+  [Direction.Left]: { x: 0, y: 1 },
+  [Direction.Right]: { x: -1, y: 1 },
 };
 
 const FEMALE_ATTACK_FRAME_0_OFFSETS = {
