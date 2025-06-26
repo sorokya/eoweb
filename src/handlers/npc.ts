@@ -146,7 +146,7 @@ function handleNpcDialog(client: Client, reader: EoReader) {
   });
 }
 
-function handleNpcDamage(client: Client, reader: EoReader) {
+function handleNpcReply(client: Client, reader: EoReader) {
   const packet = NpcReplyServerPacket.deserialize(reader);
   const npc = client.nearby.npcs.find((n) => n.index === packet.npcIndex);
   if (!npc) {
@@ -198,6 +198,6 @@ export function registerNpcHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Npc,
     PacketAction.Reply,
-    (reader) => handleNpcDamage(client, reader),
+    (reader) => handleNpcReply(client, reader),
   );
 }
