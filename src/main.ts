@@ -29,6 +29,7 @@ import { Chat } from './ui/chat';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
+import { HUD } from './ui/hud';
 import { InGameMenu } from './ui/in-game-menu';
 import { Inventory } from './ui/inventory';
 import { LoginForm } from './ui/login';
@@ -212,6 +213,8 @@ client.on('enterGame', ({ news }) => {
   characterSelect.hide();
   exitGame.show();
   chat.show();
+  hud.setStats(client);
+  hud.show();
   //offsetTweaker.show();
   inGameMenu.show();
   resizeCanvases();
@@ -226,6 +229,10 @@ client.on('passwordChanged', () => {
     'Password changed',
   );
   smallAlertLargeHeader.show();
+});
+
+client.on('statsUpdate', () => {
+  hud.setStats(client);
 });
 
 const initializeSocket = (next: 'login' | 'create') => {
@@ -301,6 +308,7 @@ const chat = new Chat();
 const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
+const hud = new HUD();
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');

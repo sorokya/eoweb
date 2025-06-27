@@ -119,6 +119,7 @@ type ClientEvents = {
   accountCreated: undefined;
   passwordChanged: undefined;
   inventoryChanged: undefined;
+  statsUpdate: undefined;
 };
 
 export enum GameState {

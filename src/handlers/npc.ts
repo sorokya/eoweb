@@ -42,6 +42,11 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
   }
 
   for (const attack of packet.attacks) {
+    if (attack.playerId === client.playerId) {
+      client.hp = Math.max(client.hp - attack.damage, 0);
+      client.emit('statsUpdate', undefined);
+    }
+
     const npc = client.nearby.npcs.find((n) => attack.npcIndex === n.index);
     if (!npc) {
       unknownNpcsIndexes.add(attack.npcIndex);
@@ -127,6 +132,11 @@ function handleNpcSpec(client: Client, reader: EoReader) {
     item.amount = packet.npcKilledData.dropAmount;
     client.nearby.items.push(item);
   }
+
+  if (packet.experience) {
+    client.experience = packet.experience;
+    client.emit('statsUpdate', undefined);
+  }
 }
 
 function handleNpcAccept(client: Client, reader: EoReader) {
@@ -147,6 +157,20 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
     client.nearby.items.push(item);
+  }
+
+  if (packet.levelUp) {
+    client.level = packet.levelUp.level;
+    client.maxHp = packet.levelUp.maxHp;
+    client.maxTp = packet.levelUp.maxTp;
+    client.maxSp = packet.levelUp.maxSp;
+    client.statPoints = packet.levelUp.statPoints;
+    client.skillPoints = packet.levelUp.skillPoints;
+  }
+
+  if (packet.experience) {
+    client.experience = packet.experience;
+    client.emit('statsUpdate', undefined);
   }
 }
 
