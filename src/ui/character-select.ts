@@ -19,6 +19,7 @@ import { renderCharacterStanding } from '../render/character-standing';
 import { playSfxById, SfxId } from '../sfx';
 import { capitalize } from '../utils/capitalize';
 import { Base } from './base-ui';
+import { renderCharacterArmor } from '../render/character-armor';
 
 type Events = {
   cancel: undefined;
@@ -100,11 +101,13 @@ export class CharacterSelect extends Base {
       mapInfo.hairStyle = character.hairStyle;
       mapInfo.equipment = new EquipmentMapInfo();
       mapInfo.equipment.boots = character.equipment.boots;
+      mapInfo.equipment.armor = character.equipment.armor;
 
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       renderCharacterHairBehind(mapInfo, this.ctx, 0, false, false);
       renderCharacterStanding(mapInfo, this.ctx);
       renderCharacterHair(mapInfo, this.ctx, 0, false, false);
+      renderCharacterArmor(mapInfo, this.ctx, 0, false, false);
       renderCharacterBoots(mapInfo, this.ctx, 0, false, false);
 
       const preview: HTMLImageElement = this.container.querySelectorAll(
