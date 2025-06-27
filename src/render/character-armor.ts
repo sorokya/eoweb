@@ -55,10 +55,10 @@ const MALE_ATTACK_FRAME_1_OFFSETS = {
 };
 
 const MALE_SIT_FLOOR_OFFSETS = {
-  [Direction.Up]: { x: -3, y: 0 },
-  [Direction.Down]: { x: 3, y: 6 },
-  [Direction.Left]: { x: 3, y: 0 },
-  [Direction.Right]: { x: -3, y: 6 },
+  [Direction.Up]: { x: -3, y: 14 },
+  [Direction.Down]: { x: 3, y: 14},
+  [Direction.Left]: { x: 3, y: 14 },
+  [Direction.Right]: { x: -3, y: 14 },
 };
 
 const FEMALE_SIT_FLOOR_OFFSETS = {
@@ -87,7 +87,7 @@ export function renderCharacterArmor(
   ctx: CanvasRenderingContext2D,
   animationFrame: number,
   walking: boolean,
-  attacking: boolean,
+  attacking: boolean
 ) {
   if (character.equipment.armor <= 0) {
     return;
@@ -105,13 +105,13 @@ export function renderCharacterArmor(
       offset = animationFrame + 3 + 4 * baseOffset;
       break;
     case attacking:
-      offset = !animationFrame ? 1 + baseOffset : 11 + baseOffset;
+      offset = animationFrame + 11 + baseOffset;
       break;
     case character.sitState === SitState.Floor:
-      offset = 15 + baseOffset;
+      offset = 19 + baseOffset;
       break;
     case character.sitState === SitState.Chair:
-      offset = 13 + baseOffset;
+      offset = 17 + baseOffset;
       break;
     default:
       offset = 1 + baseOffset;
@@ -151,11 +151,11 @@ export function renderCharacterArmor(
       additionalOffset =
         gender === Gender.Female
           ? animationFrame
-            ? { x: getOffsetX(direction), y: getOffsetY(direction) }
+            ? FEMALE_ATTACK_FRAME_1_OFFSETS[direction]
             : FEMALE_ATTACK_FRAME_0_OFFSETS[direction]
           : animationFrame
             ? MALE_ATTACK_FRAME_1_OFFSETS[direction]
-            : { x: getOffsetX(direction), y: getOffsetY(direction) };
+            : MALE_ATTACK_FRAME_0_OFFSETS[direction]
       break;
     case sitState === SitState.Floor:
       additionalOffset =
