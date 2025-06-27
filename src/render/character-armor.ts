@@ -4,7 +4,6 @@ import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
 import { GfxType, getBitmapById } from '../gfx';
 import type { Vector2 } from '../vector';
-import { getOffsetX, getOffsetY } from '../ui/offset-tweaker';
 
 const STANDING_OFFSETS = {
   [Direction.Up]: { x: 0, y: 5 },
@@ -184,7 +183,7 @@ export function renderCharacterArmor(
         gender === Gender.Female
           ? FEMALE_RANGE_ATTACK_OFFSETS[direction]
           : MALE_RANGE_ATTACK_OFFSETS[direction];
-        break;
+      break;
     case sitState === SitState.Floor:
       additionalOffset =
         gender === Gender.Female
@@ -192,8 +191,8 @@ export function renderCharacterArmor(
             ? FEMALE_SIT_FLOOR_OFFSETS[direction]
             : FEMALE_ATTACK_FRAME_0_OFFSETS[direction]
           : animationFrame
-             ? MALE_SIT_FLOOR_OFFSETS[direction]
-             : MALE_ATTACK_FRAME_0_OFFSETS[direction];
+            ? MALE_SIT_FLOOR_OFFSETS[direction]
+            : MALE_ATTACK_FRAME_0_OFFSETS[direction];
       break;
     case sitState === SitState.Chair:
       additionalOffset =

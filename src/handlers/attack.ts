@@ -22,8 +22,14 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
     packet.playerId,
     new CharacterAttackAnimation(packet.direction),
   );
-  
-  playSfxById(client.getPlayerIsUsingGun(packet.playerId) ? SfxId.Gun : client.getPlayerIsRanged(packet.playerId) ? SfxId.AttackBow : SfxId.PunchAttack);
+
+  playSfxById(
+    client.getPlayerIsUsingGun(packet.playerId)
+      ? SfxId.Gun
+      : client.getPlayerIsRanged(packet.playerId)
+        ? SfxId.AttackBow
+        : SfxId.PunchAttack,
+  );
 }
 
 export function registerAttackHandlers(client: Client) {

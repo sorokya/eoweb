@@ -301,7 +301,7 @@ export class Client {
     return this.eif.items[id - 1];
   }
 
-  getPlayerIsUsingGun(playerId: number) : boolean {
+  getPlayerIsUsingGun(playerId: number): boolean {
     const weaponId = this.getCharacterById(playerId)?.equipment.weapon ?? 0;
     if (weaponId <= 0) {
       return false;
@@ -320,7 +320,10 @@ export class Client {
   getWeaponAttackTypeByPlayerId(playerId: number): AttackType {
     const character = this.getCharacterById(playerId);
     if (!character) {
-      console.warn('getWeaponAttackTypeByPlayerId: No character found for player', playerId);
+      console.warn(
+        'getWeaponAttackTypeByPlayerId: No character found for player',
+        playerId,
+      );
       return AttackType.NotAttacking;
     }
 
@@ -337,7 +340,7 @@ export class Client {
   }
 
   getWeaponEif(weaponId: number): EifRecord | undefined {
-    if (weaponId == 0) {
+    if (weaponId === 0) {
       return undefined;
     }
     const items = this.eif.items.filter((i) => i.type === ItemType.Weapon);
@@ -941,7 +944,13 @@ export class Client {
     packet.direction = direction;
     packet.timestamp = timestamp;
     this.bus.send(packet);
-    playSfxById(this.getPlayerIsUsingGun(this.playerId) ? SfxId.Gun : this.getPlayerIsRanged(this.playerId) ? SfxId.AttackBow : SfxId.PunchAttack);
+    playSfxById(
+      this.getPlayerIsUsingGun(this.playerId)
+        ? SfxId.Gun
+        : this.getPlayerIsRanged(this.playerId)
+          ? SfxId.AttackBow
+          : SfxId.PunchAttack,
+    );
   }
 
   sit() {
