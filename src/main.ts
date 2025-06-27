@@ -214,7 +214,7 @@ client.on('enterGame', ({ news }) => {
   chat.show();
   hud.setStats(client);
   hud.show();
-  offsetTweaker.show();
+  //offsetTweaker.show();
   inGameMenu.show();
   resizeCanvases();
   inventory.loadPositions();
@@ -306,7 +306,7 @@ const exitGame = new ExitGame();
 const smallConfirm = new SmallConfirm();
 const chat = new Chat();
 // biome-ignore lint/correctness/noUnusedVariables: Only used sometimes
-//const offsetTweaker = new OffsetTweaker();
+const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
 const hud = new HUD();
