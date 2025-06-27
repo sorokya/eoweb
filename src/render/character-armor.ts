@@ -105,7 +105,7 @@ export function renderCharacterArmor(
       offset = animationFrame + 3 + 4 * baseOffset;
       break;
     case attacking:
-      offset = animationFrame + 13 + baseOffset;
+      offset = animationFrame + 13 + (baseOffset * 2);
       break;
     case character.sitState === SitState.Floor:
       offset = 19 + baseOffset;
