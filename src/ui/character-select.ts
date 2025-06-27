@@ -12,6 +12,7 @@ import {
   GAME_FPS,
   HALF_CHARACTER_WIDTH,
 } from '../consts';
+import { renderCharacterArmor } from '../render/character-armor';
 import { renderCharacterBoots } from '../render/character-boots';
 import { renderCharacterHair } from '../render/character-hair';
 import { renderCharacterHairBehind } from '../render/character-hair-behind';
@@ -19,7 +20,6 @@ import { renderCharacterStanding } from '../render/character-standing';
 import { playSfxById, SfxId } from '../sfx';
 import { capitalize } from '../utils/capitalize';
 import { Base } from './base-ui';
-import { renderCharacterArmor } from '../render/character-armor';
 
 type Events = {
   cancel: undefined;
