@@ -1,5 +1,12 @@
-import { type CharacterMapInfo, Coords, MapTileSpec, SitState } from 'eolib';
-import { type Client, GameState } from './client';
+import {
+  type CharacterMapInfo,
+  Coords,
+  ItemSubtype,
+  ItemType,
+  MapTileSpec,
+  SitState,
+} from 'eolib';
+import { AttackType, type Client, GameState } from './client';
 import {
   getCharacterIntersecting,
   getCharacterRectangle,
@@ -833,9 +840,35 @@ export class MapRenderer {
     walking: boolean,
     attacking: boolean,
   ) {
+    const attackType = attacking
+      ? this.getWeaponAttackType(character)
+      : AttackType.NotAttacking;
     renderCharacterHair(character, ctx, animationFrame, walking, attacking);
-    renderCharacterArmor(character, ctx, animationFrame, walking, attacking);
-    renderCharacterBoots(character, ctx, animationFrame, walking, attacking);
+    renderCharacterArmor(character, ctx, animationFrame, walking, attackType);
+    renderCharacterBoots(character, ctx, animationFrame, walking, attackType);
+  }
+
+  getWeaponAttackType(character: CharacterMapInfo): AttackType {
+    const eif = this.client.getEifRecordById(character.equipment.weapon);
+    if (!eif) {
+      console.warn(
+        'getWeaponAttackType: No eif record for weapon',
+        character.equipment.weapon,
+      );
+      return AttackType.NotAttacking;
+    }
+
+    if (eif.type === ItemType.Weapon) {
+      if (eif.subtype === ItemSubtype.None) {
+        return AttackType.Melee;
+      }
+      if (eif.subtype === ItemSubtype.Ranged) {
+        return AttackType.Bow;
+      }
+      return AttackType.Spell;
+    }
+
+    return AttackType.NotAttacking;
   }
 
   renderCursor(

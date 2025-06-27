@@ -5,6 +5,7 @@ import {
   EquipmentMapInfo,
 } from 'eolib';
 import mitt from 'mitt';
+import { AttackType } from '../client';
 import { Rectangle, setCharacterRectangle } from '../collision';
 import {
   CHARACTER_HEIGHT,
@@ -107,8 +108,20 @@ export class CharacterSelect extends Base {
       renderCharacterHairBehind(mapInfo, this.ctx, 0, false, false);
       renderCharacterStanding(mapInfo, this.ctx);
       renderCharacterHair(mapInfo, this.ctx, 0, false, false);
-      renderCharacterArmor(mapInfo, this.ctx, 0, false, false);
-      renderCharacterBoots(mapInfo, this.ctx, 0, false, false);
+      renderCharacterArmor(
+        mapInfo,
+        this.ctx,
+        0,
+        false,
+        AttackType.NotAttacking,
+      );
+      renderCharacterBoots(
+        mapInfo,
+        this.ctx,
+        0,
+        false,
+        AttackType.NotAttacking,
+      );
 
       const preview: HTMLImageElement = this.container.querySelectorAll(
         '.preview',

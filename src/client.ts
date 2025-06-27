@@ -128,6 +128,13 @@ export enum GameState {
   InGame = 4,
 }
 
+export enum AttackType {
+  NotAttacking = 0,
+  Melee = 1,
+  Bow = 2,
+  Spell = 3,
+}
+
 type AccountCreateData = {
   username: string;
   password: string;

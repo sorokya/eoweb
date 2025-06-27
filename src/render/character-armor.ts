@@ -1,8 +1,8 @@
 import { type CharacterMapInfo, Direction, Gender, SitState } from 'eolib';
+import { AttackType } from '../client';
 import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
 import { GfxType, getBitmapById } from '../gfx';
-import { getOffsetX, getOffsetY } from '../ui/offset-tweaker';
 import type { Vector2 } from '../vector';
 
 const STANDING_OFFSETS = {
@@ -87,34 +87,41 @@ export function renderCharacterArmor(
   ctx: CanvasRenderingContext2D,
   animationFrame: number,
   walking: boolean,
-  attacking: boolean,
+  attackType: AttackType,
 ) {
   if (character.equipment.armor <= 0) {
     return;
   }
 
-  const baseOffset = [Direction.Down, Direction.Right].includes(
+  const directionalOffset = [Direction.Down, Direction.Right].includes(
     character.direction,
   )
     ? 0
     : 1;
   const baseGfxId = (character.equipment.armor - 1) * 50;
   let offset = 0;
+
   switch (true) {
     case walking:
-      offset = animationFrame + 3 + 4 * baseOffset;
+      offset = animationFrame + 3 + 4 * directionalOffset;
       break;
-    case attacking:
-      offset = animationFrame + 13 + (baseOffset * 2);
+    case attackType == AttackType.Melee:
+      offset = animationFrame + 13 + directionalOffset * 2;
+      break;
+    case attackType == AttackType.Bow:
+      offset = 21 + directionalOffset;
+      break;
+    case attackType == AttackType.Spell:
+      offset = 11 + directionalOffset;
       break;
     case character.sitState === SitState.Floor:
-      offset = 19 + baseOffset;
+      offset = 19 + directionalOffset;
       break;
     case character.sitState === SitState.Chair:
-      offset = 17 + baseOffset;
+      offset = 17 + directionalOffset;
       break;
     default:
-      offset = 1 + baseOffset;
+      offset = 1 + directionalOffset;
   }
 
   const bmp = getBitmapById(
@@ -147,7 +154,7 @@ export function renderCharacterArmor(
           ? FEMALE_WALKING_OFFSETS[direction]
           : MALE_WALKING_OFFSETS[direction];
       break;
-    case attacking:
+    case attackType !== AttackType.NotAttacking:
       additionalOffset =
         gender === Gender.Female
           ? animationFrame
