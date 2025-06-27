@@ -43,6 +43,7 @@ import {
   type Spell,
   TalkReportClientPacket,
   ThreeItem,
+  Version,
   WalkAction,
   WalkPlayerClientPacket,
   WarpAcceptClientPacket,
@@ -58,6 +59,7 @@ import { ChatBubble } from './chat-bubble';
 import { getDoorIntersecting } from './collision';
 import {
   HALF_TILE_HEIGHT,
+  HOST,
   MAX_CHARACTER_NAME_LENGTH,
   MAX_CHAT_LENGTH,
 } from './consts';
@@ -120,6 +122,7 @@ type ClientEvents = {
   passwordChanged: undefined;
   inventoryChanged: undefined;
   statsUpdate: undefined;
+  reconnect: undefined;
 };
 
 export enum GameState {
@@ -149,6 +152,9 @@ type CharacterCreateData = {
 export class Client {
   private emitter: Emitter<ClientEvents>;
   bus: PacketBus | null = null;
+  host = HOST;
+  version: Version;
+  challenge: number;
   accountCreateData: AccountCreateData | null = null;
   characterCreateData: CharacterCreateData | null = null;
   playerId = 0;
@@ -212,6 +218,11 @@ export class Client {
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
+    this.version = new Version();
+    this.version.major = 0;
+    this.version.minor = 0;
+    this.version.patch = 28;
+    this.challenge = 0;
     getEif().then((eif) => {
       this.eif = eif;
     });
@@ -904,7 +915,9 @@ export class Client {
 
   disconnect() {
     this.state = GameState.Initial;
-    this.bus.disconnect();
+    if (this.bus) {
+      this.bus.disconnect();
+    }
   }
 
   cursorInDropRange(): boolean {
