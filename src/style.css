@@ -1101,12 +1101,12 @@ input[type="password"] {
 }
 
 #hud .dropdown {
-  width: 111px; 
-  height: 19px; 
+  width: 111px;
+  height: 19px;
   background-image: url("/gfx/gfx002/158.png");
   background-position: -222px -30px;
   background-repeat: no-repeat;
-  background-size: 440px 64px; 
+  background-size: 440px 64px;
   pointer-events: auto;
   z-index: 10;
   white-space: nowrap;
@@ -1114,7 +1114,7 @@ input[type="password"] {
   font-size: 12px;
 
   position: absolute;
-  bottom: calc(-17px * var(--ui-scale)); 
+  bottom: calc(-17px * var(--ui-scale));
 
   transform: scale(var(--ui-scale)); /* scales visually with rest of UI */
   transform-origin: left center; /* scaling doesn’t shift it sideways */
