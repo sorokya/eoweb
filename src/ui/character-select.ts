@@ -121,7 +121,7 @@ export class CharacterSelect extends Base {
         this.ctx,
         0,
         false,
-        AttackType.NotAttacking,
+        false,
       );
 
       const preview: HTMLImageElement = this.container.querySelectorAll(

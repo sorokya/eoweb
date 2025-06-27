@@ -4,6 +4,7 @@ import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
 import { GfxType, getBitmapById } from '../gfx';
 import type { Vector2 } from '../vector';
+import { getOffsetX, getOffsetY } from '../ui/offset-tweaker';
 
 const STANDING_OFFSETS = {
   [Direction.Up]: { x: 0, y: 5 },
@@ -47,10 +48,24 @@ const FEMALE_ATTACK_FRAME_1_OFFSETS = {
   [Direction.Right]: { x: 1, y: 6 },
 };
 
+const FEMALE_RANGE_ATTACK_OFFSETS = {
+  [Direction.Up]: { x: 1, y: 6 },
+  [Direction.Down]: { x: -1, y: 6 },
+  [Direction.Left]: { x: -2, y: 6 },
+  [Direction.Right]: { x: 1, y: 6 },
+};
+
 const MALE_ATTACK_FRAME_1_OFFSETS = {
   [Direction.Up]: { x: 2, y: 4 },
   [Direction.Down]: { x: -2, y: 4 },
   [Direction.Left]: { x: -2, y: 4 },
+  [Direction.Right]: { x: 2, y: 4 },
+};
+
+const MALE_RANGE_ATTACK_OFFSETS = {
+  [Direction.Up]: { x: 0, y: 4 },
+  [Direction.Down]: { x: -2, y: 4 },
+  [Direction.Left]: { x: 0, y: 4 },
   [Direction.Right]: { x: 2, y: 4 },
 };
 
@@ -109,7 +124,7 @@ export function renderCharacterArmor(
       offset = animationFrame + 13 + directionalOffset * 2;
       break;
     case attackType === AttackType.Ranged:
-      offset = 21 + directionalOffset;
+      offset = (!animationFrame ? 1 : 21) + directionalOffset;
       break;
     case attackType === AttackType.Spell:
       offset = 11 + directionalOffset;
@@ -154,7 +169,7 @@ export function renderCharacterArmor(
           ? FEMALE_WALKING_OFFSETS[direction]
           : MALE_WALKING_OFFSETS[direction];
       break;
-    case attackType !== AttackType.NotAttacking:
+    case attackType === AttackType.Melee:
       additionalOffset =
         gender === Gender.Female
           ? animationFrame
@@ -164,11 +179,21 @@ export function renderCharacterArmor(
             ? MALE_ATTACK_FRAME_1_OFFSETS[direction]
             : MALE_ATTACK_FRAME_0_OFFSETS[direction];
       break;
+    case attackType === AttackType.Ranged:
+      additionalOffset =
+        gender === Gender.Female
+          ? FEMALE_RANGE_ATTACK_OFFSETS[direction]
+          : MALE_RANGE_ATTACK_OFFSETS[direction];
+        break;
     case sitState === SitState.Floor:
       additionalOffset =
         gender === Gender.Female
-          ? FEMALE_SIT_FLOOR_OFFSETS[direction]
-          : MALE_SIT_FLOOR_OFFSETS[direction];
+          ? animationFrame
+            ? FEMALE_SIT_FLOOR_OFFSETS[direction]
+            : FEMALE_ATTACK_FRAME_0_OFFSETS[direction]
+          : animationFrame
+             ? MALE_SIT_FLOOR_OFFSETS[direction]
+             : MALE_ATTACK_FRAME_0_OFFSETS[direction];
       break;
     case sitState === SitState.Chair:
       additionalOffset =

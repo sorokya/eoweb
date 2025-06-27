@@ -87,7 +87,7 @@ export function renderCharacterBoots(
   ctx: CanvasRenderingContext2D,
   animationFrame: number,
   walking: boolean,
-  attackType: AttackType,
+  attacking: boolean,
 ) {
   if (character.equipment.boots <= 0) {
     return;
@@ -104,10 +104,10 @@ export function renderCharacterBoots(
     case walking:
       offset = animationFrame + 3 + 4 * baseOffset;
       break;
-    case attackType !== AttackType.NotAttacking:
+    case attacking:
       offset = !animationFrame
         ? 1 + baseOffset
-        : (attackType === AttackType.Ranged ? 15 : 11) + baseOffset;
+        : 11 + baseOffset;
       break;
     case character.sitState === SitState.Floor:
       offset = 15 + baseOffset;
@@ -149,7 +149,7 @@ export function renderCharacterBoots(
           ? FEMALE_WALKING_OFFSETS[direction]
           : MALE_WALKING_OFFSETS[direction];
       break;
-    case attackType !== AttackType.NotAttacking:
+    case attacking:
       additionalOffset =
         gender === Gender.Female
           ? animationFrame

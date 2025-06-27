@@ -319,17 +319,53 @@ export class Client {
     return this.eif.items[id - 1];
   }
 
-  getWeaponAttackType(weaponId: number): AttackType {
-    const items = this.eif.items.filter((i) => i.type === ItemType.Weapon);
-    const eif = items[weaponId - 1];
+  getPlayerIsUsingGun(playerId: number) : boolean {
+    const weaponId = this.getCharacterById(playerId)?.equipment.weapon ?? 0;
+    if (weaponId <= 0) {
+      return false;
+    }
+    const eif = this.getWeaponEif(weaponId);
     if (!eif) {
-      console.warn('getWeaponAttackType: No eif record for weapon', weaponId);
+      return false;
+    }
+    return eif.name.toLowerCase() === 'gun';
+  }
+
+  getPlayerIsRanged(playerId: number): boolean {
+    return this.getWeaponAttackTypeByPlayerId(playerId) === AttackType.Ranged;
+  }
+
+  getWeaponAttackTypeByPlayerId(playerId: number): AttackType {
+    const character = this.getCharacterById(playerId);
+    if (!character) {
+      console.warn('getWeaponAttackTypeByPlayerId: No character found for player', playerId);
       return AttackType.NotAttacking;
     }
 
-    return eif.subtype === ItemSubtype.Ranged
+    return this.getWeaponAttackType(character.equipment.weapon);
+  }
+
+  getWeaponAttackType(weaponId: number): AttackType {
+    if (weaponId === 0) {
+      return AttackType.Melee;
+    }
+    return this.getWeaponEif(weaponId)?.subtype === ItemSubtype.Ranged
       ? AttackType.Ranged
       : AttackType.Melee;
+  }
+
+  getWeaponEif(weaponId: number): EifRecord | undefined {
+    if (weaponId == 0) {
+      return undefined;
+    }
+    const items = this.eif.items.filter((i) => i.type === ItemType.Weapon);
+    const eif = items[weaponId - 1];
+    if (!eif) {
+      console.warn('getWeaponEif: No eif record for weapon', weaponId);
+      return undefined;
+    }
+
+    return eif;
   }
 
   getPlayerCoords() {
@@ -999,7 +1035,7 @@ export class Client {
     packet.direction = direction;
     packet.timestamp = timestamp;
     this.bus.send(packet);
-    playSfxById(SfxId.PunchAttack);
+    playSfxById(this.getPlayerIsUsingGun(this.playerId) ? SfxId.Gun : this.getPlayerIsRanged(this.playerId) ? SfxId.AttackBow : SfxId.PunchAttack);
   }
 
   sit() {
