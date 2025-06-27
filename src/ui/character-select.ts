@@ -116,13 +116,7 @@ export class CharacterSelect extends Base {
         false,
         AttackType.NotAttacking,
       );
-      renderCharacterBoots(
-        mapInfo,
-        this.ctx,
-        0,
-        false,
-        false,
-      );
+      renderCharacterBoots(mapInfo, this.ctx, 0, false, false);
 
       const preview: HTMLImageElement = this.container.querySelectorAll(
         '.preview',

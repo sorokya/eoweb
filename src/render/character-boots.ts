@@ -1,5 +1,4 @@
 import { type CharacterMapInfo, Direction, Gender, SitState } from 'eolib';
-import { AttackType } from '../client';
 import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
 import { GfxType, getBitmapById } from '../gfx';
@@ -105,9 +104,7 @@ export function renderCharacterBoots(
       offset = animationFrame + 3 + 4 * baseOffset;
       break;
     case attacking:
-      offset = !animationFrame
-        ? 1 + baseOffset
-        : 11 + baseOffset;
+      offset = !animationFrame ? 1 + baseOffset : 11 + baseOffset;
       break;
     case character.sitState === SitState.Floor:
       offset = 15 + baseOffset;
