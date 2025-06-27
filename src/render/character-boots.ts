@@ -107,7 +107,7 @@ export function renderCharacterBoots(
     case attackType !== AttackType.NotAttacking:
       offset = !animationFrame
         ? 1 + baseOffset
-        : (attackType === AttackType.Bow ? 15 : 11) + baseOffset;
+        : (attackType === AttackType.Ranged ? 15 : 11) + baseOffset;
       break;
     case character.sitState === SitState.Floor:
       offset = 15 + baseOffset;

@@ -871,7 +871,7 @@ export class MapRenderer {
         return AttackType.Melee;
       }
       if (eif.subtype === ItemSubtype.Ranged) {
-        return AttackType.Bow;
+        return AttackType.Ranged;
       }
       return AttackType.Spell;
     }
