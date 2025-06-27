@@ -28,6 +28,8 @@ import {
   ItemDropClientPacket,
   ItemGetClientPacket,
   type ItemMapInfo,
+  ItemSubtype,
+  ItemType,
   LoginRequestClientPacket,
   MapTileSpec,
   MessagePingClientPacket,
@@ -295,6 +297,19 @@ export class Client {
     }
 
     return this.eif.items[id - 1];
+  }
+
+  getWeaponAttackType(weaponId: number): AttackType {
+    const items = this.eif.items.filter((i) => i.type === ItemType.Weapon);
+    const eif = items[weaponId - 1];
+    if (!eif) {
+      console.warn('getWeaponAttackType: No eif record for weapon', weaponId);
+      return AttackType.NotAttacking;
+    }
+
+    return eif.subtype === ItemSubtype.Ranged
+      ? AttackType.Ranged
+      : AttackType.Melee;
   }
 
   getPlayerCoords() {

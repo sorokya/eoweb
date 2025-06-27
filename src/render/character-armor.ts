@@ -105,13 +105,13 @@ export function renderCharacterArmor(
     case walking:
       offset = animationFrame + 3 + 4 * directionalOffset;
       break;
-    case attackType == AttackType.Melee:
+    case attackType === AttackType.Melee:
       offset = animationFrame + 13 + directionalOffset * 2;
       break;
-    case attackType == AttackType.Ranged:
+    case attackType === AttackType.Ranged:
       offset = 21 + directionalOffset;
       break;
-    case attackType == AttackType.Spell:
+    case attackType === AttackType.Spell:
       offset = 11 + directionalOffset;
       break;
     case character.sitState === SitState.Floor:
