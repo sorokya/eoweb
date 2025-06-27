@@ -231,6 +231,10 @@ client.on('passwordChanged', () => {
   smallAlertLargeHeader.show();
 });
 
+client.on('statsUpdate', () => {
+  hud.setStats(client);
+});
+
 const initializeSocket = (next: 'login' | 'create') => {
   const socket = new WebSocket(HOST);
   socket.addEventListener('open', () => {
