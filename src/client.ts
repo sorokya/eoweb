@@ -131,7 +131,7 @@ export enum GameState {
 export enum AttackType {
   NotAttacking = 0,
   Melee = 1,
-  Bow = 2,
+  Ranged = 2,
   Spell = 3,
 }
 

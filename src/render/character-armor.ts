@@ -108,7 +108,7 @@ export function renderCharacterArmor(
     case attackType == AttackType.Melee:
       offset = animationFrame + 13 + directionalOffset * 2;
       break;
-    case attackType == AttackType.Bow:
+    case attackType == AttackType.Ranged:
       offset = 21 + directionalOffset;
       break;
     case attackType == AttackType.Spell:
