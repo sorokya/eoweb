@@ -43,6 +43,7 @@ import {
   type Spell,
   TalkReportClientPacket,
   ThreeItem,
+  Version,
   WalkAction,
   WalkPlayerClientPacket,
   WarpAcceptClientPacket,
@@ -120,6 +121,7 @@ type ClientEvents = {
   passwordChanged: undefined;
   inventoryChanged: undefined;
   statsUpdate: undefined;
+  reconnect: undefined;
 };
 
 export enum GameState {
@@ -149,6 +151,8 @@ type CharacterCreateData = {
 export class Client {
   private emitter: Emitter<ClientEvents>;
   bus: PacketBus | null = null;
+  version: Version;
+  challenge: number;
   accountCreateData: AccountCreateData | null = null;
   characterCreateData: CharacterCreateData | null = null;
   playerId = 0;
@@ -212,6 +216,11 @@ export class Client {
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
+    this.version = new Version();
+    this.version.major = 0;
+    this.version.minor = 0;
+    this.version.patch = 28;
+    this.challenge = 0;
     getEif().then((eif) => {
       this.eif = eif;
     });
