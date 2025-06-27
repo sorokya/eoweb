@@ -1,4 +1,5 @@
 import {
+  CHAR_MAX,
   deinterleave,
   EoReader,
   EoWriter,
@@ -124,7 +125,11 @@ export class PacketBus {
     });
 
     if (packet.action !== 0xff && packet.family !== 0xff) {
-      data.unshift(encodeNumber(sequence)[0]);
+      const sequenceBytes = encodeNumber(sequence);
+      if (sequence > CHAR_MAX) {
+        data.unshift(sequenceBytes[1]);
+      }
+      data.unshift(sequenceBytes[0]);
     }
 
     data.unshift(packet.family);
