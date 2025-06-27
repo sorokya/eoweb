@@ -213,6 +213,7 @@ client.on('enterGame', ({ news }) => {
   characterSelect.hide();
   exitGame.show();
   chat.show();
+  hud.setStats(client);
   hud.show();
   //offsetTweaker.show();
   inGameMenu.show();
@@ -272,7 +273,6 @@ const initializeSocket = (next: 'login' | 'create') => {
 
   socket.addEventListener('close', () => {
     hideAllUi();
-    hud.hide();
     mainMenu.show();
     if (client.state !== GameState.Initial) {
       client.state = GameState.Initial;
@@ -304,7 +304,7 @@ const chat = new Chat();
 const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
-const hud = new HUD(client);
+const hud = new HUD();
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -321,7 +321,6 @@ exitGame.on('click', () => {
   smallConfirm.setCallback(() => {
     client.disconnect();
     chat.clear();
-    hud.hide();
     hideAllUi();
     mainMenu.show();
   });
@@ -377,7 +376,6 @@ characterSelect.on('cancel', () => {
   client.disconnect();
   chat.clear();
   characterSelect.hide();
-  hud.hide();
   mainMenu.show();
 });
 

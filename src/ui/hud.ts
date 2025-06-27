@@ -1,98 +1,81 @@
 import type { Client } from '../client';
+import { playSfxById, SfxId } from '../sfx';
+import { calculateTnl, getExpForLevel } from '../utils/calculate-tnl';
 import { Base } from './base-ui';
 
 export class HUD extends Base {
   private client: Client;
-  private healthText: HTMLElement;
-  private heartFill: HTMLElement;
-  private heartBar: HTMLElement;
-  private statsDropdown: HTMLElement;
-  private lastHP = -1;
+  protected container = document.getElementById('hud');
+  private hpText: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="hp"] span',
+  );
+  private hpFill: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="hp"] .stat-fill',
+  );
+  private hpBar: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="hp"] .bar',
+  );
+  private hpDropdown: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="hp"] .dropdown',
+  );
 
-  private readonly LOW_HEALTH_THRESHOLD = 0.25;
+  private tpText: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="tp"] span',
+  );
+  private tpFill: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="tp"] .stat-fill',
+  );
+  private tpBar: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="tp"] .bar',
+  );
+  private tpDropdown: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="tp"] .dropdown',
+  );
 
-  private readonly SPRITE_TOTAL_WIDTH = 110;
-  private readonly EXCLUDED_LEFT = 25;
-  private readonly EXCLUDED_RIGHT = 5;
-  private readonly REGULAR_HEARTS_COUNT = 10;
+  private expText: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="exp"] span',
+  );
+  private expFill: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="exp"] .stat-fill',
+  );
+  private expBar: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="exp"] .bar',
+  );
+  private expDropdown: HTMLDivElement = this.container.querySelector(
+    '.stat-container[data-id="exp"] .dropdown',
+  );
+  private readonly LEFT_SIDE_WIDTH = 24;
+  private readonly STAT_WIDTH = 79;
 
-  constructor(client: Client) {
+  setStats(client: Client) {
+    this.hpText.innerText = `${client.hp}/${client.maxHp}`;
+    this.hpFill.style.width = `${this.LEFT_SIDE_WIDTH + Math.floor((client.hp / client.maxHp) * this.STAT_WIDTH)}px`;
+
+    this.tpText.innerText = `${client.tp}/${client.maxTp}`;
+    this.tpFill.style.width = `${this.LEFT_SIDE_WIDTH + Math.floor((client.tp / client.maxTp) * this.STAT_WIDTH)}px`;
+
+    const tnl = calculateTnl(client.experience);
+    const exp = getExpForLevel(client.level + 1);
+    this.expText.innerText = `${tnl}`;
+    this.expFill.style.width = `${this.LEFT_SIDE_WIDTH + Math.floor((client.experience / exp) * this.STAT_WIDTH)}px`;
+  }
+
+  constructor() {
     super();
-    this.client = client;
 
-    const container = document.getElementById('hud');
-    if (!container) throw new Error('HUD container not found');
-    this.container = container;
-
-    const healthText = this.container.querySelector('#health-text');
-    if (!healthText) throw new Error('Health text element not found');
-    this.healthText = healthText as HTMLElement;
-
-    const heartFill = this.container.querySelector('#heart-fill');
-    if (!heartFill) throw new Error('Heart fill element not found');
-    this.heartFill = heartFill as HTMLElement;
-
-    const heartBar = this.container.querySelector('#heart-bar');
-    if (!heartBar) throw new Error('Heart bar element not found');
-    this.heartBar = heartBar as HTMLElement;
-
-    const statsDropdown = this.container.querySelector('#stats-dropdown');
-    if (!statsDropdown) throw new Error('Stats dropdown element not found');
-    this.statsDropdown = statsDropdown as HTMLElement;
-
-    this.heartBar.addEventListener('click', () => {
-      this.statsDropdown.classList.toggle('hidden');
+    this.hpBar.addEventListener('click', () => {
+      playSfxById(SfxId.HudStatusBarClick);
+      this.hpDropdown.classList.toggle('hidden');
     });
 
-    this.client.on('selectCharacter', () => this.updateStats());
-    this.startUpdateLoop();
-  }
+    this.tpBar.addEventListener('click', () => {
+      playSfxById(SfxId.HudStatusBarClick);
+      this.tpDropdown.classList.toggle('hidden');
+    });
 
-  private get usableWidth(): number {
-    return this.SPRITE_TOTAL_WIDTH - this.EXCLUDED_LEFT - this.EXCLUDED_RIGHT;
-  }
-
-  private get heartWidth(): number {
-    return this.usableWidth / this.REGULAR_HEARTS_COUNT;
-  }
-
-  private calculateFillWidth(hp: number, maxHp: number): number {
-    if (maxHp <= 0) return this.EXCLUDED_LEFT;
-
-    const healthPercentage = Math.min(hp / maxHp, 1.0);
-    const hearts = healthPercentage * this.REGULAR_HEARTS_COUNT;
-    const clamped = Math.max(Math.floor(hearts), 0);
-
-    return Math.round(this.EXCLUDED_LEFT + clamped * this.heartWidth);
-  }
-
-  private startUpdateLoop(): void {
-    const update = () => {
-      if (!this.container.classList.contains('hidden')) {
-        this.updateStats();
-      }
-      requestAnimationFrame(update);
-    };
-    requestAnimationFrame(update);
-  }
-
-  // wtf was i thinking ...coding via phone doesn't work
-  private updateStats(): void {
-    const { hp, maxHp } = this.client;
-    const fillPx = this.calculateFillWidth(hp, maxHp);
-
-    this.heartFill.style.width = `${fillPx}px`;
-    this.healthText.textContent = `${hp}/${maxHp}`;
-
-    const healthPercentage = maxHp > 0 ? hp / maxHp : 0;
-    this.heartFill.classList.toggle(
-      'low-health',
-      healthPercentage < this.LOW_HEALTH_THRESHOLD,
-    );
-
-    const statHp = this.statsDropdown.querySelector('#stat-hp') as HTMLElement;
-    if (statHp) {
-      statHp.textContent = `${hp}/${maxHp}`;
-    }
+    this.expBar.addEventListener('click', () => {
+      playSfxById(SfxId.HudStatusBarClick);
+      this.expDropdown.classList.toggle('hidden');
+    });
   }
 }
