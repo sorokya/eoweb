@@ -60,6 +60,13 @@ export class HUD extends Base {
     this.expFill.style.width = `${this.LEFT_SIDE_WIDTH + Math.floor((client.experience / exp) * this.STAT_WIDTH)}px`;
   }
 
+  show() {
+    this.hpDropdown.classList.add('hidden');
+    this.tpDropdown.classList.add('hidden');
+    this.expDropdown.classList.add('hidden');
+    this.container.classList.remove('hidden');
+  }
+
   constructor() {
     super();
 
