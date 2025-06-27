@@ -253,6 +253,12 @@ input[type="password"] {
   left: 50px;
 }
 
+#character-select .character .admin-level {
+  position: absolute;
+  top: 100px;
+  left: 110px;
+}
+
 #character-select > .buttons {
   align-self: center;
 }

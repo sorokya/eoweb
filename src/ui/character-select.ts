@@ -1,4 +1,5 @@
 import {
+  AdminLevel,
   CharacterMapInfo,
   type CharacterSelectionListEntry,
   Direction,
@@ -19,6 +20,7 @@ import { renderCharacterStanding } from '../render/character-standing';
 import { playSfxById, SfxId } from '../sfx';
 import { capitalize } from '../utils/capitalize';
 import { Base } from './base-ui';
+import { getBitmapById, GfxType, loadBitmapById } from '../gfx';
 
 type Events = {
   cancel: undefined;
@@ -90,6 +92,7 @@ export class CharacterSelect extends Base {
     lastTime = now;
 
     let index = 0;
+    let adminRendered = [];
     for (const character of this.characters) {
       const mapInfo = new CharacterMapInfo();
       mapInfo.playerId = 1;
@@ -113,6 +116,21 @@ export class CharacterSelect extends Base {
       if (preview) {
         preview.src = this.canvas.toDataURL();
       }
+
+
+      if (character.admin > 0 && adminRendered.indexOf(index) === -1) {
+        const adminLevel: HTMLImageElement = this.container.querySelector('.admin-level');
+        const bmp = getBitmapById(GfxType.PostLoginUI, 32);
+        if (bmp) {
+          const adminCanvas = document.createElement('canvas');
+          adminCanvas.width = 13;
+          adminCanvas.height = 13;
+          const ctx = adminCanvas.getContext('2d');
+          ctx.drawImage(bmp, 0, character.admin == AdminLevel.HighGameMaster ? 181 : 155, bmp.width, 13, 0, 0, bmp.width, 13);
+          adminLevel.src = adminCanvas.toDataURL();
+          adminRendered.push(index);
+        }
+      }
       index++;
     }
 
@@ -124,6 +142,7 @@ export class CharacterSelect extends Base {
   }
 
   setCharacters(characters: CharacterSelectionListEntry[]) {
+    loadBitmapById(GfxType.PostLoginUI, 32)
     this.characters = characters;
     const characterBoxes = this.container.querySelectorAll('.character');
     let index = 0;
