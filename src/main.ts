@@ -306,7 +306,7 @@ const exitGame = new ExitGame();
 const smallConfirm = new SmallConfirm();
 const chat = new Chat();
 // biome-ignore lint/correctness/noUnusedVariables: Only used sometimes
-const offsetTweaker = new OffsetTweaker();
+//const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
 const hud = new HUD();
