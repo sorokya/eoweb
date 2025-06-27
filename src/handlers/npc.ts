@@ -17,6 +17,7 @@ import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
 import { HealthBar } from '../render/health-bar';
 import { NpcAttackAnimation } from '../render/npc-attack';
+import { NpcDeathAnimation } from '../render/npc-death';
 import { NpcWalkAnimation } from '../render/npc-walk';
 import { playSfxById, SfxId } from '../sfx';
 
@@ -109,8 +110,13 @@ function handleNpcAgree(client: Client, reader: EoReader) {
 
 function handleNpcSpec(client: Client, reader: EoReader) {
   const packet = NpcSpecServerPacket.deserialize(reader);
-  client.nearby.npcs = client.nearby.npcs.filter(
-    (n) => n.index !== packet.npcKilledData.npcIndex,
+  client.npcHealthBars.set(
+    packet.npcKilledData.npcIndex,
+    new HealthBar(0, packet.npcKilledData.damage),
+  );
+  client.npcAnimations.set(
+    packet.npcKilledData.npcIndex,
+    new NpcDeathAnimation(),
   );
 
   if (packet.npcKilledData.dropIndex) {
@@ -125,8 +131,13 @@ function handleNpcSpec(client: Client, reader: EoReader) {
 
 function handleNpcAccept(client: Client, reader: EoReader) {
   const packet = NpcAcceptServerPacket.deserialize(reader);
-  client.nearby.npcs = client.nearby.npcs.filter(
-    (n) => n.index !== packet.npcKilledData.npcIndex,
+  client.npcHealthBars.set(
+    packet.npcKilledData.npcIndex,
+    new HealthBar(0, packet.npcKilledData.damage),
+  );
+  client.npcAnimations.set(
+    packet.npcKilledData.npcIndex,
+    new NpcDeathAnimation(),
   );
 
   if (packet.npcKilledData.dropIndex) {
@@ -141,7 +152,13 @@ function handleNpcAccept(client: Client, reader: EoReader) {
 
 function handleNpcJunk(client: Client, reader: EoReader) {
   const packet = NpcJunkServerPacket.deserialize(reader);
-  client.nearby.npcs = client.nearby.npcs.filter((n) => n.id !== packet.npcId);
+  client.nearby.npcs
+    .filter((n) => n.id === packet.npcId)
+    .map((n) => n.index)
+    .forEach((npcIndex) => {
+      client.npcHealthBars.set(npcIndex, new HealthBar(0, 1));
+      client.npcAnimations.set(npcIndex, new NpcDeathAnimation());
+    });
 }
 
 function handleNpcDialog(client: Client, reader: EoReader) {
