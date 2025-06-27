@@ -11,7 +11,7 @@ import {
 import './style.css';
 import { PacketBus } from './bus';
 import { ChatTab, Client, GameState } from './client';
-import { GAME_FPS, HOST, MAX_CHALLENGE } from './consts';
+import { GAME_FPS, MAX_CHALLENGE } from './consts';
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
@@ -239,7 +239,7 @@ client.on('reconnect', () => {
 });
 
 const initializeSocket = (next: 'login' | 'create') => {
-  const socket = new WebSocket(HOST);
+  const socket = new WebSocket(client.host);
   socket.addEventListener('open', () => {
     mainMenu.hide();
     if (next === 'create') {
@@ -352,6 +352,11 @@ mainMenu.on('create-account', () => {
 
 mainMenu.on('view-credits', () => {
   window.open('https://github.com/sorokya/eoweb', '_blank');
+});
+
+mainMenu.on('host-change', (host) => {
+  client.host = host;
+  client.disconnect();
 });
 
 createAccountForm.on('cancel', () => {

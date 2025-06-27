@@ -59,6 +59,7 @@ import { ChatBubble } from './chat-bubble';
 import { getDoorIntersecting } from './collision';
 import {
   HALF_TILE_HEIGHT,
+  HOST,
   MAX_CHARACTER_NAME_LENGTH,
   MAX_CHAT_LENGTH,
 } from './consts';
@@ -151,6 +152,7 @@ type CharacterCreateData = {
 export class Client {
   private emitter: Emitter<ClientEvents>;
   bus: PacketBus | null = null;
+  host = HOST;
   version: Version;
   challenge: number;
   accountCreateData: AccountCreateData | null = null;
@@ -913,7 +915,9 @@ export class Client {
 
   disconnect() {
     this.state = GameState.Initial;
-    this.bus.disconnect();
+    if (this.bus) {
+      this.bus.disconnect();
+    }
   }
 
   cursorInDropRange(): boolean {
