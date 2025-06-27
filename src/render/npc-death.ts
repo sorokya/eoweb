@@ -65,9 +65,9 @@ export class NpcDeathAnimation extends NpcAnimation {
     );
     const drawY = Math.floor(screenY - metaOffset.y);
 
-    //reduce opacity for death animation
     ctx.globalAlpha = this.ticks / NPC_DEATH_TICKS;
     ctx.drawImage(bmp, drawX, drawY);
+    ctx.globalAlpha = 1;
 
     setNpcRectangle(
       npc.index,
