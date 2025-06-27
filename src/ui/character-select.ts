@@ -103,6 +103,7 @@ export class CharacterSelect extends Base {
       mapInfo.equipment = new EquipmentMapInfo();
       mapInfo.equipment.boots = character.equipment.boots;
       mapInfo.equipment.armor = character.equipment.armor;
+      mapInfo.equipment.weapon = character.equipment.weapon;
 
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       renderCharacterHairBehind(mapInfo, this.ctx, 0, false, false);
