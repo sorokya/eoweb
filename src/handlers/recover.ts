@@ -22,6 +22,7 @@ function handleRecoverPlayer(client: Client, reader: EoReader) {
   }
 
   client.tp = packet.tp;
+  client.emit('statsUpdate', undefined);
 }
 
 function handleRecoverAgree(client: Client, reader: EoReader) {

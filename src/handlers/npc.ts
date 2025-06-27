@@ -17,6 +17,7 @@ import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
 import { HealthBar } from '../render/health-bar';
 import { NpcAttackAnimation } from '../render/npc-attack';
+import { NpcDeathAnimation } from '../render/npc-death';
 import { NpcWalkAnimation } from '../render/npc-walk';
 import { playSfxById, SfxId } from '../sfx';
 
@@ -41,6 +42,11 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
   }
 
   for (const attack of packet.attacks) {
+    if (attack.playerId === client.playerId) {
+      client.hp = Math.max(client.hp - attack.damage, 0);
+      client.emit('statsUpdate', undefined);
+    }
+
     const npc = client.nearby.npcs.find((n) => attack.npcIndex === n.index);
     if (!npc) {
       unknownNpcsIndexes.add(attack.npcIndex);
@@ -109,8 +115,13 @@ function handleNpcAgree(client: Client, reader: EoReader) {
 
 function handleNpcSpec(client: Client, reader: EoReader) {
   const packet = NpcSpecServerPacket.deserialize(reader);
-  client.nearby.npcs = client.nearby.npcs.filter(
-    (n) => n.index !== packet.npcKilledData.npcIndex,
+  client.npcHealthBars.set(
+    packet.npcKilledData.npcIndex,
+    new HealthBar(0, packet.npcKilledData.damage),
+  );
+  client.npcAnimations.set(
+    packet.npcKilledData.npcIndex,
+    new NpcDeathAnimation(),
   );
 
   if (packet.npcKilledData.dropIndex) {
@@ -120,13 +131,23 @@ function handleNpcSpec(client: Client, reader: EoReader) {
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
     client.nearby.items.push(item);
+  }
+
+  if (packet.experience) {
+    client.experience = packet.experience;
+    client.emit('statsUpdate', undefined);
   }
 }
 
 function handleNpcAccept(client: Client, reader: EoReader) {
   const packet = NpcAcceptServerPacket.deserialize(reader);
-  client.nearby.npcs = client.nearby.npcs.filter(
-    (n) => n.index !== packet.npcKilledData.npcIndex,
+  client.npcHealthBars.set(
+    packet.npcKilledData.npcIndex,
+    new HealthBar(0, packet.npcKilledData.damage),
+  );
+  client.npcAnimations.set(
+    packet.npcKilledData.npcIndex,
+    new NpcDeathAnimation(),
   );
 
   if (packet.npcKilledData.dropIndex) {
@@ -137,11 +158,31 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     item.amount = packet.npcKilledData.dropAmount;
     client.nearby.items.push(item);
   }
+
+  if (packet.levelUp) {
+    client.level = packet.levelUp.level;
+    client.maxHp = packet.levelUp.maxHp;
+    client.maxTp = packet.levelUp.maxTp;
+    client.maxSp = packet.levelUp.maxSp;
+    client.statPoints = packet.levelUp.statPoints;
+    client.skillPoints = packet.levelUp.skillPoints;
+  }
+
+  if (packet.experience) {
+    client.experience = packet.experience;
+    client.emit('statsUpdate', undefined);
+  }
 }
 
 function handleNpcJunk(client: Client, reader: EoReader) {
   const packet = NpcJunkServerPacket.deserialize(reader);
-  client.nearby.npcs = client.nearby.npcs.filter((n) => n.id !== packet.npcId);
+  client.nearby.npcs
+    .filter((n) => n.id === packet.npcId)
+    .map((n) => n.index)
+    .forEach((npcIndex) => {
+      client.npcHealthBars.set(npcIndex, new HealthBar(0, 1));
+      client.npcAnimations.set(npcIndex, new NpcDeathAnimation());
+    });
 }
 
 function handleNpcDialog(client: Client, reader: EoReader) {

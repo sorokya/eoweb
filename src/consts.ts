@@ -26,6 +26,7 @@ export const WALK_ANIMATION_FRAMES = 4;
 export const FACE_TICKS = 1;
 export const SIT_TICKS = 4;
 export const ATTACK_TICKS = 5;
+export const NPC_DEATH_TICKS = 8;
 export const ATTACK_ANIMATION_FRAMES = 2;
 export const ANIMATION_TICKS = 6;
 export const MAX_CHALLENGE = 11_092_110;

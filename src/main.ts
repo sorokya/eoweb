@@ -29,6 +29,7 @@ import { Chat } from './ui/chat';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
+import { HUD } from './ui/hud';
 import { InGameMenu } from './ui/in-game-menu';
 import { Inventory } from './ui/inventory';
 import { LoginForm } from './ui/login';
@@ -43,64 +44,86 @@ import { randomRange } from './utils/random-range';
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
 
+// Declare ctx early so resizeCanvases can use it
+// willReadFrequently: true because apparently we getImageData() every time someone breathes near the zoom
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+if (!ctx) {
+  throw new Error('Failed to get canvas context!');
+}
+ctx.imageSmoothingEnabled = false;
+
 const client = new Client();
 const mobileControls = new MobileControls();
 
 let userOverride = false;
+
 export function zoomIn() {
   userOverride = true;
   setZoom(Math.min(4, ZOOM + 1));
   resizeCanvases();
 }
+
 export function zoomOut() {
   userOverride = true;
   setZoom(Math.max(1, ZOOM - 1));
   resizeCanvases();
 }
+
 export function zoomReset() {
   userOverride = false;
   resizeCanvases();
 }
+
 function resizeCanvases() {
   const container = document.getElementById('container');
   if (!container) return;
-
-  // Prefer visualViewport for accurate mobile height
   const viewportWidth =
     window.visualViewport?.width ?? container.getBoundingClientRect().width;
   const viewportHeight =
     window.visualViewport?.height ?? container.getBoundingClientRect().height;
-
   if (!userOverride) setZoom(viewportWidth >= 1280 ? 2 : 1);
-
   const w = Math.floor(viewportWidth / ZOOM);
   const h = Math.floor(viewportHeight / ZOOM);
-
+  // OK so basically canvas.width = newValue clears the entire canvas
+  // which means we see the background for like 1 frame = flicker
+  // solution: screenshot the canvas before resize, then draw it back
+  const snapshot =
+    canvas.width > 0
+      ? ctx.getImageData(0, 0, canvas.width, canvas.height)
+      : null;
+  const prevW = canvas.width;
+  const prevH = canvas.height;
   canvas.width = w;
   canvas.height = h;
-
   canvas.style.width = `${w * ZOOM}px`;
   canvas.style.height = `${h * ZOOM}px`;
-
+  ctx.imageSmoothingEnabled = false;
+  if (snapshot && prevW > 0) {
+    // restore the screenshot but scaled to new size
+    const temp = document.createElement('canvas');
+    temp.width = prevW;
+    temp.height = prevH;
+    const tempCtx = temp.getContext('2d');
+    if (tempCtx) {
+      tempCtx.putImageData(snapshot, 0, 0);
+      ctx.drawImage(temp, 0, 0, w, h);
+    }
+  } else {
+    // no previous content, just fill black
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
+  }
   client.mapRenderer.resizeCanvas(w, h);
-
+  setGameSize(w, h);
   if (client.state === GameState.InGame && viewportWidth < 940) {
     mobileControls.show();
   } else {
     mobileControls.hide();
   }
-
-  setGameSize(w, h);
 }
+
 resizeCanvases();
 window.addEventListener('resize', resizeCanvases);
-
-const ctx = canvas.getContext('2d');
-if (!ctx) {
-  throw new Error('Failed to get canvas context!');
-}
-
-ctx.imageSmoothingEnabled = false;
 
 let lastTime: DOMHighResTimeStamp | undefined;
 const render = (now: DOMHighResTimeStamp) => {
@@ -190,6 +213,8 @@ client.on('enterGame', ({ news }) => {
   characterSelect.hide();
   exitGame.show();
   chat.show();
+  hud.setStats(client);
+  hud.show();
   //offsetTweaker.show();
   inGameMenu.show();
   resizeCanvases();
@@ -204,6 +229,10 @@ client.on('passwordChanged', () => {
     'Password changed',
   );
   smallAlertLargeHeader.show();
+});
+
+client.on('statsUpdate', () => {
+  hud.setStats(client);
 });
 
 const initializeSocket = (next: 'login' | 'create') => {
@@ -279,6 +308,7 @@ const chat = new Chat();
 const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
+const hud = new HUD();
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
