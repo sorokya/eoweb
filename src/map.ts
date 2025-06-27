@@ -839,7 +839,7 @@ export class MapRenderer {
 
     renderCharacterHair(character, ctx, animationFrame, walking, attacking);
     renderCharacterArmor(character, ctx, animationFrame, walking, attackType);
-    renderCharacterBoots(character, ctx, animationFrame, walking, attackType);
+    renderCharacterBoots(character, ctx, animationFrame, walking, attacking);
   }
 
   renderCursor(
