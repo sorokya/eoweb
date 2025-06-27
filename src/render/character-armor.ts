@@ -2,8 +2,8 @@ import { type CharacterMapInfo, Direction, Gender, SitState } from 'eolib';
 import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
 import { GfxType, getBitmapById } from '../gfx';
-import type { Vector2 } from '../vector';
 import { getOffsetX, getOffsetY } from '../ui/offset-tweaker';
+import type { Vector2 } from '../vector';
 
 const STANDING_OFFSETS = {
   [Direction.Up]: { x: 0, y: 5 },
@@ -56,14 +56,14 @@ const MALE_ATTACK_FRAME_1_OFFSETS = {
 
 const MALE_SIT_FLOOR_OFFSETS = {
   [Direction.Up]: { x: -3, y: 14 },
-  [Direction.Down]: { x: 3, y: 14},
+  [Direction.Down]: { x: 3, y: 14 },
   [Direction.Left]: { x: 3, y: 14 },
   [Direction.Right]: { x: -3, y: 14 },
 };
 
 const FEMALE_SIT_FLOOR_OFFSETS = {
   [Direction.Up]: { x: -3, y: 14 },
-  [Direction.Down]: { x: 3, y: 14},
+  [Direction.Down]: { x: 3, y: 14 },
   [Direction.Left]: { x: 3, y: 14 },
   [Direction.Right]: { x: -3, y: 14 },
 };
@@ -87,7 +87,7 @@ export function renderCharacterArmor(
   ctx: CanvasRenderingContext2D,
   animationFrame: number,
   walking: boolean,
-  attacking: boolean
+  attacking: boolean,
 ) {
   if (character.equipment.armor <= 0) {
     return;
@@ -155,7 +155,7 @@ export function renderCharacterArmor(
             : FEMALE_ATTACK_FRAME_0_OFFSETS[direction]
           : animationFrame
             ? MALE_ATTACK_FRAME_1_OFFSETS[direction]
-            : MALE_ATTACK_FRAME_0_OFFSETS[direction]
+            : MALE_ATTACK_FRAME_0_OFFSETS[direction];
       break;
     case sitState === SitState.Floor:
       additionalOffset =
