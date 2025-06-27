@@ -69,9 +69,9 @@ const FEMALE_SIT_FLOOR_OFFSETS = {
 
 const MALE_SIT_CHAIR_OFFSETS = {
   [Direction.Up]: { x: -3, y: -3 },
-  [Direction.Down]: { x: 2, y: 3 },
+  [Direction.Down]: { x: 2, y: 5 },
   [Direction.Left]: { x: 3, y: -3 },
-  [Direction.Right]: { x: -3, y: 4 },
+  [Direction.Right]: { x: -3, y: 5 },
 };
 
 const FEMALE_SIT_CHAIR_OFFSETS = {

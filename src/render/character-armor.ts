@@ -20,10 +20,10 @@ const FEMALE_WALKING_OFFSETS = {
 };
 
 const MALE_WALKING_OFFSETS = {
-  [Direction.Up]: { x: 0, y: 1 },
-  [Direction.Down]: { x: 1, y: 1 },
-  [Direction.Left]: { x: 0, y: 1 },
-  [Direction.Right]: { x: -1, y: 1 },
+  [Direction.Up]: { x: 0, y: 2 },
+  [Direction.Down]: { x: 1, y: 2 },
+  [Direction.Left]: { x: 0, y: 2 },
+  [Direction.Right]: { x: -1, y: 2 },
 };
 
 const FEMALE_ATTACK_FRAME_0_OFFSETS = {
@@ -62,17 +62,17 @@ const MALE_SIT_FLOOR_OFFSETS = {
 };
 
 const FEMALE_SIT_FLOOR_OFFSETS = {
-  [Direction.Up]: { x: -2, y: 0 },
-  [Direction.Down]: { x: 2, y: 6 },
-  [Direction.Left]: { x: 2, y: 0 },
-  [Direction.Right]: { x: -2, y: 6 },
+  [Direction.Up]: { x: -3, y: 14 },
+  [Direction.Down]: { x: 3, y: 14},
+  [Direction.Left]: { x: 3, y: 14 },
+  [Direction.Right]: { x: -3, y: 14 },
 };
 
 const MALE_SIT_CHAIR_OFFSETS = {
-  [Direction.Up]: { x: -3, y: -3 },
-  [Direction.Down]: { x: 2, y: 3 },
-  [Direction.Left]: { x: 3, y: -3 },
-  [Direction.Right]: { x: -3, y: 4 },
+  [Direction.Up]: { x: -3, y: 5 },
+  [Direction.Down]: { x: 3, y: 6 },
+  [Direction.Left]: { x: 3, y: 5 },
+  [Direction.Right]: { x: -4, y: 6 },
 };
 
 const FEMALE_SIT_CHAIR_OFFSETS = {
