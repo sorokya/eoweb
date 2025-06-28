@@ -36,7 +36,7 @@ export class CreateAccountForm extends Base {
     'button[data-id="cancel-big"]',
   );
   private emitter = mitt<Events>();
-  private formElements: (HTMLInputElement | HTMLButtonElement)[];
+  private formElements: HTMLInputElement[];
 
   show() {
     this.username.value = '';
@@ -59,7 +59,6 @@ export class CreateAccountForm extends Base {
       this.name,
       this.location,
       this.email,
-      this.btnCreate,
     ];
 
     this.btnCancel.addEventListener('click', () => {

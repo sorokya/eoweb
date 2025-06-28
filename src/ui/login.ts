@@ -19,7 +19,7 @@ export class LoginForm extends Base {
   );
 
   private emitter = mitt<Events>();
-  private formElements: (HTMLInputElement | HTMLButtonElement)[];
+  private formElements: HTMLInputElement[];
 
   show() {
     this.username.value = '';
