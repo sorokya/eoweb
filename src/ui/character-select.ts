@@ -12,7 +12,6 @@ import {
   GAME_FPS,
   HALF_CHARACTER_WIDTH,
 } from '../consts';
-import { GfxType, loadBitmapById } from '../gfx';
 import { renderCharacterBoots } from '../render/character-boots';
 import { renderCharacterHair } from '../render/character-hair';
 import { renderCharacterHairBehind } from '../render/character-hair-behind';
@@ -131,7 +130,6 @@ export class CharacterSelect extends Base {
   }
 
   setCharacters(characters: CharacterSelectionListEntry[]) {
-    loadBitmapById(GfxType.PostLoginUI, 32);
     this.characters = characters;
     const characterBoxes = this.container.querySelectorAll('.character');
     let index = 0;
