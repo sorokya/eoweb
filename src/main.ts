@@ -7,12 +7,11 @@ import {
   InitInitClientPacket,
   ItemSpecial,
   SitState,
-  Version,
 } from 'eolib';
 import './style.css';
 import { PacketBus } from './bus';
 import { ChatTab, Client, GameState } from './client';
-import { GAME_FPS, HOST, MAX_CHALLENGE } from './consts';
+import { GAME_FPS, MAX_CHALLENGE } from './consts';
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
@@ -235,8 +234,12 @@ client.on('statsUpdate', () => {
   hud.setStats(client);
 });
 
+client.on('reconnect', () => {
+  initializeSocket('login');
+});
+
 const initializeSocket = (next: 'login' | 'create') => {
-  const socket = new WebSocket(HOST);
+  const socket = new WebSocket(client.host);
   socket.addEventListener('open', () => {
     mainMenu.hide();
     if (next === 'create') {
@@ -264,14 +267,12 @@ const initializeSocket = (next: 'login' | 'create') => {
     });
 
     client.setBus(bus);
+    client.challenge = randomRange(1, MAX_CHALLENGE);
 
     const init = new InitInitClientPacket();
-    init.challenge = randomRange(1, MAX_CHALLENGE);
+    init.challenge = client.challenge;
     init.hdid = '111111111';
-    init.version = new Version();
-    init.version.major = 0;
-    init.version.minor = 0;
-    init.version.patch = 28;
+    init.version = client.version;
     client.bus.send(init);
   });
 
@@ -351,6 +352,11 @@ mainMenu.on('create-account', () => {
 
 mainMenu.on('view-credits', () => {
   window.open('https://github.com/sorokya/eoweb', '_blank');
+});
+
+mainMenu.on('host-change', (host) => {
+  client.host = host;
+  client.disconnect();
 });
 
 createAccountForm.on('cancel', () => {

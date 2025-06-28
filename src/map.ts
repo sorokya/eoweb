@@ -118,6 +118,7 @@ export class MapRenderer {
   npcIdleAnimationTicks = NPC_IDLE_ANIMATION_TICKS;
   npcIdleAnimationFrame = 0;
   buildingCache = false;
+  private topLayer: (() => void)[] = [];
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
   private mainCharacterCanvas: HTMLCanvasElement;
@@ -399,6 +400,10 @@ export class MapRenderer {
     }
 
     this.renderNameTag(playerScreen, ctx);
+    for (const renderTopLayerEntity of this.topLayer) {
+      renderTopLayerEntity();
+    }
+    this.topLayer = [];
   }
 
   renderNameTag(playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
@@ -730,8 +735,10 @@ export class MapRenderer {
       ctx.drawImage(this.characterCanvas, 0, 0);
     }
 
-    renderCharacterChatBubble(bubble, character, ctx);
-    renderCharacterHealthBar(healthBar, character, ctx);
+    this.topLayer.push(() => {
+      renderCharacterChatBubble(bubble, character, ctx);
+      renderCharacterHealthBar(healthBar, character, ctx);
+    });
   }
 
   renderNpc(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
@@ -762,9 +769,10 @@ export class MapRenderer {
         ctx,
       );
     }
-
-    renderNpcChatBubble(bubble, npc, ctx);
-    renderNpcHealthBar(healthBar, npc, ctx);
+    this.topLayer.push(() => {
+      renderNpcChatBubble(bubble, npc, ctx);
+      renderNpcHealthBar(healthBar, npc, ctx);
+    });
   }
 
   renderItem(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {

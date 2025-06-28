@@ -5,7 +5,7 @@ const hardLimit = 150;
 const padding = 6;
 const lineHeight = 12;
 const radius = 6;
-const triangleHeight = 6;
+const triangleHeight = 15;
 const triangleWidth = 10;
 
 export class ChatBubble {

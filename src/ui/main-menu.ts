@@ -6,6 +6,7 @@ type Events = {
   'create-account': undefined;
   'play-game': undefined;
   'view-credits': undefined;
+  'host-change': string;
 };
 
 export class MainMenu extends Base {
@@ -19,6 +20,8 @@ export class MainMenu extends Base {
   private btnViewCredits: HTMLButtonElement = this.container.querySelector(
     'button[data-id="view-credits"]',
   );
+  private txtHost: HTMLInputElement =
+    this.container.querySelector('input[name="host"]');
   private emitter = mitt<Events>();
 
   constructor() {
@@ -34,6 +37,9 @@ export class MainMenu extends Base {
     this.btnViewCredits.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('view-credits', undefined);
+    });
+    this.txtHost.addEventListener('change', () => {
+      this.emitter.emit('host-change', this.txtHost.value);
     });
   }
 

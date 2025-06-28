@@ -1,5 +1,5 @@
 node_modules
 public/gfx*
-public/sfx
+public/sfx*
 public/maps
 dist

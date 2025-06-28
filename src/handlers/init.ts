@@ -12,6 +12,7 @@ import {
   InitSequenceStart,
   PacketAction,
   PacketFamily,
+  serverVerificationHash,
 } from 'eolib';
 import { type Client, GameState } from '../client';
 import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '../db';
@@ -24,6 +25,12 @@ function handleInitInit(client: Client, reader: EoReader) {
       handleInitOk(
         client,
         packet.replyCodeData as InitInitServerPacket.ReplyCodeDataOk,
+      );
+      break;
+    case InitReply.OutOfDate:
+      handleInitOutOfDate(
+        client,
+        packet.replyCodeData as InitInitServerPacket.ReplyCodeDataOutOfDate,
       );
       break;
     case InitReply.Banned:
@@ -75,6 +82,15 @@ function handleInitOk(
   client: Client,
   data: InitInitServerPacket.ReplyCodeDataOk,
 ) {
+  if (data.challengeResponse !== serverVerificationHash(client.challenge)) {
+    client.showError(
+      'Server failed challenge verification',
+      'Connection Refused',
+    );
+    client.disconnect();
+    return;
+  }
+
   client.playerId = data.playerId;
   // Hack to keep pre-game UI stable
   client.nearby.characters[0].playerId = data.playerId;
@@ -95,6 +111,14 @@ function handleInitOk(
   packet.playerId = data.playerId;
   bus.send(packet);
   client.state = GameState.Connected;
+}
+
+function handleInitOutOfDate(
+  client: Client,
+  data: InitInitServerPacket.ReplyCodeDataOutOfDate,
+) {
+  client.version = data.version;
+  client.emit('reconnect', undefined);
 }
 
 function handleInitBanned(
