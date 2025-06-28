@@ -1101,19 +1101,24 @@ input[type="password"] {
 }
 
 #hud .dropdown {
-  width: 109px;
-  height: 20px;
+  width: 111px;
+  height: 19px;
   background-image: url("/gfx/gfx002/158.png");
-  background-position: -220px -32px;
+  background-position: -222px -30px;
   background-repeat: no-repeat;
-  background-size: 439px 65px;
+  background-size: 440px 64px;
   pointer-events: auto;
   z-index: 10;
   white-space: nowrap;
   color: #d4c4a8;
   font-size: 12px;
+  line-height: 21px;
+
   position: absolute;
-  bottom: -19px;
+  bottom: calc(-16px * var(--ui-scale));
+
+  transform: scale(var(--ui-scale)); /* scales visually with rest of UI */
+  transform-origin: left center; /* scaling doesn't shift it sideways */
 }
 
 #hud .dropdown span {
