@@ -1112,12 +1112,13 @@ input[type="password"] {
   white-space: nowrap;
   color: #d4c4a8;
   font-size: 12px;
+  line-height: 21px;
 
   position: absolute;
-  bottom: calc(-17px * var(--ui-scale));
+  bottom: calc(-16px * var(--ui-scale));
 
   transform: scale(var(--ui-scale)); /* scales visually with rest of UI */
-  transform-origin: left center; /* scaling doesn’t shift it sideways */
+  transform-origin: left center; /* scaling doesn't shift it sideways */
 }
 
 #hud .dropdown span {
