@@ -26,6 +26,20 @@ const MALE_WALKING_OFFSETS = {
   [Direction.Right]: { x: -1, y: 1 },
 };
 
+const FEMALE_RANGED_ATTACK_FRAME_OFFSETS = {
+  [Direction.Up]: { x: 0, y: 0 },
+  [Direction.Down]: { x: -2, y: 0 },
+  [Direction.Left]: { x: -2, y: 0 },
+  [Direction.Right]: { x: 0, y: 0 },
+};
+
+const MALE_RANGED_ATTACK_FRAME_OFFSETS = {
+  [Direction.Up]: { x: 0, y: 0 },
+  [Direction.Down]: { x: -2, y: 0 },
+  [Direction.Left]: { x: -2, y: 0 },
+  [Direction.Right]: { x: 0, y: 0 },
+};
+
 const FEMALE_ATTACK_FRAME_0_OFFSETS = {
   [Direction.Up]: { x: -1, y: 0 },
   [Direction.Down]: { x: -1, y: 0 },
@@ -136,12 +150,16 @@ export function renderCharacterHairBehind(
     case attackType !== AttackType.NotAttacking:
       additionalOffset =
         gender === Gender.Female
-          ? animationFrame
-            ? FEMALE_ATTACK_FRAME_1_OFFSETS[direction]
-            : FEMALE_ATTACK_FRAME_0_OFFSETS[direction]
-          : animationFrame
-            ? MALE_ATTACK_FRAME_1_OFFSETS[direction]
-            : MALE_ATTACK_FRAME_0_OFFSETS[direction];
+          ? attackType === AttackType.Ranged
+            ? FEMALE_RANGED_ATTACK_FRAME_OFFSETS[direction]
+            : animationFrame
+              ? FEMALE_ATTACK_FRAME_1_OFFSETS[direction]
+              : FEMALE_ATTACK_FRAME_0_OFFSETS[direction]
+          : attackType === AttackType.Ranged
+            ? MALE_RANGED_ATTACK_FRAME_OFFSETS[direction]
+            : animationFrame
+              ? MALE_ATTACK_FRAME_1_OFFSETS[direction]
+              : MALE_ATTACK_FRAME_0_OFFSETS[direction];
       break;
     case sitState === SitState.Floor:
       additionalOffset =

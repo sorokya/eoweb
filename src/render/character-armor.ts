@@ -63,9 +63,9 @@ const MALE_ATTACK_FRAME_1_OFFSETS = {
 
 const MALE_RANGE_ATTACK_OFFSETS = {
   [Direction.Up]: { x: 0, y: 4 },
-  [Direction.Down]: { x: -2, y: 4 },
+  [Direction.Down]: { x: 3, y: 5 },
   [Direction.Left]: { x: 0, y: 4 },
-  [Direction.Right]: { x: 2, y: 4 },
+  [Direction.Right]: { x: -5, y: 4 },
 };
 
 const MALE_SIT_FLOOR_OFFSETS = {
