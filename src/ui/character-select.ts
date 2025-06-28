@@ -1,5 +1,4 @@
 import {
-  AdminLevel,
   CharacterMapInfo,
   type CharacterSelectionListEntry,
   Direction,
@@ -13,7 +12,7 @@ import {
   GAME_FPS,
   HALF_CHARACTER_WIDTH,
 } from '../consts';
-import { GfxType, getBitmapById, loadBitmapById } from '../gfx';
+import { GfxType, loadBitmapById } from '../gfx';
 import { renderCharacterBoots } from '../render/character-boots';
 import { renderCharacterHair } from '../render/character-hair';
 import { renderCharacterHairBehind } from '../render/character-hair-behind';
@@ -92,7 +91,6 @@ export class CharacterSelect extends Base {
     lastTime = now;
 
     let index = 0;
-    const adminRendered = [];
     for (const character of this.characters) {
       const mapInfo = new CharacterMapInfo();
       mapInfo.playerId = 1;
@@ -117,29 +115,10 @@ export class CharacterSelect extends Base {
         preview.src = this.canvas.toDataURL();
       }
 
-      if (character.admin > 0 && adminRendered.indexOf(index) === -1) {
-        const adminLevel: HTMLImageElement =
-          this.container.querySelector('.admin-level');
-        const bmp = getBitmapById(GfxType.PostLoginUI, 32);
-        if (bmp) {
-          const adminCanvas = document.createElement('canvas');
-          adminCanvas.width = 13;
-          adminCanvas.height = 13;
-          const ctx = adminCanvas.getContext('2d');
-          ctx.drawImage(
-            bmp,
-            0,
-            character.admin === AdminLevel.HighGameMaster ? 181 : 155,
-            bmp.width,
-            13,
-            0,
-            0,
-            bmp.width,
-            13,
-          );
-          adminLevel.src = adminCanvas.toDataURL();
-          adminRendered.push(index);
-        }
+      const adminLevel: HTMLImageElement =
+        this.container.querySelector('.admin-level');
+      if (adminLevel) {
+        adminLevel.classList.add(`level-${character.admin}`);
       }
       index++;
     }

@@ -257,6 +257,20 @@ input[type="password"] {
   position: absolute;
   top: 100px;
   left: 110px;
+  width: 13px;
+  height: 13px;
+}
+
+#character-select .character .admin-level.level-2,
+#character-select .character .admin-level.level-3,
+#character-select .character .admin-level.level-4 {
+  background-image: url("/gfx/gfx002/132.png");
+  background-position: 0 -155px;
+}
+
+#character-select .character .admin-level.level-5 {
+  background-image: url("/gfx/gfx002/132.png");
+  background-position: 0 -181px;
 }
 
 #character-select > .buttons {
