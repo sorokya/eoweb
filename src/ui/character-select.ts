@@ -106,9 +106,15 @@ export class CharacterSelect extends Base {
       mapInfo.equipment.weapon = character.equipment.weapon;
 
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      renderCharacterHairBehind(mapInfo, this.ctx, 0, false, false);
+      renderCharacterHairBehind(
+        mapInfo,
+        this.ctx,
+        0,
+        false,
+        AttackType.NotAttacking,
+      );
       renderCharacterStanding(mapInfo, this.ctx);
-      renderCharacterHair(mapInfo, this.ctx, 0, false, false);
+      renderCharacterHair(mapInfo, this.ctx, 0, false, AttackType.NotAttacking);
       renderCharacterArmor(
         mapInfo,
         this.ctx,
@@ -116,7 +122,13 @@ export class CharacterSelect extends Base {
         false,
         AttackType.NotAttacking,
       );
-      renderCharacterBoots(mapInfo, this.ctx, 0, false, false);
+      renderCharacterBoots(
+        mapInfo,
+        this.ctx,
+        0,
+        false,
+        AttackType.NotAttacking,
+      );
 
       const preview: HTMLImageElement = this.container.querySelectorAll(
         '.preview',

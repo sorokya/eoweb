@@ -4,8 +4,9 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
+import { AttackType, type Client } from '../client';
 import { CharacterAttackAnimation } from '../render/character-attack';
+import { CharacterRangedAttackAnimation } from '../render/character-attack-ranged';
 import { playSfxById, SfxId } from '../sfx';
 
 function handleAttackPlayer(client: Client, reader: EoReader) {
@@ -18,9 +19,12 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
     return;
   }
 
+  const attackType = client.getWeaponAttackType(character.equipment.weapon);
   client.characterAnimations.set(
     packet.playerId,
-    new CharacterAttackAnimation(packet.direction),
+    attackType === AttackType.Ranged
+      ? new CharacterRangedAttackAnimation(packet.direction)
+      : new CharacterAttackAnimation(packet.direction),
   );
 
   playSfxById(
