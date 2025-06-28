@@ -58,6 +58,7 @@ import type { PacketBus } from './bus';
 import { ChatBubble } from './chat-bubble';
 import { getDoorIntersecting } from './collision';
 import {
+  CLEAR_OUT_OF_RANGE_TICKS,
   HALF_TILE_HEIGHT,
   HOST,
   MAX_CHARACTER_NAME_LENGTH,
@@ -102,6 +103,7 @@ import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
 import { randomRange } from './utils/random-range';
+import { inRange } from './utils/range';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 
@@ -215,6 +217,7 @@ export class Client {
   quakeTicks = 0;
   quakePower = 0;
   quakeOffset = 0;
+  clearOutofRangeTicks = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -454,6 +457,21 @@ export class Client {
       if (!this.quakeTicks) {
         this.quakeOffset = 0;
       }
+    }
+
+    this.clearOutofRangeTicks = Math.max(this.clearOutofRangeTicks - 1, 0);
+    if (!this.clearOutofRangeTicks) {
+      const playerCoords = this.getPlayerCoords();
+      this.nearby.characters = this.nearby.characters.filter((c) =>
+        inRange(playerCoords, c.coords),
+      );
+      this.nearby.npcs = this.nearby.npcs.filter((n) =>
+        inRange(playerCoords, n.coords),
+      );
+      this.nearby.items = this.nearby.items.filter((i) =>
+        inRange(playerCoords, i.coords),
+      );
+      this.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
     }
   }
 

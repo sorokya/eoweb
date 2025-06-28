@@ -8,7 +8,6 @@ import {
 import type { Client } from '../client';
 import { CharacterWalkAnimation } from '../render/character-walk';
 import { getPrevCoords } from '../utils/get-prev-coords';
-import { inRange } from '../utils/range';
 
 function handleWalkPlayer(client: Client, reader: EoReader) {
   const packet = WalkPlayerServerPacket.deserialize(reader);
@@ -53,17 +52,6 @@ function handleWalkReply(client: Client, reader: EoReader) {
   }
 
   client.rangeRequest(unknownPlayerIds, unknownNpcIndexes);
-
-  const playerCoords = client.getPlayerCoords();
-  client.nearby.characters = client.nearby.characters.filter((c) =>
-    inRange(playerCoords, c.coords),
-  );
-  client.nearby.npcs = client.nearby.npcs.filter((n) =>
-    inRange(playerCoords, n.coords),
-  );
-  client.nearby.items = client.nearby.items.filter((i) =>
-    inRange(playerCoords, i.coords),
-  );
 }
 
 export function registerWalkHandlers(client: Client) {
