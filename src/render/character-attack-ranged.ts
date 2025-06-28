@@ -5,11 +5,11 @@ import {
   setCharacterRectangle,
 } from '../collision';
 import {
-  ATTACK_TICKS,
-  CHARACTER_ATTACK_WIDTH,
   CHARACTER_HEIGHT,
-  HALF_CHARACTER_ATTACK_WIDTH,
+  CHARACTER_RANGE_ATTACK_WIDTH,
+  HALF_CHARACTER_RANGE_ATTACK_WIDTH,
   RANGED_ATTACK_ANIMATION_FRAMES,
+  RANGED_ATTACK_TICKS,
 } from '../consts';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
 import { GfxType, getBitmapById } from '../gfx';
@@ -22,9 +22,9 @@ export class CharacterRangedAttackAnimation extends CharacterAnimation {
 
   constructor(direction: Direction) {
     super();
-    this.ticks = ATTACK_TICKS;
+    this.ticks = RANGED_ATTACK_TICKS;
     this.direction = direction;
-    this.animationFrame = 0;
+    this.animationFrame = 1;
   }
 
   tick() {
@@ -38,7 +38,7 @@ export class CharacterRangedAttackAnimation extends CharacterAnimation {
     const screenCoords = isoToScreen(character.coords);
 
     const additionalOffset = {
-      x: [Direction.Up, Direction.Right].includes(this.direction) ? 2 : -2,
+      x: [Direction.Up, Direction.Right].includes(this.direction) ? -5 : -7,
       y: 4,
     };
 
@@ -55,7 +55,7 @@ export class CharacterRangedAttackAnimation extends CharacterAnimation {
 
     const screenX = Math.floor(
       screenCoords.x -
-        HALF_CHARACTER_ATTACK_WIDTH -
+        HALF_CHARACTER_RANGE_ATTACK_WIDTH -
         playerScreen.x +
         HALF_GAME_WIDTH +
         additionalOffset.x,
@@ -73,7 +73,7 @@ export class CharacterRangedAttackAnimation extends CharacterAnimation {
       character.playerId,
       new Rectangle(
         { x: screenX, y: screenY },
-        CHARACTER_ATTACK_WIDTH,
+        CHARACTER_RANGE_ATTACK_WIDTH,
         CHARACTER_HEIGHT,
       ),
     );
@@ -102,30 +102,29 @@ export class CharacterRangedAttackAnimation extends CharacterAnimation {
 
     const drawX = Math.floor(
       mirrored
-        ? GAME_WIDTH - rect.position.x - CHARACTER_ATTACK_WIDTH
+        ? GAME_WIDTH - rect.position.x - CHARACTER_RANGE_ATTACK_WIDTH
         : rect.position.x,
     );
 
     const startX =
-      character.gender === Gender.Female ? 0 : CHARACTER_ATTACK_WIDTH * 2;
+      character.gender === Gender.Female ? 0 : CHARACTER_RANGE_ATTACK_WIDTH * 2;
 
     const sourceX =
       startX +
       ([Direction.Up, Direction.Left].includes(character.direction)
-        ? CHARACTER_ATTACK_WIDTH * RANGED_ATTACK_ANIMATION_FRAMES
-        : 0) +
-      CHARACTER_ATTACK_WIDTH * this.animationFrame;
+        ? CHARACTER_RANGE_ATTACK_WIDTH * RANGED_ATTACK_ANIMATION_FRAMES
+        : 0);
     const sourceY = character.skin * CHARACTER_HEIGHT;
 
     ctx.drawImage(
       bmp,
       sourceX,
       sourceY,
-      CHARACTER_ATTACK_WIDTH,
+      CHARACTER_RANGE_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
       drawX,
       rect.position.y,
-      CHARACTER_ATTACK_WIDTH,
+      CHARACTER_RANGE_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
     );
 
