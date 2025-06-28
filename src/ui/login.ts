@@ -30,8 +30,8 @@ export class LoginForm extends Base {
 
   constructor() {
     super();
-    
-    this.formElements = [this.username, this.password, this.btnCancel];
+
+    this.formElements = [this.username, this.password];
 
     this.form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -58,12 +58,14 @@ export class LoginForm extends Base {
       element.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key === 'Tab' && !this.container.classList.contains('hidden')) {
           e.preventDefault();
-          
+
           if (e.shiftKey) {
-            const prevIndex = index === 0 ? this.formElements.length - 1 : index - 1;
+            const prevIndex =
+              index === 0 ? this.formElements.length - 1 : index - 1;
             this.formElements[prevIndex].focus();
           } else {
-            const nextIndex = index === this.formElements.length - 1 ? 0 : index + 1;
+            const nextIndex =
+              index === this.formElements.length - 1 ? 0 : index + 1;
             this.formElements[nextIndex].focus();
           }
         }

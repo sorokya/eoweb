@@ -1,6 +1,6 @@
 import mitt from 'mitt';
-import { Base } from './base-ui';
 import { playSfxById, SfxId } from '../sfx';
+import { Base } from './base-ui';
 
 type Events = {
   cancel: undefined;
@@ -51,16 +51,15 @@ export class CreateAccountForm extends Base {
 
   constructor() {
     super();
-    
+
     this.formElements = [
-      this.username, 
-      this.password, 
-      this.confirmPassword, 
-      this.name, 
-      this.location, 
-      this.email, 
-      this.btnCreate, 
-      this.btnCancel
+      this.username,
+      this.password,
+      this.confirmPassword,
+      this.name,
+      this.location,
+      this.email,
+      this.btnCreate,
     ];
 
     this.btnCancel.addEventListener('click', () => {
@@ -129,12 +128,14 @@ export class CreateAccountForm extends Base {
       element.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key === 'Tab' && !this.container.classList.contains('hidden')) {
           e.preventDefault();
-          
+
           if (e.shiftKey) {
-            const prevIndex = index === 0 ? this.formElements.length - 1 : index - 1;
+            const prevIndex =
+              index === 0 ? this.formElements.length - 1 : index - 1;
             this.formElements[prevIndex].focus();
           } else {
-            const nextIndex = index === this.formElements.length - 1 ? 0 : index + 1;
+            const nextIndex =
+              index === this.formElements.length - 1 ? 0 : index + 1;
             this.formElements[nextIndex].focus();
           }
         }
