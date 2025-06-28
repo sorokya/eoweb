@@ -1,12 +1,10 @@
 import {
-  Coords,
-  type Direction,
   type EoReader,
   ItemMapInfo,
   NpcAcceptServerPacket,
+  NpcAgreeServerPacket,
   NpcDialogServerPacket,
   NpcJunkServerPacket,
-  NpcMapInfo,
   NpcPlayerServerPacket,
   NpcReplyServerPacket,
   NpcSpecServerPacket,
@@ -89,26 +87,15 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
 }
 
 function handleNpcAgree(client: Client, reader: EoReader) {
-  // TODO: Remove after eolib-2.0 is released
-  const numOfNpcs = reader.getChar();
-  for (let i = 0; i < numOfNpcs; ++i) {
-    const index = reader.getChar();
-    const id = reader.getShort();
-    const coords = Coords.deserialize(reader);
-    const direction = reader.getChar() as Direction;
-
-    const existing = client.nearby.npcs.find((n) => n.index === index);
+  const packet = NpcAgreeServerPacket.deserialize(reader);
+  for (const npc of packet.npcs) {
+    const existing = client.nearby.npcs.find((n) => n.index === npc.index);
     if (existing) {
-      existing.coords = coords;
-      existing.direction = direction;
+      existing.coords = npc.coords;
+      existing.direction = npc.direction;
     } else {
-      const info = new NpcMapInfo();
-      info.index = index;
-      info.id = id;
-      info.direction = direction;
-      info.coords = coords;
-      client.nearby.npcs.push(info);
-      client.preloadNpcSprites(info.id);
+      client.nearby.npcs.push(npc);
+      client.preloadNpcSprites(npc.id);
     }
   }
 }
