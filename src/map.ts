@@ -20,6 +20,7 @@ import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
 import { renderCharacterArmor } from './render/character-armor';
 import { CharacterAttackAnimation } from './render/character-attack';
+import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
 import { renderCharacterBoots } from './render/character-boots';
 import {
   calculateCharacterRenderPositionChair,
@@ -701,14 +702,19 @@ export class MapRenderer {
     const healthBar = this.client.characterHealthBars.get(character.playerId);
     const frame = animation?.animationFrame || 0;
     const walking = animation instanceof CharacterWalkAnimation;
-    const attacking = animation instanceof CharacterAttackAnimation;
+    const attacking =
+      animation instanceof CharacterAttackAnimation ||
+      animation instanceof CharacterRangedAttackAnimation;
+    const attackType = attacking
+      ? this.client.getWeaponAttackType(character.equipment.weapon)
+      : AttackType.NotAttacking;
 
     this.renderCharacterBehindLayers(
       character,
       characterCtx,
       frame,
       walking,
-      attacking,
+      attackType,
     );
 
     if (animation) {
@@ -726,7 +732,7 @@ export class MapRenderer {
       characterCtx,
       frame,
       walking,
-      attacking,
+      attackType,
     );
 
     if (entity.typeId === this.client.playerId) {
@@ -823,14 +829,14 @@ export class MapRenderer {
     ctx: CanvasRenderingContext2D,
     animationFrame: number,
     walking: boolean,
-    attacking: boolean,
+    attackType: AttackType,
   ) {
     renderCharacterHairBehind(
       character,
       ctx,
       animationFrame,
       walking,
-      attacking,
+      attackType,
     );
   }
 
@@ -839,15 +845,11 @@ export class MapRenderer {
     ctx: CanvasRenderingContext2D,
     animationFrame: number,
     walking: boolean,
-    attacking: boolean,
+    attackType: AttackType,
   ) {
-    const attackType = attacking
-      ? this.client.getWeaponAttackType(character.equipment.weapon)
-      : AttackType.NotAttacking;
-
-    renderCharacterHair(character, ctx, animationFrame, walking, attacking);
+    renderCharacterHair(character, ctx, animationFrame, walking, attackType);
     renderCharacterArmor(character, ctx, animationFrame, walking, attackType);
-    renderCharacterBoots(character, ctx, animationFrame, walking, attacking);
+    renderCharacterBoots(character, ctx, animationFrame, walking, attackType);
   }
 
   renderCursor(

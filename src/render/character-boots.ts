@@ -1,4 +1,5 @@
 import { type CharacterMapInfo, Direction, Gender, SitState } from 'eolib';
+import { AttackType } from '../client';
 import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
 import { GfxType, getBitmapById } from '../gfx';
@@ -86,7 +87,7 @@ export function renderCharacterBoots(
   ctx: CanvasRenderingContext2D,
   animationFrame: number,
   walking: boolean,
-  attacking: boolean,
+  attackType: AttackType,
 ) {
   if (character.equipment.boots <= 0) {
     return;
@@ -103,7 +104,7 @@ export function renderCharacterBoots(
     case walking:
       offset = animationFrame + 3 + 4 * baseOffset;
       break;
-    case attacking:
+    case attackType !== AttackType.NotAttacking:
       offset = !animationFrame ? 1 + baseOffset : 11 + baseOffset;
       break;
     case character.sitState === SitState.Floor:
@@ -146,7 +147,7 @@ export function renderCharacterBoots(
           ? FEMALE_WALKING_OFFSETS[direction]
           : MALE_WALKING_OFFSETS[direction];
       break;
-    case attacking:
+    case attackType !== AttackType.NotAttacking:
       additionalOffset =
         gender === Gender.Female
           ? animationFrame

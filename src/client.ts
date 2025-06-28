@@ -32,7 +32,6 @@ import {
   ItemType,
   LoginRequestClientPacket,
   MapTileSpec,
-  MessagePingClientPacket,
   NearbyInfo,
   type NpcMapInfo,
   NpcRangeRequestClientPacket,
@@ -73,20 +72,15 @@ import { registerAccountHandlers } from './handlers/account';
 import { registerArenaHandlers } from './handlers/arena';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerAvatarHandlers } from './handlers/avatar';
-import { registerChairHandlers } from './handlers/chair';
 import { registerCharacterHandlers } from './handlers/character';
 import { registerConnectionHandlers } from './handlers/connection';
 import { registerDoorHandlers } from './handlers/door';
-import { registerEffectHandlers } from './handlers/effect';
 import { registerFaceHandlers } from './handlers/face';
 import { registerInitHandlers } from './handlers/init';
-import { registerItemHandlers } from './handlers/item';
 import { registerLoginHandlers } from './handlers/login';
-import { registerMessageHandlers } from './handlers/message';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerRangeHandlers } from './handlers/range';
-import { registerRecoverHandlers } from './handlers/recover';
 import { registerRefreshHandlers } from './handlers/refresh';
 import { registerSitHandlers } from './handlers/sit';
 import { registerTalkHandlers } from './handlers/talk';
@@ -97,13 +91,10 @@ import { MapRenderer } from './map';
 import { MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterWalkAnimation } from './render/character-walk';
-import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
-import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
-import { randomRange } from './utils/random-range';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 
@@ -119,12 +110,8 @@ type ClientEvents = {
   selectCharacter: undefined;
   enterGame: { news: string[] };
   chat: { name: string; tab: ChatTab; message: string };
-  serverChat: { message: string; sfxId?: SfxId | null };
   accountCreated: undefined;
   passwordChanged: undefined;
-  inventoryChanged: undefined;
-  statsUpdate: undefined;
-  reconnect: undefined;
 };
 
 export enum GameState {
@@ -220,10 +207,6 @@ export class Client {
   npcMetadata = getNpcMetaData();
   doors: Door[] = [];
   typing = false;
-  pingStart = 0;
-  quakeTicks = 0;
-  quakePower = 0;
-  quakeOffset = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -644,8 +627,6 @@ export class Client {
     registerLoginHandlers(this);
     registerWelcomeHandlers(this);
     registerPlayersHandlers(this);
-    registerRecoverHandlers(this);
-    registerMessageHandlers(this);
     registerAvatarHandlers(this);
     registerFaceHandlers(this);
     registerWalkHandlers(this);
@@ -707,17 +688,6 @@ export class Client {
       if (door && !door.open) {
         this.openDoor(doorAt);
       }
-      return;
-    }
-
-    if (
-      this.isFacingChairAt(this.mouseCoords) &&
-      !this.occupied(this.mouseCoords)
-    ) {
-      const coords = new Coords();
-      coords.x = this.mouseCoords.x;
-      coords.y = this.mouseCoords.y;
-      this.sitChair(coords);
       return;
     }
 
@@ -813,19 +783,6 @@ export class Client {
 
   chat(message: string) {
     if (!message) {
-      return;
-    }
-
-    if (message.startsWith('#ping') && message.length === 5) {
-      this.pingStart = Date.now();
-      this.bus.send(new MessagePingClientPacket());
-      return;
-    }
-
-    if (message.startsWith('#loc')) {
-      this.emit('serverChat', {
-        message: `${this.mapId} x:${this.getPlayerCoords().x} y:${this.getPlayerCoords().y}`,
-      });
       return;
     }
 
