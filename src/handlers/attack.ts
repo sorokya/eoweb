@@ -6,7 +6,9 @@ import {
 } from 'eolib';
 import type { Client } from '../client';
 import { CharacterAttackAnimation } from '../render/character-attack';
-import { playSfxById, SfxId } from '../sfx';
+import { CharacterRangedAttackAnimation } from '../render/character-attack-ranged';
+import { playSfxById } from '../sfx';
+import { randomRange } from '../utils/random-range';
 
 function handleAttackPlayer(client: Client, reader: EoReader) {
   const packet = AttackPlayerServerPacket.deserialize(reader);
@@ -18,11 +20,16 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
     return;
   }
 
+  const metadata = client.getWeaponMetadata(character.equipment.weapon);
   client.characterAnimations.set(
     packet.playerId,
-    new CharacterAttackAnimation(packet.direction),
+    metadata.ranged
+      ? new CharacterRangedAttackAnimation(packet.direction)
+      : new CharacterAttackAnimation(packet.direction),
   );
-  playSfxById(SfxId.PunchAttack);
+
+  const index = randomRange(0, metadata.sfx.length - 1);
+  playSfxById(metadata.sfx[index]);
 }
 
 export function registerAttackHandlers(client: Client) {

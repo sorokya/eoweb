@@ -3,6 +3,7 @@ import { type Client, GameState } from './client';
 import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
 import { getLatestDirectionHeld, Input, isInputHeld } from './input';
 import { CharacterAttackAnimation } from './render/character-attack';
+import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
 import { CharacterWalkAnimation } from './render/character-walk';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 import { getNextCoords } from './utils/get-next-coords';
@@ -61,7 +62,9 @@ export class MovementController {
 
     const animation = this.client.characterAnimations.get(character.playerId);
     const walking = animation instanceof CharacterWalkAnimation;
-    const attacking = animation instanceof CharacterAttackAnimation;
+    const attacking =
+      animation instanceof CharacterAttackAnimation ||
+      animation instanceof CharacterRangedAttackAnimation;
 
     if (attacking && animation.ticks > 2) {
       return;
@@ -77,9 +80,14 @@ export class MovementController {
       character.sitState === SitState.Stand
     ) {
       if (!walking) {
+        const metadata = this.client.getWeaponMetadata(
+          character.equipment.weapon,
+        );
         this.client.characterAnimations.set(
           character.playerId,
-          new CharacterAttackAnimation(character.direction),
+          metadata.ranged
+            ? new CharacterRangedAttackAnimation(character.direction)
+            : new CharacterAttackAnimation(character.direction),
         );
         if (this.lastDirectionHeld !== null) {
           character.direction = this.lastDirectionHeld;

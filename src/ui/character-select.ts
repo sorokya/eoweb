@@ -5,6 +5,7 @@ import {
   EquipmentMapInfo,
 } from 'eolib';
 import mitt from 'mitt';
+import { CharacterAction } from '../client';
 import { Rectangle, setCharacterRectangle } from '../collision';
 import {
   CHARACTER_HEIGHT,
@@ -12,6 +13,7 @@ import {
   GAME_FPS,
   HALF_CHARACTER_WIDTH,
 } from '../consts';
+import { renderCharacterArmor } from '../render/character-armor';
 import { renderCharacterBoots } from '../render/character-boots';
 import { renderCharacterHair } from '../render/character-hair';
 import { renderCharacterHairBehind } from '../render/character-hair-behind';
@@ -100,12 +102,15 @@ export class CharacterSelect extends Base {
       mapInfo.hairStyle = character.hairStyle;
       mapInfo.equipment = new EquipmentMapInfo();
       mapInfo.equipment.boots = character.equipment.boots;
+      mapInfo.equipment.armor = character.equipment.armor;
+      mapInfo.equipment.weapon = character.equipment.weapon;
 
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      renderCharacterHairBehind(mapInfo, this.ctx, 0, false, false);
+      renderCharacterHairBehind(mapInfo, this.ctx, 0, CharacterAction.None);
       renderCharacterStanding(mapInfo, this.ctx);
-      renderCharacterHair(mapInfo, this.ctx, 0, false, false);
-      renderCharacterBoots(mapInfo, this.ctx, 0, false, false);
+      renderCharacterBoots(mapInfo, this.ctx, 0, CharacterAction.None);
+      renderCharacterArmor(mapInfo, this.ctx, 0, CharacterAction.None);
+      renderCharacterHair(mapInfo, this.ctx, 0, CharacterAction.None);
 
       const preview: HTMLImageElement = this.container.querySelectorAll(
         '.preview',

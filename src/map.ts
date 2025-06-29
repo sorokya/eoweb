@@ -1,5 +1,5 @@
 import { type CharacterMapInfo, Coords, MapTileSpec, SitState } from 'eolib';
-import { type Client, GameState } from './client';
+import { CharacterAction, type Client, GameState } from './client';
 import {
   getCharacterIntersecting,
   getCharacterRectangle,
@@ -18,6 +18,7 @@ import {
 } from './consts';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
+import { renderCharacterArmor } from './render/character-armor';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { renderCharacterBoots } from './render/character-boots';
 import {
@@ -699,16 +700,29 @@ export class MapRenderer {
     const bubble = this.client.characterChats.get(character.playerId);
     const healthBar = this.client.characterHealthBars.get(character.playerId);
     const frame = animation?.animationFrame || 0;
-    const walking = animation instanceof CharacterWalkAnimation;
-    const attacking = animation instanceof CharacterAttackAnimation;
 
-    this.renderCharacterBehindLayers(
-      character,
-      characterCtx,
-      frame,
-      walking,
-      attacking,
-    );
+    let action: CharacterAction;
+    switch (true) {
+      case animation instanceof CharacterWalkAnimation:
+        action = CharacterAction.Walking;
+        break;
+      case animation instanceof CharacterAttackAnimation: {
+        const metadata = this.client.getWeaponMetadata(
+          character.equipment.weapon,
+        );
+        if (metadata.ranged) {
+          action = CharacterAction.RangedAttack;
+        } else {
+          action = CharacterAction.MeleeAttack;
+        }
+        break;
+      }
+      default:
+        action = CharacterAction.None;
+        break;
+    }
+
+    this.renderCharacterBehindLayers(character, characterCtx, frame, action);
 
     if (animation) {
       animation.render(character, characterCtx);
@@ -720,13 +734,7 @@ export class MapRenderer {
       renderCharacterStanding(character, characterCtx);
     }
 
-    this.renderCharacterLayers(
-      character,
-      characterCtx,
-      frame,
-      walking,
-      attacking,
-    );
+    this.renderCharacterLayers(character, characterCtx, frame, action);
 
     if (entity.typeId === this.client.playerId) {
       ctx.drawImage(this.mainCharacterCanvas, 0, 0);
@@ -821,27 +829,20 @@ export class MapRenderer {
     character: CharacterMapInfo,
     ctx: CanvasRenderingContext2D,
     animationFrame: number,
-    walking: boolean,
-    attacking: boolean,
+    action: CharacterAction,
   ) {
-    renderCharacterHairBehind(
-      character,
-      ctx,
-      animationFrame,
-      walking,
-      attacking,
-    );
+    renderCharacterHairBehind(character, ctx, animationFrame, action);
   }
 
   renderCharacterLayers(
     character: CharacterMapInfo,
     ctx: CanvasRenderingContext2D,
     animationFrame: number,
-    walking: boolean,
-    attacking: boolean,
+    action: CharacterAction,
   ) {
-    renderCharacterHair(character, ctx, animationFrame, walking, attacking);
-    renderCharacterBoots(character, ctx, animationFrame, walking, attacking);
+    renderCharacterBoots(character, ctx, animationFrame, action);
+    renderCharacterArmor(character, ctx, animationFrame, action);
+    renderCharacterHair(character, ctx, animationFrame, action);
   }
 
   renderCursor(

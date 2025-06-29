@@ -103,6 +103,7 @@ import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
+import { getWeaponMetaData, WeaponMetadata } from './utils/get-weapon-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
 import { randomRange } from './utils/random-range';
 import { inRange } from './utils/range';
@@ -135,6 +136,14 @@ export enum GameState {
   Login = 2,
   LoggedIn = 3,
   InGame = 4,
+}
+
+export enum CharacterAction {
+  None = 0,
+  Walking = 1,
+  MeleeAttack = 2,
+  RangedAttack = 3,
+  CastingSpell = 4,
 }
 
 type AccountCreateData = {
@@ -215,13 +224,14 @@ export class Client {
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
   npcMetadata = getNpcMetaData();
+  weaponMetadata = getWeaponMetaData();
   doors: Door[] = [];
   typing = false;
+  clearOutofRangeTicks = 0;
   pingStart = 0;
   quakeTicks = 0;
   quakePower = 0;
   quakeOffset = 0;
-  clearOutofRangeTicks = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -300,6 +310,15 @@ export class Client {
     }
 
     return this.enf.npcs[id - 1];
+  }
+
+  getWeaponMetadata(graphicId: number): WeaponMetadata {
+    const data = this.weaponMetadata.get(graphicId);
+    if (data) {
+      return data;
+    }
+
+    return new WeaponMetadata(0, [SfxId.MeleeWeaponAttack], false);
   }
 
   getEifRecordById(id: number): EifRecord | undefined {
@@ -790,6 +809,19 @@ export class Client {
       return;
     }
 
+    if (message.startsWith('#ping') && message.length === 5) {
+      this.pingStart = Date.now();
+      this.bus.send(new MessagePingClientPacket());
+      return;
+    }
+
+    if (message.startsWith('#loc') && message.length === 4) {
+      this.emit('serverChat', {
+        message: `${this.mapId} x:${this.getPlayerCoords().x} y:${this.getPlayerCoords().y}`,
+      });
+      return;
+    }
+
     const trimmed = message.substring(0, MAX_CHAT_LENGTH);
 
     if (trimmed.startsWith('#') && this.handleCommand(trimmed)) {
@@ -977,7 +1009,11 @@ export class Client {
     packet.direction = direction;
     packet.timestamp = timestamp;
     this.bus.send(packet);
-    playSfxById(SfxId.PunchAttack);
+
+    const player = this.getPlayerCharacter();
+    const metadata = this.getWeaponMetadata(player.equipment.weapon);
+    const index = randomRange(0, metadata.sfx.length - 1);
+    playSfxById(metadata.sfx[index]);
   }
 
   sit() {
