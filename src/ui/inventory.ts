@@ -28,6 +28,15 @@ const ITEM_SIZE = {
   [ItemSize.Size2x4]: { x: 2, y: 4 },
 };
 
+type DragState = {
+  active: boolean;
+  itemId: number;
+  element: HTMLElement | null;
+  clone: HTMLElement | null;
+  offset: { x: number; y: number };
+  pointerId: number;
+};
+
 type Events = {
   dropItem: number;
 };
@@ -39,6 +48,16 @@ export class Inventory extends Base {
   private grid: HTMLDivElement = this.container.querySelector('.grid');
   private positions: ItemPosition[] = [];
   private tab = 0;
+
+  // Need to track our own drag state since we're ditching HTML5 drag
+  private dragState: DragState = {
+    active: false,
+    itemId: 0,
+    element: null,
+    clone: null,
+    offset: { x: 0, y: 0 },
+    pointerId: -1,
+  };
 
   constructor(client: Client) {
     super();
@@ -74,51 +93,48 @@ export class Inventory extends Base {
       e.stopPropagation();
     });
 
-    this.grid.addEventListener('dragover', (e) => {
-      e.preventDefault(); // Necessary to allow drop
-    });
-
-    this.grid.addEventListener('drop', (e) => {
-      e.preventDefault();
-      playSfxById(SfxId.InventoryPlace);
-      const itemId = Number(e.dataTransfer?.getData('text/plain'));
-      const rect = this.grid.getBoundingClientRect();
-
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      const gridX = Math.floor(mouseX / CELL_SIZE);
-      const gridY = Math.floor(mouseY / CELL_SIZE);
-
-      this.tryMoveItem(itemId, gridX, gridY);
+    // Handle drops on inventory grid
+    this.grid.addEventListener('pointerup', (e) => {
+      if (this.dragState.active && e.pointerId === this.dragState.pointerId) {
+        this.handleGridDrop(e);
+      }
     });
 
     const canvas = document.getElementById('game') as HTMLCanvasElement;
     const uiContainer = document.getElementById('ui');
-    uiContainer.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      client.setMousePosition({
-        x: Math.min(
-          Math.max(Math.floor((e.clientX - rect.left) * scaleX), 0),
-          canvas.width,
-        ),
-        y: Math.min(
-          Math.max(Math.floor((e.clientY - rect.top) * scaleY), 0),
-          canvas.height,
-        ),
-      });
-    });
 
-    uiContainer.addEventListener('drop', (e) => {
-      e.preventDefault();
-      const itemId = Number(e.dataTransfer?.getData('text/plain'));
-      if (!Number.isNaN(itemId) && itemId > 0) {
-        this.emitter.emit('dropItem', itemId);
+    // Handle drops on game world (for dropping items)
+    uiContainer.addEventListener('pointerup', (e) => {
+      if (!this.dragState.active || e.pointerId !== this.dragState.pointerId)
+        return;
+
+      const rect = canvas.getBoundingClientRect();
+      if (
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+      ) {
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        client.setMousePosition({
+          x: Math.min(
+            Math.max(Math.floor((e.clientX - rect.left) * scaleX), 0),
+            canvas.width,
+          ),
+          y: Math.min(
+            Math.max(Math.floor((e.clientY - rect.top) * scaleY), 0),
+            canvas.height,
+          ),
+        });
+
+        this.emitter.emit('dropItem', this.dragState.itemId);
       }
     });
+
+    // Bind methods to preserve 'this' context for global event listeners
+    this.handleDragMove = this.handleDragMove.bind(this);
+    this.handleDragEnd = this.handleDragEnd.bind(this);
   }
 
   on<Event extends keyof Events>(
@@ -137,20 +153,174 @@ export class Inventory extends Base {
 
     const size = ITEM_SIZE[record.size];
 
-    // Temporarily remove this item from the positions array to avoid false overlap
+    // Temporarily remove this item from positions to avoid self-collision
     const otherPositions = this.positions.filter((p) => p.id !== itemId);
-
-    // Reuse your `doesItemFitAt` function but pass in the reduced list
     const fits = this.doesItemFitAt(position.tab, x, y, size, otherPositions);
     if (!fits) return;
 
-    // Update position
     position.x = x;
     position.y = y;
-
-    // Re-render
     this.render();
     this.savePositions();
+  }
+
+  private startDrag(itemId: number, element: HTMLElement, e: PointerEvent) {
+    if (this.dragState.active) return;
+
+    playSfxById(SfxId.InventoryPickup);
+
+    this.dragState.active = true;
+    this.dragState.itemId = itemId;
+    this.dragState.element = element;
+    this.dragState.pointerId = e.pointerId;
+
+    // Only grab the image - don't want the tooltip following our cursor
+    const img = element.querySelector('img') as HTMLImageElement;
+    const clone = img.cloneNode(true) as HTMLImageElement;
+    clone.style.position = 'fixed';
+    clone.style.pointerEvents = 'none';
+    clone.style.zIndex = '9999';
+    clone.style.opacity = '0.8';
+    clone.classList.add('dragging-clone');
+
+    const rect = element.getBoundingClientRect();
+    this.dragState.offset = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+
+    clone.style.left = `${e.clientX - this.dragState.offset.x}px`;
+    clone.style.top = `${e.clientY - this.dragState.offset.y}px`;
+
+    document.body.appendChild(clone);
+    this.dragState.clone = clone;
+
+    // Visual feedback for original item
+    element.style.opacity = '0.5';
+    element.style.cursor = 'grabbing';
+
+    // These pointer events won't mess with keyboard like the old drag system did
+    document.addEventListener('pointermove', this.handleDragMove);
+    document.addEventListener('pointerup', this.handleDragEnd);
+    document.addEventListener('pointercancel', this.handleDragEnd);
+
+    element.setPointerCapture(e.pointerId);
+  }
+
+  private handleDragMove(e: PointerEvent) {
+    if (
+      !this.dragState.active ||
+      e.pointerId !== this.dragState.pointerId ||
+      !this.dragState.clone
+    ) {
+      return;
+    }
+
+    // Update visual clone position
+    this.dragState.clone.style.left = `${e.clientX - this.dragState.offset.x}px`;
+    this.dragState.clone.style.top = `${e.clientY - this.dragState.offset.y}px`;
+
+    this.updateDropZoneHighlights(e.clientX, e.clientY);
+  }
+
+  private handleDragEnd(e: PointerEvent) {
+    if (!this.dragState.active || e.pointerId !== this.dragState.pointerId) {
+      return;
+    }
+
+    // Cleanup
+    if (this.dragState.clone) {
+      document.body.removeChild(this.dragState.clone);
+    }
+
+    if (this.dragState.element) {
+      this.dragState.element.style.opacity = '';
+      this.dragState.element.style.cursor = 'grab';
+      this.dragState.element.releasePointerCapture(e.pointerId);
+    }
+
+    document.removeEventListener('pointermove', this.handleDragMove);
+    document.removeEventListener('pointerup', this.handleDragEnd);
+    document.removeEventListener('pointercancel', this.handleDragEnd);
+
+    this.clearDropZoneHighlights();
+
+    // Reset drag state
+    this.dragState = {
+      active: false,
+      itemId: 0,
+      element: null,
+      clone: null,
+      offset: { x: 0, y: 0 },
+      pointerId: -1,
+    };
+  }
+
+  private handleGridDrop(e: PointerEvent) {
+    const rect = this.grid.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const gridX = Math.floor(mouseX / CELL_SIZE);
+    const gridY = Math.floor(mouseY / CELL_SIZE);
+
+    if (gridX >= 0 && gridX < COLS && gridY >= 0 && gridY < ROWS) {
+      playSfxById(SfxId.InventoryPlace);
+      this.tryMoveItem(this.dragState.itemId, gridX, gridY);
+    }
+  }
+
+  private updateDropZoneHighlights(clientX: number, clientY: number) {
+    this.clearDropZoneHighlights();
+
+    // Highlight inventory grid
+    const gridRect = this.grid.getBoundingClientRect();
+    if (
+      clientX >= gridRect.left &&
+      clientX <= gridRect.right &&
+      clientY >= gridRect.top &&
+      clientY <= gridRect.bottom
+    ) {
+      const mouseX = clientX - gridRect.left;
+      const mouseY = clientY - gridRect.top;
+      const gridX = Math.floor(mouseX / CELL_SIZE);
+      const gridY = Math.floor(mouseY / CELL_SIZE);
+
+      const record = this.client.getEifRecordById(this.dragState.itemId);
+      if (record) {
+        const size = ITEM_SIZE[record.size];
+        const otherPositions = this.positions.filter(
+          (p) => p.id !== this.dragState.itemId,
+        );
+        const fits = this.doesItemFitAt(
+          this.tab,
+          gridX,
+          gridY,
+          size,
+          otherPositions,
+        );
+
+        this.grid.classList.add(fits ? 'drop-valid' : 'drop-invalid');
+      }
+    }
+
+    // Highlight game canvas for item dropping
+    const canvas = document.getElementById('game') as HTMLCanvasElement;
+    const canvasRect = canvas.getBoundingClientRect();
+    if (
+      clientX >= canvasRect.left &&
+      clientX <= canvasRect.right &&
+      clientY >= canvasRect.top &&
+      canvasRect.bottom
+    ) {
+      canvas.classList.add('drop-valid');
+    }
+  }
+
+  private clearDropZoneHighlights() {
+    this.grid.classList.remove('drop-valid', 'drop-invalid');
+    const canvas = document.getElementById('game') as HTMLCanvasElement;
+    canvas.classList.remove('drop-valid');
   }
 
   private render() {
@@ -185,12 +355,15 @@ export class Inventory extends Base {
 
       imgContainer.style.gridColumn = `${position.x + 1} / span ${size.x}`;
       imgContainer.style.gridRow = `${position.y + 1} / span ${size.y}`;
-      imgContainer.setAttribute('draggable', 'true');
+      imgContainer.style.cursor = 'grab';
       imgContainer.dataset.itemId = String(item.id);
 
-      imgContainer.addEventListener('dragstart', (e) => {
-        playSfxById(SfxId.InventoryPickup);
-        e.dataTransfer?.setData('text/plain', String(item.id));
+      // Switch to pointer events - should fix the movement input locking issue
+      imgContainer.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return; // Only left click/touch
+
+        this.startDrag(item.id, imgContainer, e);
+        e.preventDefault(); // Prevent text selection
       });
 
       imgContainer.addEventListener('click', (e) => {
