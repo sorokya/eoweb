@@ -106,8 +106,8 @@ import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
-import { inRange } from './utils/range';
 import { randomRange } from './utils/random-range';
+import { inRange } from './utils/range';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 
