@@ -45,6 +45,7 @@ import {
   ThreeItem,
   Version,
   WalkAction,
+  WalkAdminClientPacket,
   WalkPlayerClientPacket,
   WarpAcceptClientPacket,
   WarpTakeClientPacket,
@@ -58,10 +59,12 @@ import type { PacketBus } from './bus';
 import { ChatBubble } from './chat-bubble';
 import { getDoorIntersecting } from './collision';
 import {
+  CLEAR_OUT_OF_RANGE_TICKS,
   HALF_TILE_HEIGHT,
   HOST,
   MAX_CHARACTER_NAME_LENGTH,
   MAX_CHAT_LENGTH,
+  USAGE_TICKS,
 } from './consts';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
 import { Door } from './door';
@@ -102,6 +105,7 @@ import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
 import { randomRange } from './utils/random-range';
+import { inRange } from './utils/range';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 
@@ -167,9 +171,11 @@ export class Client {
   guildRankName = '';
   classId = 0;
   admin = AdminLevel.Player;
+  nowall = false;
   level = 0;
   experience = 0;
   usage = 0;
+  usageTicks = USAGE_TICKS;
   hp = 0;
   maxHp = 0;
   tp = 0;
@@ -215,6 +221,7 @@ export class Client {
   quakeTicks = 0;
   quakePower = 0;
   quakeOffset = 0;
+  clearOutofRangeTicks = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -332,6 +339,15 @@ export class Client {
   tick() {
     this.movementController.tick();
     this.mapRenderer.tick();
+
+    if (this.state === GameState.InGame) {
+      this.usageTicks = Math.max(this.usageTicks - 1, 0);
+      if (!this.usageTicks) {
+        this.usage += 1;
+        this.usageTicks = USAGE_TICKS;
+      }
+    }
+
     const endedCharacterAnimations: number[] = [];
     let playerWalking = false;
     for (const [id, animation] of this.characterAnimations) {
@@ -454,6 +470,21 @@ export class Client {
       if (!this.quakeTicks) {
         this.quakeOffset = 0;
       }
+    }
+
+    this.clearOutofRangeTicks = Math.max(this.clearOutofRangeTicks - 1, 0);
+    if (!this.clearOutofRangeTicks) {
+      const playerCoords = this.getPlayerCoords();
+      this.nearby.characters = this.nearby.characters.filter((c) =>
+        inRange(playerCoords, c.coords),
+      );
+      this.nearby.npcs = this.nearby.npcs.filter((n) =>
+        inRange(playerCoords, n.coords),
+      );
+      this.nearby.items = this.nearby.items.filter((i) =>
+        inRange(playerCoords, i.coords),
+      );
+      this.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
     }
   }
 
@@ -671,6 +702,10 @@ export class Client {
   }
 
   canWalk(coords: Coords): boolean {
+    if (this.nowall) {
+      return true;
+    }
+
     if (
       this.nearby.npcs.some(
         (n) => n.coords.x === coords.x && n.coords.y === coords.y,
@@ -679,12 +714,12 @@ export class Client {
       return false;
     }
 
-    // TODO: Ghost
     if (
       this.nearby.characters.some(
         (c) => c.coords.x === coords.x && c.coords.y === coords.y,
       )
     ) {
+      // TODO: Ghost
       return false;
     }
 
@@ -755,20 +790,11 @@ export class Client {
       return;
     }
 
-    if (message.startsWith('#ping') && message.length === 5) {
-      this.pingStart = Date.now();
-      this.bus.send(new MessagePingClientPacket());
-      return;
-    }
-
-    if (message.startsWith('#loc')) {
-      this.emit('serverChat', {
-        message: `${this.mapId} x:${this.getPlayerCoords().x} y:${this.getPlayerCoords().y}`,
-      });
-      return;
-    }
-
     const trimmed = message.substring(0, MAX_CHAT_LENGTH);
+
+    if (trimmed.startsWith('#') && this.handleCommand(trimmed)) {
+      return;
+    }
 
     const packet = new TalkReportClientPacket();
     packet.message = trimmed;
@@ -781,6 +807,56 @@ export class Client {
       tab: ChatTab.Local,
       message: trimmed,
     });
+  }
+
+  handleCommand(command: string): boolean {
+    switch (command) {
+      case '#ping': {
+        this.pingStart = Date.now();
+        this.bus.send(new MessagePingClientPacket());
+        return true;
+      }
+
+      case '#loc': {
+        const coords = this.getPlayerCoords();
+        this.emit('serverChat', {
+          message: `Your current location is at map ${this.mapId} x:${coords.x} y:${coords.y}`,
+        });
+        return true;
+      }
+
+      case '#engine': {
+        this.emit('serverChat', {
+          message: `eoweb client version: ${this.version.major}.${this.version.minor}.${this.version.patch}`,
+        });
+        this.emit('serverChat', {
+          message: 'render engine: canvas',
+        });
+        return true;
+      }
+
+      case '#usage': {
+        const hours = Math.floor(this.usage / 60);
+        const minutes = this.usage - hours * 60;
+        this.emit('serverChat', {
+          message: hours
+            ? `usage: ${hours}hrs. ${minutes}min.`
+            : `usage: ${minutes}min.`,
+        });
+        return true;
+      }
+
+      case '#nowall': {
+        if (this.admin === AdminLevel.Player) {
+          return false;
+        }
+
+        this.nowall = !this.nowall;
+        playSfxById(SfxId.TextBoxFocus);
+      }
+    }
+
+    return false;
   }
 
   login(username: string, password: string) {
@@ -881,7 +957,14 @@ export class Client {
   }
 
   walk(direction: Direction, coords: Coords, timestamp: number) {
-    const packet = new WalkPlayerClientPacket();
+    const packet = this.nowall
+      ? new WalkAdminClientPacket()
+      : new WalkPlayerClientPacket();
+
+    if (this.nowall) {
+      playSfxById(SfxId.GhostPlayer);
+    }
+
     packet.walkAction = new WalkAction();
     packet.walkAction.direction = direction;
     packet.walkAction.coords = coords;

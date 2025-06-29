@@ -116,6 +116,7 @@ export class Inventory extends Base {
       e.preventDefault();
       const itemId = Number(e.dataTransfer?.getData('text/plain'));
       if (!Number.isNaN(itemId) && itemId > 0) {
+        playSfxById(SfxId.InventoryPlace);
         this.emitter.emit('dropItem', itemId);
       }
     });

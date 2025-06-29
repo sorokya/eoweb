@@ -8,6 +8,7 @@ import {
   WelcomeReplyServerPacket,
 } from 'eolib';
 import { type Client, GameState } from '../client';
+import { USAGE_TICKS } from '../consts';
 
 function handleWelcomeReply(client: Client, reader: EoReader) {
   const packet = WelcomeReplyServerPacket.deserialize(reader);
@@ -144,6 +145,7 @@ function handleEnterGame(
   client.weight = data.weight;
   client.nearby = data.nearby;
   client.state = GameState.InGame;
+  client.usageTicks = USAGE_TICKS;
   client.emit('enterGame', { news: data.news });
 
   const loaded = [];
