@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       eolib:
-        specifier: ^1.1.1
-        version: 1.1.1
+        specifier: ^2.0.0
+        version: 2.0.0
       idb:
         specifier: ^8.0.3
         version: 8.0.3
@@ -342,8 +342,8 @@ packages:
   '@types/node@22.15.3':
     resolution: {integrity: sha512-lX7HFZeHf4QG/J7tBZqrCAXwz9J5RD56Y6MpP0eJkka8p+K0RY/yBTW7CYFJ4VGCclxqOLKmiGP5juQc6MKgcw==}
 
-  eolib@1.1.1:
-    resolution: {integrity: sha512-WI5Ftme+vyCmyClkV7/5oE56jjOQzGiJH3/aRf8IBHG1ncWiRpqkEJH6mgAt2CD/bDZ9Uv6F/Ew/AhBVbEOgnw==}
+  eolib@2.0.0:
+    resolution: {integrity: sha512-XZ75hxKllNtjWkGhJ1sIaULTPQKjhCXfBFDm8OG3sn5MJmRgwf44sNjjxavs/5mRHp2Qn0e5J86YvLm39HMBvA==}
 
   esbuild@0.25.5:
     resolution: {integrity: sha512-P8OtKZRv/5J5hhz0cUAdu/cLuPIKXpQl1R9pZtvmHWQvrAUVd0UNIPT4IB4W3rNOqVO0rlqHmCIbSwxh/c9yUQ==}
@@ -679,7 +679,7 @@ snapshots:
       undici-types: 6.21.0
     optional: true
 
-  eolib@1.1.1: {}
+  eolib@2.0.0: {}
 
   esbuild@0.25.5:
     optionalDependencies:
