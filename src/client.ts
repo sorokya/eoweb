@@ -45,6 +45,7 @@ import {
   ThreeItem,
   Version,
   WalkAction,
+  WalkAdminClientPacket,
   WalkPlayerClientPacket,
   WarpAcceptClientPacket,
   WarpTakeClientPacket,
@@ -170,6 +171,7 @@ export class Client {
   guildRankName = '';
   classId = 0;
   admin = AdminLevel.Player;
+  nowall = false;
   level = 0;
   experience = 0;
   usage = 0;
@@ -700,6 +702,10 @@ export class Client {
   }
 
   canWalk(coords: Coords): boolean {
+    if (this.nowall) {
+      return true;
+    }
+
     if (
       this.nearby.npcs.some(
         (n) => n.coords.x === coords.x && n.coords.y === coords.y,
@@ -708,12 +714,12 @@ export class Client {
       return false;
     }
 
-    // TODO: Ghost
     if (
       this.nearby.characters.some(
         (c) => c.coords.x === coords.x && c.coords.y === coords.y,
       )
     ) {
+      // TODO: Ghost
       return false;
     }
 
@@ -839,7 +845,18 @@ export class Client {
         });
         return true;
       }
+
+      case '#nowall': {
+        if (this.admin === AdminLevel.Player) {
+          return false;
+        }
+
+        this.nowall = !this.nowall;
+        playSfxById(SfxId.TextBoxFocus);
+      }
     }
+
+    return false;
   }
 
   login(username: string, password: string) {
@@ -940,7 +957,14 @@ export class Client {
   }
 
   walk(direction: Direction, coords: Coords, timestamp: number) {
-    const packet = new WalkPlayerClientPacket();
+    const packet = this.nowall
+      ? new WalkAdminClientPacket()
+      : new WalkPlayerClientPacket();
+
+    if (this.nowall) {
+      playSfxById(SfxId.GhostPlayer);
+    }
+
     packet.walkAction = new WalkAction();
     packet.walkAction.direction = direction;
     packet.walkAction.coords = coords;
