@@ -113,6 +113,12 @@ export class CharacterSelect extends Base {
       if (preview) {
         preview.src = this.canvas.toDataURL();
       }
+
+      const adminLevel: HTMLImageElement =
+        this.container.querySelector('.admin-level');
+      if (adminLevel) {
+        adminLevel.classList.add(`level-${character.admin}`);
+      }
       index++;
     }
 
