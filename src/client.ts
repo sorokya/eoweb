@@ -63,6 +63,7 @@ import {
   HOST,
   MAX_CHARACTER_NAME_LENGTH,
   MAX_CHAT_LENGTH,
+  USAGE_TICKS,
 } from './consts';
 import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
 import { Door } from './door';
@@ -172,6 +173,7 @@ export class Client {
   level = 0;
   experience = 0;
   usage = 0;
+  usageTicks = USAGE_TICKS;
   hp = 0;
   maxHp = 0;
   tp = 0;
@@ -335,6 +337,15 @@ export class Client {
   tick() {
     this.movementController.tick();
     this.mapRenderer.tick();
+
+    if (this.state === GameState.InGame) {
+      this.usageTicks = Math.max(this.usageTicks - 1, 0);
+      if (!this.usageTicks) {
+        this.usage += 1;
+        this.usageTicks = USAGE_TICKS;
+      }
+    }
+
     const endedCharacterAnimations: number[] = [];
     let playerWalking = false;
     for (const [id, animation] of this.characterAnimations) {

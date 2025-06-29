@@ -38,3 +38,4 @@ export const DOOR_OPEN_TICKS = 25;
 export const DOOR_HEIGHT = 110;
 export const MAX_CHAT_LENGTH = 128;
 export const CLEAR_OUT_OF_RANGE_TICKS = 8;
+export const USAGE_TICKS = 500;
