@@ -784,20 +784,11 @@ export class Client {
       return;
     }
 
-    if (message.startsWith('#ping') && message.length === 5) {
-      this.pingStart = Date.now();
-      this.bus.send(new MessagePingClientPacket());
-      return;
-    }
-
-    if (message.startsWith('#loc')) {
-      this.emit('serverChat', {
-        message: `${this.mapId} x:${this.getPlayerCoords().x} y:${this.getPlayerCoords().y}`,
-      });
-      return;
-    }
-
     const trimmed = message.substring(0, MAX_CHAT_LENGTH);
+
+    if (trimmed.startsWith('#') && this.handleCommand(trimmed)) {
+      return;
+    }
 
     const packet = new TalkReportClientPacket();
     packet.message = trimmed;
@@ -810,6 +801,45 @@ export class Client {
       tab: ChatTab.Local,
       message: trimmed,
     });
+  }
+
+  handleCommand(command: string): boolean {
+    switch (command) {
+      case '#ping': {
+        this.pingStart = Date.now();
+        this.bus.send(new MessagePingClientPacket());
+        return true;
+      }
+
+      case '#loc': {
+        const coords = this.getPlayerCoords();
+        this.emit('serverChat', {
+          message: `Your current location is at map ${this.mapId} x:${coords.x} y:${coords.y}`,
+        });
+        return true;
+      }
+
+      case '#engine': {
+        this.emit('serverChat', {
+          message: `eoweb client version: ${this.version.major}.${this.version.minor}.${this.version.patch}`,
+        });
+        this.emit('serverChat', {
+          message: 'render engine: canvas',
+        });
+        return true;
+      }
+
+      case '#usage': {
+        const hours = Math.floor(this.usage / 60);
+        const minutes = this.usage - hours * 60;
+        this.emit('serverChat', {
+          message: hours
+            ? `usage: ${hours}hrs. ${minutes}min.`
+            : `usage: ${minutes}min.`,
+        });
+        return true;
+      }
+    }
   }
 
   login(username: string, password: string) {
