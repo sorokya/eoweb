@@ -1,6 +1,6 @@
 import { CharacterMapInfo, Direction, Gender } from 'eolib';
 import mitt from 'mitt';
-import { AttackType } from '../client';
+import { CharacterAction } from '../client';
 import { Rectangle, setCharacterRectangle } from '../collision';
 import {
   CHARACTER_HEIGHT,
@@ -108,17 +108,10 @@ export class CreateCharacterForm extends Base {
       this.character,
       this.ctx,
       0,
-      false,
-      AttackType.NotAttacking,
+      CharacterAction.None,
     );
     renderCharacterStanding(this.character, this.ctx);
-    renderCharacterHair(
-      this.character,
-      this.ctx,
-      0,
-      false,
-      AttackType.NotAttacking,
-    );
+    renderCharacterHair(this.character, this.ctx, 0, CharacterAction.None);
     this.preview.src = this.canvas.toDataURL();
 
     if (this.open) {

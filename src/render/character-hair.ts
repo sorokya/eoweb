@@ -1,5 +1,5 @@
 import { type CharacterMapInfo, Direction, Gender, SitState } from 'eolib';
-import { AttackType } from '../client';
+import { CharacterAction } from '../client';
 import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
 import { GfxType, getBitmapById } from '../gfx';
@@ -26,47 +26,49 @@ const MALE_WALKING_OFFSETS = {
   [Direction.Right]: { x: -1, y: 1 },
 };
 
-const FEMALE_RANGED_ATTACK_FRAME_OFFSETS = {
+const FEMALE_RANGED_ATTACK_OFFSETS = {
   [Direction.Up]: { x: 0, y: 0 },
   [Direction.Down]: { x: 3, y: 0 },
   [Direction.Left]: { x: 3, y: 0 },
   [Direction.Right]: { x: 0, y: 0 },
 };
 
-const MALE_RANGED_ATTACK_FRAME_OFFSETS = {
+const MALE_RANGED_ATTACK_OFFSETS = {
   [Direction.Up]: { x: 0, y: 0 },
   [Direction.Down]: { x: 3, y: 0 },
   [Direction.Left]: { x: 0, y: 0 },
   [Direction.Right]: { x: 0, y: 0 },
 };
 
-const FEMALE_ATTACK_FRAME_0_OFFSETS = {
-  [Direction.Up]: { x: -1, y: 0 },
-  [Direction.Down]: { x: -1, y: 0 },
-  [Direction.Left]: { x: -1, y: 0 },
-  [Direction.Right]: { x: -1, y: 0 },
-};
+const FEMALE_MELEE_ATTACK_OFFSETS = [
+  {
+    [Direction.Up]: { x: -1, y: 0 },
+    [Direction.Down]: { x: -1, y: 0 },
+    [Direction.Left]: { x: -1, y: 0 },
+    [Direction.Right]: { x: -1, y: 0 },
+  },
+  {
+    [Direction.Up]: { x: 3, y: 1 },
+    [Direction.Down]: { x: -5, y: 5 },
+    [Direction.Left]: { x: -5, y: 1 },
+    [Direction.Right]: { x: 3, y: 4 },
+  },
+];
 
-const MALE_ATTACK_FRAME_0_OFFSETS = {
-  [Direction.Up]: { x: -2, y: 0 },
-  [Direction.Down]: { x: 0, y: 0 },
-  [Direction.Left]: { x: 0, y: 0 },
-  [Direction.Right]: { x: -2, y: 0 },
-};
-
-const FEMALE_ATTACK_FRAME_1_OFFSETS = {
-  [Direction.Up]: { x: 3, y: 1 },
-  [Direction.Down]: { x: -5, y: 5 },
-  [Direction.Left]: { x: -5, y: 1 },
-  [Direction.Right]: { x: 3, y: 4 },
-};
-
-const MALE_ATTACK_FRAME_1_OFFSETS = {
-  [Direction.Up]: { x: 1, y: 0 },
-  [Direction.Down]: { x: -6, y: 4 },
-  [Direction.Left]: { x: -4, y: 1 },
-  [Direction.Right]: { x: 4, y: 4 },
-};
+const MALE_MELEE_ATTACK_OFFSETS = [
+  {
+    [Direction.Up]: { x: -2, y: 0 },
+    [Direction.Down]: { x: 0, y: 0 },
+    [Direction.Left]: { x: 0, y: 0 },
+    [Direction.Right]: { x: -2, y: 0 },
+  },
+  {
+    [Direction.Up]: { x: 1, y: 0 },
+    [Direction.Down]: { x: -6, y: 4 },
+    [Direction.Left]: { x: -4, y: 1 },
+    [Direction.Right]: { x: 4, y: 4 },
+  },
+];
 
 const MALE_SIT_FLOOR_OFFSETS = {
   [Direction.Up]: { x: -5, y: 0 },
@@ -100,8 +102,7 @@ export function renderCharacterHair(
   character: CharacterMapInfo,
   ctx: CanvasRenderingContext2D,
   animationFrame: number,
-  walking: boolean,
-  attackType: AttackType,
+  action: CharacterAction,
 ) {
   if (character.hairStyle <= 0) {
     return;
@@ -141,25 +142,23 @@ export function renderCharacterHair(
 
   let additionalOffset: Vector2;
   switch (true) {
-    case walking:
+    case action === CharacterAction.Walking:
       additionalOffset =
         gender === Gender.Female
           ? FEMALE_WALKING_OFFSETS[direction]
           : MALE_WALKING_OFFSETS[direction];
       break;
-    case attackType !== AttackType.NotAttacking:
+    case action === CharacterAction.MeleeAttack:
       additionalOffset =
         gender === Gender.Female
-          ? attackType === AttackType.Ranged
-            ? FEMALE_RANGED_ATTACK_FRAME_OFFSETS[direction]
-            : animationFrame
-              ? FEMALE_ATTACK_FRAME_1_OFFSETS[direction]
-              : FEMALE_ATTACK_FRAME_0_OFFSETS[direction]
-          : attackType === AttackType.Ranged
-            ? MALE_RANGED_ATTACK_FRAME_OFFSETS[direction]
-            : animationFrame
-              ? MALE_ATTACK_FRAME_1_OFFSETS[direction]
-              : MALE_ATTACK_FRAME_0_OFFSETS[direction];
+          ? FEMALE_MELEE_ATTACK_OFFSETS[animationFrame][direction]
+          : MALE_MELEE_ATTACK_OFFSETS[animationFrame][direction];
+      break;
+    case action === CharacterAction.RangedAttack:
+      additionalOffset =
+        gender === Gender.Female
+          ? FEMALE_RANGED_ATTACK_OFFSETS[direction]
+          : MALE_RANGED_ATTACK_OFFSETS[direction];
       break;
     case sitState === SitState.Floor:
       additionalOffset =

@@ -1,5 +1,5 @@
 import { Direction, SitState } from 'eolib';
-import { AttackType, type Client, GameState } from './client';
+import { type Client, GameState } from './client';
 import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
 import { getLatestDirectionHeld, Input, isInputHeld } from './input';
 import { CharacterAttackAnimation } from './render/character-attack';
@@ -80,12 +80,12 @@ export class MovementController {
       character.sitState === SitState.Stand
     ) {
       if (!walking) {
-        const attackType = this.client.getWeaponAttackType(
+        const metadata = this.client.getWeaponMetadata(
           character.equipment.weapon,
         );
         this.client.characterAnimations.set(
           character.playerId,
-          attackType === AttackType.Ranged
+          metadata.ranged
             ? new CharacterRangedAttackAnimation(character.direction)
             : new CharacterAttackAnimation(character.direction),
         );

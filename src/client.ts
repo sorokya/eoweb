@@ -28,8 +28,6 @@ import {
   ItemDropClientPacket,
   ItemGetClientPacket,
   type ItemMapInfo,
-  ItemSubtype,
-  ItemType,
   LoginRequestClientPacket,
   MapTileSpec,
   MessagePingClientPacket,
@@ -105,6 +103,7 @@ import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
+import { getWeaponMetaData, WeaponMetadata } from './utils/get-weapon-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
 import { randomRange } from './utils/random-range';
 import { inRange } from './utils/range';
@@ -139,11 +138,12 @@ export enum GameState {
   InGame = 4,
 }
 
-export enum AttackType {
-  NotAttacking = 0,
-  Melee = 1,
-  Ranged = 2,
-  Spell = 3,
+export enum CharacterAction {
+  None = 0,
+  Walking = 1,
+  MeleeAttack = 2,
+  RangedAttack = 3,
+  CastingSpell = 4,
 }
 
 type AccountCreateData = {
@@ -224,6 +224,7 @@ export class Client {
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
   npcMetadata = getNpcMetaData();
+  weaponMetadata = getWeaponMetaData();
   doors: Door[] = [];
   typing = false;
   clearOutofRangeTicks = 0;
@@ -311,64 +312,21 @@ export class Client {
     return this.enf.npcs[id - 1];
   }
 
+  getWeaponMetadata(graphicId: number): WeaponMetadata {
+    const data = this.weaponMetadata.get(graphicId);
+    if (data) {
+      return data;
+    }
+
+    return new WeaponMetadata(0, [SfxId.MeleeWeaponAttack], false);
+  }
+
   getEifRecordById(id: number): EifRecord | undefined {
     if (!this.eif) {
       return;
     }
 
     return this.eif.items[id - 1];
-  }
-
-  getPlayerIsUsingGun(playerId: number): boolean {
-    const weaponId = this.getCharacterById(playerId)?.equipment.weapon ?? 0;
-    if (weaponId <= 0) {
-      return false;
-    }
-    const eif = this.getWeaponEif(weaponId);
-    if (!eif) {
-      return false;
-    }
-    return eif.name.toLowerCase() === 'gun';
-  }
-
-  getPlayerIsRanged(playerId: number): boolean {
-    return this.getWeaponAttackTypeByPlayerId(playerId) === AttackType.Ranged;
-  }
-
-  getWeaponAttackTypeByPlayerId(playerId: number): AttackType {
-    const character = this.getCharacterById(playerId);
-    if (!character) {
-      console.warn(
-        'getWeaponAttackTypeByPlayerId: No character found for player',
-        playerId,
-      );
-      return AttackType.NotAttacking;
-    }
-
-    return this.getWeaponAttackType(character.equipment.weapon);
-  }
-
-  getWeaponAttackType(weaponId: number): AttackType {
-    if (weaponId === 0) {
-      return AttackType.Melee;
-    }
-    return this.getWeaponEif(weaponId)?.subtype === ItemSubtype.Ranged
-      ? AttackType.Ranged
-      : AttackType.Melee;
-  }
-
-  getWeaponEif(weaponId: number): EifRecord | undefined {
-    if (weaponId === 0) {
-      return undefined;
-    }
-    const items = this.eif.items.filter((i) => i.type === ItemType.Weapon);
-    const eif = items[weaponId - 1];
-    if (!eif) {
-      console.warn('getWeaponEif: No eif record for weapon', weaponId);
-      return undefined;
-    }
-
-    return eif;
   }
 
   getPlayerCoords() {
@@ -1051,13 +1009,11 @@ export class Client {
     packet.direction = direction;
     packet.timestamp = timestamp;
     this.bus.send(packet);
-    playSfxById(
-      this.getPlayerIsUsingGun(this.playerId)
-        ? SfxId.Gun
-        : this.getPlayerIsRanged(this.playerId)
-          ? SfxId.AttackBow
-          : SfxId.PunchAttack,
-    );
+
+    const player = this.getPlayerCharacter();
+    const metadata = this.getWeaponMetadata(player.equipment.weapon);
+    const index = randomRange(0, metadata.sfx.length - 1);
+    playSfxById(metadata.sfx[index]);
   }
 
   sit() {
