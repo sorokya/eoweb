@@ -6,26 +6,37 @@ import {
   type EoReader,
   PacketAction,
   PacketFamily,
+  WarpEffect,
 } from 'eolib';
 import type { Client } from '../client';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleAvatarRemove(client: Client, reader: EoReader) {
   const packet = AvatarRemoveServerPacket.deserialize(reader);
-  // TODO: warp effect
+  switch (packet.warpEffect) {
+    case WarpEffect.Admin:
+      // TODO: warp animation
+      playSfxById(SfxId.AdminWarp);
+      break;
+    case WarpEffect.Scroll:
+      playSfxById(SfxId.ScrollTeleport);
+      break;
+  }
   client.nearby.characters = client.nearby.characters.filter(
     (c) => c.playerId !== packet.playerId,
   );
 }
 
-function handleAvatarUpdate(client: Client, reader: EoReader) {
+function handleAvatarAgree(client: Client, reader: EoReader) {
   const packet = AvatarAgreeServerPacket.deserialize(reader);
-  packet.change;
   const player = client.nearby.characters.find(
     (c) => c.playerId === packet.change.playerId,
   );
+
   if (!player) {
     return;
   }
+
   switch (packet.change.changeType) {
     case AvatarChangeType.Equipment: {
       const update = packet.change
@@ -50,10 +61,6 @@ function handleAvatarUpdate(client: Client, reader: EoReader) {
       player.hairColor = update.hairColor;
       break;
     }
-    default: {
-      console.warn(`Unhandled avatar change type: ${packet.change.changeType}`);
-      return;
-    }
   }
 }
 
@@ -66,6 +73,6 @@ export function registerAvatarHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Avatar,
     PacketAction.Agree,
-    (reader) => handleAvatarUpdate(client, reader),
+    (reader) => handleAvatarAgree(client, reader),
   );
 }

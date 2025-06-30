@@ -30,6 +30,7 @@ const ITEM_SIZE = {
 
 type Events = {
   dropItem: number;
+  useItem: number;
 };
 
 export class Inventory extends Base {
@@ -201,6 +202,14 @@ export class Inventory extends Base {
       imgContainer.addEventListener('dblclick', (e) => {
         e.stopPropagation();
         playSfxById(SfxId.InventoryPlace);
+        this.emitter.emit('useItem', item.id);
+      });
+
+      imgContainer.addEventListener('contextmenu', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        playSfxById(SfxId.InventoryPlace);
+        this.emitter.emit('useItem', item.id);
       });
 
       const tooltip = document.createElement('div');

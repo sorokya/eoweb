@@ -2,6 +2,7 @@ import {
   type EoReader,
   PacketAction,
   PacketFamily,
+  TalkAnnounceServerPacket,
   TalkPlayerServerPacket,
   TalkServerServerPacket,
 } from 'eolib';
@@ -37,6 +38,17 @@ function handleTalkServer(client: Client, reader: EoReader) {
   playSfxById(SfxId.ServerMessage);
 }
 
+function handleTalkAnnounce(client: Client, reader: EoReader) {
+  const packet = TalkAnnounceServerPacket.deserialize(reader);
+  client.characterChats.set(client.playerId, new ChatBubble(packet.message));
+  client.emit('chat', {
+    name: packet.playerName,
+    tab: ChatTab.Local,
+    message: packet.message,
+  });
+  playSfxById(SfxId.AdminAnnounceReceived);
+}
+
 export function registerTalkHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Talk,
@@ -47,5 +59,10 @@ export function registerTalkHandlers(client: Client) {
     PacketFamily.Talk,
     PacketAction.Server,
     (reader) => handleTalkServer(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Talk,
+    PacketAction.Announce,
+    (reader) => handleTalkAnnounce(client, reader),
   );
 }

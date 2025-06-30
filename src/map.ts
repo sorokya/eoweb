@@ -1,4 +1,10 @@
-import { type CharacterMapInfo, Coords, MapTileSpec, SitState } from 'eolib';
+import {
+  AdminLevel,
+  type CharacterMapInfo,
+  Coords,
+  MapTileSpec,
+  SitState,
+} from 'eolib';
 import { CharacterAction, type Client, GameState } from './client';
 import {
   getCharacterIntersecting,
@@ -431,7 +437,10 @@ export class MapRenderer {
     }
 
     const characterAt = this.client.getCharacterById(entityRect.id);
-    if (!characterAt) {
+    if (
+      !characterAt ||
+      (characterAt.invisible && this.client.admin === AdminLevel.Player)
+    ) {
       return false;
     }
 
@@ -740,16 +749,24 @@ export class MapRenderer {
 
     this.renderCharacterLayers(character, characterCtx, frame, action);
 
-    if (entity.typeId === this.client.playerId) {
+    if (entity.typeId === this.client.playerId && !character.invisible) {
       ctx.drawImage(this.mainCharacterCanvas, 0, 0);
     } else {
-      ctx.drawImage(this.characterCanvas, 0, 0);
+      if (character.invisible && this.client.admin !== AdminLevel.Player) {
+        ctx.globalAlpha = 0.4;
+        ctx.drawImage(this.characterCanvas, 0, 0);
+        ctx.globalAlpha = 1;
+      } else if (!character.invisible) {
+        ctx.drawImage(this.characterCanvas, 0, 0);
+      }
     }
 
-    this.topLayer.push(() => {
-      renderCharacterChatBubble(bubble, character, ctx);
-      renderCharacterHealthBar(healthBar, character, ctx);
-    });
+    if (!character.invisible || this.client.admin !== AdminLevel.Player) {
+      this.topLayer.push(() => {
+        renderCharacterChatBubble(bubble, character, ctx);
+        renderCharacterHealthBar(healthBar, character, ctx);
+      });
+    }
   }
 
   renderNpc(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {

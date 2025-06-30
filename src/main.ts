@@ -492,6 +492,10 @@ inventory.on('dropItem', (itemId) => {
   }
 });
 
+inventory.on('useItem', (itemId) => {
+  client.useItem(itemId);
+});
+
 // Tick loop
 setInterval(() => {
   client.tick();
