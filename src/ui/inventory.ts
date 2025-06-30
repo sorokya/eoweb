@@ -39,6 +39,7 @@ type DragState = {
 
 type Events = {
   dropItem: number;
+  useItem: number;
 };
 
 export class Inventory extends Base {
