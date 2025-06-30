@@ -3,6 +3,8 @@ import {
   AccountRequestClientPacket,
   AdminLevel,
   AttackUseClientPacket,
+  BankOpenClientPacket,
+  BarberOpenClientPacket,
   ByteCoords,
   ChairRequestClientPacket,
   CharacterBaseStats,
@@ -10,6 +12,7 @@ import {
   CharacterRequestClientPacket,
   CharacterSecondaryStats,
   type CharacterSelectionListEntry,
+  CitizenOpenClientPacket,
   Coords,
   type Direction,
   DoorOpenClientPacket,
@@ -24,6 +27,7 @@ import {
   FacePlayerClientPacket,
   FileType,
   type Gender,
+  GuildOpenClientPacket,
   type Item,
   ItemDropClientPacket,
   ItemGetClientPacket,
@@ -32,17 +36,23 @@ import {
   ItemUseClientPacket,
   LoginRequestClientPacket,
   MapTileSpec,
+  MarriageOpenClientPacket,
   MessagePingClientPacket,
   NearbyInfo,
   type NpcMapInfo,
   NpcRangeRequestClientPacket,
+  NpcType,
   PlayerRangeRequestClientPacket,
+  PriestOpenClientPacket,
+  QuestUseClientPacket,
   RangeRequestClientPacket,
   type ServerSettings,
+  ShopOpenClientPacket,
   SitAction,
   SitRequestClientPacket,
   SitState,
   type Spell,
+  StatSkillOpenClientPacket,
   TalkAnnounceClientPacket,
   TalkReportClientPacket,
   ThreeItem,
@@ -60,7 +70,7 @@ import {
 import mitt, { type Emitter } from 'mitt';
 import type { PacketBus } from './bus';
 import { ChatBubble } from './chat-bubble';
-import { getDoorIntersecting } from './collision';
+import { getDoorIntersecting, getNpcIntersecting } from './collision';
 import {
   CLEAR_OUT_OF_RANGE_TICKS,
   HALF_TILE_HEIGHT,
@@ -702,6 +712,15 @@ export class Client {
       return;
     }
 
+    if (
+      [SitState.Floor, SitState.Chair].includes(
+        this.getPlayerCharacter()?.sitState,
+      )
+    ) {
+      this.stand();
+      return;
+    }
+
     const itemsAtCoords = this.nearby.items.filter(
       (i) =>
         i.coords.x === this.mouseCoords.x && i.coords.y === this.mouseCoords.y,
@@ -711,6 +730,15 @@ export class Client {
       const packet = new ItemGetClientPacket();
       packet.itemIndex = itemsAtCoords[0].uid;
       this.bus.send(packet);
+    }
+
+    const npcAt = getNpcIntersecting(this.mousePosition);
+    if (npcAt) {
+      const npc = this.nearby.npcs.find((n) => n.index === npcAt.id);
+      if (npc) {
+        this.clickNpc(npc);
+        return;
+      }
     }
 
     const doorAt = getDoorIntersecting(this.mousePosition);
@@ -732,14 +760,70 @@ export class Client {
       this.sitChair(coords);
       return;
     }
+  }
 
-    if (
-      [SitState.Floor, SitState.Chair].includes(
-        this.getPlayerCharacter()?.sitState,
-      )
-    ) {
-      this.stand();
+  clickNpc(npc: NpcMapInfo) {
+    const record = this.getEnfRecordById(npc.id);
+    if (!record) {
       return;
+    }
+
+    switch (record.type) {
+      case NpcType.Quest: {
+        const packet = new QuestUseClientPacket();
+        packet.npcIndex = npc.index;
+        packet.questId = 0;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Bank: {
+        const packet = new BankOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Shop: {
+        const packet = new ShopOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Barber: {
+        const packet = new BarberOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Guild: {
+        const packet = new GuildOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Inn: {
+        const packet = new CitizenOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Lawyer: {
+        const packet = new MarriageOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Priest: {
+        const packet = new PriestOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Trainer: {
+        const packet = new StatSkillOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
     }
   }
 
