@@ -126,6 +126,11 @@ import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
+import {
+  EffectAnimationType,
+  EffectMetadata,
+  getEffectMetaData,
+} from './utils/get-effect-metadata';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { getWeaponMetaData, WeaponMetadata } from './utils/get-weapon-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
@@ -275,6 +280,7 @@ export class Client {
   movementController: MovementController;
   npcMetadata = getNpcMetaData();
   weaponMetadata = getWeaponMetaData();
+  effectMetadata = getEffectMetaData();
   doors: Door[] = [];
   typing = false;
   clearOutofRangeTicks = 0;
@@ -391,6 +397,28 @@ export class Client {
     }
 
     return this.eif.items[id - 1];
+  }
+
+  getEffectMetadata(graphicId: number): EffectMetadata {
+    const data = this.effectMetadata.get(graphicId);
+    if (data) {
+      return data;
+    }
+
+    return new EffectMetadata(
+      false,
+      false,
+      true,
+      0,
+      4,
+      2,
+      0,
+      0,
+      EffectAnimationType.Static,
+      null,
+      null,
+      null,
+    );
   }
 
   getPlayerCoords() {
