@@ -110,7 +110,7 @@ export class CreateCharacterForm extends Base {
       0,
       CharacterAction.None,
     );
-    renderCharacterStanding(this.character, this.ctx);
+    renderCharacterStanding(this.character, null, this.ctx);
     renderCharacterHair(this.character, this.ctx, 0, CharacterAction.None);
     this.preview.src = this.canvas.toDataURL();
 

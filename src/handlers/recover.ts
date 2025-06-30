@@ -1,4 +1,5 @@
 import {
+  Emote as EmoteType,
   type EoReader,
   PacketAction,
   PacketFamily,
@@ -8,6 +9,7 @@ import {
   RecoverReplyServerPacket,
 } from 'eolib';
 import type { Client } from '../client';
+import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { playSfxById, SfxId } from '../sfx';
 
@@ -72,7 +74,7 @@ function handleRecoverReply(client: Client, reader: EoReader) {
   client.experience = packet.experience;
 
   if (packet.levelUp) {
-    // TODO: Level up emote
+    client.characterEmotes.set(client.playerId, new Emote(EmoteType.LevelUp));
     playSfxById(SfxId.LevelUp);
     client.level = packet.levelUp;
     client.statPoints = packet.statPoints;

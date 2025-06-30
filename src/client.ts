@@ -23,6 +23,8 @@ import {
   type Eif,
   type EifRecord,
   type Emf,
+  EmoteReportClientPacket,
+  type Emote as EmoteType,
   type Enf,
   type EnfRecord,
   EquipmentPaperdoll,
@@ -97,6 +99,7 @@ import { registerCharacterHandlers } from './handlers/character';
 import { registerConnectionHandlers } from './handlers/connection';
 import { registerDoorHandlers } from './handlers/door';
 import { registerEffectHandlers } from './handlers/effect';
+import { registerEmoteHandlers } from './handlers/emote';
 import { registerFaceHandlers } from './handlers/face';
 import { registerInitHandlers } from './handlers/init';
 import { registerItemHandlers } from './handlers/item';
@@ -118,6 +121,7 @@ import { MapRenderer } from './map';
 import { MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterWalkAnimation } from './render/character-walk';
+import { Emote } from './render/emote';
 import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
@@ -265,6 +269,7 @@ export class Client {
   queuedNpcChats: Map<number, string[]> = new Map();
   npcHealthBars: Map<number, HealthBar> = new Map();
   characterHealthBars: Map<number, HealthBar> = new Map();
+  characterEmotes: Map<number, Emote> = new Map();
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
@@ -479,6 +484,21 @@ export class Client {
     }
     for (const id of endedCharacterAnimations) {
       this.characterAnimations.delete(id);
+    }
+
+    const endedCharacterEmotes: number[] = [];
+    for (const [id, emote] of this.characterEmotes) {
+      if (
+        !emote.ticks ||
+        !this.nearby.characters.some((c) => c.playerId === id)
+      ) {
+        endedCharacterEmotes.push(id);
+        continue;
+      }
+      emote.tick();
+    }
+    for (const id of endedCharacterEmotes) {
+      this.characterEmotes.delete(id);
     }
 
     const endedNpcAnimations: number[] = [];
@@ -750,6 +770,7 @@ export class Client {
     registerAdminInteractHandlers(this);
     registerQuestHandlers(this);
     registerMusicHandlers(this);
+    registerEmoteHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -786,15 +807,18 @@ export class Client {
       return;
     }
 
-    const itemsAtCoords = this.nearby.items.filter(
-      (i) =>
-        i.coords.x === this.mouseCoords.x && i.coords.y === this.mouseCoords.y,
-    );
-    itemsAtCoords.sort((a, b) => b.uid - a.uid);
-    if (itemsAtCoords.length) {
-      const packet = new ItemGetClientPacket();
-      packet.itemIndex = itemsAtCoords[0].uid;
-      this.bus.send(packet);
+    if (this.mouseCoords) {
+      const itemsAtCoords = this.nearby.items.filter(
+        (i) =>
+          i.coords.x === this.mouseCoords.x &&
+          i.coords.y === this.mouseCoords.y,
+      );
+      itemsAtCoords.sort((a, b) => b.uid - a.uid);
+      if (itemsAtCoords.length) {
+        const packet = new ItemGetClientPacket();
+        packet.itemIndex = itemsAtCoords[0].uid;
+        this.bus.send(packet);
+      }
     }
 
     const npcAt = getNpcIntersecting(this.mousePosition);
@@ -816,6 +840,7 @@ export class Client {
     }
 
     if (
+      this.mouseCoords &&
       this.isFacingChairAt(this.mouseCoords) &&
       !this.occupied(this.mouseCoords)
     ) {
@@ -1349,6 +1374,13 @@ export class Client {
     } else {
       packet.replyTypeData = new QuestAcceptClientPacket.ReplyTypeDataOk();
     }
+    this.bus.send(packet);
+  }
+
+  emote(type: EmoteType) {
+    const packet = new EmoteReportClientPacket();
+    packet.emote = type;
+    this.characterEmotes.set(this.playerId, new Emote(type));
     this.bus.send(packet);
   }
 }

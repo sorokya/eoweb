@@ -1,4 +1,5 @@
 import {
+  Emote as EmoteType,
   type EoReader,
   Item,
   ItemAcceptServerPacket,
@@ -15,6 +16,7 @@ import {
   PacketFamily,
 } from 'eolib';
 import { type Client, EquipmentSlot } from '../client';
+import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { playSfxById, SfxId } from '../sfx';
 
@@ -132,7 +134,10 @@ function handleItemReply(client: Client, reader: EoReader) {
         packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataExpReward;
       client.experience = data.experience;
       if (data.levelUp) {
-        // TODO: Level up emote
+        client.characterEmotes.set(
+          client.playerId,
+          new Emote(EmoteType.LevelUp),
+        );
         playSfxById(SfxId.LevelUp);
         client.level = data.levelUp;
         client.maxHp = data.maxHp;
@@ -265,7 +270,7 @@ function handleItemAccept(client: Client, reader: EoReader) {
     return;
   }
 
-  // TODO: Level up emote
+  client.characterEmotes.set(packet.playerId, new Emote(EmoteType.LevelUp));
   playSfxById(SfxId.LevelUp);
 }
 

@@ -107,7 +107,7 @@ export class CharacterSelect extends Base {
 
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       renderCharacterHairBehind(mapInfo, this.ctx, 0, CharacterAction.None);
-      renderCharacterStanding(mapInfo, this.ctx);
+      renderCharacterStanding(mapInfo, null, this.ctx);
       renderCharacterBoots(mapInfo, this.ctx, 0, CharacterAction.None);
       renderCharacterArmor(mapInfo, this.ctx, 0, CharacterAction.None);
       renderCharacterHair(mapInfo, this.ctx, 0, CharacterAction.None);

@@ -1,4 +1,4 @@
-import { type CharacterMapInfo, Direction, Gender } from 'eolib';
+import { type CharacterMapInfo, Direction, Emote, Gender } from 'eolib';
 import {
   getCharacterRectangle,
   Rectangle,
@@ -68,12 +68,15 @@ export function calculateCharacterRenderPositionFloor(
 
 export function renderCharacterFloor(
   character: CharacterMapInfo,
+  emote: Emote | null,
   ctx: CanvasRenderingContext2D,
 ) {
   const bmp = getBitmapById(GfxType.SkinSprites, 6);
   if (!bmp) {
     return;
   }
+
+  const emoteBmp = emote ? getBitmapById(GfxType.SkinSprites, 8) : null;
 
   const rect = getCharacterRectangle(character.playerId);
   if (!rect) {
@@ -116,6 +119,44 @@ export function renderCharacterFloor(
     CHARACTER_SIT_GROUND_WIDTH,
     CHARACTER_SIT_GROUND_HEIGHT,
   );
+
+  if (
+    emoteBmp &&
+    ![Emote.Trade, Emote.LevelUp].includes(emote) &&
+    [Direction.Down, Direction.Right].includes(character.direction)
+  ) {
+    let xOffset: number;
+    switch (emote) {
+      case Emote.Playful:
+        xOffset = 10;
+        break;
+      case Emote.Embarrassed:
+        xOffset = 9;
+        break;
+      default:
+        xOffset = emote - 1;
+        break;
+    }
+
+    const emoteSourceX = xOffset * 13;
+    const emoteSourceY = character.skin * 14;
+
+    const drawX = Math.floor(
+      mirrored ? GAME_WIDTH - rect.position.x - 16 : rect.position.x + 8,
+    );
+
+    ctx.drawImage(
+      emoteBmp,
+      emoteSourceX,
+      emoteSourceY,
+      13,
+      14,
+      drawX - (character.gender === Gender.Female ? 1 : 0),
+      rect.position.y,
+      13,
+      14,
+    );
+  }
 
   if (mirrored) {
     ctx.restore();

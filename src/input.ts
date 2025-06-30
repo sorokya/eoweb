@@ -7,6 +7,17 @@ export enum Input {
   Right = 3,
   SitStand = 4,
   Attack = 5,
+  EmoteHappy = 6,
+  EmoteDepressed = 7,
+  EmoteSad = 8,
+  EmoteAngry = 9,
+  EmoteConfused = 10,
+  EmoteSurprised = 11,
+  EmoteHearts = 12,
+  EmoteMoon = 13,
+  EmoteSuicidal = 14,
+  EmoteEmbarassed = 15,
+  EmotePlayful = 16,
   Unknown = -1,
 }
 
@@ -56,67 +67,125 @@ window.addEventListener('keydown', (e) => {
     if (e.key === '=' || e.key === '+') zoomIn();
     else zoomOut();
   }
-  switch (e.key) {
-    case 'w':
-    case 'W':
+  switch (e.code) {
+    case 'KeyW':
     case 'ArrowUp':
       updateDirectionHeld(Input.Up, true);
       break;
-    case 'a':
-    case 'A':
+    case 'KeyA':
     case 'ArrowLeft':
       updateDirectionHeld(Input.Left, true);
       break;
-    case 's':
-    case 'S':
+    case 'KeyS':
     case 'ArrowDown':
       updateDirectionHeld(Input.Down, true);
       break;
-    case 'd':
-    case 'D':
+    case 'KeyD':
     case 'ArrowRight':
       updateDirectionHeld(Input.Right, true);
       break;
-    case 'x':
-    case 'X':
+    case 'KeyX':
       updateInputHeld(Input.SitStand, true);
       break;
-    case ' ':
-    case 'Control':
+    case 'Space':
+    case 'ControlLeft':
+    case 'ControlRight':
       updateInputHeld(Input.Attack, true);
+      break;
+    case 'NumpadDecimal':
+      updateInputHeld(Input.EmoteEmbarassed, true);
+      break;
+    case 'Numpad0':
+      updateInputHeld(Input.EmotePlayful, true);
+      break;
+    case 'Numpad1':
+      updateInputHeld(Input.EmoteHappy, true);
+      break;
+    case 'Numpad2':
+      updateInputHeld(Input.EmoteDepressed, true);
+      break;
+    case 'Numpad3':
+      updateInputHeld(Input.EmoteSad, true);
+      break;
+    case 'Numpad4':
+      updateInputHeld(Input.EmoteAngry, true);
+      break;
+    case 'Numpad5':
+      updateInputHeld(Input.EmoteConfused, true);
+      break;
+    case 'Numpad6':
+      updateInputHeld(Input.EmoteSurprised, true);
+      break;
+    case 'Numpad7':
+      updateInputHeld(Input.EmoteHearts, true);
+      break;
+    case 'Numpad8':
+      updateInputHeld(Input.EmoteMoon, true);
+      break;
+    case 'Numpad9':
+      updateInputHeld(Input.EmoteSuicidal, true);
       break;
   }
 });
 
 window.addEventListener('keyup', (e) => {
-  switch (e.key) {
-    case 'w':
-    case 'W':
+  switch (e.code) {
+    case 'KeyW':
     case 'ArrowUp':
       updateDirectionHeld(Input.Up, false);
       break;
-    case 'a':
-    case 'A':
+    case 'KeyA':
     case 'ArrowLeft':
       updateDirectionHeld(Input.Left, false);
       break;
-    case 's':
-    case 'S':
+    case 'KeyS':
     case 'ArrowDown':
       updateDirectionHeld(Input.Down, false);
       break;
-    case 'd':
-    case 'D':
+    case 'KeyD':
     case 'ArrowRight':
       updateDirectionHeld(Input.Right, false);
       break;
-    case 'x':
-    case 'X':
+    case 'KeyX':
       updateInputHeld(Input.SitStand, false);
       break;
-    case ' ':
-    case 'Control':
+    case 'Space':
+    case 'ControlLeft':
+    case 'ControlRight':
       updateInputHeld(Input.Attack, false);
+      break;
+    case 'NumpadDecimal':
+      updateInputHeld(Input.EmoteEmbarassed, false);
+      break;
+    case 'Numpad0':
+      updateInputHeld(Input.EmotePlayful, false);
+      break;
+    case 'Numpad1':
+      updateInputHeld(Input.EmoteHappy, false);
+      break;
+    case 'Numpad2':
+      updateInputHeld(Input.EmoteDepressed, false);
+      break;
+    case 'Numpad3':
+      updateInputHeld(Input.EmoteSad, false);
+      break;
+    case 'Numpad4':
+      updateInputHeld(Input.EmoteAngry, false);
+      break;
+    case 'Numpad5':
+      updateInputHeld(Input.EmoteConfused, false);
+      break;
+    case 'Numpad6':
+      updateInputHeld(Input.EmoteSurprised, false);
+      break;
+    case 'Numpad7':
+      updateInputHeld(Input.EmoteHearts, false);
+      break;
+    case 'Numpad8':
+      updateInputHeld(Input.EmoteMoon, false);
+      break;
+    case 'Numpad9':
+      updateInputHeld(Input.EmoteSuicidal, false);
       break;
   }
 });
