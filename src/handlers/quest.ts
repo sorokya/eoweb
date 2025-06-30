@@ -4,6 +4,7 @@ import {
   PacketAction,
   PacketFamily,
   QuestDialogServerPacket,
+  QuestReportServerPacket,
 } from 'eolib';
 import type { Client } from '../client';
 
@@ -27,10 +28,21 @@ function handleQuestDialog(client: Client, reader: EoReader) {
   });
 }
 
+function handleQuestReport(client: Client, reader: EoReader) {
+  const packet = QuestReportServerPacket.deserialize(reader);
+  client.queuedNpcChats.set(packet.npcIndex, packet.messages);
+}
+
 export function registerQuestHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Quest,
     PacketAction.Dialog,
     (reader) => handleQuestDialog(client, reader),
+  );
+
+  client.bus.registerPacketHandler(
+    PacketFamily.Quest,
+    PacketAction.Report,
+    (reader) => handleQuestReport(client, reader),
   );
 }

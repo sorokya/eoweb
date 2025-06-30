@@ -261,6 +261,7 @@ export class Client {
   npcAnimations: Map<number, NpcAnimation> = new Map();
   characterChats: Map<number, ChatBubble> = new Map();
   npcChats: Map<number, ChatBubble> = new Map();
+  queuedNpcChats: Map<number, string[]> = new Map();
   npcHealthBars: Map<number, HealthBar> = new Map();
   characterHealthBars: Map<number, HealthBar> = new Map();
   mousePosition: Vector2 | undefined;
@@ -422,6 +423,42 @@ export class Client {
         this.usage += 1;
         this.usageTicks = USAGE_TICKS;
       }
+    }
+
+    const emptyQueuedNpcChats: number[] = [];
+    for (const [index, messages] of this.queuedNpcChats) {
+      const existingChat = this.npcChats.get(index);
+      if (existingChat) {
+        continue;
+      }
+
+      const npc = this.getNpcByIndex(index);
+      if (!npc) {
+        emptyQueuedNpcChats.push(index);
+        continue;
+      }
+
+      const record = this.getEnfRecordById(npc.id);
+      if (!record) {
+        emptyQueuedNpcChats.push(index);
+        continue;
+      }
+
+      this.emit('chat', {
+        name: record.name,
+        message: messages[0],
+        tab: ChatTab.Local,
+      });
+      this.npcChats.set(index, new ChatBubble(messages[0]));
+
+      if (messages.length > 1) {
+        messages.splice(0, 1);
+      } else {
+        emptyQueuedNpcChats.push(index);
+      }
+    }
+    for (const index of emptyQueuedNpcChats) {
+      this.queuedNpcChats.delete(index);
     }
 
     const endedCharacterAnimations: number[] = [];
