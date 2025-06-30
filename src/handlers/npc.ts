@@ -1,4 +1,5 @@
 import {
+  Emote as EmoteType,
   type EoReader,
   ItemMapInfo,
   NpcAcceptServerPacket,
@@ -13,6 +14,7 @@ import {
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
+import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { NpcAttackAnimation } from '../render/npc-attack';
 import { NpcDeathAnimation } from '../render/npc-death';
@@ -146,7 +148,10 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     client.nearby.items.push(item);
   }
 
-  // TODO: Level up emote
+  client.characterEmotes.set(
+    packet.npcKilledData.killerId,
+    new Emote(EmoteType.LevelUp),
+  );
   playSfxById(SfxId.LevelUp);
   if (packet.levelUp) {
     client.level = packet.levelUp.level;

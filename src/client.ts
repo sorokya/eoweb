@@ -807,15 +807,18 @@ export class Client {
       return;
     }
 
-    const itemsAtCoords = this.nearby.items.filter(
-      (i) =>
-        i.coords.x === this.mouseCoords.x && i.coords.y === this.mouseCoords.y,
-    );
-    itemsAtCoords.sort((a, b) => b.uid - a.uid);
-    if (itemsAtCoords.length) {
-      const packet = new ItemGetClientPacket();
-      packet.itemIndex = itemsAtCoords[0].uid;
-      this.bus.send(packet);
+    if (this.mouseCoords) {
+      const itemsAtCoords = this.nearby.items.filter(
+        (i) =>
+          i.coords.x === this.mouseCoords.x &&
+          i.coords.y === this.mouseCoords.y,
+      );
+      itemsAtCoords.sort((a, b) => b.uid - a.uid);
+      if (itemsAtCoords.length) {
+        const packet = new ItemGetClientPacket();
+        packet.itemIndex = itemsAtCoords[0].uid;
+        this.bus.send(packet);
+      }
     }
 
     const npcAt = getNpcIntersecting(this.mousePosition);
@@ -837,6 +840,7 @@ export class Client {
     }
 
     if (
+      this.mouseCoords &&
       this.isFacingChairAt(this.mouseCoords) &&
       !this.occupied(this.mouseCoords)
     ) {

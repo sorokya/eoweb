@@ -55,9 +55,16 @@ export class HUD extends Base {
     this.tpFill.style.width = `${this.LEFT_SIDE_WIDTH + Math.floor((client.tp / client.maxTp) * this.STAT_WIDTH)}px`;
 
     const tnl = calculateTnl(client.experience);
-    const exp = getExpForLevel(client.level + 1);
+    const currentLevelExp = getExpForLevel(client.level);
+    const nextLevelExp = getExpForLevel(client.level + 1);
+
+    const progress = client.experience - currentLevelExp;
+    const range = nextLevelExp - currentLevelExp;
+
+    const percent = progress / range;
+
     this.expText.innerText = `${tnl}`;
-    this.expFill.style.width = `${this.LEFT_SIDE_WIDTH + Math.floor((client.experience / exp) * this.STAT_WIDTH)}px`;
+    this.expFill.style.width = `${this.LEFT_SIDE_WIDTH + Math.floor(percent * this.STAT_WIDTH)}px`;
   }
 
   show() {

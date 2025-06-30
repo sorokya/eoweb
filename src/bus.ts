@@ -7,8 +7,8 @@ import {
   flipMsb,
   interleave,
   type Packet,
-  type PacketAction,
-  type PacketFamily,
+  PacketAction,
+  PacketFamily,
   PacketSequencer,
   SequenceStart,
   swapMultiples,
@@ -101,10 +101,14 @@ export class PacketBus {
       if (handler) {
         handler(reader);
       } else {
-        console.error(`Unhandled packet: ${family}_${action}`);
+        console.error(
+          `Unhandled packet: ${PacketFamily[family]}_${PacketAction[action]}`,
+        );
       }
     } else {
-      console.error(`Unhandled packet: ${family}_${action}`);
+      console.error(
+        `Unhandled packet: ${PacketFamily[family]}_${PacketAction[action]}`,
+      );
     }
   }
 
