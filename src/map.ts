@@ -712,6 +712,7 @@ export class MapRenderer {
 
     const bubble = this.client.characterChats.get(character.playerId);
     const healthBar = this.client.characterHealthBars.get(character.playerId);
+    const emote = this.client.characterEmotes.get(character.playerId);
     const frame = animation?.animationFrame || 0;
 
     let action: CharacterAction;
@@ -740,11 +741,15 @@ export class MapRenderer {
     if (animation) {
       animation.render(character, characterCtx);
     } else if (character.sitState === SitState.Floor) {
-      renderCharacterFloor(character, characterCtx);
+      renderCharacterFloor(character, emote ? emote.type : null, characterCtx);
     } else if (character.sitState === SitState.Chair) {
-      renderCharacterChair(character, characterCtx);
+      renderCharacterChair(character, emote ? emote.type : null, characterCtx);
     } else {
-      renderCharacterStanding(character, characterCtx);
+      renderCharacterStanding(
+        character,
+        emote ? emote.type : null,
+        characterCtx,
+      );
     }
 
     this.renderCharacterLayers(character, characterCtx, frame, action);
@@ -765,6 +770,9 @@ export class MapRenderer {
       this.topLayer.push(() => {
         renderCharacterChatBubble(bubble, character, ctx);
         renderCharacterHealthBar(healthBar, character, ctx);
+        if (emote) {
+          emote.render(character, ctx);
+        }
       });
     }
   }

@@ -1,4 +1,4 @@
-import { Direction, SitState } from 'eolib';
+import { Direction, Emote, SitState } from 'eolib';
 import { type Client, GameState } from './client';
 import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
 import { getLatestDirectionHeld, Input, isInputHeld } from './input';
@@ -170,6 +170,66 @@ export class MovementController {
         this.client.stand();
       }
       this.sitTicks = SIT_TICKS;
+    }
+
+    const emote = this.client.characterEmotes.get(this.client.playerId);
+    if (emote) {
+      return;
+    }
+
+    if (isInputHeld(Input.EmotePlayful)) {
+      this.client.emote(Emote.Playful);
+      return;
+    }
+
+    if (isInputHeld(Input.EmoteEmbarassed)) {
+      this.client.emote(Emote.Embarrassed);
+      return;
+    }
+
+    if (isInputHeld(Input.EmoteHappy)) {
+      this.client.emote(Emote.Happy);
+      return;
+    }
+
+    if (isInputHeld(Input.EmoteDepressed)) {
+      this.client.emote(Emote.Depressed);
+      return;
+    }
+
+    if (isInputHeld(Input.EmoteSad)) {
+      this.client.emote(Emote.Sad);
+      return;
+    }
+
+    if (isInputHeld(Input.EmoteAngry)) {
+      this.client.emote(Emote.Angry);
+      return;
+    }
+
+    if (isInputHeld(Input.EmoteConfused)) {
+      this.client.emote(Emote.Confused);
+      return;
+    }
+
+    if (isInputHeld(Input.EmoteSurprised)) {
+      this.client.emote(Emote.Surprised);
+      return;
+    }
+
+    if (isInputHeld(Input.EmoteHearts)) {
+      this.client.emote(Emote.Hearts);
+      return;
+    }
+
+    if (isInputHeld(Input.EmoteMoon)) {
+      this.client.emote(Emote.Moon);
+      return;
+    }
+
+    if (isInputHeld(Input.EmoteSuicidal)) {
+      this.client.emote(Emote.Suicidal);
+      return;
     }
   }
 }

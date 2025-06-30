@@ -23,6 +23,8 @@ import {
   type Eif,
   type EifRecord,
   type Emf,
+  EmoteReportClientPacket,
+  type Emote as EmoteType,
   type Enf,
   type EnfRecord,
   EquipmentPaperdoll,
@@ -118,6 +120,7 @@ import { MapRenderer } from './map';
 import { MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterWalkAnimation } from './render/character-walk';
+import { Emote } from './render/emote';
 import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
@@ -265,6 +268,7 @@ export class Client {
   queuedNpcChats: Map<number, string[]> = new Map();
   npcHealthBars: Map<number, HealthBar> = new Map();
   characterHealthBars: Map<number, HealthBar> = new Map();
+  characterEmotes: Map<number, Emote> = new Map();
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
@@ -479,6 +483,21 @@ export class Client {
     }
     for (const id of endedCharacterAnimations) {
       this.characterAnimations.delete(id);
+    }
+
+    const endedCharacterEmotes: number[] = [];
+    for (const [id, emote] of this.characterEmotes) {
+      if (
+        !emote.ticks ||
+        !this.nearby.characters.some((c) => c.playerId === id)
+      ) {
+        endedCharacterEmotes.push(id);
+        continue;
+      }
+      emote.tick();
+    }
+    for (const id of endedCharacterEmotes) {
+      this.characterEmotes.delete(id);
     }
 
     const endedNpcAnimations: number[] = [];
@@ -1349,6 +1368,13 @@ export class Client {
     } else {
       packet.replyTypeData = new QuestAcceptClientPacket.ReplyTypeDataOk();
     }
+    this.bus.send(packet);
+  }
+
+  emote(type: EmoteType) {
+    const packet = new EmoteReportClientPacket();
+    packet.emote = type;
+    this.characterEmotes.set(this.playerId, new Emote(type));
     this.bus.send(packet);
   }
 }

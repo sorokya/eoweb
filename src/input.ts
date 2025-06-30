@@ -67,7 +67,6 @@ window.addEventListener('keydown', (e) => {
     if (e.key === '=' || e.key === '+') zoomIn();
     else zoomOut();
   }
-  console.log(e.code);
   switch (e.code) {
     case 'KeyW':
     case 'ArrowUp':
