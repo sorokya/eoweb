@@ -31,6 +31,7 @@ import { ExitGame } from './ui/exit-game';
 import { HUD } from './ui/hud';
 import { InGameMenu } from './ui/in-game-menu';
 import { Inventory } from './ui/inventory';
+import { ItemAmountDialog } from './ui/item-amount-dialog';
 import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
@@ -310,6 +311,7 @@ const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
 const hud = new HUD();
+const itemAmountDialog = new ItemAmountDialog();
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -458,7 +460,26 @@ inventory.on('dropItem', (itemId) => {
     return;
   }
 
-  client.dropItem(itemId, 1, client.mouseCoords);
+  if (item.amount > 1) {
+    const coords = client.mouseCoords;
+    client.typing = true;
+    itemAmountDialog.setMaxAmount(item.amount);
+    itemAmountDialog.setLabel(
+      `How much ${record.name}\nwould you like to drop?`,
+    );
+    itemAmountDialog.setCallback(
+      (amount) => {
+        client.dropItem(itemId, amount, coords);
+        client.typing = false;
+      },
+      () => {
+        client.typing = false;
+      },
+    );
+    itemAmountDialog.show();
+  } else {
+    client.dropItem(itemId, 1, client.mouseCoords);
+  }
 });
 
 // Tick loop

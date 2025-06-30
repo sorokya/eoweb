@@ -1083,7 +1083,7 @@ export class Client {
       { x: player.x - 1, y: player.y }, // Left
       { x: player.x - 1, y: player.y - 1 }, // Up Left
       { x: player.x - 1, y: player.y + 1 }, // Down Left
-      { x: player.x, y: player.y - 1 }, // Down
+      { x: player.x, y: player.y + 1 }, // Down
       { x: player.x + 1, y: player.y - 1 }, // Up Right
       { x: player.x, y: player.y - 1 }, // Up
       { x: player.x, y: player.y - 2 }, // Up + 1
