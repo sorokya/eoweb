@@ -9,6 +9,7 @@ import { Base } from './base-ui';
 
 type Events = {
   reply: { questId: number; dialogId: number; action: number | null };
+  cancel: undefined;
 };
 
 export class QuestDialog extends Base {
@@ -125,6 +126,7 @@ export class QuestDialog extends Base {
       link.addEventListener('click', () => {
         playSfxById(SfxId.ButtonClick);
         this.hide();
+        this.cover.classList.add('hidden');
         this.emitter.emit('reply', {
           questId: this.questId,
           dialogId: this.dialogIndex,
@@ -170,6 +172,8 @@ export class QuestDialog extends Base {
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.hide();
+      this.cover.classList.add('hidden');
+      this.emitter.emit('cancel', undefined);
     });
 
     this.btnBack.addEventListener('click', () => {
@@ -186,12 +190,13 @@ export class QuestDialog extends Base {
 
     this.btnOk.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
+      this.hide();
+      this.cover.classList.add('hidden');
       this.emitter.emit('reply', {
         questId: this.questId,
         dialogId: this.dialogIndex,
         action: null,
       });
-      this.hide();
     });
   }
 }
