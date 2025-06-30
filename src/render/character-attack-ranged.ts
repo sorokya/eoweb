@@ -38,7 +38,7 @@ export class CharacterRangedAttackAnimation extends CharacterAnimation {
     const screenCoords = isoToScreen(character.coords);
 
     const additionalOffset = {
-      x: [Direction.Up, Direction.Right].includes(this.direction) ? -5 : -7,
+      x: [Direction.Up, Direction.Right].includes(this.direction) ? 5 : -6,
       y: 4,
     };
 

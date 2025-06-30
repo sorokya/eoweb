@@ -64,17 +64,17 @@ const MALE_ATTACK_OFFSETS = [
 ];
 
 const FEMALE_RANGE_ATTACK_OFFSETS = {
-  [Direction.Up]: { x: 1, y: 6 },
-  [Direction.Down]: { x: -1, y: 6 },
-  [Direction.Left]: { x: -2, y: 6 },
+  [Direction.Up]: { x: 0, y: 6 },
+  [Direction.Down]: { x: 1, y: 6 },
+  [Direction.Left]: { x: 1, y: 6 },
   [Direction.Right]: { x: 1, y: 6 },
 };
 
 const MALE_RANGE_ATTACK_OFFSETS = {
-  [Direction.Up]: { x: 0, y: 4 },
-  [Direction.Down]: { x: 3, y: 5 },
-  [Direction.Left]: { x: 0, y: 4 },
-  [Direction.Right]: { x: -5, y: 4 },
+  [Direction.Up]: { x: -1, y: 5 },
+  [Direction.Down]: { x: 2, y: 5 },
+  [Direction.Left]: { x: 2, y: 4 },
+  [Direction.Right]: { x: -1, y: 5 },
 };
 
 const MALE_SIT_FLOOR_OFFSETS = {

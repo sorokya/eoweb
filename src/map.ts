@@ -26,6 +26,7 @@ import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, getBitmapById } from './gfx';
 import { renderCharacterArmor } from './render/character-armor';
 import { CharacterAttackAnimation } from './render/character-attack';
+import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
 import { renderCharacterBoots } from './render/character-boots';
 import {
   calculateCharacterRenderPositionChair,
@@ -720,7 +721,8 @@ export class MapRenderer {
       case animation instanceof CharacterWalkAnimation:
         action = CharacterAction.Walking;
         break;
-      case animation instanceof CharacterAttackAnimation: {
+      case animation instanceof CharacterAttackAnimation ||
+        animation instanceof CharacterRangedAttackAnimation: {
         const metadata = this.client.getWeaponMetadata(
           character.equipment.weapon,
         );
