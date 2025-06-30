@@ -14,6 +14,9 @@ import {
   type CharacterSelectionListEntry,
   CitizenOpenClientPacket,
   Coords,
+  type DialogEntry,
+  type DialogQuestEntry,
+  DialogReply,
   type Direction,
   DoorOpenClientPacket,
   type Ecf,
@@ -44,6 +47,7 @@ import {
   NpcType,
   PlayerRangeRequestClientPacket,
   PriestOpenClientPacket,
+  QuestAcceptClientPacket,
   QuestUseClientPacket,
   RangeRequestClientPacket,
   type ServerSettings,
@@ -100,6 +104,7 @@ import { registerLoginHandlers } from './handlers/login';
 import { registerMessageHandlers } from './handlers/message';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerPlayersHandlers } from './handlers/players';
+import { registerQuestHandlers } from './handlers/quest';
 import { registerRangeHandlers } from './handlers/range';
 import { registerRecoverHandlers } from './handlers/recover';
 import { registerRefreshHandlers } from './handlers/refresh';
@@ -142,6 +147,12 @@ type ClientEvents = {
   inventoryChanged: undefined;
   statsUpdate: undefined;
   reconnect: undefined;
+  openQuestDialog: {
+    name: string;
+    questId: number;
+    quests: DialogQuestEntry[];
+    dialog: DialogEntry[];
+  };
 };
 
 export enum GameState {
@@ -264,6 +275,7 @@ export class Client {
   quakeTicks = 0;
   quakePower = 0;
   quakeOffset = 0;
+  interactNpcIndex = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -342,6 +354,19 @@ export class Client {
     }
 
     return this.enf.npcs[id - 1];
+  }
+
+  getEnfRecordByBehaviorId(
+    type: NpcType,
+    behaviorId: number,
+  ): EnfRecord | undefined {
+    if (!this.enf) {
+      return;
+    }
+
+    return this.enf.npcs.find(
+      (n) => n.type === type && n.behaviorId === behaviorId,
+    );
   }
 
   getWeaponMetadata(graphicId: number): WeaponMetadata {
@@ -685,6 +710,7 @@ export class Client {
     registerEffectHandlers(this);
     registerItemHandlers(this);
     registerAdminInteractHandlers(this);
+    registerQuestHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -824,7 +850,11 @@ export class Client {
         this.bus.send(packet);
         break;
       }
+      default:
+        return;
     }
+
+    this.interactNpcIndex = npc.index;
   }
 
   canWalk(coords: Coords): boolean {
@@ -1265,5 +1295,21 @@ export class Client {
       this.equipment.bracer[0],
       this.equipment.bracer[1],
     ];
+  }
+
+  questReply(questId: number, dialogId: number, action: number | null) {
+    const packet = new QuestAcceptClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.questId = questId;
+    packet.npcIndex = this.interactNpcIndex;
+    packet.dialogId = dialogId;
+    packet.replyType = action ? DialogReply.Link : DialogReply.Ok;
+    if (action) {
+      packet.replyTypeData = new QuestAcceptClientPacket.ReplyTypeDataLink();
+      packet.replyTypeData.action = action;
+    } else {
+      packet.replyTypeData = new QuestAcceptClientPacket.ReplyTypeDataOk();
+    }
+    this.bus.send(packet);
   }
 }
