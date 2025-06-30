@@ -121,6 +121,7 @@ import { MapRenderer } from './map';
 import { MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterWalkAnimation } from './render/character-walk';
+import type { EffectAnimation } from './render/effect';
 import { Emote } from './render/emote';
 import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
@@ -275,6 +276,7 @@ export class Client {
   npcHealthBars: Map<number, HealthBar> = new Map();
   characterHealthBars: Map<number, HealthBar> = new Map();
   characterEmotes: Map<number, Emote> = new Map();
+  effects: EffectAnimation[] = [];
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
@@ -599,6 +601,15 @@ export class Client {
     }
     for (const id of endedNpcChatBubbles) {
       this.npcChats.delete(id);
+    }
+
+    for (let i = this.effects.length - 1; i >= 0; i--) {
+      const effect = this.effects[i];
+      if (!effect.ticks && !effect.loops) {
+        this.effects.splice(i, 1);
+        continue;
+      }
+      effect.tick();
     }
 
     for (const door of this.doors) {

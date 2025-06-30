@@ -11,6 +11,11 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '../client';
+import {
+  EffectAnimation,
+  EffectTargetCharacter,
+  EffectTargetTile,
+} from '../render/effect';
 import { playSfxById, SfxId } from '../sfx';
 import { getDistance } from '../utils/range';
 
@@ -88,6 +93,13 @@ function handleEffectAgree(client: Client, reader: EoReader) {
     if (meta.sfx) {
       playSfxById(meta.sfx);
     }
+    client.effects.push(
+      new EffectAnimation(
+        effect.effectId + 1,
+        new EffectTargetTile(effect.coords),
+        meta,
+      ),
+    );
   }
 }
 
@@ -98,6 +110,13 @@ function handleEffectPlayer(client: Client, reader: EoReader) {
     if (meta.sfx) {
       playSfxById(meta.sfx);
     }
+    client.effects.push(
+      new EffectAnimation(
+        effect.effectId + 1,
+        new EffectTargetCharacter(effect.playerId),
+        meta,
+      ),
+    );
   }
 }
 
