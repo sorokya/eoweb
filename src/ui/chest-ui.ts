@@ -1,4 +1,4 @@
-import type { Coords, EifRecord, ThreeItem } from 'eolib';
+import type { EifRecord, ThreeItem } from 'eolib';
 import { ItemType } from 'eolib';
 import mitt from 'mitt';
 import type { Client } from '../client';
@@ -62,7 +62,7 @@ export class ChestUI extends Base {
     });
   }
 
-  openChest(_coords: Coords, items: ThreeItem[]) {
+  openChest(items: ThreeItem[]) {
     this.container.style.backgroundImage = `url('/gfx/gfx002/151.png')`;
     this.renderItems(items);
     this.show();

@@ -247,8 +247,8 @@ client.on('openQuestDialog', (data) => {
   questDialog.show();
 });
 
-client.on('chestOpened', ({ coords, items }) => {
-  chestUI.openChest(coords, items);
+client.on('chestOpened', ({ items }) => {
+  chestUI.openChest(items);
 });
 
 const initializeSocket = (next: 'login' | 'create') => {
