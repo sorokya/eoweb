@@ -4,6 +4,7 @@ import {
   ItemAddServerPacket,
   ItemDropServerPacket,
   ItemGetServerPacket,
+  ItemKickServerPacket,
   ItemMapInfo,
   ItemRemoveServerPacket,
   ItemReplyServerPacket,
@@ -239,6 +240,20 @@ function handleItemReply(client: Client, reader: EoReader) {
   }
 }
 
+function handleItemKick(client: Client, reader: EoReader) {
+  const packet = ItemKickServerPacket.deserialize(reader);
+  client.weight.current = packet.currentWeight;
+
+  if (packet.item.amount) {
+    const item = client.items.find((i) => i.id === packet.item.id);
+    if (item) {
+      item.amount = packet.item.amount;
+    }
+  } else {
+    client.items = client.items.filter((i) => i.id !== packet.item.id);
+  }
+}
+
 export function registerItemHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Item,
@@ -264,5 +279,10 @@ export function registerItemHandlers(client: Client) {
     PacketFamily.Item,
     PacketAction.Reply,
     (reader) => handleItemReply(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Item,
+    PacketAction.Kick,
+    (reader) => handleItemKick(client, reader),
   );
 }
