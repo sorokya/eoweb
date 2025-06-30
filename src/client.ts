@@ -28,6 +28,8 @@ import {
   ItemDropClientPacket,
   ItemGetClientPacket,
   type ItemMapInfo,
+  ItemType,
+  ItemUseClientPacket,
   LoginRequestClientPacket,
   MapTileSpec,
   MessagePingClientPacket,
@@ -144,6 +146,24 @@ export enum CharacterAction {
   MeleeAttack = 2,
   RangedAttack = 3,
   CastingSpell = 4,
+}
+
+export enum EquipmentSlot {
+  Boots = 0,
+  Accessory = 1,
+  Gloves = 2,
+  Belt = 3,
+  Armor = 4,
+  Necklace = 5,
+  Hat = 6,
+  Shield = 7,
+  Weapon = 8,
+  Ring1 = 9,
+  Ring2 = 10,
+  Armlet1 = 11,
+  Armlet2 = 12,
+  Bracer1 = 13,
+  Bracer2 = 14,
 }
 
 type AccountCreateData = {
@@ -1114,5 +1134,55 @@ export class Client {
       packet.coords.y = coords.y + 1;
       this.bus.send(packet);
     }
+  }
+
+  useItem(id: number) {
+    const item = this.items.find((i) => i.id === id);
+    if (!item) {
+      return;
+    }
+
+    const record = this.getEifRecordById(id);
+    if (!record) {
+      return;
+    }
+
+    if (
+      ![
+        ItemType.Heal,
+        ItemType.Teleport,
+        ItemType.Alcohol,
+        ItemType.EffectPotion,
+        ItemType.HairDye,
+        ItemType.ExpReward,
+        ItemType.CureCurse,
+      ].includes(record.type)
+    ) {
+      return;
+    }
+
+    const packet = new ItemUseClientPacket();
+    packet.itemId = id;
+    this.bus.send(packet);
+  }
+
+  getEquipmentArray(): number[] {
+    return [
+      this.equipment.boots,
+      this.equipment.accessory,
+      this.equipment.gloves,
+      this.equipment.belt,
+      this.equipment.armor,
+      this.equipment.necklace,
+      this.equipment.hat,
+      this.equipment.shield,
+      this.equipment.weapon,
+      this.equipment.ring[0],
+      this.equipment.ring[1],
+      this.equipment.armlet[0],
+      this.equipment.armlet[1],
+      this.equipment.bracer[0],
+      this.equipment.bracer[1],
+    ];
   }
 }

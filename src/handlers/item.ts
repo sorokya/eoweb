@@ -6,10 +6,14 @@ import {
   ItemGetServerPacket,
   ItemMapInfo,
   ItemRemoveServerPacket,
+  ItemReplyServerPacket,
+  ItemSpecial,
+  ItemType,
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
+import { type Client, EquipmentSlot } from '../client';
+import { HealthBar } from '../render/health-bar';
 
 function handleItemAdd(client: Client, reader: EoReader) {
   const packet = ItemAddServerPacket.deserialize(reader);
@@ -79,6 +83,162 @@ function handleItemDrop(client: Client, reader: EoReader) {
   client.emit('inventoryChanged', undefined);
 }
 
+function handleItemReply(client: Client, reader: EoReader) {
+  const packet = ItemReplyServerPacket.deserialize(reader);
+
+  client.weight = packet.weight;
+
+  if (packet.usedItem.amount) {
+    const item = client.items.find((i) => i.id === packet.usedItem.id);
+    if (item) {
+      item.amount = packet.usedItem.amount;
+    }
+  } else {
+    client.items = client.items.filter((i) => i.id !== packet.usedItem.id);
+  }
+
+  client.emit('inventoryChanged', undefined);
+
+  switch (packet.itemType) {
+    case ItemType.Heal: {
+      const data =
+        packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataHeal;
+      client.hp = data.hp;
+      client.tp = data.tp;
+      const percent = (client.hp / client.maxHp) * 100;
+      client.characterHealthBars.set(
+        client.playerId,
+        new HealthBar(percent, 0, data.hpGain),
+      );
+      break;
+    }
+    case ItemType.Alcohol:
+      // TODO: Drunk state
+      break;
+    case ItemType.HairDye: {
+      const player = client.getPlayerCharacter();
+      if (player) {
+        const data =
+          packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataHairDye;
+        player.hairColor = data.hairColor;
+      }
+      break;
+    }
+    case ItemType.ExpReward: {
+      const data =
+        packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataExpReward;
+      client.experience = data.experience;
+      if (data.levelUp) {
+        client.level = data.levelUp;
+        client.maxHp = data.maxHp;
+        client.maxTp = data.maxTp;
+        client.maxSp = data.maxSp;
+        client.statPoints = data.statPoints;
+        client.skillPoints = data.skillPoints;
+      }
+
+      client.emit('statsUpdate', undefined);
+      break;
+    }
+    case ItemType.CureCurse: {
+      const data =
+        packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataCureCurse;
+      client.baseStats.str = data.stats.baseStats.str;
+      client.baseStats.intl = data.stats.baseStats.intl;
+      client.baseStats.wis = data.stats.baseStats.wis;
+      client.baseStats.agi = data.stats.baseStats.agi;
+      client.baseStats.cha = data.stats.baseStats.cha;
+      client.baseStats.con = data.stats.baseStats.con;
+      client.secondaryStats.accuracy = data.stats.secondaryStats.accuracy;
+      client.secondaryStats.armor = data.stats.secondaryStats.armor;
+      client.secondaryStats.evade = data.stats.secondaryStats.evade;
+      client.secondaryStats.minDamage = data.stats.secondaryStats.minDamage;
+      client.secondaryStats.maxDamage = data.stats.secondaryStats.maxDamage;
+      client.maxHp = data.stats.maxHp;
+      client.maxTp = data.stats.maxTp;
+      client.hp = Math.min(client.hp, client.maxHp);
+      client.tp = Math.min(client.tp, client.maxTp);
+      client.emit('statsUpdate', undefined);
+
+      const cursedEquipmentSlots: EquipmentSlot[] = [];
+      const equipmentArray = client.getEquipmentArray();
+      equipmentArray.forEach((id, index) => {
+        const record = client.getEifRecordById(id);
+        if (record && record.special === ItemSpecial.Cursed) {
+          cursedEquipmentSlots.push(index);
+        }
+      });
+
+      const player = client.getPlayerCharacter();
+      if (!player) {
+        break;
+      }
+
+      for (const slot of cursedEquipmentSlots) {
+        switch (slot) {
+          case EquipmentSlot.Boots: {
+            client.equipment.boots = 0;
+            player.equipment.boots = 0;
+            break;
+          }
+          case EquipmentSlot.Accessory:
+            client.equipment.accessory = 0;
+            break;
+          case EquipmentSlot.Gloves:
+            client.equipment.boots = 0;
+            break;
+          case EquipmentSlot.Belt:
+            client.equipment.boots = 0;
+            break;
+          case EquipmentSlot.Armor: {
+            client.equipment.armor = 0;
+            player.equipment.armor = 0;
+            break;
+          }
+          case EquipmentSlot.Necklace:
+            client.equipment.necklace = 0;
+            break;
+          case EquipmentSlot.Hat: {
+            client.equipment.hat = 0;
+            player.equipment.hat = 0;
+            break;
+          }
+          case EquipmentSlot.Shield: {
+            client.equipment.shield = 0;
+            player.equipment.shield = 0;
+            break;
+          }
+          case EquipmentSlot.Weapon: {
+            client.equipment.weapon = 0;
+            player.equipment.weapon = 0;
+            break;
+          }
+          case EquipmentSlot.Ring1:
+            client.equipment.ring[0] = 0;
+            break;
+          case EquipmentSlot.Ring2:
+            client.equipment.ring[1] = 0;
+            break;
+          case EquipmentSlot.Armlet1:
+            client.equipment.armlet[0] = 0;
+            break;
+          case EquipmentSlot.Armlet2:
+            client.equipment.armlet[1] = 0;
+            break;
+          case EquipmentSlot.Bracer1:
+            client.equipment.bracer[0] = 0;
+            break;
+          case EquipmentSlot.Bracer2:
+            client.equipment.bracer[1] = 0;
+            break;
+        }
+      }
+
+      break;
+    }
+  }
+}
+
 export function registerItemHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Item,
@@ -99,5 +259,10 @@ export function registerItemHandlers(client: Client) {
     PacketFamily.Item,
     PacketAction.Drop,
     (reader) => handleItemDrop(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Item,
+    PacketAction.Reply,
+    (reader) => handleItemReply(client, reader),
   );
 }
