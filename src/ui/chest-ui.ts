@@ -11,7 +11,6 @@ type Events = {
 
 export class ChestUI extends Base {
   private client: Client;
-  protected container: HTMLElement;
   private cover: HTMLElement;
   private closeButton: HTMLButtonElement;
   private itemsList: HTMLDivElement;
