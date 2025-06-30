@@ -450,6 +450,17 @@ inventory.on('dropItem', (itemId) => {
     return;
   }
 
+  // Prevent dropping same item on stack
+  const coords = client.mouseCoords;
+  if (
+    client.nearby.items.some(
+      (i) =>
+        i.coords.x === coords.x && i.coords.y === coords.y && i.id === itemId,
+    )
+  ) {
+    return;
+  }
+
   const record = client.getEifRecordById(itemId);
   if (!record) {
     return;
@@ -461,7 +472,6 @@ inventory.on('dropItem', (itemId) => {
   }
 
   if (item.amount > 1) {
-    const coords = client.mouseCoords;
     client.typing = true;
     itemAmountDialog.setMaxAmount(item.amount);
     itemAmountDialog.setLabel(
