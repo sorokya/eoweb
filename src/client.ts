@@ -73,6 +73,7 @@ import { Door } from './door';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, loadBitmapById } from './gfx';
 import { registerAccountHandlers } from './handlers/account';
+import { registerAdminInteractHandlers } from './handlers/admin-interact';
 import { registerArenaHandlers } from './handlers/arena';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerAvatarHandlers } from './handlers/avatar';
@@ -672,6 +673,7 @@ export class Client {
     registerDoorHandlers(this);
     registerEffectHandlers(this);
     registerItemHandlers(this);
+    registerAdminInteractHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
