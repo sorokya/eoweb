@@ -11,6 +11,7 @@ type Events = {
 
 export class ChestUI extends Base {
   private client: Client;
+  protected declare container: HTMLElement; // Changed from Element to HTMLElement
   private cover: HTMLElement;
   private closeButton: HTMLButtonElement;
   private itemsList: HTMLDivElement;
@@ -22,7 +23,7 @@ export class ChestUI extends Base {
 
     const container = document.getElementById('chest');
     if (!container) throw new Error('Chest element not found');
-    this.container = container;
+    this.container = container; // Now properly typed as HTMLElement
 
     const cover = document.getElementById('cover');
     if (!cover) throw new Error('Cover element not found');
