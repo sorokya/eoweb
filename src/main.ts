@@ -255,8 +255,8 @@ client.on('openPaperdoll', ({ icon, equipment, details }) => {
   paperdoll.show();
 });
 
-client.on('chestOpened', ({ coords, items }) => {
-  chestUI.openChest(coords, items);
+client.on('chestOpened', ({ items }) => {
+  chestUI.openChest(items);
 });
 
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
