@@ -114,6 +114,11 @@ export function renderCharacterStanding(
       mirrored ? GAME_WIDTH - rect.position.x - 16 : rect.position.x + 2,
     );
 
+    const drawY =
+      character.gender === Gender.Female
+        ? rect.position.y + 2
+        : rect.position.y;
+
     ctx.drawImage(
       emoteBmp,
       emoteSourceX,
@@ -121,7 +126,7 @@ export function renderCharacterStanding(
       13,
       14,
       drawX,
-      rect.position.y,
+      drawY,
       13,
       14,
     );

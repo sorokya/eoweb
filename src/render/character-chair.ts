@@ -172,7 +172,7 @@ export function renderCharacterChair(
       emoteSourceY,
       13,
       14,
-      drawX,
+      drawX - (character.gender === Gender.Female ? 1 : 0),
       rect.position.y,
       13,
       14,

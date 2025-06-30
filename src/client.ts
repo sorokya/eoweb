@@ -99,6 +99,7 @@ import { registerCharacterHandlers } from './handlers/character';
 import { registerConnectionHandlers } from './handlers/connection';
 import { registerDoorHandlers } from './handlers/door';
 import { registerEffectHandlers } from './handlers/effect';
+import { registerEmoteHandlers } from './handlers/emote';
 import { registerFaceHandlers } from './handlers/face';
 import { registerInitHandlers } from './handlers/init';
 import { registerItemHandlers } from './handlers/item';
@@ -769,6 +770,7 @@ export class Client {
     registerAdminInteractHandlers(this);
     registerQuestHandlers(this);
     registerMusicHandlers(this);
+    registerEmoteHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
