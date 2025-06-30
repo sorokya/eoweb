@@ -43,6 +43,7 @@ import {
   SitRequestClientPacket,
   SitState,
   type Spell,
+  TalkAnnounceClientPacket,
   TalkReportClientPacket,
   ThreeItem,
   Version,
@@ -831,22 +832,16 @@ export class Client {
       return;
     }
 
-    if (message.startsWith('#ping') && message.length === 5) {
-      this.pingStart = Date.now();
-      this.bus.send(new MessagePingClientPacket());
-      return;
-    }
-
-    if (message.startsWith('#loc') && message.length === 4) {
-      this.emit('serverChat', {
-        message: `${this.mapId} x:${this.getPlayerCoords().x} y:${this.getPlayerCoords().y}`,
-      });
-      return;
-    }
-
     const trimmed = message.substring(0, MAX_CHAT_LENGTH);
 
     if (trimmed.startsWith('#') && this.handleCommand(trimmed)) {
+      return;
+    }
+
+    if (trimmed.startsWith('@') && this.admin !== AdminLevel.Player) {
+      const packet = new TalkAnnounceClientPacket();
+      packet.message = trimmed.substring(1);
+      this.bus.send(packet);
       return;
     }
 

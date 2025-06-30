@@ -34,15 +34,11 @@ export function registerAdminInteractHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.AdminInteract,
     PacketAction.Remove,
-    (reader) => {
-      handleAdminInteractRemove(client, reader);
-    },
+    (reader) => handleAdminInteractRemove(client, reader),
   );
   client.bus.registerPacketHandler(
     PacketFamily.AdminInteract,
     PacketAction.Agree,
-    (reader) => {
-      handleAdminInteractAgree(client, reader);
-    },
+    (reader) => handleAdminInteractAgree(client, reader),
   );
 }
