@@ -3,6 +3,8 @@ import {
   AccountRequestClientPacket,
   AdminLevel,
   AttackUseClientPacket,
+  BankOpenClientPacket,
+  BarberOpenClientPacket,
   ByteCoords,
   ChairRequestClientPacket,
   CharacterBaseStats,
@@ -10,7 +12,11 @@ import {
   CharacterRequestClientPacket,
   CharacterSecondaryStats,
   type CharacterSelectionListEntry,
+  CitizenOpenClientPacket,
   Coords,
+  type DialogEntry,
+  type DialogQuestEntry,
+  DialogReply,
   type Direction,
   DoorOpenClientPacket,
   type Ecf,
@@ -24,6 +30,7 @@ import {
   FacePlayerClientPacket,
   FileType,
   type Gender,
+  GuildOpenClientPacket,
   type Item,
   ItemDropClientPacket,
   ItemGetClientPacket,
@@ -32,17 +39,24 @@ import {
   ItemUseClientPacket,
   LoginRequestClientPacket,
   MapTileSpec,
+  MarriageOpenClientPacket,
   MessagePingClientPacket,
   NearbyInfo,
   type NpcMapInfo,
   NpcRangeRequestClientPacket,
+  NpcType,
   PlayerRangeRequestClientPacket,
+  PriestOpenClientPacket,
+  QuestAcceptClientPacket,
+  QuestUseClientPacket,
   RangeRequestClientPacket,
   type ServerSettings,
+  ShopOpenClientPacket,
   SitAction,
   SitRequestClientPacket,
   SitState,
   type Spell,
+  StatSkillOpenClientPacket,
   TalkAnnounceClientPacket,
   TalkReportClientPacket,
   ThreeItem,
@@ -60,7 +74,7 @@ import {
 import mitt, { type Emitter } from 'mitt';
 import type { PacketBus } from './bus';
 import { ChatBubble } from './chat-bubble';
-import { getDoorIntersecting } from './collision';
+import { getDoorIntersecting, getNpcIntersecting } from './collision';
 import {
   CLEAR_OUT_OF_RANGE_TICKS,
   HALF_TILE_HEIGHT,
@@ -88,8 +102,10 @@ import { registerInitHandlers } from './handlers/init';
 import { registerItemHandlers } from './handlers/item';
 import { registerLoginHandlers } from './handlers/login';
 import { registerMessageHandlers } from './handlers/message';
+import { registerMusicHandlers } from './handlers/music';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerPlayersHandlers } from './handlers/players';
+import { registerQuestHandlers } from './handlers/quest';
 import { registerRangeHandlers } from './handlers/range';
 import { registerRecoverHandlers } from './handlers/recover';
 import { registerRefreshHandlers } from './handlers/refresh';
@@ -132,6 +148,12 @@ type ClientEvents = {
   inventoryChanged: undefined;
   statsUpdate: undefined;
   reconnect: undefined;
+  openQuestDialog: {
+    name: string;
+    questId: number;
+    quests: DialogQuestEntry[];
+    dialog: DialogEntry[];
+  };
 };
 
 export enum GameState {
@@ -240,6 +262,7 @@ export class Client {
   npcAnimations: Map<number, NpcAnimation> = new Map();
   characterChats: Map<number, ChatBubble> = new Map();
   npcChats: Map<number, ChatBubble> = new Map();
+  queuedNpcChats: Map<number, string[]> = new Map();
   npcHealthBars: Map<number, HealthBar> = new Map();
   characterHealthBars: Map<number, HealthBar> = new Map();
   mousePosition: Vector2 | undefined;
@@ -254,6 +277,7 @@ export class Client {
   quakeTicks = 0;
   quakePower = 0;
   quakeOffset = 0;
+  interactNpcIndex = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -334,6 +358,19 @@ export class Client {
     return this.enf.npcs[id - 1];
   }
 
+  getEnfRecordByBehaviorId(
+    type: NpcType,
+    behaviorId: number,
+  ): EnfRecord | undefined {
+    if (!this.enf) {
+      return;
+    }
+
+    return this.enf.npcs.find(
+      (n) => n.type === type && n.behaviorId === behaviorId,
+    );
+  }
+
   getWeaponMetadata(graphicId: number): WeaponMetadata {
     const data = this.weaponMetadata.get(graphicId);
     if (data) {
@@ -387,6 +424,42 @@ export class Client {
         this.usage += 1;
         this.usageTicks = USAGE_TICKS;
       }
+    }
+
+    const emptyQueuedNpcChats: number[] = [];
+    for (const [index, messages] of this.queuedNpcChats) {
+      const existingChat = this.npcChats.get(index);
+      if (existingChat) {
+        continue;
+      }
+
+      const npc = this.getNpcByIndex(index);
+      if (!npc) {
+        emptyQueuedNpcChats.push(index);
+        continue;
+      }
+
+      const record = this.getEnfRecordById(npc.id);
+      if (!record) {
+        emptyQueuedNpcChats.push(index);
+        continue;
+      }
+
+      this.emit('chat', {
+        name: record.name,
+        message: messages[0],
+        tab: ChatTab.Local,
+      });
+      this.npcChats.set(index, new ChatBubble(messages[0]));
+
+      if (messages.length > 1) {
+        messages.splice(0, 1);
+      } else {
+        emptyQueuedNpcChats.push(index);
+      }
+    }
+    for (const index of emptyQueuedNpcChats) {
+      this.queuedNpcChats.delete(index);
     }
 
     const endedCharacterAnimations: number[] = [];
@@ -675,6 +748,8 @@ export class Client {
     registerEffectHandlers(this);
     registerItemHandlers(this);
     registerAdminInteractHandlers(this);
+    registerQuestHandlers(this);
+    registerMusicHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -702,6 +777,15 @@ export class Client {
       return;
     }
 
+    if (
+      [SitState.Floor, SitState.Chair].includes(
+        this.getPlayerCharacter()?.sitState,
+      )
+    ) {
+      this.stand();
+      return;
+    }
+
     const itemsAtCoords = this.nearby.items.filter(
       (i) =>
         i.coords.x === this.mouseCoords.x && i.coords.y === this.mouseCoords.y,
@@ -711,6 +795,15 @@ export class Client {
       const packet = new ItemGetClientPacket();
       packet.itemIndex = itemsAtCoords[0].uid;
       this.bus.send(packet);
+    }
+
+    const npcAt = getNpcIntersecting(this.mousePosition);
+    if (npcAt) {
+      const npc = this.nearby.npcs.find((n) => n.index === npcAt.id);
+      if (npc) {
+        this.clickNpc(npc);
+        return;
+      }
     }
 
     const doorAt = getDoorIntersecting(this.mousePosition);
@@ -732,15 +825,75 @@ export class Client {
       this.sitChair(coords);
       return;
     }
+  }
 
-    if (
-      [SitState.Floor, SitState.Chair].includes(
-        this.getPlayerCharacter()?.sitState,
-      )
-    ) {
-      this.stand();
+  clickNpc(npc: NpcMapInfo) {
+    const record = this.getEnfRecordById(npc.id);
+    if (!record) {
       return;
     }
+
+    switch (record.type) {
+      case NpcType.Quest: {
+        const packet = new QuestUseClientPacket();
+        packet.npcIndex = npc.index;
+        packet.questId = 0;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Bank: {
+        const packet = new BankOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Shop: {
+        const packet = new ShopOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Barber: {
+        const packet = new BarberOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Guild: {
+        const packet = new GuildOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Inn: {
+        const packet = new CitizenOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Lawyer: {
+        const packet = new MarriageOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Priest: {
+        const packet = new PriestOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      case NpcType.Trainer: {
+        const packet = new StatSkillOpenClientPacket();
+        packet.npcIndex = npc.index;
+        this.bus.send(packet);
+        break;
+      }
+      default:
+        return;
+    }
+
+    this.interactNpcIndex = npc.index;
   }
 
   canWalk(coords: Coords): boolean {
@@ -1181,5 +1334,21 @@ export class Client {
       this.equipment.bracer[0],
       this.equipment.bracer[1],
     ];
+  }
+
+  questReply(questId: number, dialogId: number, action: number | null) {
+    const packet = new QuestAcceptClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.questId = questId;
+    packet.npcIndex = this.interactNpcIndex;
+    packet.dialogId = dialogId;
+    packet.replyType = action ? DialogReply.Link : DialogReply.Ok;
+    if (action) {
+      packet.replyTypeData = new QuestAcceptClientPacket.ReplyTypeDataLink();
+      packet.replyTypeData.action = action;
+    } else {
+      packet.replyTypeData = new QuestAcceptClientPacket.ReplyTypeDataOk();
+    }
+    this.bus.send(packet);
   }
 }

@@ -36,6 +36,7 @@ import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
 import { OffsetTweaker } from './ui/offset-tweaker';
+import { QuestDialog } from './ui/quest-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallConfirm } from './ui/small-confirm';
 import { capitalize } from './utils/capitalize';
@@ -239,6 +240,12 @@ client.on('reconnect', () => {
   initializeSocket('login');
 });
 
+client.on('openQuestDialog', (data) => {
+  client.typing = true;
+  questDialog.setData(data.questId, data.name, data.quests, data.dialog);
+  questDialog.show();
+});
+
 const initializeSocket = (next: 'login' | 'create') => {
   const socket = new WebSocket(client.host);
   socket.addEventListener('open', () => {
@@ -312,6 +319,7 @@ const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
+const questDialog = new QuestDialog();
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -494,6 +502,15 @@ inventory.on('dropItem', (itemId) => {
 
 inventory.on('useItem', (itemId) => {
   client.useItem(itemId);
+});
+
+questDialog.on('reply', ({ questId, dialogId, action }) => {
+  client.questReply(questId, dialogId, action);
+  client.typing = false;
+});
+
+questDialog.on('cancel', () => {
+  client.typing = false;
 });
 
 // Tick loop

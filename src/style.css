@@ -743,6 +743,78 @@ input[type="password"] {
   color: #cccccc;
 }
 
+#quest-dialog {
+  position: absolute;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/167.png");
+  width: 284px;
+  height: 190px;
+  user-select: none;
+  z-index: 1020;
+}
+
+#quest-dialog .title {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  color: #fff;
+}
+
+#quest-dialog .entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 48px;
+  left: 20px;
+  color: #fff;
+  font-size: 12px;
+  width: 224px;
+}
+
+#quest-dialog li {
+  position: relative;
+}
+
+#quest-dialog li.link {
+  text-decoration: underline;
+}
+
+#quest-dialog li::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(248, 248, 190, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+#quest-dialog li:hover::before {
+  opacity: 0.3 !important;
+}
+
+#quest-dialog button[data-id="quest-select"] {
+  position: absolute;
+  right: 17px;
+  top: 16px;
+}
+
+#quest-dialog button[data-id="cancel"],
+#quest-dialog button[data-id="back"] {
+  position: absolute;
+  right: 104px;
+  bottom: 10px;
+}
+
+#quest-dialog button[data-id="next"],
+#quest-dialog button[data-id="ok"] {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+}
+
 .img-label {
   --bg-url: "";
   --bg-x: 0;
@@ -993,6 +1065,26 @@ input[type="password"] {
   --height: 29px;
 }
 
+.img-btn[data-id="back"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -145px;
+  --hover-x: -91px;
+  --hover-y: -145px;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="next"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -203px;
+  --hover-x: -91px;
+  --hover-y: -203px;
+  --width: 91px;
+  --height: 29px;
+}
+
 .img-btn[data-id="exit-game"] {
   --bg-url: url("/gfx/gfx001/124.png");
   --bg-x: 0;
@@ -1078,6 +1170,17 @@ input[type="password"] {
   --hover-y: -133px;
   --width: 36px;
   --height: 19px;
+}
+
+.img-btn[data-id="quest-select"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/127.png");
+  --bg-x: -303px;
+  --bg-y: -242px;
+  --hover-x: -303px;
+  --hover-y: -242px;
+  --width: 16px;
+  --height: 15px;
 }
 
 #offset-tweaker {

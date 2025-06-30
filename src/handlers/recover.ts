@@ -3,10 +3,13 @@ import {
   PacketAction,
   PacketFamily,
   RecoverAgreeServerPacket,
+  RecoverListServerPacket,
   RecoverPlayerServerPacket,
+  RecoverReplyServerPacket,
 } from 'eolib';
 import type { Client } from '../client';
 import { HealthBar } from '../render/health-bar';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleRecoverPlayer(client: Client, reader: EoReader) {
   const packet = RecoverPlayerServerPacket.deserialize(reader);
@@ -40,6 +43,43 @@ function handleRecoverAgree(client: Client, reader: EoReader) {
   );
 }
 
+function handleRecoverList(client: Client, reader: EoReader) {
+  const packet = RecoverListServerPacket.deserialize(reader);
+  client.baseStats.str = packet.stats.baseStats.str;
+  client.baseStats.intl = packet.stats.baseStats.intl;
+  client.baseStats.wis = packet.stats.baseStats.wis;
+  client.baseStats.agi = packet.stats.baseStats.agi;
+  client.baseStats.cha = packet.stats.baseStats.cha;
+  client.baseStats.con = packet.stats.baseStats.con;
+  client.secondaryStats.accuracy = packet.stats.secondaryStats.accuracy;
+  client.secondaryStats.armor = packet.stats.secondaryStats.armor;
+  client.secondaryStats.evade = packet.stats.secondaryStats.evade;
+  client.secondaryStats.minDamage = packet.stats.secondaryStats.minDamage;
+  client.secondaryStats.maxDamage = packet.stats.secondaryStats.maxDamage;
+  client.maxHp = packet.stats.maxHp;
+  client.maxTp = packet.stats.maxTp;
+  client.maxSp = packet.stats.maxSp;
+  client.classId = packet.classId;
+  client.weight.max = packet.stats.maxWeight;
+  client.hp = Math.min(client.hp, client.maxHp);
+  client.tp = Math.min(client.tp, client.maxTp);
+  client.emit('statsUpdate', undefined);
+}
+
+function handleRecoverReply(client: Client, reader: EoReader) {
+  const packet = RecoverReplyServerPacket.deserialize(reader);
+  client.karma = packet.karma;
+  client.experience = packet.experience;
+
+  if (packet.levelUp) {
+    // TODO: Level up emote
+    playSfxById(SfxId.LevelUp);
+    client.level = packet.levelUp;
+    client.statPoints = packet.statPoints;
+    client.skillPoints = packet.skillPoints;
+  }
+}
+
 export function registerRecoverHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Recover,
@@ -50,5 +90,15 @@ export function registerRecoverHandlers(client: Client) {
     PacketFamily.Recover,
     PacketAction.Agree,
     (reader) => handleRecoverAgree(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Recover,
+    PacketAction.List,
+    (reader) => handleRecoverList(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Recover,
+    PacketAction.Reply,
+    (reader) => handleRecoverReply(client, reader),
   );
 }

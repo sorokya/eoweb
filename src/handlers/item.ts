@@ -1,9 +1,11 @@
 import {
   type EoReader,
   Item,
+  ItemAcceptServerPacket,
   ItemAddServerPacket,
   ItemDropServerPacket,
   ItemGetServerPacket,
+  ItemKickServerPacket,
   ItemMapInfo,
   ItemRemoveServerPacket,
   ItemReplyServerPacket,
@@ -14,6 +16,7 @@ import {
 } from 'eolib';
 import { type Client, EquipmentSlot } from '../client';
 import { HealthBar } from '../render/health-bar';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleItemAdd(client: Client, reader: EoReader) {
   const packet = ItemAddServerPacket.deserialize(reader);
@@ -129,6 +132,8 @@ function handleItemReply(client: Client, reader: EoReader) {
         packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataExpReward;
       client.experience = data.experience;
       if (data.levelUp) {
+        // TODO: Level up emote
+        playSfxById(SfxId.LevelUp);
         client.level = data.levelUp;
         client.maxHp = data.maxHp;
         client.maxTp = data.maxTp;
@@ -239,6 +244,31 @@ function handleItemReply(client: Client, reader: EoReader) {
   }
 }
 
+function handleItemKick(client: Client, reader: EoReader) {
+  const packet = ItemKickServerPacket.deserialize(reader);
+  client.weight.current = packet.currentWeight;
+
+  if (packet.item.amount) {
+    const item = client.items.find((i) => i.id === packet.item.id);
+    if (item) {
+      item.amount = packet.item.amount;
+    }
+  } else {
+    client.items = client.items.filter((i) => i.id !== packet.item.id);
+  }
+}
+
+function handleItemAccept(client: Client, reader: EoReader) {
+  const packet = ItemAcceptServerPacket.deserialize(reader);
+  const character = client.getCharacterById(packet.playerId);
+  if (!character) {
+    return;
+  }
+
+  // TODO: Level up emote
+  playSfxById(SfxId.LevelUp);
+}
+
 export function registerItemHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Item,
@@ -264,5 +294,15 @@ export function registerItemHandlers(client: Client) {
     PacketFamily.Item,
     PacketAction.Reply,
     (reader) => handleItemReply(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Item,
+    PacketAction.Kick,
+    (reader) => handleItemKick(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Item,
+    PacketAction.Accept,
+    (reader) => handleItemAccept(client, reader),
   );
 }
