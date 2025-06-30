@@ -675,7 +675,7 @@ export class Client {
   }
 
   handleClick() {
-    if (this.state !== GameState.InGame) {
+    if (this.state !== GameState.InGame || this.typing) {
       return;
     }
 
