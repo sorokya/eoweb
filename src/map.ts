@@ -509,14 +509,18 @@ export class MapRenderer {
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
   ): boolean {
-    const item = this.client.nearby.items.find(
+    const items = this.client.nearby.items.filter(
       (i) =>
         i.coords.x === this.client.mouseCoords.x &&
         i.coords.y === this.client.mouseCoords.y,
     );
-    if (!item) {
+    if (!items.length) {
       return false;
     }
+
+    items.sort((a, b) => b.uid - a.uid);
+
+    const item = items[0];
 
     const data = this.client.getEifRecordById(item.id);
     if (!data) {
