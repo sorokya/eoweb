@@ -1423,3 +1423,130 @@ input[type="password"] {
     opacity: 0.7;
   }
 }
+
+#chest {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1010;
+  user-select: none;
+  box-sizing: border-box;
+  width: 272px;
+  height: 270px;
+  background-color: #000;
+  background-image: url("/gfx/gfx001/120.png");
+}
+
+#chest .title {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  color: #fff;
+  font-size: 13px;
+}
+
+#chest .chest-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 25px;
+  left: 20px;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  color: #fff;
+  font-size: 12px;
+}
+
+#chest .chest-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px auto;
+  align-items: center;
+  padding: 0 0.5rem;
+  cursor: pointer;
+  height: 44px;
+  background-image: url("/gfx/gfx003/100.png");
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+#chest .chest-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+#chest .chest-item:hover::before {
+  opacity: 1;
+}
+
+#chest .chest-item .item-image {
+  max-width: 48px;
+  max-height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+}
+
+#chest .chest-item .item-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+#chest .chest-item .item-name {
+  color: #fff;
+  font-size: 12px;
+  margin: 0;
+}
+
+#chest .chest-item .item-quantity {
+  color: #b4a08c;
+  font-size: 11px;
+  margin: 2px 0 0 0;
+}
+
+#chest .img-btn[data-id="chest-close"] {
+  position: absolute;
+  top: 227px;
+  left: 50.2%;
+  margin-left: -45px;
+  z-index: 20;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  background-image: url("/gfx/gfx001/115.png");
+  background-position: 0 -29px;
+  width: 91px;
+  height: 29px;
+  cursor: pointer;
+}
+
+#chest .img-btn[data-id="chest-close"]:hover {
+  background-position: -91px -29px;
+}
+
+#chest .empty-message,
+#chest .empty-chest {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #8a8a8a;
+  font-style: italic;
+  font-size: 12px;
+  text-align: center;
+}

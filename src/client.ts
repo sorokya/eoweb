@@ -12,6 +12,7 @@ import {
   CharacterRequestClientPacket,
   CharacterSecondaryStats,
   type CharacterSelectionListEntry,
+  ChestOpenClientPacket,
   CitizenOpenClientPacket,
   Coords,
   type DialogEntry,
@@ -96,6 +97,7 @@ import { registerAttackHandlers } from './handlers/attack';
 import { registerAvatarHandlers } from './handlers/avatar';
 import { registerChairHandlers } from './handlers/chair';
 import { registerCharacterHandlers } from './handlers/character';
+import { registerChestHandlers } from './handlers/chest';
 import { registerConnectionHandlers } from './handlers/connection';
 import { registerDoorHandlers } from './handlers/door';
 import { registerEffectHandlers } from './handlers/effect';
@@ -157,6 +159,10 @@ type ClientEvents = {
     questId: number;
     quests: DialogQuestEntry[];
     dialog: DialogEntry[];
+  };
+  chestOpened: {
+    coords: { x: number; y: number };
+    items: ThreeItem[];
   };
 };
 
@@ -771,6 +777,7 @@ export class Client {
     registerQuestHandlers(this);
     registerMusicHandlers(this);
     registerEmoteHandlers(this);
+    registerChestHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -808,6 +815,7 @@ export class Client {
     }
 
     if (this.mouseCoords) {
+      // Check for items first
       const itemsAtCoords = this.nearby.items.filter(
         (i) =>
           i.coords.x === this.mouseCoords.x &&
@@ -818,6 +826,36 @@ export class Client {
         const packet = new ItemGetClientPacket();
         packet.itemIndex = itemsAtCoords[0].uid;
         this.bus.send(packet);
+        return;
+      }
+
+      // Check tile specs for chests and chairs
+      const tileSpec = this.map.tileSpecRows
+        .find((r) => r.y === this.mouseCoords.y)
+        ?.tiles.find((t) => t.x === this.mouseCoords.x);
+
+      if (tileSpec) {
+        if (tileSpec.tileSpec === MapTileSpec.Chest) {
+          const coords = new Coords();
+          coords.x = this.mouseCoords.x;
+          coords.y = this.mouseCoords.y;
+
+          const packet = new ChestOpenClientPacket();
+          packet.coords = coords;
+          this.bus.send(packet);
+          return;
+        }
+
+        if (
+          this.isFacingChairAt(this.mouseCoords) &&
+          !this.occupied(this.mouseCoords)
+        ) {
+          const coords = new Coords();
+          coords.x = this.mouseCoords.x;
+          coords.y = this.mouseCoords.y;
+          this.sitChair(coords);
+          return;
+        }
       }
     }
 
@@ -836,18 +874,6 @@ export class Client {
       if (door && !door.open) {
         this.openDoor(doorAt);
       }
-      return;
-    }
-
-    if (
-      this.mouseCoords &&
-      this.isFacingChairAt(this.mouseCoords) &&
-      !this.occupied(this.mouseCoords)
-    ) {
-      const coords = new Coords();
-      coords.x = this.mouseCoords.x;
-      coords.y = this.mouseCoords.y;
-      this.sitChair(coords);
       return;
     }
   }
@@ -919,6 +945,14 @@ export class Client {
     }
 
     this.interactNpcIndex = npc.index;
+  }
+
+  clickChest(coords: Vector2) {
+    const packet = new ChestOpenClientPacket();
+    packet.coords = new Coords();
+    packet.coords.x = coords.x;
+    packet.coords.y = coords.y;
+    this.bus.send(packet);
   }
 
   canWalk(coords: Coords): boolean {

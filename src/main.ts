@@ -25,6 +25,7 @@ import { playSfxById, SfxId } from './sfx';
 import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
 import { Chat } from './ui/chat';
+import { ChestUI } from './ui/chest-ui';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
@@ -246,6 +247,10 @@ client.on('openQuestDialog', (data) => {
   questDialog.show();
 });
 
+client.on('chestOpened', ({ coords, items }) => {
+  chestUI.openChest(coords, items);
+});
+
 const initializeSocket = (next: 'login' | 'create') => {
   const socket = new WebSocket(client.host);
   socket.addEventListener('open', () => {
@@ -320,6 +325,7 @@ const inventory = new Inventory(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
 const questDialog = new QuestDialog();
+const chestUI = new ChestUI(client);
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
