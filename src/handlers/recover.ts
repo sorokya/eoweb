@@ -5,9 +5,11 @@ import {
   RecoverAgreeServerPacket,
   RecoverListServerPacket,
   RecoverPlayerServerPacket,
+  RecoverReplyServerPacket,
 } from 'eolib';
 import type { Client } from '../client';
 import { HealthBar } from '../render/health-bar';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleRecoverPlayer(client: Client, reader: EoReader) {
   const packet = RecoverPlayerServerPacket.deserialize(reader);
@@ -64,6 +66,20 @@ function handleRecoverList(client: Client, reader: EoReader) {
   client.emit('statsUpdate', undefined);
 }
 
+function handleRecoverReply(client: Client, reader: EoReader) {
+  const packet = RecoverReplyServerPacket.deserialize(reader);
+  client.karma = packet.karma;
+  client.experience = packet.experience;
+
+  if (packet.levelUp) {
+    // TODO: Level up emote
+    playSfxById(SfxId.LevelUp);
+    client.level = packet.levelUp;
+    client.statPoints = packet.statPoints;
+    client.skillPoints = packet.skillPoints;
+  }
+}
+
 export function registerRecoverHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Recover,
@@ -79,5 +95,10 @@ export function registerRecoverHandlers(client: Client) {
     PacketFamily.Recover,
     PacketAction.List,
     (reader) => handleRecoverList(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Recover,
+    PacketAction.Reply,
+    (reader) => handleRecoverReply(client, reader),
   );
 }

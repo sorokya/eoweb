@@ -1,6 +1,7 @@
 import {
   type EoReader,
   Item,
+  ItemAcceptServerPacket,
   ItemAddServerPacket,
   ItemDropServerPacket,
   ItemGetServerPacket,
@@ -15,6 +16,7 @@ import {
 } from 'eolib';
 import { type Client, EquipmentSlot } from '../client';
 import { HealthBar } from '../render/health-bar';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleItemAdd(client: Client, reader: EoReader) {
   const packet = ItemAddServerPacket.deserialize(reader);
@@ -130,6 +132,8 @@ function handleItemReply(client: Client, reader: EoReader) {
         packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataExpReward;
       client.experience = data.experience;
       if (data.levelUp) {
+        // TODO: Level up emote
+        playSfxById(SfxId.LevelUp);
         client.level = data.levelUp;
         client.maxHp = data.maxHp;
         client.maxTp = data.maxTp;
@@ -254,6 +258,17 @@ function handleItemKick(client: Client, reader: EoReader) {
   }
 }
 
+function handleItemAccept(client: Client, reader: EoReader) {
+  const packet = ItemAcceptServerPacket.deserialize(reader);
+  const character = client.getCharacterById(packet.playerId);
+  if (!character) {
+    return;
+  }
+
+  // TODO: Level up emote
+  playSfxById(SfxId.LevelUp);
+}
+
 export function registerItemHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Item,
@@ -284,5 +299,10 @@ export function registerItemHandlers(client: Client) {
     PacketFamily.Item,
     PacketAction.Kick,
     (reader) => handleItemKick(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Item,
+    PacketAction.Accept,
+    (reader) => handleItemAccept(client, reader),
   );
 }

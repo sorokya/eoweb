@@ -146,6 +146,8 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     client.nearby.items.push(item);
   }
 
+  // TODO: Level up emote
+  playSfxById(SfxId.LevelUp);
   if (packet.levelUp) {
     client.level = packet.levelUp.level;
     client.maxHp = packet.levelUp.maxHp;

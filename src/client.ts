@@ -102,6 +102,7 @@ import { registerInitHandlers } from './handlers/init';
 import { registerItemHandlers } from './handlers/item';
 import { registerLoginHandlers } from './handlers/login';
 import { registerMessageHandlers } from './handlers/message';
+import { registerMusicHandlers } from './handlers/music';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerQuestHandlers } from './handlers/quest';
@@ -748,6 +749,7 @@ export class Client {
     registerItemHandlers(this);
     registerAdminInteractHandlers(this);
     registerQuestHandlers(this);
+    registerMusicHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
