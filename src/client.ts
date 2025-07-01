@@ -137,6 +137,7 @@ import {
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { getWeaponMetaData, WeaponMetadata } from './utils/get-weapon-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
+import { makeDrunk } from './utils/make-drunk';
 import { randomRange } from './utils/random-range';
 import { inRange } from './utils/range';
 import { screenToIso } from './utils/screen-to-iso';
@@ -1075,7 +1076,10 @@ export class Client {
       return;
     }
 
-    const trimmed = message.substring(0, MAX_CHAT_LENGTH);
+    const trimmed = (this.drunk ? makeDrunk(message) : message).substring(
+      0,
+      MAX_CHAT_LENGTH,
+    );
 
     if (trimmed.startsWith('#') && this.handleCommand(trimmed)) {
       return;
