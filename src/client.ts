@@ -121,7 +121,7 @@ import { MapRenderer } from './map';
 import { MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterWalkAnimation } from './render/character-walk';
-import type { EffectAnimation } from './render/effect';
+import { EffectAnimation, EffectTargetCharacter } from './render/effect';
 import { Emote } from './render/emote';
 import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
@@ -1231,6 +1231,22 @@ export class Client {
       playSfxById(SfxId.GhostPlayer);
     }
 
+    const spec = this.map.tileSpecRows
+      .find((r) => r.y === coords.y)
+      ?.tiles.find((t) => t.x === coords.x);
+
+    if (spec && spec.tileSpec === MapTileSpec.Water) {
+      const metadata = this.getEffectMetadata(9);
+      playSfxById(metadata.sfx);
+      this.effects.push(
+        new EffectAnimation(
+          9,
+          new EffectTargetCharacter(this.playerId),
+          metadata,
+        ),
+      );
+    }
+
     packet.walkAction = new WalkAction();
     packet.walkAction.direction = direction;
     packet.walkAction.coords = coords;
@@ -1248,6 +1264,22 @@ export class Client {
     const metadata = this.getWeaponMetadata(player.equipment.weapon);
     const index = randomRange(0, metadata.sfx.length - 1);
     playSfxById(metadata.sfx[index]);
+
+    const spec = this.map.tileSpecRows
+      .find((r) => r.y === player.coords.y)
+      ?.tiles.find((t) => t.x === player.coords.x);
+
+    if (spec && spec.tileSpec === MapTileSpec.Water) {
+      const metadata = this.getEffectMetadata(9);
+      playSfxById(metadata.sfx);
+      this.effects.push(
+        new EffectAnimation(
+          9,
+          new EffectTargetCharacter(this.playerId),
+          metadata,
+        ),
+      );
+    }
   }
 
   sit() {

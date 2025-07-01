@@ -1,5 +1,7 @@
 import {
+  AdminLevel,
   type EoReader,
+  MapTileSpec,
   PacketAction,
   PacketFamily,
   WalkPlayerServerPacket,
@@ -7,6 +9,8 @@ import {
 } from 'eolib';
 import type { Client } from '../client';
 import { CharacterWalkAnimation } from '../render/character-walk';
+import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
+import { playSfxById } from '../sfx';
 import { getPrevCoords } from '../utils/get-prev-coords';
 
 function handleWalkPlayer(client: Client, reader: EoReader) {
@@ -35,6 +39,26 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
       packet.direction,
     ),
   );
+
+  if (character.invisible && client.admin === AdminLevel.Player) {
+    return;
+  }
+
+  const spec = client.map.tileSpecRows
+    .find((r) => r.y === packet.coords.y)
+    ?.tiles.find((t) => t.x === packet.coords.x);
+
+  if (spec && spec.tileSpec === MapTileSpec.Water) {
+    const metadata = client.getEffectMetadata(9);
+    playSfxById(metadata.sfx);
+    client.effects.push(
+      new EffectAnimation(
+        9,
+        new EffectTargetCharacter(packet.playerId),
+        metadata,
+      ),
+    );
+  }
 }
 
 function handleWalkReply(client: Client, reader: EoReader) {

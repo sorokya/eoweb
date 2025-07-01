@@ -102,6 +102,7 @@ export enum SfxId {
 }
 
 const SFX: HTMLAudioElement[] = [];
+const pool: HTMLAudioElement[] = [];
 
 export function playSfxById(id: SfxId, volume = 1.0) {
   const sfx = SFX[id];
@@ -110,8 +111,17 @@ export function playSfxById(id: SfxId, volume = 1.0) {
     return;
   }
 
-  sfx.volume = volume;
-  sfx.play();
+  const dupe = sfx.cloneNode(true) as HTMLAudioElement;
+  dupe.volume = volume;
+  dupe.play();
+
+  dupe.addEventListener('ended', () => {
+    const i = pool.indexOf(dupe);
+    if (i !== -1) pool.splice(i, 1);
+    dupe.src = '';
+  });
+
+  pool.push(dupe);
 }
 
 export function loadSfxById(id: SfxId, play = true, volume = 1.0) {
