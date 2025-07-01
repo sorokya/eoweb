@@ -82,6 +82,7 @@ import {
   HALF_TILE_HEIGHT,
   HOST,
   IDLE_TICKS,
+  INITIAL_IDLE_TICKS,
   MAX_CHARACTER_NAME_LENGTH,
   MAX_CHAT_LENGTH,
   USAGE_TICKS,
@@ -292,7 +293,10 @@ export class Client {
   quakePower = 0;
   quakeOffset = 0;
   interactNpcIndex = 0;
-  idleTicks = IDLE_TICKS;
+  idleTicks = INITIAL_IDLE_TICKS;
+  drunk = false;
+  drunkEmoteTicks = 0;
+  drunkTicks = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -466,6 +470,20 @@ export class Client {
       if (!this.idleTicks) {
         this.emote(EmoteType.Moon);
         this.idleTicks = IDLE_TICKS;
+      }
+
+      if (this.drunk) {
+        this.drunkEmoteTicks = Math.max(this.drunkEmoteTicks - 1, 0);
+        if (!this.drunkEmoteTicks) {
+          this.emote(EmoteType.Drunk);
+          this.drunkEmoteTicks = 10 + randomRange(0, 8) * 5;
+        }
+
+        this.drunkTicks = Math.max(this.drunkTicks - 1, 0);
+        if (!this.drunkTicks) {
+          this.drunk = false;
+          this.drunkEmoteTicks = 0;
+        }
       }
     }
 
@@ -1228,7 +1246,7 @@ export class Client {
     const packet = new FacePlayerClientPacket();
     packet.direction = direction;
     this.bus.send(packet);
-    this.idleTicks = IDLE_TICKS;
+    this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   walk(direction: Direction, coords: Coords, timestamp: number) {
@@ -1261,7 +1279,7 @@ export class Client {
     packet.walkAction.coords = coords;
     packet.walkAction.timestamp = timestamp;
     this.bus.send(packet);
-    this.idleTicks = IDLE_TICKS;
+    this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   attack(direction: Direction, timestamp: number) {
@@ -1290,7 +1308,7 @@ export class Client {
         ),
       );
     }
-    this.idleTicks = IDLE_TICKS;
+    this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   sit() {
@@ -1301,14 +1319,14 @@ export class Client {
     packet.sitActionData.cursorCoords.x = 0;
     packet.sitActionData.cursorCoords.y = 0;
     this.bus.send(packet);
-    this.idleTicks = IDLE_TICKS;
+    this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   stand() {
     const packet = new SitRequestClientPacket();
     packet.sitAction = SitAction.Stand;
     this.bus.send(packet);
-    this.idleTicks = IDLE_TICKS;
+    this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   disconnect() {
