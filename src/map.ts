@@ -44,7 +44,7 @@ import {
   renderCharacterStanding,
 } from './render/character-standing';
 import { CharacterWalkAnimation } from './render/character-walk';
-import { EffectTargetCharacter } from './render/effect';
+import { EffectTargetCharacter, EffectTargetTile } from './render/effect';
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
 import { renderNpcHealthBar } from './render/npc-health-bar';
@@ -394,6 +394,31 @@ export class MapRenderer {
 
     if (this.client.state !== GameState.InGame) {
       return;
+    }
+
+    const tileEffects = this.client.effects.filter(
+      (e) => e.target instanceof EffectTargetTile,
+    );
+    for (const effect of tileEffects) {
+      const target = effect.target as EffectTargetTile;
+      const tileScreen = isoToScreen(target.coords);
+      effect.target.rect = new Rectangle(
+        {
+          x: Math.floor(
+            tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+          ),
+          y: Math.floor(
+            tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
+          ),
+        },
+        TILE_WIDTH,
+        TILE_HEIGHT,
+      );
+      effect.renderBehind(ctx);
+      ctx.globalAlpha = 0.4;
+      effect.renderTransparent(ctx);
+      ctx.globalAlpha = 1;
+      effect.renderFront(ctx);
     }
 
     const main = entities.find(

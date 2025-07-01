@@ -3,11 +3,14 @@ import {
   PacketAction,
   PacketFamily,
   WarpAgreeServerPacket,
+  WarpEffect,
   WarpRequestServerPacket,
   WarpType,
 } from 'eolib';
 import type { Client } from '../client';
 import { getEmf } from '../db';
+import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleWarpRequest(client: Client, reader: EoReader) {
   const packet = WarpRequestServerPacket.deserialize(reader);
@@ -51,6 +54,22 @@ function handleWarpAgree(client: Client, reader: EoReader) {
     client.preloadNpcSprites(npc.id);
 
     loaded.push(npc.id);
+  }
+
+  if (
+    packet.warpTypeData instanceof WarpAgreeServerPacket.WarpTypeDataMapSwitch
+  ) {
+    if (packet.warpTypeData.warpEffect === WarpEffect.Admin) {
+      const metadata = client.getEffectMetadata(4);
+      playSfxById(SfxId.AdminWarp);
+      client.effects.push(
+        new EffectAnimation(
+          4,
+          new EffectTargetCharacter(client.playerId),
+          metadata,
+        ),
+      );
+    }
   }
 
   if (client.mapId !== client.warpMapId) {
