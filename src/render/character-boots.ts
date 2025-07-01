@@ -75,9 +75,9 @@ const MALE_RANGED_ATTACK_OFFSETS = {
 
 const FEMALE_RANGED_ATTACK_OFFSETS = {
   [Direction.Up]: { x: -1, y: 7 },
-  [Direction.Down]: { x: 2, y: 6 },
+  [Direction.Down]: { x: 0, y: 8 },
   [Direction.Left]: { x: 2, y: 6 },
-  [Direction.Right]: { x: -1, y: 6 },
+  [Direction.Right]: { x: 1, y: 8 },
 };
 
 const FEMALE_MELEE_ATTACK_OFFSETS = [

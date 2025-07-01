@@ -27,10 +27,10 @@ const MALE_WALKING_OFFSETS = {
 };
 
 const FEMALE_RANGED_ATTACK_OFFSETS = {
-  [Direction.Up]: { x: 0, y: 0 },
-  [Direction.Down]: { x: 3, y: 0 },
-  [Direction.Left]: { x: 3, y: 0 },
-  [Direction.Right]: { x: 0, y: 0 },
+  [Direction.Up]: { x: -3, y: 0 },
+  [Direction.Down]: { x: 2, y: 1 },
+  [Direction.Left]: { x: 2, y: 0 },
+  [Direction.Right]: { x: -3, y: 1 },
 };
 
 const MALE_RANGED_ATTACK_OFFSETS = {

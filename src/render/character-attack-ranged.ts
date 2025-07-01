@@ -17,6 +17,20 @@ import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
 import { CharacterAnimation } from './character-base-animation';
 
+const FEMALE_RANGE_ATTACK_OFFSETS = {
+  [Direction.Up]: { x: 0, y: 0 },
+  [Direction.Down]: { x: -2, y: 2 },
+  [Direction.Left]: { x: 0, y: 0 },
+  [Direction.Right]: { x: -2, y: 2 },
+};
+
+const MALE_RANGE_ATTACK_OFFSETS = {
+  [Direction.Up]: { x: 0, y: 0 },
+  [Direction.Down]: { x: 0, y: 0 },
+  [Direction.Left]: { x: 0, y: 0 },
+  [Direction.Right]: { x: 0, y: 0 },
+};
+
 export class CharacterRangedAttackAnimation extends CharacterAnimation {
   direction: Direction;
 
@@ -100,11 +114,21 @@ export class CharacterRangedAttackAnimation extends CharacterAnimation {
       ctx.scale(-1, 1); // Flip horizontally
     }
 
-    const drawX = Math.floor(
-      mirrored
-        ? GAME_WIDTH - rect.position.x - CHARACTER_RANGE_ATTACK_WIDTH
-        : rect.position.x,
-    );
+    const drawX =
+      Math.floor(
+        mirrored
+          ? GAME_WIDTH - rect.position.x - CHARACTER_RANGE_ATTACK_WIDTH
+          : rect.position.x,
+      ) +
+      (character.gender === Gender.Female
+        ? FEMALE_RANGE_ATTACK_OFFSETS[this.direction].x
+        : MALE_RANGE_ATTACK_OFFSETS[this.direction].x);
+
+    const drawY =
+      rect.position.y +
+      (character.gender === Gender.Female
+        ? FEMALE_RANGE_ATTACK_OFFSETS[this.direction].y
+        : MALE_RANGE_ATTACK_OFFSETS[this.direction].y);
 
     const startX =
       character.gender === Gender.Female ? 0 : CHARACTER_RANGE_ATTACK_WIDTH * 2;
@@ -123,7 +147,7 @@ export class CharacterRangedAttackAnimation extends CharacterAnimation {
       CHARACTER_RANGE_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
       drawX,
-      rect.position.y,
+      drawY,
       CHARACTER_RANGE_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
     );
