@@ -115,6 +115,7 @@ function handleItemReply(client: Client, reader: EoReader) {
         client.playerId,
         new HealthBar(percent, 0, data.hpGain),
       );
+      client.emit('statsUpdate', undefined);
       break;
     }
     case ItemType.Alcohol:
