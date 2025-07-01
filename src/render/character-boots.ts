@@ -67,17 +67,17 @@ const MALE_WALKING_OFFSETS = [
 ];
 
 const MALE_RANGED_ATTACK_OFFSETS = {
-  [Direction.Up]: { x: 0, y: 5 },
+  [Direction.Up]: { x: 3, y: 5 },
   [Direction.Down]: { x: 3, y: 5 },
-  [Direction.Left]: { x: 0, y: 5 },
-  [Direction.Right]: { x: 0, y: 5 },
+  [Direction.Left]: { x: -1, y: 4 },
+  [Direction.Right]: { x: -1, y: 5 },
 };
 
 const FEMALE_RANGED_ATTACK_OFFSETS = {
-  [Direction.Up]: { x: 0, y: 5 },
-  [Direction.Down]: { x: 0, y: 5 },
-  [Direction.Left]: { x: 0, y: 5 },
-  [Direction.Right]: { x: 0, y: 5 },
+  [Direction.Up]: { x: -1, y: 7 },
+  [Direction.Down]: { x: 0, y: 8 },
+  [Direction.Left]: { x: 2, y: 6 },
+  [Direction.Right]: { x: 1, y: 8 },
 };
 
 const FEMALE_MELEE_ATTACK_OFFSETS = [
