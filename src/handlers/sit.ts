@@ -1,5 +1,7 @@
 import {
+  AdminLevel,
   type EoReader,
+  MapTileSpec,
   PacketAction,
   PacketFamily,
   SitCloseServerPacket,
@@ -9,6 +11,8 @@ import {
   SitState,
 } from 'eolib';
 import type { Client } from '../client';
+import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
+import { playSfxById } from '../sfx';
 
 function handleSitPlayer(client: Client, reader: EoReader) {
   const packet = SitPlayerServerPacket.deserialize(reader);
@@ -24,6 +28,26 @@ function handleSitPlayer(client: Client, reader: EoReader) {
   character.coords.y = packet.coords.y;
   character.direction = packet.direction;
   character.sitState = SitState.Floor;
+
+  if (character.invisible && client.admin === AdminLevel.Player) {
+    return;
+  }
+
+  const spec = client.map.tileSpecRows
+    .find((r) => r.y === packet.coords.y)
+    ?.tiles.find((t) => t.x === packet.coords.x);
+
+  if (spec && spec.tileSpec === MapTileSpec.Water) {
+    const metadata = client.getEffectMetadata(9);
+    playSfxById(metadata.sfx);
+    client.effects.push(
+      new EffectAnimation(
+        9,
+        new EffectTargetCharacter(packet.playerId),
+        metadata,
+      ),
+    );
+  }
 }
 
 function handleSitRemove(client: Client, reader: EoReader) {
@@ -70,6 +94,22 @@ function handleSitReply(client: Client, reader: EoReader) {
   character.coords.y = packet.coords.y;
   character.direction = packet.direction;
   character.sitState = SitState.Floor;
+
+  const spec = client.map.tileSpecRows
+    .find((r) => r.y === packet.coords.y)
+    ?.tiles.find((t) => t.x === packet.coords.x);
+
+  if (spec && spec.tileSpec === MapTileSpec.Water) {
+    const metadata = client.getEffectMetadata(9);
+    playSfxById(metadata.sfx);
+    client.effects.push(
+      new EffectAnimation(
+        9,
+        new EffectTargetCharacter(client.playerId),
+        metadata,
+      ),
+    );
+  }
 }
 
 export function registerSitHandlers(client: Client) {

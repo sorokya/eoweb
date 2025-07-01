@@ -115,11 +115,20 @@ function handleItemReply(client: Client, reader: EoReader) {
         client.playerId,
         new HealthBar(percent, 0, data.hpGain),
       );
+      client.emit('statsUpdate', undefined);
       break;
     }
-    case ItemType.Alcohol:
-      // TODO: Drunk state
+    case ItemType.Alcohol: {
+      const record = client.getEifRecordById(packet.usedItem.id);
+      if (!record) {
+        break;
+      }
+
+      client.drunk = true;
+      client.drunkTicks = 100 + record.spec1 * 10;
+      client.drunkEmoteTicks = 20;
       break;
+    }
     case ItemType.HairDye: {
       const player = client.getPlayerCharacter();
       if (player) {

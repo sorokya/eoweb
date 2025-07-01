@@ -9,15 +9,29 @@ import {
   WarpEffect,
 } from 'eolib';
 import type { Client } from '../client';
+import { EffectAnimation, EffectTargetTile } from '../render/effect';
 import { playSfxById, SfxId } from '../sfx';
 
 function handleAvatarRemove(client: Client, reader: EoReader) {
   const packet = AvatarRemoveServerPacket.deserialize(reader);
+  const character = client.getCharacterById(packet.playerId);
+  if (!character) {
+    return;
+  }
+
   switch (packet.warpEffect) {
-    case WarpEffect.Admin:
-      // TODO: warp animation
+    case WarpEffect.Admin: {
+      const metadata = client.getEffectMetadata(3);
+      client.effects.push(
+        new EffectAnimation(
+          3,
+          new EffectTargetTile(character.coords),
+          metadata,
+        ),
+      );
       playSfxById(SfxId.AdminWarp);
       break;
+    }
     case WarpEffect.Scroll:
       playSfxById(SfxId.ScrollTeleport);
       break;

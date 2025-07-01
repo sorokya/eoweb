@@ -1,4 +1,6 @@
 import {
+  EffectAgreeServerPacket,
+  EffectPlayerServerPacket,
   EffectSpecServerPacket,
   EffectUseServerPacket,
   type EoReader,
@@ -9,6 +11,11 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '../client';
+import {
+  EffectAnimation,
+  EffectTargetCharacter,
+  EffectTargetTile,
+} from '../render/effect';
 import { playSfxById, SfxId } from '../sfx';
 import { getDistance } from '../utils/range';
 
@@ -79,6 +86,40 @@ function handleEffectUse(client: Client, reader: EoReader) {
   }
 }
 
+function handleEffectAgree(client: Client, reader: EoReader) {
+  const packet = EffectAgreeServerPacket.deserialize(reader);
+  for (const effect of packet.effects) {
+    const meta = client.getEffectMetadata(effect.effectId + 1);
+    if (meta.sfx) {
+      playSfxById(meta.sfx);
+    }
+    client.effects.push(
+      new EffectAnimation(
+        effect.effectId + 1,
+        new EffectTargetTile(effect.coords),
+        meta,
+      ),
+    );
+  }
+}
+
+function handleEffectPlayer(client: Client, reader: EoReader) {
+  const packet = EffectPlayerServerPacket.deserialize(reader);
+  for (const effect of packet.effects) {
+    const meta = client.getEffectMetadata(effect.effectId + 1);
+    if (meta.sfx) {
+      playSfxById(meta.sfx);
+    }
+    client.effects.push(
+      new EffectAnimation(
+        effect.effectId + 1,
+        new EffectTargetCharacter(effect.playerId),
+        meta,
+      ),
+    );
+  }
+}
+
 export function registerEffectHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Effect,
@@ -94,5 +135,15 @@ export function registerEffectHandlers(client: Client) {
     PacketFamily.Effect,
     PacketAction.Use,
     (reader) => handleEffectUse(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Effect,
+    PacketAction.Agree,
+    (reader) => handleEffectAgree(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Effect,
+    PacketAction.Player,
+    (reader) => handleEffectPlayer(client, reader),
   );
 }

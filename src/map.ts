@@ -44,6 +44,7 @@ import {
   renderCharacterStanding,
 } from './render/character-standing';
 import { CharacterWalkAnimation } from './render/character-walk';
+import { EffectTargetCharacter, EffectTargetTile } from './render/effect';
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
 import { renderNpcHealthBar } from './render/npc-health-bar';
@@ -186,7 +187,7 @@ export class MapRenderer {
     this.animationTicks = Math.max(this.animationTicks - 1, 0);
     this.timedSpikesTicks = Math.max(this.timedSpikesTicks - 1, 0);
     if (!this.animationTicks) {
-      this.animationFrame = (this.animationFrame + 1) % 3; // TODO: This might not be the right number of frames
+      this.animationFrame = (this.animationFrame + 1) % 4;
       this.animationTicks = ANIMATION_TICKS;
     }
 
@@ -393,6 +394,31 @@ export class MapRenderer {
 
     if (this.client.state !== GameState.InGame) {
       return;
+    }
+
+    const tileEffects = this.client.effects.filter(
+      (e) => e.target instanceof EffectTargetTile,
+    );
+    for (const effect of tileEffects) {
+      const target = effect.target as EffectTargetTile;
+      const tileScreen = isoToScreen(target.coords);
+      effect.target.rect = new Rectangle(
+        {
+          x: Math.floor(
+            tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+          ),
+          y: Math.floor(
+            tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
+          ),
+        },
+        TILE_WIDTH,
+        TILE_HEIGHT,
+      );
+      effect.renderBehind(ctx);
+      ctx.globalAlpha = 0.4;
+      effect.renderTransparent(ctx);
+      ctx.globalAlpha = 1;
+      effect.renderFront(ctx);
     }
 
     const main = entities.find(
@@ -698,6 +724,16 @@ export class MapRenderer {
       return;
     }
 
+    const effects = this.client.effects.filter(
+      (e) =>
+        e.target instanceof EffectTargetCharacter &&
+        e.target.playerId === character.playerId,
+    );
+    for (const effect of effects) {
+      effect.target.rect = rect;
+      effect.renderBehind(ctx);
+    }
+
     const characterCtx =
       entity.typeId === this.client.playerId
         ? this.mainCharacterCtx
@@ -764,6 +800,13 @@ export class MapRenderer {
       } else if (!character.invisible) {
         ctx.drawImage(this.characterCanvas, 0, 0);
       }
+    }
+
+    for (const effect of effects) {
+      ctx.globalAlpha = 0.4;
+      effect.renderTransparent(ctx);
+      ctx.globalAlpha = 1;
+      effect.renderFront(ctx);
     }
 
     if (!character.invisible || this.client.admin !== AdminLevel.Player) {

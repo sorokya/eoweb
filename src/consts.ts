@@ -46,3 +46,5 @@ export const CLEAR_OUT_OF_RANGE_TICKS = 8;
 export const USAGE_TICKS = 500;
 export const EMOTE_ANIMATION_FRAMES = 4;
 export const EMOTE_ANIMATION_TICKS = 8;
+export const INITIAL_IDLE_TICKS = 2500;
+export const IDLE_TICKS = 250;

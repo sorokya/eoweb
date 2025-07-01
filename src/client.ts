@@ -24,7 +24,7 @@ import {
   type EifRecord,
   type Emf,
   EmoteReportClientPacket,
-  type Emote as EmoteType,
+  Emote as EmoteType,
   type Enf,
   type EnfRecord,
   EquipmentPaperdoll,
@@ -81,6 +81,8 @@ import {
   CLEAR_OUT_OF_RANGE_TICKS,
   HALF_TILE_HEIGHT,
   HOST,
+  IDLE_TICKS,
+  INITIAL_IDLE_TICKS,
   MAX_CHARACTER_NAME_LENGTH,
   MAX_CHAT_LENGTH,
   USAGE_TICKS,
@@ -121,14 +123,21 @@ import { MapRenderer } from './map';
 import { MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterWalkAnimation } from './render/character-walk';
+import { EffectAnimation, EffectTargetCharacter } from './render/effect';
 import { Emote } from './render/emote';
 import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
+import {
+  EffectAnimationType,
+  EffectMetadata,
+  getEffectMetaData,
+} from './utils/get-effect-metadata';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { getWeaponMetaData, WeaponMetadata } from './utils/get-weapon-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
+import { makeDrunk } from './utils/make-drunk';
 import { randomRange } from './utils/random-range';
 import { inRange } from './utils/range';
 import { screenToIso } from './utils/screen-to-iso';
@@ -270,11 +279,13 @@ export class Client {
   npcHealthBars: Map<number, HealthBar> = new Map();
   characterHealthBars: Map<number, HealthBar> = new Map();
   characterEmotes: Map<number, Emote> = new Map();
+  effects: EffectAnimation[] = [];
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
   npcMetadata = getNpcMetaData();
   weaponMetadata = getWeaponMetaData();
+  effectMetadata = getEffectMetaData();
   doors: Door[] = [];
   typing = false;
   clearOutofRangeTicks = 0;
@@ -283,6 +294,10 @@ export class Client {
   quakePower = 0;
   quakeOffset = 0;
   interactNpcIndex = 0;
+  idleTicks = INITIAL_IDLE_TICKS;
+  drunk = false;
+  drunkEmoteTicks = 0;
+  drunkTicks = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -393,6 +408,28 @@ export class Client {
     return this.eif.items[id - 1];
   }
 
+  getEffectMetadata(graphicId: number): EffectMetadata {
+    const data = this.effectMetadata.get(graphicId);
+    if (data) {
+      return data;
+    }
+
+    return new EffectMetadata(
+      false,
+      false,
+      true,
+      0,
+      4,
+      2,
+      0,
+      0,
+      EffectAnimationType.Static,
+      null,
+      null,
+      null,
+    );
+  }
+
   getPlayerCoords() {
     const playerCharacter = this.getPlayerCharacter();
     if (playerCharacter) {
@@ -428,6 +465,26 @@ export class Client {
       if (!this.usageTicks) {
         this.usage += 1;
         this.usageTicks = USAGE_TICKS;
+      }
+
+      this.idleTicks = Math.max(this.idleTicks - 1, 0);
+      if (!this.idleTicks) {
+        this.emote(EmoteType.Moon);
+        this.idleTicks = IDLE_TICKS;
+      }
+
+      if (this.drunk) {
+        this.drunkEmoteTicks = Math.max(this.drunkEmoteTicks - 1, 0);
+        if (!this.drunkEmoteTicks) {
+          this.emote(EmoteType.Drunk);
+          this.drunkEmoteTicks = 10 + randomRange(0, 8) * 5;
+        }
+
+        this.drunkTicks = Math.max(this.drunkTicks - 1, 0);
+        if (!this.drunkTicks) {
+          this.drunk = false;
+          this.drunkEmoteTicks = 0;
+        }
       }
     }
 
@@ -571,6 +628,15 @@ export class Client {
     }
     for (const id of endedNpcChatBubbles) {
       this.npcChats.delete(id);
+    }
+
+    for (let i = this.effects.length - 1; i >= 0; i--) {
+      const effect = this.effects[i];
+      if (!effect.ticks && !effect.loops) {
+        this.effects.splice(i, 1);
+        continue;
+      }
+      effect.tick();
     }
 
     for (const door of this.doors) {
@@ -1010,7 +1076,10 @@ export class Client {
       return;
     }
 
-    const trimmed = message.substring(0, MAX_CHAT_LENGTH);
+    const trimmed = (this.drunk ? makeDrunk(message) : message).substring(
+      0,
+      MAX_CHAT_LENGTH,
+    );
 
     if (trimmed.startsWith('#') && this.handleCommand(trimmed)) {
       return;
@@ -1181,6 +1250,7 @@ export class Client {
     const packet = new FacePlayerClientPacket();
     packet.direction = direction;
     this.bus.send(packet);
+    this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   walk(direction: Direction, coords: Coords, timestamp: number) {
@@ -1192,11 +1262,28 @@ export class Client {
       playSfxById(SfxId.GhostPlayer);
     }
 
+    const spec = this.map.tileSpecRows
+      .find((r) => r.y === coords.y)
+      ?.tiles.find((t) => t.x === coords.x);
+
+    if (spec && spec.tileSpec === MapTileSpec.Water) {
+      const metadata = this.getEffectMetadata(9);
+      playSfxById(metadata.sfx);
+      this.effects.push(
+        new EffectAnimation(
+          9,
+          new EffectTargetCharacter(this.playerId),
+          metadata,
+        ),
+      );
+    }
+
     packet.walkAction = new WalkAction();
     packet.walkAction.direction = direction;
     packet.walkAction.coords = coords;
     packet.walkAction.timestamp = timestamp;
     this.bus.send(packet);
+    this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   attack(direction: Direction, timestamp: number) {
@@ -1209,6 +1296,23 @@ export class Client {
     const metadata = this.getWeaponMetadata(player.equipment.weapon);
     const index = randomRange(0, metadata.sfx.length - 1);
     playSfxById(metadata.sfx[index]);
+
+    const spec = this.map.tileSpecRows
+      .find((r) => r.y === player.coords.y)
+      ?.tiles.find((t) => t.x === player.coords.x);
+
+    if (spec && spec.tileSpec === MapTileSpec.Water) {
+      const metadata = this.getEffectMetadata(9);
+      playSfxById(metadata.sfx);
+      this.effects.push(
+        new EffectAnimation(
+          9,
+          new EffectTargetCharacter(this.playerId),
+          metadata,
+        ),
+      );
+    }
+    this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   sit() {
@@ -1219,12 +1323,14 @@ export class Client {
     packet.sitActionData.cursorCoords.x = 0;
     packet.sitActionData.cursorCoords.y = 0;
     this.bus.send(packet);
+    this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   stand() {
     const packet = new SitRequestClientPacket();
     packet.sitAction = SitAction.Stand;
     this.bus.send(packet);
+    this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   disconnect() {
