@@ -24,7 +24,7 @@ import {
   type EifRecord,
   type Emf,
   EmoteReportClientPacket,
-  type Emote as EmoteType,
+  Emote as EmoteType,
   type Enf,
   type EnfRecord,
   EquipmentPaperdoll,
@@ -81,6 +81,7 @@ import {
   CLEAR_OUT_OF_RANGE_TICKS,
   HALF_TILE_HEIGHT,
   HOST,
+  IDLE_TICKS,
   MAX_CHARACTER_NAME_LENGTH,
   MAX_CHAT_LENGTH,
   USAGE_TICKS,
@@ -291,6 +292,7 @@ export class Client {
   quakePower = 0;
   quakeOffset = 0;
   interactNpcIndex = 0;
+  idleTicks = IDLE_TICKS;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -458,6 +460,12 @@ export class Client {
       if (!this.usageTicks) {
         this.usage += 1;
         this.usageTicks = USAGE_TICKS;
+      }
+
+      this.idleTicks = Math.max(this.idleTicks - 1, 0);
+      if (!this.idleTicks) {
+        this.emote(EmoteType.Moon);
+        this.idleTicks = IDLE_TICKS;
       }
     }
 
@@ -1220,6 +1228,7 @@ export class Client {
     const packet = new FacePlayerClientPacket();
     packet.direction = direction;
     this.bus.send(packet);
+    this.idleTicks = IDLE_TICKS;
   }
 
   walk(direction: Direction, coords: Coords, timestamp: number) {
@@ -1252,6 +1261,7 @@ export class Client {
     packet.walkAction.coords = coords;
     packet.walkAction.timestamp = timestamp;
     this.bus.send(packet);
+    this.idleTicks = IDLE_TICKS;
   }
 
   attack(direction: Direction, timestamp: number) {
@@ -1280,6 +1290,7 @@ export class Client {
         ),
       );
     }
+    this.idleTicks = IDLE_TICKS;
   }
 
   sit() {
@@ -1290,12 +1301,14 @@ export class Client {
     packet.sitActionData.cursorCoords.x = 0;
     packet.sitActionData.cursorCoords.y = 0;
     this.bus.send(packet);
+    this.idleTicks = IDLE_TICKS;
   }
 
   stand() {
     const packet = new SitRequestClientPacket();
     packet.sitAction = SitAction.Stand;
     this.bus.send(packet);
+    this.idleTicks = IDLE_TICKS;
   }
 
   disconnect() {
