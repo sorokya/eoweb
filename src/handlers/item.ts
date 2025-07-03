@@ -16,6 +16,7 @@ import {
   PacketFamily,
 } from 'eolib';
 import { type Client, EquipmentSlot } from '../client';
+import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { playSfxById, SfxId } from '../sfx';
@@ -116,6 +117,22 @@ function handleItemReply(client: Client, reader: EoReader) {
         new HealthBar(percent, 0, data.hpGain),
       );
       client.emit('statsUpdate', undefined);
+      break;
+    }
+    case ItemType.EffectPotion: {
+      const data =
+        packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataEffectPotion;
+      const metadata = client.getEffectMetadata(data.effectId + 1);
+      if (metadata.sfx) {
+        playSfxById(metadata.sfx);
+      }
+      client.effects.push(
+        new EffectAnimation(
+          data.effectId + 1,
+          new EffectTargetCharacter(client.playerId),
+          metadata,
+        ),
+      );
       break;
     }
     case ItemType.Alcohol: {
