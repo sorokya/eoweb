@@ -300,6 +300,12 @@ const initializeSocket = (next: 'login' | 'create') => {
         'Lost connection',
       );
       smallAlertLargeHeader.show();
+    } else {
+      smallAlertLargeHeader.setContent(
+        'The game server could not be found, please try again at a later time',
+        'Could not find server',
+      );
+      smallAlertLargeHeader.show();
     }
     client.bus = null;
   });
