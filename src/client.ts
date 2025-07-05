@@ -15,6 +15,7 @@ import {
   CharacterSecondaryStats,
   type CharacterSelectionListEntry,
   ChestOpenClientPacket,
+  ChestTakeClientPacket,
   CitizenOpenClientPacket,
   Coords,
   type DialogEntry,
@@ -409,6 +410,7 @@ export class Client {
     game2: null,
     jukebox: null,
   };
+  chestCoords = new Coords();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -1926,6 +1928,14 @@ export class Client {
     packet.coords = new Coords();
     packet.coords.x = coords.x;
     packet.coords.y = coords.y;
+    this.chestCoords = packet.coords;
+    this.bus.send(packet);
+  }
+
+  takeChestItem(itemId: number) {
+    const packet = new ChestTakeClientPacket();
+    packet.coords = this.chestCoords;
+    packet.takeItemId = itemId;
     this.bus.send(packet);
   }
 }

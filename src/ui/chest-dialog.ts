@@ -112,14 +112,11 @@ export class ChestDialog extends Base {
         itemText.appendChild(quantityElement);
       }
 
-      itemElement.appendChild(itemText);
-      itemElement.addEventListener('mouseenter', () =>
-        itemElement.classList.add('hover'),
-      );
-      itemElement.addEventListener('mouseleave', () =>
-        itemElement.classList.remove('hover'),
-      );
+      itemElement.addEventListener('contextmenu', () => {
+        this.client.takeChestItem(item.id);
+      });
 
+      itemElement.appendChild(itemText);
       this.itemsList.appendChild(itemElement);
     }
   }
