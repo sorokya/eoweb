@@ -143,8 +143,6 @@ export class Inventory extends Base {
     uiContainer.addEventListener('drop', (e) => {
       e.preventDefault();
 
-      console.log(e.target);
-
       if (e.target === this.grid) {
         return;
       }
