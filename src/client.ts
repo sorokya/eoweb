@@ -1185,6 +1185,8 @@ export class Client {
     if (trimmed.startsWith('@') && this.admin !== AdminLevel.Player) {
       const packet = new TalkAnnounceClientPacket();
       packet.message = trimmed.substring(1);
+      this.characterChats.set(this.playerId, new ChatBubble(packet.message));
+      playSfxById(SfxId.AdminAnnounceReceived);
       this.bus.send(packet);
       return;
     }
