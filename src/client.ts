@@ -187,7 +187,9 @@ type ClientEvents = {
     equipment: EquipmentPaperdoll;
   };
   chestOpened: {
-    coords: { x: number; y: number };
+    items: ThreeItem[];
+  };
+  chestChanged: {
     items: ThreeItem[];
   };
 };
@@ -868,6 +870,16 @@ export class Client {
     );
   }
 
+  chestAt(coords: Coords): boolean {
+    return this.map.tileSpecRows.some(
+      (r) =>
+        r.y === coords.y &&
+        r.tiles.some(
+          (t) => t.x === coords.x && t.tileSpec === MapTileSpec.Chest,
+        ),
+    );
+  }
+
   openDoor(coords: Coords) {
     const door = this.getDoor(coords);
     if (!door || door.open) {
@@ -1041,13 +1053,7 @@ export class Client {
 
       if (tileSpec) {
         if (tileSpec.tileSpec === MapTileSpec.Chest) {
-          const coords = new Coords();
-          coords.x = this.mouseCoords.x;
-          coords.y = this.mouseCoords.y;
-
-          const packet = new ChestOpenClientPacket();
-          packet.coords = coords;
-          this.bus.send(packet);
+          this.openChest(this.mouseCoords);
           return;
         }
 
@@ -1913,5 +1919,13 @@ export class Client {
         character.equipment.weapon = graphicId;
         break;
     }
+  }
+
+  openChest(coords: Vector2) {
+    const packet = new ChestOpenClientPacket();
+    packet.coords = new Coords();
+    packet.coords.x = coords.x;
+    packet.coords.y = coords.y;
+    this.bus.send(packet);
   }
 }

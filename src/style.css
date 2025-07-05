@@ -1777,7 +1777,7 @@ div.icon[data-id="quest-message"] {
   width: 272px;
   height: 270px;
   background-color: #000;
-  background-image: url("/gfx/gfx001/120.png");
+  background-image: url("/gfx/gfx002/151.png");
 }
 
 #chest .title {
@@ -1810,7 +1810,7 @@ div.icon[data-id="quest-message"] {
   align-items: center;
   padding: 0 0.5rem;
   cursor: pointer;
-  height: 44px;
+  height: 38px;
   background-image: url("/gfx/gfx003/100.png");
   background-repeat: no-repeat;
   background-position: left center;
@@ -1861,34 +1861,8 @@ div.icon[data-id="quest-message"] {
   margin: 2px 0 0 0;
 }
 
-#chest .img-btn[data-id="chest-close"] {
+#chest button[data-id="cancel"] {
   position: absolute;
   top: 227px;
-  left: 50.2%;
-  margin-left: -45px;
-  z-index: 20;
-  background-color: transparent;
-  border: none;
-  outline: none;
-  background-image: url("/gfx/gfx001/115.png");
-  background-position: 0 -29px;
-  width: 91px;
-  height: 29px;
-  cursor: pointer;
-}
-
-#chest .img-btn[data-id="chest-close"]:hover {
-  background-position: -91px -29px;
-}
-
-#chest .empty-message,
-#chest .empty-chest {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #8a8a8a;
-  font-style: italic;
-  font-size: 12px;
-  text-align: center;
+  left: 92px;
 }

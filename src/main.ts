@@ -26,7 +26,7 @@ import { playSfxById, SfxId } from './sfx';
 import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
 import { Chat } from './ui/chat';
-import { ChestUI } from './ui/chest-ui';
+import { ChestDialog } from './ui/chest-dialog';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
@@ -256,7 +256,12 @@ client.on('openPaperdoll', ({ icon, equipment, details }) => {
 });
 
 client.on('chestOpened', ({ items }) => {
-  chestUI.openChest(items);
+  chestDialog.setItems(items);
+  chestDialog.show();
+});
+
+client.on('chestChanged', ({ items }) => {
+  chestDialog.setItems(items);
 });
 
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
@@ -335,7 +340,7 @@ const paperdoll = new Paperdoll(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
 const questDialog = new QuestDialog();
-const chestUI = new ChestUI(client);
+const chestDialog = new ChestDialog(client);
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');

@@ -156,6 +156,11 @@ export class MovementController {
           return;
         }
 
+        if (this.client.chestAt(to)) {
+          this.client.openChest(to);
+          return;
+        }
+
         if (this.client.isFacingChairAt(to) && !this.client.occupied(to)) {
           this.client.sitChair(to);
           return;
