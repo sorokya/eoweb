@@ -26,6 +26,7 @@ import { playSfxById, SfxId } from './sfx';
 import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
 import { Chat } from './ui/chat';
+import { ChestDialog } from './ui/chest-dialog';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
@@ -254,6 +255,15 @@ client.on('openPaperdoll', ({ icon, equipment, details }) => {
   paperdoll.show();
 });
 
+client.on('chestOpened', ({ items }) => {
+  chestDialog.setItems(items);
+  chestDialog.show();
+});
+
+client.on('chestChanged', ({ items }) => {
+  chestDialog.setItems(items);
+});
+
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.host);
   socket.addEventListener('open', () => {
@@ -330,6 +340,7 @@ const paperdoll = new Paperdoll(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
 const questDialog = new QuestDialog();
+const chestDialog = new ChestDialog(client);
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -540,6 +551,39 @@ inventory.on('junkItem', (itemId) => {
     itemAmountDialog.show();
   } else {
     client.junkItem(itemId, 1);
+  }
+});
+
+inventory.on('addChestItem', (itemId) => {
+  const item = client.items.find((i) => i.id === itemId);
+  if (!item) {
+    return;
+  }
+
+  const record = client.getEifRecordById(itemId);
+  if (!record) {
+    return;
+  }
+
+  if (item.amount > 1) {
+    client.typing = true;
+    itemAmountDialog.setMaxAmount(item.amount);
+    itemAmountDialog.setHeader('drop');
+    itemAmountDialog.setLabel(
+      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DROP)}`,
+    );
+    itemAmountDialog.setCallback(
+      (amount) => {
+        client.addChestItem(itemId, amount);
+        client.typing = false;
+      },
+      () => {
+        client.typing = false;
+      },
+    );
+    itemAmountDialog.show();
+  } else {
+    client.addChestItem(itemId, 1);
   }
 });
 

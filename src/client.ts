@@ -14,6 +14,9 @@ import {
   CharacterRequestClientPacket,
   CharacterSecondaryStats,
   type CharacterSelectionListEntry,
+  ChestAddClientPacket,
+  ChestOpenClientPacket,
+  ChestTakeClientPacket,
   CitizenOpenClientPacket,
   Coords,
   type DialogEntry,
@@ -108,6 +111,7 @@ import { registerAttackHandlers } from './handlers/attack';
 import { registerAvatarHandlers } from './handlers/avatar';
 import { registerChairHandlers } from './handlers/chair';
 import { registerCharacterHandlers } from './handlers/character';
+import { registerChestHandlers } from './handlers/chest';
 import { registerConnectionHandlers } from './handlers/connection';
 import { registerDoorHandlers } from './handlers/door';
 import { registerEffectHandlers } from './handlers/effect';
@@ -183,6 +187,12 @@ type ClientEvents = {
     icon: CharacterIcon;
     details: CharacterDetails;
     equipment: EquipmentPaperdoll;
+  };
+  chestOpened: {
+    items: ThreeItem[];
+  };
+  chestChanged: {
+    items: ThreeItem[];
   };
 };
 
@@ -401,6 +411,7 @@ export class Client {
     game2: null,
     jukebox: null,
   };
+  chestCoords = new Coords();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -862,6 +873,16 @@ export class Client {
     );
   }
 
+  chestAt(coords: Coords): boolean {
+    return this.map.tileSpecRows.some(
+      (r) =>
+        r.y === coords.y &&
+        r.tiles.some(
+          (t) => t.x === coords.x && t.tileSpec === MapTileSpec.Chest,
+        ),
+    );
+  }
+
   openDoor(coords: Coords) {
     const door = this.getDoor(coords);
     if (!door || door.open) {
@@ -976,6 +997,7 @@ export class Client {
     registerMusicHandlers(this);
     registerEmoteHandlers(this);
     registerPaperdollHandlers(this);
+    registerChestHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -1013,6 +1035,7 @@ export class Client {
     }
 
     if (this.mouseCoords) {
+      // Check for items first
       const itemsAtCoords = this.nearby.items.filter(
         (i) =>
           i.coords.x === this.mouseCoords.x &&
@@ -1023,6 +1046,30 @@ export class Client {
         const packet = new ItemGetClientPacket();
         packet.itemIndex = itemsAtCoords[0].uid;
         this.bus.send(packet);
+        return;
+      }
+
+      // Check tile specs for chests and chairs
+      const tileSpec = this.map.tileSpecRows
+        .find((r) => r.y === this.mouseCoords.y)
+        ?.tiles.find((t) => t.x === this.mouseCoords.x);
+
+      if (tileSpec) {
+        if (tileSpec.tileSpec === MapTileSpec.Chest) {
+          this.openChest(this.mouseCoords);
+          return;
+        }
+
+        if (
+          this.isFacingChairAt(this.mouseCoords) &&
+          !this.occupied(this.mouseCoords)
+        ) {
+          const coords = new Coords();
+          coords.x = this.mouseCoords.x;
+          coords.y = this.mouseCoords.y;
+          this.sitChair(coords);
+          return;
+        }
       }
     }
 
@@ -1041,18 +1088,6 @@ export class Client {
       if (door && !door.open) {
         this.openDoor(doorAt);
       }
-      return;
-    }
-
-    if (
-      this.mouseCoords &&
-      this.isFacingChairAt(this.mouseCoords) &&
-      !this.occupied(this.mouseCoords)
-    ) {
-      const coords = new Coords();
-      coords.x = this.mouseCoords.x;
-      coords.y = this.mouseCoords.y;
-      this.sitChair(coords);
       return;
     }
   }
@@ -1879,5 +1914,30 @@ export class Client {
         character.equipment.weapon = graphicId;
         break;
     }
+  }
+
+  openChest(coords: Vector2) {
+    const packet = new ChestOpenClientPacket();
+    packet.coords = new Coords();
+    packet.coords.x = coords.x;
+    packet.coords.y = coords.y;
+    this.chestCoords = packet.coords;
+    this.bus.send(packet);
+  }
+
+  takeChestItem(itemId: number) {
+    const packet = new ChestTakeClientPacket();
+    packet.coords = this.chestCoords;
+    packet.takeItemId = itemId;
+    this.bus.send(packet);
+  }
+
+  addChestItem(itemId: number, amount: number) {
+    const packet = new ChestAddClientPacket();
+    packet.addItem = new ThreeItem();
+    packet.addItem.id = itemId;
+    packet.addItem.amount = amount;
+    packet.coords = this.chestCoords;
+    this.bus.send(packet);
   }
 }
