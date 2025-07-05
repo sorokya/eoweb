@@ -1,7 +1,12 @@
-import { type EifRecord, ItemSize, ItemSpecial, ItemType } from 'eolib';
+import { ItemSize } from 'eolib';
 import mitt from 'mitt';
-import type { Client } from '../client';
+import {
+  type Client,
+  type EquipmentSlot,
+  getEquipmentSlotFromString,
+} from '../client';
 import { playSfxById, SfxId } from '../sfx';
+import { getItemMeta } from '../utils/get-item-meta';
 import type { Vector2 } from '../vector';
 import { Base } from './base-ui';
 
@@ -29,8 +34,11 @@ const ITEM_SIZE = {
 };
 
 type Events = {
-  dropItem: number;
+  dropItem: { at: 'cursor' | 'feet'; itemId: number };
   useItem: number;
+  openPaperdoll: undefined;
+  equipItem: { slot: EquipmentSlot; itemId: number };
+  junkItem: number;
 };
 
 export class Inventory extends Base {
@@ -40,6 +48,20 @@ export class Inventory extends Base {
   private grid: HTMLDivElement = this.container.querySelector('.grid');
   private positions: ItemPosition[] = [];
   private tab = 0;
+  private currentWeight: HTMLSpanElement =
+    this.container.querySelector('.weight .current');
+  private maxWeight: HTMLSpanElement =
+    this.container.querySelector('.weight .max');
+  private btnPaperdoll: HTMLButtonElement = this.container.querySelector(
+    'button[data-id="paperdoll"]',
+  );
+  private btnDrop: HTMLButtonElement = this.container.querySelector(
+    'button[data-id="drop"]',
+  );
+  private btnJunk: HTMLButtonElement = this.container.querySelector(
+    'button[data-id="junk"]',
+  );
+  private lastItemSelected = 0;
 
   constructor(client: Client) {
     super();
@@ -81,8 +103,13 @@ export class Inventory extends Base {
 
     this.grid.addEventListener('drop', (e) => {
       e.preventDefault();
+      const item = JSON.parse(e.dataTransfer?.getData('text/plain'));
+      if (item.source === 'paperdoll') {
+        client.unequipItem(item.slot);
+        return;
+      }
+
       playSfxById(SfxId.InventoryPlace);
-      const itemId = Number(e.dataTransfer?.getData('text/plain'));
       const rect = this.grid.getBoundingClientRect();
 
       const mouseX = e.clientX - rect.left;
@@ -91,7 +118,7 @@ export class Inventory extends Base {
       const gridX = Math.floor(mouseX / CELL_SIZE);
       const gridY = Math.floor(mouseY / CELL_SIZE);
 
-      this.tryMoveItem(itemId, gridX, gridY);
+      this.tryMoveItem(item.id, gridX, gridY);
     });
 
     const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -115,10 +142,87 @@ export class Inventory extends Base {
 
     uiContainer.addEventListener('drop', (e) => {
       e.preventDefault();
-      const itemId = Number(e.dataTransfer?.getData('text/plain'));
-      if (!Number.isNaN(itemId) && itemId > 0) {
-        playSfxById(SfxId.InventoryPlace);
-        this.emitter.emit('dropItem', itemId);
+
+      console.log(e.target);
+
+      if (e.target === this.grid) {
+        return;
+      }
+
+      const item = JSON.parse(e.dataTransfer?.getData('text/plain'));
+      if (Number.isNaN(item.id) || item.id < 1 || item.source !== 'inventory') {
+        return;
+      }
+
+      playSfxById(SfxId.InventoryPlace);
+
+      if (e.target === this.btnDrop) {
+        this.emitter.emit('dropItem', { at: 'feet', itemId: item.id });
+        return;
+      }
+
+      if (e.target === this.btnJunk) {
+        this.emitter.emit('junkItem', item.id);
+        return;
+      }
+
+      if (
+        e.target instanceof HTMLDivElement &&
+        e.target.classList.contains('item')
+      ) {
+        const slot = getEquipmentSlotFromString(
+          e.target.getAttribute('data-id'),
+        );
+        if (typeof slot === 'undefined') {
+          return;
+        }
+
+        this.emitter.emit('equipItem', {
+          slot,
+          itemId: item.id,
+        });
+
+        return;
+      }
+
+      if (e.target instanceof HTMLImageElement) {
+        const parent = e.target.parentElement;
+        if (
+          parent instanceof HTMLDivElement &&
+          parent.classList.contains('item')
+        ) {
+          const slot = getEquipmentSlotFromString(
+            parent.getAttribute('data-id'),
+          );
+          if (typeof slot === 'undefined') {
+            return;
+          }
+          return;
+        }
+      }
+
+      this.emitter.emit('dropItem', { at: 'cursor', itemId: item.id });
+    });
+
+    this.btnPaperdoll.addEventListener('click', () => {
+      playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('openPaperdoll', undefined);
+    });
+
+    this.btnDrop.addEventListener('click', () => {
+      playSfxById(SfxId.ButtonClick);
+      if (this.lastItemSelected) {
+        this.emitter.emit('dropItem', {
+          at: 'feet',
+          itemId: this.lastItemSelected,
+        });
+      }
+    });
+
+    this.btnJunk.addEventListener('click', () => {
+      playSfxById(SfxId.ButtonClick);
+      if (this.lastItemSelected) {
+        this.emitter.emit('junkItem', this.lastItemSelected);
       }
     });
   }
@@ -158,6 +262,9 @@ export class Inventory extends Base {
   private render() {
     this.grid.innerHTML = '';
 
+    this.currentWeight.innerText = this.client.weight.current.toString();
+    this.maxWeight.innerText = this.client.weight.max.toString();
+
     if (!this.client.items.length) {
       return;
     }
@@ -188,19 +295,24 @@ export class Inventory extends Base {
       imgContainer.style.gridColumn = `${position.x + 1} / span ${size.x}`;
       imgContainer.style.gridRow = `${position.y + 1} / span ${size.y}`;
       imgContainer.setAttribute('draggable', 'true');
-      imgContainer.dataset.itemId = String(item.id);
 
       imgContainer.addEventListener('dragstart', (e) => {
+        this.lastItemSelected = item.id;
         playSfxById(SfxId.InventoryPickup);
-        e.dataTransfer?.setData('text/plain', String(item.id));
+        e.dataTransfer?.setData(
+          'text/plain',
+          JSON.stringify({ source: 'inventory', id: item.id }),
+        );
       });
 
       imgContainer.addEventListener('click', (e) => {
         e.stopPropagation();
+        this.lastItemSelected = item.id;
       });
 
       imgContainer.addEventListener('dblclick', (e) => {
         e.stopPropagation();
+        this.lastItemSelected = item.id;
         playSfxById(SfxId.InventoryPlace);
         this.emitter.emit('useItem', item.id);
       });
@@ -208,6 +320,7 @@ export class Inventory extends Base {
       imgContainer.addEventListener('contextmenu', (e) => {
         e.stopPropagation();
         e.preventDefault();
+        this.lastItemSelected = item.id;
         playSfxById(SfxId.InventoryPlace);
         this.emitter.emit('useItem', item.id);
       });
@@ -365,221 +478,4 @@ export class Inventory extends Base {
       this.hide();
     }
   }
-}
-
-function getItemMeta(item: EifRecord): string[] {
-  const meta = [];
-
-  let itemType = '';
-  switch (item.type) {
-    case ItemType.General: {
-      itemType = 'general item';
-      break;
-    }
-    case ItemType.Currency:
-      itemType = 'currency';
-      break;
-    case ItemType.Heal:
-      itemType = 'potion';
-      if (item.hp) {
-        itemType += ` + ${item.hp}hp`;
-      }
-      if (item.tp) {
-        itemType += ` + ${item.tp}mp`;
-      }
-      break;
-    case ItemType.Teleport:
-      itemType = 'teleport';
-      break;
-    case ItemType.ExpReward:
-      itemType = 'exp reward';
-      break;
-    case ItemType.Key:
-      itemType = 'key';
-      break;
-    case ItemType.Alcohol:
-      itemType = 'beverage';
-      break;
-    case ItemType.EffectPotion:
-      itemType = 'effect';
-      break;
-    case ItemType.HairDye:
-      itemType = 'hairdye';
-      break;
-    case ItemType.CureCurse:
-      itemType = 'cure';
-      break;
-    default:
-      if (item.special === ItemSpecial.Cursed) {
-        itemType = 'cursed';
-      } else if (item.special === ItemSpecial.Lore) {
-        itemType = 'lore';
-      } else {
-        itemType = 'normal';
-      }
-
-      if (item.type === ItemType.Armor) {
-        if (item.spec2 === 1) {
-          itemType += ' male';
-        } else {
-          itemType += ' female';
-        }
-      }
-
-      switch (item.type) {
-        case ItemType.Weapon:
-          itemType += ' weapon';
-          break;
-        case ItemType.Shield:
-          itemType += ' shield';
-          break;
-        case ItemType.Armor:
-          itemType += ' clothing';
-          break;
-        case ItemType.Hat:
-          itemType += ' hat';
-          break;
-        case ItemType.Boots:
-          itemType += ' boots';
-          break;
-        case ItemType.Gloves:
-          itemType += ' gloves';
-          break;
-        case ItemType.Accessory:
-          itemType += ' accessory';
-          break;
-        case ItemType.Belt:
-          itemType += ' belt';
-          break;
-        case ItemType.Necklace:
-          itemType += ' necklace';
-          break;
-        case ItemType.Ring:
-          itemType += ' ring';
-          break;
-        case ItemType.Armlet:
-          itemType += ' bracelet';
-          break;
-        case ItemType.Bracer:
-          itemType += ' bracer';
-          break;
-      }
-  }
-
-  meta.push(itemType);
-
-  if (item.type >= 10 && item.type <= 21) {
-    if (item.minDamage || item.maxDamage) {
-      meta.push(`damage: ${item.minDamage} - ${item.maxDamage}`);
-    }
-
-    if (item.hp || item.tp) {
-      let add = 'add+';
-      if (item.hp) {
-        add += ` ${item.hp}hp`;
-      }
-
-      if (item.tp) {
-        add += ` ${item.tp}tp`;
-      }
-
-      meta.push(add);
-    }
-
-    if (item.accuracy || item.evade || item.armor) {
-      let def = 'def+';
-      if (item.accuracy) {
-        def += ` ${item.accuracy}acc`;
-      }
-
-      if (item.evade) {
-        def += ` ${item.evade}eva`;
-      }
-
-      if (item.armor) {
-        def += ` ${item.armor}arm`;
-      }
-      meta.push(def);
-    }
-
-    if (item.str || item.intl || item.wis || item.agi || item.cha || item.con) {
-      let stat = 'stat+';
-
-      if (item.str) {
-        stat += ` ${item.str}str`;
-      }
-
-      if (item.intl) {
-        stat += ` ${item.intl}int`;
-      }
-
-      if (item.wis) {
-        stat += ` ${item.wis}wis`;
-      }
-
-      if (item.agi) {
-        stat += ` ${item.agi}agi`;
-      }
-
-      if (item.cha) {
-        stat += ` ${item.cha}cha`;
-      }
-
-      if (item.con) {
-        stat += ` ${item.con}con`;
-      }
-
-      meta.push(stat);
-    }
-  }
-
-  if (
-    item.levelRequirement ||
-    item.classRequirement ||
-    item.strRequirement ||
-    item.intRequirement ||
-    item.wisRequirement ||
-    item.agiRequirement ||
-    item.chaRequirement ||
-    item.conRequirement
-  ) {
-    let req = 'req:';
-
-    if (item.levelRequirement) {
-      req += ` ${item.levelRequirement}LVL`;
-    }
-
-    if (item.classRequirement) {
-      // TODO: Load class name
-      req += ` Class ${item.classRequirement}`;
-    }
-
-    if (item.strRequirement) {
-      req += ` ${item.strRequirement}str`;
-    }
-
-    if (item.intRequirement) {
-      req += ` ${item.intRequirement}int`;
-    }
-
-    if (item.wisRequirement) {
-      req += ` ${item.wisRequirement}wis`;
-    }
-
-    if (item.agiRequirement) {
-      req += ` ${item.agiRequirement}agi`;
-    }
-
-    if (item.chaRequirement) {
-      req += ` ${item.chaRequirement}cha`;
-    }
-
-    if (item.conRequirement) {
-      req += ` ${item.conRequirement}con`;
-    }
-
-    meta.push(req);
-  }
-
-  return meta;
 }

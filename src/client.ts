@@ -8,6 +8,8 @@ import {
   ByteCoords,
   ChairRequestClientPacket,
   CharacterBaseStats,
+  type CharacterDetails,
+  type CharacterIcon,
   type CharacterMapInfo,
   CharacterRequestClientPacket,
   CharacterSecondaryStats,
@@ -20,6 +22,7 @@ import {
   type Direction,
   DoorOpenClientPacket,
   type Ecf,
+  type EcfRecord,
   type Eif,
   type EifRecord,
   type Emf,
@@ -33,10 +36,12 @@ import {
   FileType,
   type Gender,
   GuildOpenClientPacket,
-  type Item,
+  Item,
   ItemDropClientPacket,
   ItemGetClientPacket,
+  ItemJunkClientPacket,
   type ItemMapInfo,
+  ItemSpecial,
   ItemType,
   ItemUseClientPacket,
   LoginRequestClientPacket,
@@ -47,6 +52,9 @@ import {
   type NpcMapInfo,
   NpcRangeRequestClientPacket,
   NpcType,
+  PaperdollAddClientPacket,
+  PaperdollRemoveClientPacket,
+  PaperdollRequestClientPacket,
   PlayerRangeRequestClientPacket,
   PriestOpenClientPacket,
   QuestAcceptClientPacket,
@@ -109,6 +117,7 @@ import { registerLoginHandlers } from './handlers/login';
 import { registerMessageHandlers } from './handlers/message';
 import { registerMusicHandlers } from './handlers/music';
 import { registerNpcHandlers } from './handlers/npc';
+import { registerPaperdollHandlers } from './handlers/paperdoll';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerQuestHandlers } from './handlers/quest';
 import { registerRangeHandlers } from './handlers/range';
@@ -159,6 +168,7 @@ type ClientEvents = {
   accountCreated: undefined;
   passwordChanged: undefined;
   inventoryChanged: undefined;
+  equipmentChanged: undefined;
   statsUpdate: undefined;
   reconnect: undefined;
   openQuestDialog: {
@@ -166,6 +176,11 @@ type ClientEvents = {
     questId: number;
     quests: DialogQuestEntry[];
     dialog: DialogEntry[];
+  };
+  openPaperdoll: {
+    icon: CharacterIcon;
+    details: CharacterDetails;
+    equipment: EquipmentPaperdoll;
   };
 };
 
@@ -201,6 +216,79 @@ export enum EquipmentSlot {
   Armlet2 = 12,
   Bracer1 = 13,
   Bracer2 = 14,
+}
+
+export function getEquipmentSlotFromString(
+  slot: string,
+): EquipmentSlot | undefined {
+  switch (slot) {
+    case 'boots':
+      return EquipmentSlot.Boots;
+    case 'accessory':
+      return EquipmentSlot.Accessory;
+    case 'gloves':
+      return EquipmentSlot.Gloves;
+    case 'belt':
+      return EquipmentSlot.Belt;
+    case 'armor':
+      return EquipmentSlot.Armor;
+    case 'necklace':
+      return EquipmentSlot.Necklace;
+    case 'hat':
+      return EquipmentSlot.Hat;
+    case 'shield':
+      return EquipmentSlot.Shield;
+    case 'weapon':
+      return EquipmentSlot.Weapon;
+    case 'ring-1':
+      return EquipmentSlot.Ring1;
+    case 'ring-2':
+      return EquipmentSlot.Ring2;
+    case 'armlet-1':
+      return EquipmentSlot.Armlet1;
+    case 'armlet-2':
+      return EquipmentSlot.Armlet2;
+    case 'bracer-1':
+      return EquipmentSlot.Bracer1;
+    case 'bracer-2':
+      return EquipmentSlot.Bracer2;
+    default:
+      return undefined;
+  }
+}
+
+export function getEquipmentSlotForItemType(
+  type: ItemType,
+  subLoc = 0,
+): EquipmentSlot | undefined {
+  switch (type) {
+    case ItemType.Boots:
+      return EquipmentSlot.Boots;
+    case ItemType.Accessory:
+      return EquipmentSlot.Accessory;
+    case ItemType.Gloves:
+      return EquipmentSlot.Gloves;
+    case ItemType.Belt:
+      return EquipmentSlot.Belt;
+    case ItemType.Armor:
+      return EquipmentSlot.Armor;
+    case ItemType.Necklace:
+      return EquipmentSlot.Necklace;
+    case ItemType.Hat:
+      return EquipmentSlot.Hat;
+    case ItemType.Shield:
+      return EquipmentSlot.Shield;
+    case ItemType.Weapon:
+      return EquipmentSlot.Weapon;
+    case ItemType.Ring:
+      return subLoc ? EquipmentSlot.Ring2 : EquipmentSlot.Ring1;
+    case ItemType.Armlet:
+      return subLoc ? EquipmentSlot.Armlet2 : EquipmentSlot.Armlet1;
+    case ItemType.Bracer:
+      return subLoc ? EquipmentSlot.Bracer2 : EquipmentSlot.Bracer1;
+    default:
+      return undefined;
+  }
 }
 
 type AccountCreateData = {
@@ -406,6 +494,14 @@ export class Client {
     }
 
     return this.eif.items[id - 1];
+  }
+
+  getEcfRecordById(id: number): EcfRecord | undefined {
+    if (!this.ecf) {
+      return;
+    }
+
+    return this.ecf.classes[id - 1];
   }
 
   getEffectMetadata(graphicId: number): EffectMetadata {
@@ -837,6 +933,7 @@ export class Client {
     registerQuestHandlers(this);
     registerMusicHandlers(this);
     registerEmoteHandlers(this);
+    registerPaperdollHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -1417,6 +1514,14 @@ export class Client {
     }
   }
 
+  junkItem(id: number, amount: number) {
+    const packet = new ItemJunkClientPacket();
+    packet.item = new Item();
+    packet.item.id = id;
+    packet.item.amount = amount;
+    this.bus.send(packet);
+  }
+
   useItem(id: number) {
     const item = this.items.find((i) => i.id === id);
     if (!item) {
@@ -1425,6 +1530,28 @@ export class Client {
 
     const record = this.getEifRecordById(id);
     if (!record) {
+      return;
+    }
+
+    let slot = getEquipmentSlotForItemType(record.type);
+    if (typeof slot === 'number') {
+      const equipment = this.getEquipmentArray();
+      if (
+        equipment[slot] &&
+        [
+          EquipmentSlot.Ring1,
+          EquipmentSlot.Armlet1,
+          EquipmentSlot.Bracer1,
+        ].includes(slot)
+      ) {
+        slot++;
+      }
+
+      if (equipment[slot]) {
+        return;
+      }
+
+      this.equipItem(slot, item.id);
       return;
     }
 
@@ -1488,5 +1615,207 @@ export class Client {
     packet.emote = type;
     this.characterEmotes.set(this.playerId, new Emote(type));
     this.bus.send(packet);
+  }
+
+  requestPaperdoll(playerId: number) {
+    const packet = new PaperdollRequestClientPacket();
+    packet.playerId = playerId;
+    this.bus.send(packet);
+  }
+
+  unequipItem(slot: EquipmentSlot) {
+    const equipment = this.getEquipmentArray();
+    if (!equipment[slot]) {
+      return;
+    }
+
+    const itemId = equipment[slot];
+
+    const record = this.getEifRecordById(itemId);
+    if (record.special === ItemSpecial.Cursed) {
+      return;
+    }
+
+    const packet = new PaperdollRemoveClientPacket();
+    packet.itemId = itemId;
+    packet.subLoc = 0;
+
+    if (
+      [
+        EquipmentSlot.Ring2,
+        EquipmentSlot.Armlet2,
+        EquipmentSlot.Bracer2,
+      ].includes(slot)
+    ) {
+      packet.subLoc = 1;
+    }
+
+    this.bus.send(packet);
+  }
+
+  equipItem(slot: EquipmentSlot, itemId: number) {
+    const item = this.items.find((i) => i.id === itemId && i.amount > 0);
+    if (!item) {
+      return;
+    }
+
+    const equipment = this.getEquipmentArray();
+    if (equipment[slot]) {
+      // item already equipped
+      return;
+    }
+
+    const character = this.getPlayerCharacter();
+    if (!character) {
+      return;
+    }
+
+    const record = this.getEifRecordById(item.id);
+    if (!record) {
+      return;
+    }
+
+    // Wrong gender
+    if (record.type === ItemType.Armor && record.spec2 !== character.gender) {
+      return;
+    }
+
+    // Wrong class
+    if (record.classRequirement && record.classRequirement !== this.classId) {
+      return;
+    }
+
+    if (record.strRequirement > this.baseStats.str) {
+      return;
+    }
+
+    if (record.intRequirement > this.baseStats.intl) {
+      return;
+    }
+
+    if (record.wisRequirement > this.baseStats.wis) {
+      return;
+    }
+
+    if (record.agiRequirement > this.baseStats.agi) {
+      return;
+    }
+
+    if (record.chaRequirement > this.baseStats.cha) {
+      return;
+    }
+
+    if (record.conRequirement > this.baseStats.con) {
+      return;
+    }
+
+    if (record.levelRequirement > this.level) {
+      return;
+    }
+
+    const packet = new PaperdollAddClientPacket();
+    packet.itemId = itemId;
+    packet.subLoc = 0;
+
+    if (
+      [
+        EquipmentSlot.Ring2,
+        EquipmentSlot.Armlet2,
+        EquipmentSlot.Bracer2,
+      ].includes(slot)
+    ) {
+      packet.subLoc = 1;
+    }
+
+    this.bus.send(packet);
+  }
+
+  isVisisbleEquipmentChange(slot: EquipmentSlot): boolean {
+    return [
+      EquipmentSlot.Boots,
+      EquipmentSlot.Armor,
+      EquipmentSlot.Hat,
+      EquipmentSlot.Shield,
+      EquipmentSlot.Weapon,
+    ].includes(slot);
+  }
+
+  setEquipmentSlot(slot: EquipmentSlot, itemId: number) {
+    switch (slot) {
+      case EquipmentSlot.Accessory:
+        this.equipment.accessory = itemId;
+        break;
+      case EquipmentSlot.Armlet1:
+        this.equipment.armlet[0] = itemId;
+        break;
+      case EquipmentSlot.Armlet2:
+        this.equipment.armlet[1] = itemId;
+        break;
+      case EquipmentSlot.Armor:
+        this.equipment.armor = itemId;
+        break;
+      case EquipmentSlot.Belt:
+        this.equipment.belt = itemId;
+        break;
+      case EquipmentSlot.Boots:
+        this.equipment.boots = itemId;
+        break;
+      case EquipmentSlot.Bracer1:
+        this.equipment.bracer[0] = itemId;
+        break;
+      case EquipmentSlot.Bracer2:
+        this.equipment.bracer[1] = itemId;
+        break;
+      case EquipmentSlot.Gloves:
+        this.equipment.gloves = itemId;
+        break;
+      case EquipmentSlot.Hat:
+        this.equipment.hat = itemId;
+        break;
+      case EquipmentSlot.Necklace:
+        this.equipment.necklace = itemId;
+        break;
+      case EquipmentSlot.Ring1:
+        this.equipment.ring[0] = itemId;
+        break;
+      case EquipmentSlot.Ring2:
+        this.equipment.ring[1] = itemId;
+        break;
+      case EquipmentSlot.Shield:
+        this.equipment.shield = itemId;
+        break;
+      case EquipmentSlot.Weapon:
+        this.equipment.weapon = itemId;
+        break;
+    }
+  }
+
+  setNearbyCharacterEquipment(
+    playerId: number,
+    slot: EquipmentSlot,
+    graphicId: number,
+  ) {
+    const character = this.getCharacterById(playerId);
+    if (!character) {
+      return;
+    }
+
+    switch (slot) {
+      case EquipmentSlot.Boots:
+        character.equipment.boots = graphicId;
+        break;
+      case EquipmentSlot.Armor:
+        character.equipment.armor = graphicId;
+        break;
+      case EquipmentSlot.Hat:
+        character.equipment.hat = graphicId;
+        break;
+      case EquipmentSlot.Shield:
+        character.equipment.shield = graphicId;
+        break;
+      case EquipmentSlot.Weapon:
+        character.equipment.weapon = graphicId;
+        break;
+    }
   }
 }

@@ -6,6 +6,7 @@ import {
   ItemAddServerPacket,
   ItemDropServerPacket,
   ItemGetServerPacket,
+  ItemJunkServerPacket,
   ItemKickServerPacket,
   ItemMapInfo,
   ItemRemoveServerPacket,
@@ -287,6 +288,8 @@ function handleItemKick(client: Client, reader: EoReader) {
   } else {
     client.items = client.items.filter((i) => i.id !== packet.item.id);
   }
+
+  client.emit('inventoryChanged', undefined);
 }
 
 function handleItemAccept(client: Client, reader: EoReader) {
@@ -298,6 +301,22 @@ function handleItemAccept(client: Client, reader: EoReader) {
 
   client.characterEmotes.set(packet.playerId, new Emote(EmoteType.LevelUp));
   playSfxById(SfxId.LevelUp);
+}
+
+function handleItemJunk(client: Client, reader: EoReader) {
+  const packet = ItemJunkServerPacket.deserialize(reader);
+  client.weight.current = packet.weight.current;
+
+  if (packet.remainingAmount) {
+    const item = client.items.find((i) => i.id === packet.junkedItem.id);
+    if (item) {
+      item.amount = packet.remainingAmount;
+    }
+  } else {
+    client.items = client.items.filter((i) => i.id !== packet.junkedItem.id);
+  }
+
+  client.emit('inventoryChanged', undefined);
 }
 
 export function registerItemHandlers(client: Client) {
@@ -335,5 +354,10 @@ export function registerItemHandlers(client: Client) {
     PacketFamily.Item,
     PacketAction.Accept,
     (reader) => handleItemAccept(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Item,
+    PacketAction.Junk,
+    (reader) => handleItemJunk(client, reader),
   );
 }

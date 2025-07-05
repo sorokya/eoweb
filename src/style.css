@@ -22,6 +22,12 @@ body {
 * {
   /* biome-ignore lint/a11y/useGenericFontNames: Only custom font!! */
   font-family: w95fa !important;
+  user-select: none;
+}
+
+::selection {
+  background: #e4cdbc;
+  color: #000;
 }
 
 @media (max-aspect-ratio: 4 / 3) {
@@ -283,7 +289,7 @@ input[type="password"] {
   height: 240px;
   background-color: #000;
   background-image: url("/gfx/gfx001/120.png");
-  z-index: 1010;
+  z-index: 1020;
 }
 
 #create-character-preview {
@@ -329,7 +335,7 @@ input[type="password"] {
   height: 240px;
   background-color: #000;
   background-image: url("/gfx/gfx001/121.png");
-  z-index: 1010;
+  z-index: 1020;
 }
 
 #change-password-form input[name="username"] {
@@ -618,6 +624,7 @@ input[type="password"] {
   background: #7b5a29;
   cursor: move;
   user-select: none;
+  z-index: 1020;
 }
 
 #inventory .grid {
@@ -730,7 +737,8 @@ input[type="password"] {
   margin-left: 5px;
   gap: 1px;
 }
-#inventory .tabs button {
+#inventory .tabs button,
+#inventory .buttons button {
   background: transparent;
   border: 1px solid #000;
   border-bottom: none;
@@ -741,6 +749,332 @@ input[type="password"] {
 
 #inventory .tabs button.active {
   color: #cccccc;
+}
+
+#inventory .weight {
+  position: absolute;
+  bottom: 2px;
+  left: 98px;
+  color: #ccc;
+  font-size: 12px;
+}
+
+#inventory .buttons {
+  display: flex;
+  gap: 1px;
+  position: absolute;
+  right: 5px;
+  bottom: 1px;
+}
+
+#inventory .buttons button {
+  color: #ccc;
+}
+
+#paperdoll {
+  position: absolute;
+  background: url("/gfx/gfx002/149.png") #000;
+  height: 290px;
+  width: 380px;
+  z-index: 1020;
+}
+
+#paperdoll[data-gender="1"] {
+  background-position-y: -290px;
+}
+
+#paperdoll button[data-id="ok"] {
+  position: absolute;
+  bottom: 8px;
+  right: 13px;
+}
+
+#paperdoll .item,
+#paperdoll span {
+  position: absolute;
+}
+
+#paperdoll .item {
+  display: flex;
+  justify-content: center;
+}
+
+#paperdoll img {
+  align-self: center;
+}
+
+#paperdoll .item[data-id="boots"] {
+  left: 85px;
+  bottom: 17px;
+  width: 57px;
+  height: 55px;
+}
+
+#paperdoll .item[data-id="accessory"] {
+  left: 52px;
+  bottom: 16px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="gloves"] {
+  left: 20px;
+  bottom: 48px;
+  width: 57px;
+  height: 55px;
+}
+
+#paperdoll .item[data-id="belt"] {
+  left: 86px;
+  bottom: 79px;
+  width: 56px;
+  height: 25px;
+}
+
+#paperdoll .item[data-id="armor"] {
+  left: 85px;
+  top: 81px;
+  height: 99px;
+  width: 57px;
+}
+
+#paperdoll .item[data-id="necklace"] {
+  left: 151px;
+  top: 50px;
+  width: 56px;
+  height: 25px;
+}
+
+#paperdoll .item[data-id="hat"] {
+  left: 85px;
+  top: 19px;
+  width: 57px;
+  height: 55px;
+}
+
+#paperdoll .item[data-id="shield"] {
+  left: 150px;
+  top: 80px;
+  height: 99px;
+  width: 57px;
+}
+
+#paperdoll .item[data-id="weapon"] {
+  left: 20px;
+  top: 81px;
+  height: 99px;
+  width: 57px;
+}
+
+#paperdoll .item[data-id="ring-1"] {
+  left: 150px;
+  top: 186px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="ring-2"] {
+  left: 183px;
+  top: 186px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="armlet-1"] {
+  left: 150px;
+  top: 217px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="armlet-2"] {
+  left: 183px;
+  top: 217px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="bracer-1"] {
+  left: 150px;
+  top: 248px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="bracer-2"] {
+  left: 183px;
+  top: 248px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item .tooltip {
+  position: absolute;
+  bottom: 100%; /* Position above the item */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: black;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#paperdoll .item:hover .tooltip {
+  opacity: 0.8;
+}
+
+#paperdoll div.icon {
+  position: absolute;
+  left: 240px;
+  top: 262px;
+}
+
+#paperdoll span {
+  color: #f0f0c8;
+  font-size: 12px;
+}
+
+#paperdoll span[data-id="name"] {
+  left: 230px;
+  top: 24px;
+}
+
+#paperdoll span[data-id="home"] {
+  left: 230px;
+  top: 54px;
+}
+
+#paperdoll span[data-id="class"] {
+  left: 230px;
+  top: 84px;
+}
+
+#paperdoll span[data-id="partner"] {
+  left: 230px;
+  top: 114px;
+}
+
+#paperdoll span[data-id="title"] {
+  left: 230px;
+  top: 144px;
+}
+
+#paperdoll span[data-id="job"] {
+  left: 230px;
+  top: 174px;
+}
+
+#paperdoll span[data-id="guild"] {
+  left: 230px;
+  top: 204px;
+}
+
+#paperdoll span[data-id="rank"] {
+  left: 230px;
+  top: 234px;
+}
+
+div.icon {
+  background: url("/gfx/gfx002/132.png");
+  width: 13px;
+  height: 13px;
+}
+
+div.icon[data-id="note"] {
+  background-position-y: -13px;
+}
+
+div.icon[data-id="error"] {
+  background-position-y: -26px;
+}
+
+div.icon[data-id="note-left-arrow"] {
+  background-position-y: -39px;
+}
+
+div.icon[data-id="global-announce"] {
+  background-position-y: -52px;
+}
+
+div.icon[data-id="star"] {
+  background-position-y: -65px;
+}
+
+div.icon[data-id="exclamation"] {
+  background-position-y: -78px;
+}
+
+div.icon[data-id="looking-dude"] {
+  background-position-y: -91px;
+}
+
+div.icon[data-id="heart"] {
+  background-position-y: -104px;
+}
+
+div.icon[data-id="player"] {
+  background-position-y: -117px;
+}
+
+div.icon[data-id="player-party"] {
+  background-position-y: -130px;
+}
+
+div.icon[data-id="player-party-dark"] {
+  background-position-y: -143px;
+}
+
+div.icon[data-id="gm"] {
+  background-position-y: -156px;
+}
+
+div.icon[data-id="gm-party"] {
+  background-position-y: -169px;
+}
+
+div.icon[data-id="hgm"] {
+  background-position-y: -182px;
+}
+
+div.icon[data-id="hgm-party"] {
+  background-position-y: -195px;
+}
+
+div.icon[data-id="down-arrow"] {
+  background-position-y: -208px;
+}
+
+div.icon[data-id="up-arrow"] {
+  background-position-y: -221px;
+}
+
+div.icon[data-id="dot-dot-dot-dot"] {
+  background-position-y: -234px;
+}
+
+div.icon[data-id="guild"] {
+  background-position-y: -247px;
+}
+
+div.icon[data-id="skeleton"] {
+  background-position-y: -260px;
+}
+
+div.icon[data-id="trophy"] {
+  background-position-y: -273px;
+}
+
+div.icon[data-id="information"] {
+  background-position-y: -286px;
+}
+
+div.icon[data-id="quest-message"] {
+  background-position-y: -299px;
 }
 
 #quest-dialog {

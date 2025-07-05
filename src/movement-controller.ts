@@ -1,10 +1,11 @@
-import { Direction, Emote, SitState } from 'eolib';
+import { Direction, Emote, ItemSubtype, SitState } from 'eolib';
 import { type Client, GameState } from './client';
 import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
 import { getLatestDirectionHeld, Input, isInputHeld } from './input';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
 import { CharacterWalkAnimation } from './render/character-walk';
+import { playSfxById, SfxId } from './sfx';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 import { getNextCoords } from './utils/get-next-coords';
 
@@ -83,6 +84,22 @@ export class MovementController {
         const metadata = this.client.getWeaponMetadata(
           character.equipment.weapon,
         );
+
+        if (
+          metadata.ranged &&
+          metadata.sfx[0] !== SfxId.Gun &&
+          metadata.sfx[0] !== SfxId.Harp1 &&
+          metadata.sfx[0] !== SfxId.Guitar1
+        ) {
+          const shield = this.client.equipment.shield;
+          const record = this.client.getEifRecordById(shield);
+          if (!record || record.subtype !== ItemSubtype.Arrows) {
+            playSfxById(SfxId.NoArrows);
+            this.attackTicks = ATTACK_TICKS;
+            return;
+          }
+        }
+
         this.client.characterAnimations.set(
           character.playerId,
           metadata.ranged

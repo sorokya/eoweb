@@ -36,6 +36,7 @@ import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
 import { OffsetTweaker } from './ui/offset-tweaker';
+import { Paperdoll } from './ui/paperdoll';
 import { QuestDialog } from './ui/quest-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallConfirm } from './ui/small-confirm';
@@ -246,6 +247,11 @@ client.on('openQuestDialog', (data) => {
   questDialog.show();
 });
 
+client.on('openPaperdoll', ({ icon, equipment, details }) => {
+  paperdoll.setData(icon, details, equipment);
+  paperdoll.show();
+});
+
 const initializeSocket = (next: 'login' | 'create') => {
   const socket = new WebSocket(client.host);
   socket.addEventListener('open', () => {
@@ -317,6 +323,7 @@ const chat = new Chat();
 const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
+const paperdoll = new Paperdoll(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
 const questDialog = new QuestDialog();
@@ -448,18 +455,19 @@ inGameMenu.on('toggle-inventory', () => {
   inventory.toggle();
 });
 
-inventory.on('dropItem', (itemId) => {
+inventory.on('dropItem', ({ at, itemId }) => {
   const item = client.items.find((i) => i.id === itemId);
   if (!item) {
     return;
   }
 
-  if (!client.cursorInDropRange()) {
+  if (at === 'cursor' && !client.cursorInDropRange()) {
     return;
   }
 
   // Prevent dropping same item on stack
-  const coords = client.mouseCoords;
+  const playerAt = client.getPlayerCoords();
+  const coords = at === 'cursor' ? client.mouseCoords : playerAt;
   if (
     client.nearby.items.some(
       (i) =>
@@ -482,6 +490,7 @@ inventory.on('dropItem', (itemId) => {
   if (item.amount > 1) {
     client.typing = true;
     itemAmountDialog.setMaxAmount(item.amount);
+    itemAmountDialog.setHeader('drop');
     itemAmountDialog.setLabel(
       `How much ${record.name}\nwould you like to drop?`,
     );
@@ -496,12 +505,53 @@ inventory.on('dropItem', (itemId) => {
     );
     itemAmountDialog.show();
   } else {
-    client.dropItem(itemId, 1, client.mouseCoords);
+    client.dropItem(itemId, 1, coords);
+  }
+});
+
+inventory.on('junkItem', (itemId) => {
+  const item = client.items.find((i) => i.id === itemId);
+  if (!item) {
+    return;
+  }
+
+  const record = client.getEifRecordById(itemId);
+  if (!record) {
+    return;
+  }
+
+  if (item.amount > 1) {
+    client.typing = true;
+    itemAmountDialog.setMaxAmount(item.amount);
+    itemAmountDialog.setHeader('junk');
+    itemAmountDialog.setLabel(
+      `How much ${record.name}\nwould you like to junk?`,
+    );
+    itemAmountDialog.setCallback(
+      (amount) => {
+        client.junkItem(itemId, amount);
+        client.typing = false;
+      },
+      () => {
+        client.typing = false;
+      },
+    );
+    itemAmountDialog.show();
+  } else {
+    client.junkItem(itemId, 1);
   }
 });
 
 inventory.on('useItem', (itemId) => {
   client.useItem(itemId);
+});
+
+inventory.on('openPaperdoll', () => {
+  client.requestPaperdoll(client.playerId);
+});
+
+inventory.on('equipItem', ({ slot, itemId }) => {
+  client.equipItem(slot, itemId);
 });
 
 questDialog.on('reply', ({ questId, dialogId, action }) => {
