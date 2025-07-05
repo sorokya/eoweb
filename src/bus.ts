@@ -115,20 +115,21 @@ export class PacketBus {
   send(packet: Packet) {
     const writer = new EoWriter();
     packet.serialize(writer);
+    this.sendBuf(packet.family, packet.action, writer.toByteArray());
+  }
 
-    const buf = writer.toByteArray();
-
+  sendBuf(family: PacketFamily, action: PacketAction, buf: Uint8Array) {
     const data = [...buf];
     const sequence = this.sequencer.nextSequence();
 
     this.emitter.emit('send', {
-      action: packet.action,
-      family: packet.family,
+      action: action,
+      family: family,
       data: buf,
       timestamp: new Date(),
     });
 
-    if (packet.action !== 0xff && packet.family !== 0xff) {
+    if (action !== 0xff && family !== 0xff) {
       const sequenceBytes = encodeNumber(sequence);
       if (sequence > CHAR_MAX) {
         data.unshift(sequenceBytes[1]);
@@ -136,8 +137,8 @@ export class PacketBus {
       data.unshift(sequenceBytes[0]);
     }
 
-    data.unshift(packet.family);
-    data.unshift(packet.action);
+    data.unshift(family);
+    data.unshift(action);
 
     const temp = new Uint8Array(data);
 

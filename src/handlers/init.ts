@@ -5,6 +5,7 @@ import {
   Emf,
   Enf,
   EoReader,
+  EoWriter,
   Esf,
   InitBanType,
   InitInitServerPacket,
@@ -111,6 +112,12 @@ function handleInitOk(
   packet.playerId = data.playerId;
   bus.send(packet);
   client.state = GameState.Connected;
+
+  if (client.rememberMe && client.loginToken) {
+    const writer = new EoWriter();
+    writer.addString(client.loginToken);
+    bus.sendBuf(PacketFamily.Login, PacketAction.Use, writer.toByteArray());
+  }
 }
 
 function handleInitOutOfDate(

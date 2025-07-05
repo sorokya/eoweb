@@ -3,7 +3,7 @@ import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 
 type Events = {
-  login: { username: string; password: string };
+  login: { username: string; password: string; rememberMe: boolean };
   cancel: undefined;
 };
 
@@ -14,6 +14,9 @@ export class LoginForm extends Base {
     this.container.querySelector('#login-username');
   private password: HTMLInputElement =
     this.container.querySelector('#login-password');
+  private chkRememberMe: HTMLInputElement =
+    this.container.querySelector('#login-remember');
+  private rememberMe = Boolean(localStorage.getItem('remember-me')) || false;
   private btnCancel: HTMLButtonElement = this.container.querySelector(
     'button[data-id="cancel"]',
   );
@@ -24,6 +27,7 @@ export class LoginForm extends Base {
   show() {
     this.username.value = '';
     this.password.value = '';
+    this.chkRememberMe.checked = this.rememberMe;
     this.container.classList.remove('hidden');
     this.username.focus();
   }
@@ -39,9 +43,11 @@ export class LoginForm extends Base {
       this.emitter.emit('login', {
         username: this.username.value.trim(),
         password: this.password.value.trim(),
+        rememberMe: this.chkRememberMe.checked,
       });
       this.password.value = '';
       this.password.focus();
+      localStorage.setItem('remember-me', `${this.chkRememberMe.checked}`);
       return false;
     });
 
