@@ -9,11 +9,15 @@ import {
 } from 'eolib';
 import { type Client, GameState } from '../client';
 import { USAGE_TICKS } from '../consts';
+import { DialogResourceID } from '../edf';
 
 function handleWelcomeReply(client: Client, reader: EoReader) {
   const packet = WelcomeReplyServerPacket.deserialize(reader);
   if (packet.welcomeCode === WelcomeCode.ServerBusy) {
-    client.showError('Server is busy', 'Login failed');
+    const text = client.getDialogStrings(
+      DialogResourceID.CONNECTION_SERVER_BUSY,
+    );
+    client.showError(text[1], text[0]);
     return;
   }
 

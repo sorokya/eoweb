@@ -5,7 +5,7 @@ import {
   EquipmentMapInfo,
 } from 'eolib';
 import mitt from 'mitt';
-import { CharacterAction } from '../client';
+import { CharacterAction, type Client } from '../client';
 import { Rectangle, setCharacterRectangle } from '../collision';
 import {
   CHARACTER_HEIGHT,
@@ -13,6 +13,7 @@ import {
   GAME_FPS,
   HALF_CHARACTER_WIDTH,
 } from '../consts';
+import { DialogResourceID } from '../edf';
 import { renderCharacterArmor } from '../render/character-armor';
 import { renderCharacterBoots } from '../render/character-boots';
 import { renderCharacterHair } from '../render/character-hair';
@@ -56,6 +57,7 @@ export class CharacterSelect extends Base {
 
   private onLogin: ((e: Event) => undefined)[] = [];
   private onDelete: ((e: Event) => undefined)[] = [];
+  private client: Client;
 
   show() {
     this.container.classList.remove('hidden');
@@ -174,8 +176,10 @@ export class CharacterSelect extends Base {
     }
   }
 
-  constructor() {
+  constructor(client: Client) {
     super();
+
+    this.client = client;
 
     this.canvas = document.createElement('canvas');
     const w = CHARACTER_WIDTH + 40;
@@ -200,10 +204,12 @@ export class CharacterSelect extends Base {
       playSfxById(SfxId.ButtonClick);
 
       if (this.characters.length >= 3) {
+        const text = this.client.getDialogStrings(
+          DialogResourceID.CHARACTER_CREATE_TOO_MANY_CHARS,
+        );
         this.emitter.emit('error', {
-          title: 'Request denied',
-          message:
-            'You can only have 3 characters. Please delete a character and try again.',
+          title: text[0],
+          message: text[1],
         });
         return;
       }

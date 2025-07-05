@@ -7,28 +7,39 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '../client';
+import { DialogResourceID } from '../edf';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleCharacterReply(client: Client, reader: EoReader) {
   const packet = CharacterReplyServerPacket.deserialize(reader);
   switch (packet.replyCode) {
-    case CharacterReply.Exists:
-      client.showError(
-        'A character with that name already exists',
-        'Request denied',
+    case CharacterReply.Exists: {
+      const text = client.getDialogStrings(
+        DialogResourceID.CHARACTER_CREATE_NAME_EXISTS,
       );
+      client.showError(text[1], text[0]);
       return;
-    case CharacterReply.NotApproved:
-      client.showError('That character name is not approved', 'Request denied');
+    }
+    case CharacterReply.NotApproved: {
+      const text = client.getDialogStrings(
+        DialogResourceID.CHARACTER_CREATE_NAME_NOT_APPROVED,
+      );
+      client.showError(text[1], text[0]);
       return;
+    }
     case CharacterReply.Full:
-      client.showError(
-        'You can only have 3 characters. Please delete a character and try again.',
-        'Request denied',
-      );
+      {
+        const text = client.getDialogStrings(
+          DialogResourceID.CHARACTER_CREATE_TOO_MANY_CHARS,
+        );
+        client.showError(text[1], text[0]);
+      }
       return;
-    case CharacterReply.Deleted:
-      client.showError('Your character has been deleted', 'Success');
+    case CharacterReply.Deleted: {
+      // TODO: Update UI when character deleted
+      playSfxById(SfxId.DeleteCharacter);
       return;
+    }
     case CharacterReply.Ok: {
       const data =
         packet.replyCodeData as CharacterReplyServerPacket.ReplyCodeDataOk;

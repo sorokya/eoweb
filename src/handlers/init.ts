@@ -17,6 +17,7 @@ import {
 } from 'eolib';
 import { type Client, GameState } from '../client';
 import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '../db';
+import { DialogResourceID } from '../edf';
 
 function handleInitInit(client: Client, reader: EoReader) {
   const packet = InitInitServerPacket.deserialize(reader);
@@ -84,10 +85,10 @@ function handleInitOk(
   data: InitInitServerPacket.ReplyCodeDataOk,
 ) {
   if (data.challengeResponse !== serverVerificationHash(client.challenge)) {
-    client.showError(
-      'Server failed challenge verification',
-      'Connection Refused',
+    const text = client.getDialogStrings(
+      DialogResourceID.CONNECTION_LOST_CONNECTION,
     );
+    client.showError(text[1], text[0]);
     client.disconnect();
     return;
   }
@@ -133,19 +134,17 @@ function handleInitBanned(
   data: InitInitServerPacket.ReplyCodeDataBanned,
 ) {
   if (data.banType === InitBanType.Permanent) {
-    client.showError(
-      'The server dropped the connection, reason: peramanent ip ban',
-      'Connection is blocked',
+    const text = client.getDialogStrings(
+      DialogResourceID.CONNECTION_IP_BAN_PERM,
     );
+    client.showError(text[1], text[0]);
     return;
   }
 
   const banData =
     data.banTypeData as InitInitServerPacket.ReplyCodeDataBanned.BanTypeData0;
-  client.showError(
-    `The server dropped the connection, reason: temporary ip ban. ${banData.minutesRemaining} minutes`,
-    'Connection is blocked',
-  );
+  const text = client.getDialogStrings(DialogResourceID.CONNECTION_IP_BAN_TEMP);
+  client.showError(`${text[0]} ${banData.minutesRemaining} minutes`, text[1]);
 }
 
 function handleInitFileEcf(

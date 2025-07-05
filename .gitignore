@@ -3,4 +3,5 @@ public/gfx*
 public/sfx*
 public/mfx*
 public/maps
+public/data
 dist
