@@ -34,10 +34,11 @@ const ITEM_SIZE = {
 };
 
 type Events = {
-  dropItem: number;
+  dropItem: { at: 'cursor' | 'feet'; itemId: number };
   useItem: number;
   openPaperdoll: undefined;
   equipItem: { slot: EquipmentSlot; itemId: number };
+  junkItem: number;
 };
 
 export class Inventory extends Base {
@@ -54,6 +55,13 @@ export class Inventory extends Base {
   private btnPaperdoll: HTMLButtonElement = this.container.querySelector(
     'button[data-id="paperdoll"]',
   );
+  private btnDrop: HTMLButtonElement = this.container.querySelector(
+    'button[data-id="drop"]',
+  );
+  private btnJunk: HTMLButtonElement = this.container.querySelector(
+    'button[data-id="junk"]',
+  );
+  private lastItemSelected = 0;
 
   constructor(client: Client) {
     super();
@@ -135,6 +143,8 @@ export class Inventory extends Base {
     uiContainer.addEventListener('drop', (e) => {
       e.preventDefault();
 
+      console.log(e.target);
+
       if (e.target === this.grid) {
         return;
       }
@@ -145,6 +155,16 @@ export class Inventory extends Base {
       }
 
       playSfxById(SfxId.InventoryPlace);
+
+      if (e.target === this.btnDrop) {
+        this.emitter.emit('dropItem', { at: 'feet', itemId: item.id });
+        return;
+      }
+
+      if (e.target === this.btnJunk) {
+        this.emitter.emit('junkItem', item.id);
+        return;
+      }
 
       if (
         e.target instanceof HTMLDivElement &&
@@ -181,12 +201,29 @@ export class Inventory extends Base {
         }
       }
 
-      this.emitter.emit('dropItem', item.id);
+      this.emitter.emit('dropItem', { at: 'cursor', itemId: item.id });
     });
 
     this.btnPaperdoll.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('openPaperdoll', undefined);
+    });
+
+    this.btnDrop.addEventListener('click', () => {
+      playSfxById(SfxId.ButtonClick);
+      if (this.lastItemSelected) {
+        this.emitter.emit('dropItem', {
+          at: 'feet',
+          itemId: this.lastItemSelected,
+        });
+      }
+    });
+
+    this.btnJunk.addEventListener('click', () => {
+      playSfxById(SfxId.ButtonClick);
+      if (this.lastItemSelected) {
+        this.emitter.emit('junkItem', this.lastItemSelected);
+      }
     });
   }
 
@@ -260,6 +297,7 @@ export class Inventory extends Base {
       imgContainer.setAttribute('draggable', 'true');
 
       imgContainer.addEventListener('dragstart', (e) => {
+        this.lastItemSelected = item.id;
         playSfxById(SfxId.InventoryPickup);
         e.dataTransfer?.setData(
           'text/plain',
@@ -269,10 +307,12 @@ export class Inventory extends Base {
 
       imgContainer.addEventListener('click', (e) => {
         e.stopPropagation();
+        this.lastItemSelected = item.id;
       });
 
       imgContainer.addEventListener('dblclick', (e) => {
         e.stopPropagation();
+        this.lastItemSelected = item.id;
         playSfxById(SfxId.InventoryPlace);
         this.emitter.emit('useItem', item.id);
       });
@@ -280,6 +320,7 @@ export class Inventory extends Base {
       imgContainer.addEventListener('contextmenu', (e) => {
         e.stopPropagation();
         e.preventDefault();
+        this.lastItemSelected = item.id;
         playSfxById(SfxId.InventoryPlace);
         this.emitter.emit('useItem', item.id);
       });

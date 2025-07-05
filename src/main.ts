@@ -455,18 +455,19 @@ inGameMenu.on('toggle-inventory', () => {
   inventory.toggle();
 });
 
-inventory.on('dropItem', (itemId) => {
+inventory.on('dropItem', ({ at, itemId }) => {
   const item = client.items.find((i) => i.id === itemId);
   if (!item) {
     return;
   }
 
-  if (!client.cursorInDropRange()) {
+  if (at === 'cursor' && !client.cursorInDropRange()) {
     return;
   }
 
   // Prevent dropping same item on stack
-  const coords = client.mouseCoords;
+  const playerAt = client.getPlayerCoords();
+  const coords = at === 'cursor' ? client.mouseCoords : playerAt;
   if (
     client.nearby.items.some(
       (i) =>
@@ -489,6 +490,7 @@ inventory.on('dropItem', (itemId) => {
   if (item.amount > 1) {
     client.typing = true;
     itemAmountDialog.setMaxAmount(item.amount);
+    itemAmountDialog.setHeader('drop');
     itemAmountDialog.setLabel(
       `How much ${record.name}\nwould you like to drop?`,
     );
@@ -503,7 +505,40 @@ inventory.on('dropItem', (itemId) => {
     );
     itemAmountDialog.show();
   } else {
-    client.dropItem(itemId, 1, client.mouseCoords);
+    client.dropItem(itemId, 1, coords);
+  }
+});
+
+inventory.on('junkItem', (itemId) => {
+  const item = client.items.find((i) => i.id === itemId);
+  if (!item) {
+    return;
+  }
+
+  const record = client.getEifRecordById(itemId);
+  if (!record) {
+    return;
+  }
+
+  if (item.amount > 1) {
+    client.typing = true;
+    itemAmountDialog.setMaxAmount(item.amount);
+    itemAmountDialog.setHeader('junk');
+    itemAmountDialog.setLabel(
+      `How much ${record.name}\nwould you like to junk?`,
+    );
+    itemAmountDialog.setCallback(
+      (amount) => {
+        client.junkItem(itemId, amount);
+        client.typing = false;
+      },
+      () => {
+        client.typing = false;
+      },
+    );
+    itemAmountDialog.show();
+  } else {
+    client.junkItem(itemId, 1);
   }
 });
 

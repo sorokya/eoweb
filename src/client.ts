@@ -36,9 +36,10 @@ import {
   FileType,
   type Gender,
   GuildOpenClientPacket,
-  type Item,
+  Item,
   ItemDropClientPacket,
   ItemGetClientPacket,
+  ItemJunkClientPacket,
   type ItemMapInfo,
   ItemSpecial,
   ItemType,
@@ -1511,6 +1512,14 @@ export class Client {
       packet.coords.y = coords.y + 1;
       this.bus.send(packet);
     }
+  }
+
+  junkItem(id: number, amount: number) {
+    const packet = new ItemJunkClientPacket();
+    packet.item = new Item();
+    packet.item.id = id;
+    packet.item.amount = amount;
+    this.bus.send(packet);
   }
 
   useItem(id: number) {

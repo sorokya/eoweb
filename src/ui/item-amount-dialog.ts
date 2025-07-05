@@ -4,6 +4,7 @@ import { Base } from './base-ui';
 export class ItemAmountDialog extends Base {
   protected container = document.getElementById('item-amount-dialog');
   private cover = document.getElementById('cover');
+  private header = this.container.querySelector<HTMLDivElement>('.header');
   private label: HTMLParagraphElement = this.container.querySelector('.label');
   private btnCancel: HTMLButtonElement = this.container.querySelector(
     'button[data-id="cancel"]',
@@ -18,6 +19,10 @@ export class ItemAmountDialog extends Base {
     this.container.querySelector('.slider-container');
   private thumb: HTMLDivElement = this.container.querySelector('.slider-thumb');
   private dragging = false;
+
+  setHeader(header: 'drop' | 'junk' | 'give' | 'trade' | 'shop' | 'bank') {
+    this.header.setAttribute('data-id', header);
+  }
 
   setLabel(label: string) {
     this.label.innerText = label;
