@@ -12,6 +12,7 @@ import './style.css';
 import { PacketBus } from './bus';
 import { ChatTab, Client, GameState } from './client';
 import { GAME_FPS, MAX_CHALLENGE } from './consts';
+import { DialogResourceID, EOResourceID } from './edf';
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
@@ -166,10 +167,10 @@ client.on('error', ({ title, message }) => {
 client.on('debug', (_message) => {});
 
 client.on('accountCreated', () => {
-  smallAlertLargeHeader.setContent(
-    'Use your new account name and password to login to the game',
-    'Welcome',
+  const text = client.getDialogStrings(
+    DialogResourceID.ACCOUNT_CREATE_SUCCESS_WELCOME,
   );
+  smallAlertLargeHeader.setContent(text[1], text[0]);
   smallAlertLargeHeader.show();
   createAccountForm.hide();
   mainMenu.show();
@@ -193,10 +194,10 @@ client.on('serverChat', ({ message, sfxId }) => {
 
 client.on('characterCreated', (characters) => {
   createCharacterForm.hide();
-  smallAlertLargeHeader.setContent(
-    'Your character has been created',
-    'Success',
+  const text = client.getDialogStrings(
+    DialogResourceID.CHARACTER_CREATE_SUCCESS,
   );
+  smallAlertLargeHeader.setContent(text[1], text[0]);
   smallAlertLargeHeader.show();
   characterSelect.setCharacters(characters);
 });
@@ -227,10 +228,10 @@ client.on('enterGame', ({ news }) => {
 
 client.on('passwordChanged', () => {
   changePasswordForm.hide();
-  smallAlertLargeHeader.setContent(
-    'Your password has been changed, please use your new password next time you login.',
-    'Password changed',
+  const text = client.getDialogStrings(
+    DialogResourceID.CHANGE_PASSWORD_SUCCESS,
   );
+  smallAlertLargeHeader.setContent(text[1], text[0]);
   smallAlertLargeHeader.show();
 });
 
@@ -297,10 +298,10 @@ const initializeSocket = (next: 'login' | 'create' | '' = '') => {
     mainMenu.show();
     if (client.state !== GameState.Initial) {
       client.state = GameState.Initial;
-      smallAlertLargeHeader.setContent(
-        'The connection to the game server was lost, please try again a later time',
-        'Lost connection',
+      const text = client.getDialogStrings(
+        DialogResourceID.CONNECTION_LOST_CONNECTION,
       );
+      smallAlertLargeHeader.setContent(text[1], text[0]);
       smallAlertLargeHeader.show();
     }
     client.bus = null;
@@ -313,10 +314,10 @@ const initializeSocket = (next: 'login' | 'create' | '' = '') => {
 
 const mainMenu = new MainMenu();
 const loginForm = new LoginForm();
-const createAccountForm = new CreateAccountForm();
-const characterSelect = new CharacterSelect();
+const createAccountForm = new CreateAccountForm(client);
+const characterSelect = new CharacterSelect(client);
 const createCharacterForm = new CreateCharacterForm();
-const changePasswordForm = new ChangePasswordForm();
+const changePasswordForm = new ChangePasswordForm(client);
 const smallAlertLargeHeader = new SmallAlertLargeHeader();
 const exitGame = new ExitGame();
 const smallConfirm = new SmallConfirm();
@@ -338,10 +339,8 @@ const hideAllUi = () => {
 };
 
 exitGame.on('click', () => {
-  smallConfirm.setContent(
-    'Are you sure you want to exit the game?',
-    'Exit game',
-  );
+  const text = client.getDialogStrings(DialogResourceID.EXIT_GAME_ARE_YOU_SURE);
+  smallConfirm.setContent(text[1], text[0]);
   smallConfirm.setCallback(() => {
     client.disconnect();
     chat.clear();
@@ -494,7 +493,7 @@ inventory.on('dropItem', ({ at, itemId }) => {
     itemAmountDialog.setMaxAmount(item.amount);
     itemAmountDialog.setHeader('drop');
     itemAmountDialog.setLabel(
-      `How much ${record.name}\nwould you like to drop?`,
+      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DROP)}`,
     );
     itemAmountDialog.setCallback(
       (amount) => {
@@ -527,7 +526,7 @@ inventory.on('junkItem', (itemId) => {
     itemAmountDialog.setMaxAmount(item.amount);
     itemAmountDialog.setHeader('junk');
     itemAmountDialog.setLabel(
-      `How much ${record.name}\nwould you like to junk?`,
+      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_JUNK)}`,
     );
     itemAmountDialog.setCallback(
       (amount) => {

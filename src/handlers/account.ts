@@ -8,22 +8,32 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '../client';
+import { DialogResourceID } from '../edf';
 
 function handleAccountReply(client: Client, reader: EoReader) {
   const packet = AccountReplyServerPacket.deserialize(reader);
   switch (packet.replyCode) {
-    case AccountReply.Exists:
-      client.showError('An account with that name already exists');
-      return;
-    case AccountReply.NotApproved:
-      client.showError('That account name is not approved');
-      return;
-    case AccountReply.ChangeFailed:
-      client.showError(
-        'The account name or old password you provided do not match with our database.',
-        'Request denied',
+    case AccountReply.Exists: {
+      const text = client.getDialogStrings(
+        DialogResourceID.ACCOUNT_CREATE_NAME_EXISTS,
       );
+      client.showError(text[1], text[0]);
       return;
+    }
+    case AccountReply.NotApproved: {
+      const text = client.getDialogStrings(
+        DialogResourceID.ACCOUNT_CREATE_NAME_NOT_APPROVED,
+      );
+      client.showError(text[1], text[0]);
+      return;
+    }
+    case AccountReply.ChangeFailed: {
+      const text = client.getDialogStrings(
+        DialogResourceID.CHANGE_PASSWORD_MISMATCH,
+      );
+      client.showError(text[1], text[0]);
+      return;
+    }
     case AccountReply.Changed:
       client.emit('passwordChanged', undefined);
       return;

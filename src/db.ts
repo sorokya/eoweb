@@ -1,5 +1,7 @@
 import { Ecf, Eif, Emf, Enf, EoReader, EoWriter, Esf } from 'eolib';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
+import { Edf } from './edf';
+import { padWithZeros } from './utils/pad-with-zeros';
 
 type PubsKey = 'eif' | 'enf' | 'ecf' | 'esf';
 
@@ -12,16 +14,27 @@ interface DB extends DBSchema {
     key: number;
     value: Uint8Array;
   };
+  edfs: {
+    key: number;
+    value: Uint8Array;
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<DB>>;
 
 function getDb(): Promise<IDBPDatabase<DB>> {
   if (!dbPromise) {
-    dbPromise = openDB<DB>('db', 1, {
+    dbPromise = openDB<DB>('db', 2, {
       upgrade(db) {
-        db.createObjectStore('pubs');
-        db.createObjectStore('maps');
+        if (!db.objectStoreNames.contains('pubs')) {
+          db.createObjectStore('pubs');
+        }
+        if (!db.objectStoreNames.contains('maps')) {
+          db.createObjectStore('maps');
+        }
+        if (!db.objectStoreNames.contains('edfs')) {
+          db.createObjectStore('edfs');
+        }
       },
     });
   }
@@ -45,6 +58,26 @@ export function saveEmf(id: number, emf: Emf) {
     Emf.serialize(writer, emf);
     db.put('maps', writer.toByteArray(), id);
   });
+}
+
+export async function getEdf(id: number): Promise<Edf | null> {
+  const db = await getDb();
+  const buf = await db.get('edfs', id);
+  if (!buf) {
+    const response = await fetch(`/data/dat${padWithZeros(id, 3)}.edf`);
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.arrayBuffer();
+    const buf = new Uint8Array(data);
+
+    db.put('edfs', buf, id);
+
+    return Edf.deserialize(new Uint8Array(data));
+  }
+
+  return Edf.deserialize(buf);
 }
 
 export async function getEif(): Promise<Eif | null> {

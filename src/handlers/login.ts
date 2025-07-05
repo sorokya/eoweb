@@ -7,18 +7,25 @@ import {
   WelcomeRequestClientPacket,
 } from 'eolib';
 import { type Client, GameState } from '../client';
+import { DialogResourceID } from '../edf';
 
 function handleLoginReply(client: Client, reader: EoReader) {
   const packet = LoginReplyServerPacket.deserialize(reader);
   if (packet.replyCode === LoginReply.Banned) {
     client.clearSession();
-    client.showError('Account is banned', 'Login failed');
+    const text = client.getDialogStrings(
+      DialogResourceID.LOGIN_BANNED_FROM_SERVER,
+    );
+    client.showError(text[1], text[0]);
     return;
   }
 
   if (packet.replyCode === LoginReply.LoggedIn) {
     client.clearSession();
-    client.showError('Account is logged in', 'Login failed');
+    const text = client.getDialogStrings(
+      DialogResourceID.LOGIN_ACCOUNT_ALREADY_LOGGED_ON,
+    );
+    client.showError(text[1], text[0]);
     return;
   }
 
@@ -27,12 +34,18 @@ function handleLoginReply(client: Client, reader: EoReader) {
     packet.replyCode === LoginReply.WrongUserPassword
   ) {
     client.clearSession();
-    client.showError('Username or password is incorrect', 'Login failed');
+    const text = client.getDialogStrings(
+      DialogResourceID.LOGIN_ACCOUNT_NAME_OR_PASSWORD_NOT_FOUND,
+    );
+    client.showError(text[1], text[0]);
     return;
   }
 
   if (packet.replyCode === LoginReply.Busy) {
-    client.showError('Server is busy', 'Login failed');
+    const text = client.getDialogStrings(
+      DialogResourceID.CONNECTION_SERVER_BUSY,
+    );
+    client.showError(text[1], text[0]);
   }
 
   if (reader.remaining > 0) {

@@ -1,4 +1,6 @@
 import mitt from 'mitt';
+import type { Client } from '../client';
+import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 
@@ -32,6 +34,8 @@ export class ChangePasswordForm extends Base {
     'button[data-id="cancel"]',
   );
 
+  private client: Client;
+
   private open = false;
   isOpen(): boolean {
     return this.open;
@@ -63,8 +67,10 @@ export class ChangePasswordForm extends Base {
     this.cover.classList.add('hidden');
   }
 
-  constructor() {
+  constructor(client: Client) {
     super();
+
+    this.client = client;
 
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
@@ -81,19 +87,23 @@ export class ChangePasswordForm extends Base {
       const confirmNewPassword = this.confirmNewPassword.value.trim();
 
       if (!username || !oldPassword || !newPassword || !confirmNewPassword) {
+        const text = this.client.getDialogStrings(
+          DialogResourceID.ACCOUNT_CREATE_FIELDS_STILL_EMPTY,
+        );
         this.emitter.emit('error', {
-          title: 'Wrong input',
-          message:
-            'Some of the fields are still empty. Fill in all the fields and try again',
+          title: text[0],
+          message: text[1],
         });
         return false;
       }
 
       if (newPassword !== confirmNewPassword) {
+        const text = this.client.getDialogStrings(
+          DialogResourceID.CHANGE_PASSWORD_MISMATCH,
+        );
         this.emitter.emit('error', {
-          title: 'Wrong password',
-          message:
-            'The two passwords you provided are not the same, please try again.',
+          title: text[0],
+          message: text[1],
         });
         return false;
       }

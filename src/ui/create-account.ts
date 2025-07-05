@@ -1,4 +1,6 @@
 import mitt from 'mitt';
+import type { Client } from '../client';
+import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 
@@ -37,6 +39,7 @@ export class CreateAccountForm extends Base {
   );
   private emitter = mitt<Events>();
   private formElements: HTMLInputElement[];
+  private client: Client;
 
   show() {
     this.username.value = '';
@@ -49,8 +52,10 @@ export class CreateAccountForm extends Base {
     this.username.focus();
   }
 
-  constructor() {
+  constructor(client: Client) {
     super();
+
+    this.client = client;
 
     this.formElements = [
       this.username,
@@ -84,27 +89,34 @@ export class CreateAccountForm extends Base {
         !location ||
         !email
       ) {
+        const text = this.client.getDialogStrings(
+          DialogResourceID.ACCOUNT_CREATE_FIELDS_STILL_EMPTY,
+        );
         this.emitter.emit('error', {
-          title: 'Wrong input',
-          message:
-            'Some of the fields are still empty. Fill in all the fields and try again',
+          title: text[0],
+          message: text[1],
         });
         return false;
       }
 
       if (password !== confirmPassword) {
+        const text = this.client.getDialogStrings(
+          DialogResourceID.ACCOUNT_CREATE_PASSWORD_MISMATCH,
+        );
         this.emitter.emit('error', {
-          title: 'Wrong password',
-          message:
-            'The two passwords you provided are not the same, please try again.',
+          title: text[0],
+          message: text[1],
         });
         return false;
       }
 
       if (!email.includes('@') || !email.includes('.')) {
+        const text = this.client.getDialogStrings(
+          DialogResourceID.ACCOUNT_CREATE_EMAIL_INVALID,
+        );
         this.emitter.emit('error', {
-          title: 'Wrong input',
-          message: 'Enter a valid email address.',
+          title: text[0],
+          message: text[1],
         });
         return false;
       }

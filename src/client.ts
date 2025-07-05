@@ -96,8 +96,9 @@ import {
   MAX_CHAT_LENGTH,
   USAGE_TICKS,
 } from './consts';
-import { getEcf, getEif, getEmf, getEnf, getEsf } from './db';
+import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
 import { Door } from './door';
+import type { DialogResourceID, Edf, EOResourceID } from './edf';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, loadBitmapById } from './gfx';
 import { registerAccountHandlers } from './handlers/account';
@@ -391,6 +392,15 @@ export class Client {
   loginToken = localStorage.getItem('login-token');
   lastCharacterId =
     Number.parseInt(localStorage.getItem('last-character-id'), 10) || 0;
+  edfs: {
+    game1: Edf | null;
+    game2: Edf | null;
+    jukebox: Edf | null;
+  } = {
+    game1: null,
+    game2: null,
+    jukebox: null,
+  };
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -410,6 +420,15 @@ export class Client {
     });
     getEsf().then((esf) => {
       this.esf = esf;
+    });
+    getEdf(4).then((edf) => {
+      this.edfs.jukebox = edf;
+    });
+    getEdf(5).then((edf) => {
+      this.edfs.game1 = edf;
+    });
+    getEdf(6).then((edf) => {
+      this.edfs.game2 = edf;
     });
     this.nearby = new NearbyInfo();
     this.nearby.characters = [];
@@ -507,6 +526,24 @@ export class Client {
     }
 
     return this.ecf.classes[id - 1];
+  }
+
+  getResourceString(id: EOResourceID): string | undefined {
+    const edf = this.edfs.game2;
+    if (!edf) {
+      return undefined;
+    }
+
+    return edf.getLine(id);
+  }
+
+  getDialogStrings(id: DialogResourceID): string[] | undefined {
+    const edf = this.edfs.game1;
+    if (!edf) {
+      return undefined;
+    }
+
+    return [edf.getLine(id), edf.getLine(id + 1)];
   }
 
   getEffectMetadata(graphicId: number): EffectMetadata {
