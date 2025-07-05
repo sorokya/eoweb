@@ -45,7 +45,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
 
   if (
     client.rememberMe &&
-    client.token &&
+    client.loginToken &&
     data.characters.some((c) => c.id === client.lastCharacterId)
   ) {
     const packet = new WelcomeRequestClientPacket();

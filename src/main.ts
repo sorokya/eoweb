@@ -646,7 +646,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   requestAnimationFrame(render);
 
-  if (client.rememberMe && client.token) {
+  if (client.rememberMe && client.loginToken) {
     initializeSocket();
   }
 });

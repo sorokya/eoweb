@@ -388,7 +388,7 @@ export class Client {
   drunkEmoteTicks = 0;
   drunkTicks = 0;
   rememberMe = Boolean(localStorage.getItem('remember-me')) || false;
-  token = localStorage.getItem('login-token');
+  loginToken = localStorage.getItem('login-token');
   lastCharacterId =
     Number.parseInt(localStorage.getItem('last-character-id'), 10) || 0;
 
@@ -1456,7 +1456,7 @@ export class Client {
   }
 
   clearSession() {
-    this.token = '';
+    this.loginToken = '';
     this.lastCharacterId = undefined;
     localStorage.removeItem('login-token');
     localStorage.removeItem('last-character-id');
