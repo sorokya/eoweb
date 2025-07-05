@@ -30,6 +30,7 @@ import {
   Emote as EmoteType,
   type Enf,
   type EnfRecord,
+  EoWriter,
   EquipmentPaperdoll,
   type Esf,
   FacePlayerClientPacket,
@@ -386,6 +387,10 @@ export class Client {
   drunk = false;
   drunkEmoteTicks = 0;
   drunkTicks = 0;
+  rememberMe = Boolean(localStorage.getItem('remember-me')) || false;
+  token = localStorage.getItem('login-token');
+  lastCharacterId =
+    Number.parseInt(localStorage.getItem('last-character-id'), 10) || 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -1254,17 +1259,27 @@ export class Client {
     return false;
   }
 
-  login(username: string, password: string) {
+  login(username: string, password: string, rememberMe: boolean) {
+    const writer = new EoWriter();
     const packet = new LoginRequestClientPacket();
     packet.username = username;
     packet.password = password;
-    this.bus.send(packet);
+    packet.serialize(writer);
+
+    if (rememberMe) {
+      writer.addChar(1);
+    }
+
+    this.bus.sendBuf(packet.family, packet.action, writer.toByteArray());
   }
 
   selectCharacter(characterId: number) {
     const packet = new WelcomeRequestClientPacket();
     packet.characterId = characterId;
     this.bus.send(packet);
+
+    this.lastCharacterId = characterId;
+    localStorage.setItem('last-character-id', `${characterId}`);
   }
 
   requestWarpMap(id: number) {
@@ -1434,9 +1449,17 @@ export class Client {
 
   disconnect() {
     this.state = GameState.Initial;
+    this.clearSession();
     if (this.bus) {
       this.bus.disconnect();
     }
+  }
+
+  clearSession() {
+    this.token = '';
+    this.lastCharacterId = undefined;
+    localStorage.removeItem('login-token');
+    localStorage.removeItem('last-character-id');
   }
 
   cursorInDropRange(): boolean {

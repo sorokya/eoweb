@@ -208,6 +208,7 @@ client.on('chat', ({ name, tab: _, message }) => {
 });
 
 client.on('enterGame', ({ news }) => {
+  mainMenu.hide();
   for (const line of news) {
     chat.addMessage(line);
   }
@@ -252,13 +253,14 @@ client.on('openPaperdoll', ({ icon, equipment, details }) => {
   paperdoll.show();
 });
 
-const initializeSocket = (next: 'login' | 'create') => {
+const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.host);
   socket.addEventListener('open', () => {
-    mainMenu.hide();
     if (next === 'create') {
+      mainMenu.hide();
       createAccountForm.show();
     } else if (next === 'login') {
+      mainMenu.hide();
       loginForm.show();
     }
 
@@ -298,12 +300,6 @@ const initializeSocket = (next: 'login' | 'create') => {
       smallAlertLargeHeader.setContent(
         'The connection to the game server was lost, please try again a later time',
         'Lost connection',
-      );
-      smallAlertLargeHeader.show();
-    } else {
-      smallAlertLargeHeader.setContent(
-        'The game server could not be found, please try again at a later time',
-        'Could not find server',
       );
       smallAlertLargeHeader.show();
     }
@@ -396,8 +392,8 @@ createAccountForm.on('create', (data) => {
   client.requestAccountCreation(data);
 });
 
-loginForm.on('login', ({ username, password }) => {
-  client.login(username, password);
+loginForm.on('login', ({ username, password, rememberMe }) => {
+  client.login(username, password, rememberMe);
 });
 
 loginForm.on('cancel', () => {
@@ -649,4 +645,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   client.nearby.characters = [character];
 
   requestAnimationFrame(render);
+
+  if (client.rememberMe && client.token) {
+    initializeSocket();
+  }
 });

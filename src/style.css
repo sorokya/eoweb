@@ -137,6 +137,14 @@ canvas {
   position: relative;
 }
 
+label[for="login-remember"] {
+  position: absolute;
+  top: 91px;
+  left: 126px;
+  font-size: 11px;
+  color: #fff;
+}
+
 input[type="text"],
 input[type="password"] {
   background: #a38269;
