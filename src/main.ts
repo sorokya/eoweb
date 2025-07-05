@@ -36,6 +36,7 @@ import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
 import { OffsetTweaker } from './ui/offset-tweaker';
+import { Paperdoll } from './ui/paperdoll';
 import { QuestDialog } from './ui/quest-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallConfirm } from './ui/small-confirm';
@@ -246,6 +247,11 @@ client.on('openQuestDialog', (data) => {
   questDialog.show();
 });
 
+client.on('openPaperdoll', ({ icon, equipment, details }) => {
+  paperdoll.setData(icon, details, equipment);
+  paperdoll.show();
+});
+
 const initializeSocket = (next: 'login' | 'create') => {
   const socket = new WebSocket(client.host);
   socket.addEventListener('open', () => {
@@ -317,6 +323,7 @@ const chat = new Chat();
 const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
+const paperdoll = new Paperdoll(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
 const questDialog = new QuestDialog();
@@ -502,6 +509,14 @@ inventory.on('dropItem', (itemId) => {
 
 inventory.on('useItem', (itemId) => {
   client.useItem(itemId);
+});
+
+inventory.on('openPaperdoll', () => {
+  client.requestPaperdoll(client.playerId);
+});
+
+inventory.on('equipItem', ({ slot, itemId }) => {
+  client.equipItem(slot, itemId);
 });
 
 questDialog.on('reply', ({ questId, dialogId, action }) => {
