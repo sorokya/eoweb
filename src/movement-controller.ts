@@ -85,7 +85,12 @@ export class MovementController {
           character.equipment.weapon,
         );
 
-        if (metadata.ranged && metadata.sfx[0] !== SfxId.Gun) {
+        if (
+          metadata.ranged &&
+          metadata.sfx[0] !== SfxId.Gun &&
+          metadata.sfx[0] !== SfxId.Harp1 &&
+          metadata.sfx[0] !== SfxId.Guitar1
+        ) {
           const shield = this.client.equipment.shield;
           const record = this.client.getEifRecordById(shield);
           if (!record || record.subtype !== ItemSubtype.Arrows) {

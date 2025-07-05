@@ -59,13 +59,13 @@ export function getWeaponMetaData(): Map<number, WeaponMetadata> {
     [46, new WeaponMetadata(5, [SfxId.MeleeWeaponAttack], false)], // twin blades
     [47, new WeaponMetadata(1, [SfxId.MeleeWeaponAttack], false)], // lefor mace
     [48, new WeaponMetadata(0, [SfxId.MeleeWeaponAttack], false)], // cava staff
-    [49, new WeaponMetadata(0, [SfxId.Harp1, SfxId.Harp2, SfxId.Harp3], false)], // harp
+    [49, new WeaponMetadata(0, [SfxId.Harp1, SfxId.Harp2, SfxId.Harp3], true)], // harp
     [
       50,
       new WeaponMetadata(
         0,
         [SfxId.Guitar1, SfxId.Guitar2, SfxId.Guitar3],
-        false,
+        true,
       ),
     ], // guitar
     [51, new WeaponMetadata(5, [SfxId.MeleeWeaponAttack], false)], // battle spear
