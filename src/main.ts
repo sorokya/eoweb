@@ -554,6 +554,39 @@ inventory.on('junkItem', (itemId) => {
   }
 });
 
+inventory.on('addChestItem', (itemId) => {
+  const item = client.items.find((i) => i.id === itemId);
+  if (!item) {
+    return;
+  }
+
+  const record = client.getEifRecordById(itemId);
+  if (!record) {
+    return;
+  }
+
+  if (item.amount > 1) {
+    client.typing = true;
+    itemAmountDialog.setMaxAmount(item.amount);
+    itemAmountDialog.setHeader('drop');
+    itemAmountDialog.setLabel(
+      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DROP)}`,
+    );
+    itemAmountDialog.setCallback(
+      (amount) => {
+        client.addChestItem(itemId, amount);
+        client.typing = false;
+      },
+      () => {
+        client.typing = false;
+      },
+    );
+    itemAmountDialog.show();
+  } else {
+    client.addChestItem(itemId, 1);
+  }
+});
+
 inventory.on('useItem', (itemId) => {
   client.useItem(itemId);
 });

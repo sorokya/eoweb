@@ -2,6 +2,7 @@ import {
   ChestAgreeServerPacket,
   ChestGetServerPacket,
   ChestOpenServerPacket,
+  ChestReplyServerPacket,
   type EoReader,
   Item,
   PacketAction,
@@ -46,6 +47,25 @@ function handleChestGet(client: Client, reader: EoReader) {
   });
 }
 
+function handleChestReply(client: Client, reader: EoReader) {
+  const packet = ChestReplyServerPacket.deserialize(reader);
+  client.weight.current = packet.weight.current;
+
+  if (packet.remainingAmount) {
+    const item = client.items.find((i) => i.id === packet.addedItemId);
+    if (item) {
+      item.amount = packet.remainingAmount;
+    }
+  } else {
+    client.items = client.items.filter((i) => i.id !== packet.addedItemId);
+  }
+
+  client.emit('inventoryChanged', undefined);
+  client.emit('chestChanged', {
+    items: packet.items,
+  });
+}
+
 export function registerChestHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Chest,
@@ -61,5 +81,10 @@ export function registerChestHandlers(client: Client) {
     PacketFamily.Chest,
     PacketAction.Get,
     (reader) => handleChestGet(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Chest,
+    PacketAction.Reply,
+    (reader) => handleChestReply(client, reader),
   );
 }

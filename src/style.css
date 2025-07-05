@@ -1767,10 +1767,7 @@ div.icon[data-id="quest-message"] {
 }
 
 #chest {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: absolute;
   z-index: 1010;
   user-select: none;
   box-sizing: border-box;
@@ -1789,18 +1786,13 @@ div.icon[data-id="quest-message"] {
 }
 
 #chest .chest-items {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   position: absolute;
   top: 25px;
   left: 20px;
-  right: 0.5rem;
-  bottom: 0.5rem;
-  overflow-y: auto;
-  overflow-x: hidden;
   color: #fff;
   font-size: 12px;
+  width: 230px;
+  height: 192px;
 }
 
 #chest .chest-item {

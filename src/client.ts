@@ -14,6 +14,7 @@ import {
   CharacterRequestClientPacket,
   CharacterSecondaryStats,
   type CharacterSelectionListEntry,
+  ChestAddClientPacket,
   ChestOpenClientPacket,
   ChestTakeClientPacket,
   CitizenOpenClientPacket,
@@ -1936,6 +1937,15 @@ export class Client {
     const packet = new ChestTakeClientPacket();
     packet.coords = this.chestCoords;
     packet.takeItemId = itemId;
+    this.bus.send(packet);
+  }
+
+  addChestItem(itemId: number, amount: number) {
+    const packet = new ChestAddClientPacket();
+    packet.addItem = new ThreeItem();
+    packet.addItem.id = itemId;
+    packet.addItem.amount = amount;
+    packet.coords = this.chestCoords;
     this.bus.send(packet);
   }
 }

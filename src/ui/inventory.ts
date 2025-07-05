@@ -39,6 +39,7 @@ type Events = {
   openPaperdoll: undefined;
   equipItem: { slot: EquipmentSlot; itemId: number };
   junkItem: number;
+  addChestItem: number;
 };
 
 export class Inventory extends Base {
@@ -164,42 +165,37 @@ export class Inventory extends Base {
         return;
       }
 
-      if (
-        e.target instanceof HTMLDivElement &&
-        e.target.classList.contains('item')
-      ) {
-        const slot = getEquipmentSlotFromString(
-          e.target.getAttribute('data-id'),
-        );
-        if (typeof slot === 'undefined') {
+      if (e.target instanceof HTMLElement) {
+        const chestItems = e.target.closest('.chest-items');
+        if (chestItems) {
+          this.emitter.emit('addChestItem', item.id);
           return;
         }
 
-        this.emitter.emit('equipItem', {
-          slot,
-          itemId: item.id,
-        });
+        const paperdoll = e.target.closest('#paperdoll');
+        if (paperdoll) {
+          const target = e.target.closest('.item');
+          if (!target) {
+            return;
+          }
 
-        return;
-      }
-
-      if (e.target instanceof HTMLImageElement) {
-        const parent = e.target.parentElement;
-        if (
-          parent instanceof HTMLDivElement &&
-          parent.classList.contains('item')
-        ) {
           const slot = getEquipmentSlotFromString(
-            parent.getAttribute('data-id'),
+            target.getAttribute('data-id'),
           );
           if (typeof slot === 'undefined') {
             return;
           }
+
+          this.emitter.emit('equipItem', {
+            slot,
+            itemId: item.id,
+          });
           return;
         }
       }
 
-      this.emitter.emit('dropItem', { at: 'cursor', itemId: item.id });
+      if (e.target instanceof HTMLElement && e.target.closest('.chest-items'))
+        this.emitter.emit('dropItem', { at: 'cursor', itemId: item.id });
     });
 
     this.btnPaperdoll.addEventListener('click', () => {
