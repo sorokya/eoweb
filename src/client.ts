@@ -1161,14 +1161,6 @@ export class Client {
     this.interactNpcIndex = npc.index;
   }
 
-  clickChest(coords: Vector2) {
-    const packet = new ChestOpenClientPacket();
-    packet.coords = new Coords();
-    packet.coords.x = coords.x;
-    packet.coords.y = coords.y;
-    this.bus.send(packet);
-  }
-
   canWalk(coords: Coords): boolean {
     if (this.nowall) {
       return true;
