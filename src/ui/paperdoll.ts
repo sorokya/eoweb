@@ -182,7 +182,6 @@ export class Paperdoll extends Base {
   }
 
   private render() {
-    console.log('Rendering doll');
     this.container.setAttribute('data-gender', this.details.gender.toString());
 
     this.spanName.innerText = capitalize(this.details.name);
@@ -221,24 +220,72 @@ export class Paperdoll extends Base {
         break;
     }
 
-    this.setEquipment(this.equipment.boots, this.imgBoots);
-    this.setEquipment(this.equipment.accessory, this.imgAccessory);
-    this.setEquipment(this.equipment.gloves, this.imgGloves);
-    this.setEquipment(this.equipment.belt, this.imgBelt);
-    this.setEquipment(this.equipment.armor, this.imgArmor);
-    this.setEquipment(this.equipment.necklace, this.imgNecklace);
-    this.setEquipment(this.equipment.hat, this.imgHat);
-    this.setEquipment(this.equipment.shield, this.imgShield);
-    this.setEquipment(this.equipment.weapon, this.imgWeapon);
-    this.setEquipment(this.equipment.ring[0], this.imgRing1);
-    this.setEquipment(this.equipment.ring[1], this.imgRing2);
-    this.setEquipment(this.equipment.armlet[0], this.imgArmlet1);
-    this.setEquipment(this.equipment.armlet[1], this.imgArmlet2);
-    this.setEquipment(this.equipment.bracer[0], this.imgBracer1);
-    this.setEquipment(this.equipment.bracer[1], this.imgBracer2);
+    this.setEquipment(EquipmentSlot.Boots, this.equipment.boots, this.imgBoots);
+    this.setEquipment(
+      EquipmentSlot.Accessory,
+      this.equipment.accessory,
+      this.imgAccessory,
+    );
+    this.setEquipment(
+      EquipmentSlot.Gloves,
+      this.equipment.gloves,
+      this.imgGloves,
+    );
+    this.setEquipment(EquipmentSlot.Belt, this.equipment.belt, this.imgBelt);
+    this.setEquipment(EquipmentSlot.Armor, this.equipment.armor, this.imgArmor);
+    this.setEquipment(
+      EquipmentSlot.Necklace,
+      this.equipment.necklace,
+      this.imgNecklace,
+    );
+    this.setEquipment(EquipmentSlot.Hat, this.equipment.hat, this.imgHat);
+    this.setEquipment(
+      EquipmentSlot.Shield,
+      this.equipment.shield,
+      this.imgShield,
+    );
+    this.setEquipment(
+      EquipmentSlot.Weapon,
+      this.equipment.weapon,
+      this.imgWeapon,
+    );
+    this.setEquipment(
+      EquipmentSlot.Ring1,
+      this.equipment.ring[0],
+      this.imgRing1,
+    );
+    this.setEquipment(
+      EquipmentSlot.Ring2,
+      this.equipment.ring[1],
+      this.imgRing2,
+    );
+    this.setEquipment(
+      EquipmentSlot.Armlet1,
+      this.equipment.armlet[0],
+      this.imgArmlet1,
+    );
+    this.setEquipment(
+      EquipmentSlot.Armlet2,
+      this.equipment.armlet[1],
+      this.imgArmlet2,
+    );
+    this.setEquipment(
+      EquipmentSlot.Bracer1,
+      this.equipment.bracer[0],
+      this.imgBracer1,
+    );
+    this.setEquipment(
+      EquipmentSlot.Bracer2,
+      this.equipment.bracer[1],
+      this.imgBracer2,
+    );
   }
 
-  private setEquipment(itemId: number, el: HTMLDivElement) {
+  private setEquipment(
+    slot: EquipmentSlot,
+    itemId: number,
+    el: HTMLDivElement,
+  ) {
     const img = el.querySelector<HTMLImageElement>('img');
     const tooltip = el.querySelector<HTMLDivElement>('.tooltip');
 
@@ -259,6 +306,15 @@ export class Paperdoll extends Base {
     img.src = `/gfx/gfx023/${100 + record.graphicId * 2}.png`;
     tooltip.innerText = `${record.name}\n${meta.join('\n')}`;
     tooltip.classList.remove('hidden');
+
+    el.setAttribute('draggable', 'true');
+    el.addEventListener('dragstart', (e) => {
+      playSfxById(SfxId.InventoryPickup);
+      e.dataTransfer?.setData(
+        'text/plain',
+        JSON.stringify({ source: 'paperdoll', slot }),
+      );
+    });
   }
 
   show() {
@@ -267,6 +323,13 @@ export class Paperdoll extends Base {
     this.container.classList.remove('hidden');
     this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
     this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+
+    const inventory = document.querySelector<HTMLDivElement>('#inventory');
+    const dollRect = this.container.getBoundingClientRect();
+    const inventoryRect = inventory.getBoundingClientRect();
+    if (dollRect.bottom > inventoryRect.top) {
+      this.container.style.top = `${Math.floor(inventoryRect.top - dollRect.height - 30)}px`;
+    }
   }
 
   hide() {

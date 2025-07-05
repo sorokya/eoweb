@@ -1524,6 +1524,28 @@ export class Client {
       return;
     }
 
+    let slot = getEquipmentSlotForItemType(record.type);
+    if (typeof slot === 'number') {
+      const equipment = this.getEquipmentArray();
+      if (
+        equipment[slot] &&
+        [
+          EquipmentSlot.Ring1,
+          EquipmentSlot.Armlet1,
+          EquipmentSlot.Bracer1,
+        ].includes(slot)
+      ) {
+        slot++;
+      }
+
+      if (equipment[slot]) {
+        return;
+      }
+
+      this.equipItem(slot, item.id);
+      return;
+    }
+
     if (
       ![
         ItemType.Heal,
@@ -1764,28 +1786,26 @@ export class Client {
     slot: EquipmentSlot,
     graphicId: number,
   ) {
-    const index = this.nearby.characters.findIndex(
-      (c) => c.playerId === playerId,
-    );
-    if (index === -1) {
+    const character = this.getCharacterById(playerId);
+    if (!character) {
       return;
     }
 
     switch (slot) {
       case EquipmentSlot.Boots:
-        this.nearby.characters[index].equipment.boots = graphicId;
+        character.equipment.boots = graphicId;
         break;
       case EquipmentSlot.Armor:
-        this.nearby.characters[index].equipment.armor = graphicId;
+        character.equipment.armor = graphicId;
         break;
       case EquipmentSlot.Hat:
-        this.nearby.characters[index].equipment.boots = graphicId;
+        character.equipment.hat = graphicId;
         break;
       case EquipmentSlot.Shield:
-        this.nearby.characters[index].equipment.boots = graphicId;
+        character.equipment.shield = graphicId;
         break;
       case EquipmentSlot.Weapon:
-        this.nearby.characters[index].equipment.boots = graphicId;
+        character.equipment.weapon = graphicId;
         break;
     }
   }

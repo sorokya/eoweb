@@ -95,8 +95,13 @@ export class Inventory extends Base {
 
     this.grid.addEventListener('drop', (e) => {
       e.preventDefault();
+      const item = JSON.parse(e.dataTransfer?.getData('text/plain'));
+      if (item.source === 'paperdoll') {
+        client.unequipItem(item.slot);
+        return;
+      }
+
       playSfxById(SfxId.InventoryPlace);
-      const itemId = Number(e.dataTransfer?.getData('text/plain'));
       const rect = this.grid.getBoundingClientRect();
 
       const mouseX = e.clientX - rect.left;
@@ -105,7 +110,7 @@ export class Inventory extends Base {
       const gridX = Math.floor(mouseX / CELL_SIZE);
       const gridY = Math.floor(mouseY / CELL_SIZE);
 
-      this.tryMoveItem(itemId, gridX, gridY);
+      this.tryMoveItem(item.id, gridX, gridY);
     });
 
     const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -134,8 +139,8 @@ export class Inventory extends Base {
         return;
       }
 
-      const itemId = Number(e.dataTransfer?.getData('text/plain'));
-      if (Number.isNaN(itemId) || itemId < 1) {
+      const item = JSON.parse(e.dataTransfer?.getData('text/plain'));
+      if (Number.isNaN(item.id) || item.id < 1 || item.source !== 'inventory') {
         return;
       }
 
@@ -154,7 +159,7 @@ export class Inventory extends Base {
 
         this.emitter.emit('equipItem', {
           slot,
-          itemId,
+          itemId: item.id,
         });
 
         return;
@@ -176,7 +181,7 @@ export class Inventory extends Base {
         }
       }
 
-      this.emitter.emit('dropItem', itemId);
+      this.emitter.emit('dropItem', item.id);
     });
 
     this.btnPaperdoll.addEventListener('click', () => {
@@ -221,7 +226,7 @@ export class Inventory extends Base {
     this.grid.innerHTML = '';
 
     this.currentWeight.innerText = this.client.weight.current.toString();
-    this.maxWeight.innerText = this.client.weight.current.toString();
+    this.maxWeight.innerText = this.client.weight.max.toString();
 
     if (!this.client.items.length) {
       return;
@@ -253,11 +258,13 @@ export class Inventory extends Base {
       imgContainer.style.gridColumn = `${position.x + 1} / span ${size.x}`;
       imgContainer.style.gridRow = `${position.y + 1} / span ${size.y}`;
       imgContainer.setAttribute('draggable', 'true');
-      imgContainer.dataset.itemId = String(item.id);
 
       imgContainer.addEventListener('dragstart', (e) => {
         playSfxById(SfxId.InventoryPickup);
-        e.dataTransfer?.setData('text/plain', String(item.id));
+        e.dataTransfer?.setData(
+          'text/plain',
+          JSON.stringify({ source: 'inventory', id: item.id }),
+        );
       });
 
       imgContainer.addEventListener('click', (e) => {

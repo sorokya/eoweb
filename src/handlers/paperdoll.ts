@@ -7,7 +7,11 @@ import {
   PaperdollRemoveServerPacket,
   PaperdollReplyServerPacket,
 } from 'eolib';
-import { type Client, getEquipmentSlotForItemType } from '../client';
+import {
+  type Client,
+  EquipmentSlot,
+  getEquipmentSlotForItemType,
+} from '../client';
 import { playSfxById, SfxId } from '../sfx';
 
 function handlePaperdollReply(client: Client, reader: EoReader) {
@@ -32,7 +36,14 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
     return;
   }
 
-  if (packet.subLoc) {
+  if (
+    packet.subLoc &&
+    [
+      EquipmentSlot.Armlet1,
+      EquipmentSlot.Ring1,
+      EquipmentSlot.Bracer1,
+    ].includes(slot)
+  ) {
     slot += 1;
   }
 
