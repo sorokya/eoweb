@@ -102,7 +102,7 @@ export class Chat extends Base {
     }
 
     chatWindow.appendChild(li);
-    chatWindow.scrollTo(0, this.localChat.scrollHeight);
+    chatWindow.scrollTo(0, chatWindow.scrollHeight);
     chatTab.classList.add('active');
   }
 
