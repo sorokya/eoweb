@@ -1973,6 +1973,25 @@ div.icon[data-id="quest-message"] {
   width: 210px;
 }
 
+.menu-item.item .tooltip {
+  position: absolute;
+  top: 0;
+  left: 25%;
+  background-color: black;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.menu-item.item img:hover ~ .tooltip {
+  opacity: 0.9;
+}
+
 .menu-item-img {
   max-width: 48px;
   max-height: 48px;

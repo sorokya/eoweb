@@ -1,4 +1,5 @@
 import { type EifRecord, ItemType } from 'eolib';
+import { getItemMeta } from '../../utils/get-item-meta';
 import type { DialogIcon } from '../dialog-icon';
 
 export function createIconMenuItem(
@@ -40,6 +41,14 @@ export function createItemMenuItem(
   menuImg.src = getItemGraphicPath(record, itemAmount);
   menuImg.classList.add('menu-item-img');
   menuItem.appendChild(menuImg);
+
+  if (record.type !== ItemType.General) {
+    const tooltip = document.createElement('div');
+    tooltip.classList.add('tooltip');
+    const meta = getItemMeta(record);
+    tooltip.innerText = `${record.name}\n${meta.join('\n')}`;
+    menuItem.appendChild(tooltip);
+  }
 
   const menuLabel = document.createElement('div');
   menuLabel.classList.add('menu-label');

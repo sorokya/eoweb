@@ -215,7 +215,7 @@ export class ShopDialog extends Base {
       const item = createItemMenuItem(
         record,
         record.name,
-        `${this.client.getResourceString(EOResourceID.DIALOG_SHOP_PRICE)}: ${sell.buyPrice} ${record.type === ItemType.Armor ? `(${record.spec2 === Gender.Female ? this.client.getResourceString(EOResourceID.FEMALE) : this.client.getResourceString(EOResourceID.MALE)})` : ''}`,
+        `${this.client.getResourceString(EOResourceID.DIALOG_SHOP_PRICE)}: ${sell.sellPrice} ${record.type === ItemType.Armor ? `(${record.spec2 === Gender.Female ? this.client.getResourceString(EOResourceID.FEMALE) : this.client.getResourceString(EOResourceID.MALE)})` : ''}`,
       );
       this.itemList.appendChild(item);
     }
