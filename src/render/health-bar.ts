@@ -14,7 +14,7 @@ export class HealthBar {
   percentage: number;
   damage: number;
   heal: number;
-  ticks = 9;
+  ticks = 4;
   textCanvas = document.createElement('canvas');
   textCtx = this.textCanvas.getContext('2d');
 
