@@ -35,8 +35,11 @@ export function isInputHeld(input: Input): boolean {
   return held[input] || false;
 }
 
-export function getLastInputHeld(): Input | null {
-  return lastInputHeld[lastInputHeld.length - 1] ?? null;
+export function getLastHeldDirection(): Input | null {
+  const directions = lastInputHeld.filter((i) =>
+    [Input.Up, Input.Down, Input.Left, Input.Right].includes(i),
+  );
+  return directions[directions.length - 1] ?? null;
 }
 
 export function wasInputHeldLastTick(input: Input): boolean {
