@@ -40,6 +40,7 @@ import { MobileControls } from './ui/mobile-controls';
 import { OffsetTweaker } from './ui/offset-tweaker';
 import { Paperdoll } from './ui/paperdoll';
 import { QuestDialog } from './ui/quest-dialog';
+import { ShopDialog } from './ui/shop-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallConfirm } from './ui/small-confirm';
 import { capitalize } from './utils/capitalize';
@@ -264,6 +265,11 @@ client.on('chestChanged', ({ items }) => {
   chestDialog.setItems(items);
 });
 
+client.on('shopOpened', (data) => {
+  shopDialog.setData(data.name, data.craftItems, data.tradeItems);
+  shopDialog.show();
+});
+
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.host);
   socket.addEventListener('open', () => {
@@ -341,6 +347,7 @@ const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
 const questDialog = new QuestDialog();
 const chestDialog = new ChestDialog(client);
+const shopDialog = new ShopDialog(client);
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');

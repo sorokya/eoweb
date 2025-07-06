@@ -65,7 +65,9 @@ import {
   QuestUseClientPacket,
   RangeRequestClientPacket,
   type ServerSettings,
+  type ShopCraftItem,
   ShopOpenClientPacket,
+  type ShopTradeItem,
   SitAction,
   SitRequestClientPacket,
   SitState,
@@ -129,6 +131,7 @@ import { registerQuestHandlers } from './handlers/quest';
 import { registerRangeHandlers } from './handlers/range';
 import { registerRecoverHandlers } from './handlers/recover';
 import { registerRefreshHandlers } from './handlers/refresh';
+import { registerShopHandlers } from './handlers/shop';
 import { registerSitHandlers } from './handlers/sit';
 import { registerTalkHandlers } from './handlers/talk';
 import { registerWalkHandlers } from './handlers/walk';
@@ -193,6 +196,11 @@ type ClientEvents = {
   };
   chestChanged: {
     items: ThreeItem[];
+  };
+  shopOpened: {
+    name: string;
+    craftItems: ShopCraftItem[];
+    tradeItems: ShopTradeItem[];
   };
 };
 
@@ -998,6 +1006,7 @@ export class Client {
     registerEmoteHandlers(this);
     registerPaperdollHandlers(this);
     registerChestHandlers(this);
+    registerShopHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
