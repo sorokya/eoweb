@@ -874,7 +874,7 @@ export class Client {
           const coords = new Coords();
           coords.x = warpTile.x;
           coords.y = warpRow.y;
-          this.doors.push(new Door(coords));
+          this.doors.push(new Door(coords, warpTile.warp.door));
         }
       }
     }
@@ -899,6 +899,21 @@ export class Client {
   openDoor(coords: Coords) {
     const door = this.getDoor(coords);
     if (!door || door.open) {
+      return;
+    }
+
+    if (
+      door.key > 1 &&
+      !this.items.some((i) => {
+        const record = this.getEifRecordById(i.id);
+        if (!record) {
+          return false;
+        }
+
+        return record.spec1 === door.key;
+      })
+    ) {
+      playSfxById(SfxId.DoorOrChestLocked);
       return;
     }
 
@@ -1226,6 +1241,15 @@ export class Client {
       ].includes(spec.tileSpec)
     ) {
       return false;
+    }
+
+    const warp = this.map.warpRows
+      .find((r) => r.y === coords.y)
+      ?.tiles.find((t) => t.x === coords.x);
+    if (warp) {
+      if (warp.warp.levelRequired > this.level) {
+        return false;
+      }
     }
 
     return true;
