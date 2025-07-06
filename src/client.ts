@@ -91,6 +91,7 @@ import {
   WelcomeRequestClientPacket,
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
+import { Notyf } from 'notyf';
 import type { PacketBus } from './bus';
 import { ChatBubble } from './chat-bubble';
 import { getDoorIntersecting, getNpcIntersecting } from './collision';
@@ -106,7 +107,7 @@ import {
 } from './consts';
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
 import { Door } from './door';
-import type { DialogResourceID, Edf, EOResourceID } from './edf';
+import { type DialogResourceID, type Edf, EOResourceID } from './edf';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType, loadBitmapById } from './gfx';
 import { registerAccountHandlers } from './handlers/account';
@@ -425,6 +426,12 @@ export class Client {
     jukebox: null,
   };
   chestCoords = new Coords();
+  notyf = new Notyf({
+    position: {
+      x: 'right',
+      y: 'top',
+    },
+  });
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -913,7 +920,15 @@ export class Client {
         return record.spec1 === door.key;
       })
     ) {
+      const keyName =
+        this.eif.items.find(
+          (i) => i.type === ItemType.Key && i.spec1 === door.key,
+        )?.name || 'Unknown';
       playSfxById(SfxId.DoorOrChestLocked);
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+        `${this.getResourceString(EOResourceID.STATUS_LABEL_THE_DOOR_IS_LOCKED_EXCLAMATION)} - ${keyName}`,
+      );
       return;
     }
 
@@ -1248,6 +1263,10 @@ export class Client {
       ?.tiles.find((t) => t.x === coords.x);
     if (warp) {
       if (warp.warp.levelRequired > this.level) {
+        this.setStatusLabel(
+          EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+          `${this.getResourceString(EOResourceID.STATUS_LABEL_NOT_READY_TO_USE_ENTRANCE)} - LVL ${warp.warp.levelRequired}`,
+        );
         return false;
       }
     }
@@ -1682,10 +1701,6 @@ export class Client {
         slot++;
       }
 
-      if (equipment[slot]) {
-        return;
-      }
-
       this.equipItem(slot, item.id);
       return;
     }
@@ -1701,6 +1716,14 @@ export class Client {
         ItemType.CureCurse,
       ].includes(record.type)
     ) {
+      return;
+    }
+
+    if (record.type === ItemType.Teleport && !this.map.canScroll) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_ACTION,
+        this.getResourceString(EOResourceID.STATUS_LABEL_NOTHING_HAPPENED),
+      );
       return;
     }
 
@@ -1796,7 +1819,12 @@ export class Client {
 
     const equipment = this.getEquipmentArray();
     if (equipment[slot]) {
-      // item already equipped
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        this.getResourceString(
+          EOResourceID.STATUS_LABEL_ITEM_EQUIP_TYPE_ALREADY_EQUIPPED,
+        ),
+      );
       return;
     }
 
@@ -1810,41 +1838,78 @@ export class Client {
       return;
     }
 
-    // Wrong gender
     if (record.type === ItemType.Armor && record.spec2 !== character.gender) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        this.getResourceString(
+          EOResourceID.STATUS_LABEL_ITEM_EQUIP_DOES_NOT_FIT_GENDER,
+        ),
+      );
       return;
     }
 
-    // Wrong class
     if (record.classRequirement && record.classRequirement !== this.classId) {
+      const classRecord = this.getEcfRecordById(record.classRequirement);
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_CAN_ONLY_BE_USED_BY)} ${classRecord?.name || 'Unknown'}`,
+      );
       return;
     }
 
     if (record.strRequirement > this.baseStats.str) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.strRequirement} STR`,
+      );
       return;
     }
 
     if (record.intRequirement > this.baseStats.intl) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.intRequirement} INT`,
+      );
       return;
     }
 
     if (record.wisRequirement > this.baseStats.wis) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.wisRequirement} WIS`,
+      );
       return;
     }
 
     if (record.agiRequirement > this.baseStats.agi) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.agiRequirement} AGI`,
+      );
       return;
     }
 
     if (record.chaRequirement > this.baseStats.cha) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.chaRequirement} CHA`,
+      );
       return;
     }
 
     if (record.conRequirement > this.baseStats.con) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.conRequirement} CON`,
+      );
       return;
     }
 
     if (record.levelRequirement > this.level) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} LVL ${record.levelRequirement}`,
+      );
       return;
     }
 
@@ -1983,9 +2048,25 @@ export class Client {
       }
     }
 
-    const haveKeys = chestKeys.every((k) => keys.includes(k));
+    let keyName = '';
+    const haveKeys = chestKeys.every((k) => {
+      if (!keys.includes(k)) {
+        const record = this.eif.items.find(
+          (i) => i.type === ItemType.Key && i.spec1 === k,
+        );
+        keyName = record.name;
+        return false;
+      }
+
+      return true;
+    });
+
     if (!haveKeys) {
       playSfxById(SfxId.DoorOrChestLocked);
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+        `${this.getResourceString(EOResourceID.STATUS_LABEL_THE_CHEST_IS_LOCKED_EXCLAMATION)} - ${keyName}`,
+      );
       return;
     }
 
@@ -2036,5 +2117,11 @@ export class Client {
     packet.sessionId = this.sessionId;
     packet.craftItemId = itemId;
     this.bus.send(packet);
+  }
+
+  setStatusLabel(type: EOResourceID, text: string) {
+    this.notyf.open({
+      message: `[ ${this.getResourceString(type)} ] ${text}`,
+    });
   }
 }
