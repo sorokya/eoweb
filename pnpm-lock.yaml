@@ -17,6 +17,9 @@ importers:
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
+      notyf:
+        specifier: ^3.10.0
+        version: 3.10.0
     devDependencies:
       '@biomejs/biome':
         specifier: 2.0.5
@@ -428,6 +431,9 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  notyf@3.10.0:
+    resolution: {integrity: sha512-Mtnp+0qiZxgrH+TzVlzhWyZceHdAZ/UWK0/ju9U0HQeDpap1mZ8cC7H5wSI5mwgni6yeAjaxsTw0sbMK+aSuHw==}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -764,6 +770,8 @@ snapshots:
   mitt@3.0.1: {}
 
   nanoid@3.3.11: {}
+
+  notyf@3.10.0: {}
 
   picocolors@1.1.1: {}
 

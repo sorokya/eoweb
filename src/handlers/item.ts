@@ -17,6 +17,7 @@ import {
   PacketFamily,
 } from 'eolib';
 import { type Client, EquipmentSlot } from '../client';
+import { EOResourceID } from '../edf';
 import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
@@ -64,6 +65,12 @@ function handleItemGet(client: Client, reader: EoReader) {
     client.items.push(item);
   }
 
+  const record = client.getEifRecordById(packet.takenItem.id);
+  client.setStatusLabel(
+    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record.name}`,
+  );
+
   client.emit('inventoryChanged', undefined);
 }
 
@@ -86,6 +93,12 @@ function handleItemDrop(client: Client, reader: EoReader) {
   } else {
     client.items = client.items.filter((i) => i.id !== packet.droppedItem.id);
   }
+
+  const record = client.getEifRecordById(packet.droppedItem.id);
+  client.setStatusLabel(
+    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record.name}`,
+  );
 
   client.emit('inventoryChanged', undefined);
 }
@@ -142,6 +155,10 @@ function handleItemReply(client: Client, reader: EoReader) {
         break;
       }
 
+      client.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+        client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_USE_DRUNK),
+      );
       client.drunk = true;
       client.drunkTicks = 100 + record.spec1 * 10;
       client.drunkEmoteTicks = 20;
@@ -315,6 +332,12 @@ function handleItemJunk(client: Client, reader: EoReader) {
   } else {
     client.items = client.items.filter((i) => i.id !== packet.junkedItem.id);
   }
+
+  const record = client.getEifRecordById(packet.junkedItem.id);
+  client.setStatusLabel(
+    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
+  );
 
   client.emit('inventoryChanged', undefined);
 }

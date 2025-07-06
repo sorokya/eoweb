@@ -5,6 +5,7 @@ import {
   PacketFamily,
 } from 'eolib';
 import { ChatTab, type Client } from '../client';
+import { EOResourceID } from '../edf';
 
 function handleMessagePing(client: Client) {
   const delta = Date.now() - client.pingStart;
@@ -16,7 +17,7 @@ function handleMessagePing(client: Client) {
 
 function handleMessageOpen(client: Client, reader: EoReader) {
   const packet = MessageOpenServerPacket.deserialize(reader);
-  // TODO: Status bar message
+  client.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, packet.message);
   client.emit('chat', {
     name: 'System',
     tab: ChatTab.Local,

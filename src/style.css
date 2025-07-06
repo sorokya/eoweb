@@ -2117,3 +2117,9 @@ div.icon[data-id="quest-message"] {
   background-position-y: -291px;
   background-position-x: -124px;
 }
+
+.notyf__wrapper {
+  background: #000;
+  opacity: 0.6;
+  padding: 17px 15px;
+}

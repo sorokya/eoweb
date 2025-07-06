@@ -9,6 +9,7 @@ import {
   SitState,
 } from 'eolib';
 import './style.css';
+import 'notyf/notyf.min.css';
 import { PacketBus } from './bus';
 import { ChatTab, Client, GameState } from './client';
 import { GAME_FPS, MAX_CHALLENGE } from './consts';
@@ -487,6 +488,12 @@ inventory.on('dropItem', ({ at, itemId }) => {
   }
 
   if (at === 'cursor' && !client.cursorInDropRange()) {
+    client.setStatusLabel(
+      EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      client.getResourceString(
+        EOResourceID.STATUS_LABEL_ITEM_DROP_OUT_OF_RANGE,
+      ),
+    );
     return;
   }
 

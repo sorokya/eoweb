@@ -1,6 +1,7 @@
 import { Direction, Emote, ItemSubtype, SitState } from 'eolib';
 import { type Client, GameState } from './client';
 import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
+import { EOResourceID } from './edf';
 import { getLatestDirectionHeld, Input, isInputHeld } from './input';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
@@ -95,6 +96,12 @@ export class MovementController {
           const record = this.client.getEifRecordById(shield);
           if (!record || record.subtype !== ItemSubtype.Arrows) {
             playSfxById(SfxId.NoArrows);
+            this.client.setStatusLabel(
+              EOResourceID.STATUS_LABEL_TYPE_WARNING,
+              this.client.getResourceString(
+                EOResourceID.STATUS_LABEL_YOU_HAVE_NO_ARROWS,
+              ),
+            );
             this.attackTicks = ATTACK_TICKS;
             return;
           }
@@ -169,6 +176,7 @@ export class MovementController {
         }
 
         if (!this.client.canWalk(to)) {
+          this.walkTicks = WALK_TICKS;
           return;
         }
 

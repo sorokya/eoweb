@@ -6,6 +6,7 @@ import {
   NpcAgreeServerPacket,
   NpcDialogServerPacket,
   NpcJunkServerPacket,
+  NpcKillStealProtectionState,
   NpcPlayerServerPacket,
   NpcReplyServerPacket,
   NpcSpecServerPacket,
@@ -14,6 +15,7 @@ import {
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
+import { EOResourceID } from '../edf';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { NpcAttackAnimation } from '../render/npc-attack';
@@ -123,7 +125,12 @@ function handleNpcSpec(client: Client, reader: EoReader) {
   }
 
   if (packet.experience) {
+    const gain = packet.experience - client.experience;
     client.experience = packet.experience;
+    client.setStatusLabel(
+      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
+    );
     client.emit('statsUpdate', undefined);
   }
 }
@@ -163,7 +170,12 @@ function handleNpcAccept(client: Client, reader: EoReader) {
   }
 
   if (packet.experience) {
+    const gain = packet.experience - client.experience;
     client.experience = packet.experience;
+    client.setStatusLabel(
+      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
+    );
     client.emit('statsUpdate', undefined);
   }
 }
@@ -216,6 +228,16 @@ function handleNpcReply(client: Client, reader: EoReader) {
     npc.index,
     new HealthBar(packet.hpPercentage, packet.damage),
   );
+
+  if (
+    packet.playerId === client.playerId &&
+    packet.killStealProtection === NpcKillStealProtectionState.Protected
+  ) {
+    client.setStatusLabel(
+      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      client.getResourceString(EOResourceID.STATUS_LABEL_UNABLE_TO_ATTACK),
+    );
+  }
 }
 
 export function registerNpcHandlers(client: Client) {
