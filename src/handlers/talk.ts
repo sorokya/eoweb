@@ -2,13 +2,18 @@ import {
   type EoReader,
   PacketAction,
   PacketFamily,
+  TalkAdminServerPacket,
   TalkAnnounceServerPacket,
+  TalkMsgServerPacket,
   TalkPlayerServerPacket,
   TalkServerServerPacket,
+  TalkTellServerPacket,
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
 import { playSfxById, SfxId } from '../sfx';
+import { ChatIcon } from '../ui/chat';
+import { capitalize } from '../utils/capitalize';
 
 function handleTalkPlayer(client: Client, reader: EoReader) {
   const packet = TalkPlayerServerPacket.deserialize(reader);
@@ -22,29 +27,65 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
   client.characterChats.set(character.playerId, new ChatBubble(packet.message));
 
   client.emit('chat', {
-    name: character.name,
     tab: ChatTab.Local,
-    message: packet.message,
+    message: `${capitalize(character.name)} ${packet.message}`,
+    icon: ChatIcon.None,
   });
 }
 
 function handleTalkServer(client: Client, reader: EoReader) {
   const packet = TalkServerServerPacket.deserialize(reader);
-  client.emit('chat', {
-    name: 'Server',
-    tab: ChatTab.Local,
+  client.emit('serverChat', {
     message: packet.message,
   });
-  playSfxById(SfxId.ServerMessage);
+}
+
+function handleTalkMsg(client: Client, reader: EoReader) {
+  const packet = TalkMsgServerPacket.deserialize(reader);
+  client.emit('chat', {
+    icon: ChatIcon.None,
+    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    tab: ChatTab.Global,
+  });
+}
+
+function handleTalkAdmin(client: Client, reader: EoReader) {
+  const packet = TalkAdminServerPacket.deserialize(reader);
+  client.emit('chat', {
+    icon: ChatIcon.HGM,
+    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    tab: ChatTab.Group,
+  });
+  playSfxById(SfxId.AdminChatReceived);
+}
+
+function handleTalkTell(client: Client, reader: EoReader) {
+  const packet = TalkTellServerPacket.deserialize(reader);
+  client.emit('chat', {
+    icon: ChatIcon.Note,
+    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    tab: ChatTab.Local,
+  });
+  playSfxById(SfxId.PrivateMessageReceived);
 }
 
 function handleTalkAnnounce(client: Client, reader: EoReader) {
   const packet = TalkAnnounceServerPacket.deserialize(reader);
   client.characterChats.set(client.playerId, new ChatBubble(packet.message));
   client.emit('chat', {
-    name: packet.playerName,
     tab: ChatTab.Local,
-    message: packet.message,
+    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    icon: ChatIcon.GlobalAnnounce,
+  });
+  client.emit('chat', {
+    tab: ChatTab.Group,
+    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    icon: ChatIcon.GlobalAnnounce,
+  });
+  client.emit('chat', {
+    tab: ChatTab.Global,
+    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    icon: ChatIcon.GlobalAnnounce,
   });
   playSfxById(SfxId.AdminAnnounceReceived);
 }
@@ -64,5 +105,20 @@ export function registerTalkHandlers(client: Client) {
     PacketFamily.Talk,
     PacketAction.Announce,
     (reader) => handleTalkAnnounce(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Talk,
+    PacketAction.Msg,
+    (reader) => handleTalkMsg(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Talk,
+    PacketAction.Admin,
+    (reader) => handleTalkAdmin(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Talk,
+    PacketAction.Tell,
+    (reader) => handleTalkTell(client, reader),
   );
 }

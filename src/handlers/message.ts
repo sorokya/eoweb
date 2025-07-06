@@ -6,6 +6,7 @@ import {
 } from 'eolib';
 import { ChatTab, type Client } from '../client';
 import { EOResourceID } from '../edf';
+import { ChatIcon } from '../ui/chat';
 
 function handleMessagePing(client: Client) {
   const delta = Date.now() - client.pingStart;
@@ -19,8 +20,8 @@ function handleMessageOpen(client: Client, reader: EoReader) {
   const packet = MessageOpenServerPacket.deserialize(reader);
   client.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, packet.message);
   client.emit('chat', {
-    name: 'System',
-    tab: ChatTab.Local,
+    tab: ChatTab.System,
+    icon: ChatIcon.QuestMessage,
     message: packet.message,
   });
 }

@@ -6,7 +6,7 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import { ChatTab, type Client } from '../client';
+import type { Client } from '../client';
 import { playSfxById, SfxId } from '../sfx';
 
 function handleArenaUse(client: Client, reader: EoReader) {
@@ -27,9 +27,7 @@ function handleArenaAccept(client: Client, reader: EoReader) {
 function handleArenaSpec(client: Client, reader: EoReader) {
   const packet = ArenaSpecServerPacket.deserialize(reader);
   const message = `${packet.victimName} was eliminated by ${packet.killerName}`;
-  client.emit('chat', {
-    name: 'Server',
-    tab: ChatTab.Local,
+  client.emit('serverChat', {
     message:
       packet.killsCount > 1
         ? `${message}, ${packet.killerName} killed ${packet.killsCount} player(s)`

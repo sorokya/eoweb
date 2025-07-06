@@ -22,6 +22,8 @@ import { NpcAttackAnimation } from '../render/npc-attack';
 import { NpcDeathAnimation } from '../render/npc-death';
 import { NpcWalkAnimation } from '../render/npc-walk';
 import { playSfxById, SfxId } from '../sfx';
+import { ChatIcon } from '../ui/chat';
+import { capitalize } from '../utils/capitalize';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
   const packet = NpcPlayerServerPacket.deserialize(reader);
@@ -79,9 +81,9 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     client.npcChats.set(npc.index, new ChatBubble(chat.message));
 
     client.emit('chat', {
-      name: record.name,
+      icon: ChatIcon.None,
       tab: ChatTab.Local,
-      message: chat.message,
+      message: `${capitalize(record.name)} ${chat.message}`,
     });
   }
 
@@ -204,11 +206,10 @@ function handleNpcDialog(client: Client, reader: EoReader) {
   }
 
   client.npcChats.set(npc.index, new ChatBubble(packet.message));
-
   client.emit('chat', {
-    name: record.name,
+    icon: ChatIcon.None,
     tab: ChatTab.Local,
-    message: packet.message,
+    message: `${capitalize(record.name)} ${packet.message}`,
   });
 }
 
