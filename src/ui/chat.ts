@@ -66,7 +66,7 @@ export class Chat extends Base {
   );
   private collapsed = false;
 
-  addMessage(tab: ChatTab, message: string, icon = ChatIcon.None) {
+  addMessage(tab: ChatTab, message: string, icon: ChatIcon) {
     const li = document.createElement('li');
 
     const img = document.createElement('div');

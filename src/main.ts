@@ -188,11 +188,11 @@ client.on('login', (characters) => {
   characterSelect.show();
 });
 
-client.on('serverChat', ({ message, sfxId }) => {
+client.on('serverChat', ({ message, sfxId, icon }) => {
   client.emit('chat', {
     tab: ChatTab.Local,
-    message: `Server ${message}`,
-    icon: ChatIcon.None,
+    message: `${client.getResourceString(EOResourceID.STRING_SERVER)} ${message}`,
+    icon: icon || ChatIcon.Exclamation,
   });
   playSfxById(sfxId || SfxId.ServerMessage);
 });
@@ -210,14 +210,14 @@ client.on('characterCreated', (characters) => {
 client.on('selectCharacter', () => {});
 
 client.on('chat', ({ icon, tab, message }) => {
-  chat.addMessage(tab, message, icon);
+  chat.addMessage(tab, message, icon || ChatIcon.None);
 });
 
 client.on('enterGame', ({ news }) => {
   mainMenu.hide();
   for (const line of news) {
     if (line) {
-      chat.addMessage(ChatTab.Local, line);
+      chat.addMessage(ChatTab.Local, line, ChatIcon.None);
     }
   }
 
@@ -494,6 +494,13 @@ inventory.on('dropItem', ({ at, itemId }) => {
       client.getResourceString(
         EOResourceID.STATUS_LABEL_ITEM_DROP_OUT_OF_RANGE,
       ),
+    );
+    chat.addMessage(
+      ChatTab.System,
+      client.getResourceString(
+        EOResourceID.STATUS_LABEL_ITEM_DROP_OUT_OF_RANGE,
+      ),
+      ChatIcon.DotDotDotDot,
     );
     return;
   }

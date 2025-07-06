@@ -16,12 +16,13 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import { type Client, EquipmentSlot } from '../client';
+import { ChatTab, type Client, EquipmentSlot } from '../client';
 import { EOResourceID } from '../edf';
 import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { playSfxById, SfxId } from '../sfx';
+import { ChatIcon } from '../ui/chat';
 
 function handleItemAdd(client: Client, reader: EoReader) {
   const packet = ItemAddServerPacket.deserialize(reader);
@@ -70,6 +71,11 @@ function handleItemGet(client: Client, reader: EoReader) {
     EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
     `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record.name}`,
   );
+  client.emit('chat', {
+    tab: ChatTab.System,
+    icon: ChatIcon.UpArrow,
+    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record.name}`,
+  });
 
   client.emit('inventoryChanged', undefined);
 }
@@ -99,6 +105,11 @@ function handleItemDrop(client: Client, reader: EoReader) {
     EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
     `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record.name}`,
   );
+  client.emit('chat', {
+    tab: ChatTab.System,
+    icon: ChatIcon.DownArrow,
+    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record.name}`,
+  });
 
   client.emit('inventoryChanged', undefined);
 }
@@ -338,6 +349,11 @@ function handleItemJunk(client: Client, reader: EoReader) {
     EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
     `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
   );
+  client.emit('chat', {
+    tab: ChatTab.System,
+    icon: ChatIcon.DownArrow,
+    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
+  });
 
   client.emit('inventoryChanged', undefined);
 }

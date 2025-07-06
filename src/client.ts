@@ -181,8 +181,8 @@ type ClientEvents = {
   characterCreated: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
-  chat: { tab: ChatTab; message: string; icon: ChatIcon };
-  serverChat: { message: string; sfxId?: SfxId | null };
+  chat: { tab: ChatTab; message: string; icon?: ChatIcon | null };
+  serverChat: { message: string; sfxId?: SfxId | null; icon?: ChatIcon | null };
   accountCreated: undefined;
   passwordChanged: undefined;
   inventoryChanged: undefined;
@@ -684,7 +684,6 @@ export class Client {
       this.emit('chat', {
         message: `${capitalize(record.name)} ${messages[0]}`,
         tab: ChatTab.Local,
-        icon: ChatIcon.None,
       });
       this.npcChats.set(index, new ChatBubble(messages[0]));
 
@@ -1354,7 +1353,6 @@ export class Client {
     this.emit('chat', {
       tab: ChatTab.Local,
       message: `${capitalize(this.name)} ${trimmed}`,
-      icon: ChatIcon.None,
     });
   }
 

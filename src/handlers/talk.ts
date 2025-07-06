@@ -29,7 +29,6 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
   client.emit('chat', {
     tab: ChatTab.Local,
     message: `${capitalize(character.name)} ${packet.message}`,
-    icon: ChatIcon.None,
   });
 }
 
@@ -43,7 +42,6 @@ function handleTalkServer(client: Client, reader: EoReader) {
 function handleTalkMsg(client: Client, reader: EoReader) {
   const packet = TalkMsgServerPacket.deserialize(reader);
   client.emit('chat', {
-    icon: ChatIcon.None,
     message: `${capitalize(packet.playerName)} ${packet.message}`,
     tab: ChatTab.Global,
   });
