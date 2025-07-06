@@ -158,11 +158,13 @@ export class MovementController {
 
         if (this.client.chestAt(to)) {
           this.client.openChest(to);
+          this.walkTicks = WALK_TICKS;
           return;
         }
 
         if (this.client.isFacingChairAt(to) && !this.client.occupied(to)) {
           this.client.sitChair(to);
+          this.walkTicks = WALK_TICKS;
           return;
         }
 

@@ -874,7 +874,7 @@ export class Client {
           const coords = new Coords();
           coords.x = warpTile.x;
           coords.y = warpRow.y;
-          this.doors.push(new Door(coords));
+          this.doors.push(new Door(coords, warpTile.warp.door));
         }
       }
     }
@@ -899,6 +899,21 @@ export class Client {
   openDoor(coords: Coords) {
     const door = this.getDoor(coords);
     if (!door || door.open) {
+      return;
+    }
+
+    if (
+      door.key > 1 &&
+      !this.items.some((i) => {
+        const record = this.getEifRecordById(i.id);
+        if (!record) {
+          return false;
+        }
+
+        return record.spec1 === door.key;
+      })
+    ) {
+      playSfxById(SfxId.DoorOrChestLocked);
       return;
     }
 
@@ -1226,6 +1241,15 @@ export class Client {
       ].includes(spec.tileSpec)
     ) {
       return false;
+    }
+
+    const warp = this.map.warpRows
+      .find((r) => r.y === coords.y)
+      ?.tiles.find((t) => t.x === coords.x);
+    if (warp) {
+      if (warp.warp.levelRequired > this.level) {
+        return false;
+      }
     }
 
     return true;
@@ -1931,6 +1955,40 @@ export class Client {
   }
 
   openChest(coords: Vector2) {
+    const chestKeys: number[] = [];
+    for (const item of this.map.items) {
+      if (
+        item.coords.x === coords.x &&
+        item.coords.y === coords.y &&
+        item.key &&
+        !chestKeys.includes(item.key)
+      ) {
+        chestKeys.push(item.key);
+      }
+    }
+
+    const keys: number[] = [];
+    for (const item of this.items) {
+      const record = this.getEifRecordById(item.id);
+      if (!record) {
+        continue;
+      }
+
+      if (
+        record.type === ItemType.Key &&
+        record.spec1 &&
+        !keys.includes(record.spec1)
+      ) {
+        keys.push(record.spec1);
+      }
+    }
+
+    const haveKeys = chestKeys.every((k) => keys.includes(k));
+    if (!haveKeys) {
+      playSfxById(SfxId.DoorOrChestLocked);
+      return;
+    }
+
     const packet = new ChestOpenClientPacket();
     packet.coords = new Coords();
     packet.coords.x = coords.x;
