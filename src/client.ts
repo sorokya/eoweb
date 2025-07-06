@@ -1955,6 +1955,40 @@ export class Client {
   }
 
   openChest(coords: Vector2) {
+    const chestKeys: number[] = [];
+    for (const item of this.map.items) {
+      if (
+        item.coords.x === coords.x &&
+        item.coords.y === coords.y &&
+        item.key &&
+        !chestKeys.includes(item.key)
+      ) {
+        chestKeys.push(item.key);
+      }
+    }
+
+    const keys: number[] = [];
+    for (const item of this.items) {
+      const record = this.getEifRecordById(item.id);
+      if (!record) {
+        continue;
+      }
+
+      if (
+        record.type === ItemType.Key &&
+        record.spec1 &&
+        !keys.includes(record.spec1)
+      ) {
+        keys.push(record.spec1);
+      }
+    }
+
+    const haveKeys = chestKeys.every((k) => keys.includes(k));
+    if (!haveKeys) {
+      playSfxById(SfxId.DoorOrChestLocked);
+      return;
+    }
+
     const packet = new ChestOpenClientPacket();
     packet.coords = new Coords();
     packet.coords.x = coords.x;
