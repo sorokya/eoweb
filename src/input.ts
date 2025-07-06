@@ -22,7 +22,7 @@ export enum Input {
 }
 
 const held: boolean[] = [];
-const lastDirectionHeld: Input[] = [];
+const lastInputHeld: Input[] = []; // | null = null;
 
 let touchStartX: number | null = null;
 let touchStartY: number | null = null;
@@ -35,23 +35,28 @@ export function isInputHeld(input: Input): boolean {
   return held[input] || false;
 }
 
-export function getLatestDirectionHeld(): Input | null {
-  if (lastDirectionHeld.length === 0) return null;
-  return lastDirectionHeld[lastDirectionHeld.length - 1];
+export function getLastInputHeld(): Input | null {
+  return lastInputHeld[lastInputHeld.length - 1] ?? null;
 }
 
-function updateDirectionHeld(input: Input, down: boolean) {
-  held[input] = down;
-  const index = lastDirectionHeld.indexOf(input);
-  if (down) {
-    if (index === -1) lastDirectionHeld.push(input); // track most recent
-  } else {
-    if (index !== -1) lastDirectionHeld.splice(index, 1);
+export function wasInputHeldLastTick(input: Input): boolean {
+  return lastInputHeld.indexOf(input) > -1;
+}
+
+export function clearUnheldInput() {
+  for (let i = lastInputHeld.length - 1; i >= 0; --i) {
+    if (!held[lastInputHeld[i]]) {
+      lastInputHeld.splice(i, 1);
+    }
   }
 }
 
 function updateInputHeld(input: Input, down: boolean) {
   held[input] = down;
+  const index = lastInputHeld.indexOf(input);
+  if (down) {
+    if (index === -1) lastInputHeld.push(input); // track most recent
+  }
 }
 
 function swipedDir(dx: number, dy: number): Input {
@@ -70,19 +75,19 @@ window.addEventListener('keydown', (e) => {
   switch (e.code) {
     case 'KeyW':
     case 'ArrowUp':
-      updateDirectionHeld(Input.Up, true);
+      updateInputHeld(Input.Up, true);
       break;
     case 'KeyA':
     case 'ArrowLeft':
-      updateDirectionHeld(Input.Left, true);
+      updateInputHeld(Input.Left, true);
       break;
     case 'KeyS':
     case 'ArrowDown':
-      updateDirectionHeld(Input.Down, true);
+      updateInputHeld(Input.Down, true);
       break;
     case 'KeyD':
     case 'ArrowRight':
-      updateDirectionHeld(Input.Right, true);
+      updateInputHeld(Input.Right, true);
       break;
     case 'KeyX':
       updateInputHeld(Input.SitStand, true);
@@ -132,19 +137,19 @@ window.addEventListener('keyup', (e) => {
   switch (e.code) {
     case 'KeyW':
     case 'ArrowUp':
-      updateDirectionHeld(Input.Up, false);
+      updateInputHeld(Input.Up, false);
       break;
     case 'KeyA':
     case 'ArrowLeft':
-      updateDirectionHeld(Input.Left, false);
+      updateInputHeld(Input.Left, false);
       break;
     case 'KeyS':
     case 'ArrowDown':
-      updateDirectionHeld(Input.Down, false);
+      updateInputHeld(Input.Down, false);
       break;
     case 'KeyD':
     case 'ArrowRight':
-      updateDirectionHeld(Input.Right, false);
+      updateInputHeld(Input.Right, false);
       break;
     case 'KeyX':
       updateInputHeld(Input.SitStand, false);
@@ -214,7 +219,7 @@ joystickContainer.addEventListener('touchend', () => {
   inputVector = { x: 0, y: 0 };
   thumb.style.transform = 'translate(0px, 0px)';
   if (activeTouchDir !== null) {
-    updateDirectionHeld(activeTouchDir, false);
+    updateInputHeld(activeTouchDir, false);
   }
 
   touchStartX = touchStartY = null;
@@ -253,7 +258,7 @@ function handleTouchMove(e: TouchEvent) {
 
   if (dist2 < DRAG_THRESHOLD * DRAG_THRESHOLD) {
     if (activeTouchDir !== null) {
-      updateDirectionHeld(activeTouchDir, false);
+      updateInputHeld(activeTouchDir, false);
       activeTouchDir = null;
     }
     return;
@@ -261,8 +266,8 @@ function handleTouchMove(e: TouchEvent) {
 
   const dir = swipedDir(dx, dy);
   if (dir !== activeTouchDir) {
-    if (activeTouchDir !== null) updateDirectionHeld(activeTouchDir, false);
-    updateDirectionHeld(dir, true);
+    if (activeTouchDir !== null) updateInputHeld(activeTouchDir, false);
+    updateInputHeld(dir, true);
     activeTouchDir = dir;
   }
 }
