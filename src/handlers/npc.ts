@@ -22,6 +22,8 @@ import { NpcAttackAnimation } from '../render/npc-attack';
 import { NpcDeathAnimation } from '../render/npc-death';
 import { NpcWalkAnimation } from '../render/npc-walk';
 import { playSfxById, SfxId } from '../sfx';
+import { ChatIcon } from '../ui/chat';
+import { capitalize } from '../utils/capitalize';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
   const packet = NpcPlayerServerPacket.deserialize(reader);
@@ -79,9 +81,8 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     client.npcChats.set(npc.index, new ChatBubble(chat.message));
 
     client.emit('chat', {
-      name: record.name,
       tab: ChatTab.Local,
-      message: chat.message,
+      message: `${capitalize(record.name)} ${chat.message}`,
     });
   }
 
@@ -122,6 +123,13 @@ function handleNpcSpec(client: Client, reader: EoReader) {
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
     client.nearby.items.push(item);
+
+    const record = client.getEifRecordById(item.id);
+    client.emit('chat', {
+      tab: ChatTab.System,
+      icon: ChatIcon.DownArrow,
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record.name}`,
+    });
   }
 
   if (packet.experience) {
@@ -131,6 +139,11 @@ function handleNpcSpec(client: Client, reader: EoReader) {
       EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
       `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
     );
+    client.emit('chat', {
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
+      icon: ChatIcon.Star,
+      tab: ChatTab.System,
+    });
     client.emit('statsUpdate', undefined);
   }
 }
@@ -153,6 +166,13 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
     client.nearby.items.push(item);
+
+    const record = client.getEifRecordById(item.id);
+    client.emit('chat', {
+      tab: ChatTab.System,
+      icon: ChatIcon.DownArrow,
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record.name}`,
+    });
   }
 
   client.characterEmotes.set(
@@ -176,6 +196,11 @@ function handleNpcAccept(client: Client, reader: EoReader) {
       EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
       `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
     );
+    client.emit('chat', {
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
+      icon: ChatIcon.Star,
+      tab: ChatTab.System,
+    });
     client.emit('statsUpdate', undefined);
   }
 }
@@ -204,11 +229,9 @@ function handleNpcDialog(client: Client, reader: EoReader) {
   }
 
   client.npcChats.set(npc.index, new ChatBubble(packet.message));
-
   client.emit('chat', {
-    name: record.name,
     tab: ChatTab.Local,
-    message: packet.message,
+    message: `${capitalize(record.name)} ${packet.message}`,
   });
 }
 

@@ -1,6 +1,7 @@
 import {
   type EoReader,
   FileType,
+  GlobalOpenClientPacket,
   Item,
   PacketAction,
   PacketFamily,
@@ -162,6 +163,8 @@ function handleEnterGame(
 
     loaded.push(npc.id);
   }
+
+  this.bus.send(new GlobalOpenClientPacket());
 }
 
 export function registerWelcomeHandlers(client: Client) {

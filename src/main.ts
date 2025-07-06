@@ -26,7 +26,7 @@ import { inputToDirection } from './movement-controller';
 import { playSfxById, SfxId } from './sfx';
 import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
-import { Chat } from './ui/chat';
+import { Chat, ChatIcon } from './ui/chat';
 import { ChestDialog } from './ui/chest-dialog';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
@@ -47,7 +47,6 @@ import { ShopDialog } from './ui/shop-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
-import { capitalize } from './utils/capitalize';
 import { randomRange } from './utils/random-range';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -189,11 +188,11 @@ client.on('login', (characters) => {
   characterSelect.show();
 });
 
-client.on('serverChat', ({ message, sfxId }) => {
+client.on('serverChat', ({ message, sfxId, icon }) => {
   client.emit('chat', {
-    name: 'Server',
     tab: ChatTab.Local,
-    message: message,
+    message: `${client.getResourceString(EOResourceID.STRING_SERVER)} ${message}`,
+    icon: icon || ChatIcon.Exclamation,
   });
   playSfxById(sfxId || SfxId.ServerMessage);
 });
@@ -210,14 +209,16 @@ client.on('characterCreated', (characters) => {
 
 client.on('selectCharacter', () => {});
 
-client.on('chat', ({ name, tab: _, message }) => {
-  chat.addMessage(`${capitalize(name)}: ${message}`);
+client.on('chat', ({ icon, tab, message }) => {
+  chat.addMessage(tab, message, icon || ChatIcon.None);
 });
 
 client.on('enterGame', ({ news }) => {
   mainMenu.hide();
   for (const line of news) {
-    chat.addMessage(line);
+    if (line) {
+      chat.addMessage(ChatTab.Local, line, ChatIcon.None);
+    }
   }
 
   characterSelect.hide();
@@ -493,6 +494,13 @@ inventory.on('dropItem', ({ at, itemId }) => {
       client.getResourceString(
         EOResourceID.STATUS_LABEL_ITEM_DROP_OUT_OF_RANGE,
       ),
+    );
+    chat.addMessage(
+      ChatTab.System,
+      client.getResourceString(
+        EOResourceID.STATUS_LABEL_ITEM_DROP_OUT_OF_RANGE,
+      ),
+      ChatIcon.DotDotDotDot,
     );
     return;
   }

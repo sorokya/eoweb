@@ -151,6 +151,8 @@ import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
+import { ChatIcon } from './ui/chat';
+import { capitalize } from './utils/capitalize';
 import {
   EffectAnimationType,
   EffectMetadata,
@@ -167,6 +169,9 @@ import type { Vector2 } from './vector';
 
 export enum ChatTab {
   Local = 0,
+  Global = 1,
+  Group = 2,
+  System = 3,
 }
 
 type ClientEvents = {
@@ -176,8 +181,8 @@ type ClientEvents = {
   characterCreated: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
-  chat: { name: string; tab: ChatTab; message: string };
-  serverChat: { message: string; sfxId?: SfxId | null };
+  chat: { tab: ChatTab; message: string; icon?: ChatIcon | null };
+  serverChat: { message: string; sfxId?: SfxId | null; icon?: ChatIcon | null };
   accountCreated: undefined;
   passwordChanged: undefined;
   inventoryChanged: undefined;
@@ -677,8 +682,7 @@ export class Client {
       }
 
       this.emit('chat', {
-        name: record.name,
-        message: messages[0],
+        message: `${capitalize(record.name)} ${messages[0]}`,
         tab: ChatTab.Local,
       });
       this.npcChats.set(index, new ChatBubble(messages[0]));
@@ -1320,6 +1324,21 @@ export class Client {
       const packet = new TalkAnnounceClientPacket();
       packet.message = trimmed.substring(1);
       this.characterChats.set(this.playerId, new ChatBubble(packet.message));
+      this.emit('chat', {
+        icon: ChatIcon.GlobalAnnounce,
+        tab: ChatTab.Local,
+        message: `${capitalize(this.name)} ${packet.message}`,
+      });
+      this.emit('chat', {
+        icon: ChatIcon.GlobalAnnounce,
+        tab: ChatTab.Group,
+        message: `${capitalize(this.name)} ${packet.message}`,
+      });
+      this.emit('chat', {
+        icon: ChatIcon.GlobalAnnounce,
+        tab: ChatTab.Global,
+        message: `${capitalize(this.name)} ${packet.message}`,
+      });
       playSfxById(SfxId.AdminAnnounceReceived);
       this.bus.send(packet);
       return;
@@ -1332,9 +1351,8 @@ export class Client {
     this.characterChats.set(this.playerId, new ChatBubble(trimmed));
 
     this.emit('chat', {
-      name: this.name,
       tab: ChatTab.Local,
-      message: trimmed,
+      message: `${capitalize(this.name)} ${trimmed}`,
     });
   }
 

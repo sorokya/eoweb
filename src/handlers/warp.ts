@@ -7,10 +7,12 @@ import {
   WarpRequestServerPacket,
   WarpType,
 } from 'eolib';
-import type { Client } from '../client';
+import { ChatTab, type Client } from '../client';
 import { getEmf } from '../db';
+import { EOResourceID } from '../edf';
 import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
 import { playSfxById, SfxId } from '../sfx';
+import { ChatIcon } from '../ui/chat';
 
 function handleWarpRequest(client: Client, reader: EoReader) {
   const packet = WarpRequestServerPacket.deserialize(reader);
@@ -74,6 +76,13 @@ function handleWarpAgree(client: Client, reader: EoReader) {
 
   if (client.mapId !== client.warpMapId) {
     getEmf(client.warpMapId).then((map) => {
+      if (map.name) {
+        client.emit('chat', {
+          tab: ChatTab.System,
+          message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_ENTERED)} ${map.name}`,
+          icon: ChatIcon.NoteLeftArrow,
+        });
+      }
       client.mapId = client.warpMapId;
       client.setMap(map);
       client.movementController.freeze = false;

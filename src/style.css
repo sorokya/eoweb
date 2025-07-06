@@ -581,7 +581,7 @@ input[type="password"] {
 
 @media screen and (min-width: 470px) {
   #chat {
-    width: 300px !important;
+    width: 370px !important;
   }
 }
 
@@ -624,16 +624,22 @@ input[type="password"] {
   color: #fff;
 }
 
-#local-chat {
+#chat ul {
   list-style: none;
   padding: 0 5px;
   height: 130px;
   overflow-y: scroll;
 }
 
-#local-chat li {
-  padding: 0;
+#chat li {
+  padding: 3px 0;
   word-break: break-all;
+  display: flex;
+  gap: 1px;
+}
+
+#chat li span {
+  max-width: 96%;
 }
 
 #mobile-controls {
@@ -1088,95 +1094,99 @@ div.icon {
   height: 13px;
 }
 
-div.icon[data-id="note"] {
+div.icon[data-id="-1"] {
+  background: transparent;
+}
+
+div.icon[data-id="1"] {
   background-position-y: -13px;
 }
 
-div.icon[data-id="error"] {
+div.icon[data-id="2"] {
   background-position-y: -26px;
 }
 
-div.icon[data-id="note-left-arrow"] {
+div.icon[data-id="3"] {
   background-position-y: -39px;
 }
 
-div.icon[data-id="global-announce"] {
+div.icon[data-id="4"] {
   background-position-y: -52px;
 }
 
-div.icon[data-id="star"] {
+div.icon[data-id="5"] {
   background-position-y: -65px;
 }
 
-div.icon[data-id="exclamation"] {
+div.icon[data-id="6"] {
   background-position-y: -78px;
 }
 
-div.icon[data-id="looking-dude"] {
+div.icon[data-id="7"] {
   background-position-y: -91px;
 }
 
-div.icon[data-id="heart"] {
+div.icon[data-id="8"] {
   background-position-y: -104px;
 }
 
-div.icon[data-id="player"] {
+div.icon[data-id="9"] {
   background-position-y: -117px;
 }
 
-div.icon[data-id="player-party"] {
+div.icon[data-id="10"] {
   background-position-y: -130px;
 }
 
-div.icon[data-id="player-party-dark"] {
+div.icon[data-id="11"] {
   background-position-y: -143px;
 }
 
-div.icon[data-id="gm"] {
+div.icon[data-id="12"] {
   background-position-y: -156px;
 }
 
-div.icon[data-id="gm-party"] {
+div.icon[data-id="13"] {
   background-position-y: -169px;
 }
 
-div.icon[data-id="hgm"] {
+div.icon[data-id="14"] {
   background-position-y: -182px;
 }
 
-div.icon[data-id="hgm-party"] {
+div.icon[data-id="15"] {
   background-position-y: -195px;
 }
 
-div.icon[data-id="down-arrow"] {
+div.icon[data-id="16"] {
   background-position-y: -208px;
 }
 
-div.icon[data-id="up-arrow"] {
+div.icon[data-id="17"] {
   background-position-y: -221px;
 }
 
-div.icon[data-id="dot-dot-dot-dot"] {
+div.icon[data-id="18"] {
   background-position-y: -234px;
 }
 
-div.icon[data-id="guild"] {
+div.icon[data-id="19"] {
   background-position-y: -247px;
 }
 
-div.icon[data-id="skeleton"] {
+div.icon[data-id="20"] {
   background-position-y: -260px;
 }
 
-div.icon[data-id="trophy"] {
+div.icon[data-id="21"] {
   background-position-y: -273px;
 }
 
-div.icon[data-id="information"] {
+div.icon[data-id="22"] {
   background-position-y: -286px;
 }
 
-div.icon[data-id="quest-message"] {
+div.icon[data-id="23"] {
   background-position-y: -299px;
 }
 
