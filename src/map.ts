@@ -838,6 +838,10 @@ export class MapRenderer {
     const healthBar = this.client.npcHealthBars.get(npc.index);
 
     const animation = this.client.npcAnimations.get(npc.index);
+    if (meta.transparent) {
+      ctx.globalAlpha = 0.4;
+    }
+
     if (animation) {
       animation.render(record.graphicId, npc, meta, playerScreen, ctx);
     } else {
@@ -850,6 +854,11 @@ export class MapRenderer {
         ctx,
       );
     }
+
+    if (meta.transparent) {
+      ctx.globalAlpha = 1;
+    }
+
     this.topLayer.push(() => {
       renderNpcChatBubble(bubble, npc, ctx);
       renderNpcHealthBar(healthBar, npc, ctx);

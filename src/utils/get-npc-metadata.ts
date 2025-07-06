@@ -6,6 +6,7 @@ export class NPCMetadata {
     public yOffsetAttack: number,
     public animatedStanding: boolean,
     public nameLabelOffset: number,
+    public transparent = false,
   ) {}
 }
 
@@ -95,7 +96,7 @@ export function getNpcMetaData(): Map<number, NPCMetadata> {
     [82, new NPCMetadata(-2, 18, 0, 0, false, 40)], // sword guy npc
     [83, new NPCMetadata(-2, 17, 0, 0, false, 40)], // purple hair npc
     [84, new NPCMetadata(-2, 18, 0, 0, false, 40)], // green hair girl npc
-    [85, new NPCMetadata(0, 18, -10, -5, true, 50)], // wraith
+    [85, new NPCMetadata(0, 18, -10, -5, true, 50, true)], // wraith
     [86, new NPCMetadata(-2, 14, 0, 0, true, 43)], // priest
     [87, new NPCMetadata(-4, 11, -8, -4, false, 40)], // ninja
     [88, new NPCMetadata(1, 12, -10, -5, false, 54)], // orc
@@ -181,6 +182,6 @@ export function getNpcMetaData(): Map<number, NPCMetadata> {
     [168, new NPCMetadata(0, 15, -8, -4, false, 15)], // ape
     [169, new NPCMetadata(0, 4, -8, -4, false, 19)], // taraduda
     [170, new NPCMetadata(0, 19, -8, -4, false, 17)], // monkey
-    [171, new NPCMetadata(0, 0, 0, 0, false, 0)], // ancient wraith
+    [171, new NPCMetadata(0, 0, 0, 0, false, 0, true)], // ancient wraith
   ]);
 }
