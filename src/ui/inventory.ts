@@ -194,8 +194,12 @@ export class Inventory extends Base {
         }
       }
 
-      if (e.target instanceof HTMLElement && e.target.closest('.chest-items'))
+      if (e.target instanceof HTMLElement && e.target.closest('.chest-items')) {
         this.emitter.emit('dropItem', { at: 'cursor', itemId: item.id });
+        return;
+      }
+
+      this.emitter.emit('dropItem', { at: 'cursor', itemId: item.id });
     });
 
     this.btnPaperdoll.addEventListener('click', () => {

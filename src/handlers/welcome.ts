@@ -139,7 +139,7 @@ function handleEnterGame(
 ) {
   client.motd = data.news[0];
   client.items = data.items;
-  if (!client.items.length) {
+  if (!client.items.some((i) => i.id === 1)) {
     const gold = new Item();
     gold.id = 1;
     gold.amount = 0;

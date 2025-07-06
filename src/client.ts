@@ -65,7 +65,12 @@ import {
   QuestUseClientPacket,
   RangeRequestClientPacket,
   type ServerSettings,
+  ShopBuyClientPacket,
+  type ShopCraftItem,
+  ShopCreateClientPacket,
   ShopOpenClientPacket,
+  ShopSellClientPacket,
+  type ShopTradeItem,
   SitAction,
   SitRequestClientPacket,
   SitState,
@@ -129,6 +134,7 @@ import { registerQuestHandlers } from './handlers/quest';
 import { registerRangeHandlers } from './handlers/range';
 import { registerRecoverHandlers } from './handlers/recover';
 import { registerRefreshHandlers } from './handlers/refresh';
+import { registerShopHandlers } from './handlers/shop';
 import { registerSitHandlers } from './handlers/sit';
 import { registerTalkHandlers } from './handlers/talk';
 import { registerWalkHandlers } from './handlers/walk';
@@ -194,6 +200,13 @@ type ClientEvents = {
   chestChanged: {
     items: ThreeItem[];
   };
+  shopOpened: {
+    name: string;
+    craftItems: ShopCraftItem[];
+    tradeItems: ShopTradeItem[];
+  };
+  itemSold: undefined;
+  itemBought: undefined;
 };
 
 export enum GameState {
@@ -998,6 +1011,7 @@ export class Client {
     registerEmoteHandlers(this);
     registerPaperdollHandlers(this);
     registerChestHandlers(this);
+    registerShopHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -1938,6 +1952,31 @@ export class Client {
     packet.addItem.id = itemId;
     packet.addItem.amount = amount;
     packet.coords = this.chestCoords;
+    this.bus.send(packet);
+  }
+
+  buyShopItem(itemId: number, amount: number) {
+    const packet = new ShopBuyClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.buyItem = new Item();
+    packet.buyItem.id = itemId;
+    packet.buyItem.amount = amount;
+    this.bus.send(packet);
+  }
+
+  sellShopItem(itemId: number, amount: number) {
+    const packet = new ShopSellClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.sellItem = new Item();
+    packet.sellItem.id = itemId;
+    packet.sellItem.amount = amount;
+    this.bus.send(packet);
+  }
+
+  craftShopItem(itemId: number) {
+    const packet = new ShopCreateClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.craftItemId = itemId;
     this.bus.send(packet);
   }
 }

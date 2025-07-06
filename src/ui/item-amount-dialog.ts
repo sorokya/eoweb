@@ -33,7 +33,10 @@ export class ItemAmountDialog extends Base {
     this.txtAmount.max = this.maxAmount.toString();
   }
 
-  setCallback(callback: (amount: number) => void, cancelCallback: () => void) {
+  setCallback(
+    callback: (amount: number) => void,
+    cancelCallback: () => void = () => {},
+  ) {
     this.callback = callback;
     this.cancelCallback = cancelCallback;
   }

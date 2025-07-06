@@ -119,11 +119,12 @@ export function getItemMeta(item: EifRecord): string[] {
       meta.push(add);
     }
 
-    if (item.accuracy || item.evade || item.armor) {
+    if (item.accuracy) {
+      meta.push(`plus+ ${item.accuracy}hit`);
+    }
+
+    if (item.evade || item.armor) {
       let def = 'def+';
-      if (item.accuracy) {
-        def += ` ${item.accuracy}acc`;
-      }
 
       if (item.evade) {
         def += ` ${item.evade}eva`;
