@@ -9,7 +9,7 @@ import {
 import { EOResourceID } from './edf';
 import {
   clearUnheldInput,
-  getLastInputHeld,
+  getLastHeldDirection,
   Input,
   isInputHeld,
   wasInputHeldLastTick,
@@ -71,8 +71,9 @@ export class MovementController {
     }
 
     const animation = this.client.characterAnimations.get(character.playerId);
-    const lastInputHeld = getLastInputHeld();
+    const lastHeldDirection = getLastHeldDirection();
     const attackHeld = wasInputHeldLastTick(Input.Attack);
+    const sitStandHeld = wasInputHeldLastTick(Input.SitStand);
     clearUnheldInput();
 
     if (animation?.ticks) {
@@ -80,7 +81,22 @@ export class MovementController {
     }
 
     const lastDirectionHeld =
-      lastInputHeld !== null ? inputToDirection(lastInputHeld) : null;
+      lastHeldDirection !== null ? inputToDirection(lastHeldDirection) : null;
+
+    if (character.sitState === SitState.Stand && lastDirectionHeld !== null) {
+      if (
+        !this.faceTicks &&
+        character.direction !== lastDirectionHeld &&
+        !animation
+      ) {
+        character.direction = lastDirectionHeld;
+        this.client.face(lastDirectionHeld);
+        this.faceTicks = FACE_TICKS;
+        this.walkTicks = WALK_TICKS - 1;
+        this.attackTicks = ATTACK_TICKS - 3;
+        return;
+      }
+    }
 
     if (
       this.attackTicks <= 0 &&
@@ -199,7 +215,7 @@ export class MovementController {
       }
     }
 
-    if (!this.sitTicks && lastInputHeld === Input.SitStand) {
+    if (!this.sitTicks && sitStandHeld) {
       if (character.sitState === SitState.Stand) {
         this.client.sit();
       } else {
