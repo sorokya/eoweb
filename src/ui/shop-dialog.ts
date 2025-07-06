@@ -1,4 +1,5 @@
 import {
+  type CharItem,
   Gender,
   ItemType,
   type ShopCraftItem,
@@ -25,6 +26,11 @@ enum State {
 type Events = {
   buyItem: { id: number; name: string; price: number; max: number };
   sellItem: { id: number; name: string; price: number };
+  craftItem: {
+    id: number;
+    name: string;
+    ingredients: CharItem[];
+  };
 };
 
 export class ShopDialog extends Base {
@@ -284,6 +290,15 @@ export class ShopDialog extends Base {
         record.name,
         `${this.client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_INGREDIENTS)}: ${craft.ingredients.length} ${record.type === ItemType.Armor ? `(${record.spec2 === Gender.Female ? this.client.getResourceString(EOResourceID.FEMALE) : this.client.getResourceString(EOResourceID.MALE)})` : ''}`,
       );
+      const click = () => {
+        this.emitter.emit('craftItem', {
+          id: craft.itemId,
+          name: record.name,
+          ingredients: craft.ingredients,
+        });
+      };
+      item.addEventListener('click', click);
+      item.addEventListener('contextmenu', click);
       this.itemList.appendChild(item);
     }
   }

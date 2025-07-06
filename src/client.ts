@@ -67,6 +67,7 @@ import {
   type ServerSettings,
   ShopBuyClientPacket,
   type ShopCraftItem,
+  ShopCreateClientPacket,
   ShopOpenClientPacket,
   ShopSellClientPacket,
   type ShopTradeItem,
@@ -1969,6 +1970,13 @@ export class Client {
     packet.sellItem = new Item();
     packet.sellItem.id = itemId;
     packet.sellItem.amount = amount;
+    this.bus.send(packet);
+  }
+
+  craftShopItem(itemId: number) {
+    const packet = new ShopCreateClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.craftItemId = itemId;
     this.bus.send(packet);
   }
 }

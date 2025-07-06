@@ -1,8 +1,10 @@
 import {
   type EoReader,
+  Item,
   PacketAction,
   PacketFamily,
   ShopBuyServerPacket,
+  ShopCreateServerPacket,
   ShopOpenServerPacket,
   ShopSellServerPacket,
 } from 'eolib';
@@ -57,6 +59,33 @@ function handleShopSell(client: Client, reader: EoReader) {
   playSfxById(SfxId.BuySell);
 }
 
+function handleShopCreate(client: Client, reader: EoReader) {
+  const packet = ShopCreateServerPacket.deserialize(reader);
+
+  for (const ingredient of packet.ingredients) {
+    if (ingredient.amount) {
+      const item = client.items.find((i) => i.id === ingredient.id);
+      item.amount = ingredient.amount;
+    } else {
+      client.items = client.items.filter((i) => i.id !== ingredient.id);
+    }
+  }
+
+  let item = client.items.find((i) => i.id === packet.craftItemId);
+  if (item) {
+    item.amount += 1;
+  } else {
+    item = new Item();
+    item.id = packet.craftItemId;
+    item.amount = 1;
+    client.items.push(item);
+  }
+
+  client.weight.current = packet.weight.current;
+  client.emit('inventoryChanged', undefined);
+  playSfxById(SfxId.Craft);
+}
+
 export function registerShopHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Shop,
@@ -72,5 +101,10 @@ export function registerShopHandlers(client: Client) {
     PacketFamily.Shop,
     PacketAction.Sell,
     (reader) => handleShopSell(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Shop,
+    PacketAction.Create,
+    (reader) => handleShopCreate(client, reader),
   );
 }

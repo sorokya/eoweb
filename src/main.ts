@@ -34,6 +34,8 @@ import { HUD } from './ui/hud';
 import { InGameMenu } from './ui/in-game-menu';
 import { Inventory } from './ui/inventory';
 import { ItemAmountDialog } from './ui/item-amount-dialog';
+import { LargeAlertSmallHeader } from './ui/large-alert-small-header';
+import { LargeConfirmSmallHeader } from './ui/large-confirm-small-header';
 import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
@@ -350,6 +352,8 @@ const questDialog = new QuestDialog();
 const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
 const smallAlert = new SmallAlertSmallHeader();
+const largeAlertSmallHeader = new LargeAlertSmallHeader();
+const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -692,6 +696,51 @@ shopDialog.on('sellItem', (item) => {
     showConfirm(amount, total);
   });
   itemAmountDialog.show();
+});
+
+shopDialog.on('craftItem', (item) => {
+  const missing = item.ingredients.some((ingredient) => {
+    if (!ingredient.amount) {
+      return false;
+    }
+
+    const item = client.items.find((i) => i.id === ingredient.id);
+    return !item || item.amount < ingredient.amount;
+  });
+
+  const lines = item.ingredients
+    .map((ingredient) => {
+      if (!ingredient.id) {
+        return '';
+      }
+
+      const record = client.getEifRecordById(ingredient.id);
+      if (!record) {
+        return '';
+      }
+
+      return `+ ${ingredient.amount} ${record.name}`;
+    })
+    .filter((l) => !!l);
+
+  if (missing) {
+    largeAlertSmallHeader.setContent(
+      `${client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_MISSING_INGREDIENTS)}\n\n${lines.join('\n')}`,
+      `${client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_INGREDIENTS)} ${item.name}`,
+    );
+    largeAlertSmallHeader.show();
+    return;
+  }
+
+  largeConfirmSmallHeader.setContent(
+    `${client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_PUT_INGREDIENTS_TOGETHER)}\n\n${lines.join('\n')}`,
+    `${client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_INGREDIENTS)} ${item.name}`,
+  );
+  largeConfirmSmallHeader.setCallback(() => {
+    client.craftShopItem(item.id);
+    largeConfirmSmallHeader.hide();
+  });
+  largeConfirmSmallHeader.show();
 });
 
 // Tick loop
