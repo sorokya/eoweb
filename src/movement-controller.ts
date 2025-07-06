@@ -1,8 +1,19 @@
 import { Direction, Emote, ItemSubtype, SitState } from 'eolib';
 import { type Client, GameState } from './client';
-import { ATTACK_TICKS, FACE_TICKS, SIT_TICKS, WALK_TICKS } from './consts';
+import {
+  ATTACK_TICKS,
+  FACE_TICKS,
+  SIT_TICKS,
+  WALK_TICKS as WALK_ANIMATION_TICKS,
+} from './consts';
 import { EOResourceID } from './edf';
-import { getLatestDirectionHeld, Input, isInputHeld } from './input';
+import {
+  clearUnheldInput,
+  getLastInputHeld,
+  Input,
+  isInputHeld,
+  wasInputHeldLastTick,
+} from './input';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
 import { CharacterWalkAnimation } from './render/character-walk';
@@ -10,7 +21,7 @@ import { playSfxById, SfxId } from './sfx';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 import { getNextCoords } from './utils/get-next-coords';
 
-export function inputToDirection(input: Input): Direction {
+export function inputToDirection(input: Input): Direction | null {
   switch (input) {
     case Input.Up:
       return Direction.Up;
@@ -18,10 +29,14 @@ export function inputToDirection(input: Input): Direction {
       return Direction.Down;
     case Input.Left:
       return Direction.Left;
-    default:
+    case Input.Right:
       return Direction.Right;
+    default:
+      return null;
   }
 }
+
+const WALK_TICKS = WALK_ANIMATION_TICKS - 1;
 
 export class MovementController {
   private client: Client;
@@ -29,9 +44,6 @@ export class MovementController {
   faceTicks = FACE_TICKS;
   sitTicks = SIT_TICKS;
   attackTicks = ATTACK_TICKS;
-  lastDirectionHeld: Direction | null = null;
-  directionExpireTicks = 2;
-
   freeze = false;
 
   constructor(client: Client) {
@@ -43,7 +55,7 @@ export class MovementController {
     this.walkTicks = Math.max(this.walkTicks - 1, 0);
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
     this.attackTicks = Math.max(this.attackTicks - 1, -1);
-    this.directionExpireTicks = Math.max(this.directionExpireTicks - 1, 0);
+    console.log('tick');
 
     if (
       this.freeze ||
@@ -58,83 +70,75 @@ export class MovementController {
       return;
     }
 
-    const latestInput = getLatestDirectionHeld();
-    const directionHeld =
-      latestInput !== null ? inputToDirection(latestInput) : null;
-
     const animation = this.client.characterAnimations.get(character.playerId);
-    const walking = animation instanceof CharacterWalkAnimation;
-    const attacking =
-      animation instanceof CharacterAttackAnimation ||
-      animation instanceof CharacterRangedAttackAnimation;
+    const lastInputHeld = getLastInputHeld();
+    const attackHeld = wasInputHeldLastTick(Input.Attack);
+    clearUnheldInput();
 
-    if (attacking && animation.ticks > 2) {
+    if (animation?.ticks) {
       return;
     }
 
-    if (!this.directionExpireTicks && this.lastDirectionHeld !== null) {
-      this.lastDirectionHeld = null;
-    }
+    const lastDirectionHeld =
+      lastInputHeld !== null ? inputToDirection(lastInputHeld) : null;
 
     if (
       this.attackTicks <= 0 &&
-      isInputHeld(Input.Attack) &&
+      attackHeld &&
       character.sitState === SitState.Stand
     ) {
-      if (!walking) {
-        const metadata = this.client.getWeaponMetadata(
-          character.equipment.weapon,
-        );
+      const metadata = this.client.getWeaponMetadata(
+        character.equipment.weapon,
+      );
 
-        if (
-          metadata.ranged &&
-          metadata.sfx[0] !== SfxId.Gun &&
-          metadata.sfx[0] !== SfxId.Harp1 &&
-          metadata.sfx[0] !== SfxId.Guitar1
-        ) {
-          const shield = this.client.equipment.shield;
-          const record = this.client.getEifRecordById(shield);
-          if (!record || record.subtype !== ItemSubtype.Arrows) {
-            playSfxById(SfxId.NoArrows);
-            this.client.setStatusLabel(
-              EOResourceID.STATUS_LABEL_TYPE_WARNING,
-              this.client.getResourceString(
-                EOResourceID.STATUS_LABEL_YOU_HAVE_NO_ARROWS,
-              ),
-            );
-            this.attackTicks = ATTACK_TICKS;
-            return;
-          }
+      if (
+        metadata.ranged &&
+        metadata.sfx[0] !== SfxId.Gun &&
+        metadata.sfx[0] !== SfxId.Harp1 &&
+        metadata.sfx[0] !== SfxId.Guitar1
+      ) {
+        const shield = this.client.equipment.shield;
+        const record = this.client.getEifRecordById(shield);
+        if (!record || record.subtype !== ItemSubtype.Arrows) {
+          playSfxById(SfxId.NoArrows);
+          this.client.setStatusLabel(
+            EOResourceID.STATUS_LABEL_TYPE_WARNING,
+            this.client.getResourceString(
+              EOResourceID.STATUS_LABEL_YOU_HAVE_NO_ARROWS,
+            ),
+          );
+          this.attackTicks = ATTACK_TICKS;
+          this.faceTicks = FACE_TICKS;
+          this.walkTicks = WALK_TICKS;
+          return;
         }
-
-        this.client.characterAnimations.set(
-          character.playerId,
-          metadata.ranged
-            ? new CharacterRangedAttackAnimation(character.direction)
-            : new CharacterAttackAnimation(character.direction),
-        );
-        if (this.lastDirectionHeld !== null) {
-          character.direction = this.lastDirectionHeld;
-        }
-        this.client.attack(character.direction, getTimestamp());
-        this.attackTicks = ATTACK_TICKS;
-        return;
       }
-    }
 
-    if (attacking && animation.ticks > 1) {
+      this.client.characterAnimations.set(
+        character.playerId,
+        metadata.ranged
+          ? new CharacterRangedAttackAnimation(character.direction)
+          : new CharacterAttackAnimation(character.direction),
+      );
+
+      this.client.attack(character.direction, getTimestamp());
+      this.attackTicks = ATTACK_TICKS;
+      this.faceTicks = FACE_TICKS;
+      this.walkTicks = WALK_TICKS - 1;
       return;
     }
 
-    if (character.sitState === SitState.Stand && directionHeld !== null) {
+    if (character.sitState === SitState.Stand && lastDirectionHeld !== null) {
       if (
-        !walking &&
         !this.faceTicks &&
-        character.direction !== directionHeld
+        character.direction !== lastDirectionHeld &&
+        !animation &&
+        !isInputHeld(Input.Attack)
       ) {
-        character.direction = directionHeld;
-        this.client.face(directionHeld);
+        character.direction = lastDirectionHeld;
+        this.client.face(lastDirectionHeld);
         this.faceTicks = FACE_TICKS;
+        this.walkTicks = WALK_TICKS - 1;
         return;
       }
 
@@ -143,15 +147,15 @@ export class MovementController {
       }
 
       if (
-        !this.walkTicks ||
-        (walking &&
-          directionHeld !== character.direction &&
-          (animation as CharacterWalkAnimation).isOnLastFrame())
+        !this.walkTicks &&
+        (character.direction === lastDirectionHeld ||
+          animation instanceof CharacterWalkAnimation)
       ) {
+        console.log('Walking!');
         const from = bigCoordsToCoords(character.coords);
         const to = getNextCoords(
           from,
-          directionHeld,
+          lastDirectionHeld,
           this.client.map.width,
           this.client.map.height,
         );
@@ -182,12 +186,12 @@ export class MovementController {
 
         this.client.characterAnimations.set(
           character.playerId,
-          new CharacterWalkAnimation(from, to, directionHeld),
+          new CharacterWalkAnimation(from, to, lastDirectionHeld),
         );
-        character.direction = directionHeld;
+        character.direction = lastDirectionHeld;
         character.coords.x = to.x;
         character.coords.y = to.y;
-        this.client.walk(directionHeld, to, getTimestamp());
+        this.client.walk(lastDirectionHeld, to, getTimestamp());
         this.walkTicks = WALK_TICKS;
         this.faceTicks = FACE_TICKS;
         this.sitTicks = SIT_TICKS;
@@ -195,7 +199,7 @@ export class MovementController {
       }
     }
 
-    if (!this.sitTicks && isInputHeld(Input.SitStand)) {
+    if (!this.sitTicks && lastInputHeld === Input.SitStand) {
       if (character.sitState === SitState.Stand) {
         this.client.sit();
       } else {

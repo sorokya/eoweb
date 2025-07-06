@@ -164,7 +164,7 @@ function handleEnterGame(
     loaded.push(npc.id);
   }
 
-  this.bus.send(new GlobalOpenClientPacket());
+  client.bus.send(new GlobalOpenClientPacket());
 }
 
 export function registerWelcomeHandlers(client: Client) {

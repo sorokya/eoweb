@@ -21,8 +21,6 @@ import {
   setZoom,
   ZOOM,
 } from './game-state';
-import { getLatestDirectionHeld } from './input';
-import { inputToDirection } from './movement-controller';
 import { playSfxById, SfxId } from './sfx';
 import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
@@ -146,18 +144,6 @@ const render = (now: DOMHighResTimeStamp) => {
   }
 
   lastTime = now;
-
-  if (client.movementController.attackTicks < 0) {
-    const latestInput = getLatestDirectionHeld();
-    const directionHeld =
-      latestInput !== null ? inputToDirection(latestInput) : null;
-
-    if (directionHeld !== null) {
-      client.movementController.lastDirectionHeld = directionHeld;
-      client.movementController.directionExpireTicks = 2;
-    }
-  }
-
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
   client.render(ctx);
