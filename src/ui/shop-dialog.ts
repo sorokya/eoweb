@@ -4,6 +4,7 @@ import {
   type ShopCraftItem,
   type ShopTradeItem,
 } from 'eolib';
+import mitt from 'mitt';
 import type { Client } from '../client';
 import { EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
@@ -21,8 +22,14 @@ enum State {
   Craft = 3,
 }
 
+type Events = {
+  buyItem: { id: number; name: string; price: number; max: number };
+  sellItem: { id: number; name: string; price: number };
+};
+
 export class ShopDialog extends Base {
   private client: Client;
+  private emitter = mitt<Events>();
   protected container = document.getElementById('shop');
   private cover = document.querySelector<HTMLDivElement>('#cover');
   private btnCancel = this.container.querySelector<HTMLButtonElement>(
@@ -57,6 +64,21 @@ export class ShopDialog extends Base {
     this.itemList.addEventListener('scroll', () => {
       this.setScrollThumbPosition();
     });
+
+    this.client.on('itemBought', () => {
+      this.render();
+    });
+
+    this.client.on('itemSold', () => {
+      this.render();
+    });
+  }
+
+  on<Event extends keyof Events>(
+    event: Event,
+    handler: (data: Events[Event]) => void,
+  ) {
+    this.emitter.on(event, handler);
   }
 
   setScrollThumbPosition() {
@@ -97,11 +119,13 @@ export class ShopDialog extends Base {
     }
 
     this.scrollHandle.style.top = '60px';
+    this.client.typing = true;
   }
 
   hide() {
     this.cover.classList.add('hidden');
     this.container.classList.add('hidden');
+    this.client.typing = false;
   }
 
   private render() {
@@ -195,6 +219,16 @@ export class ShopDialog extends Base {
         record.name,
         `${this.client.getResourceString(EOResourceID.DIALOG_SHOP_PRICE)}: ${buy.buyPrice} ${record.type === ItemType.Armor ? `(${record.spec2 === Gender.Female ? this.client.getResourceString(EOResourceID.FEMALE) : this.client.getResourceString(EOResourceID.MALE)})` : ''}`,
       );
+      const click = () => {
+        this.emitter.emit('buyItem', {
+          id: buy.itemId,
+          name: record.name,
+          price: buy.buyPrice,
+          max: buy.maxBuyAmount,
+        });
+      };
+      item.addEventListener('click', click);
+      item.addEventListener('contextmenu', click);
       this.itemList.appendChild(item);
     }
   }
@@ -206,6 +240,12 @@ export class ShopDialog extends Base {
       (i) =>
         i.sellPrice > 0 && this.client.items.some((i2) => i2.id === i.itemId),
     );
+
+    if (!sells.length) {
+      this.changeState(State.Initial);
+      return;
+    }
+
     for (const sell of sells) {
       const record = this.client.getEifRecordById(sell.itemId);
       if (!record) {
@@ -217,6 +257,15 @@ export class ShopDialog extends Base {
         record.name,
         `${this.client.getResourceString(EOResourceID.DIALOG_SHOP_PRICE)}: ${sell.sellPrice} ${record.type === ItemType.Armor ? `(${record.spec2 === Gender.Female ? this.client.getResourceString(EOResourceID.FEMALE) : this.client.getResourceString(EOResourceID.MALE)})` : ''}`,
       );
+      const click = () => {
+        this.emitter.emit('sellItem', {
+          id: sell.itemId,
+          name: record.name,
+          price: sell.sellPrice,
+        });
+      };
+      item.addEventListener('click', click);
+      item.addEventListener('contextmenu', click);
       this.itemList.appendChild(item);
     }
   }

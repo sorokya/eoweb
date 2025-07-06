@@ -42,6 +42,7 @@ import { Paperdoll } from './ui/paperdoll';
 import { QuestDialog } from './ui/quest-dialog';
 import { ShopDialog } from './ui/shop-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
+import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
 import { capitalize } from './utils/capitalize';
 import { randomRange } from './utils/random-range';
@@ -348,6 +349,7 @@ const itemAmountDialog = new ItemAmountDialog();
 const questDialog = new QuestDialog();
 const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
+const smallAlert = new SmallAlertSmallHeader();
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -613,6 +615,83 @@ questDialog.on('reply', ({ questId, dialogId, action }) => {
 
 questDialog.on('cancel', () => {
   client.typing = false;
+});
+
+shopDialog.on('buyItem', (item) => {
+  const goldAmount = client.items.find((i) => i.id === 1).amount;
+  if (item.price > goldAmount) {
+    const text = client.getDialogStrings(
+      DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
+    );
+    smallAlert.setContent(text[1], text[0]);
+    smallAlert.show();
+    return;
+  }
+
+  itemAmountDialog.setHeader('shop');
+  itemAmountDialog.setMaxAmount(item.max);
+  itemAmountDialog.setLabel(
+    `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${item.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_BUY)}`,
+  );
+  itemAmountDialog.setCallback((amount) => {
+    const total = amount * item.price;
+    const goldAmount = client.items.find((i) => i.id === 1).amount;
+    itemAmountDialog.hide();
+    if (total > goldAmount) {
+      const text = client.getDialogStrings(
+        DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
+      );
+      smallAlert.setContent(text[1], text[0]);
+      smallAlert.show();
+    } else {
+      const wordBuy = client.getResourceString(EOResourceID.DIALOG_WORD_BUY);
+      const wordFor = client.getResourceString(EOResourceID.DIALOG_WORD_FOR);
+      const goldRecord = client.getEifRecordById(1);
+      smallConfirm.setContent(
+        `${wordBuy} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord.name} ?`,
+        client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS),
+      );
+      smallConfirm.setCallback(() => {
+        client.buyShopItem(item.id, amount);
+      });
+      smallConfirm.show();
+    }
+  });
+  itemAmountDialog.show();
+});
+
+shopDialog.on('sellItem', (item) => {
+  const itemAmount = client.items.find((i) => i.id === item.id).amount;
+  const showConfirm = (amount: number, total: number) => {
+    const wordSell = client.getResourceString(EOResourceID.DIALOG_WORD_SELL);
+    const wordFor = client.getResourceString(EOResourceID.DIALOG_WORD_FOR);
+    const goldRecord = client.getEifRecordById(1);
+    smallConfirm.setContent(
+      `${wordSell} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord.name} ?`,
+      client.getResourceString(EOResourceID.DIALOG_SHOP_SELL_ITEMS),
+    );
+    smallConfirm.setCallback(() => {
+      client.sellShopItem(item.id, amount);
+    });
+    smallConfirm.show();
+  };
+
+  if (itemAmount === 1) {
+    showConfirm(1, item.price);
+    return;
+  }
+
+  itemAmountDialog.setHeader('shop');
+  itemAmountDialog.setMaxAmount(itemAmount);
+  itemAmountDialog.setLabel(
+    `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${item.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_SELL)}`,
+  );
+  itemAmountDialog.setCallback((amount) => {
+    const total = amount * item.price;
+    itemAmountDialog.hide();
+    showConfirm(amount, total);
+  });
+  itemAmountDialog.show();
 });
 
 // Tick loop

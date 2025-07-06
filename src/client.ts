@@ -65,8 +65,10 @@ import {
   QuestUseClientPacket,
   RangeRequestClientPacket,
   type ServerSettings,
+  ShopBuyClientPacket,
   type ShopCraftItem,
   ShopOpenClientPacket,
+  ShopSellClientPacket,
   type ShopTradeItem,
   SitAction,
   SitRequestClientPacket,
@@ -202,6 +204,8 @@ type ClientEvents = {
     craftItems: ShopCraftItem[];
     tradeItems: ShopTradeItem[];
   };
+  itemSold: undefined;
+  itemBought: undefined;
 };
 
 export enum GameState {
@@ -1947,6 +1951,24 @@ export class Client {
     packet.addItem.id = itemId;
     packet.addItem.amount = amount;
     packet.coords = this.chestCoords;
+    this.bus.send(packet);
+  }
+
+  buyShopItem(itemId: number, amount: number) {
+    const packet = new ShopBuyClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.buyItem = new Item();
+    packet.buyItem.id = itemId;
+    packet.buyItem.amount = amount;
+    this.bus.send(packet);
+  }
+
+  sellShopItem(itemId: number, amount: number) {
+    const packet = new ShopSellClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.sellItem = new Item();
+    packet.sellItem.id = itemId;
+    packet.sellItem.amount = amount;
     this.bus.send(packet);
   }
 }
