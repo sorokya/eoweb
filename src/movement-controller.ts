@@ -55,13 +55,13 @@ export class MovementController {
     this.walkTicks = Math.max(this.walkTicks - 1, 0);
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
     this.attackTicks = Math.max(this.attackTicks - 1, -1);
-    console.log('tick');
 
     if (
       this.freeze ||
       this.client.state !== GameState.InGame ||
       this.client.typing
     ) {
+      clearUnheldInput();
       return;
     }
 
@@ -167,7 +167,6 @@ export class MovementController {
         (character.direction === lastDirectionHeld ||
           animation instanceof CharacterWalkAnimation)
       ) {
-        console.log('Walking!');
         const from = bigCoordsToCoords(character.coords);
         const to = getNextCoords(
           from,
