@@ -110,7 +110,7 @@ export function getNpcMetaData(): Map<number, NPCMetadata> {
     [96, new NPCMetadata(-1, 18, -6, -3, true, 46)], // optica
     [97, new NPCMetadata(-2, 14, -4, -2, false, 46)], // bogo man
     [98, new NPCMetadata(-1, 20, -8, -4, true, 50)], // butterfly
-    [99, new NPCMetadata(0, 17, -6, -3, true, 68)], // cursed mask
+    [99, new NPCMetadata(0, 17, -6, -3, true, 68, true)], // cursed mask
     [100, new NPCMetadata(0, 17, -6, -3, false, 30)], // red imp
     [101, new NPCMetadata(0, 17, -6, -3, false, 30)], // grey imp
     [102, new NPCMetadata(0, 15, 0, 0, true, 84)], // vine tentacle
