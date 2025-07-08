@@ -64,6 +64,7 @@ import {
   QuestAcceptClientPacket,
   QuestUseClientPacket,
   RangeRequestClientPacket,
+  RefreshRequestClientPacket,
   type ServerSettings,
   ShopBuyClientPacket,
   type ShopCraftItem,
@@ -2215,5 +2216,9 @@ export class Client {
     this.notyf.open({
       message: `[ ${this.getResourceString(type)} ] ${text}`,
     });
+  }
+
+  refresh() {
+    this.bus.send(new RefreshRequestClientPacket());
   }
 }

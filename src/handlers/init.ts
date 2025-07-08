@@ -15,9 +15,11 @@ import {
   PacketFamily,
   serverVerificationHash,
 } from 'eolib';
-import { type Client, GameState } from '../client';
+import { ChatTab, type Client, GameState } from '../client';
 import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '../db';
-import { DialogResourceID } from '../edf';
+import { DialogResourceID, EOResourceID } from '../edf';
+import { playSfxById, SfxId } from '../sfx';
+import { ChatIcon } from '../ui/chat';
 
 function handleInitInit(client: Client, reader: EoReader) {
   const packet = InitInitServerPacket.deserialize(reader);
@@ -75,6 +77,12 @@ function handleInitInit(client: Client, reader: EoReader) {
       handleInitWarpMap(
         client,
         packet.replyCodeData as InitInitServerPacket.ReplyCodeDataWarpMap,
+      );
+      break;
+    case InitReply.MapMutation:
+      handleInitMapMutation(
+        client,
+        packet.replyCodeData as InitInitServerPacket.ReplyCodeDataMapMutation,
       );
       break;
   }
@@ -235,6 +243,30 @@ function handleInitWarpMap(
   const map = Emf.deserialize(reader);
   saveEmf(client.warpMapId, map);
   client.warpQueued = true;
+}
+
+function handleInitMapMutation(
+  client: Client,
+  data: InitInitServerPacket.ReplyCodeDataMapMutation,
+) {
+  const reader = new EoReader(data.mapFile.content);
+  const map = Emf.deserialize(reader);
+  saveEmf(client.warpMapId, map);
+  client.setMap(map);
+  client.refresh();
+  playSfxById(SfxId.MapMutation);
+  const message = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${client.getResourceString(EOResourceID.SERVER_MESSAGE_MAP_MUTATION)}}`;
+  client.emit('chat', {
+    tab: ChatTab.Local,
+    icon: ChatIcon.Exclamation,
+    message,
+  });
+
+  client.emit('chat', {
+    tab: ChatTab.System,
+    icon: ChatIcon.Exclamation,
+    message,
+  });
 }
 
 export function registerInitHandlers(client: Client) {
