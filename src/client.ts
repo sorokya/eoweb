@@ -94,7 +94,12 @@ import mitt, { type Emitter } from 'mitt';
 import { Notyf } from 'notyf';
 import type { PacketBus } from './bus';
 import { ChatBubble } from './chat-bubble';
-import { getDoorIntersecting, getNpcIntersecting } from './collision';
+import {
+  clearRectangles,
+  getDoorIntersecting,
+  getNpcIntersecting,
+  getSignIntersecting,
+} from './collision';
 import {
   CLEAR_OUT_OF_RANGE_TICKS,
   HALF_TILE_HEIGHT,
@@ -178,6 +183,7 @@ export enum ChatTab {
 
 type ClientEvents = {
   error: { title: string; message: string };
+  smallAlert: { title: string; message: string };
   debug: string;
   login: CharacterSelectionListEntry[];
   characterCreated: CharacterSelectionListEntry[];
@@ -876,6 +882,7 @@ export class Client {
     this.npcHealthBars.clear();
     this.characterHealthBars.clear();
     if (this.map) {
+      clearRectangles();
       this.mapRenderer.buildCaches();
       this.loadDoors();
 
@@ -1195,6 +1202,14 @@ export class Client {
         this.openDoor(doorAt);
       }
       return;
+    }
+
+    const signAt = getSignIntersecting(this.mousePosition);
+    if (signAt) {
+      const sign = this.mapRenderer.getSign(signAt.x, signAt.y);
+      if (sign) {
+        this.emit('smallAlert', sign);
+      }
     }
   }
 

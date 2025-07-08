@@ -12,6 +12,7 @@ import {
   getNpcIntersecting,
   Rectangle,
   setDoorRectangle,
+  setSignRectangle,
 } from './collision';
 import {
   ANIMATION_TICKS,
@@ -129,6 +130,7 @@ export class MapRenderer {
   private topLayer: (() => void)[] = [];
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
+  private signCache: ({ title: string; message: string } | null)[][] = [];
   private mainCharacterCanvas: HTMLCanvasElement;
   private mainCharacterCtx: CanvasRenderingContext2D;
   private characterCanvas: HTMLCanvasElement;
@@ -180,6 +182,15 @@ export class MapRenderer {
     );
     for (const row of this.client.map.tileSpecRows)
       for (const t of row.tiles) this.tileSpecCache[row.y][t.x] = t.tileSpec;
+
+    this.signCache = Array.from({ length: h + 1 }, () =>
+      new Array<{ title: string; message: string } | null>(w + 1).fill(null),
+    );
+    for (const sign of this.client.map.signs) {
+      const title = sign.stringData.substring(0, sign.titleLength);
+      const message = sign.stringData.substring(sign.titleLength);
+      this.signCache[sign.coords.y][sign.coords.x] = { title, message };
+    }
 
     this.buildingCache = false;
   }
@@ -607,6 +618,7 @@ export class MapRenderer {
       }
     }
 
+    let isSign = false;
     if (entity.layer === Layer.Objects) {
       const spec = this.getTileSpec(entity.x, entity.y);
       if (spec === MapTileSpec.TimedSpikes && !this.timedSpikesTicks) {
@@ -621,6 +633,9 @@ export class MapRenderer {
       ) {
         return;
       }
+
+      const sign = this.getSign(entity.x, entity.y);
+      isSign = !!sign;
     }
 
     const bmp = getBitmapById(
@@ -657,6 +672,11 @@ export class MapRenderer {
           bmp.width,
           DOOR_HEIGHT,
         ),
+      );
+    } else if (isSign) {
+      setSignRectangle(
+        coords,
+        new Rectangle({ x: screenX, y: screenY }, bmp.width, DOOR_HEIGHT),
       );
     }
 
@@ -981,6 +1001,11 @@ export class MapRenderer {
 
   private getTileSpec(x: number, y: number): MapTileSpec | null {
     const row = this.tileSpecCache[y];
+    return row ? (row[x] ?? null) : null;
+  }
+
+  getSign(x: number, y: number): { title: string; message: string } | null {
+    const row = this.signCache[y];
     return row ? (row[x] ?? null) : null;
   }
 

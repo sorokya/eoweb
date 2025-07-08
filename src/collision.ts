@@ -15,9 +15,15 @@ type EntityRect = {
   rect: Rectangle;
 };
 
+type CoordsRect = {
+  coords: Coords;
+  rectangle: Rectangle;
+};
+
 const characterRectangles: Map<number, Rectangle> = new Map();
 const npcRectangles: Map<number, Rectangle> = new Map();
-const doorRectangles: Map<Coords, Rectangle> = new Map();
+const doorRectangles: CoordsRect[] = [];
+const signRectangles: CoordsRect[] = [];
 
 function rectIntersect(a: Rectangle, b: Rectangle): boolean {
   return (
@@ -114,15 +120,69 @@ export function getNpcIntersecting(point: Vector2): EntityRect | null {
 }
 
 export function setDoorRectangle(coords: Coords, rectangle: Rectangle) {
-  doorRectangles.set(coords, rectangle);
+  const existing = doorRectangles.find(
+    (r) => r.coords.x === coords.x && r.coords.y === coords.y,
+  );
+  if (existing) {
+    existing.rectangle = rectangle;
+    return;
+  }
+
+  doorRectangles.push({
+    coords,
+    rectangle,
+  });
 }
 
 export function getDoorRectangle(coords: Coords): Rectangle | undefined {
-  return doorRectangles.get(coords);
+  const existing = doorRectangles.find(
+    (r) => r.coords.x === coords.x && r.coords.y === coords.y,
+  );
+  if (!existing) {
+    return undefined;
+  }
+
+  return existing.rectangle;
 }
 
 export function getDoorIntersecting(point: Vector2): Coords | null {
-  for (const [coords, rectangle] of doorRectangles) {
+  for (const { coords, rectangle } of doorRectangles) {
+    if (pointIntersectRect(point, rectangle)) {
+      return coords;
+    }
+  }
+
+  return null;
+}
+
+export function setSignRectangle(coords: Coords, rectangle: Rectangle) {
+  const existing = signRectangles.find(
+    (r) => r.coords.x === coords.x && r.coords.y === coords.y,
+  );
+  if (existing) {
+    existing.rectangle = rectangle;
+    return;
+  }
+
+  signRectangles.push({
+    coords,
+    rectangle,
+  });
+}
+
+export function getSignRectangle(coords: Coords): Rectangle | undefined {
+  const existing = signRectangles.find(
+    (r) => r.coords.x === coords.x && r.coords.y === coords.y,
+  );
+  if (!existing) {
+    return undefined;
+  }
+
+  return existing.rectangle;
+}
+
+export function getSignIntersecting(point: Vector2): Coords | null {
+  for (const { coords, rectangle } of signRectangles) {
     if (pointIntersectRect(point, rectangle)) {
       return coords;
     }
@@ -134,5 +194,5 @@ export function getDoorIntersecting(point: Vector2): Coords | null {
 export function clearRectangles() {
   characterRectangles.clear();
   npcRectangles.clear();
-  doorRectangles.clear();
+  doorRectangles.splice(0, doorRectangles.length);
 }

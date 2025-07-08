@@ -155,6 +155,11 @@ client.on('error', ({ title, message }) => {
   smallAlertLargeHeader.show();
 });
 
+client.on('smallAlert', ({ title, message }) => {
+  smallAlert.setContent(message, title);
+  smallAlert.show();
+});
+
 client.on('debug', (_message) => {});
 
 client.on('accountCreated', () => {
