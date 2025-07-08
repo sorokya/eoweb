@@ -159,11 +159,13 @@ import {
   getEffectMetaData,
 } from './utils/get-effect-metadata';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
+import { getVolumeFromDistance } from './utils/get-volume-from-distance';
 import { getWeaponMetaData, WeaponMetadata } from './utils/get-weapon-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
 import { makeDrunk } from './utils/make-drunk';
+import { padWithZeros } from './utils/pad-with-zeros';
 import { randomRange } from './utils/random-range';
-import { inRange } from './utils/range';
+import { getDistance, inRange } from './utils/range';
 import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 
@@ -389,6 +391,8 @@ export class Client {
   esf: Esf | null = null;
   map: Emf | null = null;
   mapRenderer: MapRenderer;
+  ambientSound: AudioBufferSourceNode | null = null;
+  ambientVolume: GainNode | null = null;
   downloadQueue: { type: FileType; id: number }[] = [];
   characterAnimations: Map<number, CharacterAnimation> = new Map();
   npcAnimations: Map<number, NpcAnimation> = new Map();
@@ -874,6 +878,60 @@ export class Client {
     if (this.map) {
       this.mapRenderer.buildCaches();
       this.loadDoors();
+
+      if (this.ambientSound && this.ambientVolume) {
+        this.ambientSound.disconnect();
+        this.ambientSound = null;
+        this.ambientVolume.disconnect();
+        this.ambientVolume = null;
+      }
+
+      if (this.map.ambientSoundId) {
+        const context = new AudioContext();
+        fetch(`/sfx/sfx${padWithZeros(this.map.ambientSoundId, 3)}.wav`)
+          .then((response) => response.arrayBuffer())
+          .then((data) => context.decodeAudioData(data))
+          .then((buffer) => {
+            this.ambientSound = context.createBufferSource();
+            this.ambientVolume = context.createGain();
+            this.ambientSound.connect(this.ambientVolume);
+            this.ambientSound.buffer = buffer;
+            this.ambientSound.loop = true;
+            this.ambientVolume.connect(context.destination);
+            this.setAmbientVolume();
+            this.ambientSound.start(0);
+          });
+      } else if (this.ambientSound && this.ambientVolume) {
+        this.ambientSound.disconnect();
+        this.ambientSound = null;
+        this.ambientVolume.disconnect();
+        this.ambientVolume = null;
+      }
+    }
+  }
+
+  setAmbientVolume() {
+    if (!this.map || !this.ambientSound) {
+      return;
+    }
+
+    const playerAt = this.getPlayerCoords();
+    const sources: { coords: Vector2; distance: number }[] = [];
+    for (const row of this.map.tileSpecRows) {
+      for (const tile of row.tiles) {
+        if (tile.tileSpec === MapTileSpec.AmbientSource) {
+          const coords = { x: tile.x, y: row.y };
+          const distance = getDistance(playerAt, coords);
+          sources.push({ coords, distance });
+        }
+      }
+    }
+
+    sources.sort((a, b) => a.distance - b.distance);
+    if (sources.length) {
+      const distance = sources[0].distance;
+      const volume = getVolumeFromDistance(distance);
+      this.ambientVolume.gain.value = volume;
     }
   }
 
@@ -1545,6 +1603,7 @@ export class Client {
     packet.walkAction.timestamp = timestamp;
     this.bus.send(packet);
     this.idleTicks = INITIAL_IDLE_TICKS;
+    this.setAmbientVolume();
   }
 
   attack(direction: Direction, timestamp: number) {

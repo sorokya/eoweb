@@ -268,8 +268,10 @@ const initializeSocket = (next: 'login' | 'create' | '' = '') => {
       mainMenu.hide();
       createAccountForm.show();
     } else if (next === 'login') {
-      mainMenu.hide();
-      loginForm.show();
+      if (!client.loginToken) {
+        mainMenu.hide();
+        loginForm.show();
+      }
     }
 
     const bus = new PacketBus(socket);
@@ -824,8 +826,4 @@ window.addEventListener('DOMContentLoaded', async () => {
   client.nearby.characters = [character];
 
   requestAnimationFrame(render);
-
-  if (client.rememberMe && client.loginToken) {
-    initializeSocket();
-  }
 });

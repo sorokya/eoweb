@@ -124,6 +124,21 @@ export function playSfxById(id: SfxId, volume = 1.0) {
   pool.push(dupe);
 }
 
+export async function getSfxById(id: SfxId): Promise<HTMLAudioElement> {
+  const existing = SFX[id];
+  if (existing) {
+    return existing.cloneNode(true) as HTMLAudioElement;
+  }
+
+  const sfx = new Audio();
+  sfx.src = `/sfx/sfx${padWithZeros(id, 3)}.wav`;
+  return new Promise<HTMLAudioElement>((resolve) => {
+    sfx.addEventListener('loadeddata', () => {
+      resolve(sfx);
+    });
+  });
+}
+
 export function loadSfxById(id: SfxId, play = true, volume = 1.0) {
   if (SFX[id]) {
     return;
