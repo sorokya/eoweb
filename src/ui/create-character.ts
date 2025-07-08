@@ -1,7 +1,11 @@
 import { CharacterMapInfo, Direction, Gender } from 'eolib';
 import mitt from 'mitt';
 import { CharacterAction } from '../client';
-import { Rectangle, setCharacterRectangle } from '../collision';
+import {
+  getCharacterRectangle,
+  Rectangle,
+  setCharacterRectangle,
+} from '../collision';
 import {
   CHARACTER_HEIGHT,
   CHARACTER_WIDTH,
@@ -103,6 +107,18 @@ export class CreateCharacterForm extends Base {
 
     lastTime = now;
 
+    const rect = getCharacterRectangle(0);
+    if (!rect) {
+      setCharacterRectangle(
+        0,
+        new Rectangle(
+          { x: this.canvas.width / 2 - HALF_CHARACTER_WIDTH, y: 20 },
+          CHARACTER_WIDTH,
+          CHARACTER_HEIGHT,
+        ),
+      );
+    }
+
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     renderCharacterHairBehind(
       this.character,
@@ -163,15 +179,6 @@ export class CreateCharacterForm extends Base {
     this.canvas.width = CHARACTER_WIDTH + 40;
     this.canvas.height = CHARACTER_HEIGHT + 40;
     this.ctx = this.canvas.getContext('2d');
-
-    setCharacterRectangle(
-      0,
-      new Rectangle(
-        { x: this.canvas.width / 2 - HALF_CHARACTER_WIDTH, y: 20 },
-        CHARACTER_WIDTH,
-        CHARACTER_HEIGHT,
-      ),
-    );
 
     this.character = new CharacterMapInfo();
     this.character.playerId = 0;

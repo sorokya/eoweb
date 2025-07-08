@@ -176,6 +176,7 @@ client.on('login', (characters) => {
   playSfxById(SfxId.Login);
   loginForm.hide();
   characterSelect.setCharacters(characters);
+  mainMenu.hide();
   characterSelect.show();
 });
 
@@ -206,6 +207,7 @@ client.on('chat', ({ icon, tab, message }) => {
 
 client.on('enterGame', ({ news }) => {
   mainMenu.hide();
+  chat.clear();
   for (const line of news) {
     if (line) {
       chat.addMessage(ChatTab.Local, line, ChatIcon.None);
@@ -362,7 +364,6 @@ exitGame.on('click', () => {
   smallConfirm.setContent(text[1], text[0]);
   smallConfirm.setCallback(() => {
     client.disconnect();
-    chat.clear();
     hideAllUi();
     mainMenu.show();
   });
@@ -421,7 +422,6 @@ loginForm.on('cancel', () => {
 
 characterSelect.on('cancel', () => {
   client.disconnect();
-  chat.clear();
   characterSelect.hide();
   mainMenu.show();
 });

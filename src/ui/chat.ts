@@ -108,6 +108,9 @@ export class Chat extends Base {
 
   clear() {
     this.localChat.innerHTML = '';
+    this.globalChat.innerHTML = '';
+    this.groupChat.innerHTML = '';
+    this.systemChat.innerHTML = '';
   }
 
   focus() {

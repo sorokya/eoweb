@@ -6,7 +6,11 @@ import {
 } from 'eolib';
 import mitt from 'mitt';
 import { CharacterAction, type Client } from '../client';
-import { Rectangle, setCharacterRectangle } from '../collision';
+import {
+  getCharacterRectangle,
+  Rectangle,
+  setCharacterRectangle,
+} from '../collision';
 import {
   CHARACTER_HEIGHT,
   CHARACTER_WIDTH,
@@ -92,6 +96,21 @@ export class CharacterSelect extends Base {
     }
 
     lastTime = now;
+
+    const rect = getCharacterRectangle(1);
+    if (!rect) {
+      setCharacterRectangle(
+        1,
+        new Rectangle(
+          {
+            x: this.canvas.width / 2 - HALF_CHARACTER_WIDTH,
+            y: 20,
+          },
+          CHARACTER_WIDTH,
+          CHARACTER_HEIGHT,
+        ),
+      );
+    }
 
     let index = 0;
     for (const character of this.characters) {
@@ -187,18 +206,6 @@ export class CharacterSelect extends Base {
     this.canvas.width = w;
     this.canvas.height = h;
     this.ctx = this.canvas.getContext('2d');
-
-    setCharacterRectangle(
-      1,
-      new Rectangle(
-        {
-          x: w / 2 - HALF_CHARACTER_WIDTH,
-          y: 20,
-        },
-        CHARACTER_WIDTH,
-        CHARACTER_HEIGHT,
-      ),
-    );
 
     this.btnCreate.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
