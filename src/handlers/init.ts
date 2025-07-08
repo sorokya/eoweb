@@ -23,7 +23,6 @@ import { ChatIcon } from '../ui/chat';
 
 function handleInitInit(client: Client, reader: EoReader) {
   const packet = InitInitServerPacket.deserialize(reader);
-  // TODO: Verify server hash.. or don't
   switch (packet.replyCode) {
     case InitReply.Ok:
       handleInitOk(
