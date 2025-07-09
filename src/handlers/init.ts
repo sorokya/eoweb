@@ -139,8 +139,7 @@ function handleInitPlayersList(
   data: InitInitServerPacket.ReplyCodeDataPlayersList,
 ) {
   data.playersList.players.sort((a, b) => a.name.localeCompare(b.name));
-  client.onlinePlayers = data.playersList.players;
-  client.emit('playersListUpdated', client.onlinePlayers);
+  client.emit('playersListUpdated', data.playersList.players);
 }
 
 function handleInitOutOfDate(
