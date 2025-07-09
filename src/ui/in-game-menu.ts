@@ -4,6 +4,7 @@ import { Base } from './base-ui';
 
 type Events = {
   'toggle-inventory': undefined;
+  'toggle-online-list': undefined;
 };
 
 export class InGameMenu extends Base {
@@ -57,6 +58,7 @@ export class InGameMenu extends Base {
     this.btnOnline.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('toggle-online-list', undefined);
     });
 
     this.btnParty.addEventListener('click', (e) => {

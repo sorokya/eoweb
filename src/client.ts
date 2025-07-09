@@ -56,6 +56,7 @@ import {
   type NpcMapInfo,
   NpcRangeRequestClientPacket,
   NpcType,
+  type OnlinePlayer,
   PaperdollAddClientPacket,
   PaperdollRemoveClientPacket,
   PaperdollRequestClientPacket,
@@ -189,6 +190,7 @@ type ClientEvents = {
   equipmentChanged: undefined;
   statsUpdate: undefined;
   reconnect: undefined;
+  playersListUpdated: OnlinePlayer[];
   openQuestDialog: {
     name: string;
     questId: number;
@@ -437,6 +439,7 @@ export class Client {
       y: 'top',
     },
   });
+  onlinePlayers: OnlinePlayer[];
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
