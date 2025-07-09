@@ -3,12 +3,13 @@ import type { Client } from '../client';
 import { Base } from './base-ui';
 
 export class OnlineList extends Base {
-  protected container = document.getElementById('online-list');
   private client: Client;
 
   constructor(client: Client) {
-    super();
+    const draggable = true;
+    super(document.getElementById('online-list'), draggable);
     this.client = client;
+
     this.client.on('playersListUpdated', (players) => {
       if (!this.container) return;
 
