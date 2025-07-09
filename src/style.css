@@ -2,6 +2,11 @@ html {
   background: url("/back.jpg");
 }
 
+:root {
+  --eo-brown: #7b5a29;
+  --eo-font-color-light: #f0f0c8;
+}
+
 @font-face {
   font-family: w95fa;
   src: url("/w95fa.woff2");
@@ -739,6 +744,64 @@ input[type="password"] {
   height: 100%;
   justify-content: center;
   z-index: 1020;
+}
+
+#online-list {
+  position: absolute;
+  display: block;
+  bottom: 30px;
+  height: 110px;
+  width: 485px;
+  padding: 3px 0 3px 0px;
+  border-radius: 5px;
+  border: 1px solid #000;
+  left: calc(50vw - 190px);
+  cursor: move;
+  user-select: none;
+  z-index: 1021;
+  background: url("/gfx/gfx002/136.png") #000;
+  font-size: 0.8rem;
+}
+
+#online-list .player:nth-of-type(2) {
+  margin-top: 18px;
+}
+
+#online-list div.player-count {
+  position: absolute;
+  color: var(--eo-font-color-light);
+  right: 0px;
+  width: 30px;
+  text-align: center;
+}
+
+#online-list .player {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: black;
+  height: 20px;
+}
+
+#online-list .player .icon {
+  width: 13px;
+  display: inline-block;
+  margin-left: 5px;
+  margin-right: 10px;
+}
+
+#online-list .player .name::first-letter {
+  text-transform: uppercase;
+}
+
+#online-list .player .name,
+#online-list .player .title,
+#online-list .player .guild,
+#online-list .player .class {
+  flex-grow: 1;
+  min-width: 0;
+  width: 140px;
+  color: black;
 }
 
 #inventory {

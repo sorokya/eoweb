@@ -36,6 +36,12 @@ function handleInitInit(client: Client, reader: EoReader) {
         packet.replyCodeData as InitInitServerPacket.ReplyCodeDataOutOfDate,
       );
       break;
+    case InitReply.PlayersList:
+      handleInitPlayersList(
+        client,
+        packet.replyCodeData as InitInitServerPacket.ReplyCodeDataPlayersList,
+      );
+      break;
     case InitReply.Banned:
       handleInitBanned(
         client,
@@ -126,6 +132,15 @@ function handleInitOk(
     writer.addString(client.loginToken);
     bus.sendBuf(PacketFamily.Login, PacketAction.Use, writer.toByteArray());
   }
+}
+
+function handleInitPlayersList(
+  client: Client,
+  data: InitInitServerPacket.ReplyCodeDataPlayersList,
+) {
+  data.playersList.players.sort((a, b) => a.name.localeCompare(b.name));
+  client.onlinePlayers = data.playersList.players;
+  client.emit('playersListUpdated', client.onlinePlayers);
 }
 
 function handleInitOutOfDate(
