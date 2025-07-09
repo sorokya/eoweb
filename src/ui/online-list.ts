@@ -9,13 +9,30 @@ export class OnlineList extends Base {
     const draggable = true;
     super(document.getElementById('online-list'), draggable);
     this.client = client;
+    const playersContainer = this.container.querySelector('.players');
+
+    const scrollHandle = this.container.querySelector('.scroll-handle');
+
+    const topOffset = 37;
+    const bottomOffset = 30;
+
+    playersContainer.addEventListener('scroll', (e) => {
+      const percentageScrolled =
+        playersContainer.scrollTop /
+        (playersContainer.scrollHeight - playersContainer.clientHeight);
+      const containerHeight = playersContainer.clientHeight;
+      const scrollHandleHeight = 20; // Adjust this value as needed for the height of the scroll handle
+      const maxScrollTop = containerHeight - scrollHandleHeight - bottomOffset;
+      const percentageScrolledTop =
+        percentageScrolled * maxScrollTop + topOffset;
+      (scrollHandle as HTMLElement).style.top = `${percentageScrolledTop}px`;
+    });
 
     this.client.on('playersListUpdated', (players) => {
       if (!this.container) return;
 
       const playerCountElement = this.container.querySelector('.player-count');
       playerCountElement.textContent = `${players.length}`;
-      const playersContainer = this.container.querySelector('.players');
       playersContainer.innerHTML = '';
 
       players.map((player) => {
