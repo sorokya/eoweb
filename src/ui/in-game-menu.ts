@@ -7,8 +7,6 @@ type Events = {
 };
 
 export class InGameMenu extends Base {
-  protected container = document.querySelector('#in-game-menu');
-
   private emitter = mitt<Events>();
 
   private btnInventory: HTMLButtonElement = this.container.querySelector(
@@ -31,7 +29,7 @@ export class InGameMenu extends Base {
   );
 
   constructor() {
-    super();
+    super(document.querySelector('#in-game-menu'));
 
     this.btnInventory.addEventListener('click', (e) => {
       e.stopPropagation();

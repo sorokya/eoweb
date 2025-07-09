@@ -274,7 +274,7 @@ export class Inventory extends Base {
   }
 
   constructor(client: Client) {
-    super();
+    super(document.getElementById('inventory'), true);
     this.client = client;
 
     this.client.on('inventoryChanged', () => {
