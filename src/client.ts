@@ -439,7 +439,6 @@ export class Client {
       y: 'top',
     },
   });
-  onlinePlayers: OnlinePlayer[];
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
