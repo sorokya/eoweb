@@ -9,15 +9,15 @@ export class OnlineList extends Base {
   constructor(client: Client) {
     super();
     this.client = client;
-    this.client.on('playersListUpdated', () => {
+    this.client.on('playersListUpdated', (players) => {
       if (!this.container) return;
       this.container.innerHTML = '';
 
       const playerCountElement = document.createElement('div');
       playerCountElement.className = 'player-count';
-      playerCountElement.textContent = `${this.client.onlinePlayers.length}`;
+      playerCountElement.textContent = `${players.length}`;
       this.container.appendChild(playerCountElement);
-      this.client.onlinePlayers.forEach((player) => {
+      players.forEach((player) => {
         const playerElement = document.createElement('div');
         playerElement.className = 'player';
 
