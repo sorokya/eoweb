@@ -11,13 +11,13 @@ export class OnlineList extends Base {
     this.client = client;
     this.client.on('playersListUpdated', (players) => {
       if (!this.container) return;
-      this.container.innerHTML = '';
 
-      const playerCountElement = document.createElement('div');
-      playerCountElement.className = 'player-count';
+      const playerCountElement = this.container.querySelector('.player-count');
       playerCountElement.textContent = `${players.length}`;
-      this.container.appendChild(playerCountElement);
-      players.forEach((player) => {
+      const playersContainer = this.container.querySelector('.players');
+      playersContainer.innerHTML = '';
+
+      players.map((player) => {
         const playerElement = document.createElement('div');
         playerElement.className = 'player';
 
@@ -44,7 +44,7 @@ export class OnlineList extends Base {
         playerElement.appendChild(titleElement);
         playerElement.appendChild(guildElement);
         playerElement.appendChild(classElement);
-        this.container.appendChild(playerElement);
+        playersContainer.appendChild(playerElement);
       });
     });
   }
