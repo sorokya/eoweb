@@ -45,7 +45,6 @@ type Events = {
 export class Inventory extends Base {
   private client: Client;
   private emitter = mitt<Events>();
-  protected container = document.querySelector('#inventory');
   private grid: HTMLDivElement = this.container.querySelector('.grid');
   private positions: ItemPosition[] = [];
   private tab = 0;
@@ -65,7 +64,7 @@ export class Inventory extends Base {
   private lastItemSelected = 0;
 
   constructor(client: Client) {
-    super();
+    super(document.getElementById('inventory'), true);
     this.client = client;
 
     this.client.on('inventoryChanged', () => {
