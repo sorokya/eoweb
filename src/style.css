@@ -763,11 +763,23 @@ input[type="password"] {
   font-size: 0.8rem;
 }
 
+#online-list .scroll-handle {
+  position: absolute;
+  right: 2px;
+  top: 37px;
+}
+
 #online-list .players {
   margin-top: 16px;
   height: 98px;
   overflow-y: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   width: 465px;
+}
+
+#online-list .players::-webkit-scrollbar {
+  display: none;
 }
 
 #online-list div.player-count {
@@ -2087,7 +2099,7 @@ div.icon[data-id="23"] {
   justify-content: center;
 }
 
-#shop .scroll-handle {
+.scroll-handle {
   position: absolute;
   right: 16px;
   width: 16px;
