@@ -717,6 +717,9 @@ export class MapRenderer {
     } else {
       ctx.drawImage(bmp, screenX, screenY);
     }
+    if (entity.layer === Layer.Shadow) {
+      ctx.globalAlpha = 1;
+    }
   }
 
   renderCharacter(
