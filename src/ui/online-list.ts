@@ -1,6 +1,7 @@
 import { PlayersRequestClientPacket } from 'eolib';
 import type { Client } from '../client';
 import { Base } from './base-ui';
+import { characterIconToChatIcon } from './utils/character-icon-to-chat-icon';
 
 export class OnlineList extends Base {
   private client: Client;
@@ -43,7 +44,10 @@ export class OnlineList extends Base {
         nameElement.className = 'name';
         const playerIconElement = document.createElement('div');
         playerIconElement.className = 'icon';
-        playerIconElement.setAttribute('data-id', (player.icon + 9).toString());
+        playerIconElement.setAttribute(
+          'data-id',
+          characterIconToChatIcon(player.icon).toString(),
+        );
         const titleElement = document.createElement('span');
         titleElement.className = 'title';
         titleElement.textContent = player.title || '-';
