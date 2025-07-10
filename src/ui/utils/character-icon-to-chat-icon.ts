@@ -1,7 +1,7 @@
 import { CharacterIcon } from 'eolib';
 import { ChatIcon } from '../chat';
 
-export function characterIconToChatIcon(icon: CharacterIcon): number {
+export function characterIconToChatIcon(icon: CharacterIcon): ChatIcon {
   switch (icon) {
     case CharacterIcon.Player:
       return ChatIcon.Player;
