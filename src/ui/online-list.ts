@@ -16,7 +16,7 @@ export class OnlineList extends Base {
     const topOffset = 37;
     const bottomOffset = 30;
 
-    playersContainer.addEventListener('scroll', (e) => {
+    playersContainer.addEventListener('scroll', (_) => {
       const percentageScrolled =
         playersContainer.scrollTop /
         (playersContainer.scrollHeight - playersContainer.clientHeight);

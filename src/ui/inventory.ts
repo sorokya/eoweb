@@ -103,7 +103,17 @@ export class Inventory extends Base {
 
     this.grid.addEventListener('drop', (e) => {
       e.preventDefault();
-      const item = JSON.parse(e.dataTransfer?.getData('text/plain'));
+      const data = e.dataTransfer?.getData('text/plain');
+      if (!data) return;
+
+      let item: { source: string; slot: EquipmentSlot; id: number };
+      try {
+        item = JSON.parse(data);
+      } catch (error) {
+        console.error('Invalid item data:', error);
+        return;
+      }
+
       if (item.source === 'paperdoll') {
         client.unequipItem(item.slot);
         return;
