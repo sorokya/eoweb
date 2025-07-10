@@ -750,11 +750,10 @@ input[type="password"] {
   position: absolute;
   display: block;
   bottom: 30px;
-  height: 110px;
+  height: 113px;
   width: 485px;
   padding: 3px 0 3px 0px;
   border-radius: 5px;
-  border: 1px solid #000;
   left: calc(50vw - 190px);
   cursor: move;
   user-select: none;
