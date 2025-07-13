@@ -269,7 +269,7 @@ client.on('shopOpened', (data) => {
 });
 
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
-  const socket = new WebSocket(client.host);
+  const socket = new WebSocket(client.config.host);
   socket.addEventListener('open', () => {
     if (next === 'create') {
       mainMenu.hide();
@@ -393,7 +393,7 @@ mainMenu.on('view-credits', () => {
 });
 
 mainMenu.on('host-change', (host) => {
-  client.host = host;
+  client.config.host = host;
   client.disconnect();
 });
 
