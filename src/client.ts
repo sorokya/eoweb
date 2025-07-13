@@ -492,6 +492,7 @@ export class Client {
         txtHost.classList.add('hidden');
       }
       txtHost.value = config.host;
+      document.title = config.title;
     });
   }
 
