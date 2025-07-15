@@ -100,7 +100,7 @@ canvas {
 }
 
 #main-menu-logo::after {
-  content: "Web Edition!";
+  content: attr(data-slogan);
   position: absolute;
   display: inline-block;
   font-style: italic;

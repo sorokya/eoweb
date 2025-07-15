@@ -4,6 +4,8 @@ export type Config = {
   host: string;
   staticHost: boolean;
   title: string;
+  slogan: string;
+  creditsUrl: string;
 };
 
 export function getDefaultConfig(): Config {
@@ -11,14 +13,21 @@ export function getDefaultConfig(): Config {
     host: HOST,
     staticHost: false,
     title: 'EO Web Client',
+    slogan: 'Web Edition!',
+    creditsUrl: 'https://github.com/sorokya/eoweb',
   };
 }
 
 export async function loadConfig(): Promise<Config> {
-  const response = await fetch('/config.json');
-  if (!response.ok) {
+  try {
+    const response = await fetch('/config.json');
+    if (!response.ok) {
+      return getDefaultConfig();
+    }
+
+    const config = await response.json();
+    return config;
+  } catch (_err) {
     return getDefaultConfig();
   }
-
-  return response.json();
 }

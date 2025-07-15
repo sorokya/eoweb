@@ -493,6 +493,10 @@ export class Client {
       }
       txtHost.value = config.host;
       document.title = config.title;
+
+      const mainMenuLogo =
+        document.querySelector<HTMLDivElement>('#main-menu-logo');
+      mainMenuLogo.setAttribute('data-slogan', config.slogan);
     });
   }
 

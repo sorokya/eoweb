@@ -389,7 +389,7 @@ mainMenu.on('create-account', () => {
 });
 
 mainMenu.on('view-credits', () => {
-  window.open('https://github.com/sorokya/eoweb', '_blank');
+  window.open(client.config.creditsUrl, '_blank');
 });
 
 mainMenu.on('host-change', (host) => {
