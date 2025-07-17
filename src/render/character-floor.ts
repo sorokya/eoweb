@@ -109,9 +109,9 @@ export function renderCharacterFloor(
   );
 
   ctx.drawImage(
-    bmp,
-    sourceX,
-    sourceY,
+    bmp.image,
+    bmp.frame.x + sourceX,
+    bmp.frame.y + sourceY,
     CHARACTER_SIT_GROUND_WIDTH,
     CHARACTER_SIT_GROUND_HEIGHT,
     drawX,
@@ -146,9 +146,9 @@ export function renderCharacterFloor(
     );
 
     ctx.drawImage(
-      emoteBmp,
-      emoteSourceX,
-      emoteSourceY,
+      emoteBmp.image,
+      emoteBmp.frame.x + emoteSourceX,
+      emoteBmp.frame.y + emoteSourceY,
       13,
       14,
       drawX - (character.gender === Gender.Female ? 1 : 0),

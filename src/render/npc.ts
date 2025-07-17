@@ -22,19 +22,23 @@ export function renderNpc(
     offset += idleFrame;
   }
 
-  const bmp = getBitmapById(GfxType.NPC, (record.graphicId - 1) * 40 + offset);
-  if (!bmp) {
+  const bmpData = getBitmapById(
+    GfxType.NPC,
+    (record.graphicId - 1) * 40 + offset,
+  );
+  if (!bmpData) {
     return;
   }
+  const { image: bmp, frame: bmpFrame } = bmpData;
 
   const screenCoords = isoToScreen(npc.coords);
   const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
 
   const screenX = Math.floor(
-    screenCoords.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+    screenCoords.x - bmpFrame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
   );
   const screenY =
-    screenCoords.y - (bmp.height - 23) - playerScreen.y + HALF_GAME_HEIGHT;
+    screenCoords.y - (bmpFrame.h - 23) - playerScreen.y + HALF_GAME_HEIGHT;
 
   if (mirrored) {
     ctx.save(); // Save the current context state
@@ -44,16 +48,26 @@ export function renderNpc(
 
   const drawX = Math.floor(
     mirrored
-      ? GAME_WIDTH - screenX - bmp.width + meta.xOffset
+      ? GAME_WIDTH - screenX - bmpFrame.w + meta.xOffset
       : screenX + meta.xOffset,
   );
   const drawY = Math.floor(screenY - meta.yOffset);
 
-  ctx.drawImage(bmp, drawX, drawY);
+  ctx.drawImage(
+    bmp,
+    bmpFrame.x,
+    bmpFrame.y,
+    bmpFrame.w,
+    bmpFrame.h,
+    drawX,
+    drawY,
+    bmpFrame.w,
+    bmpFrame.h,
+  );
 
   setNpcRectangle(
     npc.index,
-    new Rectangle({ x: screenX, y: drawY }, bmp.width, bmp.height),
+    new Rectangle({ x: screenX, y: drawY }, bmpFrame.w, bmpFrame.h),
   );
 
   if (mirrored) {

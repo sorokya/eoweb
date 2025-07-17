@@ -35,22 +35,25 @@ export class NpcAttackAnimation extends NpcAnimation {
     ctx: CanvasRenderingContext2D,
   ) {
     const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
-    const frame = this.animationFrame + 1;
-    const offset = downRight ? frame + 12 : frame + 14;
+    const animationFrameOffset = this.animationFrame + 1;
+    const offset = downRight
+      ? animationFrameOffset + 12
+      : animationFrameOffset + 14;
 
-    const bmp = getBitmapById(GfxType.NPC, (graphicId - 1) * 40 + offset);
-    if (!bmp) {
+    const bmpData = getBitmapById(GfxType.NPC, (graphicId - 1) * 40 + offset);
+    if (!bmpData) {
       return;
     }
+    const { image: bmp, frame } = bmpData;
 
     const screenCoords = isoToScreen(npc.coords);
     const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
     const screenX = Math.floor(
-      screenCoords.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+      screenCoords.x - frame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
     );
 
     const screenY =
-      screenCoords.y - (bmp.height - 23) - playerScreen.y + HALF_GAME_HEIGHT;
+      screenCoords.y - (frame.h - 23) - playerScreen.y + HALF_GAME_HEIGHT;
 
     if (mirrored) {
       ctx.save(); // Save the current context state
@@ -70,16 +73,26 @@ export class NpcAttackAnimation extends NpcAnimation {
 
     const drawX = Math.floor(
       mirrored
-        ? GAME_WIDTH - screenX - bmp.width + metaOffset.x
+        ? GAME_WIDTH - screenX - frame.w + metaOffset.x
         : screenX + metaOffset.x,
     );
     const drawY = Math.floor(screenY - metaOffset.y);
 
-    ctx.drawImage(bmp, drawX, drawY);
+    ctx.drawImage(
+      bmp,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      drawX,
+      drawY,
+      frame.w,
+      frame.h,
+    );
 
     setNpcRectangle(
       npc.index,
-      new Rectangle({ x: screenX, y: drawY }, bmp.width, bmp.height),
+      new Rectangle({ x: screenX, y: drawY }, frame.w, frame.h),
     );
 
     if (mirrored) {

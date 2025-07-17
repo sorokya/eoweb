@@ -175,9 +175,9 @@ export class CharacterWalkAnimation extends CharacterAnimation {
     );
 
     ctx.drawImage(
-      bmp,
-      sourceX,
-      sourceY,
+      bmp.image,
+      bmp.frame.x + sourceX,
+      bmp.frame.y + sourceY,
       CHARACTER_WALKING_WIDTH,
       CHARACTER_WALKING_HEIGHT,
       drawX,

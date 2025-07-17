@@ -26,21 +26,25 @@ export class NpcDeathAnimation extends NpcAnimation {
     ctx: CanvasRenderingContext2D,
   ) {
     const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
-    const frame = downRight ? 1 : 3;
+    const animationFrameOffset = downRight ? 1 : 3;
 
-    const bmp = getBitmapById(GfxType.NPC, (graphicId - 1) * 40 + frame);
-    if (!bmp) {
+    const bmpData = getBitmapById(
+      GfxType.NPC,
+      (graphicId - 1) * 40 + animationFrameOffset,
+    );
+    if (!bmpData) {
       return;
     }
+    const { image: bmp, frame: bmpFrame } = bmpData;
 
     const screenCoords = isoToScreen(npc.coords);
     const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
     const screenX = Math.floor(
-      screenCoords.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+      screenCoords.x - bmpFrame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
     );
 
     const screenY =
-      screenCoords.y - (bmp.height - 23) - playerScreen.y + HALF_GAME_HEIGHT;
+      screenCoords.y - (bmpFrame.h - 23) - playerScreen.y + HALF_GAME_HEIGHT;
 
     if (mirrored) {
       ctx.save(); // Save the current context state
@@ -60,18 +64,28 @@ export class NpcDeathAnimation extends NpcAnimation {
 
     const drawX = Math.floor(
       mirrored
-        ? GAME_WIDTH - screenX - bmp.width + metaOffset.x
+        ? GAME_WIDTH - screenX - bmpFrame.w + metaOffset.x
         : screenX + metaOffset.x,
     );
     const drawY = Math.floor(screenY - metaOffset.y);
 
     ctx.globalAlpha = this.ticks / NPC_DEATH_TICKS;
-    ctx.drawImage(bmp, drawX, drawY);
+    ctx.drawImage(
+      bmp,
+      bmpFrame.x,
+      bmpFrame.y,
+      bmpFrame.w,
+      bmpFrame.h,
+      drawX,
+      drawY,
+      bmpFrame.w,
+      bmpFrame.h,
+    );
     ctx.globalAlpha = 1;
 
     setNpcRectangle(
       npc.index,
-      new Rectangle({ x: screenX, y: drawY }, bmp.width, bmp.height),
+      new Rectangle({ x: screenX, y: drawY }, bmpFrame.w, bmpFrame.h),
     );
 
     if (mirrored) {

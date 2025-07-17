@@ -159,8 +159,6 @@ function handleEnterGame(
       continue;
     }
 
-    client.preloadNpcSprites(npc.id);
-
     loaded.push(npc.id);
   }
 

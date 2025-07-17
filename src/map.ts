@@ -638,15 +638,16 @@ export class MapRenderer {
       isSign = !!sign;
     }
 
-    const bmp = getBitmapById(
+    const bmpData = getBitmapById(
       LAYER_GFX_MAP[entity.layer],
       entity.typeId + bmpOffset,
     );
-    if (!bmp) {
+    if (!bmpData) {
       return;
     }
+    const { image: bmp, frame } = bmpData;
 
-    const offset = this.getOffset(entity.layer, bmp.width, bmp.height);
+    const offset = this.getOffset(entity.layer, frame.w, frame.h);
     const tileScreen = isoToScreen({ x: entity.x, y: entity.y });
 
     const screenX = Math.floor(
@@ -686,11 +687,11 @@ export class MapRenderer {
       ctx.globalAlpha = 1;
     }
 
-    if (entity.layer === Layer.Ground && bmp.width > TILE_WIDTH) {
+    if (entity.layer === Layer.Ground && frame.w > TILE_WIDTH) {
       ctx.drawImage(
         bmp,
-        this.animationFrame * TILE_WIDTH,
-        0,
+        frame.x + this.animationFrame * TILE_WIDTH,
+        frame.y,
         TILE_WIDTH,
         TILE_HEIGHT,
         screenX,
@@ -699,23 +700,33 @@ export class MapRenderer {
         TILE_HEIGHT,
       );
     } else if (
-      bmp.width > 120 &&
+      frame.w > 120 &&
       [Layer.DownWall, Layer.RightWall].includes(entity.layer)
     ) {
-      const frameWidth = bmp.width / 4;
+      const frameWidth = frame.w / 4;
       ctx.drawImage(
         bmp,
-        this.animationFrame * frameWidth,
-        0,
+        frame.x + this.animationFrame * frameWidth,
+        frame.y,
         frameWidth,
-        bmp.height,
+        frame.h,
         screenX,
         screenY,
         frameWidth,
-        bmp.height,
+        frame.h,
       );
     } else {
-      ctx.drawImage(bmp, screenX, screenY);
+      ctx.drawImage(
+        bmp,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        screenX,
+        screenY,
+        frame.w,
+        frame.h,
+      );
     }
   }
 
@@ -911,21 +922,32 @@ export class MapRenderer {
       gfxId = 269 + 2 * offset;
     }
 
-    const bmp = getBitmapById(GfxType.Items, gfxId);
-    if (!bmp) {
+    const bmpData = getBitmapById(GfxType.Items, gfxId);
+    if (!bmpData) {
       return;
     }
+    const { image: bmp, frame } = bmpData;
 
     const tileScreen = isoToScreen(item.coords);
 
     const screenX = Math.floor(
-      tileScreen.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+      tileScreen.x - frame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
     );
     const screenY = Math.floor(
-      tileScreen.y - bmp.height / 2 - playerScreen.y + HALF_GAME_HEIGHT,
+      tileScreen.y - frame.h / 2 - playerScreen.y + HALF_GAME_HEIGHT,
     );
 
-    ctx.drawImage(bmp, screenX, screenY);
+    ctx.drawImage(
+      bmp,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      screenX,
+      screenY,
+      frame.w,
+      frame.h,
+    );
   }
 
   renderCharacterBehindLayers(
@@ -962,14 +984,15 @@ export class MapRenderer {
       return;
     }
 
-    const bmp = getBitmapById(GfxType.PostLoginUI, 24);
-    if (bmp && this.client.mouseCoords) {
+    const bmpData = getBitmapById(GfxType.PostLoginUI, 24);
+    if (bmpData && this.client.mouseCoords) {
+      const { image: bmp, frame } = bmpData;
       const tileScreen = isoToScreen({
         x: this.client.mouseCoords.x,
         y: this.client.mouseCoords.y,
       });
 
-      const sourceX = entity.typeId * TILE_WIDTH;
+      const sourceX = frame.x + entity.typeId * TILE_WIDTH;
 
       const screenX = Math.floor(
         tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
@@ -981,7 +1004,7 @@ export class MapRenderer {
       ctx.drawImage(
         bmp,
         sourceX,
-        0,
+        frame.y,
         TILE_WIDTH,
         TILE_HEIGHT,
         screenX,

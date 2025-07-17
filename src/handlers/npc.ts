@@ -100,7 +100,6 @@ function handleNpcAgree(client: Client, reader: EoReader) {
       existing.direction = npc.direction;
     } else {
       client.nearby.npcs.push(npc);
-      client.preloadNpcSprites(npc.id);
     }
   }
 }

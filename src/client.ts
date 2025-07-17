@@ -115,7 +115,6 @@ import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
 import { Door } from './door';
 import { type DialogResourceID, type Edf, EOResourceID } from './edf';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
-import { GfxType, loadBitmapById } from './gfx';
 import { registerAccountHandlers } from './handlers/account';
 import { registerAdminInteractHandlers } from './handlers/admin-interact';
 import { registerArenaHandlers } from './handlers/arena';
@@ -483,7 +482,6 @@ export class Client {
     this.nearby.items = [];
     this.mapRenderer = new MapRenderer(this);
     this.movementController = new MovementController(this);
-    this.preloadCharacterSprites();
     loadConfig().then((config) => {
       this.config = config;
       const txtHost =
@@ -498,24 +496,6 @@ export class Client {
         document.querySelector<HTMLDivElement>('#main-menu-logo');
       mainMenuLogo.setAttribute('data-slogan', config.slogan);
     });
-  }
-
-  private preloadCharacterSprites() {
-    loadBitmapById(GfxType.SkinSprites, 1); // standing
-    loadBitmapById(GfxType.SkinSprites, 2); // walking
-    loadBitmapById(GfxType.SkinSprites, 3); // attacking
-    loadBitmapById(GfxType.SkinSprites, 6); // sitting on ground
-  }
-
-  preloadNpcSprites(id: number) {
-    const record = this.getEnfRecordById(id);
-    if (!record) {
-      return;
-    }
-
-    for (let i = 1; i <= 18; ++i) {
-      loadBitmapById(GfxType.NPC, (record.graphicId - 1) * 40 + i);
-    }
   }
 
   getCharacterById(id: number): CharacterMapInfo | undefined {

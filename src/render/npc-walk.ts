@@ -66,19 +66,22 @@ export class NpcWalkAnimation extends NpcAnimation {
     const downRight = [Direction.Down, Direction.Right].includes(
       this.direction,
     );
-    const frame = this.animationFrame + 1;
-    const offset = downRight ? frame + 4 : frame + 8;
+    const animationFrameOffset = this.animationFrame + 1;
+    const offset = downRight
+      ? animationFrameOffset + 4
+      : animationFrameOffset + 8;
 
-    const bmp = getBitmapById(GfxType.NPC, (graphicId - 1) * 40 + offset);
-    if (!bmp) {
+    const bmpData = getBitmapById(GfxType.NPC, (graphicId - 1) * 40 + offset);
+    if (!bmpData) {
       return;
     }
+    const { image: bmp, frame: bmpFrame } = bmpData;
 
     const screenCoords = isoToScreen(this.from);
     const mirrored = [Direction.Right, Direction.Up].includes(this.direction);
     const screenX = Math.floor(
       screenCoords.x -
-        bmp.width / 2 -
+        bmpFrame.w / 2 -
         playerScreen.x +
         HALF_GAME_WIDTH +
         this.walkOffset.x,
@@ -86,7 +89,7 @@ export class NpcWalkAnimation extends NpcAnimation {
 
     const screenY =
       screenCoords.y -
-      (bmp.height - 23) -
+      (bmpFrame.h - 23) -
       playerScreen.y +
       HALF_GAME_HEIGHT +
       this.walkOffset.y;
@@ -99,16 +102,26 @@ export class NpcWalkAnimation extends NpcAnimation {
 
     const drawX = Math.floor(
       mirrored
-        ? GAME_WIDTH - screenX - bmp.width + meta.xOffset
+        ? GAME_WIDTH - screenX - bmpFrame.w + meta.xOffset
         : screenX + meta.xOffset,
     );
     const drawY = Math.floor(screenY - meta.yOffset);
 
-    ctx.drawImage(bmp, drawX, drawY);
+    ctx.drawImage(
+      bmp,
+      bmpFrame.x,
+      bmpFrame.y,
+      bmpFrame.w,
+      bmpFrame.h,
+      drawX,
+      drawY,
+      bmpFrame.w,
+      bmpFrame.h,
+    );
 
     setNpcRectangle(
       npc.index,
-      new Rectangle({ x: screenX, y: drawY }, bmp.width, bmp.height),
+      new Rectangle({ x: screenX, y: drawY }, bmpFrame.w, bmpFrame.h),
     );
 
     if (mirrored) {

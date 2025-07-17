@@ -162,9 +162,9 @@ export function renderCharacterArmor(
     return;
   }
 
-  let screenX = Math.floor(rect.position.x + rect.width / 2 - bmp.width / 2);
+  let screenX = Math.floor(rect.position.x + rect.width / 2 - bmp.frame.w / 2);
 
-  let screenY = Math.floor(rect.position.y + rect.height - bmp.height) + 1;
+  let screenY = Math.floor(rect.position.y + rect.height - bmp.frame.h) + 1;
 
   const { direction, gender, sitState } = character;
 
@@ -222,10 +222,20 @@ export function renderCharacterArmor(
   }
 
   const drawX = Math.floor(
-    mirrored ? GAME_WIDTH - screenX - bmp.width : screenX,
+    mirrored ? GAME_WIDTH - screenX - bmp.frame.w : screenX,
   );
 
-  ctx.drawImage(bmp, drawX, screenY);
+  ctx.drawImage(
+    bmp.image,
+    bmp.frame.x,
+    bmp.frame.y,
+    bmp.frame.w,
+    bmp.frame.h,
+    drawX,
+    screenY,
+    bmp.frame.w,
+    bmp.frame.h,
+  );
 
   if (mirrored) {
     ctx.restore();

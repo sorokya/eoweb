@@ -130,9 +130,9 @@ export function renderCharacterChair(
   );
 
   ctx.drawImage(
-    bmp,
-    sourceX,
-    sourceY,
+    bmp.image,
+    bmp.frame.x + sourceX,
+    bmp.frame.y + sourceY,
     CHARACTER_SIT_CHAIR_WIDTH,
     CHARACTER_SIT_CHAIR_HEIGHT,
     drawX,
@@ -167,9 +167,9 @@ export function renderCharacterChair(
     );
 
     ctx.drawImage(
-      emoteBmp,
-      emoteSourceX,
-      emoteSourceY,
+      emoteBmp.image,
+      emoteBmp.frame.x + emoteSourceX,
+      emoteBmp.frame.y + emoteSourceY,
       13,
       14,
       drawX - (character.gender === Gender.Female ? 1 : 0),

@@ -78,9 +78,9 @@ export function renderCharacterStanding(
   );
 
   ctx.drawImage(
-    bmp,
-    sourceX,
-    sourceY,
+    bmp.image,
+    bmp.frame.x + sourceX,
+    bmp.frame.y + sourceY,
     CHARACTER_WIDTH,
     CHARACTER_HEIGHT,
     drawX,
@@ -120,9 +120,9 @@ export function renderCharacterStanding(
         : rect.position.y;
 
     ctx.drawImage(
-      emoteBmp,
-      emoteSourceX,
-      emoteSourceY,
+      emoteBmp.image,
+      emoteBmp.frame.x + emoteSourceX,
+      emoteBmp.frame.y + emoteSourceY,
       13,
       14,
       drawX,

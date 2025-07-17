@@ -113,25 +113,26 @@ export class EffectAnimation {
       return;
     }
 
-    const bmp = getBitmapById(GfxType.Spells, (this.id - 1) * 3 + 1);
-    if (!bmp) {
+    const bmpData = getBitmapById(GfxType.Spells, (this.id - 1) * 3 + 1);
+    if (!bmpData) {
       return;
     }
+    const { image: bmp, frame } = bmpData;
 
-    const frameWidth = bmp.width / this.metadata.frames;
-    const sourceX = this.animationFrame * frameWidth;
-    const drawPos = this.getDrawPosition(frameWidth, bmp.height);
+    const frameWidth = frame.w / this.metadata.frames;
+    const sourceX = frame.x + this.animationFrame * frameWidth;
+    const drawPos = this.getDrawPosition(frameWidth, frame.h);
 
     ctx.drawImage(
       bmp,
       sourceX,
-      0,
+      frame.y,
       frameWidth,
-      bmp.height,
+      frame.h,
       drawPos.x,
       drawPos.y,
       frameWidth,
-      bmp.height,
+      frame.h,
     );
   }
 
@@ -140,25 +141,26 @@ export class EffectAnimation {
       return;
     }
 
-    const bmp = getBitmapById(GfxType.Spells, (this.id - 1) * 3 + 2);
-    if (!bmp) {
+    const bmpData = getBitmapById(GfxType.Spells, (this.id - 1) * 3 + 2);
+    if (!bmpData) {
       return;
     }
+    const { image: bmp, frame } = bmpData;
 
-    const frameWidth = bmp.width / this.metadata.frames;
-    const sourceX = this.animationFrame * frameWidth;
-    const drawPos = this.getDrawPosition(frameWidth, bmp.height);
+    const frameWidth = frame.w / this.metadata.frames;
+    const sourceX = frame.x + this.animationFrame * frameWidth;
+    const drawPos = this.getDrawPosition(frameWidth, frame.h);
 
     ctx.drawImage(
       bmp,
       sourceX,
-      0,
+      frame.y,
       frameWidth,
-      bmp.height,
+      frame.h,
       drawPos.x,
       drawPos.y,
       frameWidth,
-      bmp.height,
+      frame.h,
     );
   }
 
@@ -167,25 +169,26 @@ export class EffectAnimation {
       return;
     }
 
-    const bmp = getBitmapById(GfxType.Spells, (this.id - 1) * 3 + 3);
-    if (!bmp) {
+    const bmpData = getBitmapById(GfxType.Spells, (this.id - 1) * 3 + 3);
+    if (!bmpData) {
       return;
     }
+    const { image: bmp, frame } = bmpData;
 
-    const frameWidth = bmp.width / this.metadata.frames;
-    const sourceX = this.animationFrame * frameWidth;
-    const drawPos = this.getDrawPosition(frameWidth, bmp.height);
+    const frameWidth = frame.w / this.metadata.frames;
+    const sourceX = frame.x + this.animationFrame * frameWidth;
+    const drawPos = this.getDrawPosition(frameWidth, frame.h);
 
     ctx.drawImage(
       bmp,
       sourceX,
-      0,
+      frame.y,
       frameWidth,
-      bmp.height,
+      frame.h,
       drawPos.x,
       drawPos.y,
       frameWidth,
-      bmp.height,
+      frame.h,
     );
   }
 }

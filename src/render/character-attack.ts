@@ -127,9 +127,9 @@ export class CharacterAttackAnimation extends CharacterAnimation {
     const sourceY = character.skin * CHARACTER_HEIGHT;
 
     ctx.drawImage(
-      bmp,
-      sourceX,
-      sourceY,
+      bmp.image,
+      bmp.frame.x + sourceX,
+      bmp.frame.y + sourceY,
       CHARACTER_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
       drawX,

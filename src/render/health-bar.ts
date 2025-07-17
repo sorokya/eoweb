@@ -31,17 +31,18 @@ export class HealthBar {
   render(position: Vector2, ctx: CanvasRenderingContext2D) {
     const x = position.x - HEALTH_BAR_WIDTH / 2;
     const y = position.y - HEALTH_BAR_HEIGHT;
-    const bmp = getBitmapById(GfxType.PostLoginUI, 58);
-    if (!bmp) {
+    const bmpData = getBitmapById(GfxType.PostLoginUI, 58);
+    if (!bmpData) {
       return;
     }
+    const { image: bmp, frame } = bmpData;
 
     const hpWidth = Math.floor(HEALTH_BAR_WIDTH * (this.percentage / 100));
 
     ctx.drawImage(
       bmp,
-      0,
-      BLACK_BACKGROUND_START,
+      frame.x,
+      frame.y + BLACK_BACKGROUND_START,
       HEALTH_BAR_WIDTH,
       HEALTH_BAR_HEIGHT,
       x,
@@ -59,8 +60,8 @@ export class HealthBar {
 
     ctx.drawImage(
       bmp,
-      0,
-      startY,
+      frame.x,
+      frame.y + startY,
       hpWidth,
       HEALTH_BAR_HEIGHT,
       x,
@@ -73,8 +74,8 @@ export class HealthBar {
     if (!amount) {
       ctx.drawImage(
         bmp,
-        MISS_RECT.x,
-        MISS_RECT.y,
+        frame.x + MISS_RECT.x,
+        frame.y + MISS_RECT.y,
         MISS_RECT.width,
         MISS_RECT.height,
         position.x - MISS_RECT.width / 2,
@@ -97,8 +98,8 @@ export class HealthBar {
       const number = Number.parseInt(char, 10);
       this.textCtx.drawImage(
         bmp,
-        HEALTH_BAR_WIDTH + number * NUMBER_WIDTH,
-        EMPTY_BACKGROUND_START + (this.heal > 0 ? NUMBER_HEIGHT : 0),
+        frame.x + HEALTH_BAR_WIDTH + number * NUMBER_WIDTH,
+        frame.y + EMPTY_BACKGROUND_START + (this.heal > 0 ? NUMBER_HEIGHT : 0),
         NUMBER_WIDTH,
         NUMBER_HEIGHT,
         index * NUMBER_WIDTH,

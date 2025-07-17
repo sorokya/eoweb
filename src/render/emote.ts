@@ -56,9 +56,9 @@ export class Emote {
     ctx.globalAlpha = this.ticks / EMOTE_ANIMATION_TICKS;
 
     ctx.drawImage(
-      bmp,
-      sourceX,
-      0,
+      bmp.image,
+      bmp.frame.x + sourceX,
+      bmp.frame.y,
       50,
       50,
       rect.position.x + rect.width / 2 - 25,

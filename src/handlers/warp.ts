@@ -53,8 +53,6 @@ function handleWarpAgree(client: Client, reader: EoReader) {
       continue;
     }
 
-    client.preloadNpcSprites(npc.id);
-
     loaded.push(npc.id);
   }
 

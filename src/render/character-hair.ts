@@ -128,12 +128,12 @@ export function renderCharacterHair(
   }
 
   let screenX = Math.floor(
-    rect.position.x + rect.width / 2 - bmp.width / 2 + 1,
+    rect.position.x + rect.width / 2 - bmp.frame.w / 2 + 1,
   );
 
   let screenY = Math.floor(
     rect.position.y -
-      bmp.height +
+      bmp.frame.h +
       41 +
       (character.gender === Gender.Female ? 1 : 0),
   );
@@ -191,10 +191,20 @@ export function renderCharacterHair(
   }
 
   const drawX = Math.floor(
-    mirrored ? GAME_WIDTH - screenX - bmp.width : screenX,
+    mirrored ? GAME_WIDTH - screenX - bmp.frame.w : screenX,
   );
 
-  ctx.drawImage(bmp, drawX, screenY);
+  ctx.drawImage(
+    bmp.image,
+    bmp.frame.x,
+    bmp.frame.y,
+    bmp.frame.w,
+    bmp.frame.h,
+    drawX,
+    screenY,
+    bmp.frame.w,
+    bmp.frame.h,
+  );
 
   if (mirrored) {
     ctx.restore();
