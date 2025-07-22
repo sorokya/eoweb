@@ -101,10 +101,10 @@ import {
   getNpcIntersecting,
   getSignIntersecting,
 } from './collision';
+import { getDefaultConfig, loadConfig } from './config';
 import {
   CLEAR_OUT_OF_RANGE_TICKS,
   HALF_TILE_HEIGHT,
-  HOST,
   IDLE_TICKS,
   INITIAL_IDLE_TICKS,
   MAX_CHARACTER_NAME_LENGTH,
@@ -350,7 +350,7 @@ type CharacterCreateData = {
 export class Client {
   private emitter: Emitter<ClientEvents>;
   bus: PacketBus | null = null;
-  host = HOST;
+  config = getDefaultConfig();
   version: Version;
   challenge: number;
   accountCreateData: AccountCreateData | null = null;
@@ -484,6 +484,20 @@ export class Client {
     this.mapRenderer = new MapRenderer(this);
     this.movementController = new MovementController(this);
     this.preloadCharacterSprites();
+    loadConfig().then((config) => {
+      this.config = config;
+      const txtHost =
+        document.querySelector<HTMLInputElement>('input[name="host"]');
+      if (this.config.staticHost) {
+        txtHost.classList.add('hidden');
+      }
+      txtHost.value = config.host;
+      document.title = config.title;
+
+      const mainMenuLogo =
+        document.querySelector<HTMLDivElement>('#main-menu-logo');
+      mainMenuLogo.setAttribute('data-slogan', config.slogan);
+    });
   }
 
   private preloadCharacterSprites() {

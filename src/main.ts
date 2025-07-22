@@ -269,7 +269,7 @@ client.on('shopOpened', (data) => {
 });
 
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
-  const socket = new WebSocket(client.host);
+  const socket = new WebSocket(client.config.host);
   socket.addEventListener('open', () => {
     if (next === 'create') {
       mainMenu.hide();
@@ -389,11 +389,11 @@ mainMenu.on('create-account', () => {
 });
 
 mainMenu.on('view-credits', () => {
-  window.open('https://github.com/sorokya/eoweb', '_blank');
+  window.open(client.config.creditsUrl, '_blank');
 });
 
 mainMenu.on('host-change', (host) => {
-  client.host = host;
+  client.config.host = host;
   client.disconnect();
 });
 
