@@ -2,6 +2,7 @@ import {
   AdminLevel,
   type CharacterMapInfo,
   Coords,
+  Direction,
   MapTileSpec,
   SitState,
 } from 'eolib';
@@ -41,11 +42,13 @@ import {
 import { renderCharacterHair } from './render/character-hair';
 import { renderCharacterHairBehind } from './render/character-hair-behind';
 import { renderCharacterHealthBar } from './render/character-health-bar';
+import { renderCharacterShield } from './render/character-shield';
 import {
   calculateCharacterRenderPositionStanding,
   renderCharacterStanding,
 } from './render/character-standing';
 import { CharacterWalkAnimation } from './render/character-walk';
+import { renderCharacterWeapon } from './render/character-weapon';
 import { EffectTargetCharacter, EffectTargetTile } from './render/effect';
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
@@ -935,6 +938,8 @@ export class MapRenderer {
     action: CharacterAction,
   ) {
     renderCharacterHairBehind(character, ctx, animationFrame, action);
+    renderCharacterShield(character, ctx, animationFrame, action, 'behind');
+    renderCharacterWeapon(character, ctx, animationFrame, action, 'behind');
   }
 
   renderCharacterLayers(
@@ -946,6 +951,8 @@ export class MapRenderer {
     renderCharacterBoots(character, ctx, animationFrame, action);
     renderCharacterArmor(character, ctx, animationFrame, action);
     renderCharacterHair(character, ctx, animationFrame, action);
+    renderCharacterShield(character, ctx, animationFrame, action, 'front');
+    renderCharacterWeapon(character, ctx, animationFrame, action, 'front');
   }
 
   renderCursor(

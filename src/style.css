@@ -714,11 +714,12 @@ input[type="password"] {
 
 #in-game-menu {
   position: absolute;
-  right: 0;
+  right: 10px; /* Change from 0 to 60px (or whatever distance you prefer) */
   display: flex;
   flex-flow: column;
   height: 100%;
   justify-content: center;
+  gap: 20px;
 }
 
 #inventory {
@@ -1362,24 +1363,20 @@ div.icon[data-id="23"] {
   --bg-url: "";
   --bg-x: 0;
   --bg-y: 0;
-  --hover-x: 0;
-  --hover-y: 0;
   --width: 0;
   --height: 0;
 
   background-color: transparent;
   border: none;
   outline: none;
-  /* biome-ignore lint/suspicious/noShorthandPropertyOverrides: CSS variables */
   background: var(--bg-url) var(--bg-x) var(--bg-y);
+  background-repeat: no-repeat;
   width: var(--width);
   height: var(--height);
   cursor: pointer;
 }
 
-.img-btn:hover {
-  background-position: var(--hover-x) var(--hover-y);
-}
+
 
 /* Specific buttons */
 .img-btn[data-id="create-account"] {
@@ -1552,73 +1549,59 @@ div.icon[data-id="23"] {
   --width: 21px;
   --height: 18px;
 }
-
 .img-btn[data-id="inventory"] {
-  background-color: #000;
-  --bg-url: url("/gfx/gfx002/125.png");
+ 
+  --bg-url: url("/gfx/gfx002/102.png");
   --bg-x: 0;
   --bg-y: 0;
-  --hover-x: -36px;
-  --hover-y: 0;
-  --width: 36px;
-  --height: 19px;
+  --width: 56px;
+  --height: 56px;
 }
 
 .img-btn[data-id="map"] {
-  background-color: #000;
-  --bg-url: url("/gfx/gfx002/125.png");
+ 
+  --bg-url: url("/gfx/gfx002/105.png");
   --bg-x: 0;
-  --bg-y: -19px;
-  --hover-x: -36px;
-  --hover-y: -19px;
-  --width: 36px;
-  --height: 19px;
+  --bg-y: 0px;
+  --width: 56px;
+  --height: 56px;
 }
 
 .img-btn[data-id="spells"] {
-  background-color: #000;
-  --bg-url: url("/gfx/gfx002/125.png");
+ 
+  --bg-url: url("/gfx/gfx002/103.png");
   --bg-x: 0;
-  --bg-y: -38px;
-  --hover-x: -36px;
-  --hover-y: -38px;
-  --width: 36px;
-  --height: 19px;
+  --bg-y: 0px;
+  --width: 58px;  /* Changed from 50px */
+  --height: 56px; /* Changed from 40px */
 }
 
 .img-btn[data-id="stats"] {
-  background-color: #000;
-  --bg-url: url("/gfx/gfx002/125.png");
+ 
+  --bg-url: url("/gfx/gfx002/105.png");
   --bg-x: 0;
-  --bg-y: -95px;
-  --hover-x: -36px;
-  --hover-y: -95px;
-  --width: 36px;
-  --height: 19px;
+  --bg-y: 0;
+  --width: 56px;  /* Changed from 50px */
+  --height: 56px; /* Changed from 40px */
 }
 
 .img-btn[data-id="online"] {
-  background-color: #000;
-  --bg-url: url("/gfx/gfx002/125.png");
+  
+  --bg-url: url("/gfx/gfx002/108.png");
   --bg-x: 0;
-  --bg-y: -114px;
-  --hover-x: -36px;
-  --hover-y: -114px;
-  --width: 36px;
-  --height: 19px;
+  --bg-y: 0px;
+  --width: 56px;  /* Changed from 50px */
+  --height: 56px; /* Changed from 40px */
 }
 
 .img-btn[data-id="party"] {
-  background-color: #000;
-  --bg-url: url("/gfx/gfx002/125.png");
+  
+  --bg-url: url("/gfx/gfx002/106.png");
   --bg-x: 0;
-  --bg-y: -133px;
-  --hover-x: -36px;
-  --hover-y: -133px;
-  --width: 36px;
-  --height: 19px;
+  --bg-y: 0px;
+  --width: 56px;  /* Changed from 50px */
+  --height: 56px; /* Changed from 40px */
 }
-
 .img-btn[data-id="quest-select"] {
   background-color: #000;
   --bg-url: url("/gfx/gfx002/127.png");
