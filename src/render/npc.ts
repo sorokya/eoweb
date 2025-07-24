@@ -1,7 +1,7 @@
 import { Direction, type EnfRecord, type NpcMapInfo } from 'eolib';
 import { Rectangle, setNpcRectangle } from '../collision';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
-import { GfxType, getBitmapById } from '../gfx';
+import { GfxType, getBitmapById, getFrameById } from '../gfx';
 import type { NPCMetadata } from '../utils/get-npc-metadata';
 import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
@@ -27,14 +27,16 @@ export function renderNpc(
     return;
   }
 
+  const frame = getFrameById(GfxType.NPC, (record.graphicId - 1) * 40 + offset);
+
   const screenCoords = isoToScreen(npc.coords);
   const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
 
   const screenX = Math.floor(
-    screenCoords.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+    screenCoords.x - frame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
   );
   const screenY =
-    screenCoords.y - (bmp.height - 23) - playerScreen.y + HALF_GAME_HEIGHT;
+    screenCoords.y - (frame.h - 23) - playerScreen.y + HALF_GAME_HEIGHT;
 
   if (mirrored) {
     ctx.save(); // Save the current context state
@@ -44,16 +46,26 @@ export function renderNpc(
 
   const drawX = Math.floor(
     mirrored
-      ? GAME_WIDTH - screenX - bmp.width + meta.xOffset
+      ? GAME_WIDTH - screenX - frame.w + meta.xOffset
       : screenX + meta.xOffset,
   );
   const drawY = Math.floor(screenY - meta.yOffset);
 
-  ctx.drawImage(bmp, drawX, drawY);
+  ctx.drawImage(
+    bmp,
+    frame.x,
+    frame.y,
+    frame.w,
+    frame.h,
+    drawX,
+    drawY,
+    frame.w,
+    frame.h,
+  );
 
   setNpcRectangle(
     npc.index,
-    new Rectangle({ x: screenX, y: drawY }, bmp.width, bmp.height),
+    new Rectangle({ x: screenX, y: drawY }, frame.w, frame.h),
   );
 
   if (mirrored) {

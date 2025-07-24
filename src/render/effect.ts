@@ -1,6 +1,6 @@
 import type { Rectangle } from '../collision';
 import { HALF_TILE_HEIGHT, TILE_HEIGHT } from '../consts';
-import { GfxType, getBitmapById } from '../gfx';
+import { GfxType, getBitmapById, getFrameById } from '../gfx';
 import type { EffectMetadata } from '../utils/get-effect-metadata';
 import { randomRange } from '../utils/random-range';
 import type { Vector2 } from '../vector';
@@ -118,20 +118,22 @@ export class EffectAnimation {
       return;
     }
 
-    const frameWidth = bmp.width / this.metadata.frames;
+    const frame = getFrameById(GfxType.Spells, (this.id - 1) * 3 + 1);
+
+    const frameWidth = frame.w / this.metadata.frames;
     const sourceX = this.animationFrame * frameWidth;
-    const drawPos = this.getDrawPosition(frameWidth, bmp.height);
+    const drawPos = this.getDrawPosition(frameWidth, frame.h);
 
     ctx.drawImage(
       bmp,
-      sourceX,
-      0,
+      sourceX + frame.x,
+      frame.y,
       frameWidth,
-      bmp.height,
+      frame.h,
       drawPos.x,
       drawPos.y,
       frameWidth,
-      bmp.height,
+      frame.h,
     );
   }
 
@@ -145,20 +147,22 @@ export class EffectAnimation {
       return;
     }
 
-    const frameWidth = bmp.width / this.metadata.frames;
+    const frame = getFrameById(GfxType.Spells, (this.id - 1) * 3 + 2);
+
+    const frameWidth = frame.w / this.metadata.frames;
     const sourceX = this.animationFrame * frameWidth;
-    const drawPos = this.getDrawPosition(frameWidth, bmp.height);
+    const drawPos = this.getDrawPosition(frameWidth, frame.h);
 
     ctx.drawImage(
       bmp,
-      sourceX,
-      0,
+      sourceX + frame.x,
+      frame.y,
       frameWidth,
-      bmp.height,
+      frame.h,
       drawPos.x,
       drawPos.y,
       frameWidth,
-      bmp.height,
+      frame.h,
     );
   }
 
@@ -172,20 +176,22 @@ export class EffectAnimation {
       return;
     }
 
-    const frameWidth = bmp.width / this.metadata.frames;
+    const frame = getFrameById(GfxType.Spells, (this.id - 1) * 3 + 3);
+
+    const frameWidth = frame.w / this.metadata.frames;
     const sourceX = this.animationFrame * frameWidth;
-    const drawPos = this.getDrawPosition(frameWidth, bmp.height);
+    const drawPos = this.getDrawPosition(frameWidth, frame.h);
 
     ctx.drawImage(
       bmp,
-      sourceX,
-      0,
+      sourceX + frame.x,
+      frame.y,
       frameWidth,
-      bmp.height,
+      frame.h,
       drawPos.x,
       drawPos.y,
       frameWidth,
-      bmp.height,
+      frame.h,
     );
   }
 }

@@ -24,7 +24,7 @@ import {
   TILE_WIDTH,
 } from './consts';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
-import { GfxType, getBitmapById } from './gfx';
+import { GfxType, getBitmapById, getFrameById } from './gfx';
 import { renderCharacterArmor } from './render/character-armor';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
@@ -646,7 +646,11 @@ export class MapRenderer {
       return;
     }
 
-    const offset = this.getOffset(entity.layer, bmp.width, bmp.height);
+    const frame = getFrameById(
+      LAYER_GFX_MAP[entity.layer],
+      entity.typeId + bmpOffset,
+    );
+    const offset = this.getOffset(entity.layer, frame.w, frame.h);
     const tileScreen = isoToScreen({ x: entity.x, y: entity.y });
 
     const screenX = Math.floor(
@@ -668,15 +672,15 @@ export class MapRenderer {
       setDoorRectangle(
         coords,
         new Rectangle(
-          { x: screenX, y: screenY + bmp.height - DOOR_HEIGHT },
-          bmp.width,
+          { x: screenX, y: screenY + frame.h - DOOR_HEIGHT },
+          frame.w,
           DOOR_HEIGHT,
         ),
       );
     } else if (isSign) {
       setSignRectangle(
         coords,
-        new Rectangle({ x: screenX, y: screenY }, bmp.width, DOOR_HEIGHT),
+        new Rectangle({ x: screenX, y: screenY }, frame.w, DOOR_HEIGHT),
       );
     }
 
@@ -686,11 +690,11 @@ export class MapRenderer {
       ctx.globalAlpha = 1;
     }
 
-    if (entity.layer === Layer.Ground && bmp.width > TILE_WIDTH) {
+    if (entity.layer === Layer.Ground && frame.w > TILE_WIDTH) {
       ctx.drawImage(
         bmp,
-        this.animationFrame * TILE_WIDTH,
-        0,
+        this.animationFrame * TILE_WIDTH + frame.x,
+        frame.y,
         TILE_WIDTH,
         TILE_HEIGHT,
         screenX,
@@ -699,24 +703,35 @@ export class MapRenderer {
         TILE_HEIGHT,
       );
     } else if (
-      bmp.width > 120 &&
+      frame.w > 120 &&
       [Layer.DownWall, Layer.RightWall].includes(entity.layer)
     ) {
-      const frameWidth = bmp.width / 4;
+      const frameWidth = frame.w / 4;
       ctx.drawImage(
         bmp,
-        this.animationFrame * frameWidth,
-        0,
+        this.animationFrame * frameWidth + frame.x,
+        frame.y,
         frameWidth,
-        bmp.height,
+        frame.h,
         screenX,
         screenY,
         frameWidth,
-        bmp.height,
+        frame.h,
       );
     } else {
-      ctx.drawImage(bmp, screenX, screenY);
+      ctx.drawImage(
+        bmp,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        screenX,
+        screenY,
+        frame.w,
+        frame.h,
+      );
     }
+
     if (entity.layer === Layer.Shadow) {
       ctx.globalAlpha = 1;
     }
@@ -919,6 +934,8 @@ export class MapRenderer {
       return;
     }
 
+    const frame = getFrameById(GfxType.Items, gfxId);
+
     const tileScreen = isoToScreen(item.coords);
 
     const screenX = Math.floor(
@@ -928,7 +945,17 @@ export class MapRenderer {
       tileScreen.y - bmp.height / 2 - playerScreen.y + HALF_GAME_HEIGHT,
     );
 
-    ctx.drawImage(bmp, screenX, screenY);
+    ctx.drawImage(
+      bmp,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      screenX,
+      screenY,
+      frame.w,
+      frame.h,
+    );
   }
 
   renderCharacterBehindLayers(
@@ -981,10 +1008,11 @@ export class MapRenderer {
         tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
       );
 
+      const frame = getFrameById(GfxType.PostLoginUI, 24);
       ctx.drawImage(
         bmp,
-        sourceX,
-        0,
+        sourceX + frame.x,
+        frame.y,
         TILE_WIDTH,
         TILE_HEIGHT,
         screenX,

@@ -1,4 +1,4 @@
-import { GfxType, getBitmapById } from '../gfx';
+import { GfxType, getBitmapById, getFrameById } from '../gfx';
 import type { Vector2 } from '../vector';
 
 const EMPTY_BACKGROUND_START = 28;
@@ -36,12 +36,14 @@ export class HealthBar {
       return;
     }
 
+    const frame = getFrameById(GfxType.PostLoginUI, 58);
+
     const hpWidth = Math.floor(HEALTH_BAR_WIDTH * (this.percentage / 100));
 
     ctx.drawImage(
       bmp,
-      0,
-      BLACK_BACKGROUND_START,
+      frame.x,
+      BLACK_BACKGROUND_START + frame.y,
       HEALTH_BAR_WIDTH,
       HEALTH_BAR_HEIGHT,
       x,
@@ -59,8 +61,8 @@ export class HealthBar {
 
     ctx.drawImage(
       bmp,
-      0,
-      startY,
+      frame.x,
+      startY + frame.y,
       hpWidth,
       HEALTH_BAR_HEIGHT,
       x,
@@ -73,8 +75,8 @@ export class HealthBar {
     if (!amount) {
       ctx.drawImage(
         bmp,
-        MISS_RECT.x,
-        MISS_RECT.y,
+        MISS_RECT.x + frame.x,
+        MISS_RECT.y + frame.y,
         MISS_RECT.width,
         MISS_RECT.height,
         position.x - MISS_RECT.width / 2,
@@ -97,8 +99,8 @@ export class HealthBar {
       const number = Number.parseInt(char, 10);
       this.textCtx.drawImage(
         bmp,
-        HEALTH_BAR_WIDTH + number * NUMBER_WIDTH,
-        EMPTY_BACKGROUND_START + (this.heal > 0 ? NUMBER_HEIGHT : 0),
+        frame.x + HEALTH_BAR_WIDTH + number * NUMBER_WIDTH,
+        frame.y + EMPTY_BACKGROUND_START + (this.heal > 0 ? NUMBER_HEIGHT : 0),
         NUMBER_WIDTH,
         NUMBER_HEIGHT,
         index * NUMBER_WIDTH,
