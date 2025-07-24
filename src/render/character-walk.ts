@@ -14,7 +14,7 @@ import {
   WALK_WIDTH_FACTOR,
 } from '../consts';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
-import { GfxType, getBitmapById } from '../gfx';
+import { GfxType, getBitmapById, getFrameById } from '../gfx';
 import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
 import { CharacterAnimation } from './character-base-animation';
@@ -142,6 +142,8 @@ export class CharacterWalkAnimation extends CharacterAnimation {
       return;
     }
 
+    const frame = getFrameById(GfxType.SkinSprites, 2);
+
     const rect = getCharacterRectangle(character.playerId);
     if (!rect) {
       return;
@@ -176,8 +178,8 @@ export class CharacterWalkAnimation extends CharacterAnimation {
 
     ctx.drawImage(
       bmp,
-      sourceX,
-      sourceY,
+      sourceX + frame.x,
+      sourceY + frame.y,
       CHARACTER_WALKING_WIDTH,
       CHARACTER_WALKING_HEIGHT,
       drawX,
@@ -189,9 +191,5 @@ export class CharacterWalkAnimation extends CharacterAnimation {
     if (mirrored) {
       ctx.restore();
     }
-  }
-
-  isOnLastFrame(): boolean {
-    return this.ticks === 0.3;
   }
 }

@@ -10,7 +10,7 @@ import {
   HALF_CHARACTER_SIT_GROUND_WIDTH,
 } from '../consts';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
-import { GfxType, getBitmapById } from '../gfx';
+import { GfxType, getBitmapById, getFrameById } from '../gfx';
 import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
 
@@ -76,7 +76,10 @@ export function renderCharacterFloor(
     return;
   }
 
+  const frame = getFrameById(GfxType.SkinSprites, 6);
+
   const emoteBmp = emote ? getBitmapById(GfxType.SkinSprites, 8) : null;
+  const emoteFrame = emote ? getFrameById(GfxType.SkinSprites, 8) : null;
 
   const rect = getCharacterRectangle(character.playerId);
   if (!rect) {
@@ -110,8 +113,8 @@ export function renderCharacterFloor(
 
   ctx.drawImage(
     bmp,
-    sourceX,
-    sourceY,
+    sourceX + frame.x,
+    sourceY + frame.y,
     CHARACTER_SIT_GROUND_WIDTH,
     CHARACTER_SIT_GROUND_HEIGHT,
     drawX,
@@ -122,6 +125,7 @@ export function renderCharacterFloor(
 
   if (
     emoteBmp &&
+    emoteFrame &&
     ![Emote.Trade, Emote.LevelUp].includes(emote) &&
     [Direction.Down, Direction.Right].includes(character.direction)
   ) {
@@ -147,8 +151,8 @@ export function renderCharacterFloor(
 
     ctx.drawImage(
       emoteBmp,
-      emoteSourceX,
-      emoteSourceY,
+      emoteSourceX + emoteFrame.x,
+      emoteSourceY + emoteFrame.y,
       13,
       14,
       drawX - (character.gender === Gender.Female ? 1 : 0),

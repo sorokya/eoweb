@@ -2,7 +2,7 @@ import { type CharacterMapInfo, Direction, Gender, SitState } from 'eolib';
 import { CharacterAction } from '../client';
 import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
-import { GfxType, getBitmapById } from '../gfx';
+import { GfxType, getBitmapById, getFrameById } from '../gfx';
 import type { Vector2 } from '../vector';
 
 const MALE_STANDING_OFFSETS = {
@@ -153,6 +153,13 @@ export function renderCharacterArmor(
     baseGfxId + offset,
   );
 
+  const frame = getFrameById(
+    character.gender === Gender.Female
+      ? GfxType.FemaleArmor
+      : GfxType.MaleArmor,
+    baseGfxId + offset,
+  );
+
   if (!bmp) {
     return;
   }
@@ -162,9 +169,9 @@ export function renderCharacterArmor(
     return;
   }
 
-  let screenX = Math.floor(rect.position.x + rect.width / 2 - bmp.width / 2);
+  let screenX = Math.floor(rect.position.x + rect.width / 2 - frame.w / 2);
 
-  let screenY = Math.floor(rect.position.y + rect.height - bmp.height) + 1;
+  let screenY = Math.floor(rect.position.y + rect.height - frame.h) + 1;
 
   const { direction, gender, sitState } = character;
 
@@ -221,11 +228,19 @@ export function renderCharacterArmor(
     ctx.scale(-1, 1); // Flip horizontally
   }
 
-  const drawX = Math.floor(
-    mirrored ? GAME_WIDTH - screenX - bmp.width : screenX,
-  );
+  const drawX = Math.floor(mirrored ? GAME_WIDTH - screenX - frame.w : screenX);
 
-  ctx.drawImage(bmp, drawX, screenY);
+  ctx.drawImage(
+    bmp,
+    frame.x,
+    frame.y,
+    frame.w,
+    frame.h,
+    drawX,
+    screenY,
+    frame.w,
+    frame.h,
+  );
 
   if (mirrored) {
     ctx.restore();

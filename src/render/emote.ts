@@ -1,7 +1,7 @@
 import { type CharacterMapInfo, Emote as EmoteType } from 'eolib';
 import { getCharacterRectangle } from '../collision';
 import { EMOTE_ANIMATION_FRAMES, EMOTE_ANIMATION_TICKS } from '../consts';
-import { GfxType, getBitmapById } from '../gfx';
+import { GfxType, getBitmapById, getFrameById } from '../gfx';
 
 const EMOTE_POSITION = {
   [EmoteType.Happy]: 0,
@@ -44,6 +44,8 @@ export class Emote {
       return;
     }
 
+    const frame = getFrameById(GfxType.PostLoginUI, 38);
+
     const rect = getCharacterRectangle(character.playerId);
     if (!rect) {
       return;
@@ -57,8 +59,8 @@ export class Emote {
 
     ctx.drawImage(
       bmp,
-      sourceX,
-      0,
+      sourceX + frame.x,
+      frame.y,
       50,
       50,
       rect.position.x + rect.width / 2 - 25,
