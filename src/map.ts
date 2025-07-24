@@ -40,6 +40,11 @@ import {
 } from './render/character-floor';
 import { renderCharacterHair } from './render/character-hair';
 import { renderCharacterHairBehind } from './render/character-hair-behind';
+import {
+  isHatBehindHair,
+  renderCharacterHat,
+  shouldRenderHair,
+} from './render/character-hat';
 import { renderCharacterHealthBar } from './render/character-health-bar';
 import {
   calculateCharacterRenderPositionStanding,
@@ -964,7 +969,18 @@ export class MapRenderer {
     animationFrame: number,
     action: CharacterAction,
   ) {
-    renderCharacterHairBehind(character, ctx, animationFrame, action);
+    if (shouldRenderHair(character)) {
+      renderCharacterHairBehind(character, ctx, animationFrame, action);
+    }
+
+    if (isHatBehindHair(character)) {
+      renderCharacterHat(character, ctx, animationFrame, action);
+    }
+
+    // if ([Direction.Down, Direction.Right].includes(character.direction)) {
+    //   renderCharacterShield(character, ctx, animationFrame, action, 'behind');
+    // }
+    // renderCharacterWeapon(character, ctx, animationFrame, action, 'behind');
   }
 
   renderCharacterLayers(
@@ -975,7 +991,21 @@ export class MapRenderer {
   ) {
     renderCharacterBoots(character, ctx, animationFrame, action);
     renderCharacterArmor(character, ctx, animationFrame, action);
-    renderCharacterHair(character, ctx, animationFrame, action);
+
+    if (shouldRenderHair(character)) {
+      renderCharacterHair(character, ctx, animationFrame, action);
+    }
+
+    if (character.equipment.hat > 0) {
+      renderCharacterHat(character, ctx, animationFrame, action);
+    }
+
+    // renderCharacterShield(character, ctx, animationFrame, action, 'front');
+    // if ([Direction.Up, Direction.Left].includes(character.direction)) {
+    //   renderCharacterShield(character, ctx, animationFrame, action, 'behind');
+    // }
+
+    // renderCharacterWeapon(character, ctx, animationFrame, action, 'front');
   }
 
   renderCursor(
