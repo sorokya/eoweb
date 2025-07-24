@@ -164,6 +164,7 @@ import {
   EffectMetadata,
   getEffectMetaData,
 } from './utils/get-effect-metadata';
+import { getHatMetadata, HatMaskType } from './utils/get-hat-metadata';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
 import { getVolumeFromDistance } from './utils/get-volume-from-distance';
 import { getWeaponMetaData, WeaponMetadata } from './utils/get-weapon-metadata';
@@ -416,6 +417,7 @@ export class Client {
   npcMetadata = getNpcMetaData();
   weaponMetadata = getWeaponMetaData();
   effectMetadata = getEffectMetaData();
+  hatMetadata = getHatMetadata();
   doors: Door[] = [];
   typing = false;
   clearOutofRangeTicks = 0;
@@ -571,6 +573,15 @@ export class Client {
     }
 
     return new WeaponMetadata(0, [SfxId.MeleeWeaponAttack], false);
+  }
+
+  getHatMetadata(graphicId: number): HatMaskType {
+    const data = this.hatMetadata.get(graphicId);
+    if (data) {
+      return data;
+    }
+
+    return HatMaskType.Standard;
   }
 
   getEifRecordById(id: number): EifRecord | undefined {

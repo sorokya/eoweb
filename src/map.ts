@@ -40,6 +40,7 @@ import {
 } from './render/character-floor';
 import { renderCharacterHair } from './render/character-hair';
 import { renderCharacterHairBehind } from './render/character-hair-behind';
+import { renderCharacterHat } from './render/character-hat';
 import { renderCharacterHealthBar } from './render/character-health-bar';
 import {
   calculateCharacterRenderPositionStanding,
@@ -50,6 +51,8 @@ import { EffectTargetCharacter, EffectTargetTile } from './render/effect';
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
 import { renderNpcHealthBar } from './render/npc-health-bar';
+import { clipHair } from './utils/clip-hair';
+import { HatMaskType } from './utils/get-hat-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
 import type { Vector2 } from './vector';
 
@@ -831,8 +834,18 @@ export class MapRenderer {
     this.renderCharacterLayers(character, characterCtx, frame, action);
 
     if (entity.typeId === this.client.playerId && !character.invisible) {
+      clipHair(
+        characterCtx,
+        this.mainCharacterCanvas.width,
+        this.mainCharacterCanvas.height,
+      );
       ctx.drawImage(this.mainCharacterCanvas, 0, 0);
     } else {
+      clipHair(
+        characterCtx,
+        this.characterCanvas.width,
+        this.characterCanvas.height,
+      );
       if (character.invisible && this.client.admin !== AdminLevel.Player) {
         ctx.globalAlpha = 0.4;
         ctx.drawImage(this.characterCanvas, 0, 0);
@@ -975,7 +988,16 @@ export class MapRenderer {
   ) {
     renderCharacterBoots(character, ctx, animationFrame, action);
     renderCharacterArmor(character, ctx, animationFrame, action);
-    renderCharacterHair(character, ctx, animationFrame, action);
+    const maskType = this.client.getHatMetadata(character.equipment.hat);
+    if (maskType === HatMaskType.FaceMask) {
+      renderCharacterHat(character, ctx, animationFrame, action);
+    }
+    if (maskType !== HatMaskType.HideHair) {
+      renderCharacterHair(character, ctx, animationFrame, action);
+    }
+    if (maskType !== HatMaskType.FaceMask) {
+      renderCharacterHat(character, ctx, animationFrame, action);
+    }
   }
 
   renderCursor(
