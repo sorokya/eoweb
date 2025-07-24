@@ -22,9 +22,12 @@ import { renderCharacterArmor } from '../render/character-armor';
 import { renderCharacterBoots } from '../render/character-boots';
 import { renderCharacterHair } from '../render/character-hair';
 import { renderCharacterHairBehind } from '../render/character-hair-behind';
+import { renderCharacterHat } from '../render/character-hat';
 import { renderCharacterStanding } from '../render/character-standing';
 import { playSfxById, SfxId } from '../sfx';
 import { capitalize } from '../utils/capitalize';
+import { clipHair } from '../utils/clip-hair';
+import { HatMaskType } from '../utils/get-hat-metadata';
 import { Base } from './base-ui';
 
 type Events = {
@@ -125,13 +128,28 @@ export class CharacterSelect extends Base {
       mapInfo.equipment.boots = character.equipment.boots;
       mapInfo.equipment.armor = character.equipment.armor;
       mapInfo.equipment.weapon = character.equipment.weapon;
+      mapInfo.equipment.hat = character.equipment.hat;
+      mapInfo.equipment.shield = character.equipment.shield;
 
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      renderCharacterHairBehind(mapInfo, this.ctx, 0, CharacterAction.None);
+      const maskType = this.client.getHatMetadata(character.equipment.hat);
+      if (maskType !== HatMaskType.HideHair) {
+        renderCharacterHairBehind(mapInfo, this.ctx, 0, CharacterAction.None);
+      }
       renderCharacterStanding(mapInfo, null, this.ctx);
       renderCharacterBoots(mapInfo, this.ctx, 0, CharacterAction.None);
       renderCharacterArmor(mapInfo, this.ctx, 0, CharacterAction.None);
-      renderCharacterHair(mapInfo, this.ctx, 0, CharacterAction.None);
+      if (maskType === HatMaskType.FaceMask) {
+        renderCharacterHat(mapInfo, this.ctx, 0, CharacterAction.None);
+      }
+      if (maskType !== HatMaskType.HideHair) {
+        renderCharacterHair(mapInfo, this.ctx, 0, CharacterAction.None);
+      }
+      if (maskType !== HatMaskType.FaceMask) {
+        renderCharacterHat(mapInfo, this.ctx, 0, CharacterAction.None);
+      }
+
+      clipHair(this.ctx, this.canvas.width, this.canvas.height);
 
       const preview: HTMLImageElement = this.container.querySelectorAll(
         '.preview',
