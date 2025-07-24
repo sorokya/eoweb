@@ -977,7 +977,10 @@ export class MapRenderer {
     animationFrame: number,
     action: CharacterAction,
   ) {
-    renderCharacterHairBehind(character, ctx, animationFrame, action);
+    const maskType = this.client.getHatMetadata(character.equipment.hat);
+    if (maskType !== HatMaskType.HideHair) {
+      renderCharacterHairBehind(character, ctx, animationFrame, action);
+    }
   }
 
   renderCharacterLayers(
