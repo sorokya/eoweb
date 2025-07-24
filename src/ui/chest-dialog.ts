@@ -38,10 +38,13 @@ export class ChestDialog extends Base {
     this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
 
     const inventory = document.querySelector<HTMLDivElement>('#inventory');
-    const dollRect = this.container.getBoundingClientRect();
+    const chestRect = this.container.getBoundingClientRect();
     const inventoryRect = inventory.getBoundingClientRect();
-    if (dollRect.bottom > inventoryRect.top) {
-      this.container.style.top = `${Math.floor(inventoryRect.top - dollRect.height - 30)}px`;
+    if (
+      chestRect.bottom > inventoryRect.top &&
+      !inventory.classList.contains('hidden')
+    ) {
+      this.container.style.top = `${Math.floor(inventoryRect.top - chestRect.height - 30)}px`;
     }
   }
 
