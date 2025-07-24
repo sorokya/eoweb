@@ -952,10 +952,10 @@ export class MapRenderer {
     const tileScreen = isoToScreen(item.coords);
 
     const screenX = Math.floor(
-      tileScreen.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+      tileScreen.x - frame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
     );
     const screenY = Math.floor(
-      tileScreen.y - bmp.height / 2 - playerScreen.y + HALF_GAME_HEIGHT,
+      tileScreen.y - frame.h / 2 - playerScreen.y + HALF_GAME_HEIGHT,
     );
 
     ctx.drawImage(
