@@ -47,6 +47,7 @@ import {
   renderCharacterStanding,
 } from './render/character-standing';
 import { CharacterWalkAnimation } from './render/character-walk';
+import { renderCharacterWeapon } from './render/character-weapon';
 import { EffectTargetCharacter, EffectTargetTile } from './render/effect';
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
@@ -981,6 +982,23 @@ export class MapRenderer {
     if (maskType !== HatMaskType.HideHair) {
       renderCharacterHairBehind(character, ctx, animationFrame, action);
     }
+
+    // Determine if weapon is ranged
+    const isRangedWeapon =
+      this.client.getWeaponMetadata(character.equipment.weapon)?.ranged ||
+      false;
+
+    console.log('isRangedWeapon :', isRangedWeapon);
+
+    // Always render weapon behind layer (handles all non-attack cases + attack back layers)
+    renderCharacterWeapon(
+      character,
+      ctx,
+      animationFrame,
+      action,
+      'behind',
+      isRangedWeapon,
+    );
   }
 
   renderCharacterLayers(
@@ -991,6 +1009,7 @@ export class MapRenderer {
   ) {
     renderCharacterBoots(character, ctx, animationFrame, action);
     renderCharacterArmor(character, ctx, animationFrame, action);
+
     const maskType = this.client.getHatMetadata(character.equipment.hat);
     if (maskType === HatMaskType.FaceMask) {
       renderCharacterHat(character, ctx, animationFrame, action);
@@ -1001,8 +1020,22 @@ export class MapRenderer {
     if (maskType !== HatMaskType.FaceMask) {
       renderCharacterHat(character, ctx, animationFrame, action);
     }
-  }
 
+    // Determine if weapon is ranged
+    const isRangedWeapon =
+      this.client.getWeaponMetadata(character.equipment.weapon)?.ranged ||
+      false;
+
+    // Always try to render weapon front layer (only renders when needed)
+    renderCharacterWeapon(
+      character,
+      ctx,
+      animationFrame,
+      action,
+      'front',
+      isRangedWeapon,
+    );
+  }
   renderCursor(
     entity: Entity,
     playerScreen: Vector2,
