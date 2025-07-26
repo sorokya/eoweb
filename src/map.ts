@@ -42,6 +42,7 @@ import { renderCharacterHair } from './render/character-hair';
 import { renderCharacterHairBehind } from './render/character-hair-behind';
 import { renderCharacterHat } from './render/character-hat';
 import { renderCharacterHealthBar } from './render/character-health-bar';
+import { renderCharacterShield } from './render/character-shield';
 import { renderWeaponSlash } from './render/character-slash';
 import {
   calculateCharacterRenderPositionStanding,
@@ -990,9 +991,10 @@ export class MapRenderer {
       renderCharacterHairBehind(character, ctx, animationFrame, action);
     }
 
-    const isRangedWeapon =
-      this.client.getWeaponMetadata(character.equipment.weapon)?.ranged ||
-      false;
+    const weaponMetadata = this.client.getWeaponMetadata(
+      character.equipment.weapon,
+    );
+    const isRangedWeapon = weaponMetadata?.ranged || false;
 
     renderCharacterWeapon(
       character,
@@ -1001,6 +1003,17 @@ export class MapRenderer {
       action,
       'behind',
       isRangedWeapon,
+    );
+
+    // Render shields that belong in the behind layer
+    renderCharacterShield(
+      character,
+      ctx,
+      animationFrame,
+      action,
+      'behind',
+      undefined,
+      weaponMetadata,
     );
   }
 
@@ -1013,6 +1026,10 @@ export class MapRenderer {
     renderCharacterBoots(character, ctx, animationFrame, action);
     renderCharacterArmor(character, ctx, animationFrame, action);
 
+    const weaponMetadata = this.client.getWeaponMetadata(
+      character.equipment.weapon,
+    );
+
     const maskType = this.client.getHatMetadata(character.equipment.hat);
     if (maskType === HatMaskType.FaceMask) {
       renderCharacterHat(character, ctx, animationFrame, action);
@@ -1024,9 +1041,17 @@ export class MapRenderer {
       renderCharacterHat(character, ctx, animationFrame, action);
     }
 
-    const weaponMetadata = this.client.getWeaponMetadata(
-      character.equipment.weapon,
+    // Render shields that belong in the front layer (AFTER hair AND hat)
+    renderCharacterShield(
+      character,
+      ctx,
+      animationFrame,
+      action,
+      'front',
+      undefined,
+      weaponMetadata,
     );
+
     const isRangedWeapon = weaponMetadata?.ranged || false;
 
     renderCharacterWeapon(
