@@ -65,13 +65,3 @@ export function renderWeaponSlash(
   );
   ctx.globalAlpha = 1.0;
 }
-
-export function renderWeaponSlashWithMetadata(
-  character: CharacterMapInfo,
-  ctx: CanvasRenderingContext2D,
-  animationFrame: number,
-  action: CharacterAction,
-  weaponMetadata?: { slash?: number; ranged?: boolean },
-): void {
-  renderWeaponSlash(character, ctx, animationFrame, action, weaponMetadata);
-}
