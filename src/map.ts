@@ -42,6 +42,7 @@ import { renderCharacterHair } from './render/character-hair';
 import { renderCharacterHairBehind } from './render/character-hair-behind';
 import { renderCharacterHat } from './render/character-hat';
 import { renderCharacterHealthBar } from './render/character-health-bar';
+import { renderWeaponSlash } from './render/character-slash';
 import {
   calculateCharacterRenderPositionStanding,
   renderCharacterStanding,
@@ -741,6 +742,7 @@ export class MapRenderer {
     }
   }
 
+  // Updated renderCharacter method - add weapon slash rendering to main canvas
   renderCharacter(
     entity: Entity,
     playerScreen: Vector2,
@@ -855,6 +857,11 @@ export class MapRenderer {
         ctx.drawImage(this.characterCanvas, 0, 0);
       }
     }
+
+    const weaponMetadata = this.client.getWeaponMetadata(
+      character.equipment.weapon,
+    );
+    renderWeaponSlash(character, ctx, frame, action, weaponMetadata);
 
     for (const effect of effects) {
       ctx.globalAlpha = 0.4;
@@ -983,14 +990,10 @@ export class MapRenderer {
       renderCharacterHairBehind(character, ctx, animationFrame, action);
     }
 
-    // Determine if weapon is ranged
     const isRangedWeapon =
       this.client.getWeaponMetadata(character.equipment.weapon)?.ranged ||
       false;
 
-    console.log('isRangedWeapon :', isRangedWeapon);
-
-    // Always render weapon behind layer (handles all non-attack cases + attack back layers)
     renderCharacterWeapon(
       character,
       ctx,
@@ -1021,12 +1024,11 @@ export class MapRenderer {
       renderCharacterHat(character, ctx, animationFrame, action);
     }
 
-    // Determine if weapon is ranged
-    const isRangedWeapon =
-      this.client.getWeaponMetadata(character.equipment.weapon)?.ranged ||
-      false;
+    const weaponMetadata = this.client.getWeaponMetadata(
+      character.equipment.weapon,
+    );
+    const isRangedWeapon = weaponMetadata?.ranged || false;
 
-    // Always try to render weapon front layer (only renders when needed)
     renderCharacterWeapon(
       character,
       ctx,
