@@ -162,8 +162,6 @@ export class QuestDialog extends Base {
   show(): void {
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
   }
 
   constructor() {

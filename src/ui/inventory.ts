@@ -45,7 +45,7 @@ type Events = {
 export class Inventory extends Base {
   private client: Client;
   private emitter = mitt<Events>();
-  protected container = document.querySelector('#inventory');
+  protected container: HTMLDivElement = document.querySelector('#inventory');
   private grid: HTMLDivElement = this.container.querySelector('.grid');
   private positions: ItemPosition[] = [];
   private tab = 0;
@@ -222,6 +222,10 @@ export class Inventory extends Base {
       if (this.lastItemSelected) {
         this.emitter.emit('junkItem', this.lastItemSelected);
       }
+    });
+
+    window.addEventListener('resize', () => {
+      this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
     });
   }
 
@@ -467,6 +471,7 @@ export class Inventory extends Base {
   show() {
     this.render();
     this.container.classList.remove('hidden');
+    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
   }
 
   toggle() {

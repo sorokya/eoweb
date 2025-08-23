@@ -322,18 +322,6 @@ export class Paperdoll extends Base {
     this.render();
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
-
-    const inventory = document.querySelector<HTMLDivElement>('#inventory');
-    const dollRect = this.container.getBoundingClientRect();
-    const inventoryRect = inventory.getBoundingClientRect();
-    if (
-      dollRect.bottom > inventoryRect.top &&
-      !inventory.classList.contains('hidden')
-    ) {
-      this.container.style.top = `${Math.floor(inventoryRect.top - dollRect.height - 30)}px`;
-    }
   }
 
   hide() {
