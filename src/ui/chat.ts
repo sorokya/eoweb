@@ -48,6 +48,7 @@ export class Chat extends Base {
     this.container.querySelector<HTMLUListElement>('#group-chat');
   private systemChat =
     this.container.querySelector<HTMLUListElement>('#system-chat');
+  private activeChat: HTMLUListElement = this.localChat;
   private message: HTMLInputElement = this.container.querySelector('input');
   private emitter = mitt<Events>();
   private btnToggle: HTMLButtonElement =
@@ -148,10 +149,10 @@ export class Chat extends Base {
 
     this.btnToggle.addEventListener('click', () => {
       if (this.collapsed) {
-        this.localChat.classList.remove('hidden');
+        this.activeChat.classList.remove('hidden');
         this.collapsed = false;
       } else {
-        this.localChat.classList.add('hidden');
+        this.activeChat.classList.add('hidden');
         this.collapsed = true;
       }
     });
@@ -166,6 +167,8 @@ export class Chat extends Base {
       this.btnGroup.classList.remove('active');
       this.btnSystem.classList.remove('active');
       this.localChat.scrollTo(0, this.localChat.scrollHeight);
+      this.activeChat = this.localChat;
+      this.collapsed = false;
     });
 
     this.btnGlobal.addEventListener('click', () => {
@@ -178,6 +181,7 @@ export class Chat extends Base {
       this.btnGroup.classList.remove('active');
       this.btnSystem.classList.remove('active');
       this.globalChat.scrollTo(0, this.globalChat.scrollHeight);
+      this.activeChat = this.globalChat;
     });
 
     this.btnGroup.addEventListener('click', () => {
@@ -190,6 +194,8 @@ export class Chat extends Base {
       this.btnGroup.classList.add('active');
       this.btnSystem.classList.remove('active');
       this.groupChat.scrollTo(0, this.groupChat.scrollHeight);
+      this.activeChat = this.groupChat;
+      this.collapsed = false;
     });
 
     this.btnSystem.addEventListener('click', () => {
@@ -202,6 +208,8 @@ export class Chat extends Base {
       this.btnGroup.classList.remove('active');
       this.btnSystem.classList.add('active');
       this.systemChat.scrollTo(0, this.systemChat.scrollHeight);
+      this.activeChat = this.systemChat;
+      this.collapsed = false;
     });
   }
 
