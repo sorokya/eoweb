@@ -1,10 +1,6 @@
 import { type Item, ItemSize } from 'eolib';
 import mitt from 'mitt';
-import {
-  type Client,
-  type EquipmentSlot,
-  getEquipmentSlotFromString,
-} from '../client';
+import type { Client, EquipmentSlot } from '../client';
 import { playSfxById, SfxId } from '../sfx';
 import { getItemMeta } from '../utils/get-item-meta';
 import type { Vector2 } from '../vector';
