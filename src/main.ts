@@ -224,11 +224,6 @@ client.on('enterGame', ({ news }) => {
   resizeCanvases();
   inventory.loadPositions();
   inventory.show();
-
-  const dialogs = document.querySelector<HTMLDivElement>('#dialogs');
-  if (dialogs) {
-    dialogs.classList.remove('hidden');
-  }
 });
 
 client.on('passwordChanged', () => {
@@ -350,7 +345,7 @@ const inventory = new Inventory(client);
 const paperdoll = new Paperdoll(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
-const questDialog = new QuestDialog();
+const questDialog = new QuestDialog(client);
 const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
 const smallAlert = new SmallAlertSmallHeader();

@@ -1,6 +1,10 @@
 import { type Item, ItemSize } from 'eolib';
 import mitt from 'mitt';
-import type { Client, EquipmentSlot } from '../client';
+import {
+  type Client,
+  type EquipmentSlot,
+  getEquipmentSlotFromString,
+} from '../client';
 import { playSfxById, SfxId } from '../sfx';
 import { getItemMeta } from '../utils/get-item-meta';
 import type { Vector2 } from '../vector';
@@ -45,6 +49,7 @@ export class Inventory extends Base {
   private grid: HTMLDivElement = this.container.querySelector('.grid');
   private positions: ItemPosition[] = [];
   private tab = 0;
+  private uiContainer = document.getElementById('ui');
 
   private dragging: {
     item: Item;
@@ -142,59 +147,78 @@ export class Inventory extends Base {
 
     const { el, ghost, item } = this.dragging;
 
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+
     playSfxById(SfxId.InventoryPlace);
     ghost.remove();
     el.style.display = 'flex';
     this.teardownDragListeners();
     this.dragging = null;
 
-    const tab1Rect = this.btnTab1.getBoundingClientRect();
-    if (
-      e.clientX >= tab1Rect.left &&
-      e.clientX < tab1Rect.left + tab1Rect.width &&
-      e.clientY >= tab1Rect.top &&
-      e.clientY < tab1Rect.top + tab1Rect.height
-    ) {
+    if (target === this.btnTab1) {
       this.tryMoveToTab(item.id, 0);
       return;
     }
 
-    const tab2Rect = this.btnTab2.getBoundingClientRect();
-    if (
-      e.clientX >= tab2Rect.left &&
-      e.clientX < tab2Rect.left + tab2Rect.width &&
-      e.clientY >= tab2Rect.top &&
-      e.clientY < tab2Rect.top + tab2Rect.height
-    ) {
+    if (target === this.btnTab2) {
       this.tryMoveToTab(item.id, 1);
       return;
     }
 
-    const dropRect = this.btnDrop.getBoundingClientRect();
-    if (
-      e.clientX >= dropRect.left &&
-      e.clientX < dropRect.left + dropRect.width &&
-      e.clientY >= dropRect.top &&
-      e.clientY < dropRect.top + dropRect.height
-    ) {
+    if (target === this.btnDrop) {
       this.emitter.emit('dropItem', { at: 'feet', itemId: item.id });
       return;
     }
 
-    const junkRect = this.btnJunk.getBoundingClientRect();
-    if (
-      e.clientX >= junkRect.left &&
-      e.clientX < junkRect.left + junkRect.width &&
-      e.clientY >= junkRect.top &&
-      e.clientY < junkRect.top + junkRect.height
-    ) {
+    if (target === this.btnJunk) {
       this.emitter.emit('junkItem', item.id);
+      return;
+    }
+
+    console.log('Target', target);
+
+    const chestItems = target.closest('.chest-items');
+    if (chestItems) {
+      this.emitter.emit('addChestItem', item.id);
+      return;
+    }
+
+    const paperdoll = target.closest('#paperdoll');
+    if (paperdoll) {
+      const itemEl = target.closest('.item');
+      if (!itemEl) {
+        return;
+      }
+
+      const slot = getEquipmentSlotFromString(itemEl.getAttribute('data-id'));
+      if (typeof slot === 'undefined') {
+        return;
+      }
+
+      this.emitter.emit('equipItem', {
+        slot,
+        itemId: item.id,
+      });
+      return;
+    }
+
+    if (target === this.uiContainer) {
+      this.emitter.emit('dropItem', { at: 'cursor', itemId: item.id });
       return;
     }
 
     const rect = this.grid.getBoundingClientRect();
     const pointerX = e.clientX - rect.left;
     const pointerY = e.clientY - rect.top;
+
+    if (
+      pointerX < 0 ||
+      pointerY < 0 ||
+      pointerX > rect.width ||
+      pointerY > rect.height
+    ) {
+      return;
+    }
 
     const gridX = Math.floor(pointerX / CELL_SIZE);
     const gridY = Math.floor(pointerY / CELL_SIZE);

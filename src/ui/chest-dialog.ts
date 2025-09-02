@@ -12,6 +12,7 @@ export class ChestDialog extends Base {
   private btnCancel = this.container.querySelector<HTMLButtonElement>(
     'button[data-id="cancel"]',
   );
+  private dialogs = document.getElementById('dialogs');
   private itemsList =
     this.container.querySelector<HTMLDivElement>('.chest-items');
   private items: ThreeItem[] = [];
@@ -34,11 +35,18 @@ export class ChestDialog extends Base {
   show() {
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
+    this.dialogs.classList.remove('hidden');
+    this.client.typing = true;
   }
 
   hide() {
     this.cover.classList.add('hidden');
     this.container.classList.add('hidden');
+
+    if (!document.querySelector('#dialogs > div:not(.hidden)')) {
+      this.dialogs.classList.add('hidden');
+      this.client.typing = false;
+    }
   }
 
   private getChestItemGraphicId(eifRecord: EifRecord, amount: number): number {

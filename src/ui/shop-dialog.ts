@@ -37,6 +37,7 @@ export class ShopDialog extends Base {
   private client: Client;
   private emitter = mitt<Events>();
   protected container = document.getElementById('shop');
+  private dialogs = document.getElementById('dialogs');
   private cover = document.querySelector<HTMLDivElement>('#cover');
   private btnCancel = this.container.querySelector<HTMLButtonElement>(
     'button[data-id="cancel"]',
@@ -120,7 +121,11 @@ export class ShopDialog extends Base {
   hide() {
     this.cover.classList.add('hidden');
     this.container.classList.add('hidden');
-    this.client.typing = false;
+
+    if (!document.querySelector('#dialogs > div:not(.hidden)')) {
+      this.dialogs.classList.add('hidden');
+      this.client.typing = false;
+    }
   }
 
   private render() {

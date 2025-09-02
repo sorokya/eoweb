@@ -8,6 +8,7 @@ import { ChatIcon } from './chat';
 
 export class Paperdoll extends Base {
   protected container = document.getElementById('paperdoll');
+  private dialogs = document.getElementById('dialogs');
   private client: Client;
   private cover = document.getElementById('cover');
   private bntOk = this.container.querySelector<HTMLButtonElement>(
@@ -322,10 +323,17 @@ export class Paperdoll extends Base {
     this.render();
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
+    this.dialogs.classList.remove('hidden');
+    this.client.typing = true;
   }
 
   hide() {
     this.container.classList.add('hidden');
     this.cover.classList.add('hidden');
+
+    if (!document.querySelector('#dialogs > div:not(.hidden)')) {
+      this.dialogs.classList.add('hidden');
+      this.client.typing = false;
+    }
   }
 }
