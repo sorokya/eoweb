@@ -2143,5 +2143,10 @@ div.icon[data-id="23"] {
 .notyf__wrapper {
   background: #000;
   opacity: 0.6;
-  padding: 17px 15px;
+  padding: 0 3px !important;
+  font-size: 0.8rem;
+}
+
+.notyf__toast--upper {
+    margin-bottom: 10px !important;
 }
