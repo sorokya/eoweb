@@ -650,7 +650,7 @@ input[type="password"] {
 #chat li {
   margin: 0;
   padding: 3px 0;
-  word-break:break-all;
+  word-break: break-all;
   display: flex;
   gap: 1px;
 }
@@ -2151,5 +2151,5 @@ div.icon[data-id="23"] {
 }
 
 .notyf__toast--upper {
-    margin-bottom: 10px !important;
+  margin-bottom: 10px !important;
 }
