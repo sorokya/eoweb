@@ -167,6 +167,8 @@ export class Inventory extends Base {
     this.teardownDragListeners();
     this.dragging = null;
 
+    if (!target) return;
+
     if (target === this.btnTab1) {
       this.tryMoveToTab(item.id, 0);
       return;
