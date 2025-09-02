@@ -50,6 +50,7 @@ export class Inventory extends Base {
   private positions: ItemPosition[] = [];
   private tab = 0;
   private uiContainer = document.getElementById('ui');
+  private pointerDownAt = 0;
 
   private dragging: {
     item: Item;
@@ -83,6 +84,17 @@ export class Inventory extends Base {
 
   private onPointerDown(e: PointerEvent, el: HTMLDivElement, item: Item) {
     if (e.button !== 0 && e.pointerType !== 'touch') return;
+
+    const now = new Date();
+    if (this.pointerDownAt) {
+      const diff = now.getTime() - this.pointerDownAt;
+      if (diff < 200) {
+        this.emitter.emit('useItem', item.id);
+      }
+      this.pointerDownAt = now.getTime();
+    } else {
+      this.pointerDownAt = now.getTime();
+    }
 
     (e.target as Element).setPointerCapture(e.pointerId);
 
@@ -174,8 +186,6 @@ export class Inventory extends Base {
       this.emitter.emit('junkItem', item.id);
       return;
     }
-
-    console.log('Target', target);
 
     const chestItems = target.closest('.chest-items');
     if (chestItems) {
