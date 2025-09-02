@@ -284,7 +284,7 @@ export class Paperdoll extends Base {
   }
 
   private setEquipment(
-    slot: EquipmentSlot,
+    _slot: EquipmentSlot,
     itemId: number,
     el: HTMLDivElement,
   ) {
@@ -308,15 +308,6 @@ export class Paperdoll extends Base {
     img.src = `/gfx/gfx023/${100 + record.graphicId * 2}.png`;
     tooltip.innerText = `${record.name}\n${meta.join('\n')}`;
     tooltip.classList.remove('hidden');
-
-    el.setAttribute('draggable', 'true');
-    el.addEventListener('dragstart', (e) => {
-      playSfxById(SfxId.InventoryPickup);
-      e.dataTransfer?.setData(
-        'text/plain',
-        JSON.stringify({ source: 'paperdoll', slot }),
-      );
-    });
   }
 
   show() {
