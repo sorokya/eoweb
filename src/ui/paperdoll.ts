@@ -8,6 +8,7 @@ import { ChatIcon } from './chat';
 
 export class Paperdoll extends Base {
   protected container = document.getElementById('paperdoll');
+  private dialogs = document.getElementById('dialogs');
   private client: Client;
   private cover = document.getElementById('cover');
   private bntOk = this.container.querySelector<HTMLButtonElement>(
@@ -283,7 +284,7 @@ export class Paperdoll extends Base {
   }
 
   private setEquipment(
-    slot: EquipmentSlot,
+    _slot: EquipmentSlot,
     itemId: number,
     el: HTMLDivElement,
   ) {
@@ -307,37 +308,23 @@ export class Paperdoll extends Base {
     img.src = `/gfx/gfx023/${100 + record.graphicId * 2}.png`;
     tooltip.innerText = `${record.name}\n${meta.join('\n')}`;
     tooltip.classList.remove('hidden');
-
-    el.setAttribute('draggable', 'true');
-    el.addEventListener('dragstart', (e) => {
-      playSfxById(SfxId.InventoryPickup);
-      e.dataTransfer?.setData(
-        'text/plain',
-        JSON.stringify({ source: 'paperdoll', slot }),
-      );
-    });
   }
 
   show() {
     this.render();
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
-
-    const inventory = document.querySelector<HTMLDivElement>('#inventory');
-    const dollRect = this.container.getBoundingClientRect();
-    const inventoryRect = inventory.getBoundingClientRect();
-    if (
-      dollRect.bottom > inventoryRect.top &&
-      !inventory.classList.contains('hidden')
-    ) {
-      this.container.style.top = `${Math.floor(inventoryRect.top - dollRect.height - 30)}px`;
-    }
+    this.dialogs.classList.remove('hidden');
+    this.client.typing = true;
   }
 
   hide() {
     this.container.classList.add('hidden');
     this.cover.classList.add('hidden');
+
+    if (!document.querySelector('#dialogs > div:not(.hidden)')) {
+      this.dialogs.classList.add('hidden');
+      this.client.typing = false;
+    }
   }
 }

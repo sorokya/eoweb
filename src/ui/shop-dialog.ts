@@ -37,6 +37,7 @@ export class ShopDialog extends Base {
   private client: Client;
   private emitter = mitt<Events>();
   protected container = document.getElementById('shop');
+  private dialogs = document.getElementById('dialogs');
   private cover = document.querySelector<HTMLDivElement>('#cover');
   private btnCancel = this.container.querySelector<HTMLButtonElement>(
     'button[data-id="cancel"]',
@@ -114,24 +115,17 @@ export class ShopDialog extends Base {
   show() {
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
-
-    const inventory = document.querySelector<HTMLDivElement>('#inventory');
-    const dollRect = this.container.getBoundingClientRect();
-    const inventoryRect = inventory.getBoundingClientRect();
-    if (dollRect.bottom > inventoryRect.top) {
-      this.container.style.top = `${Math.floor(inventoryRect.top - dollRect.height - 30)}px`;
-    }
-
-    this.scrollHandle.style.top = '60px';
     this.client.typing = true;
   }
 
   hide() {
     this.cover.classList.add('hidden');
     this.container.classList.add('hidden');
-    this.client.typing = false;
+
+    if (!document.querySelector('#dialogs > div:not(.hidden)')) {
+      this.dialogs.classList.add('hidden');
+      this.client.typing = false;
+    }
   }
 
   private render() {

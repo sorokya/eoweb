@@ -4,6 +4,7 @@ import {
   type DialogQuestEntry,
 } from 'eolib';
 import mitt from 'mitt';
+import type { Client } from '../client';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 
@@ -16,6 +17,7 @@ export class QuestDialog extends Base {
   protected container = document.getElementById('quest-dialog');
   private emitter = mitt<Events>();
   private cover: HTMLDivElement = document.querySelector('#cover');
+  private dialogs = document.getElementById('dialogs');
   private txtTitle: HTMLSpanElement = this.container.querySelector('.title');
   private btnQuestSelect: HTMLButtonElement = this.container.querySelector(
     'button[data-id="quest-select"]',
@@ -162,12 +164,25 @@ export class QuestDialog extends Base {
   show(): void {
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    this.dialogs.classList.remove('hidden');
+    this.client.typing = true;
   }
 
-  constructor() {
+  hide(): void {
+    this.cover.classList.add('hidden');
+    this.container.classList.add('hidden');
+
+    if (!document.querySelector('#dialogs > div:not(.hidden)')) {
+      this.dialogs.classList.add('hidden');
+      this.client.typing = false;
+    }
+  }
+
+  private client: Client;
+
+  constructor(client: Client) {
     super();
+    this.client = client;
 
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);

@@ -1,4 +1,4 @@
-import { ItemSize } from 'eolib';
+import { type Item, ItemSize } from 'eolib';
 import mitt from 'mitt';
 import {
   type Client,
@@ -18,9 +18,9 @@ type ItemPosition = {
 };
 
 const TABS = 2;
-const COLS = 14;
-const ROWS = 4;
-const CELL_SIZE = 26;
+const COLS = 8;
+const ROWS = 10;
+const CELL_SIZE = 23;
 
 const ITEM_SIZE = {
   [ItemSize.Size1x1]: { x: 1, y: 1 },
@@ -45,10 +45,22 @@ type Events = {
 export class Inventory extends Base {
   private client: Client;
   private emitter = mitt<Events>();
-  protected container = document.querySelector('#inventory');
+  protected container: HTMLDivElement = document.querySelector('#inventory');
   private grid: HTMLDivElement = this.container.querySelector('.grid');
   private positions: ItemPosition[] = [];
   private tab = 0;
+  private uiContainer = document.getElementById('ui');
+  private pointerDownAt = 0;
+
+  private dragging: {
+    item: Item;
+    el: HTMLElement;
+    pointerId: number;
+    ghost: HTMLElement;
+    offsetX: number;
+    offsetY: number;
+  } | null = null;
+
   private currentWeight: HTMLSpanElement =
     this.container.querySelector('.weight .current');
   private maxWeight: HTMLSpanElement =
@@ -62,7 +74,185 @@ export class Inventory extends Base {
   private btnJunk: HTMLButtonElement = this.container.querySelector(
     'button[data-id="junk"]',
   );
+  private btnTab1: HTMLButtonElement = this.container.querySelector(
+    '.tabs > button:nth-child(1)',
+  );
+  private btnTab2: HTMLButtonElement = this.container.querySelector(
+    '.tabs > button:nth-child(2)',
+  );
   private lastItemSelected = 0;
+
+  private onPointerDown(e: PointerEvent, el: HTMLDivElement, item: Item) {
+    if (e.button !== 0 && e.pointerType !== 'touch') return;
+
+    const now = new Date();
+    if (this.pointerDownAt) {
+      const diff = now.getTime() - this.pointerDownAt;
+      if (diff < 200) {
+        this.emitter.emit('useItem', item.id);
+      }
+      this.pointerDownAt = now.getTime();
+    } else {
+      this.pointerDownAt = now.getTime();
+    }
+
+    (e.target as Element).setPointerCapture(e.pointerId);
+
+    const rect = el.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left + rect.width;
+    const offsetY = e.clientY - rect.top;
+
+    const ghost = el.querySelector('img').cloneNode(true) as HTMLElement;
+    ghost.style.position = 'fixed';
+    ghost.style.pointerEvents = 'none';
+    ghost.style.margin = '0';
+    ghost.style.inset = 'auto';
+    ghost.style.left = '0';
+    ghost.style.top = '0';
+    ghost.style.transform = `translate(${e.clientX - offsetX}px, ${e.clientY - offsetY}px)`;
+    ghost.style.opacity = '0.9';
+    ghost.style.willChange = 'transform';
+    ghost.style.zIndex = '9999';
+    // Optional: add a subtle scale to show it's being dragged
+    ghost.style.scale = '1.05';
+
+    // hide original element
+    el.style.display = 'none';
+
+    document.body.appendChild(ghost);
+
+    this.dragging = {
+      item,
+      el,
+      pointerId: e.pointerId,
+      ghost,
+      offsetX,
+      offsetY,
+    };
+
+    playSfxById(SfxId.InventoryPickup);
+
+    window.addEventListener('pointermove', this.onPointerMove.bind(this), {
+      passive: false,
+    });
+    window.addEventListener('pointerup', this.onPointerUp.bind(this), {
+      passive: false,
+    });
+    window.addEventListener('pointercancel', this.onPointerCancel.bind(this), {
+      passive: false,
+    });
+  }
+
+  private onPointerMove(e: PointerEvent) {
+    if (!this.dragging || e.pointerId !== this.dragging.pointerId) return;
+
+    // keep ghost under the finger/cursor
+    const { ghost, offsetX, offsetY } = this.dragging;
+    ghost.style.transform = `translate(${e.clientX - offsetX}px, ${e.clientY - offsetY}px)`;
+
+    // prevent page scrolling while dragging on mobile
+    e.preventDefault();
+  }
+
+  private onPointerUp(e: PointerEvent) {
+    if (!this.dragging || e.pointerId !== this.dragging.pointerId) return;
+
+    const { el, ghost, item } = this.dragging;
+
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+
+    playSfxById(SfxId.InventoryPlace);
+    ghost.remove();
+    el.style.display = 'flex';
+    this.teardownDragListeners();
+    this.dragging = null;
+
+    if (!target) return;
+
+    if (target === this.btnTab1) {
+      this.tryMoveToTab(item.id, 0);
+      return;
+    }
+
+    if (target === this.btnTab2) {
+      this.tryMoveToTab(item.id, 1);
+      return;
+    }
+
+    if (target === this.btnDrop) {
+      this.emitter.emit('dropItem', { at: 'feet', itemId: item.id });
+      return;
+    }
+
+    if (target === this.btnJunk) {
+      this.emitter.emit('junkItem', item.id);
+      return;
+    }
+
+    const chestItems = target.closest('.chest-items');
+    if (chestItems) {
+      this.emitter.emit('addChestItem', item.id);
+      return;
+    }
+
+    const paperdoll = target.closest('#paperdoll');
+    if (paperdoll) {
+      const itemEl = target.closest('.item');
+      if (!itemEl) {
+        return;
+      }
+
+      const slot = getEquipmentSlotFromString(itemEl.getAttribute('data-id'));
+      if (typeof slot === 'undefined') {
+        return;
+      }
+
+      this.emitter.emit('equipItem', {
+        slot,
+        itemId: item.id,
+      });
+      return;
+    }
+
+    if (target === this.uiContainer) {
+      this.emitter.emit('dropItem', { at: 'cursor', itemId: item.id });
+      return;
+    }
+
+    const rect = this.grid.getBoundingClientRect();
+    const pointerX = e.clientX - rect.left;
+    const pointerY = e.clientY - rect.top;
+
+    if (
+      pointerX < 0 ||
+      pointerY < 0 ||
+      pointerX > rect.width ||
+      pointerY > rect.height
+    ) {
+      return;
+    }
+
+    const gridX = Math.floor(pointerX / CELL_SIZE);
+    const gridY = Math.floor(pointerY / CELL_SIZE);
+
+    this.tryMoveItem(item.id, gridX, gridY);
+  }
+
+  private onPointerCancel() {
+    if (!this.dragging) return;
+
+    const { el, ghost } = this.dragging;
+    ghost.remove();
+    el.style.opacity = '1';
+    this.teardownDragListeners();
+    this.dragging = null;
+  }
+
+  private teardownDragListeners() {
+    window.removeEventListener('pointermove', this.onPointerMove);
+    window.removeEventListener('pointerup', this.onPointerUp);
+    window.removeEventListener('pointercancel', this.onPointerCancel);
+  }
 
   constructor(client: Client) {
     super();
@@ -73,135 +263,23 @@ export class Inventory extends Base {
       this.render();
     });
 
-    const btnTab1: HTMLButtonElement = this.container.querySelector(
-      '.tabs > button:nth-child(1)',
-    );
-    const btnTab2: HTMLButtonElement = this.container.querySelector(
-      '.tabs > button:nth-child(2)',
-    );
-
-    btnTab1.addEventListener('click', (e) => {
+    this.btnTab1.addEventListener('click', (e) => {
       playSfxById(SfxId.ButtonClick);
       this.tab = 0;
-      btnTab1.classList.add('active');
-      btnTab2.classList.remove('active');
+      this.btnTab1.classList.add('active');
+      this.btnTab2.classList.remove('active');
       this.render();
       e.stopPropagation();
     });
 
-    btnTab2.addEventListener('click', (e) => {
+    this.btnTab2.addEventListener('click', (e) => {
       playSfxById(SfxId.ButtonClick);
       this.tab = 1;
-      btnTab1.classList.remove('active');
-      btnTab2.classList.add('active');
+      this.btnTab1.classList.remove('active');
+      this.btnTab2.classList.add('active');
       this.render();
       e.stopPropagation();
     });
-
-    this.grid.addEventListener('dragover', (e) => {
-      e.preventDefault(); // Necessary to allow drop
-    });
-
-    this.grid.addEventListener('drop', (e) => {
-      e.preventDefault();
-      const item = JSON.parse(e.dataTransfer?.getData('text/plain'));
-      if (item.source === 'paperdoll') {
-        client.unequipItem(item.slot);
-        return;
-      }
-
-      playSfxById(SfxId.InventoryPlace);
-      const rect = this.grid.getBoundingClientRect();
-
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      const gridX = Math.floor(mouseX / CELL_SIZE);
-      const gridY = Math.floor(mouseY / CELL_SIZE);
-
-      this.tryMoveItem(item.id, gridX, gridY);
-    });
-
-    const canvas = document.getElementById('game') as HTMLCanvasElement;
-    const uiContainer = document.getElementById('ui');
-    uiContainer.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      client.setMousePosition({
-        x: Math.min(
-          Math.max(Math.floor((e.clientX - rect.left) * scaleX), 0),
-          canvas.width,
-        ),
-        y: Math.min(
-          Math.max(Math.floor((e.clientY - rect.top) * scaleY), 0),
-          canvas.height,
-        ),
-      });
-    });
-
-    uiContainer.addEventListener('drop', (e) => {
-      e.preventDefault();
-
-      if (e.target === this.grid) {
-        return;
-      }
-
-      const item = JSON.parse(e.dataTransfer?.getData('text/plain'));
-      if (Number.isNaN(item.id) || item.id < 1 || item.source !== 'inventory') {
-        return;
-      }
-
-      playSfxById(SfxId.InventoryPlace);
-
-      if (e.target === this.btnDrop) {
-        this.emitter.emit('dropItem', { at: 'feet', itemId: item.id });
-        return;
-      }
-
-      if (e.target === this.btnJunk) {
-        this.emitter.emit('junkItem', item.id);
-        return;
-      }
-
-      if (e.target instanceof HTMLElement) {
-        const chestItems = e.target.closest('.chest-items');
-        if (chestItems) {
-          this.emitter.emit('addChestItem', item.id);
-          return;
-        }
-
-        const paperdoll = e.target.closest('#paperdoll');
-        if (paperdoll) {
-          const target = e.target.closest('.item');
-          if (!target) {
-            return;
-          }
-
-          const slot = getEquipmentSlotFromString(
-            target.getAttribute('data-id'),
-          );
-          if (typeof slot === 'undefined') {
-            return;
-          }
-
-          this.emitter.emit('equipItem', {
-            slot,
-            itemId: item.id,
-          });
-          return;
-        }
-      }
-
-      if (e.target instanceof HTMLElement && e.target.closest('.chest-items')) {
-        this.emitter.emit('dropItem', { at: 'cursor', itemId: item.id });
-        return;
-      }
-
-      this.emitter.emit('dropItem', { at: 'cursor', itemId: item.id });
-    });
-
     this.btnPaperdoll.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('openPaperdoll', undefined);
@@ -223,6 +301,10 @@ export class Inventory extends Base {
         this.emitter.emit('junkItem', this.lastItemSelected);
       }
     });
+
+    window.addEventListener('resize', () => {
+      this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    });
   }
 
   on<Event extends keyof Events>(
@@ -230,6 +312,31 @@ export class Inventory extends Base {
     handler: (data: Events[Event]) => void,
   ) {
     this.emitter.on(event, handler);
+  }
+
+  private tryMoveToTab(itemId: number, tab: number) {
+    const position = this.getPosition(itemId);
+    if (!position) return;
+
+    if (![0, 1].includes(tab)) return;
+
+    const record = this.client.getEifRecordById(itemId);
+    if (!record) return;
+
+    // Set position to next place it fits
+    const nextPosition = this.getNextAvailablePositionInTab(
+      itemId,
+      ITEM_SIZE[record.size],
+      tab,
+    );
+
+    if (nextPosition) {
+      position.x = nextPosition.x;
+      position.y = nextPosition.y;
+      position.tab = tab;
+      this.render();
+      this.savePositions();
+    }
   }
 
   private tryMoveItem(itemId: number, x: number, y: number) {
@@ -292,36 +399,6 @@ export class Inventory extends Base {
 
       imgContainer.style.gridColumn = `${position.x + 1} / span ${size.x}`;
       imgContainer.style.gridRow = `${position.y + 1} / span ${size.y}`;
-      imgContainer.setAttribute('draggable', 'true');
-
-      imgContainer.addEventListener('dragstart', (e) => {
-        this.lastItemSelected = item.id;
-        playSfxById(SfxId.InventoryPickup);
-        e.dataTransfer?.setData(
-          'text/plain',
-          JSON.stringify({ source: 'inventory', id: item.id }),
-        );
-      });
-
-      imgContainer.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.lastItemSelected = item.id;
-      });
-
-      imgContainer.addEventListener('dblclick', (e) => {
-        e.stopPropagation();
-        this.lastItemSelected = item.id;
-        playSfxById(SfxId.InventoryPlace);
-        this.emitter.emit('useItem', item.id);
-      });
-
-      imgContainer.addEventListener('contextmenu', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        this.lastItemSelected = item.id;
-        playSfxById(SfxId.InventoryPlace);
-        this.emitter.emit('useItem', item.id);
-      });
 
       const tooltip = document.createElement('div');
       tooltip.classList.add('tooltip');
@@ -340,6 +417,10 @@ export class Inventory extends Base {
 
       imgContainer.appendChild(tooltip);
       imgContainer.appendChild(img);
+
+      imgContainer.addEventListener('pointerdown', (e) => {
+        this.onPointerDown(e, imgContainer, item);
+      });
 
       this.grid.appendChild(imgContainer);
     }
@@ -426,11 +507,24 @@ export class Inventory extends Base {
     size: Vector2,
   ): ItemPosition | null {
     for (let tab = 0; tab < TABS; ++tab) {
-      for (let y = 0; y < ROWS; ++y) {
-        for (let x = 0; x < COLS; ++x) {
-          if (this.doesItemFitAt(tab, x, y, size)) {
-            return { x, y, tab, id };
-          }
+      const position = this.getNextAvailablePositionInTab(id, size, tab);
+      if (position) {
+        return position;
+      }
+    }
+
+    return null;
+  }
+
+  private getNextAvailablePositionInTab(
+    id: number,
+    size: Vector2,
+    tab: number,
+  ): ItemPosition | null {
+    for (let y = 0; y < ROWS; ++y) {
+      for (let x = 0; x < COLS; ++x) {
+        if (this.doesItemFitAt(tab, x, y, size)) {
+          return { x, y, tab, id };
         }
       }
     }
@@ -467,6 +561,7 @@ export class Inventory extends Base {
   show() {
     this.render();
     this.container.classList.remove('hidden');
+    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
   }
 
   toggle() {

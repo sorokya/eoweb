@@ -6,8 +6,10 @@
   <link rel="icon" type="image/png" href="/favicon-32.png">
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#000000">
-  <meta name="viewport"
-      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>EO Web Client</title>
 </head>
 
@@ -16,11 +18,11 @@
     <canvas id="game"></canvas>
     <div id="ui">
       <div id="cover" class="hidden"></div>
-      <div id="main-menu">
+      <div id="main-menu" class="">
         <div id="main-menu-logo">
-          <img src="logo.png"/>
+          <img src="logo.png" />
         </div>
-        <input name="host" type="text" value="wss://ws.reoserv.net"/>
+        <input name="host" type="text" value="wss://ws.reoserv.net" />
         <button class="img-btn" type="button" data-id="create-account"></button>
         <button class="img-btn" type="button" data-id="play-game"></button>
         <button class="img-btn" type="button" data-id="view-credits"></button>
@@ -28,11 +30,11 @@
 
       <div id="login-form" class="hidden">
         <form autocomplete="off">
-          <input type="text" id="login-username"/>
-          <input type="password" id="login-password"/>
+          <input type="text" id="login-username" />
+          <input type="password" id="login-password" />
           <label for="login-remember">
-          <input type="checkbox" id="login-remember"/>
-          Remember me?
+            <input type="checkbox" id="login-remember" />
+            Remember me?
           </label>
           <div class="buttons">
             <button class="img-btn" type="submit" data-id="connect"></button>
@@ -46,27 +48,27 @@
           <div>
             <div>
               <label for="create-username" class="img-label" data-id="account-name"></label>
-              <input type="text" id="create-username"/>
+              <input type="text" id="create-username" />
             </div>
             <div>
               <label for="create-password" class="img-label" data-id="password"></label>
-              <input type="password" id="create-password"/>
+              <input type="password" id="create-password" />
             </div>
             <div>
               <label for="create-confirm-password" class="img-label" data-id="confirm-password"></label>
-              <input type="password" id="create-confirm-password"/>
+              <input type="password" id="create-confirm-password" />
             </div>
             <div>
               <label for="create-name" class="img-label" data-id="real-name"></label>
-              <input type="text" id="create-name"/>
+              <input type="text" id="create-name" />
             </div>
             <div>
               <label for="create-location" class="img-label" data-id="location"></label>
-              <input type="text" id="create-location"/>
+              <input type="text" id="create-location" />
             </div>
             <div>
               <label for="create-email" class="img-label" data-id="email"></label>
-              <input type="text" id="create-email"/>
+              <input type="text" id="create-email" />
             </div>
           </div>
           <div class="buttons">
@@ -82,7 +84,7 @@
             <span class="name"></span>
             <span class="level"></span>
             <span class="admin-level"></span>
-            <img class="preview"/>
+            <img class="preview" />
             <div class="buttons">
               <button class="img-btn" type="button" data-id="login"></button>
               <button class="img-btn" type="button" data-id="delete"></button>
@@ -92,7 +94,7 @@
             <span class="name"></span>
             <span class="level"></span>
             <span class="admin-level"></span>
-            <img class="preview"/>
+            <img class="preview" />
             <div class="buttons">
               <button class="img-btn" type="button" data-id="login"></button>
               <button class="img-btn" type="button" data-id="delete"></button>
@@ -102,7 +104,7 @@
             <span class="name"></span>
             <span class="level"></span>
             <span class="admin-level"></span>
-            <img class="preview"/>
+            <img class="preview" />
             <div class="buttons">
               <button class="img-btn" type="button" data-id="login"></button>
               <button class="img-btn" type="button" data-id="delete"></button>
@@ -118,8 +120,8 @@
 
       <div id="create-character-form" class="hidden">
         <form autocomplete="off">
-          <input type="text" id="create-character-name"/>
-          <img id="create-character-preview"/>
+          <input type="text" id="create-character-name" />
+          <img id="create-character-preview" />
           <div id="create-character-toggles">
             <div>
               <div class="img-label" data-id="gender"></div>
@@ -159,14 +161,14 @@
       </div>
 
       <div id="exit-game" class="hidden">
-          <button class="img-btn" type="button" data-id="exit-game"></button>
+        <button class="img-btn" type="button" data-id="exit-game"></button>
       </div>
 
       <div id="chat" class="hidden">
         <form autocomplete="off">
-          <input type="text" id="chat-message"/>
+          <input type="text" id="chat-message" />
           <button type="button" id="btn-toggle-chat">Toggle</button>
-          <input type="submit" class="hidden"/>
+          <input type="submit" class="hidden" />
           <div id="chat-tab-bar">
             <button id="btn-chat-tab-local" class="active">Local</button>
             <button id="btn-chat-tab-global">Global</button>
@@ -218,28 +220,28 @@
 
       <div id="offset-tweaker" class="hidden">
         <div>
-        <label for="tweak-x-0">X:</label>
-        <input type="number" id="tweak-x-0"/>
-        <label for="tweak-y-0">Y:</label>
-        <input type="number" id="tweak-y-0"/>
+          <label for="tweak-x-0">X:</label>
+          <input type="number" id="tweak-x-0" />
+          <label for="tweak-y-0">Y:</label>
+          <input type="number" id="tweak-y-0" />
         </div>
         <div>
-        <label for="tweak-x-1">X:</label>
-        <input type="number" id="tweak-x-1"/>
-        <label for="tweak-y-1">Y:</label>
-        <input type="number" id="tweak-y-1"/>
+          <label for="tweak-x-1">X:</label>
+          <input type="number" id="tweak-x-1" />
+          <label for="tweak-y-1">Y:</label>
+          <input type="number" id="tweak-y-1" />
         </div>
         <div>
-        <label for="tweak-x-2">X:</label>
-        <input type="number" id="tweak-x-2"/>
-        <label for="tweak-y-2">Y:</label>
-        <input type="number" id="tweak-y-2"/>
+          <label for="tweak-x-2">X:</label>
+          <input type="number" id="tweak-x-2" />
+          <label for="tweak-y-2">Y:</label>
+          <input type="number" id="tweak-y-2" />
         </div>
         <div>
-        <label for="tweak-x-3">X:</label>
-        <input type="number" id="tweak-x-3"/>
-        <label for="tweak-y-3">Y:</label>
-        <input type="number" id="tweak-y-3"/>
+          <label for="tweak-x-3">X:</label>
+          <input type="number" id="tweak-x-3" />
+          <label for="tweak-y-3">Y:</label>
+          <input type="number" id="tweak-y-3" />
         </div>
       </div>
 
@@ -252,110 +254,119 @@
         <button class="img-btn" type="button" data-id="party"></button>
       </div>
 
-      <div id="inventory" class="hidden">
-        <div class="grid"></div>
-        <div class="tabs">
-          <button class="active">1</button>
-          <button>2</button>
-        </div>
-        <div class="weight">
-          Weight:
-          <span class="current">0</span>
-          /
-          <span class="max">250</span>
-        </div>
-        <div class="buttons">
-          <button data-id="paperdoll">Paperdoll</button>
-          <button data-id="drop">Drop</button>
-          <button data-id="junk">Junk</button>
-        </div>
-      </div>
+      <div id="dialogs" class="hidden">
+        <div id="paperdoll" class="hidden">
+          <div class="item" data-id="boots">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-      <div id="paperdoll" class="hidden">
-        <div class="item" data-id="boots">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="accessory">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="accessory">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="gloves">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="gloves">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="belt">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="belt">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="armor">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="armor">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="necklace">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="necklace">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="hat">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="hat">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="shield">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="shield">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="weapon">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="weapon">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="ring-1">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="ring-1">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="ring-2">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="ring-2">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="armlet-1">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="armlet-1">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="armlet-2">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="armlet-2">
-          <div class="tooltip"></div>
-          <img src="" />
-        </div>
+          <div class="item" data-id="bracer-1">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
 
-        <div class="item" data-id="bracer-1">
-          <div class="tooltip"></div>
-          <img src="" />
+          <div class="item" data-id="bracer-2">
+            <div class="tooltip"></div>
+            <img src="" />
+          </div>
+          <div class="icon" data-id="player"></div>
+          <span data-id="name"></span>
+          <span data-id="home"></span>
+          <span data-id="class"></span>
+          <span data-id="partner"></span>
+          <span data-id="title"></span>
+          <span data-id="job"></span>
+          <span data-id="guild"></span>
+          <span data-id="rank"></span>
+          <button class="img-btn" data-id="ok"></button>
         </div>
 
-        <div class="item" data-id="bracer-2">
-          <div class="tooltip"></div>
-          <img src="" />
+        <div id="quest-dialog" class="hidden">
+          <span class="title"></span>
+          <button class="img-btn" type="button hidden" data-id="quest-select"></button>
+          <ul class="entries">
+          </ul>
+          <button class="img-btn" type="button" data-id="cancel"></button>
+          <button class="img-btn" type="button hidden" data-id="back"></button>
+          <button class="img-btn" type="button" data-id="next"></button>
+          <button class="img-btn" type="button hidden" data-id="ok"></button>
         </div>
-        <div class="icon" data-id="player"></div>
-        <span data-id="name"></span>
-        <span data-id="home"></span>
-        <span data-id="class"></span>
-        <span data-id="partner"></span>
-        <span data-id="title"></span>
-        <span data-id="job"></span>
-        <span data-id="guild"></span>
-        <span data-id="rank"></span>
-        <button class="img-btn" data-id="ok"></button>
+
+        <div id="chest" class="hidden">
+          <div class="chest-items"></div>
+          <button class="img-btn" type="button" data-id="cancel"></button>
+        </div>
+
+        <div id="shop" class="hidden">
+          <span class="shop-name"></span>
+          <div class="item-list"></div>
+          <div class="scroll-handle"></div>
+          <div class="buttons">
+            <button class="img-btn hidden" type="button" data-id="back"></button>
+            <button class="img-btn" type="button" data-id="cancel"></button>
+          </div>
+        </div>
       </div>
 
       <div id="item-amount-dialog" class="hidden">
@@ -364,36 +375,31 @@
           <p class="label"></p>
           <div class="slider-container">
             <div class="slider-thumb"></div>
-          </div>  
-          <input type="number" name="amount" value="1" min="1" max="1"/>
+          </div>
+          <input type="number" name="amount" value="1" min="1" max="1" />
           <button class="img-btn" type="submit" data-id="ok"></button>
           <button class="img-btn" type="button" data-id="cancel"></button>
         </form>
       </div>
 
-      <div id="quest-dialog" class="hidden">
-        <span class="title"></span>
-        <button class="img-btn" type="button hidden" data-id="quest-select"></button>
-        <ul class="entries">
-        </ul>
-        <button class="img-btn" type="button" data-id="cancel"></button>
-        <button class="img-btn" type="button hidden" data-id="back"></button>
-        <button class="img-btn" type="button" data-id="next"></button>
-        <button class="img-btn" type="button hidden" data-id="ok"></button>
-      </div>
-
-      <div id="chest" class="hidden">
-        <div class="chest-items"></div>
-        <button class="img-btn" type="button" data-id="cancel"></button>
-      </div>
-
-      <div id="shop" class="hidden">
-        <span class="shop-name"></span>
-        <div class="item-list"></div>
-        <div class="scroll-handle"></div>
+      <div id="inventory" class="hidden">
+        <div class="top">
+          <div class="tabs">
+            <button class="active">1</button>
+            <button>2</button>
+          </div>
+          <div class="weight">
+            Weight:
+            <span class="current">0</span>
+            /
+            <span class="max">250</span>
+          </div>
+        </div>
+        <div class="grid"></div>
         <div class="buttons">
-        <button class="img-btn hidden" type="button" data-id="back"></button>
-        <button class="img-btn" type="button" data-id="cancel"></button>
+          <button data-id="paperdoll">Paperdoll</button>
+          <button data-id="drop">Drop</button>
+          <button data-id="junk">Junk</button>
         </div>
       </div>
 

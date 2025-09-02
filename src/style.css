@@ -81,6 +81,18 @@ canvas {
   z-index: 1;
 }
 
+#dialogs {
+  display: flex;
+  gap: 1em;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  z-index: 1010;
+}
+
 .hidden {
   display: none !important;
 }
@@ -575,6 +587,7 @@ input[type="password"] {
 
 #exit-game {
   position: absolute;
+  z-index: 1020;
   top: 0;
   right: 0;
 }
@@ -582,6 +595,7 @@ input[type="password"] {
 @media screen and (min-width: 470px) {
   #chat {
     width: 370px !important;
+    left: 10px;
   }
 }
 
@@ -594,8 +608,9 @@ input[type="password"] {
 
 #chat {
   position: absolute;
-  top: 0;
-  background: #111111;
+  z-index: 1020;
+  top: 30px;
+  background: #5b3c02;
   width: 200px;
   color: #fff;
   opacity: 0.8;
@@ -603,7 +618,8 @@ input[type="password"] {
 }
 
 #chat-message {
-  background: #000;
+  background: #5b3c02;
+  border-color: #281a00;
   color: #fff;
   width: 100%;
   margin-bottom: 5px;
@@ -626,12 +642,13 @@ input[type="password"] {
 
 #chat ul {
   list-style: none;
-  padding: 0 5px;
+  padding: 0;
   height: 130px;
   overflow-y: scroll;
 }
 
 #chat li {
+  margin: 0;
   padding: 3px 0;
   word-break: break-all;
   display: flex;
@@ -644,6 +661,7 @@ input[type="password"] {
 
 #mobile-controls {
   opacity: 0.8;
+  z-index: 1020;
 }
 
 #mobile-controls,
@@ -719,35 +737,43 @@ input[type="password"] {
   flex-flow: column;
   height: 100%;
   justify-content: center;
+  z-index: 1020;
 }
 
 #inventory {
   position: absolute;
-  bottom: 30px;
-  height: 130px;
-  width: 380px;
-  padding: 3px 0;
+  right: 40px;
+  width: 186px;
+  height: 270px;
+  padding: 3px;
   border-radius: 5px;
   border: 1px solid #000;
-  left: calc(50vw - 190px);
   background: #7b5a29;
-  cursor: move;
   user-select: none;
-  z-index: 1020;
+  z-index: 1030;
+}
+
+#inventory .top {
+  display: flex;
+  justify-content: space-between;
+}
+
+#inventory .weight {
+  margin-right: 6px;
+  margin-top: 3px;
+  color: #ccc;
+  font-size: 12px;
 }
 
 #inventory .grid {
-  width: 365px;
-  height: 109px;
-  margin: 3px auto;
-  background: url("/gfx/gfx002/144.png") -9px -6px #000;
+  height: 229px;
+  width: 185px;
   cursor: default;
   display: grid;
-  grid-template-columns: repeat(14, 23px);
-  grid-template-rows: repeat(4, 23px);
-  gap: 3px;
-  padding-left: 4px;
-  padding-top: 3px;
+  border-top: 1px solid #000;
+  border-bottom: 1px solid #000;
+  grid-template-columns: repeat(8, 23px);
+  grid-template-rows: repeat(10, 23px);
 }
 
 #inventory .item {
@@ -843,7 +869,6 @@ input[type="password"] {
 
 #inventory .tabs {
   display: flex;
-  margin-left: 5px;
   gap: 1px;
 }
 #inventory .tabs button,
@@ -860,14 +885,6 @@ input[type="password"] {
   color: #cccccc;
 }
 
-#inventory .weight {
-  position: absolute;
-  bottom: 2px;
-  left: 98px;
-  color: #ccc;
-  font-size: 12px;
-}
-
 #inventory .buttons {
   display: flex;
   gap: 1px;
@@ -881,7 +898,7 @@ input[type="password"] {
 }
 
 #paperdoll {
-  position: absolute;
+  position: relative;
   background: url("/gfx/gfx002/149.png") #000;
   height: 290px;
   width: 380px;
@@ -1643,10 +1660,10 @@ div.icon[data-id="23"] {
 
 #hud {
   position: fixed;
+  z-index: 1020;
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10;
   user-select: none;
   pointer-events: none;
   display: flex;
@@ -1872,8 +1889,7 @@ div.icon[data-id="23"] {
 }
 
 #chest {
-  position: absolute;
-  z-index: 1010;
+  position: relative;
   user-select: none;
   box-sizing: border-box;
   width: 272px;
@@ -1966,7 +1982,6 @@ div.icon[data-id="23"] {
 
 #shop {
   position: absolute;
-  z-index: 1010;
   user-select: none;
   box-sizing: border-box;
   width: 284px;
@@ -2131,5 +2146,10 @@ div.icon[data-id="23"] {
 .notyf__wrapper {
   background: #000;
   opacity: 0.6;
-  padding: 17px 15px;
+  padding: 0 3px !important;
+  font-size: 0.8rem;
+}
+
+.notyf__toast--upper {
+  margin-bottom: 10px !important;
 }

@@ -345,7 +345,7 @@ const inventory = new Inventory(client);
 const paperdoll = new Paperdoll(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
-const questDialog = new QuestDialog();
+const questDialog = new QuestDialog(client);
 const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
 const smallAlert = new SmallAlertSmallHeader();
@@ -355,6 +355,11 @@ const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
   for (const el of uiElements) {
+    el.classList.add('hidden');
+  }
+
+  const dialogs = document.querySelectorAll('#dialogs>div');
+  for (const el of dialogs) {
     el.classList.add('hidden');
   }
 };
@@ -812,6 +817,24 @@ window.addEventListener('click', (_e) => {
   client.handleClick();
 });
 
+function loadInventoryGrid() {
+  const img = new Image();
+  img.src = '/gfx/gfx002/144.png';
+  img.onload = () => {
+    const canvas: HTMLCanvasElement = document.createElement('canvas');
+    canvas.width = 23;
+    canvas.height = 23;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 23, 23);
+    ctx.drawImage(img, 12, 10, 23, 23, 0, 0, 23, 23);
+
+    const dataUrl = canvas.toDataURL();
+    const grid = document.querySelector<HTMLDivElement>('#inventory .grid');
+    grid.style.background = `url(${dataUrl})`;
+  };
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   const response = await fetch('/maps/00005.emf');
   const map = await response.arrayBuffer();
@@ -830,5 +853,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   character.skin = 0;
   client.nearby.characters = [character];
 
+  loadInventoryGrid();
   requestAnimationFrame(render);
 });

@@ -12,6 +12,7 @@ export class ChestDialog extends Base {
   private btnCancel = this.container.querySelector<HTMLButtonElement>(
     'button[data-id="cancel"]',
   );
+  private dialogs = document.getElementById('dialogs');
   private itemsList =
     this.container.querySelector<HTMLDivElement>('.chest-items');
   private items: ThreeItem[] = [];
@@ -34,23 +35,18 @@ export class ChestDialog extends Base {
   show() {
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
-
-    const inventory = document.querySelector<HTMLDivElement>('#inventory');
-    const chestRect = this.container.getBoundingClientRect();
-    const inventoryRect = inventory.getBoundingClientRect();
-    if (
-      chestRect.bottom > inventoryRect.top &&
-      !inventory.classList.contains('hidden')
-    ) {
-      this.container.style.top = `${Math.floor(inventoryRect.top - chestRect.height - 30)}px`;
-    }
+    this.dialogs.classList.remove('hidden');
+    this.client.typing = true;
   }
 
   hide() {
     this.cover.classList.add('hidden');
     this.container.classList.add('hidden');
+
+    if (!document.querySelector('#dialogs > div:not(.hidden)')) {
+      this.dialogs.classList.add('hidden');
+      this.client.typing = false;
+    }
   }
 
   private getChestItemGraphicId(eifRecord: EifRecord, amount: number): number {
