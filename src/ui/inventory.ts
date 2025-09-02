@@ -68,6 +68,12 @@ export class Inventory extends Base {
   private btnJunk: HTMLButtonElement = this.container.querySelector(
     'button[data-id="junk"]',
   );
+  private btnTab1: HTMLButtonElement = this.container.querySelector(
+    '.tabs > button:nth-child(1)',
+  );
+  private btnTab2: HTMLButtonElement = this.container.querySelector(
+    '.tabs > button:nth-child(2)',
+  );
   private lastItemSelected = 0;
 
   private onPointerDown(e: PointerEvent, el: HTMLDivElement, item: Item) {
@@ -139,6 +145,52 @@ export class Inventory extends Base {
     playSfxById(SfxId.InventoryPlace);
     ghost.remove();
     el.style.display = 'flex';
+    this.teardownDragListeners();
+    this.dragging = null;
+
+    const tab1Rect = this.btnTab1.getBoundingClientRect();
+    if (
+      e.clientX >= tab1Rect.left &&
+      e.clientX < tab1Rect.left + tab1Rect.width &&
+      e.clientY >= tab1Rect.top &&
+      e.clientY < tab1Rect.top + tab1Rect.height
+    ) {
+      this.tryMoveToTab(item.id, 0);
+      return;
+    }
+
+    const tab2Rect = this.btnTab2.getBoundingClientRect();
+    if (
+      e.clientX >= tab2Rect.left &&
+      e.clientX < tab2Rect.left + tab2Rect.width &&
+      e.clientY >= tab2Rect.top &&
+      e.clientY < tab2Rect.top + tab2Rect.height
+    ) {
+      this.tryMoveToTab(item.id, 1);
+      return;
+    }
+
+    const dropRect = this.btnDrop.getBoundingClientRect();
+    if (
+      e.clientX >= dropRect.left &&
+      e.clientX < dropRect.left + dropRect.width &&
+      e.clientY >= dropRect.top &&
+      e.clientY < dropRect.top + dropRect.height
+    ) {
+      this.emitter.emit('dropItem', { at: 'feet', itemId: item.id });
+      return;
+    }
+
+    const junkRect = this.btnJunk.getBoundingClientRect();
+    if (
+      e.clientX >= junkRect.left &&
+      e.clientX < junkRect.left + junkRect.width &&
+      e.clientY >= junkRect.top &&
+      e.clientY < junkRect.top + junkRect.height
+    ) {
+      this.emitter.emit('junkItem', item.id);
+      return;
+    }
 
     const rect = this.grid.getBoundingClientRect();
     const pointerX = e.clientX - rect.left;
@@ -148,9 +200,6 @@ export class Inventory extends Base {
     const gridY = Math.floor(pointerY / CELL_SIZE);
 
     this.tryMoveItem(item.id, gridX, gridY);
-
-    this.teardownDragListeners();
-    this.dragging = null;
   }
 
   private onPointerCancel() {
@@ -178,27 +227,20 @@ export class Inventory extends Base {
       this.render();
     });
 
-    const btnTab1: HTMLButtonElement = this.container.querySelector(
-      '.tabs > button:nth-child(1)',
-    );
-    const btnTab2: HTMLButtonElement = this.container.querySelector(
-      '.tabs > button:nth-child(2)',
-    );
-
-    btnTab1.addEventListener('click', (e) => {
+    this.btnTab1.addEventListener('click', (e) => {
       playSfxById(SfxId.ButtonClick);
       this.tab = 0;
-      btnTab1.classList.add('active');
-      btnTab2.classList.remove('active');
+      this.btnTab1.classList.add('active');
+      this.btnTab2.classList.remove('active');
       this.render();
       e.stopPropagation();
     });
 
-    btnTab2.addEventListener('click', (e) => {
+    this.btnTab2.addEventListener('click', (e) => {
       playSfxById(SfxId.ButtonClick);
       this.tab = 1;
-      btnTab1.classList.remove('active');
-      btnTab2.classList.add('active');
+      this.btnTab1.classList.remove('active');
+      this.btnTab2.classList.add('active');
       this.render();
       e.stopPropagation();
     });
@@ -234,6 +276,31 @@ export class Inventory extends Base {
     handler: (data: Events[Event]) => void,
   ) {
     this.emitter.on(event, handler);
+  }
+
+  private tryMoveToTab(itemId: number, tab: number) {
+    const position = this.getPosition(itemId);
+    if (!position) return;
+
+    if (![0, 1].includes(tab)) return;
+
+    const record = this.client.getEifRecordById(itemId);
+    if (!record) return;
+
+    // Set position to next place it fits
+    const nextPosition = this.getNextAvailablePositionInTab(
+      itemId,
+      ITEM_SIZE[record.size],
+      tab,
+    );
+
+    if (nextPosition) {
+      position.x = nextPosition.x;
+      position.y = nextPosition.y;
+      position.tab = tab;
+      this.render();
+      this.savePositions();
+    }
   }
 
   private tryMoveItem(itemId: number, x: number, y: number) {
@@ -404,11 +471,24 @@ export class Inventory extends Base {
     size: Vector2,
   ): ItemPosition | null {
     for (let tab = 0; tab < TABS; ++tab) {
-      for (let y = 0; y < ROWS; ++y) {
-        for (let x = 0; x < COLS; ++x) {
-          if (this.doesItemFitAt(tab, x, y, size)) {
-            return { x, y, tab, id };
-          }
+      const position = this.getNextAvailablePositionInTab(id, size, tab);
+      if (position) {
+        return position;
+      }
+    }
+
+    return null;
+  }
+
+  private getNextAvailablePositionInTab(
+    id: number,
+    size: Vector2,
+    tab: number,
+  ): ItemPosition | null {
+    for (let y = 0; y < ROWS; ++y) {
+      for (let x = 0; x < COLS; ++x) {
+        if (this.doesItemFitAt(tab, x, y, size)) {
+          return { x, y, tab, id };
         }
       }
     }
