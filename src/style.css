@@ -1981,7 +1981,7 @@ div.icon[data-id="23"] {
 }
 
 #shop {
-  position: absolute;
+  position: relative;
   user-select: none;
   box-sizing: border-box;
   width: 284px;
@@ -2035,6 +2035,37 @@ div.icon[data-id="23"] {
 
 #shop .item-list::-webkit-scrollbar {
   display: none;
+}
+
+#bank {
+  position: relative;
+  user-select: none;
+  box-sizing: border-box;
+  width: 272px;
+  height: 235px;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/153.png");
+}
+
+#bank .balance {
+  position: absolute;
+  left: 130px;
+  top: 21px;
+  width: 120px;
+  color: #fff;
+  text-align: right;
+}
+
+#bank button[data-id="ok"] {
+  position: absolute;
+  bottom: 15px;
+  left: 92px;
+}
+
+#bank .item-list {
+  position: absolute;
+  left: 28px;
+  top: 58px;
 }
 
 .menu-item {
@@ -2138,9 +2169,24 @@ div.icon[data-id="23"] {
   background-position-x: -31px;
 }
 
+.menu-item-icon[data-id="2"] {
+  background-position-y: -291px;
+  background-position-x: -63px;
+}
+
+.menu-item-icon[data-id="3"] {
+  background-position-y: -291px;
+  background-position-x: -94px;
+}
+
 .menu-item-icon[data-id="4"] {
   background-position-y: -291px;
   background-position-x: -124px;
+}
+
+.menu-item-icon[data-id="5"] {
+  background-position-y: -291px;
+  background-position-x: -155px;
 }
 
 .notyf__wrapper {

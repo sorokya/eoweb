@@ -121,6 +121,7 @@ import { registerAdminInteractHandlers } from './handlers/admin-interact';
 import { registerArenaHandlers } from './handlers/arena';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerAvatarHandlers } from './handlers/avatar';
+import { registerBankHandlers } from './handlers/bank';
 import { registerChairHandlers } from './handlers/chair';
 import { registerCharacterHandlers } from './handlers/character';
 import { registerChestHandlers } from './handlers/chest';
@@ -223,6 +224,7 @@ type ClientEvents = {
   };
   itemSold: undefined;
   itemBought: undefined;
+  bankOpened: undefined;
 };
 
 export enum GameState {
@@ -450,6 +452,8 @@ export class Client {
       y: 'top',
     },
   });
+  goldBank = 0;
+  lockerUpgrades = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -1137,6 +1141,7 @@ export class Client {
     registerPaperdollHandlers(this);
     registerChestHandlers(this);
     registerShopHandlers(this);
+    registerBankHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {

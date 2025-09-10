@@ -22,6 +22,7 @@ import {
   ZOOM,
 } from './game-state';
 import { playSfxById, SfxId } from './sfx';
+import { BankDialog } from './ui/bank-dialog';
 import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
 import { Chat, ChatIcon } from './ui/chat';
@@ -268,6 +269,10 @@ client.on('shopOpened', (data) => {
   shopDialog.show();
 });
 
+client.on('bankOpened', () => {
+  bankDialog.show();
+});
+
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.config.host);
   socket.addEventListener('open', () => {
@@ -348,6 +353,7 @@ const itemAmountDialog = new ItemAmountDialog();
 const questDialog = new QuestDialog(client);
 const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
+const bankDialog = new BankDialog(client);
 const smallAlert = new SmallAlertSmallHeader();
 const largeAlertSmallHeader = new LargeAlertSmallHeader();
 const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
