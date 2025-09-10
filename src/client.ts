@@ -5,6 +5,7 @@ import {
   AttackUseClientPacket,
   BankAddClientPacket,
   BankOpenClientPacket,
+  BankTakeClientPacket,
   BarberOpenClientPacket,
   ByteCoords,
   ChairRequestClientPacket,
@@ -2261,6 +2262,17 @@ export class Client {
     }
 
     const packet = new BankAddClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.amount = amount;
+    this.bus.send(packet);
+  }
+
+  withdrawGold(amount: number) {
+    if (this.goldBank < amount) {
+      return;
+    }
+
+    const packet = new BankTakeClientPacket();
     packet.sessionId = this.sessionId;
     packet.amount = amount;
     this.bus.send(packet);

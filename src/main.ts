@@ -802,6 +802,45 @@ bankDialog.on('deposit', () => {
   client.depositGold(1);
 });
 
+bankDialog.on('withdraw', () => {
+  if (client.goldBank <= 0) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.BANK_ACCOUNT_UNABLE_TO_WITHDRAW,
+    );
+    if (!strings) {
+      throw new Error('Failed to fetch dialog strings');
+    }
+
+    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.show();
+
+    return;
+  }
+
+  if (client.goldBank > 1) {
+    const record = client.getEifRecordById(1);
+    if (!record) {
+      throw new Error('Failed to fetch gold record');
+    }
+
+    // Use transfer dialog to get qty
+    itemAmountDialog.setHeader('bank');
+    itemAmountDialog.setMaxAmount(client.goldBank);
+    itemAmountDialog.setLabel(
+      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_WITHDRAW)}`,
+    );
+    itemAmountDialog.setCallback((amount) => {
+      client.withdrawGold(amount);
+      itemAmountDialog.hide();
+    });
+    itemAmountDialog.show();
+
+    return;
+  }
+
+  client.withdrawGold(1);
+});
+
 // Tick loop
 setInterval(() => {
   client.tick();

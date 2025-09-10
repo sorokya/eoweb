@@ -69,6 +69,9 @@ export class BankDialog extends Base {
       this.client.getResourceString(EOResourceID.DIALOG_BANK_WITHDRAW),
       `${this.client.getResourceString(EOResourceID.DIALOG_BANK_TRANSFER)} ${gold.name} ${this.client.getResourceString(EOResourceID.DIALOG_BANK_FROM_ACCOUNT)}`,
     );
+    withdrawItem.addEventListener('click', () => {
+      this.emitter.emit('withdraw', undefined);
+    });
     this.itemList.appendChild(withdrawItem);
 
     const upgradeItem = createIconMenuItem(
