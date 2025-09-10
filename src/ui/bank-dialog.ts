@@ -1,9 +1,16 @@
+import mitt from 'mitt';
 import type { Client } from '../client';
 import { EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 import { DialogIcon } from './dialog-icon';
 import { createIconMenuItem } from './utils/create-menu-item';
+
+type Events = {
+  deposit: undefined;
+  withdraw: undefined;
+  upgrade: undefined;
+};
 
 export class BankDialog extends Base {
   private client: Client;
@@ -12,6 +19,7 @@ export class BankDialog extends Base {
   protected container = document.getElementById('bank');
   private itemList = this.container.querySelector<HTMLDivElement>('.item-list');
   private balance = this.container.querySelector<HTMLSpanElement>('.balance');
+  private emitter = mitt<Events>();
 
   constructor(client: Client) {
     super();
@@ -24,6 +32,17 @@ export class BankDialog extends Base {
       playSfxById(SfxId.ButtonClick);
       this.hide();
     });
+
+    client.on('bankUpdated', () => {
+      this.render();
+    });
+  }
+
+  on<Event extends keyof Events>(
+    event: Event,
+    handler: (data: Events[Event]) => void,
+  ) {
+    this.emitter.on(event, handler);
   }
 
   render() {
@@ -40,6 +59,9 @@ export class BankDialog extends Base {
       this.client.getResourceString(EOResourceID.DIALOG_BANK_DEPOSIT),
       `${this.client.getResourceString(EOResourceID.DIALOG_BANK_TRANSFER)} ${gold.name} ${this.client.getResourceString(EOResourceID.DIALOG_BANK_TO_ACCOUNT)}`,
     );
+    depositItem.addEventListener('click', () => {
+      this.emitter.emit('deposit', undefined);
+    });
     this.itemList.appendChild(depositItem);
 
     const withdrawItem = createIconMenuItem(

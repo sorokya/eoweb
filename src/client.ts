@@ -3,6 +3,7 @@ import {
   AccountRequestClientPacket,
   AdminLevel,
   AttackUseClientPacket,
+  BankAddClientPacket,
   BankOpenClientPacket,
   BarberOpenClientPacket,
   ByteCoords,
@@ -225,6 +226,7 @@ type ClientEvents = {
   itemSold: undefined;
   itemBought: undefined;
   bankOpened: undefined;
+  bankUpdated: undefined;
 };
 
 export enum GameState {
@@ -2250,5 +2252,17 @@ export class Client {
 
   refresh() {
     this.bus.send(new RefreshRequestClientPacket());
+  }
+
+  depositGold(amount: number) {
+    const gold = this.items.find((i) => i.id === 1);
+    if (!gold || gold.amount < amount) {
+      return;
+    }
+
+    const packet = new BankAddClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.amount = amount;
+    this.bus.send(packet);
   }
 }

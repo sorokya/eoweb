@@ -762,6 +762,46 @@ shopDialog.on('craftItem', (item) => {
   largeConfirmSmallHeader.show();
 });
 
+bankDialog.on('deposit', () => {
+  const gold = client.items.find((i) => i.id === 1);
+  if (!gold || gold.amount <= 0) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.BANK_ACCOUNT_UNABLE_TO_DEPOSIT,
+    );
+    if (!strings) {
+      throw new Error('Failed to fetch dialog strings');
+    }
+
+    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.show();
+
+    return;
+  }
+
+  if (gold.amount > 1) {
+    const record = client.getEifRecordById(1);
+    if (!record) {
+      throw new Error('Failed to fetch gold record');
+    }
+
+    // Use transfer dialog to get qty
+    itemAmountDialog.setHeader('bank');
+    itemAmountDialog.setMaxAmount(gold.amount);
+    itemAmountDialog.setLabel(
+      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DEPOSIT)}`,
+    );
+    itemAmountDialog.setCallback((amount) => {
+      client.depositGold(amount);
+      itemAmountDialog.hide();
+    });
+    itemAmountDialog.show();
+
+    return;
+  }
+
+  client.depositGold(1);
+});
+
 // Tick loop
 setInterval(() => {
   client.tick();
