@@ -115,6 +115,7 @@ export class ShopDialog extends Base {
   show() {
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
+    this.dialogs.classList.remove('hidden');
     this.client.typing = true;
   }
 

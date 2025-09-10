@@ -3,7 +3,9 @@ import {
   AccountRequestClientPacket,
   AdminLevel,
   AttackUseClientPacket,
+  BankAddClientPacket,
   BankOpenClientPacket,
+  BankTakeClientPacket,
   BarberOpenClientPacket,
   ByteCoords,
   ChairRequestClientPacket,
@@ -48,6 +50,7 @@ import {
   ItemSpecial,
   ItemType,
   ItemUseClientPacket,
+  LockerBuyClientPacket,
   LoginRequestClientPacket,
   MapTileSpec,
   MarriageOpenClientPacket,
@@ -121,6 +124,7 @@ import { registerAdminInteractHandlers } from './handlers/admin-interact';
 import { registerArenaHandlers } from './handlers/arena';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerAvatarHandlers } from './handlers/avatar';
+import { registerBankHandlers } from './handlers/bank';
 import { registerChairHandlers } from './handlers/chair';
 import { registerCharacterHandlers } from './handlers/character';
 import { registerChestHandlers } from './handlers/chest';
@@ -131,6 +135,7 @@ import { registerEmoteHandlers } from './handlers/emote';
 import { registerFaceHandlers } from './handlers/face';
 import { registerInitHandlers } from './handlers/init';
 import { registerItemHandlers } from './handlers/item';
+import { registerLockerHandlers } from './handlers/locker';
 import { registerLoginHandlers } from './handlers/login';
 import { registerMessageHandlers } from './handlers/message';
 import { registerMusicHandlers } from './handlers/music';
@@ -223,6 +228,8 @@ type ClientEvents = {
   };
   itemSold: undefined;
   itemBought: undefined;
+  bankOpened: undefined;
+  bankUpdated: undefined;
 };
 
 export enum GameState {
@@ -450,6 +457,8 @@ export class Client {
       y: 'top',
     },
   });
+  goldBank = 0;
+  lockerUpgrades = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -1137,6 +1146,8 @@ export class Client {
     registerPaperdollHandlers(this);
     registerChestHandlers(this);
     registerShopHandlers(this);
+    registerBankHandlers(this);
+    registerLockerHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -2245,5 +2256,32 @@ export class Client {
 
   refresh() {
     this.bus.send(new RefreshRequestClientPacket());
+  }
+
+  depositGold(amount: number) {
+    const gold = this.items.find((i) => i.id === 1);
+    if (!gold || gold.amount < amount) {
+      return;
+    }
+
+    const packet = new BankAddClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.amount = amount;
+    this.bus.send(packet);
+  }
+
+  withdrawGold(amount: number) {
+    if (this.goldBank < amount) {
+      return;
+    }
+
+    const packet = new BankTakeClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.amount = amount;
+    this.bus.send(packet);
+  }
+
+  upgradeLocker() {
+    this.bus.send(new LockerBuyClientPacket());
   }
 }

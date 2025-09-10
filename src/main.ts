@@ -12,7 +12,13 @@ import './style.css';
 import 'notyf/notyf.min.css';
 import { PacketBus } from './bus';
 import { ChatTab, Client, GameState } from './client';
-import { GAME_FPS, MAX_CHALLENGE } from './consts';
+import {
+  GAME_FPS,
+  LOCKER_UPGRADE_BASE_COST,
+  LOCKER_UPGRADE_COST_STEP,
+  MAX_CHALLENGE,
+  MAX_LOCKER_UPGRADES,
+} from './consts';
 import { DialogResourceID, EOResourceID } from './edf';
 import {
   GAME_HEIGHT,
@@ -22,6 +28,7 @@ import {
   ZOOM,
 } from './game-state';
 import { playSfxById, SfxId } from './sfx';
+import { BankDialog } from './ui/bank-dialog';
 import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
 import { Chat, ChatIcon } from './ui/chat';
@@ -268,6 +275,10 @@ client.on('shopOpened', (data) => {
   shopDialog.show();
 });
 
+client.on('bankOpened', () => {
+  bankDialog.show();
+});
+
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.config.host);
   socket.addEventListener('open', () => {
@@ -348,6 +359,7 @@ const itemAmountDialog = new ItemAmountDialog();
 const questDialog = new QuestDialog(client);
 const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
+const bankDialog = new BankDialog(client);
 const smallAlert = new SmallAlertSmallHeader();
 const largeAlertSmallHeader = new LargeAlertSmallHeader();
 const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
@@ -754,6 +766,124 @@ shopDialog.on('craftItem', (item) => {
     largeConfirmSmallHeader.hide();
   });
   largeConfirmSmallHeader.show();
+});
+
+bankDialog.on('deposit', () => {
+  const gold = client.items.find((i) => i.id === 1);
+  if (!gold || gold.amount <= 0) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.BANK_ACCOUNT_UNABLE_TO_DEPOSIT,
+    );
+    if (!strings) {
+      throw new Error('Failed to fetch dialog strings');
+    }
+
+    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.show();
+
+    return;
+  }
+
+  if (gold.amount > 1) {
+    const record = client.getEifRecordById(1);
+    if (!record) {
+      throw new Error('Failed to fetch gold record');
+    }
+
+    // Use transfer dialog to get qty
+    itemAmountDialog.setHeader('bank');
+    itemAmountDialog.setMaxAmount(gold.amount);
+    itemAmountDialog.setLabel(
+      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DEPOSIT)}`,
+    );
+    itemAmountDialog.setCallback((amount) => {
+      client.depositGold(amount);
+      itemAmountDialog.hide();
+    });
+    itemAmountDialog.show();
+
+    return;
+  }
+
+  client.depositGold(1);
+});
+
+bankDialog.on('withdraw', () => {
+  if (client.goldBank <= 0) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.BANK_ACCOUNT_UNABLE_TO_WITHDRAW,
+    );
+    if (!strings) {
+      throw new Error('Failed to fetch dialog strings');
+    }
+
+    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.show();
+
+    return;
+  }
+
+  if (client.goldBank > 1) {
+    const record = client.getEifRecordById(1);
+    if (!record) {
+      throw new Error('Failed to fetch gold record');
+    }
+
+    // Use transfer dialog to get qty
+    itemAmountDialog.setHeader('bank');
+    itemAmountDialog.setMaxAmount(client.goldBank);
+    itemAmountDialog.setLabel(
+      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_WITHDRAW)}`,
+    );
+    itemAmountDialog.setCallback((amount) => {
+      client.withdrawGold(amount);
+      itemAmountDialog.hide();
+    });
+    itemAmountDialog.show();
+
+    return;
+  }
+
+  client.withdrawGold(1);
+});
+
+bankDialog.on('upgrade', () => {
+  if (client.lockerUpgrades >= MAX_LOCKER_UPGRADES) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.LOCKER_UPGRADE_IMPOSSIBLE,
+    );
+    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.show();
+    return;
+  }
+
+  const requiredGold =
+    LOCKER_UPGRADE_BASE_COST + LOCKER_UPGRADE_COST_STEP * client.lockerUpgrades;
+  const gold = client.items.find((i) => i.id === 1)?.amount || 0;
+
+  const record = client.getEifRecordById(1);
+  if (!record) {
+    throw new Error('Failed to fetch gold record');
+  }
+
+  if (gold < requiredGold) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
+    );
+    smallAlert.setContent(`${strings[1]} ${record.name}`, strings[0]);
+    smallAlert.show();
+    return;
+  }
+
+  const strings = client.getDialogStrings(DialogResourceID.LOCKER_UPGRADE_UNIT);
+  smallConfirm.setContent(
+    `${strings[1]} ${requiredGold} ${record.name}`,
+    strings[0],
+  );
+  smallConfirm.setCallback(() => {
+    client.upgradeLocker();
+  });
+  smallConfirm.show();
 });
 
 // Tick loop
