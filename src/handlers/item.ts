@@ -335,7 +335,7 @@ function handleItemJunk(client: Client, reader: EoReader) {
   const packet = ItemJunkServerPacket.deserialize(reader);
   client.weight.current = packet.weight.current;
 
-  if (packet.remainingAmount) {
+  if (packet.remainingAmount || packet.junkedItem.id === 1) {
     const item = client.items.find((i) => i.id === packet.junkedItem.id);
     if (item) {
       item.amount = packet.remainingAmount;
