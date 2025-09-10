@@ -79,6 +79,9 @@ export class BankDialog extends Base {
       this.client.getResourceString(EOResourceID.DIALOG_BANK_LOCKER_UPGRADE),
       this.client.getResourceString(EOResourceID.DIALOG_BANK_MORE_SPACE),
     );
+    upgradeItem.addEventListener('click', () => {
+      this.emitter.emit('upgrade', undefined);
+    });
     this.itemList.appendChild(upgradeItem);
   }
 

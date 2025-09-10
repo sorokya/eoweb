@@ -50,6 +50,7 @@ import {
   ItemSpecial,
   ItemType,
   ItemUseClientPacket,
+  LockerBuyClientPacket,
   LoginRequestClientPacket,
   MapTileSpec,
   MarriageOpenClientPacket,
@@ -134,6 +135,7 @@ import { registerEmoteHandlers } from './handlers/emote';
 import { registerFaceHandlers } from './handlers/face';
 import { registerInitHandlers } from './handlers/init';
 import { registerItemHandlers } from './handlers/item';
+import { registerLockerHandlers } from './handlers/locker';
 import { registerLoginHandlers } from './handlers/login';
 import { registerMessageHandlers } from './handlers/message';
 import { registerMusicHandlers } from './handlers/music';
@@ -1145,6 +1147,7 @@ export class Client {
     registerChestHandlers(this);
     registerShopHandlers(this);
     registerBankHandlers(this);
+    registerLockerHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -2276,5 +2279,9 @@ export class Client {
     packet.sessionId = this.sessionId;
     packet.amount = amount;
     this.bus.send(packet);
+  }
+
+  upgradeLocker() {
+    this.bus.send(new LockerBuyClientPacket());
   }
 }

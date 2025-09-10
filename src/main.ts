@@ -12,7 +12,13 @@ import './style.css';
 import 'notyf/notyf.min.css';
 import { PacketBus } from './bus';
 import { ChatTab, Client, GameState } from './client';
-import { GAME_FPS, MAX_CHALLENGE } from './consts';
+import {
+  GAME_FPS,
+  LOCKER_UPGRADE_BASE_COST,
+  LOCKER_UPGRADE_COST_STEP,
+  MAX_CHALLENGE,
+  MAX_LOCKER_UPGRADES,
+} from './consts';
 import { DialogResourceID, EOResourceID } from './edf';
 import {
   GAME_HEIGHT,
@@ -839,6 +845,45 @@ bankDialog.on('withdraw', () => {
   }
 
   client.withdrawGold(1);
+});
+
+bankDialog.on('upgrade', () => {
+  if (client.lockerUpgrades >= MAX_LOCKER_UPGRADES) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.LOCKER_UPGRADE_IMPOSSIBLE,
+    );
+    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.show();
+    return;
+  }
+
+  const requiredGold =
+    LOCKER_UPGRADE_BASE_COST + LOCKER_UPGRADE_COST_STEP * client.lockerUpgrades;
+  const gold = client.items.find((i) => i.id === 1)?.amount || 0;
+
+  const record = client.getEifRecordById(1);
+  if (!record) {
+    throw new Error('Failed to fetch gold record');
+  }
+
+  if (gold < requiredGold) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
+    );
+    smallAlert.setContent(`${strings[1]} ${record.name}`, strings[0]);
+    smallAlert.show();
+    return;
+  }
+
+  const strings = client.getDialogStrings(DialogResourceID.LOCKER_UPGRADE_UNIT);
+  smallConfirm.setContent(
+    `${strings[1]} ${requiredGold} ${record.name}`,
+    strings[0],
+  );
+  smallConfirm.setCallback(() => {
+    client.upgradeLocker();
+  });
+  smallConfirm.show();
 });
 
 // Tick loop
