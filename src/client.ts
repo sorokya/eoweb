@@ -52,6 +52,7 @@ import {
   ItemUseClientPacket,
   LockerBuyClientPacket,
   LockerOpenClientPacket,
+  LockerTakeClientPacket,
   LoginRequestClientPacket,
   MapTileSpec,
   MarriageOpenClientPacket,
@@ -232,6 +233,8 @@ type ClientEvents = {
   itemBought: undefined;
   bankOpened: undefined;
   bankUpdated: undefined;
+  lockerOpened: { items: ThreeItem[] };
+  lockerChanged: { items: ThreeItem[] };
 };
 
 export enum GameState {
@@ -461,6 +464,7 @@ export class Client {
   });
   goldBank = 0;
   lockerUpgrades = 0;
+  lockerCoords = new Coords();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -2307,5 +2311,12 @@ export class Client {
 
   upgradeLocker() {
     this.bus.send(new LockerBuyClientPacket());
+  }
+
+  takeLockerItem(itemId: number) {
+    const packet = new LockerTakeClientPacket();
+    packet.takeItemId = itemId;
+    packet.lockerCoords = this.lockerCoords;
+    this.bus.send(packet);
   }
 }

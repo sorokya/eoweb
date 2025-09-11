@@ -42,6 +42,7 @@ import { Inventory } from './ui/inventory';
 import { ItemAmountDialog } from './ui/item-amount-dialog';
 import { LargeAlertSmallHeader } from './ui/large-alert-small-header';
 import { LargeConfirmSmallHeader } from './ui/large-confirm-small-header';
+import { LockerDialog } from './ui/locker-dialog';
 import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
@@ -277,6 +278,15 @@ client.on('bankOpened', () => {
   bankDialog.show();
 });
 
+client.on('lockerOpened', ({ items }) => {
+  lockerDialog.setItems(items);
+  lockerDialog.show();
+});
+
+client.on('lockerChanged', ({ items }) => {
+  lockerDialog.setItems(items);
+});
+
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.config.host);
   socket.addEventListener('open', () => {
@@ -358,6 +368,7 @@ const questDialog = new QuestDialog(client);
 const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
 const bankDialog = new BankDialog(client);
+const lockerDialog = new LockerDialog(client);
 const smallAlert = new SmallAlertSmallHeader();
 const largeAlertSmallHeader = new LargeAlertSmallHeader();
 const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
