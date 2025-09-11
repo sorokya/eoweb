@@ -625,7 +625,7 @@ export class MapRenderer {
       }
     }
 
-    let isSign = false;
+    const isSign = !!this.getSign(entity.x, entity.y);
     if (entity.layer === Layer.Objects) {
       const spec = this.getTileSpec(entity.x, entity.y);
       if (spec === MapTileSpec.TimedSpikes && !this.timedSpikesTicks) {
@@ -640,9 +640,6 @@ export class MapRenderer {
       ) {
         return;
       }
-
-      const sign = this.getSign(entity.x, entity.y);
-      isSign = !!sign;
     }
 
     const bmp = getBitmapById(
@@ -687,7 +684,7 @@ export class MapRenderer {
     } else if (isSign) {
       setSignRectangle(
         coords,
-        new Rectangle({ x: screenX, y: screenY }, frame.w, DOOR_HEIGHT),
+        new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
       );
     }
 
