@@ -50,6 +50,7 @@ import {
   ItemSpecial,
   ItemType,
   ItemUseClientPacket,
+  LockerAddClientPacket,
   LockerBuyClientPacket,
   LockerOpenClientPacket,
   LockerTakeClientPacket,
@@ -2316,6 +2317,15 @@ export class Client {
   takeLockerItem(itemId: number) {
     const packet = new LockerTakeClientPacket();
     packet.takeItemId = itemId;
+    packet.lockerCoords = this.lockerCoords;
+    this.bus.send(packet);
+  }
+
+  addLockerItem(itemId: number, amount: number) {
+    const packet = new LockerAddClientPacket();
+    packet.depositItem = new ThreeItem();
+    packet.depositItem.id = itemId;
+    packet.depositItem.amount = amount;
     packet.lockerCoords = this.lockerCoords;
     this.bus.send(packet);
   }

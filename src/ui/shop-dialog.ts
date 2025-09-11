@@ -96,7 +96,7 @@ export class ShopDialog extends Base {
     const clientHeight = this.itemList.clientHeight;
     const scrollPercent = scrollTop / (scrollHeight - clientHeight);
     const clampedPercent = Math.min(Math.max(scrollPercent, 0), 1);
-    const top = min + (max - min) * clampedPercent;
+    const top = min + (max - min) * clampedPercent || min;
     this.scrollHandle.style.top = `${top}px`;
   }
 

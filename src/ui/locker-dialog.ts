@@ -40,6 +40,15 @@ export class LockerDialog extends Base {
     this.render();
   }
 
+  getItemCount(): number {
+    return this.items.length;
+  }
+
+  getItemAmount(id: number): number {
+    const item = this.items.find((i) => i.id === id);
+    return item ? item.amount : 0;
+  }
+
   setScrollThumbPosition() {
     const min = 60;
     const max = 212;
@@ -48,7 +57,7 @@ export class LockerDialog extends Base {
     const clientHeight = this.itemsList.clientHeight;
     const scrollPercent = scrollTop / (scrollHeight - clientHeight);
     const clampedPercent = Math.min(Math.max(scrollPercent, 0), 1);
-    const top = min + (max - min) * clampedPercent;
+    const top = min + (max - min) * clampedPercent || min;
     this.scrollHandle.style.top = `${top}px`;
   }
 
