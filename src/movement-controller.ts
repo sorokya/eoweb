@@ -188,6 +188,12 @@ export class MovementController {
           return;
         }
 
+        if (this.client.lockerAt(to)) {
+          this.client.openLocker(to);
+          this.walkTicks = WALK_TICKS;
+          return;
+        }
+
         if (this.client.isFacingChairAt(to) && !this.client.occupied(to)) {
           this.client.sitChair(to);
           this.walkTicks = WALK_TICKS;

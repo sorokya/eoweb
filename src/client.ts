@@ -51,6 +51,7 @@ import {
   ItemType,
   ItemUseClientPacket,
   LockerBuyClientPacket,
+  LockerOpenClientPacket,
   LoginRequestClientPacket,
   MapTileSpec,
   MarriageOpenClientPacket,
@@ -101,6 +102,7 @@ import { ChatBubble } from './chat-bubble';
 import {
   clearRectangles,
   getDoorIntersecting,
+  getLockerIntersecting,
   getNpcIntersecting,
   getSignIntersecting,
 } from './collision';
@@ -1007,6 +1009,22 @@ export class Client {
     );
   }
 
+  lockerAt(coords: Coords): boolean {
+    return this.map.tileSpecRows.some(
+      (r) =>
+        r.y === coords.y &&
+        r.tiles.some(
+          (t) => t.x === coords.x && t.tileSpec === MapTileSpec.BankVault,
+        ),
+    );
+  }
+
+  openLocker(coords: Coords) {
+    const packet = new LockerOpenClientPacket();
+    packet.lockerCoords = coords;
+    this.bus.send(packet);
+  }
+
   openDoor(coords: Coords) {
     const door = this.getDoor(coords);
     if (!door || door.open) {
@@ -1238,6 +1256,12 @@ export class Client {
       if (door && !door.open) {
         this.openDoor(doorAt);
       }
+      return;
+    }
+
+    const lockerAt = getLockerIntersecting(this.mousePosition);
+    if (lockerAt) {
+      this.openLocker(lockerAt);
       return;
     }
 

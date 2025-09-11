@@ -12,6 +12,7 @@ import {
   getNpcIntersecting,
   Rectangle,
   setDoorRectangle,
+  setLockerRectangle,
   setSignRectangle,
 } from './collision';
 import {
@@ -625,9 +626,8 @@ export class MapRenderer {
       }
     }
 
-    const isSign = !!this.getSign(entity.x, entity.y);
+    const spec = this.getTileSpec(entity.x, entity.y);
     if (entity.layer === Layer.Objects) {
-      const spec = this.getTileSpec(entity.x, entity.y);
       if (spec === MapTileSpec.TimedSpikes && !this.timedSpikesTicks) {
         return;
       }
@@ -681,8 +681,13 @@ export class MapRenderer {
           DOOR_HEIGHT,
         ),
       );
-    } else if (isSign) {
+    } else if (this.getSign(entity.x, entity.y)) {
       setSignRectangle(
+        coords,
+        new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
+      );
+    } else if (spec === MapTileSpec.BankVault) {
+      setLockerRectangle(
         coords,
         new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
       );
