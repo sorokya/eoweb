@@ -142,9 +142,13 @@ export class MapRenderer {
   constructor(client: Client) {
     this.client = client;
     this.characterCanvas = document.createElement('canvas');
-    this.characterCtx = this.characterCanvas.getContext('2d');
+    this.characterCtx = this.characterCanvas.getContext('2d', {
+      willReadFrequently: true,
+    });
     this.mainCharacterCanvas = document.createElement('canvas');
-    this.mainCharacterCtx = this.mainCharacterCanvas.getContext('2d');
+    this.mainCharacterCtx = this.mainCharacterCanvas.getContext('2d', {
+      willReadFrequently: true,
+    });
   }
 
   resizeCanvas(width: number, height: number) {
