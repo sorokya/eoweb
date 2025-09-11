@@ -57,9 +57,7 @@ import { randomRange } from './utils/random-range';
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
 
-// Declare ctx early so resizeCanvases can use it
-// willReadFrequently: true because apparently we getImageData() every time someone breathes near the zoom
-const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const ctx = canvas.getContext('2d', { alpha: false });
 if (!ctx) {
   throw new Error('Failed to get canvas context!');
 }
