@@ -670,7 +670,7 @@ inventory.on('addLockerItem', (itemId) => {
   }
 
   const itemAmount = lockerDialog.getItemAmount(itemId);
-  if (itemAmount > LOCKER_MAX_ITEM_AMOUNT) {
+  if (itemAmount >= LOCKER_MAX_ITEM_AMOUNT) {
     const strings = client.getDialogStrings(
       DialogResourceID.LOCKER_FULL_SINGLE_ITEM_MAX,
     );
@@ -681,7 +681,9 @@ inventory.on('addLockerItem', (itemId) => {
 
   if (item.amount > 1) {
     client.typing = true;
-    itemAmountDialog.setMaxAmount(item.amount);
+    itemAmountDialog.setMaxAmount(
+      Math.min(item.amount, LOCKER_MAX_ITEM_AMOUNT - itemAmount),
+    );
     itemAmountDialog.setHeader('bank');
     itemAmountDialog.setLabel(
       `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DEPOSIT)}`,
