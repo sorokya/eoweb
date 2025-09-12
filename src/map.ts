@@ -616,11 +616,9 @@ export class MapRenderer {
     coords.y = entity.y;
 
     let bmpOffset = 0;
-    let isDoor = false;
 
     if (entity.layer === Layer.DownWall || entity.layer === Layer.RightWall) {
       const door = this.client.getDoor(coords);
-      isDoor = !!door;
       if (door?.open) {
         bmpOffset = 1;
       }
@@ -668,7 +666,7 @@ export class MapRenderer {
         offset.y,
     );
 
-    if (isDoor) {
+    if (this.client.getDoor(coords)) {
       setDoorRectangle(
         coords,
         new Rectangle(
@@ -679,6 +677,11 @@ export class MapRenderer {
       );
     } else if (this.getSign(entity.x, entity.y)) {
       setSignRectangle(
+        coords,
+        new Rectangle({ x: screenX, y: screenY }, bmp.width, bmp.height),
+      );
+    } else if (spec === MapTileSpec.BankVault) {
+      setLockerRectangle(
         coords,
         new Rectangle({ x: screenX, y: screenY }, bmp.width, bmp.height),
       );
@@ -936,10 +939,10 @@ export class MapRenderer {
     const tileScreen = isoToScreen(item.coords);
 
     const screenX = Math.floor(
-      tileScreen.x - frame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
+      tileScreen.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
     );
     const screenY = Math.floor(
-      tileScreen.y - frame.h / 2 - playerScreen.y + HALF_GAME_HEIGHT,
+      tileScreen.y - bmp.height / 2 - playerScreen.y + HALF_GAME_HEIGHT,
     );
 
     ctx.drawImage(bmp, screenX, screenY);
