@@ -12,7 +12,7 @@ import {
   HALF_CHARACTER_ATTACK_WIDTH,
 } from '../consts';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
-import { GfxType, getBitmapById, getFrameById } from '../gfx';
+import { GfxType, getBitmapById } from '../gfx';
 import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
 import { CharacterAnimation } from './character-base-animation';
@@ -94,8 +94,6 @@ export class CharacterAttackAnimation extends CharacterAnimation {
       return;
     }
 
-    const frame = getFrameById(GfxType.SkinSprites, 3);
-
     const rect = getCharacterRectangle(character.playerId);
     if (!rect) {
       return;
@@ -130,8 +128,8 @@ export class CharacterAttackAnimation extends CharacterAnimation {
 
     ctx.drawImage(
       bmp,
-      sourceX + frame.x,
-      sourceY + frame.y,
+      sourceX,
+      sourceY,
       CHARACTER_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
       drawX,
