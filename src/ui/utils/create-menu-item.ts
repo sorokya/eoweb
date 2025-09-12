@@ -42,13 +42,11 @@ export function createItemMenuItem(
   menuImg.classList.add('menu-item-img');
   menuItem.appendChild(menuImg);
 
-  if (record.type !== ItemType.General) {
-    const tooltip = document.createElement('div');
-    tooltip.classList.add('tooltip');
-    const meta = getItemMeta(record);
-    tooltip.innerText = `${record.name}\n${meta.join('\n')}`;
-    menuItem.appendChild(tooltip);
-  }
+  const tooltip = document.createElement('div');
+  tooltip.classList.add('tooltip');
+  const meta = getItemMeta(record);
+  tooltip.innerText = `${record.name}\n${meta.join('\n')}`;
+  menuItem.appendChild(tooltip);
 
   const menuLabel = document.createElement('div');
   menuLabel.classList.add('menu-label');

@@ -12,6 +12,7 @@ import {
   getNpcIntersecting,
   Rectangle,
   setDoorRectangle,
+  setLockerRectangle,
   setSignRectangle,
 } from './collision';
 import {
@@ -142,9 +143,13 @@ export class MapRenderer {
   constructor(client: Client) {
     this.client = client;
     this.characterCanvas = document.createElement('canvas');
-    this.characterCtx = this.characterCanvas.getContext('2d');
+    this.characterCtx = this.characterCanvas.getContext('2d', {
+      willReadFrequently: true,
+    });
     this.mainCharacterCanvas = document.createElement('canvas');
-    this.mainCharacterCtx = this.mainCharacterCanvas.getContext('2d');
+    this.mainCharacterCtx = this.mainCharacterCanvas.getContext('2d', {
+      willReadFrequently: true,
+    });
   }
 
   resizeCanvas(width: number, height: number) {
@@ -621,9 +626,8 @@ export class MapRenderer {
       }
     }
 
-    let isSign = false;
+    const spec = this.getTileSpec(entity.x, entity.y);
     if (entity.layer === Layer.Objects) {
-      const spec = this.getTileSpec(entity.x, entity.y);
       if (spec === MapTileSpec.TimedSpikes && !this.timedSpikesTicks) {
         return;
       }
@@ -636,9 +640,6 @@ export class MapRenderer {
       ) {
         return;
       }
-
-      const sign = this.getSign(entity.x, entity.y);
-      isSign = !!sign;
     }
 
     const bmp = getBitmapById(
@@ -680,10 +681,15 @@ export class MapRenderer {
           DOOR_HEIGHT,
         ),
       );
-    } else if (isSign) {
+    } else if (this.getSign(entity.x, entity.y)) {
       setSignRectangle(
         coords,
-        new Rectangle({ x: screenX, y: screenY }, frame.w, DOOR_HEIGHT),
+        new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
+      );
+    } else if (spec === MapTileSpec.BankVault) {
+      setLockerRectangle(
+        coords,
+        new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
       );
     }
 

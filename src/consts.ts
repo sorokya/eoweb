@@ -51,3 +51,6 @@ export const IDLE_TICKS = 250;
 export const MAX_LOCKER_UPGRADES = 7;
 export const LOCKER_UPGRADE_BASE_COST = 1000;
 export const LOCKER_UPGRADE_COST_STEP = 1000;
+export const LOCKER_BASE_SIZE = 25;
+export const LOCKER_SIZE_STEP = 5;
+export const LOCKER_MAX_ITEM_AMOUNT = 200;

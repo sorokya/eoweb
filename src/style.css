@@ -1898,14 +1898,6 @@ div.icon[data-id="23"] {
   background-image: url("/gfx/gfx002/151.png");
 }
 
-#chest .title {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  color: #fff;
-  font-size: 13px;
-}
-
 #chest .chest-items {
   position: absolute;
   top: 25px;
@@ -2066,6 +2058,116 @@ div.icon[data-id="23"] {
   position: absolute;
   left: 28px;
   top: 58px;
+}
+
+#locker {
+  position: relative;
+  user-select: none;
+  box-sizing: border-box;
+  width: 284px;
+  height: 290px;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/152.png");
+}
+
+#locker .title {
+  position: absolute;
+  color: #fff;
+  font-size: 12px;
+  left: 24px;
+  top: 18px;
+}
+
+#locker .scroll-handle {
+  position: absolute;
+  right: 16px;
+  width: 16px;
+  height: 15px;
+  background: url("/gfx/gfx002/129.png") 0 -75px;
+  touch-action: none;
+  user-select: none;
+}
+
+#locker .locker-items {
+  position: absolute;
+  top: 50px;
+  left: 22px;
+  color: #fff;
+  font-size: 12px;
+  width: 232px;
+  height: 193px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+#locker .locker-items::-webkit-scrollbar {
+  display: none;
+}
+
+#locker .locker-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px auto;
+  align-items: center;
+  padding: 0 0.5rem;
+  cursor: pointer;
+  height: 38px;
+  background-image: url("/gfx/gfx003/100.png");
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+#locker .locker-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+#locker .locker-item:hover::before {
+  opacity: 1;
+}
+
+#locker .locker-item .item-image {
+  max-width: 48px;
+  max-height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+}
+
+#locker .locker-item .item-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+#locker .locker-item .item-name {
+  color: #fff;
+  font-size: 12px;
+  margin: 0;
+}
+
+#locker .locker-item .item-quantity {
+  color: #b4a08c;
+  font-size: 11px;
+  margin: 2px 0 0 0;
+}
+
+#locker button[data-id="cancel"] {
+  position: absolute;
+  top: 251px;
+  left: 98px;
 }
 
 .menu-item {

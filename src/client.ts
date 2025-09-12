@@ -50,7 +50,10 @@ import {
   ItemSpecial,
   ItemType,
   ItemUseClientPacket,
+  LockerAddClientPacket,
   LockerBuyClientPacket,
+  LockerOpenClientPacket,
+  LockerTakeClientPacket,
   LoginRequestClientPacket,
   MapTileSpec,
   MarriageOpenClientPacket,
@@ -101,6 +104,7 @@ import { ChatBubble } from './chat-bubble';
 import {
   clearRectangles,
   getDoorIntersecting,
+  getLockerIntersecting,
   getNpcIntersecting,
   getSignIntersecting,
 } from './collision';
@@ -230,6 +234,8 @@ type ClientEvents = {
   itemBought: undefined;
   bankOpened: undefined;
   bankUpdated: undefined;
+  lockerOpened: { items: ThreeItem[] };
+  lockerChanged: { items: ThreeItem[] };
 };
 
 export enum GameState {
@@ -459,6 +465,7 @@ export class Client {
   });
   goldBank = 0;
   lockerUpgrades = 0;
+  lockerCoords = new Coords();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -1007,6 +1014,22 @@ export class Client {
     );
   }
 
+  lockerAt(coords: Coords): boolean {
+    return this.map.tileSpecRows.some(
+      (r) =>
+        r.y === coords.y &&
+        r.tiles.some(
+          (t) => t.x === coords.x && t.tileSpec === MapTileSpec.BankVault,
+        ),
+    );
+  }
+
+  openLocker(coords: Coords) {
+    const packet = new LockerOpenClientPacket();
+    packet.lockerCoords = coords;
+    this.bus.send(packet);
+  }
+
   openDoor(coords: Coords) {
     const door = this.getDoor(coords);
     if (!door || door.open) {
@@ -1238,6 +1261,12 @@ export class Client {
       if (door && !door.open) {
         this.openDoor(doorAt);
       }
+      return;
+    }
+
+    const lockerAt = getLockerIntersecting(this.mousePosition);
+    if (lockerAt) {
+      this.openLocker(lockerAt);
       return;
     }
 
@@ -2283,5 +2312,21 @@ export class Client {
 
   upgradeLocker() {
     this.bus.send(new LockerBuyClientPacket());
+  }
+
+  takeLockerItem(itemId: number) {
+    const packet = new LockerTakeClientPacket();
+    packet.takeItemId = itemId;
+    packet.lockerCoords = this.lockerCoords;
+    this.bus.send(packet);
+  }
+
+  addLockerItem(itemId: number, amount: number) {
+    const packet = new LockerAddClientPacket();
+    packet.depositItem = new ThreeItem();
+    packet.depositItem.id = itemId;
+    packet.depositItem.amount = amount;
+    packet.lockerCoords = this.lockerCoords;
+    this.bus.send(packet);
   }
 }

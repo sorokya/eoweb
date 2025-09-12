@@ -14,6 +14,9 @@ import { PacketBus } from './bus';
 import { ChatTab, Client, GameState } from './client';
 import {
   GAME_FPS,
+  LOCKER_BASE_SIZE,
+  LOCKER_MAX_ITEM_AMOUNT,
+  LOCKER_SIZE_STEP,
   LOCKER_UPGRADE_BASE_COST,
   LOCKER_UPGRADE_COST_STEP,
   MAX_CHALLENGE,
@@ -42,6 +45,7 @@ import { Inventory } from './ui/inventory';
 import { ItemAmountDialog } from './ui/item-amount-dialog';
 import { LargeAlertSmallHeader } from './ui/large-alert-small-header';
 import { LargeConfirmSmallHeader } from './ui/large-confirm-small-header';
+import { LockerDialog } from './ui/locker-dialog';
 import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
@@ -57,9 +61,7 @@ import { randomRange } from './utils/random-range';
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
 
-// Declare ctx early so resizeCanvases can use it
-// willReadFrequently: true because apparently we getImageData() every time someone breathes near the zoom
-const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const ctx = canvas.getContext('2d', { alpha: false });
 if (!ctx) {
   throw new Error('Failed to get canvas context!');
 }
@@ -279,6 +281,15 @@ client.on('bankOpened', () => {
   bankDialog.show();
 });
 
+client.on('lockerOpened', ({ items }) => {
+  lockerDialog.setItems(items);
+  lockerDialog.show();
+});
+
+client.on('lockerChanged', ({ items }) => {
+  lockerDialog.setItems(items);
+});
+
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.config.host);
   socket.addEventListener('open', () => {
@@ -360,6 +371,7 @@ const questDialog = new QuestDialog(client);
 const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
 const bankDialog = new BankDialog(client);
+const lockerDialog = new LockerDialog(client);
 const smallAlert = new SmallAlertSmallHeader();
 const largeAlertSmallHeader = new LargeAlertSmallHeader();
 const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
@@ -622,6 +634,72 @@ inventory.on('addChestItem', (itemId) => {
     itemAmountDialog.show();
   } else {
     client.addChestItem(itemId, 1);
+  }
+});
+
+inventory.on('addLockerItem', (itemId) => {
+  const item = client.items.find((i) => i.id === itemId);
+  if (!item) {
+    return;
+  }
+
+  const record = client.getEifRecordById(itemId);
+  if (!record) {
+    return;
+  }
+
+  if (itemId === 1) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.LOCKER_DEPOSIT_GOLD_ERROR,
+    );
+    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.show();
+    return;
+  }
+
+  const lockerSize =
+    LOCKER_BASE_SIZE + client.lockerUpgrades * LOCKER_SIZE_STEP;
+  const itemCount = lockerDialog.getItemCount();
+  if (itemCount + 1 >= lockerSize) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.LOCKER_FULL_DIFF_ITEMS_MAX,
+    );
+    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.show();
+    return;
+  }
+
+  const itemAmount = lockerDialog.getItemAmount(itemId);
+  if (itemAmount >= LOCKER_MAX_ITEM_AMOUNT) {
+    const strings = client.getDialogStrings(
+      DialogResourceID.LOCKER_FULL_SINGLE_ITEM_MAX,
+    );
+    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.show();
+    return;
+  }
+
+  if (item.amount > 1) {
+    client.typing = true;
+    itemAmountDialog.setMaxAmount(
+      Math.min(item.amount, LOCKER_MAX_ITEM_AMOUNT - itemAmount),
+    );
+    itemAmountDialog.setHeader('bank');
+    itemAmountDialog.setLabel(
+      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DEPOSIT)}`,
+    );
+    itemAmountDialog.setCallback(
+      (amount) => {
+        client.addLockerItem(itemId, amount);
+        client.typing = false;
+      },
+      () => {
+        client.typing = false;
+      },
+    );
+    itemAmountDialog.show();
+  } else {
+    client.addLockerItem(itemId, 1);
   }
 });
 

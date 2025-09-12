@@ -40,6 +40,7 @@ type Events = {
   equipItem: { slot: EquipmentSlot; itemId: number };
   junkItem: number;
   addChestItem: number;
+  addLockerItem: number;
 };
 
 export class Inventory extends Base {
@@ -192,6 +193,12 @@ export class Inventory extends Base {
     const chestItems = target.closest('.chest-items');
     if (chestItems) {
       this.emitter.emit('addChestItem', item.id);
+      return;
+    }
+
+    const lockerItems = target.closest('.locker-items');
+    if (lockerItems) {
+      this.emitter.emit('addLockerItem', item.id);
       return;
     }
 
