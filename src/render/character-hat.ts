@@ -2,7 +2,7 @@ import { type CharacterMapInfo, Direction, Gender, SitState } from 'eolib';
 import { CharacterAction } from '../client';
 import { getCharacterRectangle } from '../collision';
 import { GAME_WIDTH } from '../game-state';
-import { GfxType, getBitmapById, getFrameById } from '../gfx';
+import { GfxType, getBitmapById } from '../gfx';
 import type { Vector2 } from '../vector';
 
 const MALE_STANDING_OFFSETS = {
@@ -130,19 +130,14 @@ export function renderCharacterHat(
     return;
   }
 
-  const frame = getFrameById(
-    character.gender === Gender.Female ? GfxType.FemaleHat : GfxType.MaleHat,
-    graphicId,
-  );
-
   const rect = getCharacterRectangle(character.playerId);
   if (!rect) {
     return;
   }
 
-  let screenX = Math.floor(rect.position.x + rect.width / 2 - frame.w / 2);
+  let screenX = Math.floor(rect.position.x + rect.width / 2 - bmp.width / 2);
 
-  let screenY = Math.floor(rect.position.y - frame.h / 2) + 1;
+  let screenY = Math.floor(rect.position.y - bmp.height / 2) + 1;
 
   const { direction, gender, sitState } = character;
 
@@ -199,19 +194,11 @@ export function renderCharacterHat(
     ctx.scale(-1, 1); // Flip horizontally
   }
 
-  const drawX = Math.floor(mirrored ? GAME_WIDTH - screenX - frame.w : screenX);
-
-  ctx.drawImage(
-    bmp,
-    frame.x,
-    frame.y,
-    frame.w,
-    frame.h,
-    drawX,
-    screenY,
-    frame.w,
-    frame.h,
+  const drawX = Math.floor(
+    mirrored ? GAME_WIDTH - screenX - bmp.width : screenX,
   );
+
+  ctx.drawImage(bmp, drawX, screenY, bmp.width, bmp.height);
 
   if (mirrored) {
     ctx.restore();
