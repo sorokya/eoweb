@@ -1,4 +1,9 @@
-import { type CharacterMapInfo, type EquipmentMapInfo, Gender } from 'eolib';
+import {
+  type CharacterMapInfo,
+  type EquipmentMapInfo,
+  Gender,
+  MapTileSpec,
+} from 'eolib';
 import type { Client } from './client';
 import {
   CHARACTER_HEIGHT,
@@ -122,7 +127,7 @@ type CharacterAtlasEntry = {
   equipment: EquipmentMapInfo;
   hash: string;
   dirty: boolean;
-  frames: Frame[];
+  frames: (Frame | undefined)[];
 };
 
 type TileAtlasEntry = {
@@ -162,6 +167,7 @@ export class Atlas {
   private tiles: TileAtlasEntry[] = [];
   private client: Client;
   private mapId = 0;
+  private mapHasChairs = false;
   private bmpsToLoad: Bmp[] = [];
   private loading = false;
   private appended = false;
@@ -182,7 +188,7 @@ export class Atlas {
     this.atlases = [document.createElement('canvas')];
     this.atlases[0].width = ATLAS_SIZE;
     this.atlases[0].height = ATLAS_SIZE;
-    this.ctx = this.atlases[0].getContext('2d');
+    this.ctx = this.atlases[0].getContext('2d', { willReadFrequently: true });
   }
 
   insert(w: number, h: number): Rect {
@@ -209,7 +215,9 @@ export class Atlas {
       }
 
       this.currentAtlasIndex++;
-      this.ctx = this.atlases[this.currentAtlasIndex].getContext('2d');
+      this.ctx = this.atlases[this.currentAtlasIndex].getContext('2d', {
+        willReadFrequently: true,
+      });
       this.free = [{ x: 0, y: 0, w: ATLAS_SIZE, h: ATLAS_SIZE }];
       bestIndex = 0;
     }
@@ -271,7 +279,7 @@ export class Atlas {
   refresh() {
     if (this.loading) return;
 
-    //this.bmpsToLoad = [];
+    this.bmpsToLoad = [];
 
     if (this.mapId !== this.client.mapId) {
       this.resetAtlas();
@@ -281,9 +289,9 @@ export class Atlas {
     this.refreshNpcs();
     this.refreshItems();
 
-    //if (this.bmpsToLoad.length) {
-    this.updateAtlas();
-    // }
+    if (this.bmpsToLoad.length) {
+      this.updateAtlas();
+    }
   }
 
   private addBmpToLoad(gfxType: GfxType, id: number) {
@@ -309,6 +317,19 @@ export class Atlas {
       { gfxType: GfxType.SkinSprites, id: 6, img: null },
       { gfxType: GfxType.SkinSprites, id: 7, img: null },
       { gfxType: GfxType.SkinSprites, id: 8, img: null },
+    );
+
+    const chairSpecs = [
+      MapTileSpec.ChairAll,
+      MapTileSpec.ChairDown,
+      MapTileSpec.ChairLeft,
+      MapTileSpec.ChairRight,
+      MapTileSpec.ChairUp,
+      MapTileSpec.ChairDownRight,
+      MapTileSpec.ChairUpLeft,
+    ];
+    this.mapHasChairs = this.client.map.tileSpecRows.some((r) =>
+      r.tiles.some((t) => chairSpecs.includes(t.tileSpec)),
     );
 
     this.loadMapGraphicLayers();
@@ -426,7 +447,11 @@ export class Atlas {
           }
         }
 
+        let ranged = false;
         if (char.equipment.weapon > 0) {
+          const meta = this.client.getWeaponMetadata(char.equipment.weapon);
+          ranged = meta.ranged;
+
           const baseId = (char.equipment.weapon - 1) * 100;
           const gfxType =
             char.gender === Gender.Female
@@ -443,8 +468,43 @@ export class Atlas {
           existing.dirty = true;
         } else {
           const frames = [];
-          for (let i = 1; i <= 22; ++i) {
-            frames.push({ x: -1, y: -1, w: -1, h: -1 });
+          for (let i = 0; i < 22; ++i) {
+            if (
+              [
+                CharacterFrame.ChairDownRight,
+                CharacterFrame.ChairUpLeft,
+              ].includes(i as CharacterFrame) &&
+              !this.mapHasChairs
+            ) {
+              frames.push(undefined);
+              continue;
+            }
+
+            if (
+              ranged &&
+              [
+                CharacterFrame.MeleeAttackDownRight1,
+                CharacterFrame.MeleeAttackDownRight2,
+                CharacterFrame.MeleeAttackUpLeft1,
+                CharacterFrame.MeleeAttackUpLeft2,
+              ].includes(i as CharacterFrame)
+            ) {
+              frames.push(undefined);
+              continue;
+            }
+
+            if (
+              !ranged &&
+              [
+                CharacterFrame.RangeAttackDownRight,
+                CharacterFrame.RangeAttackUpLeft,
+              ].includes(i as CharacterFrame)
+            ) {
+              frames.push(undefined);
+              continue;
+            }
+
+            frames.push({ atlasIndex: -1, x: -1, y: -1, w: -1, h: -1 });
           }
 
           this.characters.push({
@@ -547,6 +607,7 @@ export class Atlas {
       this.appended = true;
     }
 
+    this.bmpsToLoad = [];
     this.loading = false;
   }
 
@@ -584,6 +645,9 @@ export class Atlas {
   }
 
   private updateNpcs() {
+    const tmpCanvas = document.createElement('canvas');
+    const tmpCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
+
     for (const npc of this.npcs) {
       for (const [index, frame] of npc.frames.entries()) {
         if (frame.x !== -1) {
@@ -593,6 +657,25 @@ export class Atlas {
         const baseId = (npc.graphicId - 1) * 40;
         const bmp = this.getBmp(GfxType.NPC, baseId + index + 1);
         if (!bmp) {
+          continue;
+        }
+
+        tmpCanvas.width = bmp.width;
+        tmpCanvas.height = bmp.height;
+        tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
+        tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
+
+        // Check if image is blank
+        const imgData = tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
+        let blank = true;
+        for (let i = 0; i < imgData.data.length; i += 4) {
+          if (imgData.data[i + 3] !== 0) {
+            blank = false;
+            break;
+          }
+        }
+
+        if (blank) {
           continue;
         }
 
@@ -617,6 +700,20 @@ export class Atlas {
       }
 
       for (const [index, frame] of character.frames.entries()) {
+        if (!frame) {
+          continue;
+        }
+
+        if (
+          frame.atlasIndex !== -1 &&
+          frame.atlasIndex !== this.currentAtlasIndex
+        ) {
+          this.ctx = this.atlases[frame.atlasIndex].getContext('2d', {
+            willReadFrequently: true,
+          });
+          this.currentAtlasIndex = frame.atlasIndex;
+        }
+
         const size = this.getCharacterFrameSize(index);
 
         if (frame.x !== -1) {
