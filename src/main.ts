@@ -1056,7 +1056,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   const emf = Emf.deserialize(reader);
   client.setMap(emf);
 
-  /*
   client.playerId = 1;
   const character = new CharacterMapInfo();
   character.playerId = 1;
@@ -1067,18 +1066,17 @@ window.addEventListener('DOMContentLoaded', async () => {
   character.sitState = SitState.Floor;
   character.skin = 0;
   client.nearby.characters = [character];
-  */
 
-  setTimeout(setDebugData, 300);
+  //setTimeout(setDebugData, 300);
 
   loadInventoryGrid();
   requestAnimationFrame(render);
 });
 
 function setDebugData() {
-  const numCharacters = 10;
-  const numNpcs = 0;
-  const numItems = 0;
+  const numCharacters = 5;
+  const numNpcs = 10;
+  const numItems = 14;
 
   const weapons = client.eif.items
     .filter((i) => i.type === ItemType.Weapon)
@@ -1105,7 +1103,7 @@ function setDebugData() {
     character.coords.x = 1;
     character.coords.y = 1;
     character.direction = Direction.Down;
-    character.gender = 0; //i % 2 === 0 ? Gender.Male : Gender.Female;
+    character.gender = i % 2 === 0 ? Gender.Male : Gender.Female;
     character.sitState = SitState.Floor;
     character.skin = randomRange(0, 6);
     character.hairStyle = randomRange(0, 20);

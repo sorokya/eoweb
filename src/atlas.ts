@@ -191,6 +191,17 @@ export class Atlas {
     this.ctx = this.atlases[0].getContext('2d', { willReadFrequently: true });
   }
 
+  getAtlas(index: number): HTMLCanvasElement | undefined {
+    return this.atlases[index];
+  }
+
+  getItem(graphicId: number): ItemAtlasEntry | undefined {
+    const item = this.items.find((i) => i.graphicId === graphicId);
+    if (!item) return undefined;
+
+    return item;
+  }
+
   insert(w: number, h: number): Rect {
     let bestIndex = -1;
     let bestArea = Number.POSITIVE_INFINITY;
@@ -440,7 +451,7 @@ export class Atlas {
               : GfxType.MaleBack;
 
           const meta = this.client.getShieldMetadata(char.equipment.shield);
-          const frames = meta.back ? 5 : 16;
+          const frames = meta.back ? 4 : 16;
 
           for (let i = 1; i <= frames; ++i) {
             this.addBmpToLoad(gfxType, baseId + i);
@@ -596,6 +607,7 @@ export class Atlas {
     this.updateNpcs();
     this.updateMapLayers();
 
+    /*
     if (!this.appended) {
       for (const canvas of this.atlases) {
         const h1 = document.createElement('h1');
@@ -606,6 +618,7 @@ export class Atlas {
       }
       this.appended = true;
     }
+      */
 
     this.bmpsToLoad = [];
     this.loading = false;
@@ -639,8 +652,6 @@ export class Atlas {
       item.h = bmp.height;
 
       this.ctx.drawImage(bmp, item.x, item.y, item.w, item.h);
-      this.ctx.strokeStyle = 'red';
-      this.ctx.strokeRect(item.x, item.y, item.w, item.h);
     }
   }
 
@@ -687,8 +698,6 @@ export class Atlas {
         frame.h = bmp.height;
 
         this.ctx.drawImage(bmp, frame.x, frame.y, frame.w, frame.h);
-        this.ctx.strokeStyle = 'blue';
-        this.ctx.strokeRect(frame.x, frame.y, frame.w, frame.h);
       }
     }
   }
@@ -757,6 +766,22 @@ export class Atlas {
           );
         }
 
+        /*
+        if (character.equipment.shield > 0) {
+          const meta = this.client.getShieldMetadata(
+            character.equipment.shield,
+          );
+          if (meta.back && !upLeft) {
+            this.renderCharacterBack(
+              character.gender,
+              character.equipment.shield,
+              frame,
+              index,
+            );
+          }
+        }
+        */
+
         this.renderCharacterSkin(
           character.gender,
           character.skin,
@@ -816,9 +841,6 @@ export class Atlas {
         }
 
         clipHair(this.ctx, frame.x, frame.y, frame.w, frame.h);
-
-        this.ctx.strokeStyle = 'green';
-        this.ctx.strokeRect(frame.x, frame.y, frame.w, frame.h);
       }
 
       // character.dirty = false;
@@ -996,6 +1018,55 @@ export class Atlas {
     this.ctx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
+  private renderCharacterBack(
+    gender: Gender,
+    back: number,
+    rect: Frame,
+    frame: CharacterFrame,
+  ) {
+    const baseGfxId = (back - 1) * 50;
+    const graphicId =
+      baseGfxId +
+      ([
+        CharacterFrame.MeleeAttackDownRight1,
+        CharacterFrame.MeleeAttackDownRight2,
+        CharacterFrame.RaisedHandDownRight,
+      ].includes(frame)
+        ? 3
+        : 1);
+
+    const bmp = this.getBmp(
+      gender === Gender.Female ? GfxType.FemaleBack : GfxType.MaleBack,
+      graphicId,
+    );
+
+    if (!bmp) {
+      console.error(
+        `Missing back bitmap for ${Gender[gender]} ${back} ${CharacterFrame[frame]}`,
+      );
+      return;
+    }
+
+    let offset = { x: 0, y: 0 };
+    const selectedFrame = Number.parseInt(
+      this.offsetFrame.value,
+      10,
+    ) as CharacterFrame;
+    if (selectedFrame === frame) {
+      const offsetX = Number.parseInt(this.offsetX.value, 10) || 0;
+      const offsetY = Number.parseInt(this.offsetY.value, 10) || 0;
+      offset = { x: offsetX, y: offsetY };
+    } else {
+      offset = BACK_OFFSETS[gender][frame];
+    }
+
+    const destX =
+      rect.x + Math.floor((rect.w >> 1) - (bmp.width >> 1)) + offset.x;
+    const destY = rect.y + rect.h - bmp.height + offset.y;
+
+    this.ctx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+  }
+
   private renderCharacterArmor(
     gender: Gender,
     armor: number,
@@ -1155,8 +1226,6 @@ export class Atlas {
       tile.h = bmp.height;
 
       this.ctx.drawImage(bmp, tile.x, tile.y, tile.w, tile.h);
-      this.ctx.strokeStyle = 'purple';
-      this.ctx.strokeRect(tile.x, tile.y, tile.w, tile.h);
     }
   }
 
@@ -1346,6 +1415,57 @@ const HAT_OFFSETS = {
     [CharacterFrame.WalkingUpLeft2]: { x: 0, y: 23 },
     [CharacterFrame.WalkingUpLeft3]: { x: 0, y: 23 },
     [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 23 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: 23 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -3, y: 28 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: 23 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -3, y: 24 },
+    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 25 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 25 },
+    [CharacterFrame.ChairDownRight]: { x: 2, y: 24 },
+    [CharacterFrame.ChairUpLeft]: { x: 3, y: 24 },
+    [CharacterFrame.FloorDownRight]: { x: 2, y: 29 },
+    [CharacterFrame.FloorUpLeft]: { x: 4, y: 29 },
+    [CharacterFrame.RangeAttackDownRight]: { x: 6, y: 22 },
+    [CharacterFrame.RangeAttackUpLeft]: { x: 4, y: 23 },
+  },
+  [Gender.Male]: {
+    [CharacterFrame.StandingDownRight]: { x: 0, y: 22 },
+    [CharacterFrame.StandingUpLeft]: { x: 0, y: 22 },
+    [CharacterFrame.WalkingDownRight1]: { x: 0, y: 22 },
+    [CharacterFrame.WalkingDownRight2]: { x: 0, y: 22 },
+    [CharacterFrame.WalkingDownRight3]: { x: 0, y: 22 },
+    [CharacterFrame.WalkingDownRight4]: { x: 0, y: 22 },
+    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: 22 },
+    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: 22 },
+    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: 22 },
+    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 22 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: 22 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -3, y: 27 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: 22 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -3, y: 23 },
+    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 24 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 24 },
+    [CharacterFrame.ChairDownRight]: { x: 3, y: 25 },
+    [CharacterFrame.ChairUpLeft]: { x: 3, y: 25 },
+    [CharacterFrame.FloorDownRight]: { x: 2, y: 30 },
+    [CharacterFrame.FloorUpLeft]: { x: 6, y: 30 },
+    [CharacterFrame.RangeAttackDownRight]: { x: 5, y: 22 },
+    [CharacterFrame.RangeAttackUpLeft]: { x: 3, y: 22 },
+  },
+};
+
+const BACK_OFFSETS = {
+  [Gender.Female]: {
+    [CharacterFrame.StandingDownRight]: { x: 0, y: -32 },
+    [CharacterFrame.StandingUpLeft]: { x: 0, y: -32 },
+    [CharacterFrame.WalkingDownRight1]: { x: 0, y: -32 },
+    [CharacterFrame.WalkingDownRight2]: { x: 0, y: -32 },
+    [CharacterFrame.WalkingDownRight3]: { x: 0, y: -32 },
+    [CharacterFrame.WalkingDownRight4]: { x: 0, y: -32 },
+    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -32 },
+    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -32 },
+    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -32 },
+    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -32 },
     [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: 23 },
     [CharacterFrame.MeleeAttackDownRight2]: { x: -3, y: 28 },
     [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: 23 },

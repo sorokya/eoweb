@@ -14,7 +14,7 @@
 </head>
 
 <body>
-  <div style="position: fixed; top: 0;">
+  <div style="position: fixed; top: 0; display: none;">
     <select id="offset-frame">
       <option value="-1">None</option>
       <option value="0">StandingDownRight</option>
@@ -44,7 +44,7 @@
     <input id="offset-y" type="number" id="y" value="0" />
   </div>
 
-  <div id="container" style="display: none;">
+  <div id="container">
     <canvas id="game"></canvas>
     <div id="ui">
       <div id="cover" class="hidden"></div>

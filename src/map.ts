@@ -935,21 +935,36 @@ export class MapRenderer {
       gfxId = 269 + 2 * offset;
     }
 
-    const bmp = getBitmapById(GfxType.Items, gfxId);
-    if (!bmp) {
+    const frame = this.client.atlas.getItem(gfxId);
+    if (!frame) {
+      return;
+    }
+
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
       return;
     }
 
     const tileScreen = isoToScreen(item.coords);
 
     const screenX = Math.floor(
-      tileScreen.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+      tileScreen.x - frame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
     );
     const screenY = Math.floor(
-      tileScreen.y - bmp.height / 2 - playerScreen.y + HALF_GAME_HEIGHT,
+      tileScreen.y - frame.h / 2 - playerScreen.y + HALF_GAME_HEIGHT,
     );
 
-    ctx.drawImage(bmp, screenX, screenY);
+    ctx.drawImage(
+      atlas,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      screenX,
+      screenY,
+      frame.w,
+      frame.h,
+    );
   }
 
   renderCharacterBehindLayers(
