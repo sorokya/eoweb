@@ -12,17 +12,18 @@ html {
 body {
   padding: 0;
   margin: 0;
+  /*
   height: 100vh;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  overflow: hidden;
+  /*overflow: hidden;*/
 }
 
 * {
   /* biome-ignore lint/a11y/useGenericFontNames: Only custom font!! */
   font-family: w95fa !important;
-  user-select: none;
+  /*user-select: none;*/
 }
 
 ::selection {
@@ -51,14 +52,11 @@ body {
   }
 }
 
-canvas {
+#game {
   position: absolute;
   top: 0;
   display: block;
   image-rendering: pixelated;
-}
-
-#game {
   left: 50%;
   transform: translateX(-50%);
   z-index: 0;
@@ -2300,4 +2298,10 @@ div.icon[data-id="23"] {
 
 .notyf__toast--upper {
   margin-bottom: 10px !important;
+}
+
+.debug {
+  width: 2048px;
+  height: 2048px;
+  position: static;
 }

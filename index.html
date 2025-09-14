@@ -14,7 +14,37 @@
 </head>
 
 <body>
-  <div id="container">
+  <div style="position: fixed; top: 0;">
+    <select id="offset-frame">
+      <option value="-1">None</option>
+      <option value="0">StandingDownRight</option>
+      <option value="1">StandingUpLeft</option>
+      <option value="2">WalkingDownRight1</option>
+      <option value="3">WalkingDownRight2</option>
+      <option value="4">WalkingDownRight3</option>
+      <option value="5">WalkingDownRight4</option>
+      <option value="6">WalkingUpLeft1</option>
+      <option value="7">WalkingUpLeft2</option>
+      <option value="8">WalkingUpLeft3</option>
+      <option value="9">WalkingUpLeft4</option>
+      <option value="10">RaisedHandDownRight</option>
+      <option value="11">RaisedHandUpLeft</option>
+      <option value="12">MeleeAttackDownRight1</option>
+      <option value="13">MeleeAttackDownRight2</option>
+      <option value="14">MeleeAttackUpLeft1</option>
+      <option value="15">MeleeAttackUpLeft2</option>
+      <option value="16">ChairDownRight</option>
+      <option value="17">ChairUpLeft</option>
+      <option value="18">FloorDownRight</option>
+      <option value="19">FloorUpLeft</option>
+      <option value="20">RangeAttackDownRight</option>
+      <option value="21">RangeAttackUpLeft</option>
+    </select>
+    <input id="offset-x" type="number" id="x" value="0" />
+    <input id="offset-y" type="number" id="y" value="0" />
+  </div>
+
+  <div id="container" style="display: none;">
     <canvas id="game"></canvas>
     <div id="ui">
       <div id="cover" class="hidden"></div>

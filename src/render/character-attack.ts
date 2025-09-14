@@ -7,9 +7,9 @@ import {
 import {
   ATTACK_ANIMATION_FRAMES,
   ATTACK_TICKS,
-  CHARACTER_ATTACK_WIDTH,
   CHARACTER_HEIGHT,
-  HALF_CHARACTER_ATTACK_WIDTH,
+  CHARACTER_MELEE_ATTACK_WIDTH,
+  HALF_CHARACTER_MELEE_ATTACK_WIDTH,
 } from '../consts';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
 import { GfxType, getBitmapById } from '../gfx';
@@ -64,7 +64,7 @@ export class CharacterAttackAnimation extends CharacterAnimation {
 
     const screenX = Math.floor(
       screenCoords.x -
-        HALF_CHARACTER_ATTACK_WIDTH -
+        HALF_CHARACTER_MELEE_ATTACK_WIDTH -
         playerScreen.x +
         HALF_GAME_WIDTH +
         additionalOffset.x,
@@ -82,7 +82,7 @@ export class CharacterAttackAnimation extends CharacterAnimation {
       character.playerId,
       new Rectangle(
         { x: screenX, y: screenY },
-        CHARACTER_ATTACK_WIDTH,
+        CHARACTER_MELEE_ATTACK_WIDTH,
         CHARACTER_HEIGHT,
       ),
     );
@@ -111,30 +111,30 @@ export class CharacterAttackAnimation extends CharacterAnimation {
 
     const drawX = Math.floor(
       mirrored
-        ? GAME_WIDTH - rect.position.x - CHARACTER_ATTACK_WIDTH
+        ? GAME_WIDTH - rect.position.x - CHARACTER_MELEE_ATTACK_WIDTH
         : rect.position.x,
     );
 
     const startX =
-      character.gender === Gender.Female ? 0 : CHARACTER_ATTACK_WIDTH * 4;
+      character.gender === Gender.Female ? 0 : CHARACTER_MELEE_ATTACK_WIDTH * 4;
 
     const sourceX =
       startX +
       ([Direction.Up, Direction.Left].includes(character.direction)
-        ? CHARACTER_ATTACK_WIDTH * ATTACK_ANIMATION_FRAMES
+        ? CHARACTER_MELEE_ATTACK_WIDTH * ATTACK_ANIMATION_FRAMES
         : 0) +
-      CHARACTER_ATTACK_WIDTH * this.animationFrame;
+      CHARACTER_MELEE_ATTACK_WIDTH * this.animationFrame;
     const sourceY = character.skin * CHARACTER_HEIGHT;
 
     ctx.drawImage(
       bmp,
       sourceX,
       sourceY,
-      CHARACTER_ATTACK_WIDTH,
+      CHARACTER_MELEE_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
       drawX,
       rect.position.y,
-      CHARACTER_ATTACK_WIDTH,
+      CHARACTER_MELEE_ATTACK_WIDTH,
       CHARACTER_HEIGHT,
     );
 

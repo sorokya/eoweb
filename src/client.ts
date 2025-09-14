@@ -99,6 +99,7 @@ import {
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
 import { Notyf } from 'notyf';
+import { Atlas } from './atlas';
 import type { PacketBus } from './bus';
 import { ChatBubble } from './chat-bubble';
 import {
@@ -175,6 +176,7 @@ import {
 } from './utils/get-effect-metadata';
 import { getHatMetadata, HatMaskType } from './utils/get-hat-metadata';
 import { getNpcMetaData, NPCMetadata } from './utils/get-npc-metadata';
+import { getShieldMetaData, ShieldMetadata } from './utils/get-shield-metadata';
 import { getVolumeFromDistance } from './utils/get-volume-from-distance';
 import { getWeaponMetaData, WeaponMetadata } from './utils/get-weapon-metadata';
 import { isoToScreen } from './utils/iso-to-screen';
@@ -429,6 +431,7 @@ export class Client {
   movementController: MovementController;
   npcMetadata = getNpcMetaData();
   weaponMetadata = getWeaponMetaData();
+  shieldMetadata = getShieldMetaData();
   effectMetadata = getEffectMetaData();
   hatMetadata = getHatMetadata();
   doors: Door[] = [];
@@ -466,6 +469,7 @@ export class Client {
   goldBank = 0;
   lockerUpgrades = 0;
   lockerCoords = new Coords();
+  atlas: Atlas;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -516,6 +520,7 @@ export class Client {
         document.querySelector<HTMLDivElement>('#main-menu-logo');
       mainMenuLogo.setAttribute('data-slogan', config.slogan);
     });
+    this.atlas = new Atlas(this);
   }
 
   private preloadCharacterSprites() {
@@ -589,6 +594,15 @@ export class Client {
     }
 
     return new WeaponMetadata(0, [SfxId.MeleeWeaponAttack], false);
+  }
+
+  getShieldMetadata(graphicId: number): ShieldMetadata {
+    const data = this.shieldMetadata.get(graphicId);
+    if (data) {
+      return data;
+    }
+
+    return new ShieldMetadata(false);
   }
 
   getHatMetadata(graphicId: number): HatMaskType {
@@ -911,6 +925,10 @@ export class Client {
       );
       this.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
     }
+
+    if (this.state === GameState.InGame) {
+      this.atlas.refresh();
+    }
   }
 
   render(ctx: CanvasRenderingContext2D) {
@@ -998,7 +1016,7 @@ export class Client {
     }
   }
 
-  getDoor(coords: Coords): Door | undefined {
+  getDoor(coords: Vector2): Door | undefined {
     return this.doors.find(
       (d) => d.coords.x === coords.x && d.coords.y === coords.y,
     );

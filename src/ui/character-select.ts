@@ -149,7 +149,7 @@ export class CharacterSelect extends Base {
         renderCharacterHat(mapInfo, this.ctx, 0, CharacterAction.None);
       }
 
-      clipHair(this.ctx, this.canvas.width, this.canvas.height);
+      clipHair(this.ctx, 0, 0, this.canvas.width, this.canvas.height);
 
       const preview: HTMLImageElement = this.container.querySelectorAll(
         '.preview',

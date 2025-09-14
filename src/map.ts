@@ -109,7 +109,7 @@ const layerDepth = [
   0.0 + TDG * 3, // Item
 ];
 
-const LAYER_GFX_MAP = [
+export const LAYER_GFX_MAP = [
   GfxType.MapTiles,
   GfxType.MapObjects,
   GfxType.MapOverlay,
@@ -825,6 +825,8 @@ export class MapRenderer {
     if (entity.typeId === this.client.playerId && !character.invisible) {
       clipHair(
         characterCtx,
+        0,
+        0,
         this.mainCharacterCanvas.width,
         this.mainCharacterCanvas.height,
       );
@@ -832,6 +834,8 @@ export class MapRenderer {
     } else {
       clipHair(
         characterCtx,
+        0,
+        0,
         this.characterCanvas.width,
         this.characterCanvas.height,
       );

@@ -1,11 +1,17 @@
 import {
   BigCoords,
   CharacterMapInfo,
+  Coords,
+  Direction,
   Emf,
   EoReader,
+  EquipmentMapInfo,
   Gender,
   InitInitClientPacket,
+  ItemMapInfo,
   ItemSpecial,
+  ItemType,
+  NpcMapInfo,
   SitState,
 } from 'eolib';
 import './style.css';
@@ -1050,6 +1056,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const emf = Emf.deserialize(reader);
   client.setMap(emf);
 
+  /*
   client.playerId = 1;
   const character = new CharacterMapInfo();
   character.playerId = 1;
@@ -1060,7 +1067,90 @@ window.addEventListener('DOMContentLoaded', async () => {
   character.sitState = SitState.Floor;
   character.skin = 0;
   client.nearby.characters = [character];
+  */
+
+  setTimeout(setDebugData, 300);
 
   loadInventoryGrid();
   requestAnimationFrame(render);
 });
+
+function setDebugData() {
+  const numCharacters = 10;
+  const numNpcs = 0;
+  const numItems = 0;
+
+  const weapons = client.eif.items
+    .filter((i) => i.type === ItemType.Weapon)
+    .map((i) => i.spec1);
+  const armors = client.eif.items
+    .filter((i) => i.type === ItemType.Armor)
+    .map((i) => ({ gender: i.spec2, graphic: i.spec1 }));
+  const boots = client.eif.items
+    .filter((i) => i.type === ItemType.Boots)
+    .map((i) => i.spec1);
+  const hats = client.eif.items
+    .filter((i) => i.type === ItemType.Hat)
+    .map((i) => i.spec1);
+  const shields = client.eif.items
+    .filter((i) => i.type === ItemType.Shield)
+    .map((i) => i.spec1);
+
+  for (let i = 1; i <= numCharacters; ++i) {
+    const character = new CharacterMapInfo();
+    character.playerId = i;
+    character.coords = new BigCoords();
+    character.name = `character${i}`;
+    character.guildTag = '   ';
+    character.coords.x = 1;
+    character.coords.y = 1;
+    character.direction = Direction.Down;
+    character.gender = 0; //i % 2 === 0 ? Gender.Male : Gender.Female;
+    character.sitState = SitState.Floor;
+    character.skin = randomRange(0, 6);
+    character.hairStyle = randomRange(0, 20);
+    character.hairColor = randomRange(0, 9);
+    character.equipment = new EquipmentMapInfo();
+
+    const wearableArmor = armors
+      .filter((a) => a.gender === character.gender)
+      .map((a) => a.graphic);
+    character.equipment.armor =
+      wearableArmor[Math.floor(Math.random() * wearableArmor.length)];
+
+    character.equipment.weapon =
+      weapons[Math.floor(Math.random() * weapons.length)];
+    character.equipment.boots = boots[Math.floor(Math.random() * boots.length)];
+
+    character.equipment.hat = hats[Math.floor(Math.random() * hats.length)];
+    character.equipment.shield =
+      shields[Math.floor(Math.random() * shields.length)];
+    client.nearby.characters.push(character);
+  }
+
+  const npcCount = client.enf.npcs.length;
+  for (let i = 1; i <= numNpcs; ++i) {
+    const npc = new NpcMapInfo();
+    npc.index = i;
+    npc.id = Math.floor(Math.random() * npcCount) + 1;
+    npc.direction = Direction.Down;
+    npc.coords = new Coords();
+    npc.coords.x = 1;
+    npc.coords.y = 1;
+    client.nearby.npcs.push(npc);
+  }
+
+  const itemCount = client.eif.totalItemsCount;
+  for (let i = 1; i <= numItems; ++i) {
+    const item = new ItemMapInfo();
+    item.uid = i;
+    item.id = Math.floor(Math.random() * itemCount) + 1;
+    item.amount = Math.floor(Math.random() * 10_000) + 1;
+    item.coords = new Coords();
+    item.coords.x = 1;
+    item.coords.y = 1;
+    client.nearby.items.push(item);
+  }
+
+  client.state = GameState.InGame;
+}
