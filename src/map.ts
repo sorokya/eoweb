@@ -721,8 +721,8 @@ export class MapRenderer {
       const frameWidth = tile.w / 4;
       ctx.drawImage(
         atlas,
-        this.animationFrame * frameWidth,
-        0,
+        tile.x + this.animationFrame * frameWidth,
+        tile.y,
         frameWidth,
         tile.h,
         screenX,
