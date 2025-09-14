@@ -202,6 +202,15 @@ export class Atlas {
     return item;
   }
 
+  getTile(gfxType: GfxType, graphicId: number): TileAtlasEntry | undefined {
+    const tile = this.tiles.find(
+      (t) => t.gfxType === gfxType && t.graphicId === graphicId,
+    );
+    if (!tile) return undefined;
+
+    return tile;
+  }
+
   insert(w: number, h: number): Rect {
     let bestIndex = -1;
     let bestArea = Number.POSITIVE_INFINITY;
@@ -349,6 +358,15 @@ export class Atlas {
   private loadMapGraphicLayers() {
     if (this.client.map.fillTile > 0) {
       this.addBmpToLoad(GfxType.MapTiles, this.client.map.fillTile);
+      this.tiles.push({
+        gfxType: GfxType.MapTiles,
+        graphicId: this.client.map.fillTile,
+        atlasIndex: -1,
+        x: -1,
+        y: -1,
+        w: -1,
+        h: -1,
+      });
     }
 
     for (const [index, layer] of this.client.map.graphicLayers.entries()) {
@@ -809,7 +827,7 @@ export class Atlas {
           );
         }
 
-        if (maskType === HatMaskType.FaceMask) {
+        if (maskType === HatMaskType.FaceMask && character.equipment.hat) {
           this.renderCharacterHat(
             character.gender,
             character.equipment.hat,
@@ -819,7 +837,7 @@ export class Atlas {
           );
         }
 
-        if (maskType !== HatMaskType.HideHair) {
+        if (maskType !== HatMaskType.HideHair && character.hairStyle) {
           this.renderCharacterHair(
             character.gender,
             character.hairStyle,
@@ -830,7 +848,7 @@ export class Atlas {
           );
         }
 
-        if (maskType !== HatMaskType.FaceMask) {
+        if (maskType !== HatMaskType.FaceMask && character.equipment.hat) {
           this.renderCharacterHat(
             character.gender,
             character.equipment.hat,

@@ -640,15 +640,20 @@ export class MapRenderer {
       }
     }
 
-    const bmp = getBitmapById(
+    const tile = this.client.atlas.getTile(
       LAYER_GFX_MAP[entity.layer],
       entity.typeId + bmpOffset,
     );
-    if (!bmp) {
+    if (!tile) {
       return;
     }
 
-    const offset = this.getOffset(entity.layer, bmp.width, bmp.height);
+    const atlas = this.client.atlas.getAtlas(tile.atlasIndex);
+    if (!atlas) {
+      return;
+    }
+
+    const offset = this.getOffset(entity.layer, tile.w, tile.h);
     const tileScreen = isoToScreen({ x: entity.x, y: entity.y });
 
     const screenX = Math.floor(
@@ -670,20 +675,20 @@ export class MapRenderer {
       setDoorRectangle(
         coords,
         new Rectangle(
-          { x: screenX, y: screenY + bmp.height - DOOR_HEIGHT },
-          bmp.width,
+          { x: screenX, y: screenY + tile.h - DOOR_HEIGHT },
+          tile.w,
           DOOR_HEIGHT,
         ),
       );
     } else if (this.getSign(entity.x, entity.y)) {
       setSignRectangle(
         coords,
-        new Rectangle({ x: screenX, y: screenY }, bmp.width, bmp.height),
+        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
       );
     } else if (spec === MapTileSpec.BankVault) {
       setLockerRectangle(
         coords,
-        new Rectangle({ x: screenX, y: screenY }, bmp.width, bmp.height),
+        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
       );
     }
 
@@ -693,9 +698,9 @@ export class MapRenderer {
       ctx.globalAlpha = 1;
     }
 
-    if (entity.layer === Layer.Ground && bmp.width > TILE_WIDTH) {
+    if (entity.layer === Layer.Ground && tile.w > TILE_WIDTH) {
       ctx.drawImage(
-        bmp,
+        atlas,
         this.animationFrame * TILE_WIDTH,
         0,
         TILE_WIDTH,
@@ -706,23 +711,33 @@ export class MapRenderer {
         TILE_HEIGHT,
       );
     } else if (
-      bmp.width > 120 &&
+      tile.w > 120 &&
       [Layer.DownWall, Layer.RightWall].includes(entity.layer)
     ) {
-      const frameWidth = bmp.width / 4;
+      const frameWidth = tile.w / 4;
       ctx.drawImage(
-        bmp,
+        atlas,
         this.animationFrame * frameWidth,
         0,
         frameWidth,
-        bmp.height,
+        tile.h,
         screenX,
         screenY,
         frameWidth,
-        bmp.height,
+        tile.h,
       );
     } else {
-      ctx.drawImage(bmp, screenX, screenY);
+      ctx.drawImage(
+        atlas,
+        tile.x,
+        tile.y,
+        tile.w,
+        tile.h,
+        screenX,
+        screenY,
+        tile.w,
+        tile.h,
+      );
     }
     if (entity.layer === Layer.Shadow) {
       ctx.globalAlpha = 1;

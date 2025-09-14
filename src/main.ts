@@ -1065,6 +1065,17 @@ window.addEventListener('DOMContentLoaded', async () => {
   character.gender = Gender.Male;
   character.sitState = SitState.Floor;
   character.skin = 0;
+  character.hairStyle = 0;
+  character.hairColor = 0;
+  character.name = 'Debug';
+  character.guildTag = '   ';
+  character.direction = Direction.Down;
+  character.equipment = new EquipmentMapInfo();
+  character.equipment.armor = 0;
+  character.equipment.weapon = 0;
+  character.equipment.boots = 0;
+  character.equipment.shield = 0;
+  character.equipment.hat = 0;
   client.nearby.characters = [character];
 
   //setTimeout(setDebugData, 300);

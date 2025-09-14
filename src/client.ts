@@ -926,9 +926,7 @@ export class Client {
       this.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
     }
 
-    if (this.state === GameState.InGame) {
-      this.atlas.refresh();
-    }
+    this.atlas.refresh();
   }
 
   render(ctx: CanvasRenderingContext2D) {
