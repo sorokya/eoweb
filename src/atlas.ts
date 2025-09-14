@@ -28,7 +28,7 @@ import { padWithZeros } from './utils/pad-with-zeros';
 const ATLAS_SIZE = 2048;
 const CHARACTER_FRAME_SIZE = 100;
 
-enum CharacterFrame {
+export enum CharacterFrame {
   StandingDownRight = 0,
   StandingUpLeft = 1,
   WalkingDownRight1 = 2,
@@ -51,6 +51,25 @@ enum CharacterFrame {
   FloorUpLeft = 19,
   RangeAttackDownRight = 20,
   RangeAttackUpLeft = 21,
+}
+
+export enum NpcFrame {
+  StandingDownRight1 = 0,
+  StandingDownRight2 = 1,
+  StandingUpLeft1 = 2,
+  StandingUpLeft2 = 3,
+  WalkingDownRight1 = 4,
+  WalkingDownRight2 = 5,
+  WalkingDownRight3 = 6,
+  WalkingDownRight4 = 7,
+  WalkingUpLeft1 = 8,
+  WalkingUpLeft2 = 9,
+  WalkingUpLeft3 = 10,
+  WalkingUpLeft4 = 11,
+  AttackDownRight1 = 12,
+  AttackDownRight2 = 13,
+  AttackUpLeft1 = 14,
+  AttackUpLeft2 = 15,
 }
 
 const FRAMES_TO_FRAME_COUNT_MAP = {
@@ -142,7 +161,7 @@ type TileAtlasEntry = {
 
 type NpcAtlasEntry = {
   graphicId: number;
-  frames: Frame[];
+  frames: (Frame | undefined)[];
 };
 
 type ItemAtlasEntry = {
@@ -209,6 +228,13 @@ export class Atlas {
     if (!tile) return undefined;
 
     return tile;
+  }
+
+  getNpcFrame(graphicId: number, frame: number): Frame | undefined {
+    const npc = this.npcs.find((n) => n.graphicId === graphicId);
+    if (!npc) return undefined;
+
+    return npc.frames[frame];
   }
 
   insert(w: number, h: number): Rect {
@@ -328,6 +354,16 @@ export class Atlas {
     this.items = [];
     this.tiles = [];
     this.mapId = this.client.mapId;
+
+    this.free = [{ x: 0, y: 0, w: ATLAS_SIZE, h: ATLAS_SIZE }];
+
+    for (let i = this.atlases.length - 1; i >= 0; --i) {
+      this.ctx = this.atlases[i].getContext('2d', { willReadFrequently: true });
+      this.ctx.clearRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
+    }
+
+    this.currentAtlasIndex = 0;
+
     this.bmpsToLoad.push(
       { gfxType: GfxType.SkinSprites, id: 1, img: null },
       { gfxType: GfxType.SkinSprites, id: 2, img: null },
@@ -625,7 +661,6 @@ export class Atlas {
     this.updateNpcs();
     this.updateMapLayers();
 
-    /*
     if (!this.appended) {
       for (const canvas of this.atlases) {
         const h1 = document.createElement('h1');
@@ -636,7 +671,6 @@ export class Atlas {
       }
       this.appended = true;
     }
-      */
 
     this.bmpsToLoad = [];
     this.loading = false;
@@ -678,8 +712,9 @@ export class Atlas {
     const tmpCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
 
     for (const npc of this.npcs) {
+      const blankIndexes = [];
       for (const [index, frame] of npc.frames.entries()) {
-        if (frame.x !== -1) {
+        if (!frame || frame.x !== -1) {
           continue;
         }
 
@@ -705,6 +740,7 @@ export class Atlas {
         }
 
         if (blank) {
+          blankIndexes.push(index);
           continue;
         }
 
@@ -716,6 +752,11 @@ export class Atlas {
         frame.h = bmp.height;
 
         this.ctx.drawImage(bmp, frame.x, frame.y, frame.w, frame.h);
+      }
+
+      // Mark blank frames as undefined
+      for (const i of blankIndexes) {
+        npc.frames[i] = undefined;
       }
     }
   }
@@ -861,7 +902,7 @@ export class Atlas {
         clipHair(this.ctx, frame.x, frame.y, frame.w, frame.h);
       }
 
-      // character.dirty = false;
+      character.dirty = false;
     }
   }
 

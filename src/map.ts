@@ -611,6 +611,10 @@ export class MapRenderer {
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
   ) {
+    if (entity.layer === Layer.Ground && entity.typeId === 0) {
+      return;
+    }
+
     const coords = new Coords();
     coords.x = entity.x;
     coords.y = entity.y;
@@ -701,8 +705,8 @@ export class MapRenderer {
     if (entity.layer === Layer.Ground && tile.w > TILE_WIDTH) {
       ctx.drawImage(
         atlas,
-        this.animationFrame * TILE_WIDTH,
-        0,
+        tile.x + this.animationFrame * TILE_WIDTH,
+        tile.y,
         TILE_WIDTH,
         TILE_HEIGHT,
         screenX,
@@ -902,7 +906,14 @@ export class MapRenderer {
     }
 
     if (animation) {
-      animation.render(record.graphicId, npc, meta, playerScreen, ctx);
+      animation.render(
+        record.graphicId,
+        npc,
+        meta,
+        playerScreen,
+        ctx,
+        this.client.atlas,
+      );
     } else {
       renderNpc(
         npc,
@@ -911,6 +922,7 @@ export class MapRenderer {
         this.npcIdleAnimationFrame,
         playerScreen,
         ctx,
+        this.client.atlas,
       );
     }
 

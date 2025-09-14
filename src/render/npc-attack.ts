@@ -1,8 +1,8 @@
 import { Direction, type NpcMapInfo } from 'eolib';
+import { type Atlas, NpcFrame } from '../atlas';
 import { Rectangle, setNpcRectangle } from '../collision';
 import { ATTACK_TICKS } from '../consts';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
-import { GfxType, getBitmapById } from '../gfx';
 import type { NPCMetadata } from '../utils/get-npc-metadata';
 import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
@@ -33,12 +33,26 @@ export class NpcAttackAnimation extends NpcAnimation {
     meta: NPCMetadata,
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
+    atlas: Atlas,
   ) {
     const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
-    const frame = this.animationFrame + 1;
-    const offset = downRight ? frame + 12 : frame + 14;
 
-    const bmp = getBitmapById(GfxType.NPC, (graphicId - 1) * 40 + offset);
+    const frame = atlas.getNpcFrame(
+      graphicId,
+      downRight
+        ? this.animationFrame
+          ? NpcFrame.AttackDownRight2
+          : NpcFrame.AttackDownRight1
+        : this.animationFrame
+          ? NpcFrame.AttackUpLeft2
+          : NpcFrame.AttackUpLeft1,
+    );
+
+    if (!frame) {
+      return;
+    }
+
+    const bmp = atlas.getAtlas(frame.atlasIndex);
     if (!bmp) {
       return;
     }
@@ -46,11 +60,11 @@ export class NpcAttackAnimation extends NpcAnimation {
     const screenCoords = isoToScreen(npc.coords);
     const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
     const screenX = Math.floor(
-      screenCoords.x - bmp.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
+      screenCoords.x - frame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
     );
 
     const screenY =
-      screenCoords.y - (bmp.height - 23) - playerScreen.y + HALF_GAME_HEIGHT;
+      screenCoords.y - (frame.h - 23) - playerScreen.y + HALF_GAME_HEIGHT;
 
     if (mirrored) {
       ctx.save(); // Save the current context state
@@ -70,16 +84,26 @@ export class NpcAttackAnimation extends NpcAnimation {
 
     const drawX = Math.floor(
       mirrored
-        ? GAME_WIDTH - screenX - bmp.width + metaOffset.x
+        ? GAME_WIDTH - screenX - frame.w + metaOffset.x
         : screenX + metaOffset.x,
     );
     const drawY = Math.floor(screenY - metaOffset.y);
 
-    ctx.drawImage(bmp, drawX, drawY);
+    ctx.drawImage(
+      bmp,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      drawX,
+      drawY,
+      frame.w,
+      frame.h,
+    );
 
     setNpcRectangle(
       npc.index,
-      new Rectangle({ x: screenX, y: drawY }, bmp.width, bmp.height),
+      new Rectangle({ x: screenX, y: drawY }, frame.w, frame.h),
     );
 
     if (mirrored) {
