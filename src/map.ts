@@ -43,11 +43,14 @@ import { renderCharacterHair } from './render/character-hair';
 import { renderCharacterHairBehind } from './render/character-hair-behind';
 import { renderCharacterHat } from './render/character-hat';
 import { renderCharacterHealthBar } from './render/character-health-bar';
+import { renderCharacterShield } from './render/character-shield';
+import { renderWeaponSlash } from './render/character-slash';
 import {
   calculateCharacterRenderPositionStanding,
   renderCharacterStanding,
 } from './render/character-standing';
 import { CharacterWalkAnimation } from './render/character-walk';
+import { renderCharacterWeapon } from './render/character-weapon';
 import { EffectTargetCharacter, EffectTargetTile } from './render/effect';
 import { renderNpc } from './render/npc';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
@@ -746,6 +749,7 @@ export class MapRenderer {
     }
   }
 
+  // Updated renderCharacter method - add weapon slash rendering to main canvas
   renderCharacter(
     entity: Entity,
     playerScreen: Vector2,
@@ -860,6 +864,11 @@ export class MapRenderer {
         ctx.drawImage(this.characterCanvas, 0, 0);
       }
     }
+
+    const weaponMetadata = this.client.getWeaponMetadata(
+      character.equipment.weapon,
+    );
+    renderWeaponSlash(character, ctx, frame, action, weaponMetadata);
 
     for (const effect of effects) {
       ctx.globalAlpha = 0.4;
@@ -987,6 +996,31 @@ export class MapRenderer {
     if (maskType !== HatMaskType.HideHair) {
       renderCharacterHairBehind(character, ctx, animationFrame, action);
     }
+
+    const weaponMetadata = this.client.getWeaponMetadata(
+      character.equipment.weapon,
+    );
+    const isRangedWeapon = weaponMetadata?.ranged || false;
+
+    renderCharacterWeapon(
+      character,
+      ctx,
+      animationFrame,
+      action,
+      'behind',
+      isRangedWeapon,
+    );
+
+    // Render shields that belong in the behind layer
+    renderCharacterShield(
+      character,
+      ctx,
+      animationFrame,
+      action,
+      'behind',
+      undefined,
+      weaponMetadata,
+    );
   }
 
   renderCharacterLayers(
@@ -997,6 +1031,11 @@ export class MapRenderer {
   ) {
     renderCharacterBoots(character, ctx, animationFrame, action);
     renderCharacterArmor(character, ctx, animationFrame, action);
+
+    const weaponMetadata = this.client.getWeaponMetadata(
+      character.equipment.weapon,
+    );
+
     const maskType = this.client.getHatMetadata(character.equipment.hat);
     if (maskType === HatMaskType.FaceMask) {
       renderCharacterHat(character, ctx, animationFrame, action);
@@ -1007,8 +1046,29 @@ export class MapRenderer {
     if (maskType !== HatMaskType.FaceMask) {
       renderCharacterHat(character, ctx, animationFrame, action);
     }
-  }
 
+    // Render shields that belong in the front layer (AFTER hair AND hat)
+    renderCharacterShield(
+      character,
+      ctx,
+      animationFrame,
+      action,
+      'front',
+      undefined,
+      weaponMetadata,
+    );
+
+    const isRangedWeapon = weaponMetadata?.ranged || false;
+
+    renderCharacterWeapon(
+      character,
+      ctx,
+      animationFrame,
+      action,
+      'front',
+      isRangedWeapon,
+    );
+  }
   renderCursor(
     entity: Entity,
     playerScreen: Vector2,
