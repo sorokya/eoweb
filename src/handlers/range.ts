@@ -21,6 +21,8 @@ function handleRangeReply(client: Client, reader: EoReader) {
       client.nearby.npcs.push(npc);
     }
   }
+
+  client.atlas.refresh();
 }
 
 export function registerRangeHandlers(client: Client) {

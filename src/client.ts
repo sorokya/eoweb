@@ -925,8 +925,6 @@ export class Client {
       );
       this.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
     }
-
-    this.atlas.refresh();
   }
 
   render(ctx: CanvasRenderingContext2D) {
@@ -2191,6 +2189,8 @@ export class Client {
         character.equipment.weapon = graphicId;
         break;
     }
+
+    this.atlas.refresh();
   }
 
   openChest(coords: Vector2) {

@@ -1,6 +1,5 @@
 import { CharacterMapInfo, Direction, Gender } from 'eolib';
 import mitt from 'mitt';
-import { CharacterAction } from '../client';
 import {
   getCharacterRectangle,
   Rectangle,
@@ -12,9 +11,6 @@ import {
   GAME_FPS,
   HALF_CHARACTER_WIDTH,
 } from '../consts';
-import { renderCharacterHair } from '../render/character-hair';
-import { renderCharacterHairBehind } from '../render/character-hair-behind';
-import { renderCharacterStanding } from '../render/character-standing';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 
@@ -120,14 +116,6 @@ export class CreateCharacterForm extends Base {
     }
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    renderCharacterHairBehind(
-      this.character,
-      this.ctx,
-      0,
-      CharacterAction.None,
-    );
-    renderCharacterStanding(this.character, null, this.ctx);
-    renderCharacterHair(this.character, this.ctx, 0, CharacterAction.None);
     this.preview.src = this.canvas.toDataURL();
 
     if (this.open) {

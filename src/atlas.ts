@@ -1,5 +1,6 @@
 import {
   type CharacterMapInfo,
+  Direction,
   type EquipmentMapInfo,
   Gender,
   MapTileSpec,
@@ -26,8 +27,8 @@ import { HatMaskType } from './utils/get-hat-metadata';
 import { padWithZeros } from './utils/pad-with-zeros';
 
 const ATLAS_SIZE = 2048;
-const CHARACTER_FRAME_SIZE = 100;
-const HALF_CHARACTER_FRAME_SIZE = CHARACTER_FRAME_SIZE >> 1;
+export const CHARACTER_FRAME_SIZE = 100;
+export const HALF_CHARACTER_FRAME_SIZE = CHARACTER_FRAME_SIZE >> 1;
 
 export enum CharacterFrame {
   StandingDownRight = 0,
@@ -138,6 +139,17 @@ type Frame = {
   h: number;
 };
 
+type CFrame = {
+  atlasIndex: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  xOffset: number;
+  yOffset: number;
+  mirroredXOffset: number;
+};
+
 type CharacterAtlasEntry = {
   playerId: number;
   gender: Gender;
@@ -147,7 +159,7 @@ type CharacterAtlasEntry = {
   equipment: EquipmentMapInfo;
   hash: string;
   dirty: boolean;
-  frames: (Frame | undefined)[];
+  frames: (CFrame | undefined)[];
 };
 
 type TileAtlasEntry = {
@@ -163,6 +175,7 @@ type TileAtlasEntry = {
 type NpcAtlasEntry = {
   graphicId: number;
   frames: (Frame | undefined)[];
+  keep: boolean;
 };
 
 type ItemAtlasEntry = {
@@ -180,122 +193,19 @@ type Bmp = {
   img: HTMLImageElement | null;
 };
 
-export class Atlas {
-  private characters: CharacterAtlasEntry[] = [];
-  private npcs: NpcAtlasEntry[] = [];
-  private items: ItemAtlasEntry[] = [];
-  private tiles: TileAtlasEntry[] = [];
-  private client: Client;
-  private mapId = 0;
-  private mapHasChairs = false;
-  private bmpsToLoad: Bmp[] = [];
-  private loading = false;
-  private appended = false;
-  private free: Rect[] = [{ x: 0, y: 0, w: ATLAS_SIZE, h: ATLAS_SIZE }];
-  private atlases: HTMLCanvasElement[];
-  private currentAtlasIndex = 0;
+class AtlasCanvas {
+  private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
+  free: Rect[] = [{ x: 0, y: 0, w: ATLAS_SIZE, h: ATLAS_SIZE }];
 
-  private characterCanvas: HTMLCanvasElement;
-  private characterCtx: CanvasRenderingContext2D;
-
-  private offsetFrame: HTMLSelectElement =
-    document.querySelector<HTMLSelectElement>('#offset-frame');
-  private offsetX: HTMLInputElement =
-    document.querySelector<HTMLInputElement>('#offset-x');
-  private offsetY: HTMLInputElement =
-    document.querySelector<HTMLInputElement>('#offset-y');
-
-  constructor(client: Client) {
-    this.client = client;
-    this.atlases = [document.createElement('canvas')];
-    this.atlases[0].width = ATLAS_SIZE;
-    this.atlases[0].height = ATLAS_SIZE;
-    this.ctx = this.atlases[0].getContext('2d', { willReadFrequently: true });
-
-    this.characterCanvas = document.createElement('canvas');
-    this.characterCanvas.width = CHARACTER_FRAME_SIZE;
-    this.characterCanvas.height = CHARACTER_FRAME_SIZE;
-    this.characterCtx = this.characterCanvas.getContext('2d', {
-      willReadFrequently: true,
-    });
+  constructor() {
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = ATLAS_SIZE;
+    this.canvas.height = ATLAS_SIZE;
+    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
   }
 
-  getAtlas(index: number): HTMLCanvasElement | undefined {
-    return this.atlases[index];
-  }
-
-  getItem(graphicId: number): ItemAtlasEntry | undefined {
-    const item = this.items.find((i) => i.graphicId === graphicId);
-    if (!item) return undefined;
-
-    return item;
-  }
-
-  getTile(gfxType: GfxType, graphicId: number): TileAtlasEntry | undefined {
-    const tile = this.tiles.find(
-      (t) => t.gfxType === gfxType && t.graphicId === graphicId,
-    );
-    if (!tile) return undefined;
-
-    return tile;
-  }
-
-  getNpcFrame(graphicId: number, frame: number): Frame | undefined {
-    const npc = this.npcs.find((n) => n.graphicId === graphicId);
-    if (!npc) return undefined;
-
-    return npc.frames[frame];
-  }
-
-  insert(w: number, h: number): Rect {
-    let bestIndex = -1;
-    let bestArea = Number.POSITIVE_INFINITY;
-
-    for (let i = 0; i < this.free.length; ++i) {
-      const rect = this.free[i];
-      if (w <= rect.w && h <= rect.h) {
-        const areaWaste = rect.w * rect.h - w * h;
-        if (areaWaste < bestArea) {
-          bestArea = areaWaste;
-          bestIndex = i;
-        }
-      }
-    }
-
-    if (bestIndex === -1) {
-      if (this.currentAtlasIndex + 1 >= this.atlases.length) {
-        const canvas = document.createElement('canvas');
-        canvas.width = ATLAS_SIZE;
-        canvas.height = ATLAS_SIZE;
-        this.atlases.push(canvas);
-      }
-
-      this.currentAtlasIndex++;
-      this.ctx = this.atlases[this.currentAtlasIndex].getContext('2d', {
-        willReadFrequently: true,
-      });
-      this.free = [{ x: 0, y: 0, w: ATLAS_SIZE, h: ATLAS_SIZE }];
-      bestIndex = 0;
-    }
-
-    const free = this.free[bestIndex];
-    const placed = { x: free.x, y: free.y, w, h };
-
-    this.free.splice(bestIndex, 1);
-
-    const right = { x: free.x + w, y: free.y, w: free.w - w, h: free.h };
-    const bottom = { x: free.x, y: free.y + h, w: w, h: free.h - h };
-
-    if (right.w > 0 && right.h > 0) this.free.push(right);
-    if (bottom.w > 0 && bottom.h > 0) this.free.push(bottom);
-
-    this.mergeFreeRects();
-
-    return placed;
-  }
-
-  private mergeFreeRects() {
+  mergeFreeRects() {
     // Simple O(n^2) merge pass
     for (let i = 0; i < this.free.length; i++) {
       for (let j = i + 1; j < this.free.length; j++) {
@@ -333,13 +243,166 @@ export class Atlas {
     }
   }
 
+  getCanvas(): HTMLCanvasElement {
+    return this.canvas;
+  }
+
+  getContext(): CanvasRenderingContext2D {
+    return this.ctx;
+  }
+}
+
+export class Atlas {
+  private characters: CharacterAtlasEntry[] = [];
+  private npcs: NpcAtlasEntry[] = [];
+  private items: ItemAtlasEntry[] = [];
+  private tiles: TileAtlasEntry[] = [];
+  private client: Client;
+  private mapId = 0;
+  private mapHasChairs = false;
+  private bmpsToLoad: Bmp[] = [];
+  private loading = false;
+  private appended = false;
+  private atlases: AtlasCanvas[];
+  private currentAtlasIndex = 0;
+  private ctx: CanvasRenderingContext2D;
+  private staleFrames: Frame[] = [];
+
+  private characterCanvas: HTMLCanvasElement;
+  private characterCtx: CanvasRenderingContext2D;
+
+  offsetFrame: HTMLSelectElement =
+    document.querySelector<HTMLSelectElement>('#offset-frame');
+  offsetX: HTMLInputElement =
+    document.querySelector<HTMLInputElement>('#offset-x');
+  offsetY: HTMLInputElement =
+    document.querySelector<HTMLInputElement>('#offset-y');
+
+  constructor(client: Client) {
+    this.client = client;
+    this.atlases = [new AtlasCanvas()];
+    this.ctx = this.atlases[0].getContext();
+    this.characterCanvas = document.createElement('canvas');
+    this.characterCanvas.width = CHARACTER_FRAME_SIZE;
+    this.characterCanvas.height = CHARACTER_FRAME_SIZE;
+    this.characterCtx = this.characterCanvas.getContext('2d', {
+      willReadFrequently: true,
+    });
+  }
+
+  getAtlas(index: number): HTMLCanvasElement | undefined {
+    return this.atlases[index]?.getCanvas();
+  }
+
+  getItem(graphicId: number): ItemAtlasEntry | undefined {
+    const item = this.items.find((i) => i.graphicId === graphicId);
+    if (!item) return undefined;
+
+    return item;
+  }
+
+  getTile(gfxType: GfxType, graphicId: number): TileAtlasEntry | undefined {
+    const tile = this.tiles.find(
+      (t) => t.gfxType === gfxType && t.graphicId === graphicId,
+    );
+    if (!tile) return undefined;
+
+    return tile;
+  }
+
+  getNpcFrame(graphicId: number, frame: number): Frame | undefined {
+    const npc = this.npcs.find((n) => n.graphicId === graphicId);
+    if (!npc) return undefined;
+
+    return npc.frames[frame];
+  }
+
+  getCharacterFrame(
+    playerId: number,
+    frame: CharacterFrame,
+  ): CFrame | undefined {
+    const character = this.characters.find((c) => c.playerId === playerId);
+    if (!character) return undefined;
+    return character.frames[frame];
+  }
+
+  insert(w: number, h: number): Rect {
+    let bestIndex = -1;
+    let bestArea = Number.POSITIVE_INFINITY;
+    let bestAtlasIndex = -1;
+
+    for (const [index, atlas] of this.atlases.entries()) {
+      for (let i = 0; i < atlas.free.length; ++i) {
+        const rect = atlas.free[i];
+        if (w <= rect.w && h <= rect.h) {
+          const areaWaste = rect.w * rect.h - w * h;
+          if (areaWaste < bestArea) {
+            bestArea = areaWaste;
+            bestIndex = i;
+            bestAtlasIndex = index;
+          }
+        }
+      }
+    }
+
+    if (bestIndex === -1) {
+      this.atlases.push(new AtlasCanvas());
+      this.currentAtlasIndex = this.atlases.length - 1;
+      this.ctx = this.atlases[this.currentAtlasIndex].getContext();
+      bestIndex = 0;
+    } else if (bestAtlasIndex !== this.currentAtlasIndex) {
+      this.currentAtlasIndex = bestAtlasIndex;
+      this.ctx = this.atlases[this.currentAtlasIndex].getContext();
+    }
+
+    const atlas = this.atlases[this.currentAtlasIndex];
+    const free = atlas.free[bestIndex];
+    const placed = { x: free.x, y: free.y, w, h };
+
+    atlas.free.splice(bestIndex, 1);
+
+    const right = { x: free.x + w, y: free.y, w: free.w - w, h: free.h };
+    const bottom = { x: free.x, y: free.y + h, w: w, h: free.h - h };
+
+    if (right.w > 0 && right.h > 0) atlas.free.push(right);
+    if (bottom.w > 0 && bottom.h > 0) atlas.free.push(bottom);
+
+    atlas.mergeFreeRects();
+
+    return placed;
+  }
+
+  private addStaleFrame(frame: Frame) {
+    this.staleFrames.push({ ...frame });
+  }
+
+  clearStaleFrames() {
+    if (!this.staleFrames.length) return;
+
+    for (const [index, atlas] of this.atlases.entries()) {
+      const ctx = atlas.getContext();
+
+      for (const frame of this.staleFrames) {
+        if (frame.atlasIndex !== index) continue;
+        ctx.clearRect(frame.x, frame.y, frame.w, frame.h);
+        atlas.free.push({ x: frame.x, y: frame.y, w: frame.w, h: frame.h });
+      }
+
+      atlas.mergeFreeRects();
+    }
+
+    this.staleFrames = [];
+    this.currentAtlasIndex = 0;
+    this.ctx = this.atlases[0].getContext();
+  }
+
   refresh() {
     if (this.loading) return;
 
     this.bmpsToLoad = [];
 
     if (this.mapId !== this.client.mapId) {
-      this.resetAtlas();
+      this.reset();
     }
 
     this.refreshCharacters();
@@ -372,21 +435,21 @@ export class Atlas {
     }
   }
 
-  private resetAtlas() {
+  reset() {
     this.characters = [];
     this.npcs = [];
     this.items = [];
     this.tiles = [];
     this.mapId = this.client.mapId;
 
-    this.free = [{ x: 0, y: 0, w: ATLAS_SIZE, h: ATLAS_SIZE }];
-
-    for (let i = this.atlases.length - 1; i >= 0; --i) {
-      this.ctx = this.atlases[i].getContext('2d', { willReadFrequently: true });
-      this.ctx.clearRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
+    for (const atlas of this.atlases) {
+      const ctx = atlas.getContext();
+      atlas.free = [{ x: 0, y: 0, w: ATLAS_SIZE, h: ATLAS_SIZE }];
+      ctx.clearRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
     }
 
     this.currentAtlasIndex = 0;
+    this.ctx = this.atlases[0].getContext();
 
     const chairSpecs = [
       MapTileSpec.ChairAll,
@@ -459,6 +522,32 @@ export class Atlas {
           }
         }
       }
+    }
+
+    for (const spawn of this.client.map.npcs) {
+      const record = this.client.getEnfRecordById(spawn.id);
+      if (!record) {
+        continue;
+      }
+
+      const existing = this.npcs.find((n) => n.graphicId === record.graphicId);
+      if (existing) {
+        continue;
+      }
+
+      const npc = {
+        graphicId: record.graphicId,
+        frames: [],
+        keep: true,
+      };
+
+      const baseId = (record.graphicId - 1) * 40;
+      for (let i = 1; i <= 18; ++i) {
+        this.addBmpToLoad(GfxType.NPC, baseId + i);
+        npc.frames.push({ x: -1, y: -1, w: -1, h: -1 });
+      }
+
+      this.npcs.push(npc);
     }
   }
 
@@ -548,6 +637,11 @@ export class Atlas {
         if (existing) {
           existing.hash = hash;
           existing.dirty = true;
+          for (const frame of existing.frames) {
+            if (frame && frame.atlasIndex !== -1) {
+              this.addStaleFrame(frame);
+            }
+          }
         } else {
           const frames = [];
           for (let i = 0; i < 22; ++i) {
@@ -586,7 +680,16 @@ export class Atlas {
               continue;
             }
 
-            frames.push({ atlasIndex: -1, x: -1, y: -1, w: -1, h: -1 });
+            frames.push({
+              atlasIndex: -1,
+              x: -1,
+              y: -1,
+              w: -1,
+              h: -1,
+              xOffset: 0,
+              yOffset: 0,
+              mirroredXOffset: 0,
+            });
           }
 
           this.characters.push({
@@ -617,6 +720,7 @@ export class Atlas {
         const npc = {
           graphicId: record.graphicId,
           frames: [],
+          keep: false,
         };
 
         const baseId = (record.graphicId - 1) * 40;
@@ -671,6 +775,8 @@ export class Atlas {
   private async updateAtlas() {
     this.loading = true;
 
+    this.clearStaleFrames();
+
     await Promise.all(this.bmpsToLoad.map((bmp) => this.loadBmp(bmp)));
 
     this.updateItems();
@@ -679,9 +785,10 @@ export class Atlas {
     this.updateMapLayers();
 
     if (!this.appended) {
-      for (const canvas of this.atlases) {
+      for (const atlas of this.atlases) {
         const h1 = document.createElement('h1');
-        h1.innerText = `Atlas ${this.atlases.indexOf(canvas)}`;
+        h1.innerText = `Atlas ${this.atlases.indexOf(atlas)}`;
+        const canvas = atlas.getCanvas();
         canvas.classList.add('debug');
         document.body.appendChild(h1);
         document.body.appendChild(canvas);
@@ -749,14 +856,23 @@ export class Atlas {
         // Check if image is blank
         const imgData = tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
         let blank = true;
+        let colors: Uint8ClampedArray | null = null;
+        let sameColor = true;
         for (let i = 0; i < imgData.data.length; i += 4) {
+          const pixel = imgData.data.slice(i, i + 3);
+          sameColor =
+            !colors ||
+            (pixel[0] === colors[0] &&
+              pixel[1] === colors[1] &&
+              pixel[2] === colors[2]);
+          colors = imgData.data.slice(i, i + 3);
           if (imgData.data[i + 3] !== 0) {
             blank = false;
             break;
           }
         }
 
-        if (blank) {
+        if (blank || sameColor) {
           blankIndexes.push(index);
           continue;
         }
@@ -838,12 +954,12 @@ export class Atlas {
         }
         */
 
-        const size = this.getCharacterFrameSize(index);
+        const skinSize = this.getCharacterFrameSize(index);
         this.renderCharacterSkin(
           character.gender,
           character.skin,
           upLeft,
-          size,
+          skinSize,
           index,
         );
 
@@ -928,15 +1044,9 @@ export class Atlas {
         const w = frameBounds.maxX - frameBounds.x + 1;
         const h = frameBounds.maxY - frameBounds.y + 1;
 
-        if (
-          frame.atlasIndex !== -1 &&
-          frame.atlasIndex !== this.currentAtlasIndex
-        ) {
-          this.ctx = this.atlases[frame.atlasIndex].getContext('2d', {
-            willReadFrequently: true,
-          });
-          this.currentAtlasIndex = frame.atlasIndex;
-        }
+        frame.xOffset = frameBounds.x;
+        frame.yOffset = frameBounds.y;
+        frame.mirroredXOffset = CHARACTER_FRAME_SIZE - (frameBounds.x + w);
 
         const placement = this.insert(w, h);
 
@@ -1388,13 +1498,13 @@ const HAIR_OFFSETS = {
     [CharacterFrame.WalkingDownRight2]: { x: 0, y: -15 },
     [CharacterFrame.WalkingDownRight3]: { x: 0, y: -15 },
     [CharacterFrame.WalkingDownRight4]: { x: 0, y: -15 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -15 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -15 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -15 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -15 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 0, y: -15 },
+    [CharacterFrame.WalkingUpLeft1]: { x: -1, y: -15 },
+    [CharacterFrame.WalkingUpLeft2]: { x: -1, y: -15 },
+    [CharacterFrame.WalkingUpLeft3]: { x: -1, y: -15 },
+    [CharacterFrame.WalkingUpLeft4]: { x: -1, y: -15 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: -15 },
     [CharacterFrame.MeleeAttackDownRight2]: { x: -5, y: -11 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: -12 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: -15 },
     [CharacterFrame.MeleeAttackUpLeft2]: { x: -3, y: -11 },
     [CharacterFrame.RaisedHandDownRight]: { x: -1, y: -12 },
     [CharacterFrame.RaisedHandUpLeft]: { x: -1, y: -12 },
@@ -1445,7 +1555,7 @@ const BOOTS_OFFSETS = {
     [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 19 },
     [CharacterFrame.MeleeAttackDownRight1]: { x: 2, y: 19 },
     [CharacterFrame.MeleeAttackDownRight2]: { x: -2, y: 19 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: 19 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: 20 },
     [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: 19 },
     [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 21 },
     [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 21 },
@@ -1460,8 +1570,8 @@ const BOOTS_OFFSETS = {
 
 const ARMOR_OFFSETS = {
   [Gender.Female]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: -4 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: -4 },
+    [CharacterFrame.StandingDownRight]: { x: 0, y: -3 },
+    [CharacterFrame.StandingUpLeft]: { x: 0, y: -3 },
     [CharacterFrame.WalkingDownRight1]: { x: 0, y: -4 },
     [CharacterFrame.WalkingDownRight2]: { x: 0, y: -4 },
     [CharacterFrame.WalkingDownRight3]: { x: 0, y: -4 },
@@ -1496,7 +1606,7 @@ const ARMOR_OFFSETS = {
     [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -5 },
     [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: -5 },
     [CharacterFrame.MeleeAttackDownRight2]: { x: -1, y: -5 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: -5 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: -5 },
     [CharacterFrame.MeleeAttackUpLeft2]: { x: -1, y: -5 },
     [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -3 },
     [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -3 },
@@ -1608,5 +1718,64 @@ const BACK_OFFSETS = {
     [CharacterFrame.FloorUpLeft]: { x: 6, y: 30 },
     [CharacterFrame.RangeAttackDownRight]: { x: 5, y: 22 },
     [CharacterFrame.RangeAttackUpLeft]: { x: 3, y: 22 },
+  },
+};
+
+export const CHARACTER_RENDER_OFFSETS = {
+  [CharacterFrame.WalkingDownRight1]: {
+    [Direction.Down]: { x: -1, y: -4 },
+    [Direction.Right]: { x: 1, y: -4 },
+  },
+  [CharacterFrame.WalkingDownRight2]: {
+    [Direction.Down]: { x: -1, y: 0 },
+    [Direction.Right]: { x: 1, y: 0 },
+  },
+  [CharacterFrame.WalkingDownRight3]: {
+    [Direction.Down]: { x: 0, y: -2 },
+    [Direction.Right]: { x: 0, y: -2 },
+  },
+  [CharacterFrame.WalkingDownRight4]: {
+    [Direction.Down]: { x: -2, y: -1 },
+    [Direction.Right]: { x: 2, y: -1 },
+  },
+  [CharacterFrame.WalkingUpLeft1]: {
+    [Direction.Up]: { x: 0, y: -3 },
+    [Direction.Left]: { x: 0, y: -3 },
+  },
+  [CharacterFrame.WalkingUpLeft2]: {
+    [Direction.Up]: { x: 1, y: -2 },
+    [Direction.Left]: { x: -1, y: -3 },
+  },
+  [CharacterFrame.WalkingUpLeft3]: {
+    [Direction.Up]: { x: 0, y: 0 },
+    [Direction.Left]: { x: 1, y: 0 },
+  },
+  [CharacterFrame.WalkingUpLeft4]: {
+    [Direction.Up]: { x: 1, y: 0 },
+    [Direction.Left]: { x: -1, y: 0 },
+  },
+  [CharacterFrame.MeleeAttackDownRight1]: {
+    [Direction.Down]: { x: -1, y: -1 },
+    [Direction.Right]: { x: 2, y: -1 },
+  },
+  [CharacterFrame.MeleeAttackDownRight2]: {
+    [Direction.Down]: { x: -2, y: -1 },
+    [Direction.Right]: { x: 2, y: -1 },
+  },
+  [CharacterFrame.MeleeAttackUpLeft1]: {
+    [Direction.Up]: { x: 0, y: 0 },
+    [Direction.Left]: { x: 0, y: 0 },
+  },
+  [CharacterFrame.MeleeAttackUpLeft2]: {
+    [Direction.Up]: { x: 2, y: 0 },
+    [Direction.Left]: { x: -2, y: 0 },
+  },
+  [CharacterFrame.RangeAttackDownRight]: {
+    [Direction.Down]: { x: -3, y: -1 },
+    [Direction.Right]: { x: 3, y: -1 },
+  },
+  [CharacterFrame.RangeAttackUpLeft]: {
+    [Direction.Up]: { x: 2, y: -3 },
+    [Direction.Left]: { x: -1, y: -3 },
   },
 };

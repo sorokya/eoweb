@@ -100,9 +100,10 @@ function handleNpcAgree(client: Client, reader: EoReader) {
       existing.direction = npc.direction;
     } else {
       client.nearby.npcs.push(npc);
-      client.preloadNpcSprites(npc.id);
     }
   }
+
+  client.atlas.refresh();
 }
 
 function handleNpcSpec(client: Client, reader: EoReader) {

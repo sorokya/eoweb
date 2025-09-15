@@ -5,6 +5,7 @@ export const TILE_WIDTH = 64;
 export const TILE_HEIGHT = 32;
 export const HALF_TILE_WIDTH = TILE_WIDTH >> 1;
 export const HALF_TILE_HEIGHT = TILE_HEIGHT >> 1;
+export const HALF_HALF_TILE_HEIGHT = HALF_TILE_HEIGHT >> 1;
 
 export const CHARACTER_WIDTH = 18;
 export const HALF_CHARACTER_WIDTH = CHARACTER_WIDTH >> 1;

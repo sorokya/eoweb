@@ -134,7 +134,6 @@ function resizeCanvases() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, w, h);
   }
-  client.mapRenderer.resizeCanvas(w, h);
   setGameSize(w, h);
   if (client.state === GameState.InGame && viewportWidth < 940) {
     mobileControls.show();
@@ -1077,6 +1076,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   character.equipment.shield = 0;
   character.equipment.hat = 0;
   client.nearby.characters = [character];
+  client.atlas.refresh();
 
   //setTimeout(setDebugData, 300);
 

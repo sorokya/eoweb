@@ -40,6 +40,8 @@ function handlePlayersAgree(client: Client, reader: EoReader) {
       client.nearby.characters.push(character);
     }
   }
+
+  client.atlas.refresh();
 }
 
 export function registerPlayersHandlers(client: Client) {

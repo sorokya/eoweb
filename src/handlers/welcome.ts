@@ -152,19 +152,8 @@ function handleEnterGame(
   client.state = GameState.InGame;
   client.usageTicks = USAGE_TICKS;
   client.emit('enterGame', { news: data.news });
-
-  const loaded = [];
-  for (const npc of client.nearby.npcs) {
-    if (loaded.includes(npc.id)) {
-      continue;
-    }
-
-    client.preloadNpcSprites(npc.id);
-
-    loaded.push(npc.id);
-  }
-
   client.bus.send(new GlobalOpenClientPacket());
+  client.atlas.refresh();
 }
 
 export function registerWelcomeHandlers(client: Client) {

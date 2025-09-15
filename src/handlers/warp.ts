@@ -47,16 +47,6 @@ function handleWarpRequest(client: Client, reader: EoReader) {
 function handleWarpAgree(client: Client, reader: EoReader) {
   const packet = WarpAgreeServerPacket.deserialize(reader);
   client.nearby = packet.nearby;
-  const loaded = [];
-  for (const npc of client.nearby.npcs) {
-    if (loaded.includes(npc.id)) {
-      continue;
-    }
-
-    client.preloadNpcSprites(npc.id);
-
-    loaded.push(npc.id);
-  }
 
   if (
     packet.warpTypeData instanceof WarpAgreeServerPacket.WarpTypeDataMapSwitch
@@ -85,9 +75,11 @@ function handleWarpAgree(client: Client, reader: EoReader) {
       }
       client.mapId = client.warpMapId;
       client.setMap(map);
+      client.atlas.refresh();
       client.movementController.freeze = false;
     });
   } else {
+    client.atlas.refresh();
     client.movementController.freeze = false;
   }
 }
