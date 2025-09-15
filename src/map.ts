@@ -738,10 +738,6 @@ export class MapRenderer {
     const additionalOffset = { x: 0, y: 0 };
     let characterFrame: CharacterFrame;
     let coords: Vector2 = character.coords;
-    const selectedFrame = Number.parseInt(
-      this.client.atlas.offsetFrame.value,
-      10,
-    );
     switch (true) {
       case animation instanceof CharacterWalkAnimation: {
         additionalOffset.x = animation.walkOffset.x;
@@ -798,40 +794,6 @@ export class MapRenderer {
       character.direction,
     );
 
-    const selectedX = Number.parseInt(this.client.atlas.offsetX.value, 10);
-    const selectedY = Number.parseInt(this.client.atlas.offsetY.value, 10);
-
-    /*
-    if (selectedFrame === characterFrame) {
-      additionalOffset.x += selectedX;
-      additionalOffset.y += selectedY;
-    } else {
-      additionalOffset.x +=
-        CHARACTER_RENDER_OFFSETS[characterFrame]?.[character.direction]?.x || 0;
-      additionalOffset.y +=
-        CHARACTER_RENDER_OFFSETS[characterFrame]?.[character.direction]?.y || 0;
-    }
-        */
-
-    /*
-  const screenX = Math.floor(
-      screenCoords.x +
-        frame.xOffset -
-        playerScreen.x +
-        HALF_GAME_WIDTH +
-        additionalOffset.x,
-    );
-
-    const screenY = Math.floor(
-      screenCoords.y +
-        HALF_HALF_TILE_HEIGHT +
-        frame.yOffset -
-        playerScreen.y +
-        HALF_GAME_HEIGHT +
-        additionalOffset.y,
-    );
-    */
-
     const screenX = Math.floor(
       screenCoords.x -
         HALF_CHARACTER_FRAME_SIZE -
@@ -842,6 +804,7 @@ export class MapRenderer {
 
     const screenY = Math.floor(
       screenCoords.y -
+        HALF_HALF_TILE_HEIGHT -
         CHARACTER_FRAME_SIZE +
         TILE_HEIGHT +
         frame.yOffset -
@@ -862,7 +825,11 @@ export class MapRenderer {
         : screenX + frame.xOffset,
     );
 
-    const rect = new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h);
+    const rect = new Rectangle(
+      { x: screenX + frame.xOffset, y: screenY },
+      frame.w,
+      frame.h,
+    );
     setCharacterRectangle(character.playerId, rect);
 
     const effects = this.client.effects.filter(
