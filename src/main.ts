@@ -1084,7 +1084,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   requestAnimationFrame(render);
 });
 
-function setDebugData() {
+function _setDebugData() {
   const numCharacters = 5;
   const numNpcs = 10;
   const numItems = 14;
