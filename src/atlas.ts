@@ -138,14 +138,6 @@ type Frame = {
   y: number;
   w: number;
   h: number;
-};
-
-type CFrame = {
-  atlasIndex: number;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
   xOffset: number;
   yOffset: number;
   mirroredXOffset: number;
@@ -161,7 +153,7 @@ type CharacterAtlasEntry = {
   equipment: EquipmentMapInfo;
   hash: string;
   dirty: boolean;
-  frames: (CFrame | undefined)[];
+  frames: (Frame | undefined)[];
 };
 
 type TileAtlasEntry = {
@@ -172,6 +164,8 @@ type TileAtlasEntry = {
   y: number;
   w: number;
   h: number;
+  xOffset: number;
+  yOffset: number;
 };
 
 type NpcAtlasEntry = {
@@ -188,6 +182,8 @@ type ItemAtlasEntry = {
   y: number;
   w: number;
   h: number;
+  xOffset: number;
+  yOffset: number;
 };
 
 type Bmp = {
@@ -323,7 +319,7 @@ export class Atlas {
   getCharacterFrame(
     playerId: number,
     frame: CharacterFrame,
-  ): CFrame | undefined {
+  ): Frame | undefined {
     const character = this.characters.find((c) => c.playerId === playerId);
     if (!character) return undefined;
     return character.frames[frame];
@@ -481,6 +477,8 @@ export class Atlas {
         y: -1,
         w: -1,
         h: -1,
+        xOffset: 0,
+        yOffset: 0,
       });
     }
 
@@ -505,6 +503,8 @@ export class Atlas {
               y: -1,
               w: -1,
               h: -1,
+              xOffset: 0,
+              yOffset: 0,
             });
 
             if (
@@ -520,6 +520,8 @@ export class Atlas {
                 y: -1,
                 w: -1,
                 h: -1,
+                xOffset: 0,
+                yOffset: 0,
               });
             }
           }
@@ -543,12 +545,22 @@ export class Atlas {
         frames: [],
         keep: true,
         tickCount: 0,
+        size: { w: 0, h: 0 },
       };
 
       const baseId = (record.graphicId - 1) * 40;
       for (let i = 1; i <= 18; ++i) {
         this.addBmpToLoad(GfxType.NPC, baseId + i);
-        npc.frames.push({ x: -1, y: -1, w: -1, h: -1 });
+        npc.frames.push({
+          atlasIndex: -1,
+          x: -1,
+          y: -1,
+          w: -1,
+          h: -1,
+          xOffset: 0,
+          yOffset: 0,
+          mirroredXOffset: 0,
+        });
       }
 
       this.npcs.push(npc);
@@ -751,6 +763,7 @@ export class Atlas {
           frames: [],
           keep: false,
           tickCount: this.client.tickCount,
+          size: { w: 0, h: 0 },
         };
 
         const baseId = (record.graphicId - 1) * 40;
@@ -801,6 +814,8 @@ export class Atlas {
           y: -1,
           w: -1,
           h: -1,
+          xOffset: 0,
+          yOffset: 0,
         });
 
         this.addBmpToLoad(GfxType.Items, gfxId);
@@ -820,7 +835,7 @@ export class Atlas {
           return gfxId === item.graphicId;
         })
       ) {
-        this.addStaleFrame({ ...item });
+        this.addStaleFrame({ ...item, mirroredXOffset: 0 });
         this.items.splice(i, 1);
       }
     }
@@ -864,6 +879,8 @@ export class Atlas {
   }
 
   private updateItems() {
+    const tmpCanvas = document.createElement('canvas');
+    const tmpCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
     for (const item of this.items) {
       if (item.x !== -1) {
         continue;
@@ -874,14 +891,57 @@ export class Atlas {
         continue;
       }
 
-      const placement = this.insert(bmp.width, bmp.height);
+      tmpCanvas.width = bmp.width;
+      tmpCanvas.height = bmp.height;
+      tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
+      tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
+
+      const imgData = tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
+      const bounds = {
+        x: bmp.width,
+        y: bmp.height,
+        maxX: 0,
+        maxY: 0,
+      };
+
+      for (let y = 0; y < bmp.height; ++y) {
+        for (let x = 0; x < bmp.width; ++x) {
+          const base = (y * bmp.width + x) * 4;
+          const alpha = imgData.data[base + 3];
+          if (alpha !== 0) {
+            if (x < bounds.x) bounds.x = x;
+            if (y < bounds.y) bounds.y = y;
+            if (x > bounds.maxX) bounds.maxX = x;
+            if (y > bounds.maxY) bounds.maxY = y;
+          }
+        }
+      }
+
+      // Calculate width and height from min/max values
+      const w = bounds.maxX - bounds.x + 1;
+      const h = bounds.maxY - bounds.y + 1;
+
+      item.xOffset = bounds.x - (bmp.width >> 1);
+      item.yOffset = bounds.y - (bmp.height >> 1);
+
+      const placement = this.insert(w, h);
       item.atlasIndex = this.currentAtlasIndex;
       item.x = placement.x;
       item.y = placement.y;
-      item.w = bmp.width;
-      item.h = bmp.height;
+      item.w = w;
+      item.h = h;
 
-      this.ctx.drawImage(bmp, item.x, item.y, item.w, item.h);
+      this.ctx.drawImage(
+        bmp,
+        bounds.x,
+        bounds.y,
+        w,
+        h,
+        item.x,
+        item.y,
+        item.w,
+        item.h,
+      );
     }
   }
 
@@ -909,36 +969,63 @@ export class Atlas {
 
         // Check if image is blank
         const imgData = tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
-        let blank = true;
-        let colors: Uint8ClampedArray | null = null;
-        let sameColor = true;
-        for (let i = 0; i < imgData.data.length; i += 4) {
-          const pixel = imgData.data.slice(i, i + 3);
-          sameColor =
-            !colors ||
-            (pixel[0] === colors[0] &&
-              pixel[1] === colors[1] &&
-              pixel[2] === colors[2]);
-          colors = imgData.data.slice(i, i + 3);
-          if (imgData.data[i + 3] !== 0) {
-            blank = false;
-            break;
+        const frameBounds = {
+          x: bmp.width,
+          y: bmp.height,
+          maxX: 0,
+          maxY: 0,
+        };
+        const colors: Set<number> = new Set();
+        for (let y = 0; y < bmp.height; ++y) {
+          for (let x = 0; x < bmp.width; ++x) {
+            const base = (y * bmp.width + x) * 4;
+            colors.add(
+              (imgData.data[base] << 16) |
+                (imgData.data[base + 1] << 8) |
+                imgData.data[base + 2],
+            );
+            const alpha = imgData.data[base + 3];
+            if (alpha !== 0) {
+              if (x < frameBounds.x) frameBounds.x = x;
+              if (y < frameBounds.y) frameBounds.y = y;
+              if (x > frameBounds.maxX) frameBounds.maxX = x;
+              if (y > frameBounds.maxY) frameBounds.maxY = y;
+            }
           }
         }
 
-        if (blank || sameColor) {
+        if (colors.size <= 2 || !frameBounds.maxX) {
           blankIndexes.push(index);
           continue;
         }
 
-        const placement = this.insert(bmp.width, bmp.height);
+        // Calculate width and height from min/max values
+        const w = frameBounds.maxX - frameBounds.x + 1;
+        const h = frameBounds.maxY - frameBounds.y + 1;
+
+        const halfBmpWidth = bmp.width >> 1;
+        frame.xOffset = frameBounds.x - halfBmpWidth;
+        frame.yOffset = frameBounds.y - (bmp.height - 23);
+        frame.mirroredXOffset = halfBmpWidth - (frameBounds.x + w);
+
+        const placement = this.insert(w, h);
         frame.atlasIndex = this.currentAtlasIndex;
         frame.x = placement.x;
         frame.y = placement.y;
-        frame.w = bmp.width;
-        frame.h = bmp.height;
+        frame.w = w;
+        frame.h = h;
 
-        this.ctx.drawImage(bmp, frame.x, frame.y, frame.w, frame.h);
+        this.ctx.drawImage(
+          bmp,
+          frameBounds.x,
+          frameBounds.y,
+          w,
+          h,
+          frame.x,
+          frame.y,
+          frame.w,
+          frame.h,
+        );
       }
 
       // Mark blank frames as undefined
@@ -1098,9 +1185,9 @@ export class Atlas {
         const w = frameBounds.maxX - frameBounds.x + 1;
         const h = frameBounds.maxY - frameBounds.y + 1;
 
-        frame.xOffset = frameBounds.x;
-        frame.yOffset = frameBounds.y;
-        frame.mirroredXOffset = CHARACTER_FRAME_SIZE - (frameBounds.x + w);
+        frame.xOffset = frameBounds.x - HALF_CHARACTER_FRAME_SIZE;
+        frame.yOffset = frameBounds.y - CHARACTER_FRAME_SIZE;
+        frame.mirroredXOffset = HALF_CHARACTER_FRAME_SIZE - (frameBounds.x + w);
 
         const placement = this.insert(w, h);
 
@@ -1478,6 +1565,8 @@ export class Atlas {
   }
 
   private updateMapLayers() {
+    const tmpCanvas = document.createElement('canvas');
+    const tmpCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
     for (const tile of this.tiles) {
       if (tile.x !== -1) {
         continue;
@@ -1488,14 +1577,56 @@ export class Atlas {
         continue;
       }
 
-      const placement = this.insert(bmp.width, bmp.height);
+      tmpCanvas.width = bmp.width;
+      tmpCanvas.height = bmp.height;
+      tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
+      tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
+
+      const imgData = tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
+      const bounds = {
+        x: bmp.width,
+        y: bmp.height,
+        maxX: 0,
+        maxY: 0,
+      };
+
+      for (let y = 0; y < bmp.height; ++y) {
+        for (let x = 0; x < bmp.width; ++x) {
+          const alpha = imgData.data[(y * bmp.width + x) * 4 + 3];
+          if (alpha !== 0) {
+            if (x < bounds.x) bounds.x = x;
+            if (y < bounds.y) bounds.y = y;
+            if (x > bounds.maxX) bounds.maxX = x;
+            if (y > bounds.maxY) bounds.maxY = y;
+          }
+        }
+      }
+
+      // Calculate width and height from min/max values
+      const w = bounds.maxX - bounds.x + 1;
+      const h = bounds.maxY - bounds.y + 1;
+
+      const placement = this.insert(w, h);
       tile.atlasIndex = this.currentAtlasIndex;
       tile.x = placement.x;
       tile.y = placement.y;
-      tile.w = bmp.width;
-      tile.h = bmp.height;
+      tile.w = w;
+      tile.h = h;
 
-      this.ctx.drawImage(bmp, tile.x, tile.y, tile.w, tile.h);
+      tile.xOffset = bounds.x;
+      tile.yOffset = bounds.y;
+
+      this.ctx.drawImage(
+        bmp,
+        bounds.x,
+        bounds.y,
+        w,
+        h,
+        tile.x,
+        tile.y,
+        tile.w,
+        tile.h,
+      );
     }
   }
 

@@ -1085,9 +1085,9 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 function _setDebugData() {
-  const numCharacters = 5;
-  const numNpcs = 10;
-  const numItems = 14;
+  const numCharacters = 100;
+  const numNpcs = 200;
+  const numItems = 100;
 
   const weapons = client.eif.items
     .filter((i) => i.type === ItemType.Weapon)
@@ -1161,5 +1161,5 @@ function _setDebugData() {
     client.nearby.items.push(item);
   }
 
-  client.state = GameState.InGame;
+  client.atlas.refresh();
 }

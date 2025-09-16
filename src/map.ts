@@ -1,10 +1,5 @@
 import { AdminLevel, Coords, Direction, MapTileSpec, SitState } from 'eolib';
-import {
-  CHARACTER_FRAME_SIZE,
-  CharacterFrame,
-  HALF_CHARACTER_FRAME_SIZE,
-  NpcFrame,
-} from './atlas';
+import { CharacterFrame, NpcFrame } from './atlas';
 import { type Client, GameState } from './client';
 import {
   getCharacterIntersecting,
@@ -636,14 +631,16 @@ export class MapRenderer {
         HALF_TILE_WIDTH -
         playerScreen.x +
         HALF_GAME_WIDTH +
-        offset.x,
+        offset.x +
+        tile.xOffset,
     );
     const screenY = Math.floor(
       tileScreen.y -
         HALF_TILE_HEIGHT -
         playerScreen.y +
         HALF_GAME_HEIGHT +
-        offset.y,
+        offset.y +
+        tile.yOffset,
     );
 
     if (this.client.getDoor(coords)) {
@@ -794,17 +791,12 @@ export class MapRenderer {
     );
 
     const screenX = Math.floor(
-      screenCoords.x -
-        HALF_CHARACTER_FRAME_SIZE -
-        playerScreen.x +
-        HALF_GAME_WIDTH +
-        additionalOffset.x,
+      screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + additionalOffset.x,
     );
 
     const screenY = Math.floor(
       screenCoords.y -
-        HALF_HALF_TILE_HEIGHT -
-        CHARACTER_FRAME_SIZE +
+        HALF_HALF_TILE_HEIGHT +
         TILE_HEIGHT +
         frame.yOffset -
         playerScreen.y +
@@ -991,17 +983,13 @@ export class MapRenderer {
     const screenCoords = isoToScreen(coords);
     const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
     const screenX = Math.floor(
-      screenCoords.x -
-        (frame.w >> 1) -
-        playerScreen.x +
-        HALF_GAME_WIDTH +
-        additionalOffset.x,
+      screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + additionalOffset.x,
     );
     const screenY = Math.floor(
       screenCoords.y -
-        (frame.h - 23) -
         playerScreen.y +
         HALF_GAME_HEIGHT +
+        frame.yOffset +
         additionalOffset.y,
     );
 
@@ -1012,7 +1000,9 @@ export class MapRenderer {
     }
 
     const drawX = Math.floor(
-      mirrored ? GAME_WIDTH - screenX - frame.w : screenX,
+      mirrored
+        ? GAME_WIDTH - screenX - frame.w - frame.mirroredXOffset
+        : screenX + frame.xOffset,
     );
 
     if (meta.transparent) {
@@ -1084,10 +1074,10 @@ export class MapRenderer {
     const tileScreen = isoToScreen(item.coords);
 
     const screenX = Math.floor(
-      tileScreen.x - frame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
+      tileScreen.x - playerScreen.x + HALF_GAME_WIDTH + frame.xOffset,
     );
     const screenY = Math.floor(
-      tileScreen.y - frame.h / 2 - playerScreen.y + HALF_GAME_HEIGHT,
+      tileScreen.y - playerScreen.y + HALF_GAME_HEIGHT + frame.yOffset,
     );
 
     ctx.drawImage(
