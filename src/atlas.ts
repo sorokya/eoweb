@@ -259,7 +259,7 @@ export class Atlas {
   private mapHasChairs = false;
   private bmpsToLoad: Bmp[] = [];
   private loading = false;
-  private appended = false;
+  private appended = true;
   private atlases: AtlasCanvas[];
   private currentAtlasIndex = 0;
   private ctx: CanvasRenderingContext2D;
