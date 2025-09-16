@@ -1,11 +1,4 @@
-import { Direction, type NpcMapInfo } from 'eolib';
-import { type Atlas, NpcFrame } from '../atlas';
-import { Rectangle, setNpcRectangle } from '../collision';
 import { ATTACK_TICKS } from '../consts';
-import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
-import type { NPCMetadata } from '../utils/get-npc-metadata';
-import { isoToScreen } from '../utils/iso-to-screen';
-import type { Vector2 } from '../vector';
 import { NpcAnimation } from './npc-base-animation';
 
 export class NpcAttackAnimation extends NpcAnimation {
@@ -25,89 +18,5 @@ export class NpcAttackAnimation extends NpcAnimation {
     }
 
     this.ticks = Math.max(this.ticks - 1, 0);
-  }
-
-  render(
-    graphicId: number,
-    npc: NpcMapInfo,
-    meta: NPCMetadata,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-    atlas: Atlas,
-  ) {
-    const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
-
-    const frame = atlas.getNpcFrame(
-      graphicId,
-      downRight
-        ? this.animationFrame
-          ? NpcFrame.AttackDownRight2
-          : NpcFrame.AttackDownRight1
-        : this.animationFrame
-          ? NpcFrame.AttackUpLeft2
-          : NpcFrame.AttackUpLeft1,
-    );
-
-    if (!frame) {
-      return;
-    }
-
-    const bmp = atlas.getAtlas(frame.atlasIndex);
-    if (!bmp) {
-      return;
-    }
-
-    const screenCoords = isoToScreen(npc.coords);
-    const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
-    const screenX = Math.floor(
-      screenCoords.x - frame.w / 2 - playerScreen.x + HALF_GAME_WIDTH,
-    );
-
-    const screenY =
-      screenCoords.y - (frame.h - 23) - playerScreen.y + HALF_GAME_HEIGHT;
-
-    if (mirrored) {
-      ctx.save(); // Save the current context state
-      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
-      ctx.scale(-1, 1); // Flip horizontally
-    }
-
-    const metaOffset = {
-      x: meta.xOffset,
-      y: meta.yOffset,
-    };
-
-    if (this.animationFrame) {
-      metaOffset.x += meta.xOffsetAttack;
-      metaOffset.y += meta.yOffsetAttack;
-    }
-
-    const drawX = Math.floor(
-      mirrored
-        ? GAME_WIDTH - screenX - frame.w + metaOffset.x
-        : screenX + metaOffset.x,
-    );
-    const drawY = Math.floor(screenY - metaOffset.y);
-
-    ctx.drawImage(
-      bmp,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
-      drawX,
-      drawY,
-      frame.w,
-      frame.h,
-    );
-
-    setNpcRectangle(
-      npc.index,
-      new Rectangle({ x: screenX, y: drawY }, frame.w, frame.h),
-    );
-
-    if (mirrored) {
-      ctx.restore();
-    }
   }
 }

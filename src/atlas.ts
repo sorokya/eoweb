@@ -1,12 +1,12 @@
 import {
   type CharacterMapInfo,
-  Direction,
   type EquipmentMapInfo,
   Gender,
   MapTileSpec,
 } from 'eolib';
 import type { Client } from './client';
 import {
+  ATLAS_EXPIRY_TICKS,
   CHARACTER_HEIGHT,
   CHARACTER_MELEE_ATTACK_WIDTH,
   CHARACTER_RAISED_HAND_HEIGHT,
@@ -24,6 +24,7 @@ import { GfxType } from './gfx';
 import { LAYER_GFX_MAP } from './map';
 import { clipHair } from './utils/clip-hair';
 import { HatMaskType } from './utils/get-hat-metadata';
+import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { padWithZeros } from './utils/pad-with-zeros';
 
 const ATLAS_SIZE = 2048;
@@ -152,6 +153,7 @@ type CFrame = {
 
 type CharacterAtlasEntry = {
   playerId: number;
+  tickCount: number;
   gender: Gender;
   skin: number;
   hairStyle: number;
@@ -174,6 +176,7 @@ type TileAtlasEntry = {
 
 type NpcAtlasEntry = {
   graphicId: number;
+  tickCount: number;
   frames: (Frame | undefined)[];
   keep: boolean;
 };
@@ -539,6 +542,7 @@ export class Atlas {
         graphicId: record.graphicId,
         frames: [],
         keep: true,
+        tickCount: 0,
       };
 
       const baseId = (record.graphicId - 1) * 40;
@@ -557,6 +561,11 @@ export class Atlas {
       const existing = this.characters.find(
         (c) => c.playerId === char.playerId,
       );
+
+      if (existing) {
+        existing.tickCount = this.client.tickCount;
+      }
+
       if (!existing || existing.hash !== hash) {
         if (char.hairStyle) {
           const baseId = (char.hairStyle - 1) * 40 + char.hairColor * 4;
@@ -702,8 +711,28 @@ export class Atlas {
             hash,
             dirty: true,
             frames,
+            tickCount: this.client.tickCount,
           });
         }
+      }
+    }
+
+    for (let i = this.characters.length - 1; i >= 0; --i) {
+      const character = this.characters[i];
+      const ticksSinceSeen = this.client.tickCount - character.tickCount;
+      if (
+        ticksSinceSeen > ATLAS_EXPIRY_TICKS &&
+        !this.client.nearby.characters.find(
+          (c) => c.playerId === character.playerId,
+        )
+      ) {
+        for (const frame of character.frames) {
+          if (frame && frame.atlasIndex !== -1) {
+            this.addStaleFrame(frame);
+          }
+        }
+
+        this.characters.splice(i, 1);
       }
     }
   }
@@ -721,6 +750,7 @@ export class Atlas {
           graphicId: record.graphicId,
           frames: [],
           keep: false,
+          tickCount: this.client.tickCount,
         };
 
         const baseId = (record.graphicId - 1) * 40;
@@ -730,6 +760,26 @@ export class Atlas {
         }
 
         this.npcs.push(npc);
+      } else {
+        existing.tickCount = this.client.tickCount;
+      }
+    }
+
+    for (let i = this.npcs.length - 1; i >= 0; --i) {
+      const npc = this.npcs[i];
+      if (npc.keep) {
+        continue;
+      }
+
+      const ticksSinceSeen = this.client.tickCount - npc.tickCount;
+      if (ticksSinceSeen > ATLAS_EXPIRY_TICKS && !npc.keep) {
+        for (const frame of npc.frames) {
+          if (frame && frame.atlasIndex !== -1) {
+            this.addStaleFrame(frame);
+          }
+        }
+
+        this.npcs.splice(i, 1);
       }
     }
   }
@@ -741,21 +791,7 @@ export class Atlas {
         continue;
       }
 
-      let gfxId = record.graphicId * 2 - 1;
-      if (item.id === 1) {
-        const offset =
-          item.amount >= 100_000
-            ? 4
-            : item.amount >= 10_000
-              ? 3
-              : item.amount >= 100
-                ? 2
-                : item.amount >= 2
-                  ? 1
-                  : 0;
-        gfxId = 269 + 2 * offset;
-      }
-
+      const gfxId = getItemGraphicId(item.id, record.graphicId, item.amount);
       const existing = this.items.find((i) => i.graphicId === gfxId);
       if (!existing) {
         this.items.push({
@@ -768,6 +804,24 @@ export class Atlas {
         });
 
         this.addBmpToLoad(GfxType.Items, gfxId);
+      }
+    }
+
+    for (let i = this.items.length - 1; i >= 0; --i) {
+      const item = this.items[i];
+      if (
+        !this.client.nearby.items.find((it) => {
+          const record = this.client.getEifRecordById(it.id);
+          if (!record) {
+            return false;
+          }
+
+          const gfxId = getItemGraphicId(it.id, record.graphicId, it.amount);
+          return gfxId === item.graphicId;
+        })
+      ) {
+        this.addStaleFrame({ ...item });
+        this.items.splice(i, 1);
       }
     }
   }
@@ -1718,64 +1772,5 @@ const BACK_OFFSETS = {
     [CharacterFrame.FloorUpLeft]: { x: 6, y: 30 },
     [CharacterFrame.RangeAttackDownRight]: { x: 5, y: 22 },
     [CharacterFrame.RangeAttackUpLeft]: { x: 3, y: 22 },
-  },
-};
-
-export const CHARACTER_RENDER_OFFSETS = {
-  [CharacterFrame.WalkingDownRight1]: {
-    [Direction.Down]: { x: -1, y: -4 },
-    [Direction.Right]: { x: 1, y: -4 },
-  },
-  [CharacterFrame.WalkingDownRight2]: {
-    [Direction.Down]: { x: -1, y: 0 },
-    [Direction.Right]: { x: 1, y: 0 },
-  },
-  [CharacterFrame.WalkingDownRight3]: {
-    [Direction.Down]: { x: 0, y: -2 },
-    [Direction.Right]: { x: 0, y: -2 },
-  },
-  [CharacterFrame.WalkingDownRight4]: {
-    [Direction.Down]: { x: -2, y: -1 },
-    [Direction.Right]: { x: 2, y: -1 },
-  },
-  [CharacterFrame.WalkingUpLeft1]: {
-    [Direction.Up]: { x: 0, y: -3 },
-    [Direction.Left]: { x: 0, y: -3 },
-  },
-  [CharacterFrame.WalkingUpLeft2]: {
-    [Direction.Up]: { x: 1, y: -2 },
-    [Direction.Left]: { x: -1, y: -3 },
-  },
-  [CharacterFrame.WalkingUpLeft3]: {
-    [Direction.Up]: { x: 0, y: 0 },
-    [Direction.Left]: { x: 1, y: 0 },
-  },
-  [CharacterFrame.WalkingUpLeft4]: {
-    [Direction.Up]: { x: 1, y: 0 },
-    [Direction.Left]: { x: -1, y: 0 },
-  },
-  [CharacterFrame.MeleeAttackDownRight1]: {
-    [Direction.Down]: { x: -1, y: -1 },
-    [Direction.Right]: { x: 2, y: -1 },
-  },
-  [CharacterFrame.MeleeAttackDownRight2]: {
-    [Direction.Down]: { x: -2, y: -1 },
-    [Direction.Right]: { x: 2, y: -1 },
-  },
-  [CharacterFrame.MeleeAttackUpLeft1]: {
-    [Direction.Up]: { x: 0, y: 0 },
-    [Direction.Left]: { x: 0, y: 0 },
-  },
-  [CharacterFrame.MeleeAttackUpLeft2]: {
-    [Direction.Up]: { x: 2, y: 0 },
-    [Direction.Left]: { x: -2, y: 0 },
-  },
-  [CharacterFrame.RangeAttackDownRight]: {
-    [Direction.Down]: { x: -3, y: -1 },
-    [Direction.Right]: { x: 3, y: -1 },
-  },
-  [CharacterFrame.RangeAttackUpLeft]: {
-    [Direction.Up]: { x: 2, y: -3 },
-    [Direction.Left]: { x: -1, y: -3 },
   },
 };

@@ -365,6 +365,7 @@ type CharacterCreateData = {
 
 export class Client {
   private emitter: Emitter<ClientEvents>;
+  tickCount = 0;
   bus: PacketBus | null = null;
   config = getDefaultConfig();
   version: Version;
@@ -697,6 +698,7 @@ export class Client {
   }
 
   tick() {
+    this.tickCount += 1;
     this.movementController.tick();
     this.mapRenderer.tick();
 

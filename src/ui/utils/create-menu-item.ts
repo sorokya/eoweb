@@ -1,4 +1,5 @@
-import { type EifRecord, ItemType } from 'eolib';
+import type { EifRecord } from 'eolib';
+import { getItemGraphicPath } from '../../utils/get-item-graphic-id';
 import { getItemMeta } from '../../utils/get-item-meta';
 import type { DialogIcon } from '../dialog-icon';
 
@@ -29,6 +30,7 @@ export function createIconMenuItem(
 }
 
 export function createItemMenuItem(
+  itemId: number,
   record: EifRecord,
   label: string,
   description: string,
@@ -38,7 +40,7 @@ export function createItemMenuItem(
   menuItem.classList.add('menu-item', 'item');
 
   const menuImg = document.createElement('img');
-  menuImg.src = getItemGraphicPath(record, itemAmount);
+  menuImg.src = getItemGraphicPath(itemId, record.graphicId, itemAmount);
   menuImg.classList.add('menu-item-img');
   menuItem.appendChild(menuImg);
 
@@ -59,27 +61,4 @@ export function createItemMenuItem(
   menuItem.appendChild(menuDescription);
 
   return menuItem;
-}
-
-function getItemGraphicPath(eifRecord: EifRecord, amount: number): string {
-  const graphicId = getItemGraphicId(eifRecord, amount);
-  const fileId = 100 + graphicId;
-  return `/gfx/gfx023/${fileId}.png`;
-}
-
-function getItemGraphicId(record: EifRecord, amount: number): number {
-  if (record.type === ItemType.Currency) {
-    const gfx =
-      amount >= 100000
-        ? 4
-        : amount >= 10000
-          ? 3
-          : amount >= 100
-            ? 2
-            : amount >= 2
-              ? 1
-              : 0;
-    return 269 + 2 * gfx;
-  }
-  return 2 * record.graphicId - 1;
 }

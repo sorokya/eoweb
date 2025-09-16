@@ -54,6 +54,7 @@ export const DOOR_HEIGHT = 110;
 export const MAX_CHAT_LENGTH = 128;
 export const CLEAR_OUT_OF_RANGE_TICKS = 8;
 export const USAGE_TICKS = 500;
+export const ATLAS_EXPIRY_TICKS = 500;
 export const EMOTE_ANIMATION_FRAMES = 4;
 export const EMOTE_ANIMATION_TICKS = 8;
 export const INITIAL_IDLE_TICKS = 2500;

@@ -1,17 +1,9 @@
-import {
-  AdminLevel,
-  type CharacterMapInfo,
-  Coords,
-  Direction,
-  Gender,
-  MapTileSpec,
-  SitState,
-} from 'eolib';
+import { AdminLevel, Coords, Direction, MapTileSpec, SitState } from 'eolib';
 import {
   CHARACTER_FRAME_SIZE,
-  CHARACTER_RENDER_OFFSETS,
   CharacterFrame,
   HALF_CHARACTER_FRAME_SIZE,
+  NpcFrame,
 } from './atlas';
 import { type Client, GameState } from './client';
 import {
@@ -21,6 +13,7 @@ import {
   setCharacterRectangle,
   setDoorRectangle,
   setLockerRectangle,
+  setNpcRectangle,
   setSignRectangle,
 } from './collision';
 import {
@@ -29,6 +22,7 @@ import {
   HALF_HALF_TILE_HEIGHT,
   HALF_TILE_HEIGHT,
   HALF_TILE_WIDTH,
+  NPC_DEATH_TICKS,
   NPC_IDLE_ANIMATION_TICKS,
   TILE_HEIGHT,
   TILE_WIDTH,
@@ -41,9 +35,12 @@ import { renderCharacterChatBubble } from './render/character-chat-bubble';
 import { renderCharacterHealthBar } from './render/character-health-bar';
 import { CharacterWalkAnimation } from './render/character-walk';
 import { EffectTargetCharacter, EffectTargetTile } from './render/effect';
-import { renderNpc } from './render/npc';
+import { NpcAttackAnimation } from './render/npc-attack';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
+import { NpcDeathAnimation } from './render/npc-death';
 import { renderNpcHealthBar } from './render/npc-health-bar';
+import { NpcWalkAnimation } from './render/npc-walk';
+import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';
 import type { Vector2 } from './vector';
 
@@ -125,6 +122,7 @@ export class MapRenderer {
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
   private signCache: ({ title: string; message: string } | null)[][] = [];
+  private mainCharacterFrame: CharacterFrame | null = null;
 
   constructor(client: Client) {
     this.client = client;
@@ -419,7 +417,7 @@ export class MapRenderer {
     if (main) {
       ctx.globalAlpha = 0.4;
 
-      // TODO: Render main character again
+      this.renderCharacter(main, playerScreen, ctx, true);
 
       ctx.globalAlpha = 1;
     }
@@ -725,6 +723,7 @@ export class MapRenderer {
     entity: Entity,
     playerScreen: Vector2,
     ctx: CanvasRenderingContext2D,
+    justCharacter = false,
   ) {
     const character = this.client.getCharacterById(entity.typeId);
     if (!character) {
@@ -832,19 +831,27 @@ export class MapRenderer {
     );
     setCharacterRectangle(character.playerId, rect);
 
-    const effects = this.client.effects.filter(
-      (e) =>
-        e.target instanceof EffectTargetCharacter &&
-        e.target.playerId === character.playerId,
-    );
+    const effects = justCharacter
+      ? []
+      : this.client.effects.filter(
+          (e) =>
+            e.target instanceof EffectTargetCharacter &&
+            e.target.playerId === character.playerId,
+        );
     for (const effect of effects) {
       effect.target.rect = rect;
       effect.renderBehind(ctx);
     }
 
-    const bubble = this.client.characterChats.get(character.playerId);
-    const healthBar = this.client.characterHealthBars.get(character.playerId);
-    const emote = this.client.characterEmotes.get(character.playerId);
+    const bubble = justCharacter
+      ? null
+      : this.client.characterChats.get(character.playerId);
+    const healthBar = justCharacter
+      ? null
+      : this.client.characterHealthBars.get(character.playerId);
+    const emote = justCharacter
+      ? null
+      : this.client.characterEmotes.get(character.playerId);
 
     if (entity.typeId === this.client.playerId && !character.invisible) {
       ctx.drawImage(
@@ -899,7 +906,10 @@ export class MapRenderer {
       effect.renderFront(ctx);
     }
 
-    if (!character.invisible || this.client.admin !== AdminLevel.Player) {
+    if (
+      !justCharacter &&
+      (!character.invisible || this.client.admin !== AdminLevel.Player)
+    ) {
       this.topLayer.push(() => {
         renderCharacterChatBubble(bubble, character, ctx);
         renderCharacterHealthBar(healthBar, character, ctx);
@@ -908,100 +918,6 @@ export class MapRenderer {
         }
       });
     }
-  }
-
-  private getAdditionalCharacterChairOffset(
-    character: CharacterMapInfo,
-  ): Vector2 {
-    const additionalOffset = { x: 0, y: 0 };
-    if (character.gender === Gender.Female) {
-      switch (character.direction) {
-        case Direction.Up:
-          additionalOffset.x = 3;
-          additionalOffset.y = 15;
-          break;
-        case Direction.Down:
-          additionalOffset.x = -2;
-          additionalOffset.y = 13;
-          break;
-        case Direction.Left:
-          additionalOffset.x = -3;
-          additionalOffset.y = 15;
-          break;
-        case Direction.Right:
-          additionalOffset.x = 2;
-          additionalOffset.y = 13;
-          break;
-      }
-    } else {
-      switch (character.direction) {
-        case Direction.Up:
-          additionalOffset.x = 3;
-          additionalOffset.y = 14;
-          break;
-        case Direction.Down:
-          additionalOffset.x = -3;
-          additionalOffset.y = 12;
-          break;
-        case Direction.Left:
-          additionalOffset.x = -3;
-          additionalOffset.y = 14;
-          break;
-        case Direction.Right:
-          additionalOffset.x = 3;
-          additionalOffset.y = 12;
-          break;
-      }
-    }
-
-    return additionalOffset;
-  }
-
-  private getAdditionalCharacterWalkOffset(
-    character: CharacterMapInfo,
-  ): Vector2 {
-    const additionalOffset = { x: 0, y: 0 };
-    if (character.gender === Gender.Female) {
-      switch (character.direction) {
-        case Direction.Up:
-          additionalOffset.x = 0;
-          additionalOffset.y = 6;
-          break;
-        case Direction.Down:
-          additionalOffset.x = 0;
-          additionalOffset.y = 6;
-          break;
-        case Direction.Left:
-          additionalOffset.x = 0;
-          additionalOffset.y = 6;
-          break;
-        case Direction.Right:
-          additionalOffset.x = 0;
-          additionalOffset.y = 6;
-          break;
-      }
-    } else {
-      switch (character.direction) {
-        case Direction.Up:
-          additionalOffset.x = 1;
-          additionalOffset.y = 6;
-          break;
-        case Direction.Down:
-          additionalOffset.x = -1;
-          additionalOffset.y = 6;
-          break;
-        case Direction.Left:
-          additionalOffset.x = -1;
-          additionalOffset.y = 6;
-          break;
-        case Direction.Right:
-          additionalOffset.x = 0;
-          additionalOffset.y = 6;
-          break;
-      }
-    }
-
-    return additionalOffset;
   }
 
   renderNpc(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
@@ -1015,39 +931,127 @@ export class MapRenderer {
       return;
     }
 
-    const meta = this.client.getNpcMetadata(record.graphicId);
-    const bubble = this.client.npcChats.get(npc.index);
-    const healthBar = this.client.npcHealthBars.get(npc.index);
-
     const animation = this.client.npcAnimations.get(npc.index);
+    const meta = this.client.getNpcMetadata(record.graphicId);
+    const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
+    const additionalOffset = { x: 0, y: 0 };
+    let npcFrame: NpcFrame;
+    let coords: Vector2 = npc.coords;
+
+    switch (true) {
+      case animation instanceof NpcWalkAnimation: {
+        additionalOffset.x += animation.walkOffset.x;
+        additionalOffset.y += animation.walkOffset.y;
+        coords = animation.from;
+        npcFrame = downRight
+          ? NpcFrame.WalkingDownRight1 + animation.animationFrame
+          : NpcFrame.WalkingUpLeft1 + animation.animationFrame;
+        break;
+      }
+      case animation instanceof NpcAttackAnimation:
+        npcFrame = downRight
+          ? NpcFrame.AttackDownRight1 + animation.animationFrame
+          : NpcFrame.AttackUpLeft1 + animation.animationFrame;
+        break;
+      default:
+        npcFrame =
+          (downRight ? NpcFrame.StandingDownRight1 : NpcFrame.StandingUpLeft1) +
+          (meta.animatedStanding ? this.npcIdleAnimationFrame : 0);
+        break;
+    }
+
+    const frame = this.client.atlas.getNpcFrame(record.graphicId, npcFrame);
+    if (!frame) {
+      return;
+    }
+
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
+      return;
+    }
+
+    const downRightAdjust = downRight ? 1 : -1;
+    const upRightAdjust = [Direction.Up, Direction.Right].includes(
+      npc.direction,
+    )
+      ? -1
+      : 1;
+    if (
+      npcFrame === NpcFrame.AttackDownRight2 ||
+      npcFrame === NpcFrame.AttackUpLeft2
+    ) {
+      additionalOffset.x +=
+        meta.xOffsetAttack * upRightAdjust + meta.xOffset * upRightAdjust;
+      additionalOffset.y -= meta.yOffsetAttack * downRightAdjust + meta.yOffset;
+    } else {
+      additionalOffset.x += meta.xOffset * upRightAdjust;
+      additionalOffset.y -= meta.yOffset;
+    }
+
+    const screenCoords = isoToScreen(coords);
+    const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
+    const screenX = Math.floor(
+      screenCoords.x -
+        (frame.w >> 1) -
+        playerScreen.x +
+        HALF_GAME_WIDTH +
+        additionalOffset.x,
+    );
+    const screenY = Math.floor(
+      screenCoords.y -
+        (frame.h - 23) -
+        playerScreen.y +
+        HALF_GAME_HEIGHT +
+        additionalOffset.y,
+    );
+
+    if (mirrored) {
+      ctx.save(); // Save the current context state
+      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
+      ctx.scale(-1, 1); // Flip horizontally
+    }
+
+    const drawX = Math.floor(
+      mirrored ? GAME_WIDTH - screenX - frame.w : screenX,
+    );
+
     if (meta.transparent) {
       ctx.globalAlpha = 0.4;
     }
 
-    if (animation) {
-      animation.render(
-        record.graphicId,
-        npc,
-        meta,
-        playerScreen,
-        ctx,
-        this.client.atlas,
-      );
-    } else {
-      renderNpc(
-        npc,
-        record,
-        meta,
-        this.npcIdleAnimationFrame,
-        playerScreen,
-        ctx,
-        this.client.atlas,
-      );
+    let dying = false;
+    if (animation instanceof NpcDeathAnimation) {
+      dying = true;
+      ctx.globalAlpha = animation.ticks / NPC_DEATH_TICKS;
     }
 
-    if (meta.transparent) {
+    ctx.drawImage(
+      atlas,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      drawX,
+      screenY,
+      frame.w,
+      frame.h,
+    );
+
+    if (meta.transparent || dying) {
       ctx.globalAlpha = 1;
     }
+
+    if (mirrored) {
+      ctx.restore(); // Restore the context to its original state
+    }
+
+    setNpcRectangle(
+      npc.index,
+      new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
+    );
+
+    const bubble = this.client.npcChats.get(npc.index);
+    const healthBar = this.client.npcHealthBars.get(npc.index);
 
     this.topLayer.push(() => {
       renderNpcChatBubble(bubble, npc, ctx);
@@ -1066,21 +1070,7 @@ export class MapRenderer {
       return;
     }
 
-    let gfxId = record.graphicId * 2 - 1;
-    if (item.id === 1) {
-      const offset =
-        item.amount >= 100_000
-          ? 4
-          : item.amount >= 10_000
-            ? 3
-            : item.amount >= 100
-              ? 2
-              : item.amount >= 2
-                ? 1
-                : 0;
-      gfxId = 269 + 2 * offset;
-    }
-
+    const gfxId = getItemGraphicId(item.id, record.graphicId, item.amount);
     const frame = this.client.atlas.getItem(gfxId);
     if (!frame) {
       return;

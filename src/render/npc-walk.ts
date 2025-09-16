@@ -1,16 +1,10 @@
-import { type Coords, Direction, type NpcMapInfo } from 'eolib';
-import { type Atlas, NpcFrame } from '../atlas';
-import { Rectangle, setNpcRectangle } from '../collision';
+import { type Coords, Direction } from 'eolib';
 import {
   WALK_ANIMATION_FRAMES,
   WALK_HEIGHT_FACTOR,
   WALK_TICKS,
   WALK_WIDTH_FACTOR,
 } from '../consts';
-import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
-import type { NPCMetadata } from '../utils/get-npc-metadata';
-import { isoToScreen } from '../utils/iso-to-screen';
-import type { Vector2 } from '../vector';
 import { NpcAnimation } from './npc-base-animation';
 
 export class NpcWalkAnimation extends NpcAnimation {
@@ -54,85 +48,5 @@ export class NpcWalkAnimation extends NpcAnimation {
       },
     }[this.direction];
     this.ticks = Math.max(this.ticks - 1, 0);
-  }
-
-  render(
-    graphicId: number,
-    npc: NpcMapInfo,
-    meta: NPCMetadata,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-    atlas: Atlas,
-  ) {
-    const downRight = [Direction.Down, Direction.Right].includes(
-      this.direction,
-    );
-
-    const frame = atlas.getNpcFrame(
-      graphicId,
-      downRight
-        ? NpcFrame.WalkingDownRight1 + this.animationFrame
-        : NpcFrame.WalkingUpLeft1 + this.animationFrame,
-    );
-
-    if (!frame) {
-      return;
-    }
-
-    const bmp = atlas.getAtlas(frame.atlasIndex);
-    if (!bmp) {
-      return;
-    }
-
-    const screenCoords = isoToScreen(this.from);
-    const mirrored = [Direction.Right, Direction.Up].includes(this.direction);
-    const screenX = Math.floor(
-      screenCoords.x -
-        frame.w / 2 -
-        playerScreen.x +
-        HALF_GAME_WIDTH +
-        this.walkOffset.x,
-    );
-
-    const screenY =
-      screenCoords.y -
-      (frame.h - 23) -
-      playerScreen.y +
-      HALF_GAME_HEIGHT +
-      this.walkOffset.y;
-
-    if (mirrored) {
-      ctx.save(); // Save the current context state
-      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
-      ctx.scale(-1, 1); // Flip horizontally
-    }
-
-    const drawX = Math.floor(
-      mirrored
-        ? GAME_WIDTH - screenX - frame.w + meta.xOffset
-        : screenX + meta.xOffset,
-    );
-    const drawY = Math.floor(screenY - meta.yOffset);
-
-    ctx.drawImage(
-      bmp,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
-      drawX,
-      drawY,
-      frame.w,
-      frame.h,
-    );
-
-    setNpcRectangle(
-      npc.index,
-      new Rectangle({ x: screenX, y: drawY }, frame.w, frame.h),
-    );
-
-    if (mirrored) {
-      ctx.restore();
-    }
   }
 }
