@@ -124,6 +124,7 @@ function handleNpcSpec(client: Client, reader: EoReader) {
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
     client.nearby.items.push(item);
+    client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);
     client.emit('chat', {
@@ -167,6 +168,7 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
     client.nearby.items.push(item);
+    client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);
     client.emit('chat', {

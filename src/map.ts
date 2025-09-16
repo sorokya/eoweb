@@ -35,6 +35,7 @@ import { renderNpcChatBubble } from './render/npc-chat-bubble';
 import { NpcDeathAnimation } from './render/npc-death';
 import { renderNpcHealthBar } from './render/npc-health-bar';
 import { NpcWalkAnimation } from './render/npc-walk';
+import { capitalize } from './utils/capitalize';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';
 import type { Vector2 } from './vector';
@@ -56,7 +57,7 @@ type Entity = {
   layer: number;
 };
 
-enum Layer {
+export enum Layer {
   Ground = 0,
   Objects = 1,
   Overlay = 2,
@@ -210,6 +211,29 @@ export class MapRenderer {
     }
 
     playerScreen.x += this.client.quakeOffset;
+
+    /*
+    const mapCanvas = this.client.atlas.getMapCanvas();
+    if (!mapCanvas) {
+      return;
+    }
+
+    const mapOriginX = this.client.atlas.getMapOriginX();
+
+    // Player in mapCanvas space
+    const px = mapOriginX + playerScreen.x;
+    const py = playerScreen.y;
+
+    // Desired top-left of the viewport
+    const sx = Math.floor(px - ctx.canvas.width / 2) + HALF_TILE_WIDTH;
+    const sy = Math.floor(py - ctx.canvas.height / 2) + HALF_TILE_HEIGHT;
+
+    ctx.drawImage(
+      mapCanvas,
+      sx, sy, ctx.canvas.width, ctx.canvas.height,
+      0, 0, ctx.canvas.width, ctx.canvas.height
+    );
+    */
 
     const diag = Math.hypot(ctx.canvas.width, ctx.canvas.height);
     const rangeX = Math.min(
@@ -462,7 +486,7 @@ export class MapRenderer {
 
     ctx.fillStyle = '#fff';
     ctx.font = '12px w95fa';
-    let name = characterAt.name;
+    let name = capitalize(characterAt.name);
     if (characterAt.guildTag !== '   ') {
       name += ` ${characterAt.guildTag}`;
     }
@@ -519,7 +543,11 @@ export class MapRenderer {
         position.x - metrics.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
       ),
       Math.floor(
-        position.y - playerScreen.y - entityRect.rect.height + HALF_GAME_HEIGHT,
+        position.y -
+          playerScreen.y -
+          entityRect.rect.height -
+          8 +
+          HALF_GAME_HEIGHT,
       ),
     );
 
@@ -631,16 +659,14 @@ export class MapRenderer {
         HALF_TILE_WIDTH -
         playerScreen.x +
         HALF_GAME_WIDTH +
-        offset.x +
-        tile.xOffset,
+        offset.x,
     );
     const screenY = Math.floor(
       tileScreen.y -
         HALF_TILE_HEIGHT -
         playerScreen.y +
         HALF_GAME_HEIGHT +
-        offset.y +
-        tile.yOffset,
+        offset.y,
     );
 
     if (this.client.getDoor(coords)) {
@@ -1037,7 +1063,14 @@ export class MapRenderer {
 
     setNpcRectangle(
       npc.index,
-      new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
+      new Rectangle(
+        {
+          x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
+          y: screenY,
+        },
+        frame.w,
+        frame.h,
+      ),
     );
 
     const bubble = this.client.npcChats.get(npc.index);

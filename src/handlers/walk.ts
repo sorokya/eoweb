@@ -69,10 +69,16 @@ function handleWalkReply(client: Client, reader: EoReader) {
   const unknownNpcIndexes = packet.npcIndexes.filter(
     (index) => !client.nearby.npcs.some((n) => n.index === index),
   );
+  let newItems = false;
   for (const item of packet.items) {
     if (!client.nearby.items.some((i) => i.uid === item.uid)) {
       client.nearby.items.push(item);
+      newItems = true;
     }
+  }
+
+  if (newItems) {
+    client.atlas.refresh();
   }
 
   client.rangeRequest(unknownPlayerIds, unknownNpcIndexes);

@@ -164,8 +164,6 @@ type TileAtlasEntry = {
   y: number;
   w: number;
   h: number;
-  xOffset: number;
-  yOffset: number;
 };
 
 type NpcAtlasEntry = {
@@ -267,6 +265,13 @@ export class Atlas {
   private ctx: CanvasRenderingContext2D;
   private staleFrames: Frame[] = [];
 
+  /*
+  private mapCanvas: HTMLCanvasElement;
+  private mapCtx: CanvasRenderingContext2D;
+  private mapRendered = false;
+  private mapOriginX = 0;
+  */
+
   private characterCanvas: HTMLCanvasElement;
   private characterCtx: CanvasRenderingContext2D;
 
@@ -287,7 +292,25 @@ export class Atlas {
     this.characterCtx = this.characterCanvas.getContext('2d', {
       willReadFrequently: true,
     });
+
+    /*
+    this.mapCanvas = document.createElement('canvas');
+    this.mapCtx = this.mapCanvas.getContext('2d');
+    */
   }
+
+  /*
+  getMapCanvas(): HTMLCanvasElement | undefined {
+    if (!this.mapRendered) {
+      return;
+    }
+    return this.mapCanvas;
+  }
+
+  getMapOriginX(): number {
+    return this.mapOriginX;
+  }
+  */
 
   getAtlas(index: number): HTMLCanvasElement | undefined {
     return this.atlases[index]?.getCanvas();
@@ -397,6 +420,7 @@ export class Atlas {
 
   refresh() {
     if (this.loading) return;
+    this.loading = true;
 
     this.bmpsToLoad = [];
 
@@ -423,6 +447,8 @@ export class Atlas {
 
     if (this.bmpsToLoad.length) {
       this.updateAtlas();
+    } else {
+      this.loading = false;
     }
   }
 
@@ -440,6 +466,7 @@ export class Atlas {
     this.items = [];
     this.tiles = [];
     this.mapId = this.client.mapId;
+    //this.mapRendered = false;
 
     for (const atlas of this.atlases) {
       const ctx = atlas.getContext();
@@ -477,8 +504,6 @@ export class Atlas {
         y: -1,
         w: -1,
         h: -1,
-        xOffset: 0,
-        yOffset: 0,
       });
     }
 
@@ -503,8 +528,6 @@ export class Atlas {
               y: -1,
               w: -1,
               h: -1,
-              xOffset: 0,
-              yOffset: 0,
             });
 
             if (
@@ -520,8 +543,6 @@ export class Atlas {
                 y: -1,
                 w: -1,
                 h: -1,
-                xOffset: 0,
-                yOffset: 0,
               });
             }
           }
@@ -842,11 +863,16 @@ export class Atlas {
   }
 
   private async updateAtlas() {
-    this.loading = true;
-
     this.clearStaleFrames();
 
     await Promise.all(this.bmpsToLoad.map((bmp) => this.loadBmp(bmp)));
+
+    /*
+    if (!this.mapRendered) {
+      this.updateMap();
+      this.mapRendered = true;
+    }
+    */
 
     this.updateItems();
     this.updateCharacters();
@@ -854,6 +880,16 @@ export class Atlas {
     this.updateMapLayers();
 
     if (!this.appended) {
+      this.appended = true;
+
+      /*
+      const h1 = document.createElement('h1');
+      h1.innerText = 'Map';
+      const mapCanvas = this.getMapCanvas();
+      document.body.appendChild(h1);
+      document.body.appendChild(mapCanvas);
+      */
+
       for (const atlas of this.atlases) {
         const h1 = document.createElement('h1');
         h1.innerText = `Atlas ${this.atlases.indexOf(atlas)}`;
@@ -862,11 +898,10 @@ export class Atlas {
         document.body.appendChild(h1);
         document.body.appendChild(canvas);
       }
-      this.appended = true;
     }
 
-    this.bmpsToLoad = [];
     this.loading = false;
+    this.bmpsToLoad = [];
   }
 
   private getBmp(
@@ -1565,9 +1600,8 @@ export class Atlas {
   }
 
   private updateMapLayers() {
-    const tmpCanvas = document.createElement('canvas');
-    const tmpCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
-    for (const tile of this.tiles) {
+    //const tilesToRemove: number[] = [];
+    for (const [_index, tile] of this.tiles.entries()) {
       if (tile.x !== -1) {
         continue;
       }
@@ -1577,58 +1611,110 @@ export class Atlas {
         continue;
       }
 
-      tmpCanvas.width = bmp.width;
-      tmpCanvas.height = bmp.height;
-      tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
-      tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
-
-      const imgData = tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
-      const bounds = {
-        x: bmp.width,
-        y: bmp.height,
-        maxX: 0,
-        maxY: 0,
-      };
-
-      for (let y = 0; y < bmp.height; ++y) {
-        for (let x = 0; x < bmp.width; ++x) {
-          const alpha = imgData.data[(y * bmp.width + x) * 4 + 3];
-          if (alpha !== 0) {
-            if (x < bounds.x) bounds.x = x;
-            if (y < bounds.y) bounds.y = y;
-            if (x > bounds.maxX) bounds.maxX = x;
-            if (y > bounds.maxY) bounds.maxY = y;
-          }
+      /*
+      if (tile.gfxType === GfxType.Shadows || (tile.gfxType === GfxType.MapTiles && bmp.width === TILE_WIDTH)) {
+        const usedInTop = this.client.map.graphicLayers[Layer.Top]?.graphicRows.some((row) =>
+          row.tiles.some((t) => t.graphic === tile.graphicId)
+        );
+        if (!usedInTop) {
+          tilesToRemove.push(index);
+          continue;
         }
       }
+      */
 
-      // Calculate width and height from min/max values
-      const w = bounds.maxX - bounds.x + 1;
-      const h = bounds.maxY - bounds.y + 1;
-
-      const placement = this.insert(w, h);
+      const placement = this.insert(bmp.width, bmp.height);
       tile.atlasIndex = this.currentAtlasIndex;
       tile.x = placement.x;
       tile.y = placement.y;
-      tile.w = w;
-      tile.h = h;
+      tile.w = bmp.width;
+      tile.h = bmp.height;
 
-      tile.xOffset = bounds.x;
-      tile.yOffset = bounds.y;
+      this.ctx.drawImage(bmp, tile.x, tile.y, tile.w, tile.h);
+    }
 
-      this.ctx.drawImage(
-        bmp,
-        bounds.x,
-        bounds.y,
-        w,
-        h,
-        tile.x,
-        tile.y,
-        tile.w,
-        tile.h,
-      );
+    // Remove any tiles that don't need to be in the atlas
+    /*
+    for (let i = tilesToRemove.length - 1; i >= 0; --i) {
+      this.tiles.splice(tilesToRemove[i], 1);
+    }
+    */
+  }
+
+  /*
+  private updateMap() {
+    const map = this.client.map;
+    this.mapCanvas.width = (map.width + 1 + map.height + 1) * HALF_TILE_WIDTH;
+    this.mapCanvas.height = (map.width + 1 + map.height + 1) * HALF_TILE_HEIGHT;
+    const offsetX = map.height < map.width ? (((map.width - map.height) * HALF_TILE_WIDTH) >> 1) :
+      (((map.height - map.width) * HALF_TILE_WIDTH) >> 1);
+    //const offsetX = (this.mapCanvas.width >> 1) - ((map.width + 1) * HALF_TILE_WIDTH >> 1);
+
+
+    this.mapCtx.clearRect(
+      0,
+      0,
+      this.mapCanvas.width,
+      this.mapCanvas.height,
+    );
+
+    const HALF_MAP_WIDTH = this.mapCanvas.width >> 1;
+
+    for (const layer of [Layer.Ground, Layer.Shadow]) {
+      const gfxLayer = map.graphicLayers[layer]
+      if (!gfxLayer) {
+        continue;
+      }
+
+      if (layer === Layer.Shadow) {
+        this.mapCtx.globalAlpha = 0.2;
+      } else {
+        this.mapCtx.globalAlpha = 1.0;
+      }
+
+      for (let y = 0; y <= map.height; ++y) {
+        const row = gfxLayer.graphicRows.find((r) => r.y === y);
+        for (let x = 0; x <= map.width; ++x) {
+          const tile = row?.tiles.find((t) => t.x === x);
+          if (tile && tile.graphic === 0) {
+            continue;
+          }
+
+          const graphicId = tile?.graphic ? tile.graphic : layer === Layer.Ground && map.fillTile ? map.fillTile : 0;
+          if (graphicId === 0) {
+            continue;
+          }
+
+          const bmp = this.getBmp(LAYER_GFX_MAP[layer], graphicId);
+          if (!bmp) {
+            console.error(`Missing map tile: ${graphicId} (layer ${Layer[layer]})`);
+            continue;
+          }
+
+          // Skip animated ground tiles
+          if (layer === Layer.Ground && bmp.width > TILE_WIDTH) {
+            continue;
+          }
+
+          const tileScreen = isoToScreen({ x: x, y: y });
+          const offset = layer === Layer.Ground ? { x: 0, y: 0 } : { x: -24, y: -12 };
+          const screenX = Math.floor(
+            tileScreen.x - HALF_TILE_WIDTH + HALF_MAP_WIDTH + offset.x + offsetX
+          );
+          const screenY = Math.floor(
+            tileScreen.y + offset.y
+          );
+
+          if (x === 0 && y === 0) {
+            this.mapOriginX = screenX;
+          }
+
+          this.mapCtx.drawImage(bmp, screenX, screenY, bmp.width, bmp.height);
+        }
+      }
     }
   }
+    */
 
   private async loadBmp(bmp: Bmp) {
     const img = new Image();
