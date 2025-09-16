@@ -39,6 +39,8 @@ function handleItemAdd(client: Client, reader: EoReader) {
     item.coords = packet.coords;
     client.nearby.items.push(item);
   }
+
+  client.atlas.refresh();
 }
 
 function handleItemRemove(client: Client, reader: EoReader) {
@@ -112,6 +114,7 @@ function handleItemDrop(client: Client, reader: EoReader) {
   });
 
   client.emit('inventoryChanged', undefined);
+  client.atlas.refresh();
 }
 
 function handleItemReply(client: Client, reader: EoReader) {
@@ -181,6 +184,7 @@ function handleItemReply(client: Client, reader: EoReader) {
         const data =
           packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataHairDye;
         player.hairColor = data.hairColor;
+        client.atlas.refresh();
       }
       break;
     }

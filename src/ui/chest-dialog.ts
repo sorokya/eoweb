@@ -3,6 +3,7 @@ import { Gender, ItemType } from 'eolib';
 import type { Client } from '../client';
 import { EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
+import { getItemGraphicId } from '../utils/get-item-graphic-id';
 import { Base } from './base-ui';
 
 export class ChestDialog extends Base {
@@ -49,28 +50,12 @@ export class ChestDialog extends Base {
     }
   }
 
-  private getChestItemGraphicId(eifRecord: EifRecord, amount: number): number {
-    if (eifRecord.type === ItemType.Currency) {
-      const gfx =
-        amount >= 100000
-          ? 4
-          : amount >= 10000
-            ? 3
-            : amount >= 100
-              ? 2
-              : amount >= 2
-                ? 1
-                : 0;
-      return 269 + 2 * gfx;
-    }
-    return 2 * eifRecord.graphicId - 1;
-  }
-
   private getChestItemGraphicPath(
+    id: number,
     eifRecord: EifRecord,
     amount: number,
   ): string {
-    const graphicId = this.getChestItemGraphicId(eifRecord, amount);
+    const graphicId = getItemGraphicId(id, eifRecord.graphicId, amount);
     const fileId = 100 + graphicId;
     return `/gfx/gfx023/${fileId}.png`;
   }
@@ -92,7 +77,11 @@ export class ChestDialog extends Base {
       itemElement.className = 'chest-item';
 
       const itemImage = document.createElement('img');
-      itemImage.src = this.getChestItemGraphicPath(record, item.amount);
+      itemImage.src = this.getChestItemGraphicPath(
+        item.id,
+        record,
+        item.amount,
+      );
       itemImage.classList.add('item-image');
       itemElement.appendChild(itemImage);
 

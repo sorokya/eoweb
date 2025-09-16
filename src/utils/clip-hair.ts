@@ -1,9 +1,11 @@
 export function clipHair(
   ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
   width: number,
   height: number,
 ) {
-  const imgData = ctx.getImageData(0, 0, width, height);
+  const imgData = ctx.getImageData(x, y, width, height);
 
   for (let i = 0; i < imgData.data.length; i += 4) {
     if (
@@ -15,5 +17,5 @@ export function clipHair(
     }
   }
 
-  ctx.putImageData(imgData, 0, 0);
+  ctx.putImageData(imgData, x, y);
 }

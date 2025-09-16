@@ -305,8 +305,10 @@ window.addEventListener(
   { passive: false },
 );
 
+/*
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   e.stopPropagation();
   return false;
 });
+*/

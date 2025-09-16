@@ -19,7 +19,7 @@ export function renderNpcHealthBar(
   hpBar.render(
     {
       x: rect.position.x + rect.width / 2,
-      y: rect.position.y,
+      y: rect.position.y - 20,
     },
     ctx,
   );

@@ -216,6 +216,7 @@ export class ShopDialog extends Base {
       }
 
       const item = createItemMenuItem(
+        buy.itemId,
         record,
         record.name,
         `${this.client.getResourceString(EOResourceID.DIALOG_SHOP_PRICE)}: ${buy.buyPrice} ${record.type === ItemType.Armor ? `(${record.spec2 === Gender.Female ? this.client.getResourceString(EOResourceID.FEMALE) : this.client.getResourceString(EOResourceID.MALE)})` : ''}`,
@@ -254,6 +255,7 @@ export class ShopDialog extends Base {
       }
 
       const item = createItemMenuItem(
+        sell.itemId,
         record,
         record.name,
         `${this.client.getResourceString(EOResourceID.DIALOG_SHOP_PRICE)}: ${sell.sellPrice} ${record.type === ItemType.Armor ? `(${record.spec2 === Gender.Female ? this.client.getResourceString(EOResourceID.FEMALE) : this.client.getResourceString(EOResourceID.MALE)})` : ''}`,
@@ -281,6 +283,7 @@ export class ShopDialog extends Base {
       }
 
       const item = createItemMenuItem(
+        craft.itemId,
         record,
         record.name,
         `${this.client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_INGREDIENTS)}: ${craft.ingredients.length} ${record.type === ItemType.Armor ? `(${record.spec2 === Gender.Female ? this.client.getResourceString(EOResourceID.FEMALE) : this.client.getResourceString(EOResourceID.MALE)})` : ''}`,

@@ -133,8 +133,8 @@ export class MovementController {
       this.client.characterAnimations.set(
         character.playerId,
         metadata.ranged
-          ? new CharacterRangedAttackAnimation(character.direction)
-          : new CharacterAttackAnimation(character.direction),
+          ? new CharacterRangedAttackAnimation()
+          : new CharacterAttackAnimation(),
       );
 
       this.client.attack(character.direction, getTimestamp());

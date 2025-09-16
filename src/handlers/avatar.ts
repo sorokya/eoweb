@@ -76,6 +76,8 @@ function handleAvatarAgree(client: Client, reader: EoReader) {
       break;
     }
   }
+
+  client.atlas.refresh();
 }
 
 export function registerAvatarHandlers(client: Client) {

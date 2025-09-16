@@ -28,17 +28,7 @@ export enum GfxType {
   SpellIcons = 25,
 }
 
-const GFX: HTMLImageElement[] = [];
-const Frames: Map<
-  number,
-  {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-  }
->[] = [];
-const Pending: number[] = [];
+const GFX: HTMLImageElement[][] = [];
 
 export function getBitmapById(
   gfxType: GfxType,
@@ -48,7 +38,13 @@ export function getBitmapById(
     return null;
   }
 
-  const bmp = GFX[gfxType];
+  const gfx = GFX[gfxType];
+  if (!gfx) {
+    loadBitmapById(gfxType, resourceId);
+    return null;
+  }
+
+  const bmp = gfx[resourceId];
   if (!bmp) {
     loadBitmapById(gfxType, resourceId);
     return null;
@@ -57,49 +53,18 @@ export function getBitmapById(
   return bmp;
 }
 
-export function getFrameById(
-  gfxType: GfxType,
-  resourceId: number,
-): { x: number; y: number; w: number; h: number } {
-  const frame = Frames[gfxType]?.get(resourceId);
-  if (frame) {
-    return frame;
-  }
-
-  return { x: 0, y: 0, w: 0, h: 0 };
-}
-
 export function loadBitmapById(gfxType: GfxType, resourceId: number) {
-  if (GFX[gfxType] || Pending.includes(gfxType)) {
+  if (GFX[gfxType]?.[resourceId]) {
     return;
   }
-
-  Pending.push(gfxType);
 
   const img = new Image();
-  img.src = `/gfx/gfx${padWithZeros(gfxType, 3)}/atlas.png`;
+  img.src = `/gfx/gfx${padWithZeros(gfxType, 3)}/${resourceId + 100}.png`;
   img.onload = () => {
-    GFX[gfxType] = img;
-  };
-
-  if (Frames[gfxType]?.[resourceId]) {
-    return;
-  }
-
-  fetch(`/gfx/gfx${padWithZeros(gfxType, 3)}/atlas.json`).then((res) => {
-    if (!res.ok) {
-      throw new Error(`Atlas missing: ${GfxType[gfxType]}`);
+    if (!GFX[gfxType]) {
+      GFX[gfxType] = [];
     }
 
-    res.json().then((obj) => {
-      if (!Frames[gfxType]) {
-        Frames[gfxType] = new Map();
-      }
-
-      for (const [id, frame] of Object.entries(obj)) {
-        // @ts-ignore
-        Frames[gfxType].set(Number.parseInt(id, 10), frame);
-      }
-    });
-  });
+    GFX[gfxType][resourceId] = img;
+  };
 }

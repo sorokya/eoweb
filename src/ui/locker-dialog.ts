@@ -94,6 +94,7 @@ export class LockerDialog extends Base {
       }
 
       const itemElement = createItemMenuItem(
+        item.id,
         record,
         record.name,
         `x ${item.amount}`,

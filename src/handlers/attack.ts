@@ -22,12 +22,14 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
     return;
   }
 
+  character.direction = packet.direction;
+
   const metadata = client.getWeaponMetadata(character.equipment.weapon);
   client.characterAnimations.set(
     packet.playerId,
     metadata.ranged
-      ? new CharacterRangedAttackAnimation(packet.direction)
-      : new CharacterAttackAnimation(packet.direction),
+      ? new CharacterRangedAttackAnimation()
+      : new CharacterAttackAnimation(),
   );
 
   const index = randomRange(0, metadata.sfx.length - 1);
