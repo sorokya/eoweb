@@ -187,12 +187,15 @@ type ItemAtlasEntry = {
 type Bmp = {
   gfxType: GfxType;
   id: number;
-  img: HTMLImageElement | null;
+  img: HTMLImageElement;
+  loaded: boolean;
 };
 
 class AtlasCanvas {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
+  private img: HTMLImageElement;
+  private loaded = false;
   free: Rect[] = [{ x: 0, y: 0, w: ATLAS_SIZE, h: ATLAS_SIZE }];
 
   constructor() {
@@ -200,6 +203,10 @@ class AtlasCanvas {
     this.canvas.width = ATLAS_SIZE;
     this.canvas.height = ATLAS_SIZE;
     this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+    this.img = new Image();
+    this.img.onload = () => {
+      this.loaded = true;
+    };
   }
 
   mergeFreeRects() {
@@ -238,6 +245,19 @@ class AtlasCanvas {
         }
       }
     }
+  }
+
+  commit() {
+    this.loaded = false;
+    this.img.src = this.canvas.toDataURL();
+  }
+
+  getImg(): HTMLImageElement | undefined {
+    if (!this.loaded) {
+      return;
+    }
+
+    return this.img;
   }
 
   getCanvas(): HTMLCanvasElement {
@@ -312,8 +332,8 @@ export class Atlas {
   }
   */
 
-  getAtlas(index: number): HTMLCanvasElement | undefined {
-    return this.atlases[index]?.getCanvas();
+  getAtlas(index: number): HTMLImageElement | undefined {
+    return this.atlases[index]?.getImg();
   }
 
   getItem(graphicId: number): ItemAtlasEntry | undefined {
@@ -433,22 +453,23 @@ export class Atlas {
     this.refreshItems();
 
     if (this.characters.some((c) => c.dirty)) {
-      this.bmpsToLoad.push(
-        { gfxType: GfxType.SkinSprites, id: 1, img: null },
-        { gfxType: GfxType.SkinSprites, id: 2, img: null },
-        { gfxType: GfxType.SkinSprites, id: 3, img: null },
-        { gfxType: GfxType.SkinSprites, id: 4, img: null },
-        { gfxType: GfxType.SkinSprites, id: 5, img: null },
-        { gfxType: GfxType.SkinSprites, id: 6, img: null },
-        { gfxType: GfxType.SkinSprites, id: 7, img: null },
-        { gfxType: GfxType.SkinSprites, id: 8, img: null },
-      );
+      for (let i = 1; i <= 8; ++i) {
+        this.addBmpToLoad(GfxType.SkinSprites, i);
+      }
     }
 
     if (this.bmpsToLoad.length) {
-      this.updateAtlas();
+      this.waitForBmpsToLoadThenUpdateAtlas();
     } else {
       this.loading = false;
+    }
+  }
+
+  private waitForBmpsToLoadThenUpdateAtlas() {
+    if (this.bmpsToLoad.some((bmp) => !bmp.loaded)) {
+      setTimeout(() => this.waitForBmpsToLoadThenUpdateAtlas(), 50);
+    } else {
+      this.updateAtlas();
     }
   }
 
@@ -456,7 +477,20 @@ export class Atlas {
     if (
       !this.bmpsToLoad.find((bmp) => bmp.gfxType === gfxType && bmp.id === id)
     ) {
-      this.bmpsToLoad.push({ gfxType, id, img: null });
+      const img = new Image();
+      const bmp = {
+        gfxType,
+        id,
+        img,
+        loaded: false,
+      };
+
+      img.onload = () => {
+        bmp.loaded = true;
+      };
+
+      img.src = `/gfx/gfx${padWithZeros(gfxType, 3)}/${id + 100}.png`;
+      this.bmpsToLoad.push(bmp);
     }
   }
 
@@ -865,8 +899,6 @@ export class Atlas {
   private async updateAtlas() {
     this.clearStaleFrames();
 
-    await Promise.all(this.bmpsToLoad.map((bmp) => this.loadBmp(bmp)));
-
     /*
     if (!this.mapRendered) {
       this.updateMap();
@@ -878,6 +910,10 @@ export class Atlas {
     this.updateCharacters();
     this.updateNpcs();
     this.updateMapLayers();
+
+    for (const atlas of this.atlases) {
+      atlas.commit();
+    }
 
     if (!this.appended) {
       this.appended = true;
@@ -1715,22 +1751,6 @@ export class Atlas {
     }
   }
     */
-
-  private async loadBmp(bmp: Bmp) {
-    const img = new Image();
-    img.src = `/gfx/gfx${padWithZeros(bmp.gfxType, 3)}/${bmp.id + 100}.png`;
-
-    await new Promise((resolve) => {
-      img.onload = () => {
-        bmp.img = img;
-        resolve(true);
-      };
-      img.onerror = () => {
-        console.error(`Failed to load image: ${img.src}`);
-        resolve(false);
-      };
-    });
-  }
 }
 
 function generateCharacterHash(character: CharacterMapInfo) {
