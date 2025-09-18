@@ -2347,4 +2347,14 @@ export class Client {
     packet.lockerCoords = this.lockerCoords;
     this.bus.send(packet);
   }
+
+  setNpcDeathAnimation(index: number) {
+    const npc = this.nearby.npcs.find((n) => n.index === index);
+    if (!npc) {
+      return;
+    }
+
+    const current = this.npcAnimations.get(index);
+    this.npcAnimations.set(index, new NpcDeathAnimation(current));
+  }
 }
