@@ -248,7 +248,6 @@ class AtlasCanvas {
   }
 
   commit() {
-    this.loaded = false;
     this.img.src = this.canvas.toDataURL();
   }
 
