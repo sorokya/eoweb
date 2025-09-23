@@ -139,11 +139,13 @@ function handleItemReply(client: Client, reader: EoReader) {
         packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataHeal;
       client.hp = data.hp;
       client.tp = data.tp;
-      const percent = (client.hp / client.maxHp) * 100;
-      client.characterHealthBars.set(
-        client.playerId,
-        new HealthBar(percent, 0, data.hpGain),
-      );
+      if (data.hpGain) {
+        const percent = (client.hp / client.maxHp) * 100;
+        client.characterHealthBars.set(
+          client.playerId,
+          new HealthBar(percent, 0, data.hpGain),
+        );
+      }
       client.emit('statsUpdate', undefined);
       break;
     }
