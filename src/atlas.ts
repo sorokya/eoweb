@@ -712,6 +712,11 @@ export class Atlas {
         if (existing) {
           existing.hash = hash;
           existing.dirty = true;
+          existing.hairStyle = char.hairStyle;
+          existing.hairColor = char.hairColor;
+          existing.skin = char.skin;
+          existing.gender = char.gender;
+
           for (const frame of existing.frames) {
             if (frame && frame.atlasIndex !== -1) {
               this.addStaleFrame(frame);
