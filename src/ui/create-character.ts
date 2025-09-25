@@ -1,16 +1,8 @@
-import { CharacterMapInfo, Direction, Gender } from 'eolib';
+import { type CharacterMapInfo, Direction, Gender } from 'eolib';
 import mitt from 'mitt';
-import {
-  getCharacterRectangle,
-  Rectangle,
-  setCharacterRectangle,
-} from '../collision';
-import {
-  CHARACTER_HEIGHT,
-  CHARACTER_WIDTH,
-  GAME_FPS,
-  HALF_CHARACTER_WIDTH,
-} from '../consts';
+import { CharacterFrame } from '../atlas';
+import type { Client } from '../client';
+import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../consts';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 
@@ -70,7 +62,8 @@ export class CreateCharacterForm extends Base {
   private lblSkin: HTMLDivElement = this.container.querySelector(
     'div[data-id="skin"]',
   );
-  private character: CharacterMapInfo;
+  private character: CharacterMapInfo | undefined;
+  private client: Client;
 
   private gender = 0;
   private hairStyle = 0;
@@ -103,19 +96,56 @@ export class CreateCharacterForm extends Base {
 
     lastTime = now;
 
-    const rect = getCharacterRectangle(0);
-    if (!rect) {
-      setCharacterRectangle(
-        0,
-        new Rectangle(
-          { x: this.canvas.width / 2 - HALF_CHARACTER_WIDTH, y: 20 },
-          CHARACTER_WIDTH,
-          CHARACTER_HEIGHT,
-        ),
-      );
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    const downRight = [Direction.Down, Direction.Right].includes(
+      this.character.direction,
+    );
+
+    const frame = this.client.atlas.getCharacterFrame(
+      this.client.playerId,
+      downRight
+        ? CharacterFrame.StandingDownRight
+        : CharacterFrame.StandingUpLeft,
+    );
+    if (!frame) {
+      return;
     }
 
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
+      return;
+    }
+
+    const mirrored = [Direction.Right, Direction.Up].includes(
+      this.character.direction,
+    );
+
+    if (mirrored) {
+      this.ctx.save();
+      this.ctx.scale(-1, 1);
+      this.ctx.translate(-this.canvas.width, 0);
+    }
+
+    this.ctx.drawImage(
+      atlas,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      Math.floor(
+        (this.canvas.width >> 1) +
+          (mirrored ? frame.mirroredXOffset : frame.xOffset),
+      ),
+      this.canvas.height + frame.yOffset,
+      frame.w,
+      frame.h,
+    );
+
+    if (mirrored) {
+      this.ctx.restore();
+    }
+
     this.preview.src = this.canvas.toDataURL();
 
     if (this.open) {
@@ -131,6 +161,7 @@ export class CreateCharacterForm extends Base {
     this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
     this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
     this.name.value = '';
+    this.character = this.client.getCharacterById(this.client.playerId);
     this.character.gender = Gender.Female;
     this.character.skin = 0;
     this.character.direction = Direction.Down;
@@ -142,6 +173,7 @@ export class CreateCharacterForm extends Base {
     this.skin = 0;
     this.open = true;
     this.updateIcons();
+    this.client.atlas.refresh();
     window.requestAnimationFrame((now) => {
       this.render(now);
     });
@@ -160,21 +192,15 @@ export class CreateCharacterForm extends Base {
     this.lblSkin.style.backgroundPositionX = `-${this.skin * 23 + 46}px`;
   }
 
-  constructor() {
+  constructor(client: Client) {
     super();
+
+    this.client = client;
 
     this.canvas = document.createElement('canvas');
     this.canvas.width = CHARACTER_WIDTH + 40;
     this.canvas.height = CHARACTER_HEIGHT + 40;
     this.ctx = this.canvas.getContext('2d');
-
-    this.character = new CharacterMapInfo();
-    this.character.playerId = 0;
-    this.character.gender = Gender.Female;
-    this.character.skin = 0;
-    this.character.direction = Direction.Down;
-    this.character.hairStyle = 1;
-    this.character.hairColor = 0;
 
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
@@ -224,6 +250,7 @@ export class CreateCharacterForm extends Base {
       this.gender = incrementOrWrap(this.gender, MAX_GENDER);
       this.character.gender = this.gender as Gender;
       this.updateIcons();
+      this.client.atlas.refresh();
     });
 
     this.btnToggleHairStyle.addEventListener('click', () => {
@@ -231,6 +258,7 @@ export class CreateCharacterForm extends Base {
       this.hairStyle = incrementOrWrap(this.hairStyle, MAX_HAIR_STYLE);
       this.character.hairStyle = this.hairStyle + 1;
       this.updateIcons();
+      this.client.atlas.refresh();
     });
 
     this.btnToggleHairColor.addEventListener('click', () => {
@@ -238,6 +266,7 @@ export class CreateCharacterForm extends Base {
       this.hairColor = incrementOrWrap(this.hairColor, MAX_HAIR_COLOR);
       this.character.hairColor = this.hairColor;
       this.updateIcons();
+      this.client.atlas.refresh();
     });
 
     this.btnToggleSkin.addEventListener('click', () => {
@@ -245,6 +274,7 @@ export class CreateCharacterForm extends Base {
       this.skin = incrementOrWrap(this.skin, MAX_SKIN);
       this.character.skin = this.skin;
       this.updateIcons();
+      this.client.atlas.refresh();
     });
   }
 }
