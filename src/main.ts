@@ -1055,9 +1055,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   const emf = Emf.deserialize(reader);
   client.setMap(emf);
 
-  client.playerId = 1;
+  client.playerId = 0;
   const character = new CharacterMapInfo();
-  character.playerId = 1;
+  character.playerId = 0;
   character.coords = new BigCoords();
   character.coords.x = 35;
   character.coords.y = 38;

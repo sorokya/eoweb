@@ -1,5 +1,9 @@
 import {
+  BigCoords,
+  CharacterMapInfo,
+  Direction,
   type EoReader,
+  EquipmentMapInfo,
   LoginReply,
   LoginReplyServerPacket,
   PacketAction,
@@ -67,6 +71,29 @@ function handleLoginReply(client: Client, reader: EoReader) {
     return;
   }
 
+  client.nearby.characters.push(
+    ...data.characters.map((c) => {
+      const info = new CharacterMapInfo();
+      info.playerId = c.id;
+      info.name = c.name;
+      info.mapId = client.mapId;
+      info.coords = new BigCoords();
+      info.direction = Direction.Down;
+      info.gender = c.gender;
+      info.hairStyle = c.hairStyle;
+      info.hairColor = c.hairColor;
+      info.skin = c.skin;
+      info.equipment = new EquipmentMapInfo();
+      info.equipment.armor = c.equipment.armor;
+      info.equipment.weapon = c.equipment.weapon;
+      info.equipment.boots = c.equipment.boots;
+      info.equipment.shield = c.equipment.shield;
+      info.equipment.hat = c.equipment.hat;
+      return info;
+    }),
+  );
+
+  client.atlas.refresh();
   client.emit('login', data.characters);
 }
 

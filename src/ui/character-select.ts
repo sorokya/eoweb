@@ -1,22 +1,8 @@
-import {
-  CharacterMapInfo,
-  type CharacterSelectionListEntry,
-  Direction,
-  EquipmentMapInfo,
-} from 'eolib';
+import type { CharacterSelectionListEntry } from 'eolib';
 import mitt from 'mitt';
+import { CharacterFrame } from '../atlas';
 import type { Client } from '../client';
-import {
-  getCharacterRectangle,
-  Rectangle,
-  setCharacterRectangle,
-} from '../collision';
-import {
-  CHARACTER_HEIGHT,
-  CHARACTER_WIDTH,
-  GAME_FPS,
-  HALF_CHARACTER_WIDTH,
-} from '../consts';
+import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../consts';
 import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { capitalize } from '../utils/capitalize';
@@ -67,9 +53,7 @@ export class CharacterSelect extends Base {
       const image = el as HTMLImageElement;
       image.src = '';
     }
-    window.requestAnimationFrame((now) => {
-      this.render(now);
-    });
+    window.requestAnimationFrame(this.render.bind(this));
   }
 
   hide() {
@@ -92,38 +76,36 @@ export class CharacterSelect extends Base {
 
     lastTime = now;
 
-    const rect = getCharacterRectangle(1);
-    if (!rect) {
-      setCharacterRectangle(
-        1,
-        new Rectangle(
-          {
-            x: this.canvas.width / 2 - HALF_CHARACTER_WIDTH,
-            y: 20,
-          },
-          CHARACTER_WIDTH,
-          CHARACTER_HEIGHT,
-        ),
-      );
-    }
-
     let index = 0;
     for (const character of this.characters) {
-      const mapInfo = new CharacterMapInfo();
-      mapInfo.playerId = 1;
-      mapInfo.gender = character.gender;
-      mapInfo.skin = character.skin;
-      mapInfo.direction = Direction.Down;
-      mapInfo.hairColor = character.hairColor;
-      mapInfo.hairStyle = character.hairStyle;
-      mapInfo.equipment = new EquipmentMapInfo();
-      mapInfo.equipment.boots = character.equipment.boots;
-      mapInfo.equipment.armor = character.equipment.armor;
-      mapInfo.equipment.weapon = character.equipment.weapon;
-      mapInfo.equipment.hat = character.equipment.hat;
-      mapInfo.equipment.shield = character.equipment.shield;
-
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      const frame = this.client.atlas.getCharacterFrame(
+        character.id,
+        CharacterFrame.StandingDownRight,
+      );
+      if (!frame) {
+        index++;
+        continue;
+      }
+
+      const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+      if (!atlas) {
+        index++;
+        continue;
+      }
+
+      this.ctx.drawImage(
+        atlas,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        Math.floor((this.canvas.width >> 1) - (frame.w >> 1)),
+        Math.floor((this.canvas.height >> 1) - (frame.h >> 1)),
+        frame.w,
+        frame.h,
+      );
 
       const preview: HTMLImageElement = this.container.querySelectorAll(
         '.preview',
@@ -141,9 +123,8 @@ export class CharacterSelect extends Base {
     }
 
     if (this.open) {
-      window.requestAnimationFrame((now) => {
-        this.render(now);
-      });
+      window.requestAnimationFrame(this.render.bind(this));
+      return;
     }
   }
 
