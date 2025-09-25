@@ -716,6 +716,7 @@ export class Atlas {
           existing.hairColor = char.hairColor;
           existing.skin = char.skin;
           existing.gender = char.gender;
+          existing.equipment = char.equipment;
 
           for (const frame of existing.frames) {
             if (frame && frame.atlasIndex !== -1) {

@@ -1,5 +1,6 @@
 import {
   CharacterCreateClientPacket,
+  CharacterPlayerServerPacket,
   CharacterReply,
   CharacterReplyServerPacket,
   type EoReader,
@@ -36,7 +37,9 @@ function handleCharacterReply(client: Client, reader: EoReader) {
       }
       return;
     case CharacterReply.Deleted: {
-      // TODO: Update UI when character deleted
+      const data =
+        packet.replyCodeData as CharacterReplyServerPacket.ReplyCodeDataDeleted;
+      client.emit('characterDeleted', data.characters);
       playSfxById(SfxId.DeleteCharacter);
       return;
     }
@@ -66,10 +69,20 @@ function handleCharacterReply(client: Client, reader: EoReader) {
   }
 }
 
+function handleCharacterPlayer(client: Client, reader: EoReader) {
+  const packet = CharacterPlayerServerPacket.deserialize(reader);
+  client.sessionId = packet.sessionId;
+}
+
 export function registerCharacterHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Character,
     PacketAction.Reply,
     (reader) => handleCharacterReply(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Character,
+    PacketAction.Player,
+    (reader) => handleCharacterPlayer(client, reader),
   );
 }

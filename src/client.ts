@@ -13,9 +13,11 @@ import {
   type CharacterDetails,
   type CharacterIcon,
   type CharacterMapInfo,
+  CharacterRemoveClientPacket,
   CharacterRequestClientPacket,
   CharacterSecondaryStats,
   type CharacterSelectionListEntry,
+  CharacterTakeClientPacket,
   ChestAddClientPacket,
   ChestOpenClientPacket,
   ChestTakeClientPacket,
@@ -200,6 +202,7 @@ type ClientEvents = {
   debug: string;
   login: CharacterSelectionListEntry[];
   characterCreated: CharacterSelectionListEntry[];
+  characterDeleted: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
   chat: { tab: ChatTab; message: string; icon?: ChatIcon | null };
@@ -728,6 +731,21 @@ export class Client {
           this.drunkEmoteTicks = 0;
         }
       }
+
+      this.clearOutofRangeTicks = Math.max(this.clearOutofRangeTicks - 1, 0);
+      if (!this.clearOutofRangeTicks) {
+        const playerCoords = this.getPlayerCoords();
+        this.nearby.characters = this.nearby.characters.filter((c) =>
+          inRange(playerCoords, c.coords),
+        );
+        this.nearby.npcs = this.nearby.npcs.filter((n) =>
+          inRange(playerCoords, n.coords),
+        );
+        this.nearby.items = this.nearby.items.filter((i) =>
+          inRange(playerCoords, i.coords),
+        );
+        this.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
+      }
     }
 
     const emptyQueuedNpcChats: number[] = [];
@@ -911,21 +929,6 @@ export class Client {
       if (!this.quakeTicks) {
         this.quakeOffset = 0;
       }
-    }
-
-    this.clearOutofRangeTicks = Math.max(this.clearOutofRangeTicks - 1, 0);
-    if (!this.clearOutofRangeTicks) {
-      const playerCoords = this.getPlayerCoords();
-      this.nearby.characters = this.nearby.characters.filter((c) =>
-        inRange(playerCoords, c.coords),
-      );
-      this.nearby.npcs = this.nearby.npcs.filter((n) =>
-        inRange(playerCoords, n.coords),
-      );
-      this.nearby.items = this.nearby.items.filter((i) =>
-        inRange(playerCoords, i.coords),
-      );
-      this.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
     }
   }
 
@@ -1582,6 +1585,19 @@ export class Client {
 
     this.lastCharacterId = characterId;
     localStorage.setItem('last-character-id', `${characterId}`);
+  }
+
+  requestCharacterDeletion(characterId: number) {
+    const packet = new CharacterTakeClientPacket();
+    packet.characterId = characterId;
+    this.bus.send(packet);
+  }
+
+  deleteCharacter(characterId: number) {
+    const packet = new CharacterRemoveClientPacket();
+    packet.characterId = characterId;
+    packet.sessionId = this.sessionId;
+    this.bus.send(packet);
   }
 
   requestWarpMap(id: number) {
