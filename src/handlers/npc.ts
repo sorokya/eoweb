@@ -19,7 +19,6 @@ import { EOResourceID } from '../edf';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { NpcAttackAnimation } from '../render/npc-attack';
-import { NpcDeathAnimation } from '../render/npc-death';
 import { NpcWalkAnimation } from '../render/npc-walk';
 import { playSfxById, SfxId } from '../sfx';
 import { ChatIcon } from '../ui/chat';
@@ -112,10 +111,8 @@ function handleNpcSpec(client: Client, reader: EoReader) {
     packet.npcKilledData.npcIndex,
     new HealthBar(0, packet.npcKilledData.damage),
   );
-  client.npcAnimations.set(
-    packet.npcKilledData.npcIndex,
-    new NpcDeathAnimation(),
-  );
+
+  client.setNpcDeathAnimation(packet.npcKilledData.npcIndex);
 
   if (packet.npcKilledData.dropIndex) {
     const item = new ItemMapInfo();
@@ -156,10 +153,7 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     packet.npcKilledData.npcIndex,
     new HealthBar(0, packet.npcKilledData.damage),
   );
-  client.npcAnimations.set(
-    packet.npcKilledData.npcIndex,
-    new NpcDeathAnimation(),
-  );
+  client.setNpcDeathAnimation(packet.npcKilledData.npcIndex);
 
   if (packet.npcKilledData.dropIndex) {
     const item = new ItemMapInfo();
@@ -215,7 +209,7 @@ function handleNpcJunk(client: Client, reader: EoReader) {
     .map((n) => n.index)
     .forEach((npcIndex) => {
       client.npcHealthBars.set(npcIndex, new HealthBar(0, 1));
-      client.npcAnimations.set(npcIndex, new NpcDeathAnimation());
+      client.setNpcDeathAnimation(npcIndex);
     });
 }
 

@@ -5,18 +5,9 @@ import {
   EquipmentMapInfo,
 } from 'eolib';
 import mitt from 'mitt';
+import { CharacterFrame } from '../atlas';
 import type { Client } from '../client';
-import {
-  getCharacterRectangle,
-  Rectangle,
-  setCharacterRectangle,
-} from '../collision';
-import {
-  CHARACTER_HEIGHT,
-  CHARACTER_WIDTH,
-  GAME_FPS,
-  HALF_CHARACTER_WIDTH,
-} from '../consts';
+import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../consts';
 import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { capitalize } from '../utils/capitalize';
@@ -25,6 +16,14 @@ import { Base } from './base-ui';
 type Events = {
   cancel: undefined;
   selectCharacter: number;
+  requestCharacterDeletion: {
+    id: number;
+    name: string;
+  };
+  deleteCharacter: {
+    id: number;
+    name: string;
+  };
   create: undefined;
   changePassword: undefined;
   error: { title: string; message: string };
@@ -47,6 +46,7 @@ export class CharacterSelect extends Base {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private open = false;
+  confirmed = false;
 
   isOpen(): boolean {
     return this.open;
@@ -67,9 +67,7 @@ export class CharacterSelect extends Base {
       const image = el as HTMLImageElement;
       image.src = '';
     }
-    window.requestAnimationFrame((now) => {
-      this.render(now);
-    });
+    window.requestAnimationFrame(this.render.bind(this));
   }
 
   hide() {
@@ -92,63 +90,90 @@ export class CharacterSelect extends Base {
 
     lastTime = now;
 
-    const rect = getCharacterRectangle(1);
-    if (!rect) {
-      setCharacterRectangle(
-        1,
-        new Rectangle(
-          {
-            x: this.canvas.width / 2 - HALF_CHARACTER_WIDTH,
-            y: 20,
-          },
-          CHARACTER_WIDTH,
-          CHARACTER_HEIGHT,
-        ),
-      );
-    }
-
-    let index = 0;
-    for (const character of this.characters) {
-      const mapInfo = new CharacterMapInfo();
-      mapInfo.playerId = 1;
-      mapInfo.gender = character.gender;
-      mapInfo.skin = character.skin;
-      mapInfo.direction = Direction.Down;
-      mapInfo.hairColor = character.hairColor;
-      mapInfo.hairStyle = character.hairStyle;
-      mapInfo.equipment = new EquipmentMapInfo();
-      mapInfo.equipment.boots = character.equipment.boots;
-      mapInfo.equipment.armor = character.equipment.armor;
-      mapInfo.equipment.weapon = character.equipment.weapon;
-      mapInfo.equipment.hat = character.equipment.hat;
-      mapInfo.equipment.shield = character.equipment.shield;
-
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
+    for (let i = 0; i < 3; ++i) {
       const preview: HTMLImageElement = this.container.querySelectorAll(
         '.preview',
-      )[index] as HTMLImageElement;
+      )[i] as HTMLImageElement;
+      const adminLevel: HTMLImageElement =
+        this.container.querySelector('.admin-level');
+
+      const character = this.characters[i];
+      if (!character) {
+        preview.src = '';
+        adminLevel.className = 'admin-level';
+        continue;
+      }
+
+      const frame = this.client.atlas.getCharacterFrame(
+        this.client.playerId + i + 1,
+        CharacterFrame.StandingDownRight,
+      );
+      if (!frame) {
+        continue;
+      }
+
+      const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+      if (!atlas) {
+        continue;
+      }
+
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.drawImage(
+        atlas,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        Math.floor((this.canvas.width >> 1) - (frame.w >> 1)),
+        Math.floor((this.canvas.height >> 1) - (frame.h >> 1)),
+        frame.w,
+        frame.h,
+      );
+
       if (preview) {
         preview.src = this.canvas.toDataURL();
       }
 
-      const adminLevel: HTMLImageElement =
-        this.container.querySelector('.admin-level');
       if (adminLevel) {
         adminLevel.classList.add(`level-${character.admin}`);
       }
-      index++;
     }
 
     if (this.open) {
-      window.requestAnimationFrame((now) => {
-        this.render(now);
-      });
+      window.requestAnimationFrame(this.render.bind(this));
+      return;
     }
   }
 
   setCharacters(characters: CharacterSelectionListEntry[]) {
+    this.confirmed = false;
     this.characters = characters;
+
+    this.client.nearby.characters = this.client.nearby.characters.filter(
+      (c) => c.playerId === this.client.playerId,
+    );
+    this.client.nearby.characters.push(
+      ...this.characters.map((c, i) => {
+        const info = new CharacterMapInfo();
+        info.playerId = this.client.playerId + i + 1;
+        info.name = c.name;
+        info.mapId = this.client.mapId;
+        info.direction = Direction.Down;
+        info.gender = c.gender;
+        info.hairStyle = c.hairStyle;
+        info.hairColor = c.hairColor;
+        info.skin = c.skin;
+        info.equipment = new EquipmentMapInfo();
+        info.equipment.armor = c.equipment.armor;
+        info.equipment.weapon = c.equipment.weapon;
+        info.equipment.boots = c.equipment.boots;
+        info.equipment.shield = c.equipment.shield;
+        info.equipment.hat = c.equipment.hat;
+        return info;
+      }),
+    );
+
+    this.client.atlas.refresh();
     const characterBoxes = this.container.querySelectorAll('.character');
     let index = 0;
     for (const box of characterBoxes) {
@@ -173,6 +198,10 @@ export class CharacterSelect extends Base {
       btnLogin.removeEventListener('click', this.onLogin[index]);
       this.onLogin[index] = () => {
         playSfxById(SfxId.ButtonClick);
+        if (!character) {
+          return;
+        }
+
         this.emitter.emit('selectCharacter', character.id);
       };
       btnLogin.addEventListener('click', this.onLogin[index]);
@@ -180,6 +209,21 @@ export class CharacterSelect extends Base {
       btnDelete.removeEventListener('click', this.onDelete[index]);
       this.onDelete[index] = () => {
         playSfxById(SfxId.ButtonClick);
+        if (!character) {
+          return;
+        }
+
+        if (this.confirmed) {
+          this.emitter.emit('deleteCharacter', {
+            id: character.id,
+            name: character.name,
+          });
+        } else {
+          this.emitter.emit('requestCharacterDeletion', {
+            id: character.id,
+            name: character.name,
+          });
+        }
       };
       btnDelete.addEventListener('click', this.onDelete[index]);
 

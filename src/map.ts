@@ -949,7 +949,14 @@ export class MapRenderer {
       return;
     }
 
-    const animation = this.client.npcAnimations.get(npc.index);
+    let dyingTicks = 0;
+    let dying = false;
+    let animation = this.client.npcAnimations.get(npc.index);
+    if (animation instanceof NpcDeathAnimation) {
+      dying = true;
+      dyingTicks = animation.ticks;
+      animation = animation.base;
+    }
     const meta = this.client.getNpcMetadata(record.graphicId);
     const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
     const additionalOffset = { x: 0, y: 0 };
@@ -1035,10 +1042,8 @@ export class MapRenderer {
       ctx.globalAlpha = 0.4;
     }
 
-    let dying = false;
-    if (animation instanceof NpcDeathAnimation) {
-      dying = true;
-      ctx.globalAlpha = animation.ticks / NPC_DEATH_TICKS;
+    if (dying) {
+      ctx.globalAlpha = dyingTicks / NPC_DEATH_TICKS;
     }
 
     ctx.drawImage(

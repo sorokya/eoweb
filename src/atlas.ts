@@ -28,8 +28,8 @@ import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { padWithZeros } from './utils/pad-with-zeros';
 
 const ATLAS_SIZE = 2048;
-export const CHARACTER_FRAME_SIZE = 100;
-export const HALF_CHARACTER_FRAME_SIZE = CHARACTER_FRAME_SIZE >> 1;
+const CHARACTER_FRAME_SIZE = 100;
+const HALF_CHARACTER_FRAME_SIZE = CHARACTER_FRAME_SIZE >> 1;
 
 export enum CharacterFrame {
   StandingDownRight = 0,
@@ -248,7 +248,6 @@ class AtlasCanvas {
   }
 
   commit() {
-    this.loaded = false;
     this.img.src = this.canvas.toDataURL();
   }
 
@@ -713,6 +712,12 @@ export class Atlas {
         if (existing) {
           existing.hash = hash;
           existing.dirty = true;
+          existing.hairStyle = char.hairStyle;
+          existing.hairColor = char.hairColor;
+          existing.skin = char.skin;
+          existing.gender = char.gender;
+          existing.equipment = char.equipment;
+
           for (const frame of existing.frames) {
             if (frame && frame.atlasIndex !== -1) {
               this.addStaleFrame(frame);

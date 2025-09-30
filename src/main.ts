@@ -62,6 +62,7 @@ import { ShopDialog } from './ui/shop-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
+import { capitalize } from './utils/capitalize';
 import { randomRange } from './utils/random-range';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -213,6 +214,10 @@ client.on('characterCreated', (characters) => {
   characterSelect.setCharacters(characters);
 });
 
+client.on('characterDeleted', (characters) => {
+  characterSelect.setCharacters(characters);
+});
+
 client.on('selectCharacter', () => {});
 
 client.on('chat', ({ icon, tab, message }) => {
@@ -359,7 +364,7 @@ const mainMenu = new MainMenu();
 const loginForm = new LoginForm();
 const createAccountForm = new CreateAccountForm(client);
 const characterSelect = new CharacterSelect(client);
-const createCharacterForm = new CreateCharacterForm();
+const createCharacterForm = new CreateCharacterForm(client);
 const changePasswordForm = new ChangePasswordForm(client);
 const smallAlertLargeHeader = new SmallAlertLargeHeader();
 const exitGame = new ExitGame();
@@ -466,6 +471,29 @@ characterSelect.on('changePassword', () => {
 
 characterSelect.on('selectCharacter', (id) => {
   client.selectCharacter(id);
+});
+
+characterSelect.on('requestCharacterDeletion', ({ id, name }) => {
+  const strings = client.getDialogStrings(
+    DialogResourceID.CHARACTER_DELETE_FIRST_CHECK,
+  );
+  smallConfirm.setContent(`${capitalize(name)} ${strings[1]}`, strings[0]);
+  smallConfirm.setCallback(() => {
+    client.requestCharacterDeletion(id);
+    characterSelect.confirmed = true;
+  });
+  smallConfirm.show();
+});
+
+characterSelect.on('deleteCharacter', ({ id, name }) => {
+  const strings = client.getDialogStrings(
+    DialogResourceID.CHARACTER_DELETE_CONFIRM,
+  );
+  smallConfirm.setContent(`${capitalize(name)} ${strings[1]}`, strings[0]);
+  smallConfirm.setCallback(() => {
+    client.deleteCharacter(id);
+  });
+  smallConfirm.show();
 });
 
 characterSelect.on('error', ({ title, message }) => {
@@ -1055,18 +1083,18 @@ window.addEventListener('DOMContentLoaded', async () => {
   const emf = Emf.deserialize(reader);
   client.setMap(emf);
 
-  client.playerId = 1;
+  client.playerId = 0;
   const character = new CharacterMapInfo();
-  character.playerId = 1;
+  character.playerId = 0;
   character.coords = new BigCoords();
   character.coords.x = 35;
   character.coords.y = 38;
-  character.gender = Gender.Male;
+  character.gender = Gender.Female;
   character.sitState = SitState.Floor;
   character.skin = 0;
-  character.hairStyle = 0;
+  character.hairStyle = 1;
   character.hairColor = 0;
-  character.name = 'Debug';
+  character.name = 'debug';
   character.guildTag = '   ';
   character.direction = Direction.Down;
   character.equipment = new EquipmentMapInfo();
