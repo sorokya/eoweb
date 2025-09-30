@@ -62,6 +62,7 @@ import { ShopDialog } from './ui/shop-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
+import { Stats } from './ui/stats';
 import { capitalize } from './utils/capitalize';
 import { randomRange } from './utils/random-range';
 
@@ -256,6 +257,7 @@ client.on('passwordChanged', () => {
 
 client.on('statsUpdate', () => {
   hud.setStats(client);
+  stats.render();
 });
 
 client.on('reconnect', () => {
@@ -374,6 +376,7 @@ const chat = new Chat();
 const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
+const stats = new Stats(client);
 const paperdoll = new Paperdoll(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
@@ -533,8 +536,15 @@ chat.on('blur', () => {
   client.typing = false;
 });
 
-inGameMenu.on('toggle-inventory', () => {
-  inventory.toggle();
+inGameMenu.on('toggle', (which) => {
+  switch (which) {
+    case 'inventory':
+      inventory.toggle();
+      break;
+    case 'stats':
+      stats.toggle();
+      break;
+  }
 });
 
 inventory.on('dropItem', ({ at, itemId }) => {

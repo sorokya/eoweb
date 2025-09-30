@@ -3,7 +3,7 @@ import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 
 type Events = {
-  'toggle-inventory': undefined;
+  toggle: 'inventory' | 'map' | 'spells' | 'stats' | 'online' | 'party';
 };
 
 export class InGameMenu extends Base {
@@ -36,32 +36,37 @@ export class InGameMenu extends Base {
     this.btnInventory.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
-      this.emitter.emit('toggle-inventory', undefined);
+      this.emitter.emit('toggle', 'inventory');
     });
 
     this.btnMap.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('toggle', 'map');
     });
 
     this.btnSpells.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('toggle', 'spells');
     });
 
     this.btnStats.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('toggle', 'stats');
     });
 
     this.btnOnline.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('toggle', 'online');
     });
 
     this.btnParty.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
+      this.emitter.emit('toggle', 'party');
     });
   }
 

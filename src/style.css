@@ -66,6 +66,7 @@ body {
   #container {
     height: 100vh;
   }
+
   #game {
     transform: translate(-50%);
   }
@@ -410,8 +411,10 @@ input[type="password"] {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.1); /* optional dimming effect */
-  z-index: 1000; /* higher than game UI, lower than modal */
+  background: rgba(0, 0, 0, 0.1);
+  /* optional dimming effect */
+  z-index: 1000;
+  /* higher than game UI, lower than modal */
 }
 
 .title {
@@ -783,7 +786,8 @@ input[type="password"] {
 
 #inventory .item .tooltip {
   position: absolute;
-  bottom: 100%; /* Position above the item */
+  bottom: 100%;
+  /* Position above the item */
   left: 50%;
   transform: translateX(-50%);
   background-color: black;
@@ -869,6 +873,7 @@ input[type="password"] {
   display: flex;
   gap: 1px;
 }
+
 #inventory .tabs button,
 #inventory .buttons button {
   background: transparent;
@@ -1034,7 +1039,8 @@ input[type="password"] {
 
 #paperdoll .item .tooltip {
   position: absolute;
-  bottom: 100%; /* Position above the item */
+  bottom: 100%;
+  /* Position above the item */
   left: 50%;
   transform: translateX(-50%);
   background-color: black;
@@ -1702,8 +1708,10 @@ div.icon[data-id="23"] {
   position: absolute;
   bottom: calc(-16px * var(--ui-scale));
 
-  transform: scale(var(--ui-scale)); /* scales visually with rest of UI */
-  transform-origin: left center; /* scaling doesn't shift it sideways */
+  transform: scale(var(--ui-scale));
+  /* scales visually with rest of UI */
+  transform-origin: left center;
+  /* scaling doesn't shift it sideways */
 }
 
 #hud .dropdown span {
@@ -1855,6 +1863,7 @@ div.icon[data-id="23"] {
   :root {
     --ui-scale: 0.8;
   }
+
   .stat-label {
     font-size: 10px;
   }
@@ -1864,9 +1873,11 @@ div.icon[data-id="23"] {
   :root {
     --ui-scale: 0.6;
   }
+
   .stat-label {
     font-size: 9px;
   }
+
   #hud {
     top: 20px;
   }
@@ -1881,6 +1892,7 @@ div.icon[data-id="23"] {
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -2304,4 +2316,143 @@ div.icon[data-id="23"] {
   width: 2048px;
   height: 2048px;
   position: static;
+}
+
+#stats {
+  position: absolute;
+  width: 479px;
+  height: 119px;
+  background: #000;
+  background-image: url(/gfx/gfx002/134.png);
+  color: #fff;
+  font-size: 12px;
+  background-position: -3px 0;
+  border-radius: 5px;
+  z-index: 9999;
+}
+
+#stats .stat {
+  position: absolute;
+}
+
+#stats .stat[data-id="str"] {
+  left: 52px;
+  top: 10px;
+  width: 75px;
+}
+
+#stats .stat[data-id="int"] {
+  left: 52px;
+  top: 28px;
+  width: 75px;
+}
+
+#stats .stat[data-id="wis"] {
+  left: 52px;
+  top: 46px;
+  width: 75px;
+}
+
+#stats .stat[data-id="agi"] {
+  left: 52px;
+  top: 64px;
+  width: 75px;
+}
+
+#stats .stat[data-id="con"] {
+  left: 52px;
+  top: 82px;
+  width: 75px;
+}
+
+#stats .stat[data-id="cha"] {
+  left: 52px;
+  top: 100px;
+  width: 75px;
+}
+
+#stats .stat[data-id="hp"] {
+  left: 160px;
+  top: 10px;
+  width: 75px;
+}
+
+#stats .stat[data-id="tp"] {
+  left: 160px;
+  top: 28px;
+  width: 75px;
+}
+
+#stats .stat[data-id="dam"] {
+  left: 160px;
+  top: 46px;
+  width: 75px;
+}
+
+#stats .stat[data-id="acc"] {
+  left: 160px;
+  top: 64px;
+  width: 75px;
+}
+
+#stats .stat[data-id="arm"] {
+  left: 160px;
+  top: 82px;
+  width: 75px;
+}
+
+#stats .stat[data-id="eva"] {
+  left: 160px;
+  top: 100px;
+  width: 75px;
+}
+
+#stats .stat[data-id="name"] {
+  left: 282px;
+  top: 9px;
+}
+
+#stats .stat[data-id="lvl"] {
+  left: 453px;
+  top: 10px;
+}
+
+#stats .stat[data-id="guild"] {
+  left: 282px;
+  top: 27px;
+}
+
+#stats .stat[data-id="weight"] {
+  left: 282px;
+  top: 46px;
+}
+
+#stats .stat[data-id="stat-points"] {
+  left: 282px;
+  top: 64px;
+}
+
+#stats .stat[data-id="skill-points"] {
+  left: 282px;
+  top: 82px;
+}
+
+#stats .stat[data-id="gold"] {
+  left: 380px;
+  top: 46px;
+}
+
+#stats .stat[data-id="exp"] {
+  left: 380px;
+  top: 64px;
+}
+
+#stats .stat[data-id="tnl"] {
+  left: 380px;
+  top: 82px;
+}
+
+#stats .stat[data-id="karma"] {
+  left: 380px;
+  top: 100px;
 }
