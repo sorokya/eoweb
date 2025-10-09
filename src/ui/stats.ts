@@ -1,7 +1,13 @@
+import { StatId } from 'eolib';
+import mitt from 'mitt';
 import type { Client } from '../client';
 import { calculateTnl } from '../utils/calculate-tnl';
 import { capitalize } from '../utils/capitalize';
 import { Base } from './base-ui';
+
+type Events = {
+  confirmTraining: undefined;
+};
 
 class StatItem {
   private container: HTMLSpanElement;
@@ -10,8 +16,33 @@ class StatItem {
     this.container.textContent = value;
   }
 
+  getValue(): string {
+    return this.container.textContent || '';
+  }
+
   constructor(id: string) {
     this.container = document.querySelector(`#stats span[data-id="${id}"]`);
+  }
+}
+
+class StatUpgradeButton {
+  private container: HTMLButtonElement;
+
+  constructor(target: string, callback: () => void) {
+    this.container = document.querySelector(
+      `#stats button[data-target="${target}"]`,
+    );
+    this.container.addEventListener('click', () => {
+      callback();
+    });
+  }
+
+  show() {
+    this.container.classList.remove('hidden');
+  }
+
+  hide() {
+    this.container.classList.add('hidden');
   }
 }
 
@@ -19,7 +50,10 @@ export class Stats extends Base {
   protected container: HTMLDivElement = document.querySelector('#stats');
   private client: Client;
   private statItems: { [key: string]: StatItem };
+  private statButtons: { [key: string]: StatUpgradeButton };
   private open = false;
+  private confirmedTraining = false;
+  private emitter = mitt<Events>();
 
   constructor(client: Client) {
     super();
@@ -48,10 +82,55 @@ export class Stats extends Base {
       tnl: new StatItem('tnl'),
       karma: new StatItem('karma'),
     };
+
+    this.statButtons = {
+      str: new StatUpgradeButton('str', () => {
+        this.upgradeStat(StatId.Str);
+      }),
+      int: new StatUpgradeButton('int', () => {
+        this.upgradeStat(StatId.Int);
+      }),
+      wis: new StatUpgradeButton('wis', () => {
+        this.upgradeStat(StatId.Wis);
+      }),
+      agi: new StatUpgradeButton('agi', () => {
+        this.upgradeStat(StatId.Agi);
+      }),
+      con: new StatUpgradeButton('con', () => {
+        this.upgradeStat(StatId.Con);
+      }),
+      cha: new StatUpgradeButton('cha', () => {
+        this.upgradeStat(StatId.Cha);
+      }),
+    };
+  }
+
+  private upgradeStat(statId: StatId) {
+    if (!this.confirmedTraining) {
+      this.emitter.emit('confirmTraining');
+      return;
+    }
+
+    this.client.trainStat(statId);
+  }
+
+  on<Event extends keyof Events>(
+    event: Event,
+    handler: (data: Events[Event]) => void,
+  ) {
+    this.emitter.on(event, handler);
+  }
+
+  setTrainingConfirmed() {
+    this.confirmedTraining = true;
   }
 
   render() {
     if (!this.open) return;
+
+    if (this.statItems.level.getValue() !== this.client.level.toString()) {
+      this.confirmedTraining = false;
+    }
 
     const goldItem = this.client.items.find((i) => i.id === 1);
     const goldAmount = goldItem ? goldItem.amount : 0;
@@ -84,6 +163,16 @@ export class Stats extends Base {
       calculateTnl(this.client.experience).toString(),
     );
     this.statItems.karma.setValue(this.getKarmaString(this.client.karma));
+
+    if (this.client.statPoints > 0) {
+      for (const button of Object.values(this.statButtons)) {
+        button.show();
+      }
+    } else {
+      for (const button of Object.values(this.statButtons)) {
+        button.hide();
+      }
+    }
   }
 
   private getKarmaString(value: number): string {

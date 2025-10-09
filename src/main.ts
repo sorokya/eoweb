@@ -1007,6 +1007,14 @@ bankDialog.on('upgrade', () => {
   smallConfirm.show();
 });
 
+stats.on('confirmTraining', () => {
+  smallConfirm.setContent('Do you want to train?', 'Character training');
+  smallConfirm.setCallback(() => {
+    stats.setTrainingConfirmed();
+  });
+  smallConfirm.show();
+});
+
 // Tick loop
 setInterval(() => {
   client.tick();

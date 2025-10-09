@@ -560,7 +560,7 @@ input[type="password"] {
   width: 290px;
   height: 125px;
   user-select: none;
-  z-index: 1020;
+  z-index: 10000;
 }
 
 #small-confirm .title {
@@ -1651,6 +1651,17 @@ div.icon[data-id="23"] {
   --height: 15px;
 }
 
+.img-btn[data-id="upgrade-stat"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/127.png");
+  --bg-x: -215px;
+  --bg-y: -386px;
+  --hover-x: -234px;
+  --hover-y: -386px;
+  --width: 19px;
+  --height: 15px;
+}
+
 #offset-tweaker {
   color: #fff;
   position: absolute;
@@ -2329,6 +2340,7 @@ div.icon[data-id="23"] {
   background-position: -3px 0;
   border-radius: 5px;
   z-index: 9999;
+  user-select: none;
 }
 
 #stats .stat {
@@ -2341,10 +2353,22 @@ div.icon[data-id="23"] {
   width: 75px;
 }
 
+#stats .upgrade[data-target="str"] {
+  position: absolute;
+  left: 102px;
+  top: 7px;
+}
+
 #stats .stat[data-id="int"] {
   left: 52px;
   top: 28px;
   width: 75px;
+}
+
+#stats .upgrade[data-target="int"] {
+  position: absolute;
+  left: 102px;
+  top: 25px;
 }
 
 #stats .stat[data-id="wis"] {
@@ -2353,10 +2377,22 @@ div.icon[data-id="23"] {
   width: 75px;
 }
 
+#stats .upgrade[data-target="wis"] {
+  position: absolute;
+  left: 102px;
+  top: 43px;
+}
+
 #stats .stat[data-id="agi"] {
   left: 52px;
   top: 64px;
   width: 75px;
+}
+
+#stats .upgrade[data-target="agi"] {
+  position: absolute;
+  left: 102px;
+  top: 61px;
 }
 
 #stats .stat[data-id="con"] {
@@ -2365,10 +2401,22 @@ div.icon[data-id="23"] {
   width: 75px;
 }
 
+#stats .upgrade[data-target="con"] {
+  position: absolute;
+  left: 102px;
+  top: 79px;
+}
+
 #stats .stat[data-id="cha"] {
   left: 52px;
   top: 100px;
   width: 75px;
+}
+
+#stats .upgrade[data-target="cha"] {
+  position: absolute;
+  left: 102px;
+  top: 97px;
 }
 
 #stats .stat[data-id="hp"] {
