@@ -84,10 +84,13 @@ import {
   SitRequestClientPacket,
   SitState,
   type Spell,
+  type StatId,
+  StatSkillAddClientPacket,
   StatSkillOpenClientPacket,
   TalkAnnounceClientPacket,
   TalkReportClientPacket,
   ThreeItem,
+  TrainType,
   Version,
   WalkAction,
   WalkAdminClientPacket,
@@ -155,6 +158,7 @@ import { registerRecoverHandlers } from './handlers/recover';
 import { registerRefreshHandlers } from './handlers/refresh';
 import { registerShopHandlers } from './handlers/shop';
 import { registerSitHandlers } from './handlers/sit';
+import { registerStatSkillHandlers } from './handlers/stat-skill';
 import { registerTalkHandlers } from './handlers/talk';
 import { registerWalkHandlers } from './handlers/walk';
 import { registerWarpHandlers } from './handlers/warp';
@@ -1190,6 +1194,7 @@ export class Client {
     registerShopHandlers(this);
     registerBankHandlers(this);
     registerLockerHandlers(this);
+    registerStatSkillHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -2372,5 +2377,13 @@ export class Client {
 
     const current = this.npcAnimations.get(index);
     this.npcAnimations.set(index, new NpcDeathAnimation(current));
+  }
+
+  trainStat(statId: StatId) {
+    const packet = new StatSkillAddClientPacket();
+    packet.actionType = TrainType.Stat;
+    packet.actionTypeData = new StatSkillAddClientPacket.ActionTypeDataStat();
+    packet.actionTypeData.statId = statId;
+    this.bus.send(packet);
   }
 }
