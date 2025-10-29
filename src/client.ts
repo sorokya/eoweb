@@ -89,6 +89,7 @@ import {
   type StatId,
   StatSkillAddClientPacket,
   StatSkillOpenClientPacket,
+  StatSkillTakeClientPacket,
   TalkAnnounceClientPacket,
   TalkReportClientPacket,
   ThreeItem,
@@ -204,6 +205,11 @@ export enum ChatTab {
 
 type ClientEvents = {
   error: { title: string; message: string };
+  confirmation: {
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  };
   smallAlert: { title: string; message: string };
   debug: string;
   login: CharacterSelectionListEntry[];
@@ -251,6 +257,7 @@ type ClientEvents = {
     name: string;
     skills: SkillLearn[];
   };
+  skillLearned: undefined;
 };
 
 export enum GameState {
@@ -1157,6 +1164,10 @@ export class Client {
 
   showError(message: string, title = '') {
     this.emitter.emit('error', { title, message });
+  }
+
+  showConfirmation(message: string, title: string, onConfirm: () => void) {
+    this.emitter.emit('confirmation', { title, message, onConfirm });
   }
 
   emit<Event extends keyof ClientEvents>(
@@ -2398,6 +2409,13 @@ export class Client {
     packet.actionType = TrainType.Stat;
     packet.actionTypeData = new StatSkillAddClientPacket.ActionTypeDataStat();
     packet.actionTypeData.statId = statId;
+    this.bus.send(packet);
+  }
+
+  learnSkill(skillId: number) {
+    const packet = new StatSkillTakeClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.spellId = skillId;
     this.bus.send(packet);
   }
 }

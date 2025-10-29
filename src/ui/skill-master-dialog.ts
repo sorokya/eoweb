@@ -105,6 +105,10 @@ export class SkillMasterDialog extends Base {
     this.render();
   }
 
+  refresh() {
+    this.render();
+  }
+
   show() {
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
@@ -212,9 +216,17 @@ export class SkillMasterDialog extends Base {
 
   renderLearn() {
     this.itemList.innerHTML = '';
+    let skillCount = 0;
     for (const skill of this.skills) {
+      if (this.client.spells.some((s) => s.id === skill.id)) {
+        continue;
+      }
+
+      skillCount++;
+
       const record = this.client.getEsfRecordById(skill.id);
-      if (!record) {
+      const learn = this.skills.find((s) => s.id === skill.id);
+      if (!record || !learn) {
         continue;
       }
 
@@ -229,11 +241,73 @@ export class SkillMasterDialog extends Base {
           this.changeState(State.Requirements);
         },
       );
-      const click = () => {};
+      const click = () => {
+        if (
+          learn.classRequirement &&
+          this.client.classId !== learn.classRequirement
+        ) {
+          const strings = this.client.getDialogStrings(
+            DialogResourceID.SKILL_LEARN_WRONG_CLASS,
+          );
+          this.client.showError(
+            `${strings[1]} ${this.getClassName(learn.classRequirement)}`,
+            strings[0],
+          );
+          return;
+        }
+
+        let skillRequirementsMet = true;
+        for (const req of learn.skillRequirements) {
+          if (req && this.client.spells.every((s) => s.id !== req)) {
+            skillRequirementsMet = false;
+            break;
+          }
+        }
+
+        const gold = this.client.items.find((i) => i.id === 1);
+
+        const requirementsMet =
+          skillRequirementsMet &&
+          this.client.level >= learn.levelRequirement &&
+          gold &&
+          gold.amount >= learn.cost &&
+          this.client.baseStats.str >= learn.statRequirements.str &&
+          this.client.baseStats.intl >= learn.statRequirements.intl &&
+          this.client.baseStats.wis >= learn.statRequirements.wis &&
+          this.client.baseStats.agi >= learn.statRequirements.agi &&
+          this.client.baseStats.con >= learn.statRequirements.con &&
+          this.client.baseStats.cha >= learn.statRequirements.cha;
+
+        if (!requirementsMet) {
+          const strings = this.client.getDialogStrings(
+            DialogResourceID.SKILL_LEARN_REQS_NOT_MET,
+          );
+          this.client.showError(strings[1], strings[0]);
+          return;
+        }
+
+        const strings = this.client.getDialogStrings(
+          DialogResourceID.SKILL_LEARN_CONFIRMATION,
+        );
+        this.client.showConfirmation(
+          `${strings[1]} ${record.name}`,
+          strings[0],
+          () => {
+            this.client.learnSkill(skill.id);
+          },
+        );
+      };
+
       item.addEventListener('click', click);
       item.addEventListener('contextmenu', click);
       this.itemList.appendChild(item);
     }
+
+    if (!skillCount) {
+      this.reset();
+      return;
+    }
+
     this.btnBack.classList.remove('hidden');
   }
 

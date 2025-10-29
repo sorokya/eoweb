@@ -172,6 +172,14 @@ client.on('error', ({ title, message }) => {
   smallAlertLargeHeader.show();
 });
 
+client.on('confirmation', ({ title, message, onConfirm }) => {
+  smallConfirm.setContent(message, title);
+  smallConfirm.setCallback(() => {
+    onConfirm();
+  });
+  smallConfirm.show();
+});
+
 client.on('smallAlert', ({ title, message }) => {
   smallAlert.setContent(message, title);
   smallAlert.show();
@@ -306,6 +314,10 @@ client.on('lockerChanged', ({ items }) => {
 client.on('skillMasterOpened', ({ name, skills }) => {
   skillMasterDialog.setData(name, skills);
   skillMasterDialog.show();
+});
+
+client.on('skillLearned', () => {
+  skillMasterDialog.refresh();
 });
 
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
