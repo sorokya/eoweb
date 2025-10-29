@@ -45,6 +45,7 @@ import { ChestDialog } from './ui/chest-dialog';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
+import { Hotbar } from './ui/hotbar';
 import { HUD } from './ui/hud';
 import { InGameMenu } from './ui/in-game-menu';
 import { Inventory } from './ui/inventory';
@@ -248,6 +249,7 @@ client.on('enterGame', ({ news }) => {
   chat.show();
   hud.setStats(client);
   hud.show();
+  hotbar.show();
   //offsetTweaker.show();
   inGameMenu.show();
   resizeCanvases();
@@ -407,6 +409,7 @@ const skillMasterDialog = new SkillMasterDialog(client);
 const smallAlert = new SmallAlertSmallHeader();
 const largeAlertSmallHeader = new LargeAlertSmallHeader();
 const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
+const hotbar = new Hotbar(client);
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');

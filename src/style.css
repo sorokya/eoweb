@@ -2617,15 +2617,41 @@ div.icon[data-id="23"] {
   width: 4em;
   height: 4em;
   border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-#hotbar .slot::after {
+#hotbar .slot::before {
   content: "";
   position: absolute;
-  top:0;
-  left:0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.3);
+  z-index: 1021;
+}
+
+#hotbar .slot .item,
+#hotbar .slot .skill {
+  position: absolute;
+  z-index: 1023;
+}
+
+#hotbar .slot .skill {
+  width: 34px;
+  height: 32px;
+  scale: 1.3;
+}
+
+#hotbar .slot .item {
+  background: url("/gfx/gfx003/100.png");
+  width: 64px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  scale: 1.3;
 }

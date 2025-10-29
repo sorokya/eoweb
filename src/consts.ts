@@ -65,3 +65,5 @@ export const LOCKER_UPGRADE_COST_STEP = 1000;
 export const LOCKER_BASE_SIZE = 25;
 export const LOCKER_SIZE_STEP = 5;
 export const LOCKER_MAX_ITEM_AMOUNT = 200;
+
+export const HOTBAR_SLOTS = 5;
