@@ -2601,3 +2601,31 @@ div.icon[data-id="23"] {
   left: 142px;
   top: 97px;
 }
+
+#hotbar {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 1020;
+}
+
+#hotbar .slot {
+  position: relative;
+  width: 4em;
+  height: 4em;
+  border-radius: 5px;
+}
+
+#hotbar .slot::after {
+  content: "";
+  position: absolute;
+  top:0;
+  left:0;
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.3);
+}
