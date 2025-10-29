@@ -88,6 +88,7 @@ import {
   type Spell,
   type StatId,
   StatSkillAddClientPacket,
+  StatSkillJunkClientPacket,
   StatSkillOpenClientPacket,
   StatSkillRemoveClientPacket,
   StatSkillTakeClientPacket,
@@ -666,7 +667,16 @@ export class Client {
       return undefined;
     }
 
-    return edf.getLine(id);
+    const line = edf.getLine(id);
+    if (!line) {
+      return undefined;
+    }
+
+    if (line.startsWith('*')) {
+      return line.substring(1);
+    }
+
+    return line;
   }
 
   getDialogStrings(id: DialogResourceID): string[] | undefined {
@@ -2424,6 +2434,12 @@ export class Client {
     const packet = new StatSkillRemoveClientPacket();
     packet.sessionId = this.sessionId;
     packet.spellId = skillId;
+    this.bus.send(packet);
+  }
+
+  resetCharacter() {
+    const packet = new StatSkillJunkClientPacket();
+    packet.sessionId = this.sessionId;
     this.bus.send(packet);
   }
 }

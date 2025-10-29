@@ -351,6 +351,55 @@ export class SkillMasterDialog extends Base {
 
   renderForgetAll() {
     this.itemList.innerHTML = '';
+
+    this.itemList.appendChild(
+      createTextMenuItem(
+        this.client.getResourceString(EOResourceID.SKILLMASTER_FORGET_ALL),
+      ),
+    );
+
+    this.itemList.appendChild(createTextMenuItem());
+    this.itemList.append(
+      createTextMenuItem(
+        this.client.getResourceString(
+          EOResourceID.SKILLMASTER_FORGET_ALL_MSG_1,
+        ),
+      ),
+    );
+    this.itemList.appendChild(createTextMenuItem());
+    this.itemList.append(
+      createTextMenuItem(
+        this.client.getResourceString(
+          EOResourceID.SKILLMASTER_FORGET_ALL_MSG_2,
+        ),
+      ),
+    );
+    this.itemList.appendChild(createTextMenuItem());
+    this.itemList.append(
+      createTextMenuItem(
+        this.client.getResourceString(
+          EOResourceID.SKILLMASTER_FORGET_ALL_MSG_3,
+        ),
+      ),
+    );
+    this.itemList.appendChild(createTextMenuItem());
+
+    this.itemList.appendChild(
+      createTextMenuItem(
+        this.client.getResourceString(
+          EOResourceID.SKILLMASTER_CLICK_HERE_TO_FORGET_ALL,
+        ),
+        () => {
+          const lines = this.client.getDialogStrings(
+            DialogResourceID.SKILL_RESET_CHARACTER_CONFIRMATION,
+          );
+          this.client.showConfirmation(lines[1], lines[0], () => {
+            this.client.resetCharacter();
+          });
+        },
+      ),
+    );
+
     this.btnBack.classList.remove('hidden');
   }
 

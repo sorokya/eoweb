@@ -100,10 +100,21 @@ export function createSkillMenuItem(
   return menuItem;
 }
 
-export function createTextMenuItem(text = ' ') {
+export function createTextMenuItem(
+  text = ' ',
+  onClick: (() => void) | null = null,
+) {
   const menuItem = document.createElement('div');
   menuItem.classList.add('menu-item', 'text');
   menuItem.innerText = text;
+
+  if (onClick) {
+    menuItem.classList.add('link');
+    menuItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onClick();
+    });
+  }
 
   return menuItem;
 }

@@ -4,6 +4,7 @@ import {
   PacketFamily,
   SkillMasterReply,
   Spell,
+  StatSkillJunkServerPacket,
   StatSkillOpenServerPacket,
   StatSkillPlayerServerPacket,
   StatSkillRemoveServerPacket,
@@ -100,6 +101,37 @@ function handleStatSkillRemove(client: Client, reader: EoReader) {
   client.emit('skillsChanged', undefined);
 }
 
+function handleStatSkillJunk(client: Client, reader: EoReader) {
+  const packet = StatSkillJunkServerPacket.deserialize(reader);
+  client.spells = [];
+  client.hp = packet.stats.hp;
+  client.maxHp = packet.stats.maxHp;
+  client.tp = packet.stats.tp;
+  client.maxTp = packet.stats.maxTp;
+  client.maxSp = packet.stats.maxSp;
+  client.statPoints = packet.stats.statPoints;
+  client.skillPoints = packet.stats.skillPoints;
+  client.secondaryStats.minDamage = packet.stats.secondary.minDamage;
+  client.secondaryStats.maxDamage = packet.stats.secondary.maxDamage;
+  client.secondaryStats.accuracy = packet.stats.secondary.accuracy;
+  client.secondaryStats.armor = packet.stats.secondary.armor;
+  client.secondaryStats.evade = packet.stats.secondary.evade;
+  client.baseStats.str = packet.stats.base.str;
+  client.baseStats.intl = packet.stats.base.intl;
+  client.baseStats.wis = packet.stats.base.wis;
+  client.baseStats.agi = packet.stats.base.agi;
+  client.baseStats.con = packet.stats.base.con;
+  client.baseStats.cha = packet.stats.base.cha;
+  client.emit('statsUpdate', undefined);
+  client.emit('skillsChanged', undefined);
+  playSfxById(SfxId.LearnNewSpell);
+
+  const strings = client.getDialogStrings(
+    DialogResourceID.SKILL_RESET_CHARACTER_COMPLETE,
+  );
+  client.showError(strings[1], strings[0]);
+}
+
 export function registerStatSkillHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.StatSkill,
@@ -134,6 +166,13 @@ export function registerStatSkillHandlers(client: Client) {
     PacketAction.Remove,
     (reader) => {
       handleStatSkillRemove(client, reader);
+    },
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.StatSkill,
+    PacketAction.Junk,
+    (reader) => {
+      handleStatSkillJunk(client, reader);
     },
   );
 }
