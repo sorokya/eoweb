@@ -2417,15 +2417,15 @@ div.icon[data-id="23"] {
   user-select: none;
 }
 
-#stats >div:first-child {
+#stats > div:first-child {
   position: absolute;
-  top:0;
+  top: 0;
   width: 240px;
   height: 120px;
   background-image: url(/gfx/gfx002/134.png);
 }
 
-#stats >div:last-child {
+#stats > div:last-child {
   position: absolute;
   width: 240px;
   height: 115px;
