@@ -2288,6 +2288,10 @@ div.icon[data-id="23"] {
   left: 53px;
 }
 
+.menu-description.link {
+  text-decoration: underline;
+}
+
 .menu-item.item {
   position: relative;
   display: grid;
@@ -2331,6 +2335,10 @@ div.icon[data-id="23"] {
   position: relative;
   z-index: 1;
   justify-self: center;
+}
+
+.menu-item.text {
+  min-height: 12px;
 }
 
 .menu-item-icon {

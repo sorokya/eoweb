@@ -8,6 +8,7 @@ import { DialogIcon } from './dialog-icon';
 import {
   createIconMenuItem,
   createSkillMenuItem,
+  createTextMenuItem,
 } from './utils/create-menu-item';
 
 enum State {
@@ -15,6 +16,7 @@ enum State {
   Learn = 1,
   Forget = 2,
   ForgetAll = 3,
+  Requirements = 4,
 }
 
 type Events = {
@@ -41,7 +43,8 @@ export class SkillMasterDialog extends Base {
     this.container.querySelector<HTMLDivElement>('.scroll-handle');
   private name = '';
   private skills: SkillLearn[] = [];
-  private state = State.Initial;
+  private state = [State.Initial];
+  private skillId = 0;
 
   constructor(client: Client) {
     super();
@@ -54,7 +57,8 @@ export class SkillMasterDialog extends Base {
 
     this.btnBack.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
-      this.changeState(State.Initial);
+      this.state.pop();
+      this.render();
     });
 
     this.itemList.addEventListener('scroll', () => {
@@ -92,7 +96,12 @@ export class SkillMasterDialog extends Base {
   setData(name: string, skills: SkillLearn[]) {
     this.name = name;
     this.skills = skills;
-    this.state = State.Initial;
+    this.reset();
+  }
+
+  private reset() {
+    this.skillId = 0;
+    this.state = [State.Initial];
     this.render();
   }
 
@@ -118,7 +127,7 @@ export class SkillMasterDialog extends Base {
     this.txtName.innerText = this.name;
     this.btnBack.classList.add('hidden');
 
-    switch (this.state) {
+    switch (this.state[this.state.length - 1]) {
       case State.Initial:
         this.renderInitial();
         return;
@@ -131,11 +140,14 @@ export class SkillMasterDialog extends Base {
       case State.ForgetAll:
         this.renderForgetAll();
         return;
+      case State.Requirements:
+        this.renderRequirements();
+        return;
     }
   }
 
   private changeState(state: State) {
-    this.state = state;
+    this.state.push(state);
     this.render();
   }
 
@@ -166,20 +178,22 @@ export class SkillMasterDialog extends Base {
     learnItem.addEventListener('contextmenu', clickLearn);
     this.itemList.appendChild(learnItem);
 
-    const forgetItem = createIconMenuItem(
-      DialogIcon.Forget,
-      this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_FORGET),
-      `${forgetCount}${this.client.getResourceString(EOResourceID.SKILLMASTER_ITEMS_LEARNED)}`,
-    );
-    const clickForget = () => {
-      if (!forgetCount) {
-        return;
-      }
-      this.changeState(State.Forget);
-    };
-    forgetItem.addEventListener('click', clickForget);
-    forgetItem.addEventListener('contextmenu', clickForget);
-    this.itemList.appendChild(forgetItem);
+    if (forgetCount) {
+      const forgetItem = createIconMenuItem(
+        DialogIcon.Forget,
+        this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_FORGET),
+        `${forgetCount}${this.client.getResourceString(EOResourceID.SKILLMASTER_ITEMS_LEARNED)}`,
+      );
+      const clickForget = () => {
+        if (!forgetCount) {
+          return;
+        }
+        this.changeState(State.Forget);
+      };
+      forgetItem.addEventListener('click', clickForget);
+      forgetItem.addEventListener('contextmenu', clickForget);
+      this.itemList.appendChild(forgetItem);
+    }
 
     const forgetAllItem = createIconMenuItem(
       DialogIcon.Forget,
@@ -210,6 +224,10 @@ export class SkillMasterDialog extends Base {
         this.client.getResourceString(
           EOResourceID.SKILLMASTER_WORD_REQUIREMENTS,
         ),
+        () => {
+          this.skillId = skill.id;
+          this.changeState(State.Requirements);
+        },
       );
       const click = () => {};
       item.addEventListener('click', click);
@@ -227,5 +245,122 @@ export class SkillMasterDialog extends Base {
   renderForgetAll() {
     this.itemList.innerHTML = '';
     this.btnBack.classList.remove('hidden');
+  }
+
+  renderRequirements() {
+    this.itemList.innerHTML = '';
+
+    if (!this.skillId) {
+      this.reset();
+      return;
+    }
+
+    const learn = this.skills.find((s) => s.id === this.skillId);
+    if (!learn) {
+      this.reset();
+      return;
+    }
+
+    const record = this.client.getEsfRecordById(this.skillId);
+    const goldRecord = this.client.getEifRecordById(1);
+    if (!record || !goldRecord) {
+      this.reset();
+      return;
+    }
+
+    const classRequirement = learn.classRequirement
+      ? `[${this.getClassName(learn.classRequirement)}]`
+      : '';
+    this.itemList.appendChild(
+      createTextMenuItem(`${record.name} ${classRequirement}`),
+    );
+
+    this.itemList.appendChild(createTextMenuItem());
+
+    const skillRequirements = learn.skillRequirements.filter((id) => !!id);
+    if (skillRequirements.length) {
+      const wordSkill = this.client.getResourceString(
+        EOResourceID.SKILLMASTER_WORD_SKILL,
+      );
+      for (const req of skillRequirements) {
+        const reqRecord = this.client.getEsfRecordById(req);
+        if (!reqRecord) {
+          continue;
+        }
+
+        this.itemList.appendChild(
+          createTextMenuItem(`${wordSkill}: ${reqRecord.name}`),
+        );
+      }
+
+      this.itemList.appendChild(createTextMenuItem());
+    }
+
+    if (learn.statRequirements.str) {
+      this.itemList.appendChild(
+        createTextMenuItem(
+          `${learn.statRequirements.str} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_STRENGTH)}`,
+        ),
+      );
+    }
+
+    if (learn.statRequirements.intl) {
+      this.itemList.appendChild(
+        createTextMenuItem(
+          `${learn.statRequirements.intl} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_INTELLIGENCE)}`,
+        ),
+      );
+    }
+
+    if (learn.statRequirements.wis) {
+      this.itemList.appendChild(
+        createTextMenuItem(
+          `${learn.statRequirements.wis} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_WISDOM)}`,
+        ),
+      );
+    }
+
+    if (learn.statRequirements.agi) {
+      this.itemList.appendChild(
+        createTextMenuItem(
+          `${learn.statRequirements.agi} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_AGILITY)}`,
+        ),
+      );
+    }
+
+    if (learn.statRequirements.con) {
+      this.itemList.appendChild(
+        createTextMenuItem(
+          `${learn.statRequirements.con} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_CONSTITUTION)}`,
+        ),
+      );
+    }
+
+    if (learn.statRequirements.cha) {
+      this.itemList.appendChild(
+        createTextMenuItem(
+          `${learn.statRequirements.cha} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_CHARISMA)}`,
+        ),
+      );
+    }
+
+    this.itemList.appendChild(createTextMenuItem());
+
+    this.itemList.appendChild(
+      createTextMenuItem(
+        `${learn.levelRequirement} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_LEVEL)}`,
+      ),
+    );
+
+    this.itemList.appendChild(
+      createTextMenuItem(`${learn.cost} ${goldRecord.name}`),
+    );
+
+    this.btnBack.classList.remove('hidden');
+  }
+
+  private getClassName(classId: number): string {
+    const classRecord = this.client.getEcfRecordById(classId);
+    return classRecord ? classRecord.name : '';
   }
 }

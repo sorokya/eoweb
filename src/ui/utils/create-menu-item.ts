@@ -67,6 +67,7 @@ export function createSkillMenuItem(
   record: EsfRecord,
   label: string,
   description: string,
+  onRequirementsClick: (() => void) | null = null,
 ) {
   const menuItem = document.createElement('div');
   menuItem.classList.add('menu-item');
@@ -84,9 +85,23 @@ export function createSkillMenuItem(
   menuItem.appendChild(menuLabel);
 
   const menuDescription = document.createElement('div');
-  menuDescription.classList.add('menu-description');
+  menuDescription.classList.add('menu-description', 'link');
   menuDescription.innerText = description;
+  menuDescription.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (onRequirementsClick) {
+      onRequirementsClick();
+    }
+  });
   menuItem.appendChild(menuDescription);
+
+  return menuItem;
+}
+
+export function createTextMenuItem(text = ' ') {
+  const menuItem = document.createElement('div');
+  menuItem.classList.add('menu-item', 'text');
+  menuItem.innerText = text;
 
   return menuItem;
 }
