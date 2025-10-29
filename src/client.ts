@@ -1080,6 +1080,10 @@ export class Client {
   }
 
   openLocker(coords: Coords) {
+    if (!this.isAdjacentToSpec(MapTileSpec.BankVault)) {
+      return;
+    }
+
     const packet = new LockerOpenClientPacket();
     packet.lockerCoords = coords;
     this.bus.send(packet);
@@ -1117,6 +1121,29 @@ export class Client {
     const packet = new DoorOpenClientPacket();
     packet.coords = coords;
     this.bus.send(packet);
+  }
+
+  isAdjacentToSpec(spec: MapTileSpec): boolean {
+    const playerAt = this.getPlayerCoords();
+
+    const adjacentTiles = [
+      { x: playerAt.x + 1, y: playerAt.y },
+      { x: playerAt.x - 1, y: playerAt.y },
+      { x: playerAt.x, y: playerAt.y + 1 },
+      { x: playerAt.x, y: playerAt.y - 1 },
+    ];
+
+    for (const coords of adjacentTiles) {
+      const tileSpec = this.map.tileSpecRows
+        .find((r) => r.y === coords.y)
+        ?.tiles.find((t) => t.x === coords.x);
+
+      if (tileSpec && tileSpec.tileSpec === spec) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   isFacingChairAt(coords: Vector2): boolean {
@@ -2254,6 +2281,10 @@ export class Client {
   }
 
   openChest(coords: Vector2) {
+    if (!this.isAdjacentToSpec(MapTileSpec.Chest)) {
+      return;
+    }
+
     const chestKeys: number[] = [];
     for (const item of this.map.items) {
       if (
