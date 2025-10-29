@@ -100,7 +100,7 @@ export class Inventory extends Base {
     (e.target as Element).setPointerCapture(e.pointerId);
 
     const rect = el.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left + rect.width;
+    const offsetX = e.clientX - rect.left;
     const offsetY = e.clientY - rect.top;
 
     const ghost = el.querySelector('img').cloneNode(true) as HTMLElement;
@@ -114,9 +114,6 @@ export class Inventory extends Base {
     ghost.style.opacity = '0.9';
     ghost.style.willChange = 'transform';
     ghost.style.zIndex = '9999';
-    // Optional: add a subtle scale to show it's being dragged
-    ghost.style.scale = '1.05';
-
     // hide original element
     el.style.display = 'none';
 

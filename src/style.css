@@ -2050,6 +2050,63 @@ div.icon[data-id="23"] {
   display: none;
 }
 
+#skill-master {
+  position: relative;
+  user-select: none;
+  box-sizing: border-box;
+  width: 284px;
+  height: 290px;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/152.png");
+}
+
+#skill-master .name {
+  position: absolute;
+  color: #fff;
+  font-size: 12px;
+  left: 24px;
+  top: 18px;
+}
+
+#skill-master .buttons {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  width: 260px;
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+}
+
+#skill-master .scroll-handle {
+  position: absolute;
+  right: 16px;
+  width: 16px;
+  height: 15px;
+  background: url("/gfx/gfx002/129.png") 0 -75px;
+  touch-action: none;
+  user-select: none;
+}
+
+#skill-master .item-list {
+  position: absolute;
+  top: 50px;
+  left: 22px;
+  width: 232px;
+  height: 193px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+#skill-master .item-list::-webkit-scrollbar {
+  display: none;
+}
+
 #bank {
   position: relative;
   user-select: none;
@@ -2231,6 +2288,10 @@ div.icon[data-id="23"] {
   left: 53px;
 }
 
+.link {
+  text-decoration: underline;
+}
+
 .menu-item.item {
   position: relative;
   display: grid;
@@ -2276,6 +2337,10 @@ div.icon[data-id="23"] {
   justify-self: center;
 }
 
+.menu-item.text {
+  min-height: 12px;
+}
+
 .menu-item-icon {
   background-color: #000;
   background-image: url("/gfx/gfx002/127.png");
@@ -2312,6 +2377,16 @@ div.icon[data-id="23"] {
   background-position-x: -155px;
 }
 
+.menu-item-icon[data-id="20"] {
+  background-position-y: -353px;
+  background-position-x: -63px;
+}
+
+.menu-item-icon[data-id="21"] {
+  background-position-y: -353px;
+  background-position-x: -94px;
+}
+
 .notyf__wrapper {
   background: #000;
   opacity: 0.6;
@@ -2331,16 +2406,32 @@ div.icon[data-id="23"] {
 
 #stats {
   position: absolute;
-  width: 479px;
-  height: 119px;
+  width: 240px;
+  height: 233px;
   background: #000;
-  background-image: url(/gfx/gfx002/134.png);
   color: #fff;
   font-size: 12px;
   background-position: -3px 0;
   border-radius: 5px;
   z-index: 9999;
   user-select: none;
+}
+
+#stats > div:first-child {
+  position: absolute;
+  top: 0;
+  width: 240px;
+  height: 120px;
+  background-image: url(/gfx/gfx002/134.png);
+}
+
+#stats > div:last-child {
+  position: absolute;
+  width: 240px;
+  height: 115px;
+  top: 119px;
+  background-image: url(/gfx/gfx002/134.png);
+  background-position: -239px -4px;
 }
 
 #stats .stat {
@@ -2456,51 +2547,51 @@ div.icon[data-id="23"] {
 }
 
 #stats .stat[data-id="name"] {
-  left: 282px;
-  top: 9px;
+  left: 44px;
+  top: 6px;
 }
 
 #stats .stat[data-id="lvl"] {
-  left: 453px;
-  top: 10px;
+  left: 215px;
+  top: 6px;
 }
 
 #stats .stat[data-id="guild"] {
-  left: 282px;
-  top: 27px;
+  left: 44px;
+  top: 24px;
 }
 
 #stats .stat[data-id="weight"] {
-  left: 282px;
-  top: 46px;
+  left: 44px;
+  top: 43px;
 }
 
 #stats .stat[data-id="stat-points"] {
-  left: 282px;
-  top: 64px;
+  left: 44px;
+  top: 61px;
 }
 
 #stats .stat[data-id="skill-points"] {
-  left: 282px;
-  top: 82px;
+  left: 44px;
+  top: 79px;
 }
 
 #stats .stat[data-id="gold"] {
-  left: 380px;
-  top: 46px;
+  left: 142px;
+  top: 43px;
 }
 
 #stats .stat[data-id="exp"] {
-  left: 380px;
-  top: 64px;
+  left: 142px;
+  top: 61px;
 }
 
 #stats .stat[data-id="tnl"] {
-  left: 380px;
-  top: 82px;
+  left: 142px;
+  top: 79px;
 }
 
 #stats .stat[data-id="karma"] {
-  left: 380px;
-  top: 100px;
+  left: 142px;
+  top: 97px;
 }

@@ -59,6 +59,7 @@ import { OffsetTweaker } from './ui/offset-tweaker';
 import { Paperdoll } from './ui/paperdoll';
 import { QuestDialog } from './ui/quest-dialog';
 import { ShopDialog } from './ui/shop-dialog';
+import { SkillMasterDialog } from './ui/skill-master-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
@@ -169,6 +170,14 @@ const render = (now: DOMHighResTimeStamp) => {
 client.on('error', ({ title, message }) => {
   smallAlertLargeHeader.setContent(message, title || 'Error');
   smallAlertLargeHeader.show();
+});
+
+client.on('confirmation', ({ title, message, onConfirm }) => {
+  smallConfirm.setContent(message, title);
+  smallConfirm.setCallback(() => {
+    onConfirm();
+  });
+  smallConfirm.show();
 });
 
 client.on('smallAlert', ({ title, message }) => {
@@ -302,6 +311,15 @@ client.on('lockerChanged', ({ items }) => {
   lockerDialog.setItems(items);
 });
 
+client.on('skillMasterOpened', ({ name, skills }) => {
+  skillMasterDialog.setData(name, skills);
+  skillMasterDialog.show();
+});
+
+client.on('skillsChanged', () => {
+  skillMasterDialog.refresh();
+});
+
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.config.host);
   socket.addEventListener('open', () => {
@@ -385,6 +403,7 @@ const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
 const bankDialog = new BankDialog(client);
 const lockerDialog = new LockerDialog(client);
+const skillMasterDialog = new SkillMasterDialog(client);
 const smallAlert = new SmallAlertSmallHeader();
 const largeAlertSmallHeader = new LargeAlertSmallHeader();
 const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
@@ -1072,8 +1091,8 @@ window.addEventListener('mousemove', (e) => {
   });
 });
 
-window.addEventListener('click', (_e) => {
-  client.handleClick();
+window.addEventListener('click', (e) => {
+  client.handleClick(e);
 });
 
 function loadInventoryGrid() {

@@ -2,9 +2,17 @@ import {
   type EoReader,
   PacketAction,
   PacketFamily,
+  SkillMasterReply,
+  Spell,
+  StatSkillJunkServerPacket,
+  StatSkillOpenServerPacket,
   StatSkillPlayerServerPacket,
+  StatSkillRemoveServerPacket,
+  StatSkillReplyServerPacket,
+  StatSkillTakeServerPacket,
 } from 'eolib';
 import type { Client } from '../client';
+import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 
 function handleStatSkillPlayer(client: Client, reader: EoReader) {
@@ -29,12 +37,142 @@ function handleStatSkillPlayer(client: Client, reader: EoReader) {
   playSfxById(SfxId.InventoryPickup);
 }
 
+function handleStatSkillOpen(client: Client, reader: EoReader) {
+  const packet = StatSkillOpenServerPacket.deserialize(reader);
+  client.sessionId = packet.sessionId;
+  client.emit('skillMasterOpened', {
+    name: packet.shopName,
+    skills: packet.skills,
+  });
+}
+
+function handleStatSkillReply(client: Client, reader: EoReader) {
+  const packet = StatSkillReplyServerPacket.deserialize(reader);
+  switch (packet.replyCode) {
+    case SkillMasterReply.RemoveItems: {
+      const strings = client.getDialogStrings(
+        DialogResourceID.SKILL_RESET_CHARACTER_CLEAR_PAPERDOLL,
+      );
+      client.showError(strings[1], strings[0]);
+      return;
+    }
+    case SkillMasterReply.WrongClass: {
+      const data =
+        packet.replyCodeData as StatSkillReplyServerPacket.ReplyCodeDataWrongClass;
+      const classRecord = client.getEcfRecordById(data.classId);
+      if (!classRecord) {
+        return;
+      }
+
+      const strings = client.getDialogStrings(
+        DialogResourceID.SKILL_LEARN_WRONG_CLASS,
+      );
+      client.showError(`${strings[1]} ${classRecord.name}`, strings[0]);
+    }
+  }
+}
+
+function handleStatSkillTake(client: Client, reader: EoReader) {
+  const packet = StatSkillTakeServerPacket.deserialize(reader);
+  const gold = client.items.find((i) => i.id === 1);
+  if (!gold) {
+    return;
+  }
+
+  gold.amount = packet.goldAmount;
+
+  const spell = new Spell();
+  spell.id = packet.spellId;
+  spell.level = 0;
+  client.spells.push(spell);
+
+  client.emit('inventoryChanged', undefined);
+  client.emit('skillsChanged', undefined);
+  playSfxById(SfxId.LearnNewSpell);
+}
+
+function handleStatSkillRemove(client: Client, reader: EoReader) {
+  const packet = StatSkillRemoveServerPacket.deserialize(reader);
+  client.spells = client.spells.filter((s) => s.id !== packet.spellId);
+  const strings = client.getDialogStrings(
+    DialogResourceID.SKILL_FORGET_SUCCESS,
+  );
+  client.showError(strings[1], strings[0]);
+  client.emit('skillsChanged', undefined);
+}
+
+function handleStatSkillJunk(client: Client, reader: EoReader) {
+  const packet = StatSkillJunkServerPacket.deserialize(reader);
+  client.spells = [];
+  client.hp = packet.stats.hp;
+  client.maxHp = packet.stats.maxHp;
+  client.tp = packet.stats.tp;
+  client.maxTp = packet.stats.maxTp;
+  client.maxSp = packet.stats.maxSp;
+  client.statPoints = packet.stats.statPoints;
+  client.skillPoints = packet.stats.skillPoints;
+  client.secondaryStats.minDamage = packet.stats.secondary.minDamage;
+  client.secondaryStats.maxDamage = packet.stats.secondary.maxDamage;
+  client.secondaryStats.accuracy = packet.stats.secondary.accuracy;
+  client.secondaryStats.armor = packet.stats.secondary.armor;
+  client.secondaryStats.evade = packet.stats.secondary.evade;
+  client.baseStats.str = packet.stats.base.str;
+  client.baseStats.intl = packet.stats.base.intl;
+  client.baseStats.wis = packet.stats.base.wis;
+  client.baseStats.agi = packet.stats.base.agi;
+  client.baseStats.con = packet.stats.base.con;
+  client.baseStats.cha = packet.stats.base.cha;
+  client.emit('statsUpdate', undefined);
+  client.emit('skillsChanged', undefined);
+  playSfxById(SfxId.LearnNewSpell);
+
+  const strings = client.getDialogStrings(
+    DialogResourceID.SKILL_RESET_CHARACTER_COMPLETE,
+  );
+  client.showError(strings[1], strings[0]);
+}
+
 export function registerStatSkillHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Player,
     (reader) => {
       handleStatSkillPlayer(client, reader);
+    },
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.StatSkill,
+    PacketAction.Open,
+    (reader) => {
+      handleStatSkillOpen(client, reader);
+    },
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.StatSkill,
+    PacketAction.Reply,
+    (reader) => {
+      handleStatSkillReply(client, reader);
+    },
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.StatSkill,
+    PacketAction.Take,
+    (reader) => {
+      handleStatSkillTake(client, reader);
+    },
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.StatSkill,
+    PacketAction.Remove,
+    (reader) => {
+      handleStatSkillRemove(client, reader);
+    },
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.StatSkill,
+    PacketAction.Junk,
+    (reader) => {
+      handleStatSkillJunk(client, reader);
     },
   );
 }

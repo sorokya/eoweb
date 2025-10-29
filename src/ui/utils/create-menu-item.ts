@@ -1,4 +1,4 @@
-import type { EifRecord } from 'eolib';
+import type { EifRecord, EsfRecord } from 'eolib';
 import { getItemGraphicPath } from '../../utils/get-item-graphic-id';
 import { getItemMeta } from '../../utils/get-item-meta';
 import type { DialogIcon } from '../dialog-icon';
@@ -59,6 +59,62 @@ export function createItemMenuItem(
   menuDescription.classList.add('menu-description');
   menuDescription.innerText = description;
   menuItem.appendChild(menuDescription);
+
+  return menuItem;
+}
+
+export function createSkillMenuItem(
+  record: EsfRecord,
+  label: string,
+  description: string,
+  onRequirementsClick: (() => void) | null = null,
+) {
+  const menuItem = document.createElement('div');
+  menuItem.classList.add('menu-item');
+
+  const menuIcon = document.createElement('div');
+  menuIcon.classList.add('menu-item-icon', 'skill-icon');
+  menuIcon.style.backgroundImage = `url('gfx/gfx025/${record.iconId + 100}.png')`;
+  menuIcon.style.width = '33px';
+  menuIcon.style.height = '31px';
+  menuItem.appendChild(menuIcon);
+
+  const menuLabel = document.createElement('div');
+  menuLabel.classList.add('menu-label');
+  menuLabel.innerText = label;
+  menuItem.appendChild(menuLabel);
+
+  if (description) {
+    const menuDescription = document.createElement('div');
+    menuDescription.classList.add('menu-description', 'link');
+    menuDescription.innerText = description;
+    menuDescription.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (onRequirementsClick) {
+        onRequirementsClick();
+      }
+    });
+    menuItem.appendChild(menuDescription);
+  }
+
+  return menuItem;
+}
+
+export function createTextMenuItem(
+  text = ' ',
+  onClick: (() => void) | null = null,
+) {
+  const menuItem = document.createElement('div');
+  menuItem.classList.add('menu-item', 'text');
+  menuItem.innerText = text;
+
+  if (onClick) {
+    menuItem.classList.add('link');
+    menuItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onClick();
+    });
+  }
 
   return menuItem;
 }

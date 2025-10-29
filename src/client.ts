@@ -40,6 +40,7 @@ import {
   EoWriter,
   EquipmentPaperdoll,
   type Esf,
+  type EsfRecord,
   FacePlayerClientPacket,
   FileType,
   type Gender,
@@ -83,10 +84,14 @@ import {
   SitAction,
   SitRequestClientPacket,
   SitState,
+  type SkillLearn,
   type Spell,
   type StatId,
   StatSkillAddClientPacket,
+  StatSkillJunkClientPacket,
   StatSkillOpenClientPacket,
+  StatSkillRemoveClientPacket,
+  StatSkillTakeClientPacket,
   TalkAnnounceClientPacket,
   TalkReportClientPacket,
   ThreeItem,
@@ -202,6 +207,11 @@ export enum ChatTab {
 
 type ClientEvents = {
   error: { title: string; message: string };
+  confirmation: {
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  };
   smallAlert: { title: string; message: string };
   debug: string;
   login: CharacterSelectionListEntry[];
@@ -245,6 +255,11 @@ type ClientEvents = {
   bankUpdated: undefined;
   lockerOpened: { items: ThreeItem[] };
   lockerChanged: { items: ThreeItem[] };
+  skillMasterOpened: {
+    name: string;
+    skills: SkillLearn[];
+  };
+  skillsChanged: undefined;
 };
 
 export enum GameState {
@@ -638,13 +653,30 @@ export class Client {
     return this.ecf.classes[id - 1];
   }
 
+  getEsfRecordById(id: number): EsfRecord | undefined {
+    if (!this.esf) {
+      return;
+    }
+
+    return this.esf.skills[id - 1];
+  }
+
   getResourceString(id: EOResourceID): string | undefined {
     const edf = this.edfs.game2;
     if (!edf) {
       return undefined;
     }
 
-    return edf.getLine(id);
+    const line = edf.getLine(id);
+    if (!line) {
+      return undefined;
+    }
+
+    if (line.startsWith('*')) {
+      return line.substring(1);
+    }
+
+    return line;
   }
 
   getDialogStrings(id: DialogResourceID): string[] | undefined {
@@ -1048,6 +1080,10 @@ export class Client {
   }
 
   openLocker(coords: Coords) {
+    if (!this.isAdjacentToSpec(MapTileSpec.BankVault)) {
+      return;
+    }
+
     const packet = new LockerOpenClientPacket();
     packet.lockerCoords = coords;
     this.bus.send(packet);
@@ -1085,6 +1121,29 @@ export class Client {
     const packet = new DoorOpenClientPacket();
     packet.coords = coords;
     this.bus.send(packet);
+  }
+
+  isAdjacentToSpec(spec: MapTileSpec): boolean {
+    const playerAt = this.getPlayerCoords();
+
+    const adjacentTiles = [
+      { x: playerAt.x + 1, y: playerAt.y },
+      { x: playerAt.x - 1, y: playerAt.y },
+      { x: playerAt.x, y: playerAt.y + 1 },
+      { x: playerAt.x, y: playerAt.y - 1 },
+    ];
+
+    for (const coords of adjacentTiles) {
+      const tileSpec = this.map.tileSpecRows
+        .find((r) => r.y === coords.y)
+        ?.tiles.find((t) => t.x === coords.x);
+
+      if (tileSpec && tileSpec.tileSpec === spec) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   isFacingChairAt(coords: Vector2): boolean {
@@ -1143,6 +1202,10 @@ export class Client {
 
   showError(message: string, title = '') {
     this.emitter.emit('error', { title, message });
+  }
+
+  showConfirmation(message: string, title: string, onConfirm: () => void) {
+    this.emitter.emit('confirmation', { title, message, onConfirm });
   }
 
   emit<Event extends keyof ClientEvents>(
@@ -1217,8 +1280,9 @@ export class Client {
     return false;
   }
 
-  handleClick() {
-    if (this.state !== GameState.InGame || this.typing) {
+  handleClick(e: MouseEvent) {
+    const ui = document.getElementById('ui');
+    if (this.state !== GameState.InGame || this.typing || e.target !== ui) {
       return;
     }
 
@@ -2217,6 +2281,10 @@ export class Client {
   }
 
   openChest(coords: Vector2) {
+    if (!this.isAdjacentToSpec(MapTileSpec.Chest)) {
+      return;
+    }
+
     const chestKeys: number[] = [];
     for (const item of this.map.items) {
       if (
@@ -2384,6 +2452,26 @@ export class Client {
     packet.actionType = TrainType.Stat;
     packet.actionTypeData = new StatSkillAddClientPacket.ActionTypeDataStat();
     packet.actionTypeData.statId = statId;
+    this.bus.send(packet);
+  }
+
+  learnSkill(skillId: number) {
+    const packet = new StatSkillTakeClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.spellId = skillId;
+    this.bus.send(packet);
+  }
+
+  forgetSkill(skillId: number) {
+    const packet = new StatSkillRemoveClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.spellId = skillId;
+    this.bus.send(packet);
+  }
+
+  resetCharacter() {
+    const packet = new StatSkillJunkClientPacket();
+    packet.sessionId = this.sessionId;
     this.bus.send(packet);
   }
 }
