@@ -2406,16 +2406,32 @@ div.icon[data-id="23"] {
 
 #stats {
   position: absolute;
-  width: 479px;
-  height: 119px;
+  width: 240px;
+  height: 233px;
   background: #000;
-  background-image: url(/gfx/gfx002/134.png);
   color: #fff;
   font-size: 12px;
   background-position: -3px 0;
   border-radius: 5px;
   z-index: 9999;
   user-select: none;
+}
+
+#stats >div:first-child {
+  position: absolute;
+  top:0;
+  width: 240px;
+  height: 120px;
+  background-image: url(/gfx/gfx002/134.png);
+}
+
+#stats >div:last-child {
+  position: absolute;
+  width: 240px;
+  height: 115px;
+  top: 119px;
+  background-image: url(/gfx/gfx002/134.png);
+  background-position: -239px -4px;
 }
 
 #stats .stat {
@@ -2531,51 +2547,51 @@ div.icon[data-id="23"] {
 }
 
 #stats .stat[data-id="name"] {
-  left: 282px;
-  top: 9px;
+  left: 44px;
+  top: 6px;
 }
 
 #stats .stat[data-id="lvl"] {
-  left: 453px;
-  top: 10px;
+  left: 215px;
+  top: 6px;
 }
 
 #stats .stat[data-id="guild"] {
-  left: 282px;
-  top: 27px;
+  left: 44px;
+  top: 24px;
 }
 
 #stats .stat[data-id="weight"] {
-  left: 282px;
-  top: 46px;
+  left: 44px;
+  top: 43px;
 }
 
 #stats .stat[data-id="stat-points"] {
-  left: 282px;
-  top: 64px;
+  left: 44px;
+  top: 61px;
 }
 
 #stats .stat[data-id="skill-points"] {
-  left: 282px;
-  top: 82px;
+  left: 44px;
+  top: 79px;
 }
 
 #stats .stat[data-id="gold"] {
-  left: 380px;
-  top: 46px;
+  left: 142px;
+  top: 43px;
 }
 
 #stats .stat[data-id="exp"] {
-  left: 380px;
-  top: 64px;
+  left: 142px;
+  top: 61px;
 }
 
 #stats .stat[data-id="tnl"] {
-  left: 380px;
-  top: 82px;
+  left: 142px;
+  top: 79px;
 }
 
 #stats .stat[data-id="karma"] {
-  left: 380px;
-  top: 100px;
+  left: 142px;
+  top: 97px;
 }
