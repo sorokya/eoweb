@@ -1253,8 +1253,9 @@ export class Client {
     return false;
   }
 
-  handleClick() {
-    if (this.state !== GameState.InGame || this.typing) {
+  handleClick(e: MouseEvent) {
+    const ui = document.getElementById('ui');
+    if (this.state !== GameState.InGame || this.typing || e.target !== ui) {
       return;
     }
 

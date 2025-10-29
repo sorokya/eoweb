@@ -1091,8 +1091,8 @@ window.addEventListener('mousemove', (e) => {
   });
 });
 
-window.addEventListener('click', (_e) => {
-  client.handleClick();
+window.addEventListener('click', (e) => {
+  client.handleClick(e);
 });
 
 function loadInventoryGrid() {
