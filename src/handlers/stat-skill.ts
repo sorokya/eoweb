@@ -2,6 +2,7 @@ import {
   type EoReader,
   PacketAction,
   PacketFamily,
+  StatSkillOpenServerPacket,
   StatSkillPlayerServerPacket,
 } from 'eolib';
 import type { Client } from '../client';
@@ -29,12 +30,28 @@ function handleStatSkillPlayer(client: Client, reader: EoReader) {
   playSfxById(SfxId.InventoryPickup);
 }
 
+function handleStatSkillOpen(client: Client, reader: EoReader) {
+  const packet = StatSkillOpenServerPacket.deserialize(reader);
+  client.sessionId = packet.sessionId;
+  client.emit('skillMasterOpened', {
+    name: packet.shopName,
+    skills: packet.skills,
+  });
+}
+
 export function registerStatSkillHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Player,
     (reader) => {
       handleStatSkillPlayer(client, reader);
+    },
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.StatSkill,
+    PacketAction.Open,
+    (reader) => {
+      handleStatSkillOpen(client, reader);
     },
   );
 }

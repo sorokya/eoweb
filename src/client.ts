@@ -40,6 +40,7 @@ import {
   EoWriter,
   EquipmentPaperdoll,
   type Esf,
+  type EsfRecord,
   FacePlayerClientPacket,
   FileType,
   type Gender,
@@ -83,6 +84,7 @@ import {
   SitAction,
   SitRequestClientPacket,
   SitState,
+  type SkillLearn,
   type Spell,
   type StatId,
   StatSkillAddClientPacket,
@@ -245,6 +247,10 @@ type ClientEvents = {
   bankUpdated: undefined;
   lockerOpened: { items: ThreeItem[] };
   lockerChanged: { items: ThreeItem[] };
+  skillMasterOpened: {
+    name: string;
+    skills: SkillLearn[];
+  };
 };
 
 export enum GameState {
@@ -636,6 +642,14 @@ export class Client {
     }
 
     return this.ecf.classes[id - 1];
+  }
+
+  getEsfRecordById(id: number): EsfRecord | undefined {
+    if (!this.esf) {
+      return;
+    }
+
+    return this.esf.skills[id - 1];
   }
 
   getResourceString(id: EOResourceID): string | undefined {
