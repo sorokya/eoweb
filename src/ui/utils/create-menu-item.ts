@@ -84,16 +84,18 @@ export function createSkillMenuItem(
   menuLabel.innerText = label;
   menuItem.appendChild(menuLabel);
 
-  const menuDescription = document.createElement('div');
-  menuDescription.classList.add('menu-description', 'link');
-  menuDescription.innerText = description;
-  menuDescription.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (onRequirementsClick) {
-      onRequirementsClick();
-    }
-  });
-  menuItem.appendChild(menuDescription);
+  if (description) {
+    const menuDescription = document.createElement('div');
+    menuDescription.classList.add('menu-description', 'link');
+    menuDescription.innerText = description;
+    menuDescription.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (onRequirementsClick) {
+        onRequirementsClick();
+      }
+    });
+    menuItem.appendChild(menuDescription);
+  }
 
   return menuItem;
 }

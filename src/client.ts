@@ -89,6 +89,7 @@ import {
   type StatId,
   StatSkillAddClientPacket,
   StatSkillOpenClientPacket,
+  StatSkillRemoveClientPacket,
   StatSkillTakeClientPacket,
   TalkAnnounceClientPacket,
   TalkReportClientPacket,
@@ -257,7 +258,7 @@ type ClientEvents = {
     name: string;
     skills: SkillLearn[];
   };
-  skillLearned: undefined;
+  skillsChanged: undefined;
 };
 
 export enum GameState {
@@ -2414,6 +2415,13 @@ export class Client {
 
   learnSkill(skillId: number) {
     const packet = new StatSkillTakeClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.spellId = skillId;
+    this.bus.send(packet);
+  }
+
+  forgetSkill(skillId: number) {
+    const packet = new StatSkillRemoveClientPacket();
     packet.sessionId = this.sessionId;
     packet.spellId = skillId;
     this.bus.send(packet);

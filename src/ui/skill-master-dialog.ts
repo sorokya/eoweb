@@ -45,6 +45,7 @@ export class SkillMasterDialog extends Base {
   private skills: SkillLearn[] = [];
   private state = [State.Initial];
   private skillId = 0;
+  private open = false;
 
   constructor(client: Client) {
     super();
@@ -106,7 +107,9 @@ export class SkillMasterDialog extends Base {
   }
 
   refresh() {
-    this.render();
+    if (this.open) {
+      this.render();
+    }
   }
 
   show() {
@@ -115,6 +118,7 @@ export class SkillMasterDialog extends Base {
     this.dialogs.classList.remove('hidden');
     this.client.typing = true;
     this.setScrollThumbPosition();
+    this.open = true;
   }
 
   hide() {
@@ -125,6 +129,7 @@ export class SkillMasterDialog extends Base {
       this.dialogs.classList.add('hidden');
       this.client.typing = false;
     }
+    this.open = false;
   }
 
   private render() {
@@ -313,6 +318,34 @@ export class SkillMasterDialog extends Base {
 
   renderForget() {
     this.itemList.innerHTML = '';
+
+    if (!this.client.spells.length) {
+      this.reset();
+      return;
+    }
+
+    for (const skill of this.client.spells) {
+      const record = this.client.getEsfRecordById(skill.id);
+      if (!record) {
+        continue;
+      }
+
+      const item = createSkillMenuItem(record, record.name, '');
+
+      const click = () => {
+        const strings = this.client.getDialogStrings(
+          DialogResourceID.SKILL_PROMPT_TO_FORGET,
+        );
+        this.client.showConfirmation(strings[1], strings[0], () => {
+          this.client.forgetSkill(skill.id);
+        });
+      };
+
+      item.addEventListener('click', click);
+      item.addEventListener('contextmenu', click);
+      this.itemList.appendChild(item);
+    }
+
     this.btnBack.classList.remove('hidden');
   }
 

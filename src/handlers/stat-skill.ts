@@ -6,6 +6,7 @@ import {
   Spell,
   StatSkillOpenServerPacket,
   StatSkillPlayerServerPacket,
+  StatSkillRemoveServerPacket,
   StatSkillReplyServerPacket,
   StatSkillTakeServerPacket,
 } from 'eolib';
@@ -85,8 +86,18 @@ function handleStatSkillTake(client: Client, reader: EoReader) {
   client.spells.push(spell);
 
   client.emit('inventoryChanged', undefined);
-  client.emit('skillLearned', undefined);
+  client.emit('skillsChanged', undefined);
   playSfxById(SfxId.LearnNewSpell);
+}
+
+function handleStatSkillRemove(client: Client, reader: EoReader) {
+  const packet = StatSkillRemoveServerPacket.deserialize(reader);
+  client.spells = client.spells.filter((s) => s.id !== packet.spellId);
+  const strings = client.getDialogStrings(
+    DialogResourceID.SKILL_FORGET_SUCCESS,
+  );
+  client.showError(strings[1], strings[0]);
+  client.emit('skillsChanged', undefined);
 }
 
 export function registerStatSkillHandlers(client: Client) {
@@ -116,6 +127,13 @@ export function registerStatSkillHandlers(client: Client) {
     PacketAction.Take,
     (reader) => {
       handleStatSkillTake(client, reader);
+    },
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.StatSkill,
+    PacketAction.Remove,
+    (reader) => {
+      handleStatSkillRemove(client, reader);
     },
   );
 }

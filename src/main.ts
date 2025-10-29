@@ -316,7 +316,7 @@ client.on('skillMasterOpened', ({ name, skills }) => {
   skillMasterDialog.show();
 });
 
-client.on('skillLearned', () => {
+client.on('skillsChanged', () => {
   skillMasterDialog.refresh();
 });
 
