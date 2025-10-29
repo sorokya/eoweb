@@ -1,7 +1,7 @@
 import type { SkillLearn } from 'eolib';
 import mitt from 'mitt';
 import type { Client } from '../client';
-import { EOResourceID } from '../edf';
+import { DialogResourceID, EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
 import { DialogIcon } from './dialog-icon';
@@ -153,6 +153,13 @@ export class SkillMasterDialog extends Base {
       `${learnCount}${this.client.getResourceString(EOResourceID.SKILLMASTER_ITEMS_TO_LEARN)}`,
     );
     const clickLearn = () => {
+      if (!learnCount) {
+        const strings = this.client.getDialogStrings(
+          DialogResourceID.SKILL_NOTHING_MORE_TO_LEARN,
+        );
+        this.client.showError(strings[1], strings[0]);
+        return;
+      }
       this.changeState(State.Learn);
     };
     learnItem.addEventListener('click', clickLearn);
@@ -165,6 +172,9 @@ export class SkillMasterDialog extends Base {
       `${forgetCount}${this.client.getResourceString(EOResourceID.SKILLMASTER_ITEMS_LEARNED)}`,
     );
     const clickForget = () => {
+      if (!forgetCount) {
+        return;
+      }
       this.changeState(State.Forget);
     };
     forgetItem.addEventListener('click', clickForget);
