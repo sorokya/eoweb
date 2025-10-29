@@ -1212,7 +1212,7 @@ div.icon[data-id="23"] {
 }
 
 #quest-dialog {
-  position: absolute;
+  position: relative;
   background-color: #000;
   background-image: url("/gfx/gfx002/167.png");
   width: 284px;
@@ -2405,7 +2405,7 @@ div.icon[data-id="23"] {
 }
 
 #stats {
-  position: absolute;
+  position: relative;
   width: 240px;
   height: 233px;
   background: #000;
@@ -2425,13 +2425,19 @@ div.icon[data-id="23"] {
   background-image: url(/gfx/gfx002/134.png);
 }
 
-#stats > div:last-child {
+#stats > div:nth-child(2) {
   position: absolute;
   width: 240px;
   height: 115px;
   top: 119px;
   background-image: url(/gfx/gfx002/134.png);
   background-position: -239px -4px;
+}
+
+#stats button[data-id="cancel"] {
+  position: absolute;
+  bottom: -32px;
+  left: 76px;
 }
 
 #stats .stat {

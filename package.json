@@ -21,5 +21,6 @@
     "idb": "^8.0.3",
     "mitt": "^3.0.1",
     "notyf": "^3.10.0"
-  }
+  },
+  "packageManager": "pnpm@10.20.0+sha256.47a3352808501b8d1ef20112273b6a5dcfa53d28a55bcce36d268e878bd6bfe9"
 }
