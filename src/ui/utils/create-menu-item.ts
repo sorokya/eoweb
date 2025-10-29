@@ -1,4 +1,4 @@
-import type { EifRecord } from 'eolib';
+import type { EifRecord, EsfRecord } from 'eolib';
 import { getItemGraphicPath } from '../../utils/get-item-graphic-id';
 import { getItemMeta } from '../../utils/get-item-meta';
 import type { DialogIcon } from '../dialog-icon';
@@ -49,6 +49,34 @@ export function createItemMenuItem(
   const meta = getItemMeta(record);
   tooltip.innerText = `${record.name}\n${meta.join('\n')}`;
   menuItem.appendChild(tooltip);
+
+  const menuLabel = document.createElement('div');
+  menuLabel.classList.add('menu-label');
+  menuLabel.innerText = label;
+  menuItem.appendChild(menuLabel);
+
+  const menuDescription = document.createElement('div');
+  menuDescription.classList.add('menu-description');
+  menuDescription.innerText = description;
+  menuItem.appendChild(menuDescription);
+
+  return menuItem;
+}
+
+export function createSkillMenuItem(
+  record: EsfRecord,
+  label: string,
+  description: string,
+) {
+  const menuItem = document.createElement('div');
+  menuItem.classList.add('menu-item');
+
+  const menuIcon = document.createElement('div');
+  menuIcon.classList.add('menu-item-icon', 'skill-icon');
+  menuIcon.style.backgroundImage = `url('gfx/gfx025/${record.iconId + 100}.png')`;
+  menuIcon.style.width = '33px';
+  menuIcon.style.height = '31px';
+  menuItem.appendChild(menuIcon);
 
   const menuLabel = document.createElement('div');
   menuLabel.classList.add('menu-label');
