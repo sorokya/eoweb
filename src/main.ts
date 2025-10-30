@@ -785,6 +785,10 @@ inventory.on('equipItem', ({ slot, itemId }) => {
   client.equipItem(slot, itemId);
 });
 
+inventory.on('assignToSlot', ({ itemId, slotIndex }) => {
+  hotbar.setSlot(slotIndex, SlotType.Item, itemId);
+});
+
 questDialog.on('reply', ({ questId, dialogId, action }) => {
   client.questReply(questId, dialogId, action);
   client.typing = false;

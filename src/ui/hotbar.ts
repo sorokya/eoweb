@@ -61,6 +61,8 @@ export class Hotbar extends Base {
       }
 
       const element = this.container.children[index] as HTMLDivElement;
+      element.innerHTML = '';
+
       if (slot.type === SlotType.Skill) {
         const skill = this.client.getEsfRecordById(slot.typeId);
         if (!skill) {

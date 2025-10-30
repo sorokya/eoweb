@@ -41,6 +41,7 @@ type Events = {
   junkItem: number;
   addChestItem: number;
   addLockerItem: number;
+  assignToSlot: { itemId: number; slotIndex: number };
 };
 
 export class Inventory extends Base {
@@ -166,6 +167,20 @@ export class Inventory extends Base {
     this.dragging = null;
 
     if (!target) return;
+
+    const slot = target.closest('.slot') as HTMLDivElement;
+    if (slot) {
+      const slots = document.querySelectorAll('#hotbar .slot');
+      const slotIndex = Array.from(slots).indexOf(slot);
+      if (slotIndex === -1) return;
+
+      this.emitter.emit('assignToSlot', {
+        itemId: item.id,
+        slotIndex,
+      });
+
+      return;
+    }
 
     if (target === this.btnTab1) {
       this.tryMoveToTab(item.id, 0);
