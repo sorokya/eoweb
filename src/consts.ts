@@ -68,3 +68,4 @@ export const LOCKER_MAX_ITEM_AMOUNT = 200;
 
 export const HOTBAR_SLOTS = 5;
 export const HOTBAR_COOLDOWN_TICKS = 2;
+export const TICKS_PER_CAST_TIME = 4;

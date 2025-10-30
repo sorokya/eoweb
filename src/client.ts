@@ -85,7 +85,14 @@ import {
   SitRequestClientPacket,
   SitState,
   type SkillLearn,
+  SkillTargetType,
+  SkillType,
   type Spell,
+  SpellRequestClientPacket,
+  SpellTargetGroupClientPacket,
+  SpellTargetOtherClientPacket,
+  SpellTargetSelfClientPacket,
+  SpellTargetType,
   type StatId,
   StatSkillAddClientPacket,
   StatSkillJunkClientPacket,
@@ -169,8 +176,9 @@ import { registerWalkHandlers } from './handlers/walk';
 import { registerWarpHandlers } from './handlers/warp';
 import { registerWelcomeHandlers } from './handlers/welcome';
 import { MapRenderer } from './map';
-import { MovementController } from './movement-controller';
+import { getTimestamp, MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
+import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
 import { EffectAnimation, EffectTargetCharacter } from './render/effect';
 import { Emote } from './render/emote';
@@ -387,6 +395,13 @@ type CharacterCreateData = {
   skin: number;
 };
 
+enum SpellTarget {
+  Self = 0,
+  Group = 1,
+  Npc = 2,
+  Player = 3,
+}
+
 export class Client {
   private emitter: Emitter<ClientEvents>;
   tickCount = 0;
@@ -496,7 +511,11 @@ export class Client {
   lockerCoords = new Coords();
   atlas: Atlas;
   hotbarSlots: Slot[] = [];
+  selectedSpellId = 0;
   queuedSpellId = 0;
+  spellCastTimestamp = 0;
+  spellTarget: SpellTarget | null = null;
+  spellTargetId = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -786,6 +805,10 @@ export class Client {
         );
         this.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
       }
+
+      if (this.queuedSpellId) {
+        this.beginSpellChant();
+      }
     }
 
     const emptyQueuedNpcChats: number[] = [];
@@ -830,6 +853,13 @@ export class Client {
         !animation.ticks ||
         !this.nearby.characters.some((c) => c.playerId === id)
       ) {
+        if (
+          id === this.playerId &&
+          animation instanceof CharacterSpellChantAnimation
+        ) {
+          this.castSpell(animation.spellId);
+        }
+
         endedCharacterAnimations.push(id);
         continue;
       }
@@ -1431,6 +1461,17 @@ export class Client {
         const packet = new StatSkillOpenClientPacket();
         packet.npcIndex = npc.index;
         this.bus.send(packet);
+        break;
+      }
+      case NpcType.Aggressive:
+      case NpcType.Passive: {
+        if (!this.selectedSpellId) {
+          return;
+        }
+
+        this.spellTarget = SpellTarget.Npc;
+        this.spellTargetId = npc.index;
+        this.queuedSpellId = this.selectedSpellId;
         break;
       }
       default:
@@ -2488,9 +2529,104 @@ export class Client {
     if (slot.type === SlotType.Item) {
       this.useItem(slot.typeId);
     } else {
-      this.queuedSpellId = slot.typeId;
+      const record = this.getEsfRecordById(slot.typeId);
+      if (!record) {
+        return;
+      }
+
+      const animation = this.characterAnimations.get(this.playerId);
+      if (animation) {
+        return;
+      }
+
+      // TODO: Bard
+      if (record.type === SkillType.Bard) {
+        return;
+      }
+
+      if (
+        [SkillTargetType.Self, SkillTargetType.Group].includes(
+          record.targetType,
+        )
+      ) {
+        this.spellTarget =
+          record.targetType === SkillTargetType.Self
+            ? SpellTarget.Self
+            : SpellTarget.Group;
+        this.spellTargetId = 0;
+        this.queuedSpellId = slot.typeId;
+        return;
+      }
+
+      this.selectedSpellId = slot.typeId;
       this.emit('spellQueued', undefined);
       playSfxById(SfxId.SpellActivate);
+    }
+  }
+
+  beginSpellChant() {
+    const record = this.getEsfRecordById(this.queuedSpellId);
+    if (!record) {
+      return;
+    }
+
+    this.spellCastTimestamp = getTimestamp();
+    const packet = new SpellRequestClientPacket();
+    packet.spellId = this.queuedSpellId;
+    packet.timestamp = this.spellCastTimestamp;
+    this.bus.send(packet);
+
+    console.log(`Casting ${record.name} - cast time ${record.castTime}`);
+
+    this.characterAnimations.set(
+      this.playerId,
+      new CharacterSpellChantAnimation(
+        this.queuedSpellId,
+        record.chant,
+        record.castTime,
+      ),
+    );
+
+    this.queuedSpellId = 0;
+  }
+
+  castSpell(spellId: number) {
+    const timestamp = getTimestamp();
+    const character = this.getPlayerCharacter();
+
+    const diff = timestamp - this.spellCastTimestamp;
+    console.log(`Spell cast time elapsed: ${diff * 10}ms`);
+    console.log('Target:', this.spellTarget, this.spellTargetId);
+
+    switch (this.spellTarget) {
+      case SpellTarget.Self: {
+        const packet = new SpellTargetSelfClientPacket();
+        packet.spellId = spellId;
+        packet.direction = character.direction;
+        packet.timestamp = timestamp;
+        this.bus.send(packet);
+        break;
+      }
+      case SpellTarget.Group: {
+        const packet = new SpellTargetGroupClientPacket();
+        packet.spellId = spellId;
+        packet.timestamp = timestamp;
+        this.bus.send(packet);
+        break;
+      }
+      default: {
+        const packet = new SpellTargetOtherClientPacket();
+        packet.spellId = spellId;
+        packet.targetType =
+          this.spellTarget === SpellTarget.Npc
+            ? SpellTargetType.Npc
+            : SpellTargetType.Player;
+        packet.victimId = this.spellTargetId;
+        packet.previousTimestamp = this.spellCastTimestamp;
+        packet.timestamp = timestamp;
+        this.bus.send(packet);
+        break;
+      }
     }
   }
 }

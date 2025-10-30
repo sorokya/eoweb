@@ -312,7 +312,7 @@ export class MovementController {
   }
 }
 
-function getTimestamp(): number {
+export function getTimestamp(): number {
   const now = new Date();
   const hour = now.getHours();
   const minute = now.getMinutes();

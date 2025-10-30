@@ -75,7 +75,7 @@ export class Hotbar extends Base {
         img.classList.add('skill');
         img.style.backgroundImage = `url(/gfx/gfx025/${skill.iconId + 100}.png)`;
 
-        if (this.client.queuedSpellId === slot.typeId) {
+        if (this.client.selectedSpellId === slot.typeId) {
           img.style.backgroundPositionX = '-34px';
         }
 

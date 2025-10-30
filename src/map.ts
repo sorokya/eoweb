@@ -3,6 +3,7 @@ import { CharacterFrame, NpcFrame } from './atlas';
 import { type Client, GameState } from './client';
 import {
   getCharacterIntersecting,
+  getCharacterRectangle,
   getNpcIntersecting,
   Rectangle,
   setCharacterRectangle,
@@ -28,6 +29,7 @@ import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
 import { renderCharacterChatBubble } from './render/character-chat-bubble';
 import { renderCharacterHealthBar } from './render/character-health-bar';
+import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
 import { EffectTargetCharacter, EffectTargetTile } from './render/effect';
 import { NpcAttackAnimation } from './render/npc-attack';
@@ -35,6 +37,7 @@ import { renderNpcChatBubble } from './render/npc-chat-bubble';
 import { NpcDeathAnimation } from './render/npc-death';
 import { renderNpcHealthBar } from './render/npc-health-bar';
 import { NpcWalkAnimation } from './render/npc-walk';
+import { renderSpellChant } from './render/spell-chant';
 import { capitalize } from './utils/capitalize';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';
@@ -780,6 +783,11 @@ export class MapRenderer {
           ? CharacterFrame.RangeAttackDownRight
           : CharacterFrame.RangeAttackUpLeft;
         break;
+      case animation instanceof CharacterSpellChantAnimation:
+        characterFrame = downRight
+          ? CharacterFrame.RaisedHandDownRight
+          : CharacterFrame.RaisedHandUpLeft;
+        break;
       case character.sitState === SitState.Floor:
         characterFrame = downRight
           ? CharacterFrame.FloorDownRight
@@ -933,6 +941,17 @@ export class MapRenderer {
         renderCharacterHealthBar(healthBar, character, ctx);
         if (emote) {
           emote.render(character, ctx);
+        }
+
+        if (
+          animation instanceof CharacterSpellChantAnimation &&
+          !animation.animationFrame
+        ) {
+          renderSpellChant(
+            getCharacterRectangle(character.playerId),
+            animation.chant,
+            ctx,
+          );
         }
       });
     }
