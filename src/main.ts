@@ -323,6 +323,10 @@ client.on('skillsChanged', () => {
   skillMasterDialog.refresh();
 });
 
+client.on('spellQueued', () => {
+  hotbar.refresh();
+});
+
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.config.host);
   socket.addEventListener('open', () => {

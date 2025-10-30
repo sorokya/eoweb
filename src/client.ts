@@ -261,6 +261,7 @@ type ClientEvents = {
     skills: SkillLearn[];
   };
   skillsChanged: undefined;
+  spellQueued: undefined;
 };
 
 export enum GameState {
@@ -495,6 +496,7 @@ export class Client {
   lockerCoords = new Coords();
   atlas: Atlas;
   hotbarSlots: Slot[] = [];
+  queuedSpellId = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -2486,6 +2488,8 @@ export class Client {
     if (slot.type === SlotType.Item) {
       this.useItem(slot.typeId);
     } else {
+      this.queuedSpellId = slot.typeId;
+      this.emit('spellQueued', undefined);
       playSfxById(SfxId.SpellActivate);
     }
   }

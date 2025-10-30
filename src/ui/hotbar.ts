@@ -34,6 +34,10 @@ export class Hotbar extends Base {
     }
   }
 
+  refresh() {
+    this.render();
+  }
+
   show() {
     this.render();
     this.container.classList.remove('hidden');
@@ -70,6 +74,10 @@ export class Hotbar extends Base {
         const img = document.createElement('div');
         img.classList.add('skill');
         img.style.backgroundImage = `url(/gfx/gfx025/${skill.iconId + 100}.png)`;
+
+        if (this.client.queuedSpellId === slot.typeId) {
+          img.style.backgroundPositionX = '-34px';
+        }
 
         element.appendChild(img);
       } else {
