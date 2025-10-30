@@ -147,6 +147,7 @@ import { registerArenaHandlers } from './handlers/arena';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerAvatarHandlers } from './handlers/avatar';
 import { registerBankHandlers } from './handlers/bank';
+import { registerCastHandlers } from './handlers/cast';
 import { registerChairHandlers } from './handlers/chair';
 import { registerCharacterHandlers } from './handlers/character';
 import { registerChestHandlers } from './handlers/chest';
@@ -1298,6 +1299,7 @@ export class Client {
     registerLockerHandlers(this);
     registerStatSkillHandlers(this);
     registerSpellHandlers(this);
+    registerCastHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {

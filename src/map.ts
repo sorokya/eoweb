@@ -31,7 +31,11 @@ import { renderCharacterChatBubble } from './render/character-chat-bubble';
 import { renderCharacterHealthBar } from './render/character-health-bar';
 import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
-import { EffectTargetCharacter, EffectTargetTile } from './render/effect';
+import {
+  EffectTargetCharacter,
+  EffectTargetNpc,
+  EffectTargetTile,
+} from './render/effect';
 import { NpcAttackAnimation } from './render/npc-attack';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
 import { NpcDeathAnimation } from './render/npc-death';
@@ -1045,6 +1049,27 @@ export class MapRenderer {
         additionalOffset.y,
     );
 
+    const rect = new Rectangle(
+      {
+        x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
+        y: screenY,
+      },
+      frame.w,
+      frame.h,
+    );
+
+    setNpcRectangle(npc.index, rect);
+
+    const effects = this.client.effects.filter(
+      (e) =>
+        e.target instanceof EffectTargetNpc && e.target.index === npc.index,
+    );
+
+    for (const effect of effects) {
+      effect.target.rect = rect;
+      effect.renderBehind(ctx);
+    }
+
     if (mirrored) {
       ctx.save(); // Save the current context state
       ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
@@ -1085,17 +1110,12 @@ export class MapRenderer {
       ctx.restore(); // Restore the context to its original state
     }
 
-    setNpcRectangle(
-      npc.index,
-      new Rectangle(
-        {
-          x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
-          y: screenY,
-        },
-        frame.w,
-        frame.h,
-      ),
-    );
+    for (const effect of effects) {
+      ctx.globalAlpha = 0.4;
+      effect.renderTransparent(ctx);
+      ctx.globalAlpha = 1;
+      effect.renderFront(ctx);
+    }
 
     const bubble = this.client.npcChats.get(npc.index);
     const healthBar = this.client.npcHealthBars.get(npc.index);
