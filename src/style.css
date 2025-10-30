@@ -2655,3 +2655,85 @@ div.icon[data-id="23"] {
   align-items: center;
   scale: 1.3;
 }
+
+#spell-book {
+  position: relative;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/164.png");
+  width: 284px;
+  height: 290px;
+  user-select: none;
+}
+
+#spell-book .spell-grid {
+  position: absolute;
+  top: 44px;
+  left: 15px;
+  width: 233px;
+  height: 198px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  gap: 6px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  touch-action: pan-y;
+}
+
+#spell-book .spell-grid > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#spell-book .spell-name {
+  color: #fff;
+  font-size: 10px;
+  max-width: 32px;
+  text-align: center;
+}
+
+#spell-book .spell-level {
+  color: #b4a08c;
+  font-size: 9px;
+  position: relative;
+}
+
+#spell-book .spell-icon {
+  width: 34px;
+  height: 32px;
+}
+
+#spell-book .spell-icon:hover {
+  background-position-x: -34px;
+}
+
+#spell-book .spell-grid::-webkit-scrollbar {
+  display: none;
+}
+
+#spell-book .scroll-handle {
+  position: absolute;
+  right: 16px;
+  width: 16px;
+  height: 15px;
+  background: url("/gfx/gfx002/129.png") 0 -75px;
+  touch-action: none;
+  user-select: none;
+}
+
+#spell-book .label {
+  position: absolute;
+  top: 18px;
+  left: 24px;
+  color: #fff;
+  font-size: 12px;
+}
+
+#spell-book button[data-id="cancel"] {
+  position: absolute;
+  bottom: 10px;
+  left: 98px;
+}

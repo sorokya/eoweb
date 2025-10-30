@@ -64,6 +64,7 @@ import { SkillMasterDialog } from './ui/skill-master-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
+import { SpellBook } from './ui/spell-book';
 import { Stats } from './ui/stats';
 import { capitalize } from './utils/capitalize';
 import { randomRange } from './utils/random-range';
@@ -410,6 +411,7 @@ const smallAlert = new SmallAlertSmallHeader();
 const largeAlertSmallHeader = new LargeAlertSmallHeader();
 const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
 const hotbar = new Hotbar(client);
+const spellBook = new SpellBook(client);
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -565,6 +567,9 @@ inGameMenu.on('toggle', (which) => {
       break;
     case 'stats':
       stats.toggle();
+      break;
+    case 'spells':
+      spellBook.toggle();
       break;
   }
 });
