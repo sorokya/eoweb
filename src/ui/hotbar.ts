@@ -3,7 +3,7 @@ import { HOTBAR_SLOTS } from '../consts';
 import { getItemGraphicPath } from '../utils/get-item-graphic-id';
 import { Base } from './base-ui';
 
-enum SlotType {
+export enum SlotType {
   Empty = 0,
   Item = 1,
   Skill = 2,
@@ -39,6 +39,15 @@ export class Hotbar extends Base {
   show() {
     this.render();
     this.container.classList.remove('hidden');
+  }
+
+  setSlot(slotIndex: number, type: SlotType, typeId: number) {
+    this.slots[slotIndex] = new Slot(type, typeId);
+    localStorage.setItem(
+      `${this.client.name}-hotbar`,
+      JSON.stringify(this.slots),
+    );
+    this.render();
   }
 
   private render() {

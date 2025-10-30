@@ -45,7 +45,7 @@ import { ChestDialog } from './ui/chest-dialog';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
-import { Hotbar } from './ui/hotbar';
+import { Hotbar, SlotType } from './ui/hotbar';
 import { HUD } from './ui/hud';
 import { InGameMenu } from './ui/in-game-menu';
 import { Inventory } from './ui/inventory';
@@ -1040,6 +1040,10 @@ stats.on('confirmTraining', () => {
     stats.setTrainingConfirmed();
   });
   smallConfirm.show();
+});
+
+spellBook.on('assignToSlot', ({ spellId, slotIndex }) => {
+  hotbar.setSlot(slotIndex, SlotType.Skill, spellId);
 });
 
 // Tick loop
