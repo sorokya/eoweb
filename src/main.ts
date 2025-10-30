@@ -327,6 +327,10 @@ client.on('spellQueued', () => {
   hotbar.refresh();
 });
 
+client.on('setChat', (message) => {
+  chat.setMessage(message);
+});
+
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.config.host);
   socket.addEventListener('open', () => {
@@ -1113,6 +1117,11 @@ window.addEventListener('mousemove', (e) => {
 
 window.addEventListener('click', (e) => {
   client.handleClick(e);
+});
+
+window.addEventListener('contextmenu', (e) => {
+  client.handleRightClick(e);
+  e.preventDefault();
 });
 
 function loadInventoryGrid() {

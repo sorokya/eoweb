@@ -113,62 +113,107 @@ export class Paperdoll extends Base {
     });
 
     this.imgAccessory.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Accessory);
     });
 
     this.imgArmlet1.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Armlet1);
     });
 
     this.imgArmlet2.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Armlet2);
     });
 
     this.imgArmor.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Armor);
     });
 
     this.imgBelt.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Belt);
     });
 
     this.imgBoots.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Boots);
     });
 
     this.imgBracer1.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Bracer1);
     });
 
     this.imgBracer2.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Bracer2);
     });
 
     this.imgGloves.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Gloves);
     });
 
     this.imgHat.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Hat);
     });
 
     this.imgNecklace.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Necklace);
     });
 
     this.imgRing1.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Ring1);
     });
 
     this.imgRing2.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Ring2);
     });
 
     this.imgShield.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Shield);
     });
 
     this.imgWeapon.addEventListener('contextmenu', () => {
+      if (this.details.playerId !== this.client.playerId) {
+        return;
+      }
       this.client.unequipItem(EquipmentSlot.Weapon);
     });
   }

@@ -15,6 +15,10 @@ import { playSfxById, SfxId } from '../sfx';
 
 function handleAvatarRemove(client: Client, reader: EoReader) {
   const packet = AvatarRemoveServerPacket.deserialize(reader);
+  if (client.menuPlayerId === packet.playerId) {
+    client.menuPlayerId = 0;
+  }
+
   const character = client.getCharacterById(packet.playerId);
   if (!character) {
     return;

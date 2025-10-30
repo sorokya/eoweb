@@ -102,6 +102,7 @@ import {
   StatSkillTakeClientPacket,
   TalkAnnounceClientPacket,
   TalkReportClientPacket,
+  TalkTellClientPacket,
   ThreeItem,
   TrainType,
   Version,
@@ -123,6 +124,7 @@ import { ChatBubble } from './chat-bubble';
 import {
   clearRectangles,
   getCharacterIntersecting,
+  getCharacterRectangle,
   getDoorIntersecting,
   getLockerIntersecting,
   getNpcIntersecting,
@@ -136,6 +138,9 @@ import {
   INITIAL_IDLE_TICKS,
   MAX_CHARACTER_NAME_LENGTH,
   MAX_CHAT_LENGTH,
+  PLAYER_MENU_ITEM_HEIGHT,
+  PLAYER_MENU_OFFSET_Y,
+  PLAYER_MENU_WIDTH,
   SPELL_COOLDOWN_TICKS,
   USAGE_TICKS,
 } from './consts';
@@ -280,6 +285,7 @@ type ClientEvents = {
   };
   skillsChanged: undefined;
   spellQueued: undefined;
+  setChat: string;
 };
 
 export enum GameState {
@@ -527,6 +533,7 @@ export class Client {
   spellTarget: SpellTarget | null = null;
   spellTargetId = 0;
   spellCooldownTicks = 0;
+  menuPlayerId = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -815,6 +822,13 @@ export class Client {
           inRange(playerCoords, i.coords),
         );
         this.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
+
+        if (this.menuPlayerId) {
+          const character = this.getCharacterById(this.menuPlayerId);
+          if (!character) {
+            this.menuPlayerId = 0;
+          }
+        }
       }
 
       if (this.queuedSpellId) {
@@ -1346,6 +1360,29 @@ export class Client {
   }
 
   handleClick(e: MouseEvent) {
+    if (this.menuPlayerId) {
+      const hovered = this.getHoveredPlayerMenuItem();
+      if (hovered !== undefined) {
+        playSfxById(SfxId.ButtonClick);
+        switch (hovered) {
+          case PlayerMenuItem.Paperdoll:
+            this.requestPaperdoll(this.menuPlayerId);
+            break;
+          case PlayerMenuItem.Whisper: {
+            const character = this.getCharacterById(this.menuPlayerId);
+            if (character) {
+              this.emit('setChat', `!${character.name} `);
+            }
+            break;
+          }
+        }
+        this.menuPlayerId = 0;
+        return;
+      }
+
+      this.menuPlayerId = 0;
+    }
+
     const ui = document.getElementById('ui');
     if (this.state !== GameState.InGame || this.typing || e.target !== ui) {
       return;
@@ -1438,6 +1475,30 @@ export class Client {
       if (sign) {
         this.emit('smallAlert', sign);
       }
+    }
+  }
+
+  handleRightClick(e: MouseEvent) {
+    const ui = document.getElementById('ui');
+    if (this.state !== GameState.InGame || this.typing || e.target !== ui) {
+      return;
+    }
+
+    const characterAt = getCharacterIntersecting(this.mousePosition);
+    if (characterAt) {
+      const character = this.getCharacterById(characterAt.id);
+      if (character) {
+        if (characterAt.id === this.playerId) {
+          this.requestPaperdoll(this.playerId);
+        } else {
+          this.menuPlayerId = character.playerId;
+        }
+        return;
+      }
+    }
+
+    if (this.menuPlayerId) {
+      this.menuPlayerId = 0;
     }
   }
 
@@ -1673,6 +1734,26 @@ export class Client {
       playSfxById(SfxId.AdminAnnounceReceived);
       this.bus.send(packet);
       return;
+    }
+
+    if (trimmed.startsWith('!')) {
+      const target = trimmed.substring(1).split(' ')[0];
+      if (target.trim().length) {
+        const msg = trimmed.substring(target.length + 2);
+
+        const packet = new TalkTellClientPacket();
+        packet.name = target;
+        packet.message = msg;
+        this.bus.send(packet);
+
+        this.emit('chat', {
+          icon: ChatIcon.Note,
+          tab: ChatTab.Local,
+          message: `${capitalize(this.name)}->${capitalize(target)} ${msg}`,
+        });
+
+        return;
+      }
     }
 
     const packet = new TalkReportClientPacket();
@@ -2768,4 +2849,40 @@ export class Client {
       playSfxById(metadata.sfx);
     }
   }
+
+  getHoveredPlayerMenuItem(): PlayerMenuItem | undefined {
+    if (!this.mousePosition || !this.menuPlayerId) {
+      return;
+    }
+
+    const rect = getCharacterRectangle(this.menuPlayerId);
+    if (!rect) {
+      return;
+    }
+
+    const menuX = rect.position.x + rect.width + 10;
+
+    if (
+      this.mousePosition.x < menuX ||
+      this.mousePosition.x > menuX + PLAYER_MENU_WIDTH
+    ) {
+      return;
+    }
+
+    const relativeY =
+      this.mousePosition.y - rect.position.y - PLAYER_MENU_OFFSET_Y;
+    const itemIndex = Math.floor(relativeY / PLAYER_MENU_ITEM_HEIGHT);
+    return itemIndex in PlayerMenuItem ? itemIndex : undefined;
+  }
+}
+
+export enum PlayerMenuItem {
+  Paperdoll = 0,
+  Book = 1,
+  Join = 2,
+  Invite = 3,
+  Trade = 4,
+  Whisper = 5,
+  Friend = 6,
+  Ignore = 7,
 }

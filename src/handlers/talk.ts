@@ -61,7 +61,7 @@ function handleTalkTell(client: Client, reader: EoReader) {
   const packet = TalkTellServerPacket.deserialize(reader);
   client.emit('chat', {
     icon: ChatIcon.Note,
-    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    message: `${capitalize(packet.playerName)}->${capitalize(client.name)} ${packet.message}`,
     tab: ChatTab.Local,
   });
   playSfxById(SfxId.PrivateMessageReceived);

@@ -70,3 +70,8 @@ export const HOTBAR_SLOTS = 5;
 export const HOTBAR_COOLDOWN_TICKS = 2;
 export const TICKS_PER_CAST_TIME = 4;
 export const SPELL_COOLDOWN_TICKS = 5;
+
+export const PLAYER_MENU_WIDTH = 96;
+export const PLAYER_MENU_HEIGHT = 137;
+export const PLAYER_MENU_ITEM_HEIGHT = 15;
+export const PLAYER_MENU_OFFSET_Y = 10;
