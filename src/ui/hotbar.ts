@@ -9,7 +9,7 @@ export enum SlotType {
   Skill = 2,
 }
 
-class Slot {
+export class Slot {
   type: SlotType;
   typeId: number;
 
@@ -22,12 +22,10 @@ class Slot {
 export class Hotbar extends Base {
   protected container: HTMLDivElement = document.querySelector('#hotbar');
   private client: Client;
-  private slots: Slot[];
 
   constructor(client: Client) {
     super();
     this.client = client;
-    this.slots = [];
 
     for (let i = 0; i < HOTBAR_SLOTS; ++i) {
       const slot = document.createElement('div');
@@ -42,20 +40,20 @@ export class Hotbar extends Base {
   }
 
   setSlot(slotIndex: number, type: SlotType, typeId: number) {
-    this.slots[slotIndex] = new Slot(type, typeId);
+    this.client.hotbarSlots[slotIndex] = new Slot(type, typeId);
     localStorage.setItem(
       `${this.client.name}-hotbar`,
-      JSON.stringify(this.slots),
+      JSON.stringify(this.client.hotbarSlots),
     );
     this.render();
   }
 
   private render() {
-    if (!this.slots.length) {
+    if (!this.client.hotbarSlots.length) {
       this.loadSlots();
     }
 
-    for (const [index, slot] of this.slots.entries()) {
+    for (const [index, slot] of this.client.hotbarSlots.entries()) {
       if (slot.type === SlotType.Empty) {
         continue;
       }
@@ -95,10 +93,10 @@ export class Hotbar extends Base {
   private loadSlots() {
     const json = localStorage.getItem(`${this.client.name}-hotbar`);
     if (json) {
-      this.slots = JSON.parse(json);
+      this.client.hotbarSlots = JSON.parse(json);
     } else {
       for (let i = 0; i < HOTBAR_SLOTS; ++i) {
-        this.slots.push(new Slot(SlotType.Empty));
+        this.client.hotbarSlots.push(new Slot(SlotType.Empty));
       }
     }
   }

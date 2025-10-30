@@ -18,6 +18,11 @@ export enum Input {
   EmoteSuicidal = 14,
   EmoteEmbarassed = 15,
   EmotePlayful = 16,
+  Hotbar1 = 17,
+  Hotbar2 = 18,
+  Hotbar3 = 19,
+  Hotbar4 = 20,
+  Hotbar5 = 21,
   Unknown = -1,
 }
 
@@ -33,6 +38,10 @@ const DRAG_THRESHOLD = 30;
 
 export function isInputHeld(input: Input): boolean {
   return held[input] || false;
+}
+
+export function isOrWasInputHeld(input: Input): boolean {
+  return held[input] || wasInputHeldLastTick(input);
 }
 
 export function getLastHeldDirection(): Input | null {
@@ -133,6 +142,21 @@ window.addEventListener('keydown', (e) => {
     case 'Numpad9':
       updateInputHeld(Input.EmoteSuicidal, true);
       break;
+    case 'Digit1':
+      updateInputHeld(Input.Hotbar1, true);
+      break;
+    case 'Digit2':
+      updateInputHeld(Input.Hotbar2, true);
+      break;
+    case 'Digit3':
+      updateInputHeld(Input.Hotbar3, true);
+      break;
+    case 'Digit4':
+      updateInputHeld(Input.Hotbar4, true);
+      break;
+    case 'Digit5':
+      updateInputHeld(Input.Hotbar5, true);
+      break;
   }
 });
 
@@ -194,6 +218,21 @@ window.addEventListener('keyup', (e) => {
       break;
     case 'Numpad9':
       updateInputHeld(Input.EmoteSuicidal, false);
+      break;
+    case 'Digit1':
+      updateInputHeld(Input.Hotbar1, false);
+      break;
+    case 'Digit2':
+      updateInputHeld(Input.Hotbar2, false);
+      break;
+    case 'Digit3':
+      updateInputHeld(Input.Hotbar3, false);
+      break;
+    case 'Digit4':
+      updateInputHeld(Input.Hotbar4, false);
+      break;
+    case 'Digit5':
+      updateInputHeld(Input.Hotbar5, false);
       break;
   }
 });

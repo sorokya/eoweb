@@ -67,3 +67,4 @@ export const LOCKER_SIZE_STEP = 5;
 export const LOCKER_MAX_ITEM_AMOUNT = 200;
 
 export const HOTBAR_SLOTS = 5;
+export const HOTBAR_COOLDOWN_TICKS = 2;

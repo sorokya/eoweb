@@ -179,6 +179,7 @@ import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
 import { ChatIcon } from './ui/chat';
+import { type Slot, SlotType } from './ui/hotbar';
 import { capitalize } from './utils/capitalize';
 import {
   EffectAnimationType,
@@ -493,6 +494,7 @@ export class Client {
   lockerUpgrades = 0;
   lockerCoords = new Coords();
   atlas: Atlas;
+  hotbarSlots: Slot[] = [];
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -2473,5 +2475,18 @@ export class Client {
     const packet = new StatSkillJunkClientPacket();
     packet.sessionId = this.sessionId;
     this.bus.send(packet);
+  }
+
+  useHotbarSlot(index: number) {
+    const slot = this.hotbarSlots[index];
+    if (!slot) {
+      return;
+    }
+
+    if (slot.type === SlotType.Item) {
+      this.useItem(slot.typeId);
+    } else {
+      playSfxById(SfxId.SpellActivate);
+    }
   }
 }
