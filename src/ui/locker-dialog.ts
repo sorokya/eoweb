@@ -17,7 +17,7 @@ export class LockerDialog extends Base {
     this.container.querySelector<HTMLDivElement>('.scroll-handle');
   private title = this.container.querySelector<HTMLSpanElement>('.title');
   private dialogs = document.getElementById('dialogs');
-  private itemsList =
+  private itemList =
     this.container.querySelector<HTMLDivElement>('.locker-items');
   private items: ThreeItem[] = [];
 
@@ -30,8 +30,32 @@ export class LockerDialog extends Base {
       this.hide();
     });
 
-    this.itemsList.addEventListener('scroll', () => {
+    this.itemList.addEventListener('scroll', () => {
       this.setScrollThumbPosition();
+    });
+
+    this.scrollHandle.addEventListener('pointerdown', () => {
+      const onPointerMove = (e: PointerEvent) => {
+        const rect = this.itemList.getBoundingClientRect();
+        const min = 30;
+        const max = 212;
+        const clampedY = Math.min(
+          Math.max(e.clientY, rect.top + min),
+          rect.top + max,
+        );
+        const scrollPercent = (clampedY - rect.top - min) / (max - min);
+        const scrollHeight = this.itemList.scrollHeight;
+        const clientHeight = this.itemList.clientHeight;
+        this.itemList.scrollTop = scrollPercent * (scrollHeight - clientHeight);
+      };
+
+      const onPointerUp = () => {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+      };
+
+      document.addEventListener('pointermove', onPointerMove);
+      document.addEventListener('pointerup', onPointerUp);
     });
   }
 
@@ -52,9 +76,9 @@ export class LockerDialog extends Base {
   setScrollThumbPosition() {
     const min = 60;
     const max = 212;
-    const scrollTop = this.itemsList.scrollTop;
-    const scrollHeight = this.itemsList.scrollHeight;
-    const clientHeight = this.itemsList.clientHeight;
+    const scrollTop = this.itemList.scrollTop;
+    const scrollHeight = this.itemList.scrollHeight;
+    const clientHeight = this.itemList.clientHeight;
     const scrollPercent = scrollTop / (scrollHeight - clientHeight);
     const clampedPercent = Math.min(Math.max(scrollPercent, 0), 1);
     const top = min + (max - min) * clampedPercent || min;
@@ -80,7 +104,7 @@ export class LockerDialog extends Base {
   }
 
   private render() {
-    this.itemsList.innerHTML = '';
+    this.itemList.innerHTML = '';
     this.title.innerText = `${capitalize(this.client.name)}'s ${this.client.getResourceString(EOResourceID.DIALOG_TITLE_PRIVATE_LOCKER)} [${this.items.length}]`;
 
     if (this.items.length === 0) {
@@ -119,7 +143,7 @@ export class LockerDialog extends Base {
         this.client.takeLockerItem(item.id);
       });
 
-      this.itemsList.appendChild(itemElement);
+      this.itemList.appendChild(itemElement);
     }
   }
 }

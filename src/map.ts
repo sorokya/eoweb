@@ -3,6 +3,7 @@ import { CharacterFrame, NpcFrame } from './atlas';
 import { type Client, GameState } from './client';
 import {
   getCharacterIntersecting,
+  getCharacterRectangle,
   getNpcIntersecting,
   Rectangle,
   setCharacterRectangle,
@@ -13,11 +14,11 @@ import {
 } from './collision';
 import {
   ANIMATION_TICKS,
+  DEATH_TICKS,
   DOOR_HEIGHT,
   HALF_HALF_TILE_HEIGHT,
   HALF_TILE_HEIGHT,
   HALF_TILE_WIDTH,
-  NPC_DEATH_TICKS,
   NPC_IDLE_ANIMATION_TICKS,
   TILE_HEIGHT,
   TILE_WIDTH,
@@ -27,14 +28,21 @@ import { GfxType, getBitmapById } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
 import { renderCharacterChatBubble } from './render/character-chat-bubble';
+import { CharacterDeathAnimation } from './render/character-death';
 import { renderCharacterHealthBar } from './render/character-health-bar';
+import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
-import { EffectTargetCharacter, EffectTargetTile } from './render/effect';
+import {
+  EffectTargetCharacter,
+  EffectTargetNpc,
+  EffectTargetTile,
+} from './render/effect';
 import { NpcAttackAnimation } from './render/npc-attack';
 import { renderNpcChatBubble } from './render/npc-chat-bubble';
 import { NpcDeathAnimation } from './render/npc-death';
 import { renderNpcHealthBar } from './render/npc-health-bar';
 import { NpcWalkAnimation } from './render/npc-walk';
+import { renderSpellChant } from './render/spell-chant';
 import { capitalize } from './utils/capitalize';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';
@@ -201,9 +209,14 @@ export class MapRenderer {
 
     const player = this.getPlayerCoords();
     let playerScreen = isoToScreen(player);
-    const mainCharacterAnimation = this.client.characterAnimations.get(
+    let mainCharacterAnimation = this.client.characterAnimations.get(
       this.client.playerId,
     );
+
+    if (mainCharacterAnimation instanceof CharacterDeathAnimation) {
+      mainCharacterAnimation = mainCharacterAnimation.base;
+    }
+
     if (mainCharacterAnimation instanceof CharacterWalkAnimation) {
       playerScreen = isoToScreen(mainCharacterAnimation.from);
       playerScreen.x += mainCharacterAnimation.walkOffset.x;
@@ -753,7 +766,15 @@ export class MapRenderer {
       return;
     }
 
-    const animation = this.client.characterAnimations.get(character.playerId);
+    let dyingTicks = 0;
+    let dying = false;
+    let animation = this.client.characterAnimations.get(character.playerId);
+    if (animation instanceof CharacterDeathAnimation) {
+      dying = true;
+      dyingTicks = animation.ticks;
+      animation = animation.base;
+    }
+
     const downRight = [Direction.Down, Direction.Right].includes(
       character.direction,
     );
@@ -779,6 +800,11 @@ export class MapRenderer {
         characterFrame = downRight
           ? CharacterFrame.RangeAttackDownRight
           : CharacterFrame.RangeAttackUpLeft;
+        break;
+      case animation instanceof CharacterSpellChantAnimation:
+        characterFrame = downRight
+          ? CharacterFrame.RaisedHandDownRight
+          : CharacterFrame.RaisedHandUpLeft;
         break;
       case character.sitState === SitState.Floor:
         characterFrame = downRight
@@ -871,6 +897,10 @@ export class MapRenderer {
       ? null
       : this.client.characterEmotes.get(character.playerId);
 
+    if (dying) {
+      ctx.globalAlpha = dyingTicks / DEATH_TICKS;
+    }
+
     if (entity.typeId === this.client.playerId && !character.invisible) {
       ctx.drawImage(
         atlas,
@@ -933,6 +963,17 @@ export class MapRenderer {
         renderCharacterHealthBar(healthBar, character, ctx);
         if (emote) {
           emote.render(character, ctx);
+        }
+
+        if (
+          animation instanceof CharacterSpellChantAnimation &&
+          !animation.animationFrame
+        ) {
+          renderSpellChant(
+            getCharacterRectangle(character.playerId),
+            animation.chant,
+            ctx,
+          );
         }
       });
     }
@@ -1026,6 +1067,27 @@ export class MapRenderer {
         additionalOffset.y,
     );
 
+    const rect = new Rectangle(
+      {
+        x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
+        y: screenY,
+      },
+      frame.w,
+      frame.h,
+    );
+
+    setNpcRectangle(npc.index, rect);
+
+    const effects = this.client.effects.filter(
+      (e) =>
+        e.target instanceof EffectTargetNpc && e.target.index === npc.index,
+    );
+
+    for (const effect of effects) {
+      effect.target.rect = rect;
+      effect.renderBehind(ctx);
+    }
+
     if (mirrored) {
       ctx.save(); // Save the current context state
       ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
@@ -1043,7 +1105,7 @@ export class MapRenderer {
     }
 
     if (dying) {
-      ctx.globalAlpha = dyingTicks / NPC_DEATH_TICKS;
+      ctx.globalAlpha = dyingTicks / DEATH_TICKS;
     }
 
     ctx.drawImage(
@@ -1058,25 +1120,16 @@ export class MapRenderer {
       frame.h,
     );
 
-    if (meta.transparent || dying) {
-      ctx.globalAlpha = 1;
-    }
-
     if (mirrored) {
       ctx.restore(); // Restore the context to its original state
     }
 
-    setNpcRectangle(
-      npc.index,
-      new Rectangle(
-        {
-          x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
-          y: screenY,
-        },
-        frame.w,
-        frame.h,
-      ),
-    );
+    for (const effect of effects) {
+      ctx.globalAlpha = 0.4;
+      effect.renderTransparent(ctx);
+      ctx.globalAlpha = 1;
+      effect.renderFront(ctx);
+    }
 
     const bubble = this.client.npcChats.get(npc.index);
     const healthBar = this.client.npcHealthBars.get(npc.index);

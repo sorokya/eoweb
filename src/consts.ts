@@ -40,7 +40,7 @@ export const FACE_TICKS = 1;
 export const SIT_TICKS = 4;
 export const ATTACK_TICKS = 5;
 export const RANGED_ATTACK_TICKS = 4;
-export const NPC_DEATH_TICKS = 6;
+export const DEATH_TICKS = 6;
 export const RANGED_ATTACK_ANIMATION_FRAMES = 1;
 export const ATTACK_ANIMATION_FRAMES = 2;
 export const ANIMATION_TICKS = 6;
@@ -65,3 +65,8 @@ export const LOCKER_UPGRADE_COST_STEP = 1000;
 export const LOCKER_BASE_SIZE = 25;
 export const LOCKER_SIZE_STEP = 5;
 export const LOCKER_MAX_ITEM_AMOUNT = 200;
+
+export const HOTBAR_SLOTS = 5;
+export const HOTBAR_COOLDOWN_TICKS = 2;
+export const TICKS_PER_CAST_TIME = 4;
+export const SPELL_COOLDOWN_TICKS = 5;

@@ -5,7 +5,7 @@ import type { EffectMetadata } from '../utils/get-effect-metadata';
 import { randomRange } from '../utils/random-range';
 import type { Vector2 } from '../vector';
 
-abstract class EffectTarget {
+export abstract class EffectTarget {
   rect: Rectangle | null = null;
 }
 

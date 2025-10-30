@@ -3,6 +3,7 @@ import { type Client, GameState } from './client';
 import {
   ATTACK_TICKS,
   FACE_TICKS,
+  HOTBAR_COOLDOWN_TICKS,
   SIT_TICKS,
   WALK_TICKS as WALK_ANIMATION_TICKS,
 } from './consts';
@@ -12,6 +13,7 @@ import {
   getLastHeldDirection,
   Input,
   isInputHeld,
+  isOrWasInputHeld,
   wasInputHeldLastTick,
 } from './input';
 import { CharacterAttackAnimation } from './render/character-attack';
@@ -44,6 +46,7 @@ export class MovementController {
   faceTicks = FACE_TICKS;
   sitTicks = SIT_TICKS;
   attackTicks = ATTACK_TICKS;
+  hotbarTicks = HOTBAR_COOLDOWN_TICKS;
   freeze = false;
 
   constructor(client: Client) {
@@ -55,6 +58,7 @@ export class MovementController {
     this.walkTicks = Math.max(this.walkTicks - 1, 0);
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
     this.attackTicks = Math.max(this.attackTicks - 1, -1);
+    this.hotbarTicks = Math.max(this.hotbarTicks - 1, 0);
 
     if (
       this.freeze ||
@@ -68,6 +72,23 @@ export class MovementController {
     const character = this.client.getPlayerCharacter();
     if (!character) {
       return;
+    }
+
+    if (isOrWasInputHeld(Input.Hotbar1) && this.hotbarTicks === 0) {
+      this.client.useHotbarSlot(0);
+      this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
+    } else if (isOrWasInputHeld(Input.Hotbar2) && this.hotbarTicks === 0) {
+      this.client.useHotbarSlot(1);
+      this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
+    } else if (isOrWasInputHeld(Input.Hotbar3) && this.hotbarTicks === 0) {
+      this.client.useHotbarSlot(2);
+      this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
+    } else if (isOrWasInputHeld(Input.Hotbar4) && this.hotbarTicks === 0) {
+      this.client.useHotbarSlot(3);
+      this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
+    } else if (isOrWasInputHeld(Input.Hotbar5) && this.hotbarTicks === 0) {
+      this.client.useHotbarSlot(4);
+      this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     }
 
     const animation = this.client.characterAnimations.get(character.playerId);
@@ -291,7 +312,7 @@ export class MovementController {
   }
 }
 
-function getTimestamp(): number {
+export function getTimestamp(): number {
   const now = new Date();
   const hour = now.getHours();
   const minute = now.getMinutes();

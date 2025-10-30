@@ -45,6 +45,7 @@ import { ChestDialog } from './ui/chest-dialog';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
+import { Hotbar, SlotType } from './ui/hotbar';
 import { HUD } from './ui/hud';
 import { InGameMenu } from './ui/in-game-menu';
 import { Inventory } from './ui/inventory';
@@ -63,6 +64,7 @@ import { SkillMasterDialog } from './ui/skill-master-dialog';
 import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
 import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
+import { SpellBook } from './ui/spell-book';
 import { Stats } from './ui/stats';
 import { capitalize } from './utils/capitalize';
 import { randomRange } from './utils/random-range';
@@ -248,6 +250,7 @@ client.on('enterGame', ({ news }) => {
   chat.show();
   hud.setStats(client);
   hud.show();
+  hotbar.show();
   //offsetTweaker.show();
   inGameMenu.show();
   resizeCanvases();
@@ -318,6 +321,10 @@ client.on('skillMasterOpened', ({ name, skills }) => {
 
 client.on('skillsChanged', () => {
   skillMasterDialog.refresh();
+});
+
+client.on('spellQueued', () => {
+  hotbar.refresh();
 });
 
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
@@ -407,6 +414,8 @@ const skillMasterDialog = new SkillMasterDialog(client);
 const smallAlert = new SmallAlertSmallHeader();
 const largeAlertSmallHeader = new LargeAlertSmallHeader();
 const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
+const hotbar = new Hotbar(client);
+const spellBook = new SpellBook(client);
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -562,6 +571,9 @@ inGameMenu.on('toggle', (which) => {
       break;
     case 'stats':
       stats.toggle();
+      break;
+    case 'spells':
+      spellBook.toggle();
       break;
   }
 });
@@ -775,6 +787,10 @@ inventory.on('openPaperdoll', () => {
 
 inventory.on('equipItem', ({ slot, itemId }) => {
   client.equipItem(slot, itemId);
+});
+
+inventory.on('assignToSlot', ({ itemId, slotIndex }) => {
+  hotbar.setSlot(slotIndex, SlotType.Item, itemId);
 });
 
 questDialog.on('reply', ({ questId, dialogId, action }) => {
@@ -1032,6 +1048,10 @@ stats.on('confirmTraining', () => {
     stats.setTrainingConfirmed();
   });
   smallConfirm.show();
+});
+
+spellBook.on('assignToSlot', ({ spellId, slotIndex }) => {
+  hotbar.setSlot(slotIndex, SlotType.Skill, spellId);
 });
 
 // Tick loop

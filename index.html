@@ -420,6 +420,49 @@
             <button class="img-btn" type="button" data-id="cancel"></button>
           </div>
         </div>
+
+        <div id="stats" class="hidden">
+          <div>
+            <span class="stat" data-id="str">0</span>
+            <button class="upgrade img-btn hidden" data-target="str" data-id="upgrade-stat"></button>
+            <span class="stat" data-id="int">0</span>
+            <button class="upgrade img-btn hidden" data-target="int" data-id="upgrade-stat"></button>
+            <span class="stat" data-id="wis">0</span>
+            <button class="upgrade img-btn hidden" data-target="wis" data-id="upgrade-stat"></button>
+            <span class="stat" data-id="agi">0</span>
+            <button class="upgrade img-btn hidden" data-target="agi" data-id="upgrade-stat"></button>
+            <span class="stat" data-id="con">0</span>
+            <button class="upgrade img-btn hidden" data-target="con" data-id="upgrade-stat"></button>
+            <span class="stat" data-id="cha">0</span>
+            <button class="upgrade img-btn hidden" data-target="cha" data-id="upgrade-stat"></button>
+            <span class="stat" data-id="hp">0</span>
+            <span class="stat" data-id="tp">0</span>
+            <span class="stat" data-id="dam">0</span>
+            <span class="stat" data-id="acc">0</span>
+            <span class="stat" data-id="arm">0</span>
+            <span class="stat" data-id="eva">0</span>
+          </div>
+          <div>
+            <span class="stat" data-id="name"></span>
+            <span class="stat" data-id="lvl">0</span>
+            <span class="stat" data-id="guild"></span>
+            <span class="stat" data-id="weight"></span>
+            <span class="stat" data-id="stat-points">0</span>
+            <span class="stat" data-id="skill-points">0</span>
+            <span class="stat" data-id="gold">0</span>
+            <span class="stat" data-id="exp">0</span>
+            <span class="stat" data-id="tnl">0</span>
+            <span class="stat" data-id="karma">0</span>
+          </div>
+          <button class="img-btn" type="button" data-id="cancel"></button>
+        </div>
+
+        <div id="spell-book" class="hidden">
+          <span class="label"></span>
+          <div class="scroll-handle"></div>
+          <div class="spell-grid"></div>
+          <button class="img-btn" type="button" data-id="cancel"></button>
+        </div>
       </div>
 
       <div id="item-amount-dialog" class="hidden">
@@ -453,41 +496,6 @@
           <button data-id="paperdoll">Paperdoll</button>
           <button data-id="drop">Drop</button>
           <button data-id="junk">Junk</button>
-        </div>
-      </div>
-
-      <div id="stats" class="hidden">
-        <div>
-          <span class="stat" data-id="str">0</span>
-          <button class="upgrade img-btn hidden" data-target="str" data-id="upgrade-stat"></button>
-          <span class="stat" data-id="int">0</span>
-          <button class="upgrade img-btn hidden" data-target="int" data-id="upgrade-stat"></button>
-          <span class="stat" data-id="wis">0</span>
-          <button class="upgrade img-btn hidden" data-target="wis" data-id="upgrade-stat"></button>
-          <span class="stat" data-id="agi">0</span>
-          <button class="upgrade img-btn hidden" data-target="agi" data-id="upgrade-stat"></button>
-          <span class="stat" data-id="con">0</span>
-          <button class="upgrade img-btn hidden" data-target="con" data-id="upgrade-stat"></button>
-          <span class="stat" data-id="cha">0</span>
-          <button class="upgrade img-btn hidden" data-target="cha" data-id="upgrade-stat"></button>
-          <span class="stat" data-id="hp">0</span>
-          <span class="stat" data-id="tp">0</span>
-          <span class="stat" data-id="dam">0</span>
-          <span class="stat" data-id="acc">0</span>
-          <span class="stat" data-id="arm">0</span>
-          <span class="stat" data-id="eva">0</span>
-        </div>
-        <div>
-          <span class="stat" data-id="name"></span>
-          <span class="stat" data-id="lvl">0</span>
-          <span class="stat" data-id="guild"></span>
-          <span class="stat" data-id="weight"></span>
-          <span class="stat" data-id="stat-points">0</span>
-          <span class="stat" data-id="skill-points">0</span>
-          <span class="stat" data-id="gold">0</span>
-          <span class="stat" data-id="exp">0</span>
-          <span class="stat" data-id="tnl">0</span>
-          <span class="stat" data-id="karma">0</span>
         </div>
       </div>
 
@@ -533,6 +541,8 @@
           </div>
         </div>
       </div>
+
+      <div id="hotbar" class="hidden"></div>
     </div>
   </div>
   <script type="module" src="/src/main.ts"></script>

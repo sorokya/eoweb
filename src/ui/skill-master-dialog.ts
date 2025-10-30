@@ -73,6 +73,30 @@ export class SkillMasterDialog extends Base {
     this.client.on('itemSold', () => {
       this.render();
     });
+
+    this.scrollHandle.addEventListener('pointerdown', () => {
+      const onPointerMove = (e: PointerEvent) => {
+        const rect = this.itemList.getBoundingClientRect();
+        const min = 30;
+        const max = 212;
+        const clampedY = Math.min(
+          Math.max(e.clientY, rect.top + min),
+          rect.top + max,
+        );
+        const scrollPercent = (clampedY - rect.top - min) / (max - min);
+        const scrollHeight = this.itemList.scrollHeight;
+        const clientHeight = this.itemList.clientHeight;
+        this.itemList.scrollTop = scrollPercent * (scrollHeight - clientHeight);
+      };
+
+      const onPointerUp = () => {
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+      };
+
+      document.addEventListener('pointermove', onPointerMove);
+      document.addEventListener('pointerup', onPointerUp);
+    });
   }
 
   on<Event extends keyof Events>(

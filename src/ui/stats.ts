@@ -1,6 +1,7 @@
 import { StatId } from 'eolib';
 import mitt from 'mitt';
 import type { Client } from '../client';
+import { playSfxById, SfxId } from '../sfx';
 import { calculateTnl } from '../utils/calculate-tnl';
 import { capitalize } from '../utils/capitalize';
 import { Base } from './base-ui';
@@ -48,6 +49,7 @@ class StatUpgradeButton {
 
 export class Stats extends Base {
   protected container: HTMLDivElement = document.querySelector('#stats');
+  private dialogs = document.getElementById('dialogs');
   private client: Client;
   private statItems: { [key: string]: StatItem };
   private statButtons: { [key: string]: StatUpgradeButton };
@@ -103,6 +105,16 @@ export class Stats extends Base {
         this.upgradeStat(StatId.Cha);
       }),
     };
+
+    const btnBack = this.container.querySelector<HTMLButtonElement>(
+      'button[data-id="cancel"]',
+    );
+    if (btnBack) {
+      btnBack.addEventListener('click', () => {
+        playSfxById(SfxId.ButtonClick);
+        this.hide();
+      });
+    }
   }
 
   private upgradeStat(statId: StatId) {
@@ -195,13 +207,17 @@ export class Stats extends Base {
     this.open = true;
     this.render();
     this.container.classList.remove('hidden');
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
+    this.dialogs.classList.remove('hidden');
   }
 
   hide() {
     this.open = false;
     this.container.classList.add('hidden');
+
+    if (!document.querySelector('#dialogs > div:not(.hidden)')) {
+      this.dialogs.classList.add('hidden');
+      this.client.typing = false;
+    }
   }
 
   toggle() {
