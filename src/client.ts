@@ -170,6 +170,7 @@ import { registerRecoverHandlers } from './handlers/recover';
 import { registerRefreshHandlers } from './handlers/refresh';
 import { registerShopHandlers } from './handlers/shop';
 import { registerSitHandlers } from './handlers/sit';
+import { registerSpellHandlers } from './handlers/spell';
 import { registerStatSkillHandlers } from './handlers/stat-skill';
 import { registerTalkHandlers } from './handlers/talk';
 import { registerWalkHandlers } from './handlers/walk';
@@ -180,7 +181,11 @@ import { getTimestamp, MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
-import { EffectAnimation, EffectTargetCharacter } from './render/effect';
+import {
+  EffectAnimation,
+  type EffectTarget,
+  EffectTargetCharacter,
+} from './render/effect';
 import { Emote } from './render/emote';
 import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
@@ -1292,6 +1297,7 @@ export class Client {
     registerBankHandlers(this);
     registerLockerHandlers(this);
     registerStatSkillHandlers(this);
+    registerSpellHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -2627,6 +2633,24 @@ export class Client {
         this.bus.send(packet);
         break;
       }
+    }
+  }
+
+  playSpellEffect(spellId: number, target: EffectTarget) {
+    const record = this.getEsfRecordById(spellId);
+    if (!record) {
+      return;
+    }
+
+    const metadata = this.getEffectMetadata(record.graphicId);
+    if (!metadata) {
+      return;
+    }
+
+    this.effects.push(new EffectAnimation(record.graphicId, target, metadata));
+
+    if (metadata.sfx) {
+      playSfxById(metadata.sfx);
     }
   }
 }
