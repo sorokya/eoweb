@@ -7,6 +7,7 @@ import {
   BankOpenClientPacket,
   BankTakeClientPacket,
   BarberOpenClientPacket,
+  BookRequestClientPacket,
   ByteCoords,
   ChairRequestClientPacket,
   CharacterBaseStats,
@@ -69,6 +70,8 @@ import {
   PaperdollAddClientPacket,
   PaperdollRemoveClientPacket,
   PaperdollRequestClientPacket,
+  PartyRequestClientPacket,
+  PartyRequestType,
   PlayerRangeRequestClientPacket,
   PriestOpenClientPacket,
   QuestAcceptClientPacket,
@@ -104,6 +107,7 @@ import {
   TalkReportClientPacket,
   TalkTellClientPacket,
   ThreeItem,
+  TradeRequestClientPacket,
   TrainType,
   Version,
   WalkAction,
@@ -1368,6 +1372,9 @@ export class Client {
           case PlayerMenuItem.Paperdoll:
             this.requestPaperdoll(this.menuPlayerId);
             break;
+          case PlayerMenuItem.Book:
+            this.requestBook(this.menuPlayerId);
+            break;
           case PlayerMenuItem.Whisper: {
             const character = this.getCharacterById(this.menuPlayerId);
             if (character) {
@@ -1375,6 +1382,15 @@ export class Client {
             }
             break;
           }
+          case PlayerMenuItem.Join:
+            this.requestToJoinParty(this.menuPlayerId);
+            break;
+          case PlayerMenuItem.Invite:
+            this.inviteToParty(this.menuPlayerId);
+            break;
+          case PlayerMenuItem.Trade:
+            this.requestTrade(this.menuPlayerId);
+            break;
         }
         this.menuPlayerId = 0;
         return;
@@ -2873,6 +2889,32 @@ export class Client {
       this.mousePosition.y - rect.position.y - PLAYER_MENU_OFFSET_Y;
     const itemIndex = Math.floor(relativeY / PLAYER_MENU_ITEM_HEIGHT);
     return itemIndex in PlayerMenuItem ? itemIndex : undefined;
+  }
+
+  requestBook(playerId: number) {
+    const packet = new BookRequestClientPacket();
+    packet.playerId = playerId;
+    this.bus.send(packet);
+  }
+
+  requestToJoinParty(playerId: number) {
+    const packet = new PartyRequestClientPacket();
+    packet.requestType = PartyRequestType.Join;
+    packet.playerId = playerId;
+    this.bus.send(packet);
+  }
+
+  inviteToParty(playerId: number) {
+    const packet = new PartyRequestClientPacket();
+    packet.requestType = PartyRequestType.Invite;
+    packet.playerId = playerId;
+    this.bus.send(packet);
+  }
+
+  requestTrade(playerId: number) {
+    const packet = new TradeRequestClientPacket();
+    packet.playerId = playerId;
+    this.bus.send(packet);
   }
 }
 
