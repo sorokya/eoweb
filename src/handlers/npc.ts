@@ -12,6 +12,7 @@ import {
   NpcSpecServerPacket,
   PacketAction,
   PacketFamily,
+  PlayerKilledState,
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
@@ -44,6 +45,7 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     }
   }
 
+  let someoneKilled = false;
   for (const attack of packet.attacks) {
     if (attack.playerId === client.playerId) {
       client.hp = Math.max(client.hp - attack.damage, 0);
@@ -63,6 +65,15 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
       attack.playerId,
       new HealthBar(attack.hpPercentage, attack.damage),
     );
+
+    if (attack.killed === PlayerKilledState.Killed) {
+      client.setCharacterDeathAnimation(attack.playerId);
+      someoneKilled = true;
+    }
+  }
+
+  if (someoneKilled) {
+    playSfxById(SfxId.Dead);
   }
 
   for (const chat of packet.chats) {

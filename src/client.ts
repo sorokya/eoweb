@@ -59,6 +59,7 @@ import {
   LockerTakeClientPacket,
   LoginRequestClientPacket,
   MapTileSpec,
+  MapType,
   MarriageOpenClientPacket,
   MessagePingClientPacket,
   NearbyInfo,
@@ -121,6 +122,7 @@ import type { PacketBus } from './bus';
 import { ChatBubble } from './chat-bubble';
 import {
   clearRectangles,
+  getCharacterIntersecting,
   getDoorIntersecting,
   getLockerIntersecting,
   getNpcIntersecting,
@@ -134,6 +136,7 @@ import {
   INITIAL_IDLE_TICKS,
   MAX_CHARACTER_NAME_LENGTH,
   MAX_CHAT_LENGTH,
+  SPELL_COOLDOWN_TICKS,
   USAGE_TICKS,
 } from './consts';
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
@@ -180,6 +183,7 @@ import { registerWelcomeHandlers } from './handlers/welcome';
 import { MapRenderer } from './map';
 import { getTimestamp, MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
+import { CharacterDeathAnimation } from './render/character-death';
 import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
 import {
@@ -522,6 +526,7 @@ export class Client {
   spellCastTimestamp = 0;
   spellTarget: SpellTarget | null = null;
   spellTargetId = 0;
+  spellCooldownTicks = 0;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -815,6 +820,8 @@ export class Client {
       if (this.queuedSpellId) {
         this.beginSpellChant();
       }
+
+      this.spellCooldownTicks = Math.max(this.spellCooldownTicks - 1, 0);
     }
 
     const emptyQueuedNpcChats: number[] = [];
@@ -854,6 +861,7 @@ export class Client {
 
     const endedCharacterAnimations: number[] = [];
     let playerWalking = false;
+    let playerDying = false;
     for (const [id, animation] of this.characterAnimations) {
       if (
         !animation.ticks ||
@@ -866,11 +874,26 @@ export class Client {
           this.castSpell(animation.spellId);
         }
 
+        if (
+          id !== this.playerId &&
+          animation instanceof CharacterDeathAnimation
+        ) {
+          this.nearby.characters = this.nearby.characters.filter(
+            (c) => c.playerId !== id,
+          );
+        }
+
         endedCharacterAnimations.push(id);
         continue;
       }
       if (id === this.playerId && animation instanceof CharacterWalkAnimation) {
         playerWalking = true;
+      }
+      if (
+        id === this.playerId &&
+        animation instanceof CharacterDeathAnimation
+      ) {
+        playerDying = true;
       }
       animation.tick();
     }
@@ -986,7 +1009,7 @@ export class Client {
       }
     }
 
-    if (this.warpQueued && !playerWalking) {
+    if (this.warpQueued && !playerWalking && !playerDying) {
       this.acceptWarp();
     }
 
@@ -1385,6 +1408,15 @@ export class Client {
       }
     }
 
+    const characterAt = getCharacterIntersecting(this.mousePosition);
+    if (characterAt) {
+      const character = this.getCharacterById(characterAt.id);
+      if (character) {
+        this.clickCharacter(character);
+        return;
+      }
+    }
+
     const doorAt = getDoorIntersecting(this.mousePosition);
     if (doorAt) {
       const door = this.getDoor(doorAt);
@@ -1473,13 +1505,17 @@ export class Client {
       }
       case NpcType.Aggressive:
       case NpcType.Passive: {
-        if (!this.selectedSpellId) {
+        if (
+          !this.selectedSpellId ||
+          this.queuedSpellId > 0 ||
+          this.spellCooldownTicks > 0
+        ) {
           return;
         }
-
         this.spellTarget = SpellTarget.Npc;
         this.spellTargetId = npc.index;
         this.queuedSpellId = this.selectedSpellId;
+        this.spellCooldownTicks = 999;
         break;
       }
       default:
@@ -1487,6 +1523,21 @@ export class Client {
     }
 
     this.interactNpcIndex = npc.index;
+  }
+
+  clickCharacter(character: CharacterMapInfo) {
+    if (
+      !this.selectedSpellId ||
+      this.queuedSpellId > 0 ||
+      this.spellCooldownTicks > 0
+    ) {
+      return;
+    }
+
+    this.spellTarget = SpellTarget.Player;
+    this.spellTargetId = character.playerId;
+    this.queuedSpellId = this.selectedSpellId;
+    this.spellCooldownTicks = 999;
   }
 
   canWalk(coords: Coords): boolean {
@@ -2500,6 +2551,19 @@ export class Client {
     this.npcAnimations.set(index, new NpcDeathAnimation(current));
   }
 
+  setCharacterDeathAnimation(playerId: number) {
+    const character = this.getCharacterById(playerId);
+    if (!character) {
+      return;
+    }
+
+    const current = this.characterAnimations.get(playerId);
+    this.characterAnimations.set(
+      playerId,
+      new CharacterDeathAnimation(current),
+    );
+  }
+
   trainStat(statId: StatId) {
     const packet = new StatSkillAddClientPacket();
     packet.actionType = TrainType.Stat;
@@ -2578,13 +2642,64 @@ export class Client {
       return;
     }
 
+    if (this.tp < record.tpCost) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+        this.getResourceString(EOResourceID.ATTACK_YOU_ARE_EXHAUSTED_TP),
+      );
+      this.queuedSpellId = 0;
+      return;
+    }
+
+    if (
+      record.type === SkillType.Heal &&
+      this.spellTarget === SpellTarget.Npc
+    ) {
+      this.queuedSpellId = 0;
+      return;
+    }
+
+    if (
+      record.type === SkillType.Attack &&
+      this.spellTarget !== SpellTarget.Npc &&
+      this.map.type !== MapType.Pk
+    ) {
+      this.queuedSpellId = 0;
+      return;
+    }
+
+    if (this.spellTarget === SpellTarget.Npc) {
+      const npc = this.getNpcByIndex(this.spellTargetId);
+      if (!npc) {
+        return;
+      }
+
+      const animation = this.npcAnimations.get(npc.index);
+      if (animation instanceof NpcDeathAnimation) {
+        return;
+      }
+    }
+
+    if (this.spellTarget === SpellTarget.Player) {
+      const character = this.getCharacterById(this.spellTargetId);
+      if (!character) {
+        return;
+      }
+
+      /*
+      TODO: Implement character death animation check
+      const animation = this.characterAnimations.get(character.id);
+      if (animation instanceof CharacterDeathAnimation) {
+        return;
+      }
+      */
+    }
+
     this.spellCastTimestamp = getTimestamp();
     const packet = new SpellRequestClientPacket();
     packet.spellId = this.queuedSpellId;
     packet.timestamp = this.spellCastTimestamp;
     this.bus.send(packet);
-
-    console.log(`Casting ${record.name} - cast time ${record.castTime}`);
 
     this.characterAnimations.set(
       this.playerId,
@@ -2601,10 +2716,6 @@ export class Client {
   castSpell(spellId: number) {
     const timestamp = getTimestamp();
     const character = this.getPlayerCharacter();
-
-    const diff = timestamp - this.spellCastTimestamp;
-    console.log(`Spell cast time elapsed: ${diff * 10}ms`);
-    console.log('Target:', this.spellTarget, this.spellTargetId);
 
     switch (this.spellTarget) {
       case SpellTarget.Self: {
@@ -2636,6 +2747,8 @@ export class Client {
         break;
       }
     }
+
+    this.spellCooldownTicks = SPELL_COOLDOWN_TICKS;
   }
 
   playSpellEffect(spellId: number, target: EffectTarget) {

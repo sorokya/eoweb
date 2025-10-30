@@ -14,11 +14,11 @@ import {
 } from './collision';
 import {
   ANIMATION_TICKS,
+  DEATH_TICKS,
   DOOR_HEIGHT,
   HALF_HALF_TILE_HEIGHT,
   HALF_TILE_HEIGHT,
   HALF_TILE_WIDTH,
-  NPC_DEATH_TICKS,
   NPC_IDLE_ANIMATION_TICKS,
   TILE_HEIGHT,
   TILE_WIDTH,
@@ -28,6 +28,7 @@ import { GfxType, getBitmapById } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
 import { renderCharacterChatBubble } from './render/character-chat-bubble';
+import { CharacterDeathAnimation } from './render/character-death';
 import { renderCharacterHealthBar } from './render/character-health-bar';
 import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
@@ -208,9 +209,14 @@ export class MapRenderer {
 
     const player = this.getPlayerCoords();
     let playerScreen = isoToScreen(player);
-    const mainCharacterAnimation = this.client.characterAnimations.get(
+    let mainCharacterAnimation = this.client.characterAnimations.get(
       this.client.playerId,
     );
+
+    if (mainCharacterAnimation instanceof CharacterDeathAnimation) {
+      mainCharacterAnimation = mainCharacterAnimation.base;
+    }
+
     if (mainCharacterAnimation instanceof CharacterWalkAnimation) {
       playerScreen = isoToScreen(mainCharacterAnimation.from);
       playerScreen.x += mainCharacterAnimation.walkOffset.x;
@@ -760,7 +766,15 @@ export class MapRenderer {
       return;
     }
 
-    const animation = this.client.characterAnimations.get(character.playerId);
+    let dyingTicks = 0;
+    let dying = false;
+    let animation = this.client.characterAnimations.get(character.playerId);
+    if (animation instanceof CharacterDeathAnimation) {
+      dying = true;
+      dyingTicks = animation.ticks;
+      animation = animation.base;
+    }
+
     const downRight = [Direction.Down, Direction.Right].includes(
       character.direction,
     );
@@ -882,6 +896,10 @@ export class MapRenderer {
     const emote = justCharacter
       ? null
       : this.client.characterEmotes.get(character.playerId);
+
+    if (dying) {
+      ctx.globalAlpha = dyingTicks / DEATH_TICKS;
+    }
 
     if (entity.typeId === this.client.playerId && !character.invisible) {
       ctx.drawImage(
@@ -1087,7 +1105,7 @@ export class MapRenderer {
     }
 
     if (dying) {
-      ctx.globalAlpha = dyingTicks / NPC_DEATH_TICKS;
+      ctx.globalAlpha = dyingTicks / DEATH_TICKS;
     }
 
     ctx.drawImage(
@@ -1101,10 +1119,6 @@ export class MapRenderer {
       frame.w,
       frame.h,
     );
-
-    if (meta.transparent || dying) {
-      ctx.globalAlpha = 1;
-    }
 
     if (mirrored) {
       ctx.restore(); // Restore the context to its original state

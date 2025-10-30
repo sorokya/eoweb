@@ -78,6 +78,11 @@ function handleEffectSpec(client: Client, reader: EoReader) {
     new HealthBar(Math.floor((client.hp / client.maxHp) * 100), damage),
   );
   client.emit('statsUpdate', undefined);
+
+  if (!data.hp) {
+    client.setCharacterDeathAnimation(client.playerId);
+    playSfxById(SfxId.Dead);
+  }
 }
 
 function handleEffectUse(client: Client, reader: EoReader) {
@@ -145,6 +150,11 @@ function handleEffectAdmin(client: Client, reader: EoReader) {
     packet.playerId,
     new HealthBar(packet.hpPercentage, packet.damage),
   );
+
+  if (packet.died) {
+    client.setCharacterDeathAnimation(packet.playerId);
+    playSfxById(SfxId.Dead);
+  }
 }
 
 export function registerEffectHandlers(client: Client) {

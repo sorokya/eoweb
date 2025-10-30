@@ -9,6 +9,7 @@ import {
   WarpEffect,
 } from 'eolib';
 import type { Client } from '../client';
+import { CharacterDeathAnimation } from '../render/character-death';
 import { EffectAnimation, EffectTargetTile } from '../render/effect';
 import { playSfxById, SfxId } from '../sfx';
 
@@ -36,6 +37,12 @@ function handleAvatarRemove(client: Client, reader: EoReader) {
       playSfxById(SfxId.ScrollTeleport);
       break;
   }
+
+  const animation = client.characterAnimations.get(packet.playerId);
+  if (animation instanceof CharacterDeathAnimation) {
+    return;
+  }
+
   client.nearby.characters = client.nearby.characters.filter(
     (c) => c.playerId !== packet.playerId,
   );
