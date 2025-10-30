@@ -2,13 +2,38 @@ import {
   type EoReader,
   PacketAction,
   PacketFamily,
+  SpellRequestServerPacket,
   SpellTargetGroupServerPacket,
   SpellTargetOtherServerPacket,
   SpellTargetSelfServerPacket,
 } from 'eolib';
 import type { Client } from '../client';
+import { CharacterSpellChantAnimation } from '../render/character-spell-chant';
 import { EffectTargetCharacter } from '../render/effect';
 import { HealthBar } from '../render/health-bar';
+
+function handleSpellRequest(client: Client, reader: EoReader) {
+  const packet = SpellRequestServerPacket.deserialize(reader);
+  const character = client.getCharacterById(packet.playerId);
+  if (!character) {
+    client.requestCharacterRange([packet.playerId]);
+    return;
+  }
+
+  const record = client.getEsfRecordById(packet.spellId);
+  if (!record) {
+    return;
+  }
+
+  client.characterAnimations.set(
+    packet.playerId,
+    new CharacterSpellChantAnimation(
+      packet.spellId,
+      record.chant,
+      record.castTime,
+    ),
+  );
+}
 
 function handleSpellTargetSelf(client: Client, reader: EoReader) {
   const packet = SpellTargetSelfServerPacket.deserialize(reader);
@@ -110,6 +135,11 @@ function handleSpellTargetGroup(client: Client, reader: EoReader) {
 }
 
 export function registerSpellHandlers(client: Client) {
+  client.bus.registerPacketHandler(
+    PacketFamily.Spell,
+    PacketAction.Request,
+    (reader) => handleSpellRequest(client, reader),
+  );
   client.bus.registerPacketHandler(
     PacketFamily.Spell,
     PacketAction.TargetSelf,
