@@ -7,6 +7,7 @@ import {
   RecoverListServerPacket,
   RecoverPlayerServerPacket,
   RecoverReplyServerPacket,
+  RecoverTargetGroupServerPacket,
 } from 'eolib';
 import type { Client } from '../client';
 import { Emote } from '../render/emote';
@@ -82,6 +83,16 @@ function handleRecoverReply(client: Client, reader: EoReader) {
   }
 }
 
+function handleRecoverTargetGroup(client: Client, reader: EoReader) {
+  const packet = RecoverTargetGroupServerPacket.deserialize(reader);
+  client.maxHp = packet.maxHp;
+  client.maxTp = packet.maxTp;
+  client.maxSp = packet.maxSp;
+  client.statPoints = packet.statPoints;
+  client.skillPoints = packet.skillPoints;
+  client.emit('statsUpdate', undefined);
+}
+
 export function registerRecoverHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Recover,
@@ -102,5 +113,10 @@ export function registerRecoverHandlers(client: Client) {
     PacketFamily.Recover,
     PacketAction.Reply,
     (reader) => handleRecoverReply(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Recover,
+    PacketAction.TargetGroup,
+    (reader) => handleRecoverTargetGroup(client, reader),
   );
 }

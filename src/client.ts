@@ -70,6 +70,8 @@ import {
   PaperdollAddClientPacket,
   PaperdollRemoveClientPacket,
   PaperdollRequestClientPacket,
+  PartyAcceptClientPacket,
+  type PartyMember,
   PartyRequestClientPacket,
   PartyRequestType,
   PlayerRangeRequestClientPacket,
@@ -290,6 +292,7 @@ type ClientEvents = {
   skillsChanged: undefined;
   spellQueued: undefined;
   setChat: string;
+  partyUpdated: undefined;
 };
 
 export enum GameState {
@@ -538,6 +541,7 @@ export class Client {
   spellTargetId = 0;
   spellCooldownTicks = 0;
   menuPlayerId = 0;
+  partyMembers: PartyMember[] = [];
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -2914,6 +2918,13 @@ export class Client {
   requestTrade(playerId: number) {
     const packet = new TradeRequestClientPacket();
     packet.playerId = playerId;
+    this.bus.send(packet);
+  }
+
+  acceptPartyRequest(playerId: number, requestType: PartyRequestType) {
+    const packet = new PartyAcceptClientPacket();
+    packet.inviterPlayerId = playerId;
+    packet.requestType = requestType;
     this.bus.send(packet);
   }
 }
