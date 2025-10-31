@@ -67,6 +67,11 @@ export class Chat extends Base {
   );
   private collapsed = false;
 
+  setMessage(message: string) {
+    this.message.value = message;
+    this.focus();
+  }
+
   addMessage(tab: ChatTab, message: string, icon: ChatIcon) {
     const li = document.createElement('li');
 

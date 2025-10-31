@@ -30,6 +30,11 @@ export class Hotbar extends Base {
     for (let i = 0; i < HOTBAR_SLOTS; ++i) {
       const slot = document.createElement('div');
       slot.classList.add('slot');
+
+      slot.addEventListener('click', () => {
+        this.client.useHotbarSlot(i);
+      });
+
       this.container.appendChild(slot);
     }
   }

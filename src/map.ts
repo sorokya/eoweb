@@ -20,6 +20,10 @@ import {
   HALF_TILE_HEIGHT,
   HALF_TILE_WIDTH,
   NPC_IDLE_ANIMATION_TICKS,
+  PLAYER_MENU_HEIGHT,
+  PLAYER_MENU_ITEM_HEIGHT,
+  PLAYER_MENU_OFFSET_Y,
+  PLAYER_MENU_WIDTH,
   TILE_HEIGHT,
   TILE_WIDTH,
 } from './consts';
@@ -224,29 +228,6 @@ export class MapRenderer {
     }
 
     playerScreen.x += this.client.quakeOffset;
-
-    /*
-    const mapCanvas = this.client.atlas.getMapCanvas();
-    if (!mapCanvas) {
-      return;
-    }
-
-    const mapOriginX = this.client.atlas.getMapOriginX();
-
-    // Player in mapCanvas space
-    const px = mapOriginX + playerScreen.x;
-    const py = playerScreen.y;
-
-    // Desired top-left of the viewport
-    const sx = Math.floor(px - ctx.canvas.width / 2) + HALF_TILE_WIDTH;
-    const sy = Math.floor(py - ctx.canvas.height / 2) + HALF_TILE_HEIGHT;
-
-    ctx.drawImage(
-      mapCanvas,
-      sx, sy, ctx.canvas.width, ctx.canvas.height,
-      0, 0, ctx.canvas.width, ctx.canvas.height
-    );
-    */
 
     const diag = Math.hypot(ctx.canvas.width, ctx.canvas.height);
     const rangeX = Math.min(
@@ -459,6 +440,7 @@ export class MapRenderer {
       renderTopLayerEntity();
     }
     this.topLayer = [];
+    this.renderPlayerMenu(ctx);
   }
 
   renderNameTag(playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
@@ -611,6 +593,52 @@ export class MapRenderer {
     );
 
     return true;
+  }
+
+  renderPlayerMenu(ctx: CanvasRenderingContext2D) {
+    if (!this.client.menuPlayerId) {
+      return;
+    }
+
+    const rect = getCharacterRectangle(this.client.menuPlayerId);
+    if (!rect) {
+      this.client.menuPlayerId = 0;
+      return;
+    }
+
+    const bmp = getBitmapById(GfxType.PostLoginUI, 41);
+    if (!bmp) {
+      return;
+    }
+
+    ctx.drawImage(
+      bmp,
+      0,
+      0,
+      PLAYER_MENU_WIDTH,
+      PLAYER_MENU_HEIGHT,
+      rect.position.x + rect.width + 10,
+      rect.position.y,
+      PLAYER_MENU_WIDTH,
+      PLAYER_MENU_HEIGHT,
+    );
+
+    const hovered = this.client.getHoveredPlayerMenuItem();
+    if (hovered !== undefined) {
+      ctx.drawImage(
+        bmp,
+        PLAYER_MENU_WIDTH,
+        PLAYER_MENU_OFFSET_Y + hovered * PLAYER_MENU_ITEM_HEIGHT,
+        PLAYER_MENU_WIDTH,
+        PLAYER_MENU_ITEM_HEIGHT,
+        rect.position.x + rect.width + 10,
+        rect.position.y +
+          PLAYER_MENU_OFFSET_Y +
+          hovered * PLAYER_MENU_ITEM_HEIGHT,
+        PLAYER_MENU_WIDTH,
+        PLAYER_MENU_ITEM_HEIGHT,
+      );
+    }
   }
 
   renderTile(
