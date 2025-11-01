@@ -632,7 +632,9 @@ inventory.on('dropItem', ({ at, itemId }) => {
   }
 
   if (record.special === ItemSpecial.Lore) {
-    // TODO: alert
+    const strings = client.getDialogStrings(DialogResourceID.ITEM_IS_LORE_ITEM);
+    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.show();
     return;
   }
 
