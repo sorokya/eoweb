@@ -67,6 +67,15 @@ export class OnlineList extends Base {
         playerElement.appendChild(guildElement);
         playerElement.appendChild(classElement);
         playersContainer.appendChild(playerElement);
+
+        playerElement.addEventListener('contextmenu', () => {
+          const chatBox = document.getElementById(
+            'chat-message',
+          ) as HTMLInputElement;
+          if (chatBox) {
+            chatBox.value = `!${player.name} `;
+          }
+        });
       });
     });
   }
