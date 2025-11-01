@@ -257,11 +257,6 @@ client.on('enterGame', ({ news }) => {
   resizeCanvases();
   inventory.loadPositions();
   inventory.show();
-
-  const dialogs = document.querySelector<HTMLDivElement>('#dialogs');
-  if (dialogs) {
-    dialogs.classList.remove('hidden');
-  }
 });
 
 client.on('passwordChanged', () => {

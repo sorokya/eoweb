@@ -1,6 +1,10 @@
 import { type Item, ItemSize } from 'eolib';
 import mitt from 'mitt';
-import type { Client, EquipmentSlot } from '../client';
+import {
+  type Client,
+  type EquipmentSlot,
+  getEquipmentSlotFromString,
+} from '../client';
 import { playSfxById, SfxId } from '../sfx';
 import { getItemMeta } from '../utils/get-item-meta';
 import type { Vector2 } from '../vector';
@@ -270,7 +274,7 @@ export class Inventory extends Base {
   }
 
   constructor(client: Client) {
-    super(document.getElementById('inventory'), true);
+    super();
     this.client = client;
 
     this.client.on('inventoryChanged', () => {
