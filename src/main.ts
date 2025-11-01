@@ -58,6 +58,7 @@ import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
 import { OffsetTweaker } from './ui/offset-tweaker';
 import { Paperdoll } from './ui/paperdoll';
+import { PartyDialog } from './ui/party-dialog';
 import { QuestDialog } from './ui/quest-dialog';
 import { ShopDialog } from './ui/shop-dialog';
 import { SkillMasterDialog } from './ui/skill-master-dialog';
@@ -331,6 +332,10 @@ client.on('setChat', (message) => {
   chat.setMessage(message);
 });
 
+client.on('partyUpdated', () => {
+  partyDialog.refresh();
+});
+
 const initializeSocket = (next: 'login' | 'create' | '' = '') => {
   const socket = new WebSocket(client.config.host);
   socket.addEventListener('open', () => {
@@ -420,6 +425,7 @@ const largeAlertSmallHeader = new LargeAlertSmallHeader();
 const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
 const hotbar = new Hotbar(client);
 const spellBook = new SpellBook(client);
+const partyDialog = new PartyDialog(client);
 
 const hideAllUi = () => {
   const uiElements = document.querySelectorAll('#ui>div');
@@ -578,6 +584,9 @@ inGameMenu.on('toggle', (which) => {
       break;
     case 'spells':
       spellBook.toggle();
+      break;
+    case 'party':
+      partyDialog.toggle();
       break;
   }
 });

@@ -68,7 +68,7 @@ function handlePartyRequest(client: Client, reader: EoReader) {
   );
 
   client.showConfirmation(
-    `${packet.playerName} ${strings[1]}`,
+    `${capitalize(packet.playerName)} ${strings[1]}`,
     strings[0],
     () => {
       client.acceptPartyRequest(packet.inviterPlayerId, packet.requestType);
@@ -137,6 +137,11 @@ function handlePartyRemove(client: Client, reader: EoReader) {
   client.partyMembers = client.partyMembers.filter(
     (m) => m.playerId !== packet.playerId,
   );
+
+  if (client.partyMembers.length === 1) {
+    client.partyMembers = [];
+  }
+
   client.emit('partyUpdated', undefined);
 }
 
@@ -170,24 +175,38 @@ function handlePartyTargetGroup(client: Client, reader: EoReader) {
     const member = client.partyMembers.find(
       (m) => m.playerId === gain.playerId,
     );
-    if (!member || !gain.levelUp) {
+    if (!member) {
       continue;
     }
 
     if (member.playerId === client.playerId) {
       client.experience += gain.experience;
+      client.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain.experience} EXP`,
+      );
+      client.emit('chat', {
+        message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain.experience} EXP`,
+        icon: ChatIcon.Star,
+        tab: ChatTab.System,
+      });
+
       if (gain.levelUp) {
         client.level = gain.levelUp;
       }
       client.emit('statsUpdate', undefined);
     }
 
-    member.level = gain.levelUp;
-
-    const memberCharacter = client.getCharacterById(member.playerId);
-    if (memberCharacter) {
-      playSfxById(SfxId.LevelUp);
-      client.characterEmotes.set(member.playerId, new Emote(EmoteType.LevelUp));
+    if (gain.levelUp) {
+      member.level = gain.levelUp;
+      const memberCharacter = client.getCharacterById(member.playerId);
+      if (memberCharacter) {
+        playSfxById(SfxId.LevelUp);
+        client.characterEmotes.set(
+          member.playerId,
+          new Emote(EmoteType.LevelUp),
+        );
+      }
     }
   }
 

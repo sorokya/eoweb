@@ -72,8 +72,10 @@ import {
   PaperdollRequestClientPacket,
   PartyAcceptClientPacket,
   type PartyMember,
+  PartyRemoveClientPacket,
   PartyRequestClientPacket,
   PartyRequestType,
+  PartyTakeClientPacket,
   PlayerRangeRequestClientPacket,
   PriestOpenClientPacket,
   QuestAcceptClientPacket,
@@ -178,6 +180,7 @@ import { registerMessageHandlers } from './handlers/message';
 import { registerMusicHandlers } from './handlers/music';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerPaperdollHandlers } from './handlers/paperdoll';
+import { registerPartyHandlers } from './handlers/party';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerQuestHandlers } from './handlers/quest';
 import { registerRangeHandlers } from './handlers/range';
@@ -1345,6 +1348,7 @@ export class Client {
     registerStatSkillHandlers(this);
     registerSpellHandlers(this);
     registerCastHandlers(this);
+    registerPartyHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -2925,6 +2929,22 @@ export class Client {
     const packet = new PartyAcceptClientPacket();
     packet.inviterPlayerId = playerId;
     packet.requestType = requestType;
+    this.bus.send(packet);
+  }
+
+  removePartyMember(playerId: number) {
+    const packet = new PartyRemoveClientPacket();
+    packet.playerId = playerId;
+    this.bus.send(packet);
+  }
+
+  requestPartyList() {
+    if (this.partyMembers.length === 0) {
+      return;
+    }
+
+    const packet = new PartyTakeClientPacket();
+    packet.membersCount = this.partyMembers.length;
     this.bus.send(packet);
   }
 }
