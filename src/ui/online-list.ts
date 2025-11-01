@@ -1,39 +1,22 @@
 import { PlayersRequestClientPacket } from 'eolib';
 import type { Client } from '../client';
-import { Base } from './base-ui';
+import { BaseDialogMd } from './base-dialog-md';
 import { characterIconToChatIcon } from './utils/character-icon-to-chat-icon';
 
-export class OnlineList extends Base {
-  private client: Client;
+type Events = {
+  playerSelected: { playerId: number };
+};
 
+export class OnlineList extends BaseDialogMd<Events> {
   constructor(client: Client) {
-    const draggable = true;
-    super(document.getElementById('online-list'), draggable);
-    this.client = client;
+    super(client, document.querySelector('#online-list'), 'Online Players');
+
     const playersContainer = this.container.querySelector('.players');
-
-    const scrollHandle = this.container.querySelector('.scroll-handle');
-
-    const topOffset = 30;
-    const bottomOffset = 35;
-    const scrollHandleHeight = 15;
-
-    playersContainer.addEventListener('scroll', (_) => {
-      const containerHeight = playersContainer.clientHeight;
-      const maxScrollTop = containerHeight - scrollHandleHeight - topOffset;
-      const percentageScrolled =
-        playersContainer.scrollTop /
-        (playersContainer.scrollHeight - playersContainer.clientHeight);
-      const percentageScrolledTop =
-        percentageScrolled * maxScrollTop + bottomOffset;
-      (scrollHandle as HTMLElement).style.top = `${percentageScrolledTop}px`;
-    });
 
     this.client.on('playersListUpdated', (players) => {
       if (!this.container) return;
 
-      const playerCountElement = this.container.querySelector('.player-count');
-      playerCountElement.textContent = `${players.length}`;
+      this.updateLabelText(`Online Players (${players.length})`);
       playersContainer.innerHTML = '';
 
       players.map((player) => {
@@ -48,24 +31,15 @@ export class OnlineList extends Base {
           'data-id',
           characterIconToChatIcon(player.icon).toString(),
         );
-        const titleElement = document.createElement('span');
-        titleElement.className = 'title';
-        titleElement.textContent = player.title || '-';
         const guildElement = document.createElement('span');
         guildElement.className = 'guild';
         guildElement.textContent =
           !player.guildTag || player.guildTag === '   ' ? '-' : player.guildTag;
-        const classElement = document.createElement('span');
-        classElement.className = 'class';
-        classElement.textContent =
-          this.client.ecf.classes[player.classId - 1]?.name || '-';
 
         nameElement.textContent = player.name;
         playerElement.appendChild(playerIconElement);
         playerElement.appendChild(nameElement);
-        playerElement.appendChild(titleElement);
         playerElement.appendChild(guildElement);
-        playerElement.appendChild(classElement);
         playersContainer.appendChild(playerElement);
 
         playerElement.addEventListener('contextmenu', () => {
@@ -84,4 +58,6 @@ export class OnlineList extends Base {
     this.client.bus.send(new PlayersRequestClientPacket());
     super.show();
   }
+
+  render(): void {}
 }

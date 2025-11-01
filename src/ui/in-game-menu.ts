@@ -9,59 +9,50 @@ type Events = {
 export class InGameMenu extends Base {
   private emitter = mitt<Events>();
 
-  private btnInventory: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="inventory"]',
-  );
-  private btnMap: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="map"]',
-  );
-  private btnSpells: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="spells"]',
-  );
-  private btnStats: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="stats"]',
-  );
-  private btnOnline: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="online"]',
-  );
-  private btnParty: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="party"]',
-  );
-
   constructor() {
-    super(document.querySelector('#in-game-menu'));
+    super();
+    this.container = document.querySelector('#in-game-menu');
 
-    this.btnInventory.addEventListener('click', (e) => {
+    const btnInventory = this.container.querySelector(
+      'button[data-id="inventory"]',
+    );
+    const btnMap = this.container.querySelector('button[data-id="map"]');
+    const btnSpells = this.container.querySelector('button[data-id="spells"]');
+    const btnStats = this.container.querySelector('button[data-id="stats"]');
+    const btnOnline = this.container.querySelector('button[data-id="online"]');
+    const btnParty = this.container.querySelector('button[data-id="party"]');
+
+    btnInventory.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'inventory');
     });
 
-    this.btnMap.addEventListener('click', (e) => {
+    btnMap.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'map');
     });
 
-    this.btnSpells.addEventListener('click', (e) => {
+    btnSpells.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'spells');
     });
 
-    this.btnStats.addEventListener('click', (e) => {
+    btnStats.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'stats');
     });
 
-    this.btnOnline.addEventListener('click', (e) => {
+    btnOnline.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'online');
     });
 
-    this.btnParty.addEventListener('click', (e) => {
+    btnParty.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'party');

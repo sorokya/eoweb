@@ -1,26 +1,15 @@
-import mitt from 'mitt';
 import type { Client } from '../client';
 import { playSfxById, SfxId } from '../sfx';
-import { Base } from './base-ui';
+import { BaseDialogMd } from './base-dialog-md';
 
 type Events = {
   assignToSlot: { spellId: number; slotIndex: number };
 };
 
-export class SpellBook extends Base {
+export class SpellBook extends BaseDialogMd<Events> {
   protected container: HTMLDivElement = document.querySelector('#spell-book');
-  private dialogs = document.getElementById('dialogs');
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="cancel"]',
-  );
   private spellGrid: HTMLDivElement =
     this.container.querySelector('.spell-grid');
-  private label: HTMLSpanElement = this.container.querySelector('.label');
-  private scrollHandle: HTMLDivElement =
-    this.container.querySelector('.scroll-handle');
-  private open = false;
-  private client: Client;
-  private emitter = mitt<Events>();
 
   private dragging: {
     spellId: number;
@@ -32,94 +21,15 @@ export class SpellBook extends Base {
   } | null = null;
 
   constructor(client: Client) {
-    super();
-
-    this.client = client;
-
-    this.btnCancel.addEventListener('click', () => {
-      playSfxById(SfxId.ButtonClick);
-      this.hide();
-    });
-
-    this.spellGrid.addEventListener('scroll', () => {
-      this.setScrollThumbPosition();
-    });
-
-    this.scrollHandle.addEventListener('pointerdown', () => {
-      const onPointerMove = (e: PointerEvent) => {
-        const rect = this.spellGrid.getBoundingClientRect();
-        const min = 30;
-        const max = 212;
-        const clampedY = Math.min(
-          Math.max(e.clientY, rect.top + min),
-          rect.top + max,
-        );
-        const scrollPercent = (clampedY - rect.top - min) / (max - min);
-        const scrollHeight = this.spellGrid.scrollHeight;
-        const clientHeight = this.spellGrid.clientHeight;
-        this.spellGrid.scrollTop =
-          scrollPercent * (scrollHeight - clientHeight);
-      };
-
-      const onPointerUp = () => {
-        document.removeEventListener('pointermove', onPointerMove);
-        document.removeEventListener('pointerup', onPointerUp);
-      };
-
-      document.addEventListener('pointermove', onPointerMove);
-      document.addEventListener('pointerup', onPointerUp);
-    });
+    super(client, document.querySelector('#spell-book'), 'Spell Book');
   }
 
-  on<Event extends keyof Events>(
-    event: Event,
-    handler: (data: Events[Event]) => void,
-  ) {
-    this.emitter.on(event, handler);
-  }
-
-  setScrollThumbPosition() {
-    const min = 60;
-    const max = 212;
-    const scrollTop = this.spellGrid.scrollTop;
-    const scrollHeight = this.spellGrid.scrollHeight;
-    const clientHeight = this.spellGrid.clientHeight;
-    const scrollPercent = scrollTop / (scrollHeight - clientHeight);
-    const clampedPercent = Math.min(Math.max(scrollPercent, 0), 1);
-    const top = min + (max - min) * clampedPercent || min;
-    this.scrollHandle.style.top = `${top}px`;
-  }
-
-  show() {
-    this.render();
-    this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
-    this.open = true;
-    this.setScrollThumbPosition();
-  }
-
-  hide() {
-    this.container.classList.add('hidden');
-    this.open = false;
-
-    if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
-      this.client.typing = false;
-    }
-  }
-
-  toggle() {
-    if (this.open) {
-      this.hide();
-    } else {
-      this.show();
-    }
-  }
-
-  private render() {
+  public render() {
     this.spellGrid.innerHTML = '';
 
-    this.label.innerText = `Spell Book (${this.client.spells.length}) Points (${this.client.skillPoints})`;
+    this.updateLabelText(
+      `Spell Book (${this.client.spells.length}) Points (${this.client.skillPoints})`,
+    );
 
     for (const spell of this.client.spells) {
       const record = this.client.getEsfRecordById(spell.id);
