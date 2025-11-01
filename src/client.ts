@@ -2706,6 +2706,10 @@ export class Client {
     if (slot.type === SlotType.Item) {
       this.useItem(slot.typeId);
     } else {
+      if (!this.spells.find((s) => s.id === slot.typeId)) {
+        return;
+      }
+
       const record = this.getEsfRecordById(slot.typeId);
       if (!record) {
         return;
@@ -2718,6 +2722,13 @@ export class Client {
 
       // TODO: Bard
       if (record.type === SkillType.Bard) {
+        return;
+      }
+
+      if (
+        record.targetType === SkillTargetType.Group &&
+        !this.partyMembers.length
+      ) {
         return;
       }
 
@@ -2776,11 +2787,13 @@ export class Client {
     if (this.spellTarget === SpellTarget.Npc) {
       const npc = this.getNpcByIndex(this.spellTargetId);
       if (!npc) {
+        this.queuedSpellId = 0;
         return;
       }
 
       const animation = this.npcAnimations.get(npc.index);
       if (animation instanceof NpcDeathAnimation) {
+        this.queuedSpellId = 0;
         return;
       }
     }
@@ -2788,16 +2801,15 @@ export class Client {
     if (this.spellTarget === SpellTarget.Player) {
       const character = this.getCharacterById(this.spellTargetId);
       if (!character) {
+        this.queuedSpellId = 0;
         return;
       }
 
-      /*
-      TODO: Implement character death animation check
-      const animation = this.characterAnimations.get(character.id);
+      const animation = this.characterAnimations.get(this.spellTargetId);
       if (animation instanceof CharacterDeathAnimation) {
+        this.queuedSpellId = 0;
         return;
       }
-      */
     }
 
     this.spellCastTimestamp = getTimestamp();

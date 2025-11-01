@@ -25,21 +25,35 @@ function handlePartyReply(client: Client, reader: EoReader) {
   const packet = PartyReplyServerPacket.deserialize(reader);
   switch (packet.replyCode) {
     case PartyReplyCode.AlreadyInAnotherParty: {
+      const data =
+        packet.replyCodeData as PartyReplyServerPacket.ReplyCodeDataAlreadyInAnotherParty;
       client.setStatusLabel(
         EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        client.getResourceString(
+        `${capitalize(data.playerName)} ${client.getResourceString(
           EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_IN_ANOTHER_PARTY,
-        ),
+        )}`,
       );
+      client.emit('chat', {
+        tab: ChatTab.System,
+        icon: ChatIcon.Error,
+        message: `${capitalize(data.playerName)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_IN_ANOTHER_PARTY)}`,
+      });
       return;
     }
     case PartyReplyCode.AlreadyInYourParty: {
+      const data =
+        packet.replyCodeData as PartyReplyServerPacket.ReplyCodeDataAlreadyInYourParty;
       client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-        client.getResourceString(
+        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+        `${capitalize(data.playerName)} ${client.getResourceString(
           EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_MEMBER,
-        ),
+        )}`,
       );
+      client.emit('chat', {
+        tab: ChatTab.System,
+        icon: ChatIcon.Error,
+        message: `${capitalize(data.playerName)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_MEMBER)}`,
+      });
       return;
     }
     case PartyReplyCode.PartyIsFull: {
@@ -49,6 +63,13 @@ function handlePartyReply(client: Client, reader: EoReader) {
           EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL,
         ),
       );
+      client.emit('chat', {
+        tab: ChatTab.System,
+        icon: ChatIcon.Error,
+        message: client.getResourceString(
+          EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL,
+        ),
+      });
       return;
     }
   }
