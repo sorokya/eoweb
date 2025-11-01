@@ -746,78 +746,6 @@ input[type="password"] {
   z-index: 1020;
 }
 
-#online-list {
-  position: absolute;
-  display: block;
-  bottom: 30px;
-  height: 113px;
-  width: 485px;
-  padding: 3px 0 3px 0px;
-  border-radius: 5px;
-  left: calc(50vw - 190px);
-  cursor: move;
-  user-select: none;
-  z-index: 1021;
-  background: url("/gfx/gfx002/136.png") #000;
-  font-size: 0.8rem;
-}
-
-#online-list .scroll-handle {
-  position: absolute;
-  right: 2px;
-  top: 37px;
-}
-
-#online-list .players {
-  margin-top: 16px;
-  height: 98px;
-  overflow-y: scroll;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  width: 465px;
-}
-
-#online-list .players::-webkit-scrollbar {
-  display: none;
-}
-
-#online-list div.player-count {
-  position: absolute;
-  color: var(--eo-font-color-light);
-  right: 0px;
-  width: 30px;
-  text-align: center;
-}
-
-#online-list .player {
-  position: relative;
-  display: flex;
-  align-items: center;
-  color: black;
-  height: 20px;
-}
-
-#online-list .player .icon {
-  width: 13px;
-  display: inline-block;
-  margin-left: 5px;
-  margin-right: 10px;
-}
-
-#online-list .player .name::first-letter {
-  text-transform: uppercase;
-}
-
-#online-list .player .name,
-#online-list .player .title,
-#online-list .player .guild,
-#online-list .player .class {
-  flex-grow: 1;
-  min-width: 0;
-  width: 140px;
-  color: black;
-}
-
 #inventory {
   position: absolute;
   right: 40px;
@@ -2733,16 +2661,35 @@ div.icon[data-id="23"] {
   scale: 1.3;
 }
 
-#spell-book {
+.dialog-md {
   position: relative;
   background-color: #000;
-  background-image: url("/gfx/gfx002/164.png");
+  background-image: url("/gfx/gfx002/152.png");
+  color: #ddd;
   width: 284px;
   height: 290px;
   user-select: none;
 }
 
-#spell-book .spell-grid {
+#spell-book.dialog-md {
+  background-image: url("/gfx/gfx002/164.png");
+}
+
+.dialog-md .dialog-contents .player {
+  justify-content: space-between;
+  flex-direction: row;
+  height: 20px;
+  width: 233px;
+}
+
+.dialog-md .dialog-contents .player .name {
+  flex: 1;
+  text-transform: capitalize;
+  font-size: 12px;
+  padding-left: 3px;
+}
+
+.dialog-md .dialog-contents {
   position: absolute;
   top: 44px;
   left: 15px;
@@ -2759,39 +2706,39 @@ div.icon[data-id="23"] {
   touch-action: pan-y;
 }
 
-#spell-book .spell-grid > div {
+.dialog-md .dialog-contents > div {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-#spell-book .spell-name {
+.dialog-md .spell-name {
   color: #fff;
   font-size: 10px;
   max-width: 32px;
   text-align: center;
 }
 
-#spell-book .spell-level {
+.dialog-md .spell-level {
   color: #b4a08c;
   font-size: 9px;
   position: relative;
 }
 
-#spell-book .spell-icon {
+.dialog-md .spell-icon {
   width: 34px;
   height: 32px;
 }
 
-#spell-book .spell-icon:hover {
+.dialog-md .spell-icon:hover {
   background-position-x: -34px;
 }
 
-#spell-book .spell-grid::-webkit-scrollbar {
+.dialog-md .spell-grid::-webkit-scrollbar {
   display: none;
 }
 
-#spell-book .scroll-handle {
+.dialog-md .scroll-handle {
   position: absolute;
   right: 16px;
   width: 16px;
@@ -2801,7 +2748,7 @@ div.icon[data-id="23"] {
   user-select: none;
 }
 
-#spell-book .label {
+.dialog-md .label {
   position: absolute;
   top: 18px;
   left: 24px;
@@ -2809,7 +2756,7 @@ div.icon[data-id="23"] {
   font-size: 12px;
 }
 
-#spell-book button[data-id="cancel"] {
+.dialog-md button[data-id="cancel"] {
   position: absolute;
   bottom: 10px;
   left: 98px;
