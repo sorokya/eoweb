@@ -884,23 +884,15 @@ export class MapRenderer {
         additionalOffset.y,
     );
 
-    if (mirrored) {
-      ctx.save();
-      ctx.translate(GAME_WIDTH, 0);
-      ctx.scale(-1, 1);
-    }
-
-    const drawX = Math.floor(
-      mirrored
-        ? GAME_WIDTH - screenX - frame.w - frame.mirroredXOffset
-        : screenX + frame.xOffset,
-    );
-
     const rect = new Rectangle(
-      { x: screenX + frame.xOffset, y: screenY },
+      {
+        x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
+        y: screenY,
+      },
       frame.w,
       frame.h,
     );
+
     setCharacterRectangle(character.playerId, rect);
 
     const effects = justCharacter
@@ -915,15 +907,17 @@ export class MapRenderer {
       effect.renderBehind(ctx);
     }
 
-    const bubble = justCharacter
-      ? null
-      : this.client.characterChats.get(character.playerId);
-    const healthBar = justCharacter
-      ? null
-      : this.client.characterHealthBars.get(character.playerId);
-    const emote = justCharacter
-      ? null
-      : this.client.characterEmotes.get(character.playerId);
+    if (mirrored) {
+      ctx.save();
+      ctx.translate(GAME_WIDTH, 0);
+      ctx.scale(-1, 1);
+    }
+
+    const drawX = Math.floor(
+      mirrored
+        ? GAME_WIDTH - screenX - frame.w - frame.mirroredXOffset
+        : screenX + frame.xOffset,
+    );
 
     if (dying) {
       ctx.globalAlpha = dyingTicks / DEATH_TICKS;
@@ -986,6 +980,16 @@ export class MapRenderer {
       !justCharacter &&
       (!character.invisible || this.client.admin !== AdminLevel.Player)
     ) {
+      const bubble = justCharacter
+        ? null
+        : this.client.characterChats.get(character.playerId);
+      const healthBar = justCharacter
+        ? null
+        : this.client.characterHealthBars.get(character.playerId);
+      const emote = justCharacter
+        ? null
+        : this.client.characterEmotes.get(character.playerId);
+
       this.topLayer.push(() => {
         renderCharacterChatBubble(bubble, character, ctx);
         renderCharacterHealthBar(healthBar, character, ctx);

@@ -252,7 +252,7 @@ function handleInitMapMutation(
   const map = Emf.deserialize(reader);
   saveEmf(client.warpMapId, map);
   client.setMap(map);
-  client.atlas.reset();
+  client.atlas.mapId = 0; // Force atlas to reload map data
   client.refresh();
   playSfxById(SfxId.MapMutation);
   const message = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${client.getResourceString(EOResourceID.SERVER_MESSAGE_MAP_MUTATION)}}`;

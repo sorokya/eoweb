@@ -70,8 +70,12 @@ import {
   PaperdollAddClientPacket,
   PaperdollRemoveClientPacket,
   PaperdollRequestClientPacket,
+  PartyAcceptClientPacket,
+  type PartyMember,
+  PartyRemoveClientPacket,
   PartyRequestClientPacket,
   PartyRequestType,
+  PartyTakeClientPacket,
   PlayerRangeRequestClientPacket,
   PriestOpenClientPacket,
   QuestAcceptClientPacket,
@@ -176,6 +180,7 @@ import { registerMessageHandlers } from './handlers/message';
 import { registerMusicHandlers } from './handlers/music';
 import { registerNpcHandlers } from './handlers/npc';
 import { registerPaperdollHandlers } from './handlers/paperdoll';
+import { registerPartyHandlers } from './handlers/party';
 import { registerPlayersHandlers } from './handlers/players';
 import { registerQuestHandlers } from './handlers/quest';
 import { registerRangeHandlers } from './handlers/range';
@@ -290,6 +295,7 @@ type ClientEvents = {
   skillsChanged: undefined;
   spellQueued: undefined;
   setChat: string;
+  partyUpdated: undefined;
 };
 
 export enum GameState {
@@ -538,6 +544,7 @@ export class Client {
   spellTargetId = 0;
   spellCooldownTicks = 0;
   menuPlayerId = 0;
+  partyMembers: PartyMember[] = [];
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -1341,6 +1348,7 @@ export class Client {
     registerStatSkillHandlers(this);
     registerSpellHandlers(this);
     registerCastHandlers(this);
+    registerPartyHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -2698,6 +2706,10 @@ export class Client {
     if (slot.type === SlotType.Item) {
       this.useItem(slot.typeId);
     } else {
+      if (!this.spells.find((s) => s.id === slot.typeId)) {
+        return;
+      }
+
       const record = this.getEsfRecordById(slot.typeId);
       if (!record) {
         return;
@@ -2710,6 +2722,13 @@ export class Client {
 
       // TODO: Bard
       if (record.type === SkillType.Bard) {
+        return;
+      }
+
+      if (
+        record.targetType === SkillTargetType.Group &&
+        !this.partyMembers.length
+      ) {
         return;
       }
 
@@ -2768,11 +2787,13 @@ export class Client {
     if (this.spellTarget === SpellTarget.Npc) {
       const npc = this.getNpcByIndex(this.spellTargetId);
       if (!npc) {
+        this.queuedSpellId = 0;
         return;
       }
 
       const animation = this.npcAnimations.get(npc.index);
       if (animation instanceof NpcDeathAnimation) {
+        this.queuedSpellId = 0;
         return;
       }
     }
@@ -2780,16 +2801,15 @@ export class Client {
     if (this.spellTarget === SpellTarget.Player) {
       const character = this.getCharacterById(this.spellTargetId);
       if (!character) {
+        this.queuedSpellId = 0;
         return;
       }
 
-      /*
-      TODO: Implement character death animation check
-      const animation = this.characterAnimations.get(character.id);
+      const animation = this.characterAnimations.get(this.spellTargetId);
       if (animation instanceof CharacterDeathAnimation) {
+        this.queuedSpellId = 0;
         return;
       }
-      */
     }
 
     this.spellCastTimestamp = getTimestamp();
@@ -2914,6 +2934,29 @@ export class Client {
   requestTrade(playerId: number) {
     const packet = new TradeRequestClientPacket();
     packet.playerId = playerId;
+    this.bus.send(packet);
+  }
+
+  acceptPartyRequest(playerId: number, requestType: PartyRequestType) {
+    const packet = new PartyAcceptClientPacket();
+    packet.inviterPlayerId = playerId;
+    packet.requestType = requestType;
+    this.bus.send(packet);
+  }
+
+  removePartyMember(playerId: number) {
+    const packet = new PartyRemoveClientPacket();
+    packet.playerId = playerId;
+    this.bus.send(packet);
+  }
+
+  requestPartyList() {
+    if (this.partyMembers.length === 0) {
+      return;
+    }
+
+    const packet = new PartyTakeClientPacket();
+    packet.membersCount = this.partyMembers.length;
     this.bus.send(packet);
   }
 }
