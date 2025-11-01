@@ -274,7 +274,7 @@ export class Atlas {
   private items: ItemAtlasEntry[] = [];
   private tiles: TileAtlasEntry[] = [];
   private client: Client;
-  private mapId = 0;
+  mapId = 0;
   private mapHasChairs = false;
   private bmpsToLoad: Bmp[] = [];
   private loading = false;
