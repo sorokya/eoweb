@@ -2675,18 +2675,41 @@ div.icon[data-id="23"] {
   background-image: url("/gfx/gfx002/164.png");
 }
 
-.dialog-md .dialog-contents .player {
-  justify-content: space-between;
+#online-list.dialog-md .dialog-contents {
+  display: flex;
   flex-direction: row;
-  height: 20px;
-  width: 233px;
+  justify-content: flex-start;
 }
 
-.dialog-md .dialog-contents .player .name {
-  flex: 1;
-  text-transform: capitalize;
+.dialog-md .dialog-contents .player {
+  flex-direction: column;
+  width: 110px;
   font-size: 12px;
-  padding-left: 3px;
+  color: #b4a08c;
+  align-items: center;
+  height: 100%;
+}
+
+.dialog-md .dialog-contents .player .nameplate {
+  display: flex;
+  flex-direction: row;
+}
+
+.dialog-md .dialog-contents .player .nameplate .name {
+  text-transform: capitalize;
+  font-weight: bold;
+  color: #f0f0c8;
+  padding: 0 2px 0 2px;
+}
+
+.dialog-md .dialog-contents .player .nameplate .guild,
+.dialog-md .dialog-contents .player .nameplate .name,
+.dialog-md .dialog-contents .player .nameplate .icon {
+  margin: 0 1px 0 1px;
+}
+
+.dialog-md .dialog-contents .player .title {
+  font-style: italic;
 }
 
 .dialog-md .dialog-contents {
