@@ -23,6 +23,9 @@ export class OnlineList extends BaseDialogMd<Events> {
         const playerElement = document.createElement('div');
         playerElement.className = 'player';
 
+        const nameplateElement = document.createElement('div');
+        nameplateElement.className = 'nameplate';
+
         const nameElement = document.createElement('span');
         nameElement.className = 'name';
         const playerIconElement = document.createElement('div');
@@ -34,12 +37,30 @@ export class OnlineList extends BaseDialogMd<Events> {
         const guildElement = document.createElement('span');
         guildElement.className = 'guild';
         guildElement.textContent =
-          !player.guildTag || player.guildTag === '   ' ? '-' : player.guildTag;
+          !player.guildTag || player.guildTag === '   '
+            ? ''
+            : `${player.guildTag}`;
+
+        nameplateElement.appendChild(playerIconElement);
+        nameplateElement.appendChild(nameElement);
+        nameplateElement.appendChild(guildElement);
+
+        const levelElement = document.createElement('span');
+        levelElement.className = 'level';
+        levelElement.textContent = `(Lvl: ${player.level})`;
+
+        const titleElement = document.createElement('span');
+        titleElement.className = 'title';
+        titleElement.textContent = player.title ? `${player.title}` : '';
+
+        const classElement = document.createElement('span');
+        classElement.className = 'class';
+        classElement.textContent = `Lvl: ${player.level} ${this.client.ecf.classes[player.classId - 1]?.name || ''}`;
 
         nameElement.textContent = player.name;
-        playerElement.appendChild(playerIconElement);
-        playerElement.appendChild(nameElement);
-        playerElement.appendChild(guildElement);
+        playerElement.appendChild(nameplateElement);
+        playerElement.appendChild(classElement);
+        playerElement.appendChild(titleElement);
         playersContainer.appendChild(playerElement);
 
         playerElement.addEventListener('contextmenu', () => {
