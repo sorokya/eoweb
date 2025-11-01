@@ -193,14 +193,7 @@ function handlePartyAgree(client: Client, reader: EoReader) {
 function handlePartyTargetGroup(client: Client, reader: EoReader) {
   const packet = PartyTargetGroupServerPacket.deserialize(reader);
   for (const gain of packet.gains) {
-    const member = client.partyMembers.find(
-      (m) => m.playerId === gain.playerId,
-    );
-    if (!member) {
-      continue;
-    }
-
-    if (member.playerId === client.playerId) {
+    if (gain.playerId === client.playerId) {
       client.experience += gain.experience;
       client.setStatusLabel(
         EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
@@ -219,14 +212,18 @@ function handlePartyTargetGroup(client: Client, reader: EoReader) {
     }
 
     if (gain.levelUp) {
-      member.level = gain.levelUp;
-      const memberCharacter = client.getCharacterById(member.playerId);
+      const memberCharacter = client.getCharacterById(gain.playerId);
       if (memberCharacter) {
         playSfxById(SfxId.LevelUp);
-        client.characterEmotes.set(
-          member.playerId,
-          new Emote(EmoteType.LevelUp),
-        );
+        client.characterEmotes.set(gain.playerId, new Emote(EmoteType.LevelUp));
+      }
+
+      const member = client.partyMembers.find(
+        (m) => m.playerId === gain.playerId,
+      );
+
+      if (member) {
+        member.level = gain.levelUp;
       }
     }
   }
