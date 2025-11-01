@@ -8,4 +8,12 @@ export abstract class Base {
   hide() {
     this.container.classList.add('hidden');
   }
+
+  toggle() {
+    if (this.container.classList.contains('hidden')) {
+      this.show();
+    } else {
+      this.hide();
+    }
+  }
 }

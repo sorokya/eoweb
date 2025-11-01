@@ -57,6 +57,7 @@ import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
 import { OffsetTweaker } from './ui/offset-tweaker';
+import { OnlineList } from './ui/online-list';
 import { Paperdoll } from './ui/paperdoll';
 import { QuestDialog } from './ui/quest-dialog';
 import { ShopDialog } from './ui/shop-dialog';
@@ -406,6 +407,7 @@ const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
 const stats = new Stats(client);
+const onlineList = new OnlineList(client);
 const paperdoll = new Paperdoll(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
@@ -578,6 +580,9 @@ inGameMenu.on('toggle', (which) => {
       break;
     case 'spells':
       spellBook.toggle();
+      break;
+    case 'online':
+      onlineList.toggle();
       break;
   }
 });
