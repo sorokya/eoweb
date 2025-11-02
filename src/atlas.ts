@@ -274,6 +274,7 @@ export enum StaticAtlasEntryType {
   HealNumbers = 3,
   Miss = 4,
   PlayerMenu = 5,
+  Cursor = 6,
 }
 
 export class Atlas {
@@ -675,6 +676,17 @@ export class Atlas {
       h: -1,
     });
     this.addBmpToLoad(GfxType.PostLoginUI, 41);
+
+    this.staticEntries.set(StaticAtlasEntryType.Cursor, {
+      gfxType: GfxType.PostLoginUI,
+      graphicId: 24,
+      atlasIndex: -1,
+      x: -1,
+      y: -1,
+      w: -1,
+      h: -1,
+    });
+    this.addBmpToLoad(GfxType.PostLoginUI, 24);
   }
 
   private refreshCharacters() {

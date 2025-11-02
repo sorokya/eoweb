@@ -28,7 +28,7 @@ import {
   TILE_WIDTH,
 } from './consts';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
-import { GfxType, getBitmapById } from './gfx';
+import { GfxType } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
 import { renderCharacterChatBubble } from './render/character-chat-bubble';
@@ -1312,26 +1312,49 @@ export class MapRenderer {
       return;
     }
 
-    const bmp = getBitmapById(GfxType.PostLoginUI, 24);
-    if (bmp && this.client.mouseCoords) {
-      const tileScreen = isoToScreen({
-        x: this.client.mouseCoords.x,
-        y: this.client.mouseCoords.y,
-      });
+    const frame = this.client.atlas.getStaticEntry(StaticAtlasEntryType.Cursor);
+    if (!frame) {
+      return;
+    }
 
-      const sourceX = entity.typeId * TILE_WIDTH;
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
+      return;
+    }
 
-      const screenX = Math.floor(
-        tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
-      );
-      const screenY = Math.floor(
-        tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
-      );
+    const tileScreen = isoToScreen({
+      x: this.client.mouseCoords.x,
+      y: this.client.mouseCoords.y,
+    });
 
+    const sourceX = entity.typeId * TILE_WIDTH;
+
+    const screenX = Math.floor(
+      tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+    );
+    const screenY = Math.floor(
+      tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
+    );
+
+    ctx.drawImage(
+      atlas,
+      frame.x + sourceX,
+      frame.y,
+      TILE_WIDTH,
+      TILE_HEIGHT,
+      screenX,
+      screenY,
+      TILE_WIDTH,
+      TILE_HEIGHT,
+    );
+
+    const animation = this.client.cursorClickAnimation;
+    if (animation) {
+      const sourceX = Math.floor((3 + animation.animationFrame) * TILE_WIDTH);
       ctx.drawImage(
-        bmp,
-        sourceX,
-        0,
+        atlas,
+        frame.x + sourceX,
+        frame.y,
         TILE_WIDTH,
         TILE_HEIGHT,
         screenX,
@@ -1339,22 +1362,6 @@ export class MapRenderer {
         TILE_WIDTH,
         TILE_HEIGHT,
       );
-
-      const animation = this.client.cursorClickAnimation;
-      if (animation) {
-        const sourceX = Math.floor((3 + animation.animationFrame) * TILE_WIDTH);
-        ctx.drawImage(
-          bmp,
-          sourceX,
-          0,
-          TILE_WIDTH,
-          TILE_HEIGHT,
-          screenX,
-          screenY,
-          TILE_WIDTH,
-          TILE_HEIGHT,
-        );
-      }
     }
   }
 
