@@ -2852,7 +2852,7 @@ div.icon[data-id="23"] {
 }
 
 #party .remove-icon {
-  background: url("gfx/gfx002/143.png");
+  background: url("/gfx/gfx002/143.png");
   width: 14px;
   height: 10px;
   cursor: pointer;
