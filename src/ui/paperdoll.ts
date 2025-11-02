@@ -4,7 +4,7 @@ import { playSfxById, SfxId } from '../sfx';
 import { capitalize } from '../utils/capitalize';
 import { getItemMeta } from '../utils/get-item-meta';
 import { Base } from './base-ui';
-import { ChatIcon } from './chat';
+import { characterIconToChatIcon } from './utils/character-icon-to-chat-icon';
 
 export class Paperdoll extends Base {
   protected container = document.getElementById('paperdoll');
@@ -246,26 +246,10 @@ export class Paperdoll extends Base {
     this.spanGuild.innerText = this.details.guild;
     this.spanRank.innerText = this.details.guildRank;
 
-    switch (this.icon) {
-      case CharacterIcon.Player:
-        this.divIcon.setAttribute('data-id', ChatIcon.Player.toString());
-        break;
-      case CharacterIcon.Party:
-        this.divIcon.setAttribute('data-id', ChatIcon.PlayerParty.toString());
-        break;
-      case CharacterIcon.Gm:
-        this.divIcon.setAttribute('data-id', ChatIcon.GM.toString());
-        break;
-      case CharacterIcon.GmParty:
-        this.divIcon.setAttribute('data-id', ChatIcon.GMParty.toString());
-        break;
-      case CharacterIcon.Hgm:
-        this.divIcon.setAttribute('data-id', ChatIcon.HGM.toString());
-        break;
-      case CharacterIcon.HgmParty:
-        this.divIcon.setAttribute('data-id', ChatIcon.HGMParty.toString());
-        break;
-    }
+    this.divIcon.setAttribute(
+      'data-id',
+      characterIconToChatIcon(this.icon).toString(),
+    );
 
     this.setEquipment(EquipmentSlot.Boots, this.equipment.boots, this.imgBoots);
     this.setEquipment(
