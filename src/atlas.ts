@@ -273,6 +273,7 @@ export enum StaticAtlasEntryType {
   DamageNumbers = 2,
   HealNumbers = 3,
   Miss = 4,
+  PlayerMenu = 5,
 }
 
 export class Atlas {
@@ -663,6 +664,17 @@ export class Atlas {
       });
     }
     this.addBmpToLoad(GfxType.PostLoginUI, 58);
+
+    this.staticEntries.set(StaticAtlasEntryType.PlayerMenu, {
+      gfxType: GfxType.PostLoginUI,
+      graphicId: 41,
+      atlasIndex: -1,
+      x: -1,
+      y: -1,
+      w: -1,
+      h: -1,
+    });
+    this.addBmpToLoad(GfxType.PostLoginUI, 41);
   }
 
   private refreshCharacters() {
@@ -1782,6 +1794,26 @@ export class Atlas {
             bmp,
             132,
             28,
+            entry.w,
+            entry.h,
+            entry.x,
+            entry.y,
+            entry.w,
+            entry.h,
+          );
+          break;
+        }
+        case StaticAtlasEntryType.PlayerMenu: {
+          const placement = this.insert(190, bmp.height);
+          entry.atlasIndex = this.currentAtlasIndex;
+          entry.x = placement.x;
+          entry.y = placement.y;
+          entry.w = 190;
+          entry.h = bmp.height;
+          this.ctx.drawImage(
+            bmp,
+            0,
+            0,
             entry.w,
             entry.h,
             entry.x,

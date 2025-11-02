@@ -631,15 +631,22 @@ export class MapRenderer {
       return;
     }
 
-    const bmp = getBitmapById(GfxType.PostLoginUI, 41);
-    if (!bmp) {
+    const frame = this.client.atlas.getStaticEntry(
+      StaticAtlasEntryType.PlayerMenu,
+    );
+    if (!frame) {
+      return;
+    }
+
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
       return;
     }
 
     ctx.drawImage(
-      bmp,
-      0,
-      0,
+      atlas,
+      frame.x,
+      frame.y,
       PLAYER_MENU_WIDTH,
       PLAYER_MENU_HEIGHT,
       rect.position.x + rect.width + 10,
@@ -651,9 +658,9 @@ export class MapRenderer {
     const hovered = this.client.getHoveredPlayerMenuItem();
     if (hovered !== undefined) {
       ctx.drawImage(
-        bmp,
-        PLAYER_MENU_WIDTH,
-        PLAYER_MENU_OFFSET_Y + hovered * PLAYER_MENU_ITEM_HEIGHT,
+        atlas,
+        frame.x + PLAYER_MENU_WIDTH,
+        frame.y + PLAYER_MENU_OFFSET_Y + hovered * PLAYER_MENU_ITEM_HEIGHT,
         PLAYER_MENU_WIDTH,
         PLAYER_MENU_ITEM_HEIGHT,
         rect.position.x + rect.width + 10,
