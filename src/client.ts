@@ -970,10 +970,10 @@ export class Client {
     }
 
     if (this.cursorClickAnimation) {
-      this.cursorClickAnimation.tick();
       if (!this.cursorClickAnimation.ticks) {
         this.cursorClickAnimation = undefined;
       }
+      this.cursorClickAnimation.tick();
     }
 
     const endedCharacterChatBubbles: number[] = [];
