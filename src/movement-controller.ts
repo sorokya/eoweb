@@ -47,6 +47,7 @@ export class MovementController {
   sitTicks = SIT_TICKS;
   attackTicks = ATTACK_TICKS;
   hotbarTicks = HOTBAR_COOLDOWN_TICKS;
+  minimapTicks = WALK_TICKS;
   freeze = false;
 
   constructor(client: Client) {
@@ -59,6 +60,7 @@ export class MovementController {
     this.sitTicks = Math.max(this.sitTicks - 1, 0);
     this.attackTicks = Math.max(this.attackTicks - 1, -1);
     this.hotbarTicks = Math.max(this.hotbarTicks - 1, 0);
+    this.minimapTicks = Math.max(this.minimapTicks - 1, 0);
 
     if (
       this.freeze ||
@@ -89,6 +91,12 @@ export class MovementController {
     } else if (isOrWasInputHeld(Input.Hotbar5) && this.hotbarTicks === 0) {
       this.client.useHotbarSlot(4);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
+    }
+
+    if (isOrWasInputHeld(Input.Tab) && this.minimapTicks === 0) {
+      playSfxById(SfxId.ButtonClick);
+      this.client.toggleMinimap();
+      this.minimapTicks = WALK_TICKS;
     }
 
     const animation = this.client.characterAnimations.get(character.playerId);

@@ -199,25 +199,21 @@ export class MapRenderer {
     return layerDepth[layer] + y * RDG + x * layerDepth.length * TDG;
   }
 
-  getPlayerCoords() {
-    const playerCharacter = this.client.nearby.characters.find(
-      (c) => c.playerId === this.client.playerId,
-    );
-    return playerCharacter ? playerCharacter.coords : { x: 0, y: 0 };
-  }
-
   render(ctx: CanvasRenderingContext2D) {
     if (!this.client.map || this.buildingCache) {
       return;
     }
 
-    const player = this.getPlayerCoords();
+    const player = this.client.getPlayerCoords();
     let playerScreen = isoToScreen(player);
     let mainCharacterAnimation = this.client.characterAnimations.get(
       this.client.playerId,
     );
 
-    if (mainCharacterAnimation instanceof CharacterDeathAnimation) {
+    if (
+      mainCharacterAnimation instanceof CharacterDeathAnimation &&
+      mainCharacterAnimation.base
+    ) {
       mainCharacterAnimation = mainCharacterAnimation.base;
     }
 
@@ -800,7 +796,9 @@ export class MapRenderer {
     if (animation instanceof CharacterDeathAnimation) {
       dying = true;
       dyingTicks = animation.ticks;
-      animation = animation.base;
+      if (animation.base) {
+        animation = animation.base;
+      }
     }
 
     const downRight = [Direction.Down, Direction.Right].includes(
@@ -1028,7 +1026,9 @@ export class MapRenderer {
     if (animation instanceof NpcDeathAnimation) {
       dying = true;
       dyingTicks = animation.ticks;
-      animation = animation.base;
+      if (animation.base) {
+        animation = animation.base;
+      }
     }
     const meta = this.client.getNpcMetadata(record.graphicId);
     const downRight = [Direction.Down, Direction.Right].includes(npc.direction);

@@ -268,11 +268,16 @@ class AtlasCanvas {
   }
 }
 
+export enum StaticAtlasEntryType {
+  MinimapIcons = 0,
+}
+
 export class Atlas {
   private characters: CharacterAtlasEntry[] = [];
   private npcs: NpcAtlasEntry[] = [];
   private items: ItemAtlasEntry[] = [];
   private tiles: TileAtlasEntry[] = [];
+  private staticEntries: Map<StaticAtlasEntryType, TileAtlasEntry> = new Map();
   private client: Client;
   mapId = 0;
   private mapHasChairs = false;
@@ -365,6 +370,10 @@ export class Atlas {
     const character = this.characters.find((c) => c.playerId === playerId);
     if (!character) return undefined;
     return character.frames[frame];
+  }
+
+  getStaticEntry(type: StaticAtlasEntryType): TileAtlasEntry | undefined {
+    return this.staticEntries.get(type);
   }
 
   insert(w: number, h: number): Rect {
@@ -524,6 +533,7 @@ export class Atlas {
     );
 
     this.loadMapGraphicLayers();
+    this.loadStaticEntries();
   }
 
   private loadMapGraphicLayers() {
@@ -619,6 +629,19 @@ export class Atlas {
 
       this.npcs.push(npc);
     }
+  }
+
+  private loadStaticEntries() {
+    this.staticEntries.set(StaticAtlasEntryType.MinimapIcons, {
+      gfxType: GfxType.PostLoginUI,
+      graphicId: 45,
+      atlasIndex: -1,
+      x: -1,
+      y: -1,
+      w: -1,
+      h: -1,
+    });
+    this.addBmpToLoad(GfxType.PostLoginUI, 45);
   }
 
   private refreshCharacters() {
@@ -915,6 +938,7 @@ export class Atlas {
     this.updateCharacters();
     this.updateNpcs();
     this.updateMapLayers();
+    this.updateStaticEntries();
 
     for (const atlas of this.atlases) {
       atlas.commit();
@@ -922,14 +946,6 @@ export class Atlas {
 
     if (!this.appended) {
       this.appended = true;
-
-      /*
-      const h1 = document.createElement('h1');
-      h1.innerText = 'Map';
-      const mapCanvas = this.getMapCanvas();
-      document.body.appendChild(h1);
-      document.body.appendChild(mapCanvas);
-      */
 
       for (const atlas of this.atlases) {
         const h1 = document.createElement('h1');
@@ -1680,6 +1696,28 @@ export class Atlas {
       this.tiles.splice(tilesToRemove[i], 1);
     }
     */
+  }
+
+  private updateStaticEntries() {
+    for (const entry of this.staticEntries.values()) {
+      if (entry.x !== -1) {
+        continue;
+      }
+
+      const bmp = this.getBmp(entry.gfxType, entry.graphicId);
+      if (!bmp) {
+        continue;
+      }
+
+      const placement = this.insert(bmp.width, bmp.height);
+      entry.atlasIndex = this.currentAtlasIndex;
+      entry.x = placement.x;
+      entry.y = placement.y;
+      entry.w = bmp.width;
+      entry.h = bmp.height;
+
+      this.ctx.drawImage(bmp, entry.x, entry.y, entry.w, entry.h);
+    }
   }
 
   /*

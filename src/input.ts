@@ -23,6 +23,7 @@ export enum Input {
   Hotbar3 = 19,
   Hotbar4 = 20,
   Hotbar5 = 21,
+  Tab = 22,
   Unknown = -1,
 }
 
@@ -157,6 +158,10 @@ window.addEventListener('keydown', (e) => {
     case 'Digit5':
       updateInputHeld(Input.Hotbar5, true);
       break;
+    case 'Tab':
+      updateInputHeld(Input.Tab, true);
+      e.preventDefault();
+      break;
   }
 });
 
@@ -233,6 +238,9 @@ window.addEventListener('keyup', (e) => {
       break;
     case 'Digit5':
       updateInputHeld(Input.Hotbar5, false);
+      break;
+    case 'Tab':
+      updateInputHeld(Input.Tab, false);
       break;
   }
 });
