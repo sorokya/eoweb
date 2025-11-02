@@ -1257,6 +1257,22 @@ export class MapRenderer {
         TILE_WIDTH,
         TILE_HEIGHT,
       );
+
+      const animation = this.client.cursorClickAnimation;
+      if (animation) {
+        const sourceX = Math.floor((3 + animation.animationFrame) * TILE_WIDTH);
+        ctx.drawImage(
+          bmp,
+          sourceX,
+          0,
+          TILE_WIDTH,
+          TILE_HEIGHT,
+          screenX,
+          screenY,
+          TILE_WIDTH,
+          TILE_HEIGHT,
+        );
+      }
     }
   }
 

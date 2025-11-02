@@ -1,4 +1,4 @@
-import { type CharacterMapInfo, type Coords, Direction, Gender } from 'eolib';
+import { type CharacterMapInfo, Direction, Gender } from 'eolib';
 import {
   getCharacterRectangle,
   Rectangle,
@@ -20,12 +20,12 @@ import type { Vector2 } from '../vector';
 import { CharacterAnimation } from './character-base-animation';
 
 export class CharacterWalkAnimation extends CharacterAnimation {
-  from: Coords;
-  to: Coords;
+  from: Vector2;
+  to: Vector2;
   direction: Direction;
   walkOffset = { x: 0, y: 0 };
 
-  constructor(from: Coords, to: Coords, direction: Direction) {
+  constructor(from: Vector2, to: Vector2, direction: Direction) {
     super();
     this.ticks = WALK_TICKS;
     this.from = from;
@@ -192,6 +192,6 @@ export class CharacterWalkAnimation extends CharacterAnimation {
   }
 
   isOnLastFrame(): boolean {
-    return this.ticks === 0.3;
+    return this.animationFrame === WALK_ANIMATION_FRAMES || this.ticks === 0;
   }
 }
