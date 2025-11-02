@@ -27,7 +27,7 @@ import {
   type DialogEntry,
   type DialogQuestEntry,
   DialogReply,
-  type Direction,
+  Direction,
   DoorOpenClientPacket,
   type Ecf,
   type EcfRecord,
@@ -550,6 +550,7 @@ export class Client {
   minimapEnabled = false;
   minimapRenderer: MinimapRenderer;
   cursorClickAnimation: CursorClickAnimation | undefined;
+  autoWalkPath: Vector2[] = [];
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -1067,6 +1068,42 @@ export class Client {
         this.quakeOffset = 0;
       }
     }
+
+    if (this.autoWalkPath.length) {
+      const animation = this.characterAnimations.get(this.playerId);
+      if (
+        animation instanceof CharacterWalkAnimation &&
+        !animation.isOnLastFrame()
+      ) {
+        return;
+      }
+
+      const current = this.getPlayerCoords();
+      const character = this.getPlayerCharacter();
+      const next = this.autoWalkPath.splice(0, 1)[0];
+
+      if (!this.canWalk(next, true)) {
+        this.autoWalkPath = [];
+        return;
+      }
+
+      const diffX = next.x - current.x;
+      const diffY = next.y - current.y;
+      let direction: Direction;
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        direction = diffX > 0 ? Direction.Right : Direction.Left;
+      } else {
+        direction = diffY > 0 ? Direction.Down : Direction.Up;
+      }
+      this.characterAnimations.set(
+        this.playerId,
+        new CharacterWalkAnimation(current, next, direction),
+      );
+      character.coords.x = next.x;
+      character.coords.y = next.y;
+      character.direction = direction;
+      this.walk(direction, next, getTimestamp());
+    }
   }
 
   render(ctx: CanvasRenderingContext2D) {
@@ -1520,16 +1557,144 @@ export class Client {
     if (
       !this.cursorClickAnimation &&
       this.mouseCoords &&
-      this.canWalk(this.mouseCoords)
+      this.canWalk(this.mouseCoords, true)
     ) {
       this.cursorClickAnimation = new CursorClickAnimation();
 
-      const _path = this.findPathTo(this.mouseCoords);
+      const path = this.findPathTo(this.mouseCoords);
+      if (path.length) {
+        this.autoWalkPath = path;
+      }
     }
   }
 
-  findPathTo(_coords: Vector2): Vector2[] {
-    // Use A* pathfinding to find a path to the target coords
+  findPathTo(target: Vector2): Vector2[] {
+    const start = this.getPlayerCoords();
+
+    if (!this.canWalk(target, true)) {
+      return [];
+    }
+
+    // A* pathfinding implementation
+    interface PathNode {
+      x: number;
+      y: number;
+      g: number; // Cost from start
+      h: number; // Heuristic cost to target
+      f: number; // Total cost (g + h)
+      parent: PathNode | null;
+    }
+
+    const openSet: PathNode[] = [];
+    const closedSet = new Set<string>();
+
+    // Helper function to calculate Manhattan distance
+    const heuristic = (a: Vector2, b: Vector2): number => {
+      return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    };
+
+    // Helper function to get node key for set operations
+    const getKey = (x: number, y: number): string => `${x},${y}`;
+
+    // Helper function to check if coordinates are within map bounds
+    const isInBounds = (x: number, y: number): boolean => {
+      return x >= 0 && y >= 0 && x < this.map.width && y < this.map.height;
+    };
+
+    // Create start node
+    const startNode: PathNode = {
+      x: start.x,
+      y: start.y,
+      g: 0,
+      h: heuristic(start, target),
+      f: heuristic(start, target),
+      parent: null,
+    };
+
+    openSet.push(startNode);
+
+    // Movement directions (4-directional movement)
+    const directions = [
+      { x: 0, y: -1 }, // Up
+      { x: 1, y: 0 }, // Right
+      { x: 0, y: 1 }, // Down
+      { x: -1, y: 0 }, // Left
+    ];
+
+    while (openSet.length > 0) {
+      // Find node with lowest f cost
+      let currentIndex = 0;
+      for (let i = 1; i < openSet.length; i++) {
+        if (openSet[i].f < openSet[currentIndex].f) {
+          currentIndex = i;
+        }
+      }
+
+      const current = openSet.splice(currentIndex, 1)[0];
+      closedSet.add(getKey(current.x, current.y));
+
+      // Check if we reached the target
+      if (current.x === target.x && current.y === target.y) {
+        // Reconstruct path
+        const path: Vector2[] = [];
+        let node: PathNode | null = current;
+
+        while (node?.parent) {
+          path.unshift({ x: node.x, y: node.y });
+          node = node.parent;
+        }
+
+        return path;
+      }
+
+      // Check all neighbors
+      for (const dir of directions) {
+        const neighborX = current.x + dir.x;
+        const neighborY = current.y + dir.y;
+        const neighborKey = getKey(neighborX, neighborY);
+
+        // Skip if already processed, out of bounds, or not walkable
+        if (
+          closedSet.has(neighborKey) ||
+          !isInBounds(neighborX, neighborY) ||
+          !this.canWalk({ x: neighborX, y: neighborY }, true)
+        ) {
+          continue;
+        }
+
+        const gCost = current.g + 1;
+        const hCost = heuristic({ x: neighborX, y: neighborY }, target);
+        const fCost = gCost + hCost;
+
+        // Check if this neighbor is already in openSet
+        const existingNode = openSet.find(
+          (node) => node.x === neighborX && node.y === neighborY,
+        );
+
+        if (existingNode) {
+          // If we found a better path to this node, update it
+          if (gCost < existingNode.g) {
+            existingNode.g = gCost;
+            existingNode.f = fCost;
+            existingNode.parent = current;
+          }
+        } else {
+          // Add new node to openSet
+          const neighborNode: PathNode = {
+            x: neighborX,
+            y: neighborY,
+            g: gCost,
+            h: hCost,
+            f: fCost,
+            parent: current,
+          };
+          openSet.push(neighborNode);
+        }
+      }
+    }
+
+    // No path found
+
     return [];
   }
 
@@ -1656,7 +1821,7 @@ export class Client {
     this.spellCooldownTicks = 999;
   }
 
-  canWalk(coords: Vector2): boolean {
+  canWalk(coords: Vector2, silent = false): boolean {
     if (this.nowall) {
       return true;
     }
@@ -1714,10 +1879,12 @@ export class Client {
       ?.tiles.find((t) => t.x === coords.x);
     if (warp) {
       if (warp.warp.levelRequired > this.level) {
-        this.setStatusLabel(
-          EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-          `${this.getResourceString(EOResourceID.STATUS_LABEL_NOT_READY_TO_USE_ENTRANCE)} - LVL ${warp.warp.levelRequired}`,
-        );
+        if (!silent) {
+          this.setStatusLabel(
+            EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+            `${this.getResourceString(EOResourceID.STATUS_LABEL_NOT_READY_TO_USE_ENTRANCE)} - LVL ${warp.warp.levelRequired}`,
+          );
+        }
         return false;
       }
     }
@@ -1994,7 +2161,7 @@ export class Client {
     this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
-  walk(direction: Direction, coords: Coords, timestamp: number) {
+  walk(direction: Direction, coords: Vector2, timestamp: number) {
     const packet = this.nowall
       ? new WalkAdminClientPacket()
       : new WalkPlayerClientPacket();
@@ -2021,7 +2188,9 @@ export class Client {
 
     packet.walkAction = new WalkAction();
     packet.walkAction.direction = direction;
-    packet.walkAction.coords = coords;
+    packet.walkAction.coords = new Coords();
+    packet.walkAction.coords.x = coords.x;
+    packet.walkAction.coords.y = coords.y;
     packet.walkAction.timestamp = timestamp;
     this.bus.send(packet);
     this.idleTicks = INITIAL_IDLE_TICKS;

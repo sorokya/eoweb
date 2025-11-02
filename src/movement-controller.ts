@@ -105,6 +105,10 @@ export class MovementController {
     const sitStandHeld = wasInputHeldLastTick(Input.SitStand);
     clearUnheldInput();
 
+    if (lastHeldDirection !== null && this.client.autoWalkPath.length) {
+      this.client.autoWalkPath = [];
+    }
+
     if (animation?.ticks) {
       return;
     }
