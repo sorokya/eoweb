@@ -210,7 +210,10 @@ export class MapRenderer {
       this.client.playerId,
     );
 
-    if (mainCharacterAnimation instanceof CharacterDeathAnimation) {
+    if (
+      mainCharacterAnimation instanceof CharacterDeathAnimation &&
+      mainCharacterAnimation.base
+    ) {
       mainCharacterAnimation = mainCharacterAnimation.base;
     }
 
