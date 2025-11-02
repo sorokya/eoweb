@@ -91,7 +91,10 @@ export class MinimapRenderer {
       this.client.playerId,
     );
 
-    if (mainCharacterAnimation instanceof CharacterDeathAnimation) {
+    if (
+      mainCharacterAnimation instanceof CharacterDeathAnimation &&
+      mainCharacterAnimation.base
+    ) {
       mainCharacterAnimation = mainCharacterAnimation.base;
     }
 
