@@ -92,7 +92,8 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
 
     client.emit('chat', {
       tab: ChatTab.Local,
-      message: `${capitalize(record.name)} ${chat.message}`,
+      message: `${chat.message}`,
+      player: `${capitalize(record.name)}`,
     });
   }
 
@@ -239,7 +240,8 @@ function handleNpcDialog(client: Client, reader: EoReader) {
   client.npcChats.set(npc.index, new ChatBubble(client.sans11, packet.message));
   client.emit('chat', {
     tab: ChatTab.Local,
-    message: `${capitalize(record.name)} ${packet.message}`,
+    message: `${packet.message}`,
+    player: `${capitalize(record.name)}`,
   });
 }
 
