@@ -195,6 +195,7 @@ import { registerWalkHandlers } from './handlers/walk';
 import { registerWarpHandlers } from './handlers/warp';
 import { registerWelcomeHandlers } from './handlers/welcome';
 import { MapRenderer } from './map';
+import { MinimapRenderer } from './minimap';
 import { getTimestamp, MovementController } from './movement-controller';
 import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterDeathAnimation } from './render/character-death';
@@ -545,6 +546,8 @@ export class Client {
   spellCooldownTicks = 0;
   menuPlayerId = 0;
   partyMembers: PartyMember[] = [];
+  minimapEnabled = false;
+  minimapRenderer: MinimapRenderer;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -579,6 +582,7 @@ export class Client {
     this.nearby.npcs = [];
     this.nearby.items = [];
     this.mapRenderer = new MapRenderer(this);
+    this.minimapRenderer = new MinimapRenderer(this);
     this.movementController = new MovementController(this);
     this.preloadCharacterSprites();
     loadConfig().then((config) => {
@@ -1058,6 +1062,7 @@ export class Client {
 
   render(ctx: CanvasRenderingContext2D) {
     this.mapRenderer.render(ctx);
+    this.minimapRenderer.render(ctx);
   }
 
   setMap(map: Emf) {
@@ -1098,6 +1103,10 @@ export class Client {
         this.ambientSound = null;
         this.ambientVolume.disconnect();
         this.ambientVolume = null;
+      }
+
+      if (!this.map.mapAvailable) {
+        this.minimapEnabled = false;
       }
     }
   }
@@ -2958,6 +2967,18 @@ export class Client {
     const packet = new PartyTakeClientPacket();
     packet.membersCount = this.partyMembers.length;
     this.bus.send(packet);
+  }
+
+  toggleMinimap() {
+    if (!this.map.mapAvailable) {
+      this.setStatusLabel(
+        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+        this.getResourceString(EOResourceID.STATUS_LABEL_NO_MAP_OF_AREA),
+      );
+      return;
+    }
+
+    this.minimapEnabled = !this.minimapEnabled;
   }
 }
 

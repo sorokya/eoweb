@@ -579,6 +579,9 @@ inGameMenu.on('toggle', (which) => {
     case 'inventory':
       inventory.toggle();
       break;
+    case 'map':
+      client.toggleMinimap();
+      break;
     case 'stats':
       stats.toggle();
       break;
