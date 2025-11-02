@@ -677,11 +677,11 @@ input[type="password"] {
   gap: 1px;
 }
 
-#chat li span.msg {
+#chat li div.msg {
   max-width: 96%;
 }
 
-#chat li span.msg > .player-name {
+#chat li div.msg > .author {
   color: #f0f0c8;
   padding-right: 5px;
 }
