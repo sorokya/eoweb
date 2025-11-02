@@ -1,9 +1,5 @@
 import { type CharacterMapInfo, Direction, Gender } from 'eolib';
-import {
-  getCharacterRectangle,
-  Rectangle,
-  setCharacterRectangle,
-} from '../collision';
+import { Rectangle, setCharacterRectangle } from '../collision';
 import {
   CHARACTER_WALKING_HEIGHT,
   CHARACTER_WALKING_WIDTH,
@@ -13,8 +9,7 @@ import {
   WALK_TICKS,
   WALK_WIDTH_FACTOR,
 } from '../consts';
-import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
-import { GfxType, getBitmapById } from '../gfx';
+import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from '../game-state';
 import { isoToScreen } from '../utils/iso-to-screen';
 import type { Vector2 } from '../vector';
 import { CharacterAnimation } from './character-base-animation';
@@ -134,61 +129,6 @@ export class CharacterWalkAnimation extends CharacterAnimation {
         CHARACTER_WALKING_HEIGHT,
       ),
     );
-  }
-
-  render(character: CharacterMapInfo, ctx: CanvasRenderingContext2D) {
-    const bmp = getBitmapById(GfxType.SkinSprites, 2);
-    if (!bmp) {
-      return;
-    }
-
-    const rect = getCharacterRectangle(character.playerId);
-    if (!rect) {
-      return;
-    }
-
-    const mirrored = [Direction.Right, Direction.Up].includes(
-      character.direction,
-    );
-
-    if (mirrored) {
-      ctx.save(); // Save the current context state
-      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
-      ctx.scale(-1, 1); // Flip horizontally
-    }
-
-    const startX =
-      character.gender === Gender.Female ? 0 : CHARACTER_WALKING_WIDTH * 8;
-
-    const sourceX =
-      startX +
-      ([Direction.Up, Direction.Left].includes(character.direction)
-        ? CHARACTER_WALKING_WIDTH * WALK_ANIMATION_FRAMES
-        : 0) +
-      CHARACTER_WALKING_WIDTH * this.animationFrame;
-    const sourceY = character.skin * CHARACTER_WALKING_HEIGHT;
-
-    const drawX = Math.floor(
-      mirrored
-        ? GAME_WIDTH - CHARACTER_WALKING_WIDTH - rect.position.x
-        : rect.position.x,
-    );
-
-    ctx.drawImage(
-      bmp,
-      sourceX,
-      sourceY,
-      CHARACTER_WALKING_WIDTH,
-      CHARACTER_WALKING_HEIGHT,
-      drawX,
-      rect.position.y,
-      CHARACTER_WALKING_WIDTH,
-      CHARACTER_WALKING_HEIGHT,
-    );
-
-    if (mirrored) {
-      ctx.restore();
-    }
   }
 
   isOnLastFrame(): boolean {
