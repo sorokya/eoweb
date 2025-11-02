@@ -2696,7 +2696,7 @@ div.icon[data-id="23"] {
 }
 
 .dialog-md .dialog-contents .player:hover::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
