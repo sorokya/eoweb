@@ -201,6 +201,7 @@ import type { CharacterAnimation } from './render/character-base-animation';
 import { CharacterDeathAnimation } from './render/character-death';
 import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
+import { CursorClickAnimation } from './render/cursor-click';
 import {
   EffectAnimation,
   type EffectTarget,
@@ -548,6 +549,7 @@ export class Client {
   partyMembers: PartyMember[] = [];
   minimapEnabled = false;
   minimapRenderer: MinimapRenderer;
+  cursorClickAnimation: CursorClickAnimation | undefined;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -958,6 +960,13 @@ export class Client {
         this.nearby.npcs = this.nearby.npcs.filter((n) => n.index !== id);
       }
       this.npcAnimations.delete(id);
+    }
+
+    if (this.cursorClickAnimation) {
+      this.cursorClickAnimation.tick();
+      if (!this.cursorClickAnimation.ticks) {
+        this.cursorClickAnimation = undefined;
+      }
     }
 
     const endedCharacterChatBubbles: number[] = [];
@@ -1448,10 +1457,10 @@ export class Client {
       // Check tile specs for chests and chairs
       const tileSpec = this.map.tileSpecRows
         .find((r) => r.y === this.mouseCoords.y)
-        ?.tiles.find((t) => t.x === this.mouseCoords.x);
+        ?.tiles.find((t) => t.x === this.mouseCoords.x)?.tileSpec;
 
-      if (tileSpec) {
-        if (tileSpec.tileSpec === MapTileSpec.Chest) {
+      if (tileSpec !== undefined) {
+        if (tileSpec === MapTileSpec.Chest) {
           this.openChest(this.mouseCoords);
           return;
         }
@@ -1488,12 +1497,9 @@ export class Client {
     }
 
     const doorAt = getDoorIntersecting(this.mousePosition);
-    if (doorAt) {
-      const door = this.getDoor(doorAt);
-      if (door && !door.open) {
-        this.openDoor(doorAt);
-      }
-      return;
+    const door = doorAt ? this.getDoor(doorAt) : undefined;
+    if (door && !door.open) {
+      this.openDoor(doorAt);
     }
 
     const lockerAt = getLockerIntersecting(this.mousePosition);
@@ -1507,8 +1513,24 @@ export class Client {
       const sign = this.mapRenderer.getSign(signAt.x, signAt.y);
       if (sign) {
         this.emit('smallAlert', sign);
+        return;
       }
     }
+
+    if (
+      !this.cursorClickAnimation &&
+      this.mouseCoords &&
+      this.canWalk(this.mouseCoords)
+    ) {
+      this.cursorClickAnimation = new CursorClickAnimation();
+
+      const _path = this.findPathTo(this.mouseCoords);
+    }
+  }
+
+  findPathTo(_coords: Vector2): Vector2[] {
+    // Use A* pathfinding to find a path to the target coords
+    return [];
   }
 
   handleRightClick(e: MouseEvent) {
@@ -1634,7 +1656,7 @@ export class Client {
     this.spellCooldownTicks = 999;
   }
 
-  canWalk(coords: Coords): boolean {
+  canWalk(coords: Vector2): boolean {
     if (this.nowall) {
       return true;
     }
