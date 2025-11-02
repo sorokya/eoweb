@@ -1137,10 +1137,12 @@ export class MapRenderer {
     );
 
     if (meta.transparent) {
-      ctx.globalAlpha = 0.4;
-    }
-
-    if (dying) {
+      if (!dying) {
+        ctx.globalAlpha = 0.4;
+      } else {
+        ctx.globalAlpha = 0.4 * (dyingTicks / DEATH_TICKS);
+      }
+    } else if (dying) {
       ctx.globalAlpha = dyingTicks / DEATH_TICKS;
     }
 
