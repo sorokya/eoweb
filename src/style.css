@@ -2687,7 +2687,6 @@ div.icon[data-id="23"] {
   font-size: 12px;
   color: #b4a08c;
   align-items: center;
-  height: 100%;
 }
 
 .dialog-md .dialog-contents .player .nameplate {
@@ -2710,6 +2709,7 @@ div.icon[data-id="23"] {
 
 .dialog-md .dialog-contents .player .title {
   font-style: italic;
+  text-align: center;
 }
 
 .dialog-md .dialog-contents {
