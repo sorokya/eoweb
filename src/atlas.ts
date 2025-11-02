@@ -1190,8 +1190,8 @@ export class Atlas {
       this.calculateTileSize(tile);
     }
 
-    for (const entry of this.staticEntries.values()) {
-      this.calculateStaticSize(entry);
+    for (const [id, frame] of this.staticEntries) {
+      this.calculateStaticSize(id, frame);
     }
   }
 
@@ -1329,7 +1329,7 @@ export class Atlas {
     tile.h = bmp.height;
   }
 
-  private calculateStaticSize(entry: TileAtlasEntry) {
+  private calculateStaticSize(id: StaticAtlasEntryType, entry: TileAtlasEntry) {
     if (entry.w !== -1) {
       return;
     }
@@ -1339,8 +1339,73 @@ export class Atlas {
       return;
     }
 
-    entry.w = bmp.width;
-    entry.h = bmp.height;
+    switch (id) {
+      case StaticAtlasEntryType.HealthBars: {
+        entry.x = 0;
+        entry.y = 28;
+        entry.w = 40;
+        entry.h = 35;
+        break;
+      }
+      case StaticAtlasEntryType.DamageNumbers: {
+        entry.x = 40;
+        entry.y = 28;
+        entry.w = 89;
+        entry.h = 11;
+        break;
+      }
+      case StaticAtlasEntryType.HealNumbers: {
+        entry.x = 40;
+        entry.y = 39;
+        entry.w = 89;
+        entry.h = 11;
+        break;
+      }
+      case StaticAtlasEntryType.Miss: {
+        entry.x = 132;
+        entry.y = 28;
+        entry.w = 30;
+        entry.h = 11;
+        break;
+      }
+      case StaticAtlasEntryType.PlayerMenu: {
+        entry.x = 0;
+        entry.y = 0;
+        entry.w = 190;
+        entry.h = bmp.height;
+        break;
+      }
+      case StaticAtlasEntryType.EmoteHappy:
+      case StaticAtlasEntryType.EmoteSad:
+      case StaticAtlasEntryType.EmoteSurprised:
+      case StaticAtlasEntryType.EmoteConfused:
+      case StaticAtlasEntryType.EmoteMoon:
+      case StaticAtlasEntryType.EmoteAngry:
+      case StaticAtlasEntryType.EmoteHearts:
+      case StaticAtlasEntryType.EmoteDepressed:
+      case StaticAtlasEntryType.EmoteEmbarrassed:
+      case StaticAtlasEntryType.EmoteSuicidal:
+      case StaticAtlasEntryType.EmoteDrunk:
+      case StaticAtlasEntryType.EmoteTrade:
+      case StaticAtlasEntryType.EmoteLevelUp:
+      case StaticAtlasEntryType.EmotePlayful:
+      case StaticAtlasEntryType.EmoteBard: {
+        const emoteIndex = id - StaticAtlasEntryType.EmoteHappy;
+        entry.x = emoteIndex * 200;
+        entry.y = 0;
+        entry.w = 200;
+        entry.h = 50;
+        break;
+      }
+      default: {
+        entry.x = 0;
+        entry.y = 0;
+        entry.w = bmp.width;
+        entry.h = bmp.height;
+        this.ctx.drawImage(bmp, entry.x, entry.y, entry.w, entry.h);
+        break;
+      }
+    }
   }
 
   private getBmp(
@@ -1350,333 +1415,6 @@ export class Atlas {
     return this.bmpsToLoad.find(
       (bmp) => bmp.gfxType === gfxType && bmp.id === graphicId,
     )?.img;
-  }
-
-  private updateItems() {
-    const tmpCanvas = document.createElement('canvas');
-    const tmpCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
-    for (const item of this.items) {
-      if (item.x !== -1) {
-        continue;
-      }
-
-      const bmp = this.getBmp(GfxType.Items, item.graphicId);
-      if (!bmp) {
-        continue;
-      }
-
-      tmpCanvas.width = bmp.width;
-      tmpCanvas.height = bmp.height;
-      tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
-      tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
-
-      const imgData = tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
-      const bounds = {
-        x: bmp.width,
-        y: bmp.height,
-        maxX: 0,
-        maxY: 0,
-      };
-
-      for (let y = 0; y < bmp.height; ++y) {
-        for (let x = 0; x < bmp.width; ++x) {
-          const base = (y * bmp.width + x) * 4;
-          const alpha = imgData.data[base + 3];
-          if (alpha !== 0) {
-            if (x < bounds.x) bounds.x = x;
-            if (y < bounds.y) bounds.y = y;
-            if (x > bounds.maxX) bounds.maxX = x;
-            if (y > bounds.maxY) bounds.maxY = y;
-          }
-        }
-      }
-
-      // Calculate width and height from min/max values
-      const w = bounds.maxX - bounds.x + 1;
-      const h = bounds.maxY - bounds.y + 1;
-
-      item.xOffset = bounds.x - (bmp.width >> 1);
-      item.yOffset = bounds.y - (bmp.height >> 1);
-
-      const placement = this.insert(w, h);
-      item.atlasIndex = this.currentAtlasIndex;
-      item.x = placement.x;
-      item.y = placement.y;
-      item.w = w;
-      item.h = h;
-
-      this.ctx.drawImage(
-        bmp,
-        bounds.x,
-        bounds.y,
-        w,
-        h,
-        item.x,
-        item.y,
-        item.w,
-        item.h,
-      );
-    }
-  }
-
-  private updateNpcs() {
-    const tmpCanvas = document.createElement('canvas');
-    const tmpCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
-
-    for (const npc of this.npcs) {
-      const blankIndexes = [];
-      for (const [index, frame] of npc.frames.entries()) {
-        if (!frame || frame.x !== -1) {
-          continue;
-        }
-
-        const baseId = (npc.graphicId - 1) * 40;
-        const bmp = this.getBmp(GfxType.NPC, baseId + index + 1);
-        if (!bmp) {
-          continue;
-        }
-
-        tmpCanvas.width = bmp.width;
-        tmpCanvas.height = bmp.height;
-        tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
-        tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
-
-        // Check if image is blank
-        const imgData = tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
-        const frameBounds = {
-          x: bmp.width,
-          y: bmp.height,
-          maxX: 0,
-          maxY: 0,
-        };
-        const colors: Set<number> = new Set();
-        for (let y = 0; y < bmp.height; ++y) {
-          for (let x = 0; x < bmp.width; ++x) {
-            const base = (y * bmp.width + x) * 4;
-            colors.add(
-              (imgData.data[base] << 16) |
-                (imgData.data[base + 1] << 8) |
-                imgData.data[base + 2],
-            );
-            const alpha = imgData.data[base + 3];
-            if (alpha !== 0) {
-              if (x < frameBounds.x) frameBounds.x = x;
-              if (y < frameBounds.y) frameBounds.y = y;
-              if (x > frameBounds.maxX) frameBounds.maxX = x;
-              if (y > frameBounds.maxY) frameBounds.maxY = y;
-            }
-          }
-        }
-
-        if (colors.size <= 2 || !frameBounds.maxX) {
-          blankIndexes.push(index);
-          continue;
-        }
-
-        // Calculate width and height from min/max values
-        const w = frameBounds.maxX - frameBounds.x + 1;
-        const h = frameBounds.maxY - frameBounds.y + 1;
-
-        const halfBmpWidth = bmp.width >> 1;
-        frame.xOffset = frameBounds.x - halfBmpWidth;
-        frame.yOffset = frameBounds.y - (bmp.height - 23);
-        frame.mirroredXOffset = halfBmpWidth - (frameBounds.x + w);
-
-        const placement = this.insert(w, h);
-        frame.atlasIndex = this.currentAtlasIndex;
-        frame.x = placement.x;
-        frame.y = placement.y;
-        frame.w = w;
-        frame.h = h;
-
-        this.ctx.drawImage(
-          bmp,
-          frameBounds.x,
-          frameBounds.y,
-          w,
-          h,
-          frame.x,
-          frame.y,
-          frame.w,
-          frame.h,
-        );
-      }
-
-      // Mark blank frames as undefined
-      for (const i of blankIndexes) {
-        npc.frames[i] = undefined;
-      }
-    }
-  }
-
-  private updateCharacters() {
-    for (const character of this.characters) {
-      if (!character.dirty) {
-        continue;
-      }
-
-      for (const [index, frame] of character.frames.entries()) {
-        if (!frame) {
-          continue;
-        }
-
-        this.tmpCtx.clearRect(0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
-
-        const upLeft = [
-          CharacterFrame.StandingUpLeft,
-          CharacterFrame.WalkingUpLeft1,
-          CharacterFrame.WalkingUpLeft2,
-          CharacterFrame.WalkingUpLeft3,
-          CharacterFrame.WalkingUpLeft4,
-          CharacterFrame.MeleeAttackUpLeft1,
-          CharacterFrame.MeleeAttackUpLeft2,
-          CharacterFrame.RaisedHandUpLeft,
-          CharacterFrame.ChairUpLeft,
-          CharacterFrame.FloorUpLeft,
-          CharacterFrame.RangeAttackUpLeft,
-        ].includes(index);
-
-        const maskType = this.client.getHatMetadata(character.equipment.hat);
-
-        if (maskType !== HatMaskType.HideHair && character.hairStyle) {
-          this.renderCharacterHairBehind(
-            character.gender,
-            character.hairStyle,
-            character.hairColor,
-            upLeft,
-            index,
-          );
-        }
-
-        /*
-        if (character.equipment.shield > 0) {
-          const meta = this.client.getShieldMetadata(
-            character.equipment.shield,
-          );
-          if (meta.back && !upLeft) {
-            this.renderCharacterBack(
-              character.gender,
-              character.equipment.shield,
-              frame,
-              index,
-            );
-          }
-        }
-        */
-
-        const skinSize = this.getCharacterFrameSize(index);
-        this.renderCharacterSkin(
-          character.gender,
-          character.skin,
-          upLeft,
-          skinSize,
-          index,
-        );
-
-        if (character.equipment.boots) {
-          this.renderCharacterBoots(
-            character.gender,
-            character.equipment.boots,
-            index,
-          );
-        }
-
-        if (character.equipment.armor) {
-          this.renderCharacterArmor(
-            character.gender,
-            character.equipment.armor,
-            index,
-          );
-        }
-
-        if (maskType === HatMaskType.FaceMask && character.equipment.hat) {
-          this.renderCharacterHat(
-            character.gender,
-            character.equipment.hat,
-            index,
-            upLeft,
-          );
-        }
-
-        if (maskType !== HatMaskType.HideHair && character.hairStyle) {
-          this.renderCharacterHair(
-            character.gender,
-            character.hairStyle,
-            character.hairColor,
-            upLeft,
-            index,
-          );
-        }
-
-        if (maskType !== HatMaskType.FaceMask && character.equipment.hat) {
-          this.renderCharacterHat(
-            character.gender,
-            character.equipment.hat,
-            index,
-            upLeft,
-          );
-        }
-
-        clipHair(this.tmpCtx, 0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
-
-        const frameBounds = {
-          x: CHARACTER_FRAME_SIZE,
-          y: CHARACTER_FRAME_SIZE,
-          maxX: 0,
-          maxY: 0,
-        };
-
-        const imgData = this.tmpCtx.getImageData(
-          0,
-          0,
-          CHARACTER_FRAME_SIZE,
-          CHARACTER_FRAME_SIZE,
-        );
-        for (let y = 0; y < CHARACTER_FRAME_SIZE; ++y) {
-          for (let x = 0; x < CHARACTER_FRAME_SIZE; ++x) {
-            const alpha = imgData.data[(y * CHARACTER_FRAME_SIZE + x) * 4 + 3];
-            if (alpha !== 0) {
-              if (x < frameBounds.x) frameBounds.x = x;
-              if (y < frameBounds.y) frameBounds.y = y;
-              if (x > frameBounds.maxX) frameBounds.maxX = x;
-              if (y > frameBounds.maxY) frameBounds.maxY = y;
-            }
-          }
-        }
-
-        // Calculate width and height from min/max values
-        const w = frameBounds.maxX - frameBounds.x + 1;
-        const h = frameBounds.maxY - frameBounds.y + 1;
-
-        frame.xOffset = frameBounds.x - HALF_CHARACTER_FRAME_SIZE;
-        frame.yOffset = frameBounds.y - CHARACTER_FRAME_SIZE;
-        frame.mirroredXOffset = HALF_CHARACTER_FRAME_SIZE - (frameBounds.x + w);
-
-        const placement = this.insert(w, h);
-
-        frame.atlasIndex = this.currentAtlasIndex;
-        frame.x = placement.x;
-        frame.y = placement.y;
-        frame.w = w;
-        frame.h = h;
-        frame.x = placement.x;
-        frame.y = placement.y;
-
-        this.ctx.drawImage(
-          this.tmpCanvas,
-          frameBounds.x,
-          frameBounds.y,
-          w,
-          h,
-          frame.x,
-          frame.y,
-          frame.w,
-          frame.h,
-        );
-      }
-
-      character.dirty = false;
-    }
   }
 
   private renderCharacterHairBehind(
@@ -1844,53 +1582,6 @@ export class Atlas {
     this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
-  private renderCharacterBack(
-    gender: Gender,
-    back: number,
-    frame: CharacterFrame,
-  ) {
-    const baseGfxId = (back - 1) * 50;
-    const graphicId =
-      baseGfxId +
-      ([
-        CharacterFrame.MeleeAttackDownRight1,
-        CharacterFrame.MeleeAttackDownRight2,
-        CharacterFrame.RaisedHandDownRight,
-      ].includes(frame)
-        ? 3
-        : 1);
-
-    const bmp = this.getBmp(
-      gender === Gender.Female ? GfxType.FemaleBack : GfxType.MaleBack,
-      graphicId,
-    );
-
-    if (!bmp) {
-      console.error(
-        `Missing back bitmap for ${Gender[gender]} ${back} ${CharacterFrame[frame]}`,
-      );
-      return;
-    }
-
-    let offset = { x: 0, y: 0 };
-    const selectedFrame = Number.parseInt(
-      this.offsetFrame.value,
-      10,
-    ) as CharacterFrame;
-    if (selectedFrame === frame) {
-      const offsetX = Number.parseInt(this.offsetX.value, 10) || 0;
-      const offsetY = Number.parseInt(this.offsetY.value, 10) || 0;
-      offset = { x: offsetX, y: offsetY };
-    } else {
-      offset = BACK_OFFSETS[gender][frame];
-    }
-
-    const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
-    const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
-
-    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-  }
-
   private renderCharacterArmor(
     gender: Gender,
     armor: number,
@@ -2026,264 +1717,6 @@ export class Atlas {
         throw new Error(`Unknown character frame: ${frame}`);
     }
   }
-
-  private updateMapLayers() {
-    for (const [_index, tile] of this.tiles.entries()) {
-      if (tile.x !== -1) {
-        continue;
-      }
-
-      const bmp = this.getBmp(tile.gfxType, tile.graphicId);
-      if (!bmp) {
-        continue;
-      }
-
-      const placement = this.insert(bmp.width, bmp.height);
-      tile.atlasIndex = this.currentAtlasIndex;
-      tile.x = placement.x;
-      tile.y = placement.y;
-      tile.w = bmp.width;
-      tile.h = bmp.height;
-
-      this.ctx.drawImage(bmp, tile.x, tile.y, tile.w, tile.h);
-    }
-  }
-
-  private updateStaticEntries() {
-    for (const [id, entry] of this.staticEntries) {
-      if (entry.x !== -1) {
-        continue;
-      }
-
-      const bmp = this.getBmp(entry.gfxType, entry.graphicId);
-      if (!bmp) {
-        continue;
-      }
-
-      switch (id) {
-        case StaticAtlasEntryType.HealthBars: {
-          const placement = this.insert(40, 35);
-          entry.atlasIndex = this.currentAtlasIndex;
-          entry.x = placement.x;
-          entry.y = placement.y;
-          entry.w = 40;
-          entry.h = 35;
-          this.ctx.drawImage(
-            bmp,
-            0,
-            28,
-            entry.w,
-            entry.h,
-            entry.x,
-            entry.y,
-            entry.w,
-            entry.h,
-          );
-          break;
-        }
-        case StaticAtlasEntryType.DamageNumbers: {
-          const placement = this.insert(89, 11);
-          entry.atlasIndex = this.currentAtlasIndex;
-          entry.x = placement.x;
-          entry.y = placement.y;
-          entry.w = 89;
-          entry.h = 11;
-          this.ctx.drawImage(
-            bmp,
-            40,
-            28,
-            entry.w,
-            entry.h,
-            entry.x,
-            entry.y,
-            entry.w,
-            entry.h,
-          );
-          break;
-        }
-        case StaticAtlasEntryType.HealNumbers: {
-          const placement = this.insert(89, 11);
-          entry.atlasIndex = this.currentAtlasIndex;
-          entry.x = placement.x;
-          entry.y = placement.y;
-          entry.w = 89;
-          entry.h = 11;
-          this.ctx.drawImage(
-            bmp,
-            40,
-            39,
-            entry.w,
-            entry.h,
-            entry.x,
-            entry.y,
-            entry.w,
-            entry.h,
-          );
-          break;
-        }
-        case StaticAtlasEntryType.Miss: {
-          const placement = this.insert(30, 11);
-          entry.atlasIndex = this.currentAtlasIndex;
-          entry.x = placement.x;
-          entry.y = placement.y;
-          entry.w = 30;
-          entry.h = 11;
-          this.ctx.drawImage(
-            bmp,
-            132,
-            28,
-            entry.w,
-            entry.h,
-            entry.x,
-            entry.y,
-            entry.w,
-            entry.h,
-          );
-          break;
-        }
-        case StaticAtlasEntryType.PlayerMenu: {
-          const placement = this.insert(190, bmp.height);
-          entry.atlasIndex = this.currentAtlasIndex;
-          entry.x = placement.x;
-          entry.y = placement.y;
-          entry.w = 190;
-          entry.h = bmp.height;
-          this.ctx.drawImage(
-            bmp,
-            0,
-            0,
-            entry.w,
-            entry.h,
-            entry.x,
-            entry.y,
-            entry.w,
-            entry.h,
-          );
-          break;
-        }
-        case StaticAtlasEntryType.EmoteHappy:
-        case StaticAtlasEntryType.EmoteSad:
-        case StaticAtlasEntryType.EmoteSurprised:
-        case StaticAtlasEntryType.EmoteConfused:
-        case StaticAtlasEntryType.EmoteMoon:
-        case StaticAtlasEntryType.EmoteAngry:
-        case StaticAtlasEntryType.EmoteHearts:
-        case StaticAtlasEntryType.EmoteDepressed:
-        case StaticAtlasEntryType.EmoteEmbarrassed:
-        case StaticAtlasEntryType.EmoteSuicidal:
-        case StaticAtlasEntryType.EmoteDrunk:
-        case StaticAtlasEntryType.EmoteTrade:
-        case StaticAtlasEntryType.EmoteLevelUp:
-        case StaticAtlasEntryType.EmotePlayful:
-        case StaticAtlasEntryType.EmoteBard: {
-          const placement = this.insert(200, 50);
-          entry.atlasIndex = this.currentAtlasIndex;
-          entry.x = placement.x;
-          entry.y = placement.y;
-          entry.w = 200;
-          entry.h = 50;
-          const emoteIndex = id - StaticAtlasEntryType.EmoteHappy;
-          this.ctx.drawImage(
-            bmp,
-            emoteIndex * 200,
-            0,
-            entry.w,
-            entry.h,
-            entry.x,
-            entry.y,
-            entry.w,
-            entry.h,
-          );
-          break;
-        }
-        default: {
-          const placement = this.insert(bmp.width, bmp.height);
-          entry.atlasIndex = this.currentAtlasIndex;
-          entry.x = placement.x;
-          entry.y = placement.y;
-          entry.w = bmp.width;
-          entry.h = bmp.height;
-          this.ctx.drawImage(bmp, entry.x, entry.y, entry.w, entry.h);
-          break;
-        }
-      }
-    }
-  }
-
-  /*
-  private updateMap() {
-    const map = this.client.map;
-    this.mapCanvas.width = (map.width + 1 + map.height + 1) * HALF_TILE_WIDTH;
-    this.mapCanvas.height = (map.width + 1 + map.height + 1) * HALF_TILE_HEIGHT;
-    const offsetX = map.height < map.width ? (((map.width - map.height) * HALF_TILE_WIDTH) >> 1) :
-      (((map.height - map.width) * HALF_TILE_WIDTH) >> 1);
-    //const offsetX = (this.mapCanvas.width >> 1) - ((map.width + 1) * HALF_TILE_WIDTH >> 1);
-
-
-    this.mapCtx.clearRect(
-      0,
-      0,
-      this.mapCanvas.width,
-      this.mapCanvas.height,
-    );
-
-    const HALF_MAP_WIDTH = this.mapCanvas.width >> 1;
-
-    for (const layer of [Layer.Ground, Layer.Shadow]) {
-      const gfxLayer = map.graphicLayers[layer]
-      if (!gfxLayer) {
-        continue;
-      }
-
-      if (layer === Layer.Shadow) {
-        this.mapCtx.globalAlpha = 0.2;
-      } else {
-        this.mapCtx.globalAlpha = 1.0;
-      }
-
-      for (let y = 0; y <= map.height; ++y) {
-        const row = gfxLayer.graphicRows.find((r) => r.y === y);
-        for (let x = 0; x <= map.width; ++x) {
-          const tile = row?.tiles.find((t) => t.x === x);
-          if (tile && tile.graphic === 0) {
-            continue;
-          }
-
-          const graphicId = tile?.graphic ? tile.graphic : layer === Layer.Ground && map.fillTile ? map.fillTile : 0;
-          if (graphicId === 0) {
-            continue;
-          }
-
-          const bmp = this.getBmp(LAYER_GFX_MAP[layer], graphicId);
-          if (!bmp) {
-            console.error(`Missing map tile: ${graphicId} (layer ${Layer[layer]})`);
-            continue;
-          }
-
-          // Skip animated ground tiles
-          if (layer === Layer.Ground && bmp.width > TILE_WIDTH) {
-            continue;
-          }
-
-          const tileScreen = isoToScreen({ x: x, y: y });
-          const offset = layer === Layer.Ground ? { x: 0, y: 0 } : { x: -24, y: -12 };
-          const screenX = Math.floor(
-            tileScreen.x - HALF_TILE_WIDTH + HALF_MAP_WIDTH + offset.x + offsetX
-          );
-          const screenY = Math.floor(
-            tileScreen.y + offset.y
-          );
-
-          if (x === 0 && y === 0) {
-            this.mapOriginX = screenX;
-          }
-
-          this.mapCtx.drawImage(bmp, screenX, screenY, bmp.width, bmp.height);
-        }
-      }
-    }
-  }
-    */
 }
 
 function generateCharacterHash(character: CharacterMapInfo) {
@@ -2455,57 +1888,6 @@ const HAT_OFFSETS = {
     [CharacterFrame.WalkingUpLeft2]: { x: 0, y: 23 },
     [CharacterFrame.WalkingUpLeft3]: { x: 0, y: 23 },
     [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 23 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: 23 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -3, y: 28 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: 23 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -3, y: 24 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 25 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 25 },
-    [CharacterFrame.ChairDownRight]: { x: 2, y: 24 },
-    [CharacterFrame.ChairUpLeft]: { x: 3, y: 24 },
-    [CharacterFrame.FloorDownRight]: { x: 2, y: 29 },
-    [CharacterFrame.FloorUpLeft]: { x: 4, y: 29 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 6, y: 22 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 4, y: 23 },
-  },
-  [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: 22 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingDownRight1]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingDownRight2]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingDownRight3]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingDownRight4]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 22 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: 22 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -3, y: 27 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: 22 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -3, y: 23 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 24 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 24 },
-    [CharacterFrame.ChairDownRight]: { x: 3, y: 25 },
-    [CharacterFrame.ChairUpLeft]: { x: 3, y: 25 },
-    [CharacterFrame.FloorDownRight]: { x: 2, y: 30 },
-    [CharacterFrame.FloorUpLeft]: { x: 6, y: 30 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 5, y: 22 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 3, y: 22 },
-  },
-};
-
-const BACK_OFFSETS = {
-  [Gender.Female]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: -32 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: -32 },
-    [CharacterFrame.WalkingDownRight1]: { x: 0, y: -32 },
-    [CharacterFrame.WalkingDownRight2]: { x: 0, y: -32 },
-    [CharacterFrame.WalkingDownRight3]: { x: 0, y: -32 },
-    [CharacterFrame.WalkingDownRight4]: { x: 0, y: -32 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -32 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -32 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -32 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -32 },
     [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: 23 },
     [CharacterFrame.MeleeAttackDownRight2]: { x: -3, y: 28 },
     [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: 23 },
