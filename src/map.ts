@@ -963,6 +963,10 @@ export class MapRenderer {
       }
     }
 
+    if (dying) {
+      ctx.globalAlpha = 1;
+    }
+
     if (mirrored) {
       ctx.restore();
     }
@@ -1151,6 +1155,10 @@ export class MapRenderer {
       frame.w,
       frame.h,
     );
+
+    if (dying || meta.transparent) {
+      ctx.globalAlpha = 1;
+    }
 
     if (mirrored) {
       ctx.restore(); // Restore the context to its original state
