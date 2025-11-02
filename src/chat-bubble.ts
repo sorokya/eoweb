@@ -40,7 +40,7 @@ export class ChatBubble {
       this.height = lineHeight * this.lines.length + padding * 2 - 5;
     }
 
-    const x = position.x - this.width / 2;
+    const x = position.x - (this.width >> 1);
     const y = position.y - this.height - triangleHeight;
 
     ctx.beginPath();

@@ -269,6 +269,10 @@ class AtlasCanvas {
 
 export enum StaticAtlasEntryType {
   MinimapIcons = 0,
+  HealthBars = 1,
+  DamageNumbers = 2,
+  HealNumbers = 3,
+  Miss = 4,
 }
 
 export class Atlas {
@@ -641,6 +645,24 @@ export class Atlas {
       h: -1,
     });
     this.addBmpToLoad(GfxType.PostLoginUI, 45);
+
+    for (const id of [
+      StaticAtlasEntryType.HealthBars,
+      StaticAtlasEntryType.DamageNumbers,
+      StaticAtlasEntryType.HealNumbers,
+      StaticAtlasEntryType.Miss,
+    ]) {
+      this.staticEntries.set(id, {
+        gfxType: GfxType.PostLoginUI,
+        graphicId: 58,
+        atlasIndex: -1,
+        x: -1,
+        y: -1,
+        w: -1,
+        h: -1,
+      });
+    }
+    this.addBmpToLoad(GfxType.PostLoginUI, 58);
   }
 
   private refreshCharacters() {
@@ -1656,7 +1678,6 @@ export class Atlas {
   }
 
   private updateMapLayers() {
-    //const tilesToRemove: number[] = [];
     for (const [_index, tile] of this.tiles.entries()) {
       if (tile.x !== -1) {
         continue;
@@ -1667,18 +1688,6 @@ export class Atlas {
         continue;
       }
 
-      /*
-      if (tile.gfxType === GfxType.Shadows || (tile.gfxType === GfxType.MapTiles && bmp.width === TILE_WIDTH)) {
-        const usedInTop = this.client.map.graphicLayers[Layer.Top]?.graphicRows.some((row) =>
-          row.tiles.some((t) => t.graphic === tile.graphicId)
-        );
-        if (!usedInTop) {
-          tilesToRemove.push(index);
-          continue;
-        }
-      }
-      */
-
       const placement = this.insert(bmp.width, bmp.height);
       tile.atlasIndex = this.currentAtlasIndex;
       tile.x = placement.x;
@@ -1688,17 +1697,10 @@ export class Atlas {
 
       this.ctx.drawImage(bmp, tile.x, tile.y, tile.w, tile.h);
     }
-
-    // Remove any tiles that don't need to be in the atlas
-    /*
-    for (let i = tilesToRemove.length - 1; i >= 0; --i) {
-      this.tiles.splice(tilesToRemove[i], 1);
-    }
-    */
   }
 
   private updateStaticEntries() {
-    for (const entry of this.staticEntries.values()) {
+    for (const [id, entry] of this.staticEntries) {
       if (entry.x !== -1) {
         continue;
       }
@@ -1708,14 +1710,98 @@ export class Atlas {
         continue;
       }
 
-      const placement = this.insert(bmp.width, bmp.height);
-      entry.atlasIndex = this.currentAtlasIndex;
-      entry.x = placement.x;
-      entry.y = placement.y;
-      entry.w = bmp.width;
-      entry.h = bmp.height;
-
-      this.ctx.drawImage(bmp, entry.x, entry.y, entry.w, entry.h);
+      switch (id) {
+        case StaticAtlasEntryType.HealthBars: {
+          const placement = this.insert(40, 35);
+          entry.atlasIndex = this.currentAtlasIndex;
+          entry.x = placement.x;
+          entry.y = placement.y;
+          entry.w = 40;
+          entry.h = 35;
+          this.ctx.drawImage(
+            bmp,
+            0,
+            28,
+            entry.w,
+            entry.h,
+            entry.x,
+            entry.y,
+            entry.w,
+            entry.h,
+          );
+          break;
+        }
+        case StaticAtlasEntryType.DamageNumbers: {
+          const placement = this.insert(89, 11);
+          entry.atlasIndex = this.currentAtlasIndex;
+          entry.x = placement.x;
+          entry.y = placement.y;
+          entry.w = 89;
+          entry.h = 11;
+          this.ctx.drawImage(
+            bmp,
+            40,
+            28,
+            entry.w,
+            entry.h,
+            entry.x,
+            entry.y,
+            entry.w,
+            entry.h,
+          );
+          break;
+        }
+        case StaticAtlasEntryType.HealNumbers: {
+          const placement = this.insert(89, 11);
+          entry.atlasIndex = this.currentAtlasIndex;
+          entry.x = placement.x;
+          entry.y = placement.y;
+          entry.w = 89;
+          entry.h = 11;
+          this.ctx.drawImage(
+            bmp,
+            40,
+            39,
+            entry.w,
+            entry.h,
+            entry.x,
+            entry.y,
+            entry.w,
+            entry.h,
+          );
+          break;
+        }
+        case StaticAtlasEntryType.Miss: {
+          const placement = this.insert(30, 11);
+          entry.atlasIndex = this.currentAtlasIndex;
+          entry.x = placement.x;
+          entry.y = placement.y;
+          entry.w = 30;
+          entry.h = 11;
+          this.ctx.drawImage(
+            bmp,
+            132,
+            28,
+            entry.w,
+            entry.h,
+            entry.x,
+            entry.y,
+            entry.w,
+            entry.h,
+          );
+          break;
+        }
+        default: {
+          const placement = this.insert(bmp.width, bmp.height);
+          entry.atlasIndex = this.currentAtlasIndex;
+          entry.x = placement.x;
+          entry.y = placement.y;
+          entry.w = bmp.width;
+          entry.h = bmp.height;
+          this.ctx.drawImage(bmp, entry.x, entry.y, entry.w, entry.h);
+          break;
+        }
+      }
     }
   }
 

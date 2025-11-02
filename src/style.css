@@ -18,7 +18,7 @@ body {
   /* biome-ignore lint/a11y/useGenericFontNames: Only custom font!! */
   font-family: w95fa !important;
   -webkit-touch-callout: none; /* Disable “Save Image” / “Copy” popup */
-  -webkit-user-select: none;   /* Disable text selection */
+  -webkit-user-select: none; /* Disable text selection */
   user-select: none;
 }
 
@@ -603,7 +603,8 @@ input[type="password"] {
   }
 }
 
-#chat ul, #chat ul * {
+#chat ul,
+#chat ul * {
   user-select: text !important;
 }
 
