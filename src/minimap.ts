@@ -229,7 +229,7 @@ export class MinimapRenderer {
       let dyingTicks = 0;
       let dying = false;
       let animation = this.client.characterAnimations.get(character.playerId);
-      if (animation instanceof CharacterDeathAnimation && animation.base) {
+      if (animation instanceof CharacterDeathAnimation) {
         dying = true;
         dyingTicks = animation.ticks;
 
