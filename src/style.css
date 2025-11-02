@@ -616,30 +616,46 @@ input[type="password"] {
   position: absolute;
   z-index: 1020;
   top: 30px;
-  background: #5b3c02;
+  background: rgba(0, 0, 0, 0.4);
+  border-image: url("/border-thin.png") 9 / 9px 9px;
+
   width: 200px;
   color: #fff;
-  opacity: 0.8;
-  padding: 5px 10px;
+  padding: 5px;
 }
 
 #chat-message {
-  background: #5b3c02;
+  padding: 5px;
+  background: rgba(255, 255, 255, 0.7);
   border-color: #281a00;
-  color: #fff;
+  border-image: url("/border-thin.png") 9 / 9px 9px;
   width: 100%;
-  margin-bottom: 5px;
+  height: 24px;
+  margin-top: 5px;
+  box-sizing: border-box;
 }
 
 #btn-toggle-chat {
-  background: none;
-  color: #fff;
+  padding: 3px 8px;
+  background: #201c18;
+  color: #adadad;
+  border-image: url("/border-thin.png") 9 / 9px 9px;
+  outline: none;
+  user-select: none;
   float: right;
 }
 
+#chat-tab-bar {
+  margin-top: -14px;
+}
+
 #chat-tab-bar button {
-  background: none;
+  padding: 3px 8px;
+  background: #201c18;
   color: #adadad;
+  border-image: url("/border-thin.png") 9 / 9px 9px;
+  outline: none;
+  user-select: none;
 }
 
 #chat-tab-bar button.active {
@@ -654,15 +670,20 @@ input[type="password"] {
 }
 
 #chat li {
-  margin: 0;
-  padding: 3px 0;
+  padding-top: 4px;
+  padding-bottom: 2px;
   word-break: break-all;
   display: flex;
   gap: 1px;
 }
 
-#chat li span {
+#chat li span.msg {
   max-width: 96%;
+}
+
+#chat li span.msg > .player-name {
+  color: #f0f0c8;
+  padding-right: 5px;
 }
 
 #mobile-controls {
@@ -751,9 +772,8 @@ input[type="password"] {
   right: 40px;
   width: 186px;
   height: 270px;
-  padding: 3px;
-  border-radius: 5px;
-  border: 1px solid #000;
+  padding: 6px;
+  border-image: url("/border-thin.png") 9 / 9px 9px;
   background: #7b5a29;
   user-select: none;
   z-index: 1030;
@@ -762,6 +782,10 @@ input[type="password"] {
 #inventory .top {
   display: flex;
   justify-content: space-between;
+}
+
+#inventory .top > div {
+  user-select: none;
 }
 
 #inventory .weight {
@@ -1695,8 +1719,8 @@ div.icon[data-id="23"] {
 }
 
 #hud .bar {
-  width: 109px;
-  height: 13px;
+  width: 110px;
+  height: 14px;
   background: none;
   border-radius: 10px;
   overflow: hidden;
@@ -1708,10 +1732,10 @@ div.icon[data-id="23"] {
 }
 
 #hud .dropdown {
-  width: 111px;
-  height: 19px;
+  width: 110px;
+  height: 20px;
   background-image: url("/gfx/gfx002/158.png");
-  background-position: -222px -30px;
+  background-position: -221px -30px;
   background-repeat: no-repeat;
   background-size: 440px 64px;
   pointer-events: auto;
@@ -1722,7 +1746,7 @@ div.icon[data-id="23"] {
   line-height: 21px;
 
   position: absolute;
-  bottom: calc(-16px * var(--ui-scale));
+  bottom: calc(-17px * var(--ui-scale));
 
   transform: scale(var(--ui-scale));
   /* scales visually with rest of UI */
@@ -2615,28 +2639,50 @@ div.icon[data-id="23"] {
   display: flex;
   gap: 4px;
   z-index: 1020;
+
+  counter-reset: slot-counter;
 }
 
 #hotbar .slot {
+  padding: 3px;
   position: relative;
   width: 4em;
   height: 4em;
-  border-radius: 5px;
+  border-image: url("/border-thin.png") 9 / 9px 9px;
   display: flex;
   justify-content: center;
   align-items: center;
+
+  counter-increment: slot-counter;
 }
 
 #hotbar .slot::before {
   content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 1021;
+  box-sizing: border-box;
+}
+
+#hotbar .slot::after {
+  width: 14px;
+  height: 14px;
+  content: counter(slot-counter);
+  color: #e6c5a5;
+  font-size: 10px;
+  top: 3px;
+  left: 3px;
+  background-color: #5a3100;
+  position: absolute;
+  border-bottom: 1px solid #3a2110;
+  border-right: 1px solid #3a2110;
+  border-radius: 0 0 4px 0;
+  align-items: center;
+  justify-content: center;
+  line-height: normal;
+  z-index: 1022;
+  display: flex;
 }
 
 #hotbar .slot .item,

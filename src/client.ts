@@ -255,7 +255,12 @@ type ClientEvents = {
   characterDeleted: CharacterSelectionListEntry[];
   selectCharacter: undefined;
   enterGame: { news: string[] };
-  chat: { tab: ChatTab; message: string; icon?: ChatIcon | null };
+  chat: {
+    tab: ChatTab;
+    message: string;
+    icon?: ChatIcon | null;
+    player?: string;
+  };
   serverChat: { message: string; sfxId?: SfxId | null; icon?: ChatIcon | null };
   accountCreated: undefined;
   passwordChanged: undefined;
@@ -879,8 +884,9 @@ export class Client {
       }
 
       this.emit('chat', {
-        message: `${capitalize(record.name)} ${messages[0]}`,
+        message: `${messages[0]}`,
         tab: ChatTab.Local,
+        player: `${capitalize(record.name)}`,
       });
       this.npcChats.set(index, new ChatBubble(messages[0]));
 
@@ -1989,7 +1995,8 @@ export class Client {
 
     this.emit('chat', {
       tab: ChatTab.Local,
-      message: `${capitalize(this.name)} ${trimmed}`,
+      message: `${trimmed}`,
+      player: `${capitalize(this.name)}`,
     });
   }
 
