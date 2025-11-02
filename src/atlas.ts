@@ -10,7 +10,6 @@ import {
   CHARACTER_HEIGHT,
   CHARACTER_MELEE_ATTACK_WIDTH,
   CHARACTER_RAISED_HAND_HEIGHT,
-  CHARACTER_RAISED_HAND_WIDTH,
   CHARACTER_RANGE_ATTACK_WIDTH,
   CHARACTER_SIT_CHAIR_HEIGHT,
   CHARACTER_SIT_CHAIR_WIDTH,
@@ -283,7 +282,7 @@ export class Atlas {
   private mapHasChairs = false;
   private bmpsToLoad: Bmp[] = [];
   private loading = false;
-  private appended = true;
+  private appended = false;
   private atlases: AtlasCanvas[];
   private currentAtlasIndex = 0;
   private ctx: CanvasRenderingContext2D;
@@ -1636,7 +1635,7 @@ export class Atlas {
       case CharacterFrame.RaisedHandDownRight:
       case CharacterFrame.RaisedHandUpLeft:
         return {
-          w: CHARACTER_RAISED_HAND_WIDTH,
+          w: CHARACTER_WIDTH,
           h: CHARACTER_RAISED_HAND_HEIGHT,
         };
       case CharacterFrame.ChairDownRight:

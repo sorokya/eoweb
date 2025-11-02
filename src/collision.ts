@@ -135,17 +135,6 @@ export function setDoorRectangle(coords: Coords, rectangle: Rectangle) {
   });
 }
 
-export function getDoorRectangle(coords: Coords): Rectangle | undefined {
-  const existing = doorRectangles.find(
-    (r) => r.coords.x === coords.x && r.coords.y === coords.y,
-  );
-  if (!existing) {
-    return undefined;
-  }
-
-  return existing.rectangle;
-}
-
 export function getDoorIntersecting(point: Vector2): Coords | null {
   for (const { coords, rectangle } of doorRectangles) {
     if (pointIntersectRect(point, rectangle)) {
@@ -169,17 +158,6 @@ export function setSignRectangle(coords: Coords, rectangle: Rectangle) {
     coords,
     rectangle,
   });
-}
-
-export function getSignRectangle(coords: Coords): Rectangle | undefined {
-  const existing = signRectangles.find(
-    (r) => r.coords.x === coords.x && r.coords.y === coords.y,
-  );
-  if (!existing) {
-    return undefined;
-  }
-
-  return existing.rectangle;
 }
 
 export function getSignIntersecting(point: Vector2): Coords | null {

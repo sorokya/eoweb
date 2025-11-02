@@ -1,5 +1,6 @@
 import mitt from 'mitt';
 import type { Client } from '../client';
+import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH } from '../consts';
 import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { Base } from './base-ui';
@@ -65,6 +66,10 @@ export class CreateAccountForm extends Base {
       this.location,
       this.email,
     ];
+
+    this.username.maxLength = MAX_USERNAME_LENGTH;
+    this.password.maxLength = MAX_PASSWORD_LENGTH;
+    this.confirmPassword.maxLength = MAX_PASSWORD_LENGTH;
 
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);

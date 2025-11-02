@@ -310,14 +310,6 @@ export enum GameState {
   InGame = 4,
 }
 
-export enum CharacterAction {
-  None = 0,
-  Walking = 1,
-  MeleeAttack = 2,
-  RangedAttack = 3,
-  CastingSpell = 4,
-}
-
 export enum EquipmentSlot {
   Boots = 0,
   Accessory = 1,
@@ -430,6 +422,17 @@ enum SpellTarget {
   Group = 1,
   Npc = 2,
   Player = 3,
+}
+
+enum PlayerMenuItem {
+  Paperdoll = 0,
+  Book = 1,
+  Join = 2,
+  Invite = 3,
+  Trade = 4,
+  Whisper = 5,
+  Friend = 6,
+  Ignore = 7,
 }
 
 export class Client {
@@ -3174,15 +3177,4 @@ export class Client {
 
     this.minimapEnabled = !this.minimapEnabled;
   }
-}
-
-export enum PlayerMenuItem {
-  Paperdoll = 0,
-  Book = 1,
-  Join = 2,
-  Invite = 3,
-  Trade = 4,
-  Whisper = 5,
-  Friend = 6,
-  Ignore = 7,
 }

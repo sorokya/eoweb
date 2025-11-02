@@ -23,7 +23,7 @@ import { playSfxById, SfxId } from './sfx';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 import { getNextCoords } from './utils/get-next-coords';
 
-export function inputToDirection(input: Input): Direction | null {
+function inputToDirection(input: Input): Direction | null {
   switch (input) {
     case Input.Up:
       return Direction.Up;

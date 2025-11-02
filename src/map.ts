@@ -69,7 +69,7 @@ type Entity = {
   layer: number;
 };
 
-export enum Layer {
+enum Layer {
   Ground = 0,
   Objects = 1,
   Overlay = 2,
