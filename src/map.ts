@@ -1564,7 +1564,7 @@ export class MapRenderer {
     ctx: CanvasRenderingContext2D,
   ) {
     const frame = this.client.atlas.getStaticEntry(
-      StaticAtlasEntryType.EmoteHappy + emote.type - 1,
+      StaticAtlasEntryType.Emote + emote.type - 1 + emote.animationFrame,
     );
     if (!frame) {
       return;
@@ -1575,20 +1575,18 @@ export class MapRenderer {
       return;
     }
 
-    const sourceX = emote.animationFrame * 50;
-
     ctx.globalAlpha = emote.ticks / EMOTE_ANIMATION_TICKS;
 
     ctx.drawImage(
       atlas,
-      frame.x + sourceX,
+      frame.x,
       frame.y,
-      50,
-      50,
-      position.x - 25,
-      position.y - 50,
-      50,
-      50,
+      frame.w,
+      frame.h,
+      position.x + frame.xOffset,
+      position.y + frame.yOffset - 25,
+      frame.w,
+      frame.h,
     );
 
     ctx.globalAlpha = 1;

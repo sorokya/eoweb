@@ -162,6 +162,8 @@ type TileAtlasEntry = {
   y: number;
   w: number;
   h: number;
+  xOffset: number;
+  yOffset: number;
 };
 
 type NpcAtlasEntry = {
@@ -251,21 +253,8 @@ export enum StaticAtlasEntryType {
   Miss = 4,
   PlayerMenu = 5,
   Cursor = 6,
-  EmoteHappy = 7,
-  EmoteDepressed = 8,
-  EmoteSad = 9,
-  EmoteAngry = 10,
-  EmoteConfused = 11,
-  EmoteSurprised = 12,
-  EmoteHearts = 13,
-  EmoteMoon = 14,
-  EmoteSuicidal = 15,
-  EmoteEmbarrassed = 16,
-  EmoteDrunk = 17,
-  EmoteTrade = 18,
-  EmoteLevelUp = 19,
-  EmotePlayful = 20,
-  EmoteBard = 21,
+  Emote = 7,
+  Next = 67, // Placeholder for next static entry (67 to make room for emotes)
 }
 
 export class Atlas {
@@ -590,6 +579,8 @@ export class Atlas {
         y: -1,
         w: -1,
         h: -1,
+        xOffset: 0,
+        yOffset: 0,
       });
     }
 
@@ -614,6 +605,8 @@ export class Atlas {
               y: -1,
               w: -1,
               h: -1,
+              xOffset: 0,
+              yOffset: 0,
             });
 
             if (
@@ -629,6 +622,8 @@ export class Atlas {
                 y: -1,
                 w: -1,
                 h: -1,
+                xOffset: 0,
+                yOffset: 0,
               });
             }
           }
@@ -683,6 +678,8 @@ export class Atlas {
       y: -1,
       w: -1,
       h: -1,
+      xOffset: 0,
+      yOffset: 0,
     });
     this.addBmpToLoad(GfxType.PostLoginUI, 45);
 
@@ -700,6 +697,8 @@ export class Atlas {
         y: -1,
         w: -1,
         h: -1,
+        xOffset: 0,
+        yOffset: 0,
       });
     }
     this.addBmpToLoad(GfxType.PostLoginUI, 58);
@@ -712,6 +711,8 @@ export class Atlas {
       y: -1,
       w: -1,
       h: -1,
+      xOffset: 0,
+      yOffset: 0,
     });
     this.addBmpToLoad(GfxType.PostLoginUI, 41);
 
@@ -723,11 +724,13 @@ export class Atlas {
       y: -1,
       w: -1,
       h: -1,
+      xOffset: 0,
+      yOffset: 0,
     });
     this.addBmpToLoad(GfxType.PostLoginUI, 24);
 
-    for (let i = 0; i <= 14; ++i) {
-      this.staticEntries.set(StaticAtlasEntryType.EmoteHappy + i, {
+    for (let i = 0; i < 60; ++i) {
+      this.staticEntries.set(StaticAtlasEntryType.Emote + i, {
         gfxType: GfxType.PostLoginUI,
         graphicId: 38,
         atlasIndex: -1,
@@ -735,6 +738,8 @@ export class Atlas {
         y: -1,
         w: -1,
         h: -1,
+        xOffset: 0,
+        yOffset: 0,
       });
     }
     this.addBmpToLoad(GfxType.PostLoginUI, 38);
@@ -1623,62 +1628,104 @@ export class Atlas {
       return;
     }
 
-    switch (id) {
-      case StaticAtlasEntryType.HealthBars: {
+    switch (true) {
+      case id === StaticAtlasEntryType.HealthBars: {
         entry.x = 0;
         entry.y = 28;
         entry.w = 40;
         entry.h = 35;
         break;
       }
-      case StaticAtlasEntryType.DamageNumbers: {
+      case id === StaticAtlasEntryType.DamageNumbers: {
         entry.x = 40;
         entry.y = 28;
         entry.w = 89;
         entry.h = 11;
         break;
       }
-      case StaticAtlasEntryType.HealNumbers: {
+      case id === StaticAtlasEntryType.HealNumbers: {
         entry.x = 40;
         entry.y = 39;
         entry.w = 89;
         entry.h = 11;
         break;
       }
-      case StaticAtlasEntryType.Miss: {
+      case id === StaticAtlasEntryType.Miss: {
         entry.x = 132;
         entry.y = 28;
         entry.w = 30;
         entry.h = 11;
         break;
       }
-      case StaticAtlasEntryType.PlayerMenu: {
+      case id === StaticAtlasEntryType.PlayerMenu: {
         entry.x = 0;
         entry.y = 0;
         entry.w = 190;
         entry.h = bmp.height;
         break;
       }
-      case StaticAtlasEntryType.EmoteHappy:
-      case StaticAtlasEntryType.EmoteSad:
-      case StaticAtlasEntryType.EmoteSurprised:
-      case StaticAtlasEntryType.EmoteConfused:
-      case StaticAtlasEntryType.EmoteMoon:
-      case StaticAtlasEntryType.EmoteAngry:
-      case StaticAtlasEntryType.EmoteHearts:
-      case StaticAtlasEntryType.EmoteDepressed:
-      case StaticAtlasEntryType.EmoteEmbarrassed:
-      case StaticAtlasEntryType.EmoteSuicidal:
-      case StaticAtlasEntryType.EmoteDrunk:
-      case StaticAtlasEntryType.EmoteTrade:
-      case StaticAtlasEntryType.EmoteLevelUp:
-      case StaticAtlasEntryType.EmotePlayful:
-      case StaticAtlasEntryType.EmoteBard: {
-        const emoteIndex = id - StaticAtlasEntryType.EmoteHappy;
-        entry.x = emoteIndex * 200;
-        entry.y = 0;
-        entry.w = 200;
-        entry.h = 50;
+      case id >= StaticAtlasEntryType.Emote &&
+        id <= StaticAtlasEntryType.Emote + 60: {
+        const base = id - StaticAtlasEntryType.Emote;
+        const emoteIndex = Math.floor(base / 4);
+        const frame = base % 4;
+
+        this.tmpCanvas.width = 50;
+        this.tmpCanvas.height = 50;
+        this.tmpCtx.clearRect(
+          0,
+          0,
+          this.tmpCanvas.width,
+          this.tmpCanvas.height,
+        );
+        this.tmpCtx.drawImage(
+          bmp,
+          emoteIndex * 200 + frame * 50,
+          0,
+          50,
+          50,
+          0,
+          0,
+          50,
+          50,
+        );
+
+        const imgData = this.tmpCtx.getImageData(
+          0,
+          0,
+          this.tmpCanvas.width,
+          this.tmpCanvas.height,
+        );
+        const bounds = {
+          x: 50,
+          y: 50,
+          maxX: 0,
+          maxY: 0,
+        };
+
+        for (let y = 0; y < 50; ++y) {
+          for (let x = 0; x < 50; ++x) {
+            const base = (y * 50 + x) * 4;
+            const alpha = imgData.data[base + 3];
+            if (alpha !== 0) {
+              if (x < bounds.x) bounds.x = x;
+              if (y < bounds.y) bounds.y = y;
+              if (x > bounds.maxX) bounds.maxX = x;
+              if (y > bounds.maxY) bounds.maxY = y;
+            }
+          }
+        }
+
+        // Calculate width and height from min/max values
+        const w = bounds.maxX - bounds.x + 1;
+        const h = bounds.maxY - bounds.y + 1;
+
+        entry.xOffset = bounds.x - 25;
+        entry.yOffset = bounds.y - 25;
+        entry.x = emoteIndex * 200 + frame * 50 + bounds.x;
+        entry.y = bounds.y;
+        entry.w = w;
+        entry.h = h;
         break;
       }
       default: {
