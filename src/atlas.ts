@@ -275,6 +275,21 @@ export enum StaticAtlasEntryType {
   Miss = 4,
   PlayerMenu = 5,
   Cursor = 6,
+  EmoteHappy = 7,
+  EmoteDepressed = 8,
+  EmoteSad = 9,
+  EmoteAngry = 10,
+  EmoteConfused = 11,
+  EmoteSurprised = 12,
+  EmoteHearts = 13,
+  EmoteMoon = 14,
+  EmoteSuicidal = 15,
+  EmoteEmbarrassed = 16,
+  EmoteDrunk = 17,
+  EmoteTrade = 18,
+  EmoteLevelUp = 19,
+  EmotePlayful = 20,
+  EmoteBard = 21,
 }
 
 export class Atlas {
@@ -687,6 +702,19 @@ export class Atlas {
       h: -1,
     });
     this.addBmpToLoad(GfxType.PostLoginUI, 24);
+
+    for (let i = 0; i <= 14; ++i) {
+      this.staticEntries.set(StaticAtlasEntryType.EmoteHappy + i, {
+        gfxType: GfxType.PostLoginUI,
+        graphicId: 38,
+        atlasIndex: -1,
+        x: -1,
+        y: -1,
+        w: -1,
+        h: -1,
+      });
+    }
+    this.addBmpToLoad(GfxType.PostLoginUI, 38);
   }
 
   private refreshCharacters() {
@@ -1825,6 +1853,41 @@ export class Atlas {
           this.ctx.drawImage(
             bmp,
             0,
+            0,
+            entry.w,
+            entry.h,
+            entry.x,
+            entry.y,
+            entry.w,
+            entry.h,
+          );
+          break;
+        }
+        case StaticAtlasEntryType.EmoteHappy:
+        case StaticAtlasEntryType.EmoteSad:
+        case StaticAtlasEntryType.EmoteSurprised:
+        case StaticAtlasEntryType.EmoteConfused:
+        case StaticAtlasEntryType.EmoteMoon:
+        case StaticAtlasEntryType.EmoteAngry:
+        case StaticAtlasEntryType.EmoteHearts:
+        case StaticAtlasEntryType.EmoteDepressed:
+        case StaticAtlasEntryType.EmoteEmbarrassed:
+        case StaticAtlasEntryType.EmoteSuicidal:
+        case StaticAtlasEntryType.EmoteDrunk:
+        case StaticAtlasEntryType.EmoteTrade:
+        case StaticAtlasEntryType.EmoteLevelUp:
+        case StaticAtlasEntryType.EmotePlayful:
+        case StaticAtlasEntryType.EmoteBard: {
+          const placement = this.insert(200, 50);
+          entry.atlasIndex = this.currentAtlasIndex;
+          entry.x = placement.x;
+          entry.y = placement.y;
+          entry.w = 200;
+          entry.h = 50;
+          const emoteIndex = id - StaticAtlasEntryType.EmoteHappy;
+          this.ctx.drawImage(
+            bmp,
+            emoteIndex * 200,
             0,
             entry.w,
             entry.h,

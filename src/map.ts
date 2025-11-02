@@ -16,6 +16,7 @@ import {
   ANIMATION_TICKS,
   DEATH_TICKS,
   DOOR_HEIGHT,
+  EMOTE_ANIMATION_TICKS,
   HALF_HALF_TILE_HEIGHT,
   HALF_TILE_HEIGHT,
   HALF_TILE_WIDTH,
@@ -40,6 +41,7 @@ import {
   EffectTargetNpc,
   EffectTargetTile,
 } from './render/effect';
+import type { Emote } from './render/emote';
 import type { HealthBar } from './render/health-bar';
 import { NpcAttackAnimation } from './render/npc-attack';
 import { NpcDeathAnimation } from './render/npc-death';
@@ -1040,7 +1042,14 @@ export class MapRenderer {
           ctx,
         );
         if (emote) {
-          emote.render(character, ctx);
+          this.renderEmote(
+            emote,
+            {
+              x: rect.position.x + (rect.width >> 1),
+              y: rect.position.y,
+            },
+            ctx,
+          );
         }
 
         if (
@@ -1547,5 +1556,41 @@ export class MapRenderer {
       position.x - this.damageNumberCanvas.width / 2,
       position.y - 35 + healthBar.ticks,
     );
+  }
+
+  renderEmote(
+    emote: Emote,
+    position: { x: number; y: number },
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const frame = this.client.atlas.getStaticEntry(
+      StaticAtlasEntryType.EmoteHappy + emote.type - 1,
+    );
+    if (!frame) {
+      return;
+    }
+
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
+      return;
+    }
+
+    const sourceX = emote.animationFrame * 50;
+
+    ctx.globalAlpha = emote.ticks / EMOTE_ANIMATION_TICKS;
+
+    ctx.drawImage(
+      atlas,
+      frame.x + sourceX,
+      frame.y,
+      50,
+      50,
+      position.x - 25,
+      position.y - 50,
+      50,
+      50,
+    );
+
+    ctx.globalAlpha = 1;
   }
 }
