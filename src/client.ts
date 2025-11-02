@@ -1604,7 +1604,7 @@ export class Client {
 
     // Helper function to check if coordinates are within map bounds
     const isInBounds = (x: number, y: number): boolean => {
-      return x >= 0 && y >= 0 && x < this.map.width && y < this.map.height;
+      return x >= 0 && y >= 0 && x <= this.map.width && y <= this.map.height;
     };
 
     // Create start node
@@ -2806,6 +2806,7 @@ export class Client {
   }
 
   refresh() {
+    this.atlas.mapId = 0;
     this.bus.send(new RefreshRequestClientPacket());
   }
 
