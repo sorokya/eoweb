@@ -308,6 +308,7 @@ export class Atlas {
   private currentAtlasIndex = 0;
   private ctx: CanvasRenderingContext2D;
   private staleFrames: Frame[] = [];
+  private temporaryCharacterFrames: Map<number, ImageData[]> = new Map();
 
   /*
   private mapCanvas: HTMLCanvasElement;
@@ -316,8 +317,8 @@ export class Atlas {
   private mapOriginX = 0;
   */
 
-  private characterCanvas: HTMLCanvasElement;
-  private characterCtx: CanvasRenderingContext2D;
+  private tmpCanvas: HTMLCanvasElement;
+  private tmpCtx: CanvasRenderingContext2D;
 
   offsetFrame: HTMLSelectElement =
     document.querySelector<HTMLSelectElement>('#offset-frame');
@@ -330,10 +331,10 @@ export class Atlas {
     this.client = client;
     this.atlases = [new AtlasCanvas()];
     this.ctx = this.atlases[0].getContext();
-    this.characterCanvas = document.createElement('canvas');
-    this.characterCanvas.width = CHARACTER_FRAME_SIZE;
-    this.characterCanvas.height = CHARACTER_FRAME_SIZE;
-    this.characterCtx = this.characterCanvas.getContext('2d', {
+    this.tmpCanvas = document.createElement('canvas');
+    this.tmpCanvas.width = CHARACTER_FRAME_SIZE;
+    this.tmpCanvas.height = CHARACTER_FRAME_SIZE;
+    this.tmpCtx = this.tmpCanvas.getContext('2d', {
       willReadFrequently: true,
     });
 
@@ -1000,18 +1001,10 @@ export class Atlas {
   private async updateAtlas() {
     this.clearStaleFrames();
 
-    /*
-    if (!this.mapRendered) {
-      this.updateMap();
-      this.mapRendered = true;
-    }
-    */
+    this.preRenderCharacterFrames();
+    this.calculateFrameSizes();
 
-    this.updateItems();
-    this.updateCharacters();
-    this.updateNpcs();
-    this.updateMapLayers();
-    this.updateStaticEntries();
+    // Optimally place all frames
 
     for (const atlas of this.atlases) {
       atlas.commit();
@@ -1032,6 +1025,322 @@ export class Atlas {
 
     this.loading = false;
     this.bmpsToLoad = [];
+  }
+
+  private preRenderCharacterFrames() {
+    this.temporaryCharacterFrames.clear();
+    for (const character of this.characters) {
+      if (!character.dirty) {
+        continue;
+      }
+
+      this.temporaryCharacterFrames.set(character.playerId, []);
+
+      for (const [index, frame] of character.frames.entries()) {
+        if (!frame) {
+          this.temporaryCharacterFrames
+            .get(character.playerId)
+            ?.push(undefined);
+          continue;
+        }
+
+        this.tmpCtx.clearRect(0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
+
+        const upLeft = [
+          CharacterFrame.StandingUpLeft,
+          CharacterFrame.WalkingUpLeft1,
+          CharacterFrame.WalkingUpLeft2,
+          CharacterFrame.WalkingUpLeft3,
+          CharacterFrame.WalkingUpLeft4,
+          CharacterFrame.MeleeAttackUpLeft1,
+          CharacterFrame.MeleeAttackUpLeft2,
+          CharacterFrame.RaisedHandUpLeft,
+          CharacterFrame.ChairUpLeft,
+          CharacterFrame.FloorUpLeft,
+          CharacterFrame.RangeAttackUpLeft,
+        ].includes(index);
+
+        const maskType = this.client.getHatMetadata(character.equipment.hat);
+
+        if (maskType !== HatMaskType.HideHair && character.hairStyle) {
+          this.renderCharacterHairBehind(
+            character.gender,
+            character.hairStyle,
+            character.hairColor,
+            upLeft,
+            index,
+          );
+        }
+
+        const skinSize = this.getCharacterFrameSize(index);
+        this.renderCharacterSkin(
+          character.gender,
+          character.skin,
+          upLeft,
+          skinSize,
+          index,
+        );
+
+        if (character.equipment.boots) {
+          this.renderCharacterBoots(
+            character.gender,
+            character.equipment.boots,
+            index,
+          );
+        }
+
+        if (character.equipment.armor) {
+          this.renderCharacterArmor(
+            character.gender,
+            character.equipment.armor,
+            index,
+          );
+        }
+
+        if (maskType === HatMaskType.FaceMask && character.equipment.hat) {
+          this.renderCharacterHat(
+            character.gender,
+            character.equipment.hat,
+            index,
+            upLeft,
+          );
+        }
+
+        if (maskType !== HatMaskType.HideHair && character.hairStyle) {
+          this.renderCharacterHair(
+            character.gender,
+            character.hairStyle,
+            character.hairColor,
+            upLeft,
+            index,
+          );
+        }
+
+        if (maskType !== HatMaskType.FaceMask && character.equipment.hat) {
+          this.renderCharacterHat(
+            character.gender,
+            character.equipment.hat,
+            index,
+            upLeft,
+          );
+        }
+
+        clipHair(this.tmpCtx, 0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
+
+        const frameBounds = {
+          x: CHARACTER_FRAME_SIZE,
+          y: CHARACTER_FRAME_SIZE,
+          maxX: 0,
+          maxY: 0,
+        };
+
+        const imgData = this.tmpCtx.getImageData(
+          0,
+          0,
+          CHARACTER_FRAME_SIZE,
+          CHARACTER_FRAME_SIZE,
+        );
+
+        for (let y = 0; y < CHARACTER_FRAME_SIZE; ++y) {
+          for (let x = 0; x < CHARACTER_FRAME_SIZE; ++x) {
+            const alpha = imgData.data[(y * CHARACTER_FRAME_SIZE + x) * 4 + 3];
+            if (alpha !== 0) {
+              if (x < frameBounds.x) frameBounds.x = x;
+              if (y < frameBounds.y) frameBounds.y = y;
+              if (x > frameBounds.maxX) frameBounds.maxX = x;
+              if (y > frameBounds.maxY) frameBounds.maxY = y;
+            }
+          }
+        }
+
+        // Calculate width and height from min/max values
+        frame.x = frameBounds.x;
+        frame.y = frameBounds.y;
+        frame.w = frameBounds.maxX - frameBounds.x + 1;
+        frame.h = frameBounds.maxY - frameBounds.y + 1;
+        frame.xOffset = frameBounds.x - HALF_CHARACTER_FRAME_SIZE;
+        frame.yOffset = frameBounds.y - CHARACTER_FRAME_SIZE;
+        frame.mirroredXOffset =
+          HALF_CHARACTER_FRAME_SIZE - (frameBounds.x + frame.w);
+
+        const croppedImgData = this.tmpCtx.getImageData(
+          frameBounds.x,
+          frameBounds.y,
+          frame.w,
+          frame.h,
+        );
+
+        this.temporaryCharacterFrames
+          .get(character.playerId)
+          ?.push(croppedImgData);
+      }
+    }
+  }
+
+  private calculateFrameSizes() {
+    for (const npc of this.npcs) {
+      this.calculateNpcFrameSizes(npc);
+    }
+
+    for (const item of this.items) {
+      this.calculateItemSize(item);
+    }
+
+    for (const tile of this.tiles) {
+      this.calculateTileSize(tile);
+    }
+
+    for (const entry of this.staticEntries.values()) {
+      this.calculateStaticSize(entry);
+    }
+  }
+
+  private calculateNpcFrameSizes(npc: NpcAtlasEntry) {
+    const blankIndexes = [];
+    for (const [index, frame] of npc.frames.entries()) {
+      if (!frame || frame.w !== -1) {
+        continue;
+      }
+
+      const baseId = (npc.graphicId - 1) * 40;
+      const bmp = this.getBmp(GfxType.NPC, baseId + index + 1);
+      if (!bmp) {
+        continue;
+      }
+
+      this.tmpCanvas.width = bmp.width;
+      this.tmpCanvas.height = bmp.height;
+      this.tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
+      this.tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
+
+      // Check if image is blank
+      const imgData = this.tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
+      const frameBounds = {
+        x: bmp.width,
+        y: bmp.height,
+        maxX: 0,
+        maxY: 0,
+      };
+      const colors: Set<number> = new Set();
+      for (let y = 0; y < bmp.height; ++y) {
+        for (let x = 0; x < bmp.width; ++x) {
+          const base = (y * bmp.width + x) * 4;
+          colors.add(
+            (imgData.data[base] << 16) |
+              (imgData.data[base + 1] << 8) |
+              imgData.data[base + 2],
+          );
+          const alpha = imgData.data[base + 3];
+          if (alpha !== 0) {
+            if (x < frameBounds.x) frameBounds.x = x;
+            if (y < frameBounds.y) frameBounds.y = y;
+            if (x > frameBounds.maxX) frameBounds.maxX = x;
+            if (y > frameBounds.maxY) frameBounds.maxY = y;
+          }
+        }
+      }
+
+      if (colors.size <= 2 || !frameBounds.maxX) {
+        blankIndexes.push(index);
+        continue;
+      }
+
+      // Calculate width and height from min/max values
+      const w = frameBounds.maxX - frameBounds.x + 1;
+      const h = frameBounds.maxY - frameBounds.y + 1;
+
+      const halfBmpWidth = bmp.width >> 1;
+      frame.xOffset = frameBounds.x - halfBmpWidth;
+      frame.yOffset = frameBounds.y - (bmp.height - 23);
+      frame.mirroredXOffset = halfBmpWidth - (frameBounds.x + w);
+      frame.x = frameBounds.x;
+      frame.y = frameBounds.y;
+      frame.w = w;
+      frame.h = h;
+    }
+
+    // Mark blank frames as undefined
+    for (const i of blankIndexes) {
+      npc.frames[i] = undefined;
+    }
+  }
+
+  private calculateItemSize(item: ItemAtlasEntry) {
+    if (item.w !== -1) {
+      return;
+    }
+
+    const bmp = this.getBmp(GfxType.Items, item.graphicId);
+    if (!bmp) {
+      return;
+    }
+
+    this.tmpCanvas.width = bmp.width;
+    this.tmpCanvas.height = bmp.height;
+    this.tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
+    this.tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
+
+    const imgData = this.tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
+    const bounds = {
+      x: bmp.width,
+      y: bmp.height,
+      maxX: 0,
+      maxY: 0,
+    };
+
+    for (let y = 0; y < bmp.height; ++y) {
+      for (let x = 0; x < bmp.width; ++x) {
+        const base = (y * bmp.width + x) * 4;
+        const alpha = imgData.data[base + 3];
+        if (alpha !== 0) {
+          if (x < bounds.x) bounds.x = x;
+          if (y < bounds.y) bounds.y = y;
+          if (x > bounds.maxX) bounds.maxX = x;
+          if (y > bounds.maxY) bounds.maxY = y;
+        }
+      }
+    }
+
+    // Calculate width and height from min/max values
+    const w = bounds.maxX - bounds.x + 1;
+    const h = bounds.maxY - bounds.y + 1;
+
+    item.xOffset = bounds.x - (bmp.width >> 1);
+    item.yOffset = bounds.y - (bmp.height >> 1);
+    item.x = bounds.x;
+    item.y = bounds.y;
+    item.w = w;
+    item.h = h;
+  }
+
+  private calculateTileSize(tile: TileAtlasEntry) {
+    if (tile.w !== -1) {
+      return;
+    }
+
+    const bmp = this.getBmp(tile.gfxType, tile.graphicId);
+    if (!bmp) {
+      return;
+    }
+
+    // TODO: Tried cropping these before but had issues with alignment when rendering
+
+    tile.w = bmp.width;
+    tile.h = bmp.height;
+  }
+
+  private calculateStaticSize(entry: TileAtlasEntry) {
+    if (entry.w !== -1) {
+      return;
+    }
+
+    const bmp = this.getBmp(entry.gfxType, entry.graphicId);
+    if (!bmp) {
+      return;
+    }
+
+    entry.w = bmp.width;
+    entry.h = bmp.height;
   }
 
   private getBmp(
@@ -1211,12 +1520,7 @@ export class Atlas {
           continue;
         }
 
-        this.characterCtx.clearRect(
-          0,
-          0,
-          CHARACTER_FRAME_SIZE,
-          CHARACTER_FRAME_SIZE,
-        );
+        this.tmpCtx.clearRect(0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
 
         const upLeft = [
           CharacterFrame.StandingUpLeft,
@@ -1313,13 +1617,7 @@ export class Atlas {
           );
         }
 
-        clipHair(
-          this.characterCtx,
-          0,
-          0,
-          CHARACTER_FRAME_SIZE,
-          CHARACTER_FRAME_SIZE,
-        );
+        clipHair(this.tmpCtx, 0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
 
         const frameBounds = {
           x: CHARACTER_FRAME_SIZE,
@@ -1328,7 +1626,7 @@ export class Atlas {
           maxY: 0,
         };
 
-        const imgData = this.characterCtx.getImageData(
+        const imgData = this.tmpCtx.getImageData(
           0,
           0,
           CHARACTER_FRAME_SIZE,
@@ -1365,7 +1663,7 @@ export class Atlas {
         frame.y = placement.y;
 
         this.ctx.drawImage(
-          this.characterCanvas,
+          this.tmpCanvas,
           frameBounds.x,
           frameBounds.y,
           w,
@@ -1411,7 +1709,7 @@ export class Atlas {
       HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y,
     );
 
-    this.characterCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
   private renderCharacterHair(
@@ -1444,7 +1742,7 @@ export class Atlas {
       HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y,
     );
 
-    this.characterCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
   private renderCharacterSkin(
@@ -1474,7 +1772,7 @@ export class Atlas {
     const destX = HALF_CHARACTER_FRAME_SIZE - (size.w >> 1);
     const destY = HALF_CHARACTER_FRAME_SIZE - (size.h >> 1);
 
-    this.characterCtx.drawImage(
+    this.tmpCtx.drawImage(
       bmp,
       sourceX,
       sourceY,
@@ -1543,7 +1841,7 @@ export class Atlas {
     const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
     const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
 
-    this.characterCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
   private renderCharacterBack(
@@ -1590,7 +1888,7 @@ export class Atlas {
     const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
     const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
 
-    this.characterCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
   private renderCharacterArmor(
@@ -1617,7 +1915,7 @@ export class Atlas {
     const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
     const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
 
-    this.characterCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
   private renderCharacterHat(
@@ -1645,7 +1943,7 @@ export class Atlas {
     const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
     const destY = -(bmp.height >> 1) + offset.y;
 
-    this.characterCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
   private getCharacterFrameGraphicId(frame: CharacterFrame): number {
