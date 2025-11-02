@@ -529,6 +529,7 @@ export class Atlas {
     this.items = [];
     this.tiles = [];
     this.mapId = this.client.mapId;
+    this.staticEntries.clear();
     //this.mapRendered = false;
 
     for (const atlas of this.atlases) {
