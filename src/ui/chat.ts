@@ -231,7 +231,7 @@ export class Chat extends Base {
   }
 
   private replaceLinks(input: string): string {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urlRegex = /(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g;
     return input.replace(urlRegex, (url) => {
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
     });

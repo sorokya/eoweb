@@ -2591,7 +2591,7 @@ export class Client {
     this.bus.send(packet);
   }
 
-  isVisisbleEquipmentChange(slot: EquipmentSlot): boolean {
+  isVisibleEquipmentChange(slot: EquipmentSlot): boolean {
     return [
       EquipmentSlot.Boots,
       EquipmentSlot.Armor,

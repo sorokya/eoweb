@@ -483,7 +483,6 @@ export class Atlas {
       this.atlases.push(newAtlas);
       this.currentAtlasIndex = this.atlases.length - 1;
       this.ctx = newAtlas.getContext();
-      bestAtlasIndex = this.currentAtlasIndex;
       bestIndex = 0;
       bestX = 0;
       bestY = 0;
