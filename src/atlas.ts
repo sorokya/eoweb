@@ -1,5 +1,6 @@
 import {
   type CharacterMapInfo,
+  Emote,
   type EquipmentMapInfo,
   Gender,
   MapTileSpec,
@@ -371,10 +372,48 @@ export class Atlas {
   }
 
   getEmoteFrame(emoteId: number, frameIndex: number): Frame | undefined {
-    const emote = this.emotes.find((e) => e.emoteId === emoteId);
+    const slot = this.getEmoteSlot(emoteId);
+    const emote = this.emotes.find((e) => e.emoteId === slot);
     if (!emote) return undefined;
 
     return emote.frames[frameIndex];
+  }
+
+  private getEmoteSlot(emoteId: number): number {
+    switch (emoteId) {
+      case Emote.Happy:
+        return 0;
+      case Emote.Sad:
+        return 1;
+      case Emote.Surprised:
+        return 2;
+      case Emote.Confused:
+        return 3;
+      case Emote.Moon:
+        return 4;
+      case Emote.Angry:
+        return 5;
+      case Emote.Hearts:
+        return 6;
+      case Emote.Depressed:
+        return 7;
+      case Emote.Embarrassed:
+        return 8;
+      case Emote.Suicidal:
+        return 9;
+      case Emote.Drunk:
+        return 10;
+      case Emote.Trade:
+        return 11;
+      case Emote.LevelUp:
+        return 12;
+      case Emote.Playful:
+        return 13;
+      case 15: // TODO: Bard should be in protocol
+        return 14;
+      default:
+        return 0;
+    }
   }
 
   getEffectBehindFrame(
@@ -861,7 +900,7 @@ export class Atlas {
         });
       }
       this.emotes.push({
-        emoteId: i + 1,
+        emoteId: i,
         frames,
       });
     }
@@ -2078,7 +2117,7 @@ export class Atlas {
       this.tmpCtx.clearRect(0, 0, this.tmpCanvas.width, this.tmpCanvas.height);
       this.tmpCtx.drawImage(
         bmp,
-        (emote.emoteId - 1) * 200 + frameIndex * 50,
+        emote.emoteId * 200 + frameIndex * 50,
         0,
         50,
         50,
@@ -2120,7 +2159,7 @@ export class Atlas {
 
       frame.xOffset = bounds.x - 25;
       frame.yOffset = bounds.y - 25;
-      frame.x = (emote.emoteId - 1) * 200 + frameIndex * 50 + bounds.x;
+      frame.x = emote.emoteId * 200 + frameIndex * 50 + bounds.x;
       frame.y = bounds.y;
       frame.w = w;
       frame.h = h;
