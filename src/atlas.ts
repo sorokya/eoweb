@@ -34,6 +34,9 @@ const ATLAS_SIZE = 2048;
 const CHARACTER_FRAME_SIZE = 100;
 const HALF_CHARACTER_FRAME_SIZE = CHARACTER_FRAME_SIZE >> 1;
 
+const MAP_ATLAS_INDEX = 254;
+const STATIC_ATLAS_INDEX = 255;
+
 export enum CharacterFrame {
   StandingDownRight = 0,
   StandingUpLeft = 1,
@@ -290,6 +293,8 @@ export class Atlas {
   private bmpsToLoad: Bmp[] = [];
   private loading = false;
   private appended = false;
+  private staticAtlas: AtlasCanvas;
+  private mapAtlas: AtlasCanvas;
   private atlases: AtlasCanvas[];
   private currentAtlasIndex = 0;
   private ctx: CanvasRenderingContext2D;
@@ -307,6 +312,8 @@ export class Atlas {
 
   constructor(client: Client) {
     this.client = client;
+    this.staticAtlas = new AtlasCanvas();
+    this.mapAtlas = new AtlasCanvas();
     this.atlases = [new AtlasCanvas()];
     this.ctx = this.atlases[0].getContext();
     this.tmpCanvas = document.createElement('canvas');
@@ -318,6 +325,14 @@ export class Atlas {
   }
 
   getAtlas(index: number): HTMLImageElement | undefined {
+    if (index === STATIC_ATLAS_INDEX) {
+      return this.staticAtlas.getImg();
+    }
+
+    if (index === MAP_ATLAS_INDEX) {
+      return this.mapAtlas.getImg();
+    }
+
     return this.atlases[index]?.getImg();
   }
 
@@ -396,6 +411,55 @@ export class Atlas {
     let bestX = 0;
     let bestY = Number.POSITIVE_INFINITY;
     let bestIndex = -1;
+
+    if (this.currentAtlasIndex === STATIC_ATLAS_INDEX) {
+      for (let i = 0; i < this.staticAtlas.skyline.length; ++i) {
+        const y = this.fitSkyline(this.staticAtlas, i, w, h);
+        if (y >= 0) {
+          if (
+            y + h <= ATLAS_SIZE &&
+            (y < bestY ||
+              (y === bestY && this.staticAtlas.skyline[i].x < bestX))
+          ) {
+            bestY = y;
+            bestX = this.staticAtlas.skyline[i].x;
+            bestIndex = i;
+          }
+        }
+      }
+
+      if (bestIndex !== -1) {
+        const placed = { x: bestX, y: bestY, w, h };
+        this.addSkylineLevel(this.staticAtlas, bestIndex, placed);
+        return placed;
+      }
+
+      throw new Error('No space left in static atlas');
+    }
+
+    if (this.currentAtlasIndex === MAP_ATLAS_INDEX) {
+      for (let i = 0; i < this.mapAtlas.skyline.length; ++i) {
+        const y = this.fitSkyline(this.mapAtlas, i, w, h);
+        if (y >= 0) {
+          if (
+            y + h <= ATLAS_SIZE &&
+            (y < bestY || (y === bestY && this.mapAtlas.skyline[i].x < bestX))
+          ) {
+            bestY = y;
+            bestX = this.mapAtlas.skyline[i].x;
+            bestIndex = i;
+          }
+        }
+      }
+
+      if (bestIndex !== -1) {
+        const placed = { x: bestX, y: bestY, w, h };
+        this.addSkylineLevel(this.mapAtlas, bestIndex, placed);
+        return placed;
+      }
+
+      throw new Error('No space left in map atlas');
+    }
 
     for (const [index, atlas] of this.atlases.entries()) {
       for (let i = 0; i < atlas.skyline.length; ++i) {
@@ -517,6 +581,11 @@ export class Atlas {
     this.bmpsToLoad = [];
 
     if (this.mapId !== this.client.mapId) {
+      this.tiles = [];
+      const ctx = this.mapAtlas.getContext();
+      ctx.clearRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
+      this.mapAtlas.skyline = [{ x: 0, y: 0, w: ATLAS_SIZE }];
+      this.mapId = this.client.mapId;
       this.reset();
     }
 
@@ -574,12 +643,7 @@ export class Atlas {
     this.characters = [];
     this.npcs = [];
     this.items = [];
-    this.tiles = [];
     this.mapId = this.client.mapId;
-    this.staticEntries.clear();
-    this.emotes = [];
-    this.effects = [];
-    //this.mapRendered = false;
 
     for (const atlas of this.atlases) {
       const ctx = atlas.getContext();
@@ -610,6 +674,10 @@ export class Atlas {
   }
 
   private loadMapGraphicLayers() {
+    if (this.tiles.length) {
+      return;
+    }
+
     if (this.client.map.fillTile > 0) {
       this.addBmpToLoad(GfxType.MapTiles, this.client.map.fillTile);
       this.tiles.push({
@@ -711,6 +779,10 @@ export class Atlas {
   }
 
   private loadStaticEntries() {
+    if (this.staticEntries.size > 0) {
+      return;
+    }
+
     this.staticEntries.set(StaticAtlasEntryType.MinimapIcons, {
       gfxType: GfxType.PostLoginUI,
       graphicId: 45,
@@ -772,6 +844,10 @@ export class Atlas {
   }
 
   private loadEmoteEntries() {
+    if (this.emotes.length > 0) {
+      return;
+    }
+
     this.addBmpToLoad(GfxType.PostLoginUI, 38);
     for (let i = 0; i < NUMBER_OF_EMOTES; ++i) {
       const frames = [];
@@ -795,6 +871,10 @@ export class Atlas {
   }
 
   private loadEffectEntries() {
+    if (this.effects.length > 0) {
+      return;
+    }
+
     for (let i = 1; i <= NUMBER_OF_EFFECTS; ++i) {
       const meta = this.client.getEffectMetadata(i);
       if (!meta) {
@@ -1143,6 +1223,24 @@ export class Atlas {
         document.body.appendChild(h1);
         document.body.appendChild(canvas);
       }
+
+      {
+        const h1 = document.createElement('h1');
+        h1.innerText = 'Map Atlas';
+        const mapCanvas = this.mapAtlas.getCanvas();
+        mapCanvas.classList.add('debug');
+        document.body.appendChild(h1);
+        document.body.appendChild(mapCanvas);
+      }
+
+      {
+        const h1 = document.createElement('h1');
+        h1.innerText = 'Static Atlas';
+        const staticCanvas = this.staticAtlas.getCanvas();
+        staticCanvas.classList.add('debug');
+        document.body.appendChild(h1);
+        document.body.appendChild(staticCanvas);
+      }
     }
 
     this.loading = false;
@@ -1151,66 +1249,6 @@ export class Atlas {
 
   private placeFrames() {
     const placeableFrames: PlaceableFrame[] = [];
-
-    for (const character of this.characters) {
-      for (const [index, frame] of character.frames.entries()) {
-        if (!frame || frame.atlasIndex !== -1) {
-          continue;
-        }
-
-        placeableFrames.push({
-          type: FrameType.Character,
-          typeId: character.playerId,
-          frameIndex: index,
-          w: frame.w,
-          h: frame.h,
-        });
-      }
-    }
-
-    for (const npc of this.npcs) {
-      for (const [index, frame] of npc.frames.entries()) {
-        if (!frame || frame.atlasIndex !== -1) {
-          continue;
-        }
-
-        placeableFrames.push({
-          type: FrameType.Npc,
-          typeId: npc.graphicId,
-          frameIndex: index,
-          w: frame.w,
-          h: frame.h,
-        });
-      }
-    }
-
-    for (const item of this.items) {
-      if (item.atlasIndex !== -1) {
-        continue;
-      }
-
-      placeableFrames.push({
-        type: FrameType.Item,
-        typeId: item.graphicId,
-        frameIndex: 0,
-        w: item.w,
-        h: item.h,
-      });
-    }
-
-    for (const tile of this.tiles) {
-      if (tile.atlasIndex !== -1) {
-        continue;
-      }
-
-      placeableFrames.push({
-        type: FrameType.Tile,
-        typeId: tile.gfxType,
-        frameIndex: tile.graphicId,
-        w: tile.w,
-        h: tile.h,
-      });
-    }
 
     for (const [id, frame] of this.staticEntries.entries()) {
       if (frame.atlasIndex !== -1) {
@@ -1288,150 +1326,16 @@ export class Atlas {
 
     placeableFrames.sort((a, b) => b.h - a.h);
 
+    if (placeableFrames.length) {
+      this.currentAtlasIndex = STATIC_ATLAS_INDEX;
+      this.ctx = this.staticAtlas.getContext();
+    }
+
     for (const placeable of placeableFrames) {
       const rect = this.insert(placeable.w, placeable.h);
       let frameImg: HTMLCanvasElement | undefined;
 
       switch (placeable.type) {
-        case FrameType.Character: {
-          const character = this.characters.find(
-            (c) => c.playerId === placeable.typeId,
-          );
-
-          if (!character) {
-            continue;
-          }
-
-          const frame = character.frames[placeable.frameIndex];
-          const imgData = this.temporaryCharacterFrames.get(
-            character.playerId,
-          )?.[placeable.frameIndex];
-
-          if (!imgData) {
-            continue;
-          }
-
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.putImageData(imgData, 0, 0);
-
-          frame.atlasIndex = this.currentAtlasIndex;
-          frame.x = rect.x;
-          frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
-          break;
-        }
-        case FrameType.Npc: {
-          const npc = this.npcs.find((n) => n.graphicId === placeable.typeId);
-
-          if (!npc) {
-            continue;
-          }
-
-          const frame = npc.frames[placeable.frameIndex];
-          const baseId = (npc.graphicId - 1) * 40;
-          const bmp = this.getBmp(
-            GfxType.NPC,
-            baseId + placeable.frameIndex + 1,
-          );
-          if (!bmp) {
-            continue;
-          }
-
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h,
-            0,
-            0,
-            frame.w,
-            frame.h,
-          );
-
-          frame.atlasIndex = this.currentAtlasIndex;
-          frame.x = rect.x;
-          frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
-          break;
-        }
-        case FrameType.Item: {
-          const item = this.items.find((i) => i.graphicId === placeable.typeId);
-          if (!item) {
-            continue;
-          }
-
-          const bmp = this.getBmp(GfxType.Items, placeable.typeId);
-          if (!bmp) {
-            continue;
-          }
-
-          this.tmpCanvas.width = item.w;
-          this.tmpCanvas.height = item.h;
-          this.tmpCtx.clearRect(0, 0, item.w, item.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            item.x,
-            item.y,
-            item.w,
-            item.h,
-            0,
-            0,
-            item.w,
-            item.h,
-          );
-
-          item.atlasIndex = this.currentAtlasIndex;
-          item.x = rect.x;
-          item.y = rect.y;
-
-          frameImg = this.tmpCanvas;
-          break;
-        }
-        case FrameType.Tile: {
-          const tile = this.tiles.find(
-            (t) =>
-              t.gfxType === placeable.typeId &&
-              t.graphicId === placeable.frameIndex,
-          );
-          if (!tile) {
-            continue;
-          }
-
-          const bmp = this.getBmp(tile.gfxType, tile.graphicId);
-          if (!bmp) {
-            continue;
-          }
-
-          this.tmpCanvas.width = tile.w;
-          this.tmpCanvas.height = tile.h;
-          this.tmpCtx.clearRect(0, 0, tile.w, tile.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            tile.x,
-            tile.y,
-            tile.w,
-            tile.h,
-            0,
-            0,
-            tile.w,
-            tile.h,
-          );
-
-          tile.atlasIndex = this.currentAtlasIndex;
-          tile.x = rect.x;
-          tile.y = rect.y;
-
-          frameImg = this.tmpCanvas;
-          break;
-        }
         case FrameType.Static: {
           const frame = this.staticEntries.get(
             placeable.typeId as StaticAtlasEntryType,
@@ -1558,6 +1462,241 @@ export class Atlas {
           frame.atlasIndex = this.currentAtlasIndex;
           frame.x = rect.x;
           frame.y = rect.y;
+
+          frameImg = this.tmpCanvas;
+          break;
+        }
+      }
+
+      if (frameImg) {
+        this.ctx.drawImage(frameImg, rect.x, rect.y, rect.w, rect.h);
+      }
+    }
+
+    if (placeableFrames.length) {
+      this.staticAtlas.commit();
+    }
+
+    placeableFrames.splice(0, placeableFrames.length);
+
+    for (const tile of this.tiles) {
+      if (tile.atlasIndex !== -1) {
+        continue;
+      }
+
+      placeableFrames.push({
+        type: FrameType.Tile,
+        typeId: tile.gfxType,
+        frameIndex: tile.graphicId,
+        w: tile.w,
+        h: tile.h,
+      });
+    }
+
+    placeableFrames.sort((a, b) => b.h - a.h);
+
+    if (placeableFrames.length) {
+      this.currentAtlasIndex = MAP_ATLAS_INDEX;
+      this.ctx = this.mapAtlas.getContext();
+    }
+
+    for (const placeable of placeableFrames) {
+      const rect = this.insert(placeable.w, placeable.h);
+      const tile = this.tiles.find(
+        (t) =>
+          t.gfxType === placeable.typeId &&
+          t.graphicId === placeable.frameIndex,
+      );
+      if (!tile) {
+        continue;
+      }
+
+      const bmp = this.getBmp(tile.gfxType, tile.graphicId);
+      if (!bmp) {
+        continue;
+      }
+
+      this.tmpCanvas.width = tile.w;
+      this.tmpCanvas.height = tile.h;
+      this.tmpCtx.clearRect(0, 0, tile.w, tile.h);
+      this.tmpCtx.drawImage(
+        bmp,
+        tile.x,
+        tile.y,
+        tile.w,
+        tile.h,
+        0,
+        0,
+        tile.w,
+        tile.h,
+      );
+
+      tile.atlasIndex = this.currentAtlasIndex;
+      tile.x = rect.x;
+      tile.y = rect.y;
+
+      this.ctx.drawImage(this.tmpCanvas, rect.x, rect.y, rect.w, rect.h);
+    }
+
+    if (placeableFrames.length) {
+      this.mapAtlas.commit();
+    }
+
+    placeableFrames.splice(0, placeableFrames.length);
+    this.currentAtlasIndex = 0;
+    this.ctx = this.atlases[0].getContext();
+
+    for (const character of this.characters) {
+      for (const [index, frame] of character.frames.entries()) {
+        if (!frame || frame.atlasIndex !== -1) {
+          continue;
+        }
+
+        placeableFrames.push({
+          type: FrameType.Character,
+          typeId: character.playerId,
+          frameIndex: index,
+          w: frame.w,
+          h: frame.h,
+        });
+      }
+    }
+
+    for (const npc of this.npcs) {
+      for (const [index, frame] of npc.frames.entries()) {
+        if (!frame || frame.atlasIndex !== -1) {
+          continue;
+        }
+
+        placeableFrames.push({
+          type: FrameType.Npc,
+          typeId: npc.graphicId,
+          frameIndex: index,
+          w: frame.w,
+          h: frame.h,
+        });
+      }
+    }
+
+    for (const item of this.items) {
+      if (item.atlasIndex !== -1) {
+        continue;
+      }
+
+      placeableFrames.push({
+        type: FrameType.Item,
+        typeId: item.graphicId,
+        frameIndex: 0,
+        w: item.w,
+        h: item.h,
+      });
+    }
+
+    placeableFrames.sort((a, b) => b.h - a.h);
+
+    for (const placeable of placeableFrames) {
+      const rect = this.insert(placeable.w, placeable.h);
+      let frameImg: HTMLCanvasElement | undefined;
+
+      switch (placeable.type) {
+        case FrameType.Character: {
+          const character = this.characters.find(
+            (c) => c.playerId === placeable.typeId,
+          );
+
+          if (!character) {
+            continue;
+          }
+
+          const frame = character.frames[placeable.frameIndex];
+          const imgData = this.temporaryCharacterFrames.get(
+            character.playerId,
+          )?.[placeable.frameIndex];
+
+          if (!imgData) {
+            continue;
+          }
+
+          this.tmpCanvas.width = frame.w;
+          this.tmpCanvas.height = frame.h;
+          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
+          this.tmpCtx.putImageData(imgData, 0, 0);
+
+          frame.atlasIndex = this.currentAtlasIndex;
+          frame.x = rect.x;
+          frame.y = rect.y;
+
+          frameImg = this.tmpCanvas;
+          break;
+        }
+        case FrameType.Npc: {
+          const npc = this.npcs.find((n) => n.graphicId === placeable.typeId);
+
+          if (!npc) {
+            continue;
+          }
+
+          const frame = npc.frames[placeable.frameIndex];
+          const baseId = (npc.graphicId - 1) * 40;
+          const bmp = this.getBmp(
+            GfxType.NPC,
+            baseId + placeable.frameIndex + 1,
+          );
+          if (!bmp) {
+            continue;
+          }
+
+          this.tmpCanvas.width = frame.w;
+          this.tmpCanvas.height = frame.h;
+          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
+          this.tmpCtx.drawImage(
+            bmp,
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h,
+            0,
+            0,
+            frame.w,
+            frame.h,
+          );
+
+          frame.atlasIndex = this.currentAtlasIndex;
+          frame.x = rect.x;
+          frame.y = rect.y;
+
+          frameImg = this.tmpCanvas;
+          break;
+        }
+        case FrameType.Item: {
+          const item = this.items.find((i) => i.graphicId === placeable.typeId);
+          if (!item) {
+            continue;
+          }
+
+          const bmp = this.getBmp(GfxType.Items, placeable.typeId);
+          if (!bmp) {
+            continue;
+          }
+
+          this.tmpCanvas.width = item.w;
+          this.tmpCanvas.height = item.h;
+          this.tmpCtx.clearRect(0, 0, item.w, item.h);
+          this.tmpCtx.drawImage(
+            bmp,
+            item.x,
+            item.y,
+            item.w,
+            item.h,
+            0,
+            0,
+            item.w,
+            item.h,
+          );
+
+          item.atlasIndex = this.currentAtlasIndex;
+          item.x = rect.x;
+          item.y = rect.y;
 
           frameImg = this.tmpCanvas;
           break;

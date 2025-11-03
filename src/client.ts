@@ -2806,7 +2806,6 @@ export class Client {
   }
 
   refresh() {
-    this.atlas.mapId = 0;
     this.bus.send(new RefreshRequestClientPacket());
   }
 
