@@ -129,7 +129,6 @@ export class MapRenderer {
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
   private signCache: ({ title: string; message: string } | null)[][] = [];
-  private mainCharacterFrame: CharacterFrame | null = null;
   private damageNumberCanvas: HTMLCanvasElement;
   private damageNumberCtx: CanvasRenderingContext2D;
 
