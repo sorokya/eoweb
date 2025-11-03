@@ -37,6 +37,7 @@ import { CharacterDeathAnimation } from './render/character-death';
 import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
 import {
+  type EffectAnimation,
   EffectTargetCharacter,
   EffectTargetNpc,
   EffectTargetTile,
@@ -416,11 +417,9 @@ export class MapRenderer {
         TILE_WIDTH,
         TILE_HEIGHT,
       );
-      effect.renderBehind(ctx);
-      ctx.globalAlpha = 0.4;
-      effect.renderTransparent(ctx);
-      ctx.globalAlpha = 1;
-      effect.renderFront(ctx);
+      this.renderEffectBehind(effect, ctx);
+      this.renderEffectTransparent(effect, ctx);
+      this.renderEffectFront(effect, ctx);
     }
 
     const main = entities.find(
@@ -942,7 +941,7 @@ export class MapRenderer {
         );
     for (const effect of effects) {
       effect.target.rect = rect;
-      effect.renderBehind(ctx);
+      this.renderEffectBehind(effect, ctx);
     }
 
     if (mirrored) {
@@ -1012,10 +1011,8 @@ export class MapRenderer {
     }
 
     for (const effect of effects) {
-      ctx.globalAlpha = 0.4;
-      effect.renderTransparent(ctx);
-      ctx.globalAlpha = 1;
-      effect.renderFront(ctx);
+      this.renderEffectTransparent(effect, ctx);
+      this.renderEffectFront(effect, ctx);
     }
 
     if (
@@ -1175,7 +1172,7 @@ export class MapRenderer {
 
     for (const effect of effects) {
       effect.target.rect = rect;
-      effect.renderBehind(ctx);
+      this.renderEffectBehind(effect, ctx);
     }
 
     if (mirrored) {
@@ -1221,10 +1218,8 @@ export class MapRenderer {
     }
 
     for (const effect of effects) {
-      ctx.globalAlpha = 0.4;
-      effect.renderTransparent(ctx);
-      ctx.globalAlpha = 1;
-      effect.renderFront(ctx);
+      this.renderEffectTransparent(effect, ctx);
+      this.renderEffectFront(effect, ctx);
     }
 
     const bubble = this.client.npcChats.get(npc.index);
@@ -1583,5 +1578,139 @@ export class MapRenderer {
     );
 
     ctx.globalAlpha = 1;
+  }
+
+  private renderEffectBehind(
+    effect: EffectAnimation,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const frame = this.client.atlas.getEffectBehindFrame(
+      effect.id,
+      effect.animationFrame,
+    );
+    if (!frame) {
+      return;
+    }
+
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
+      return;
+    }
+
+    if (!effect.target.rect) {
+      return;
+    }
+
+    ctx.drawImage(
+      atlas,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      Math.floor(
+        effect.target.rect.position.x +
+          (effect.target.rect.width >> 1) +
+          frame.xOffset,
+      ),
+      Math.floor(
+        effect.target.rect.position.y +
+          effect.target.rect.height -
+          TILE_HEIGHT -
+          HALF_TILE_HEIGHT +
+          frame.yOffset,
+      ),
+      frame.w,
+      frame.h,
+    );
+  }
+
+  private renderEffectTransparent(
+    effect: EffectAnimation,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const frame = this.client.atlas.getEffectTransparentFrame(
+      effect.id,
+      effect.animationFrame,
+    );
+    if (!frame) {
+      return;
+    }
+
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
+      return;
+    }
+
+    if (!effect.target.rect) {
+      return;
+    }
+
+    ctx.globalAlpha = 0.4;
+    ctx.drawImage(
+      atlas,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      Math.floor(
+        effect.target.rect.position.x +
+          (effect.target.rect.width >> 1) +
+          frame.xOffset,
+      ),
+      Math.floor(
+        effect.target.rect.position.y +
+          effect.target.rect.height -
+          TILE_HEIGHT -
+          HALF_TILE_HEIGHT +
+          frame.yOffset,
+      ),
+      frame.w,
+      frame.h,
+    );
+    ctx.globalAlpha = 1;
+  }
+
+  private renderEffectFront(
+    effect: EffectAnimation,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    const frame = this.client.atlas.getEffectFrontFrame(
+      effect.id,
+      effect.animationFrame,
+    );
+    if (!frame) {
+      return;
+    }
+
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
+      return;
+    }
+
+    if (!effect.target.rect) {
+      return;
+    }
+
+    ctx.drawImage(
+      atlas,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      Math.floor(
+        effect.target.rect.position.x +
+          (effect.target.rect.width >> 1) +
+          frame.xOffset,
+      ),
+      Math.floor(
+        effect.target.rect.position.y +
+          effect.target.rect.height -
+          TILE_HEIGHT -
+          HALF_TILE_HEIGHT +
+          frame.yOffset,
+      ),
+      frame.w,
+      frame.h,
+    );
   }
 }

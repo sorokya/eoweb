@@ -19,6 +19,7 @@ import {
   CHARACTER_WALKING_WIDTH,
   CHARACTER_WIDTH,
   HALF_TILE_WIDTH,
+  NUMBER_OF_EFFECTS,
   NUMBER_OF_EMOTES,
   TILE_HEIGHT,
 } from './consts';
@@ -175,8 +176,10 @@ type EmoteAtlasEntry = {
 };
 
 type EffectAtlasEntry = {
-  skillId: number;
-  frames: Frame[];
+  effectId: number;
+  behindFrames: Frame[];
+  transparentFrames: Frame[];
+  frontFrames: Frame[];
 };
 
 type NpcAtlasEntry = {
@@ -211,12 +214,15 @@ enum FrameType {
   Tile = 3,
   Static = 4,
   Emote = 5,
-  Effect = 6,
+  EffectBehind = 6,
+  EffectTransparent = 7,
+  EffectFront = 8,
 }
 
 type PlaceableFrame = {
   type: FrameType;
   typeId: number;
+  frameIndex: number;
   w: number;
   h: number;
 };
@@ -356,6 +362,33 @@ export class Atlas {
     if (!emote) return undefined;
 
     return emote.frames[frameIndex];
+  }
+
+  getEffectBehindFrame(
+    effectId: number,
+    frameIndex: number,
+  ): Frame | undefined {
+    const effect = this.effects.find((e) => e.effectId === effectId);
+    if (!effect) return undefined;
+
+    return effect.behindFrames[frameIndex];
+  }
+
+  getEffectTransparentFrame(
+    effectId: number,
+    frameIndex: number,
+  ): Frame | undefined {
+    const effect = this.effects.find((e) => e.effectId === effectId);
+    if (!effect) return undefined;
+
+    return effect.transparentFrames[frameIndex];
+  }
+
+  getEffectFrontFrame(effectId: number, frameIndex: number): Frame | undefined {
+    const effect = this.effects.find((e) => e.effectId === effectId);
+    if (!effect) return undefined;
+
+    return effect.frontFrames[frameIndex];
   }
 
   insert(w: number, h: number): Rect {
@@ -761,7 +794,50 @@ export class Atlas {
     }
   }
 
-  private loadEffectEntries() {}
+  private loadEffectEntries() {
+    for (let i = 1; i <= NUMBER_OF_EFFECTS; ++i) {
+      const meta = this.client.getEffectMetadata(i);
+      if (!meta) {
+        continue;
+      }
+
+      const makeFrames = () => {
+        const frames = [];
+        for (let j = 0; j < meta.frames; ++j) {
+          frames.push({
+            atlasIndex: -1,
+            x: -1,
+            y: -1,
+            w: -1,
+            h: -1,
+            xOffset: 0,
+            yOffset: 0,
+            mirroredXOffset: 0,
+          });
+        }
+        return frames;
+      };
+
+      this.effects.push({
+        effectId: i,
+        behindFrames: meta.hasBehindLayer ? makeFrames() : [],
+        transparentFrames: meta.hasTransparentLayer ? makeFrames() : [],
+        frontFrames: meta.hasInFrontLayer ? makeFrames() : [],
+      });
+
+      if (meta.hasBehindLayer) {
+        this.addBmpToLoad(GfxType.Spells, (i - 1) * 3 + 1);
+      }
+
+      if (meta.hasTransparentLayer) {
+        this.addBmpToLoad(GfxType.Spells, (i - 1) * 3 + 2);
+      }
+
+      if (meta.hasInFrontLayer) {
+        this.addBmpToLoad(GfxType.Spells, (i - 1) * 3 + 3);
+      }
+    }
+  }
 
   private refreshCharacters() {
     for (const char of this.client.nearby.characters) {
@@ -1084,7 +1160,8 @@ export class Atlas {
 
         placeableFrames.push({
           type: FrameType.Character,
-          typeId: character.playerId * 10000 + index,
+          typeId: character.playerId,
+          frameIndex: index,
           w: frame.w,
           h: frame.h,
         });
@@ -1099,7 +1176,8 @@ export class Atlas {
 
         placeableFrames.push({
           type: FrameType.Npc,
-          typeId: npc.graphicId * 10000 + index,
+          typeId: npc.graphicId,
+          frameIndex: index,
           w: frame.w,
           h: frame.h,
         });
@@ -1114,6 +1192,7 @@ export class Atlas {
       placeableFrames.push({
         type: FrameType.Item,
         typeId: item.graphicId,
+        frameIndex: 0,
         w: item.w,
         h: item.h,
       });
@@ -1126,13 +1205,14 @@ export class Atlas {
 
       placeableFrames.push({
         type: FrameType.Tile,
-        typeId: tile.gfxType * 10000 + tile.graphicId,
+        typeId: tile.gfxType,
+        frameIndex: tile.graphicId,
         w: tile.w,
         h: tile.h,
       });
     }
 
-    for (const [id, frame] of this.staticEntries) {
+    for (const [id, frame] of this.staticEntries.entries()) {
       if (frame.atlasIndex !== -1) {
         continue;
       }
@@ -1140,6 +1220,7 @@ export class Atlas {
       placeableFrames.push({
         type: FrameType.Static,
         typeId: id,
+        frameIndex: 0,
         w: frame.w,
         h: frame.h,
       });
@@ -1153,7 +1234,52 @@ export class Atlas {
 
         placeableFrames.push({
           type: FrameType.Emote,
-          typeId: emote.emoteId * 10000 + index,
+          typeId: emote.emoteId,
+          frameIndex: index,
+          w: frame.w,
+          h: frame.h,
+        });
+      }
+    }
+
+    for (const effect of this.effects) {
+      for (const [index, frame] of effect.behindFrames.entries()) {
+        if (!frame || frame.atlasIndex !== -1) {
+          continue;
+        }
+
+        placeableFrames.push({
+          type: FrameType.EffectBehind,
+          typeId: effect.effectId,
+          frameIndex: index,
+          w: frame.w,
+          h: frame.h,
+        });
+      }
+
+      for (const [index, frame] of effect.transparentFrames.entries()) {
+        if (!frame || frame.atlasIndex !== -1) {
+          continue;
+        }
+
+        placeableFrames.push({
+          type: FrameType.EffectTransparent,
+          typeId: effect.effectId,
+          frameIndex: index,
+          w: frame.w,
+          h: frame.h,
+        });
+      }
+
+      for (const [index, frame] of effect.frontFrames.entries()) {
+        if (!frame || frame.atlasIndex !== -1) {
+          continue;
+        }
+
+        placeableFrames.push({
+          type: FrameType.EffectFront,
+          typeId: effect.effectId,
+          frameIndex: index,
           w: frame.w,
           h: frame.h,
         });
@@ -1168,19 +1294,18 @@ export class Atlas {
 
       switch (placeable.type) {
         case FrameType.Character: {
-          const playerId = Math.floor(placeable.typeId / 10000);
-          const frameIndex = placeable.typeId % 10000;
           const character = this.characters.find(
-            (c) => c.playerId === playerId,
+            (c) => c.playerId === placeable.typeId,
           );
 
           if (!character) {
             continue;
           }
 
-          const frame = character.frames[frameIndex];
-          const imgData =
-            this.temporaryCharacterFrames.get(playerId)?.[frameIndex];
+          const frame = character.frames[placeable.frameIndex];
+          const imgData = this.temporaryCharacterFrames.get(
+            character.playerId,
+          )?.[placeable.frameIndex];
 
           if (!imgData) {
             continue;
@@ -1199,17 +1324,18 @@ export class Atlas {
           break;
         }
         case FrameType.Npc: {
-          const graphicId = Math.floor(placeable.typeId / 10000);
-          const frameIndex = placeable.typeId % 10000;
-          const npc = this.npcs.find((n) => n.graphicId === graphicId);
+          const npc = this.npcs.find((n) => n.graphicId === placeable.typeId);
 
           if (!npc) {
             continue;
           }
 
-          const frame = npc.frames[frameIndex];
+          const frame = npc.frames[placeable.frameIndex];
           const baseId = (npc.graphicId - 1) * 40;
-          const bmp = this.getBmp(GfxType.NPC, baseId + frameIndex + 1);
+          const bmp = this.getBmp(
+            GfxType.NPC,
+            baseId + placeable.frameIndex + 1,
+          );
           if (!bmp) {
             continue;
           }
@@ -1271,7 +1397,9 @@ export class Atlas {
         }
         case FrameType.Tile: {
           const tile = this.tiles.find(
-            (t) => t.gfxType * 10000 + t.graphicId === placeable.typeId,
+            (t) =>
+              t.gfxType === placeable.typeId &&
+              t.graphicId === placeable.frameIndex,
           );
           if (!tile) {
             continue;
@@ -1340,15 +1468,13 @@ export class Atlas {
           break;
         }
         case FrameType.Emote: {
-          const emoteId = Math.floor(placeable.typeId / 10000);
-          const frameIndex = placeable.typeId % 10000;
-          const emote = this.emotes.find((e) => e.emoteId === emoteId);
+          const emote = this.emotes.find((e) => e.emoteId === placeable.typeId);
 
           if (!emote) {
             continue;
           }
 
-          const frame = emote.frames[frameIndex];
+          const frame = emote.frames[placeable.frameIndex];
           const bmp = this.getBmp(GfxType.PostLoginUI, 38);
           if (!bmp) {
             continue;
@@ -1375,6 +1501,65 @@ export class Atlas {
 
           frameImg = this.tmpCanvas;
 
+          break;
+        }
+
+        case FrameType.EffectBehind:
+        case FrameType.EffectTransparent:
+        case FrameType.EffectFront: {
+          const effect = this.effects.find(
+            (e) => e.effectId === placeable.typeId,
+          );
+
+          if (!effect) {
+            continue;
+          }
+
+          let frame: Frame;
+          let offset = 0;
+          switch (placeable.type) {
+            case FrameType.EffectBehind:
+              frame = effect.behindFrames[placeable.frameIndex];
+              offset = 1;
+              break;
+            case FrameType.EffectTransparent:
+              frame = effect.transparentFrames[placeable.frameIndex];
+              offset = 2;
+              break;
+            case FrameType.EffectFront:
+              frame = effect.frontFrames[placeable.frameIndex];
+              offset = 3;
+              break;
+          }
+
+          const bmp = this.getBmp(
+            GfxType.Spells,
+            (effect.effectId - 1) * 3 + offset,
+          );
+          if (!bmp) {
+            continue;
+          }
+
+          this.tmpCanvas.width = frame.w;
+          this.tmpCanvas.height = frame.h;
+          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
+          this.tmpCtx.drawImage(
+            bmp,
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h,
+            0,
+            0,
+            frame.w,
+            frame.h,
+          );
+
+          frame.atlasIndex = this.currentAtlasIndex;
+          frame.x = rect.x;
+          frame.y = rect.y;
+
+          frameImg = this.tmpCanvas;
           break;
         }
       }
@@ -1557,6 +1742,10 @@ export class Atlas {
 
     for (const emote of this.emotes) {
       this.calculateEmoteSize(emote);
+    }
+
+    for (const effect of this.effects) {
+      this.calculateEffectSize(effect);
     }
   }
 
@@ -1749,36 +1938,36 @@ export class Atlas {
       return;
     }
 
-    switch (true) {
-      case id === StaticAtlasEntryType.HealthBars: {
+    switch (id) {
+      case StaticAtlasEntryType.HealthBars: {
         entry.x = 0;
         entry.y = 28;
         entry.w = 40;
         entry.h = 35;
         break;
       }
-      case id === StaticAtlasEntryType.DamageNumbers: {
+      case StaticAtlasEntryType.DamageNumbers: {
         entry.x = 40;
         entry.y = 28;
         entry.w = 89;
         entry.h = 11;
         break;
       }
-      case id === StaticAtlasEntryType.HealNumbers: {
+      case StaticAtlasEntryType.HealNumbers: {
         entry.x = 40;
         entry.y = 40;
         entry.w = 89;
         entry.h = 11;
         break;
       }
-      case id === StaticAtlasEntryType.Miss: {
+      case StaticAtlasEntryType.Miss: {
         entry.x = 132;
         entry.y = 28;
         entry.w = 30;
         entry.h = 11;
         break;
       }
-      case id === StaticAtlasEntryType.PlayerMenu: {
+      case StaticAtlasEntryType.PlayerMenu: {
         entry.x = 0;
         entry.y = 0;
         entry.w = 190;
@@ -1854,6 +2043,117 @@ export class Atlas {
       frame.y = bounds.y;
       frame.w = w;
       frame.h = h;
+    }
+  }
+
+  private calculateEffectSize(effect: EffectAtlasEntry) {
+    const meta = this.client.getEffectMetadata(effect.effectId);
+    let offset = 1;
+    for (const frameArray of [
+      effect.behindFrames,
+      effect.transparentFrames,
+      effect.frontFrames,
+    ]) {
+      const blankIndexes = [];
+      for (const [frameIndex, frame] of frameArray.entries()) {
+        if (!frame || frame.w !== -1) {
+          continue;
+        }
+
+        const bmp = this.getBmp(
+          GfxType.Spells,
+          (effect.effectId - 1) * 3 + offset,
+        );
+        if (!bmp) {
+          continue;
+        }
+
+        const frameWidth = Math.floor(bmp.width / frameArray.length);
+
+        this.tmpCanvas.width = frameWidth;
+        this.tmpCanvas.height = bmp.height;
+        this.tmpCtx.clearRect(0, 0, frameWidth, bmp.height);
+        this.tmpCtx.drawImage(
+          bmp,
+          frameIndex * frameWidth,
+          0,
+          frameWidth,
+          bmp.height,
+          0,
+          0,
+          frameWidth,
+          bmp.height,
+        );
+
+        const imgData = this.tmpCtx.getImageData(0, 0, frameWidth, bmp.height);
+        const bounds = {
+          x: frameWidth,
+          y: bmp.height,
+          maxX: 0,
+          maxY: 0,
+        };
+
+        const colors: Set<number> = new Set();
+        for (let y = 0; y < bmp.height; ++y) {
+          for (let x = 0; x < frameWidth; ++x) {
+            const base = (y * frameWidth + x) * 4;
+            colors.add(
+              (imgData.data[base] << 16) |
+                (imgData.data[base + 1] << 8) |
+                imgData.data[base + 2],
+            );
+            const alpha = imgData.data[base + 3];
+            if (alpha !== 0) {
+              if (x < bounds.x) bounds.x = x;
+              if (y < bounds.y) bounds.y = y;
+              if (x > bounds.maxX) bounds.maxX = x;
+              if (y > bounds.maxY) bounds.maxY = y;
+            }
+          }
+        }
+
+        if (colors.size <= 2 || !bounds.maxX) {
+          blankIndexes.push(frameIndex);
+          continue;
+        }
+
+        // Calculate width and height from min/max values
+        const w = bounds.maxX - bounds.x + 1;
+        const h = bounds.maxY - bounds.y + 1;
+
+        const halfFrameWidth = Math.floor(frameWidth >> 1);
+
+        const additionalOffset = { x: 0, y: 0 };
+        if (meta.positionOffsetMetadata) {
+          additionalOffset.x +=
+            meta.positionOffsetMetadata.offsetByFrameX[frameIndex];
+          additionalOffset.y +=
+            meta.positionOffsetMetadata.offsetByFrameY[frameIndex];
+        }
+
+        if (meta.verticalMetadata) {
+          additionalOffset.y += meta.verticalMetadata.frameOffsetY * frameIndex;
+        }
+
+        frame.xOffset =
+          bounds.x - halfFrameWidth + additionalOffset.x + meta.offsetX;
+        frame.yOffset =
+          bounds.y -
+          (36 + Math.floor((bmp.height - 100) >> 1)) +
+          additionalOffset.y +
+          meta.offsetY;
+
+        frame.x = bounds.x + frameIndex * frameWidth;
+        frame.y = bounds.y;
+        frame.w = w;
+        frame.h = h;
+      }
+      offset++;
+
+      // Mark blank frames as undefined
+      for (const i of blankIndexes) {
+        frameArray[i] = undefined;
+      }
     }
   }
 

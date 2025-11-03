@@ -63,3 +63,5 @@ export const PLAYER_MENU_WIDTH = 96;
 export const PLAYER_MENU_HEIGHT = 137;
 export const PLAYER_MENU_ITEM_HEIGHT = 15;
 export const PLAYER_MENU_OFFSET_Y = 10;
+
+export const NUMBER_OF_EFFECTS = 34;
