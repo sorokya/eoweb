@@ -556,6 +556,10 @@ export class Client {
   cursorClickAnimation: CursorClickAnimation | undefined;
   autoWalkPath: Vector2[] = [];
   onlinePlayers: OnlinePlayer[];
+  equipmentSwap: {
+    slot: EquipmentSlot;
+    itemId: number;
+  } | null = null;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -2473,12 +2477,15 @@ export class Client {
 
     const equipment = this.getEquipmentArray();
     if (equipment[slot]) {
-      this.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-        this.getResourceString(
-          EOResourceID.STATUS_LABEL_ITEM_EQUIP_TYPE_ALREADY_EQUIPPED,
-        ),
-      );
+      if (equipment[slot] === itemId) {
+        return;
+      }
+
+      this.equipmentSwap = {
+        slot,
+        itemId,
+      };
+      this.unequipItem(slot);
       return;
     }
 
