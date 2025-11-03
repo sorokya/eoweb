@@ -2403,8 +2403,8 @@ div.icon[data-id="23"] {
 }
 
 .debug {
-  width: 2048px;
-  height: 2048px;
+  width: 100%;
+  height: auto;
   position: static;
 }
 
