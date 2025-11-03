@@ -1555,8 +1555,9 @@ export class MapRenderer {
     position: { x: number; y: number },
     ctx: CanvasRenderingContext2D,
   ) {
-    const frame = this.client.atlas.getStaticEntry(
-      StaticAtlasEntryType.Emote + emote.type - 1 + emote.animationFrame,
+    const frame = this.client.atlas.getEmoteFrame(
+      emote.type,
+      emote.animationFrame,
     );
     if (!frame) {
       return;

@@ -19,6 +19,7 @@ import {
   CHARACTER_WALKING_WIDTH,
   CHARACTER_WIDTH,
   HALF_TILE_WIDTH,
+  NUMBER_OF_EMOTES,
   TILE_HEIGHT,
 } from './consts';
 import { GfxType } from './gfx';
@@ -168,6 +169,16 @@ type TileAtlasEntry = {
   yOffset: number;
 };
 
+type EmoteAtlasEntry = {
+  emoteId: number;
+  frames: Frame[];
+};
+
+type EffectAtlasEntry = {
+  skillId: number;
+  frames: Frame[];
+};
+
 type NpcAtlasEntry = {
   graphicId: number;
   tickCount: number;
@@ -199,6 +210,8 @@ enum FrameType {
   Item = 2,
   Tile = 3,
   Static = 4,
+  Emote = 5,
+  Effect = 6,
 }
 
 type PlaceableFrame = {
@@ -255,8 +268,6 @@ export enum StaticAtlasEntryType {
   Miss = 4,
   PlayerMenu = 5,
   Cursor = 6,
-  Emote = 7,
-  Next = 67, // Placeholder for next static entry (67 to make room for emotes)
 }
 
 export class Atlas {
@@ -264,6 +275,8 @@ export class Atlas {
   private npcs: NpcAtlasEntry[] = [];
   private items: ItemAtlasEntry[] = [];
   private tiles: TileAtlasEntry[] = [];
+  private emotes: EmoteAtlasEntry[] = [];
+  private effects: EffectAtlasEntry[] = [];
   private staticEntries: Map<StaticAtlasEntryType, TileAtlasEntry> = new Map();
   private client: Client;
   mapId = 0;
@@ -336,6 +349,13 @@ export class Atlas {
 
   getStaticEntry(type: StaticAtlasEntryType): TileAtlasEntry | undefined {
     return this.staticEntries.get(type);
+  }
+
+  getEmoteFrame(emoteId: number, frameIndex: number): Frame | undefined {
+    const emote = this.emotes.find((e) => e.emoteId === emoteId);
+    if (!emote) return undefined;
+
+    return emote.frames[frameIndex];
   }
 
   insert(w: number, h: number): Rect {
@@ -524,6 +544,8 @@ export class Atlas {
     this.tiles = [];
     this.mapId = this.client.mapId;
     this.staticEntries.clear();
+    this.emotes = [];
+    this.effects = [];
     //this.mapRendered = false;
 
     for (const atlas of this.atlases) {
@@ -550,6 +572,8 @@ export class Atlas {
 
     this.loadMapGraphicLayers();
     this.loadStaticEntries();
+    this.loadEmoteEntries();
+    this.loadEffectEntries();
   }
 
   private loadMapGraphicLayers() {
@@ -712,22 +736,32 @@ export class Atlas {
       yOffset: 0,
     });
     this.addBmpToLoad(GfxType.PostLoginUI, 24);
+  }
 
-    for (let i = 0; i < 60; ++i) {
-      this.staticEntries.set(StaticAtlasEntryType.Emote + i, {
-        gfxType: GfxType.PostLoginUI,
-        graphicId: 38,
-        atlasIndex: -1,
-        x: -1,
-        y: -1,
-        w: -1,
-        h: -1,
-        xOffset: 0,
-        yOffset: 0,
+  private loadEmoteEntries() {
+    this.addBmpToLoad(GfxType.PostLoginUI, 38);
+    for (let i = 0; i < NUMBER_OF_EMOTES; ++i) {
+      const frames = [];
+      for (let j = 0; j < 4; ++j) {
+        frames.push({
+          atlasIndex: -1,
+          x: -1,
+          y: -1,
+          w: -1,
+          h: -1,
+          xOffset: 0,
+          yOffset: 0,
+          mirroredXOffset: 0,
+        });
+      }
+      this.emotes.push({
+        emoteId: i + 1,
+        frames,
       });
     }
-    this.addBmpToLoad(GfxType.PostLoginUI, 38);
   }
+
+  private loadEffectEntries() {}
 
   private refreshCharacters() {
     for (const char of this.client.nearby.characters) {
@@ -1111,6 +1145,21 @@ export class Atlas {
       });
     }
 
+    for (const emote of this.emotes) {
+      for (const [index, frame] of emote.frames.entries()) {
+        if (frame.atlasIndex !== -1) {
+          continue;
+        }
+
+        placeableFrames.push({
+          type: FrameType.Emote,
+          typeId: emote.emoteId * 10000 + index,
+          w: frame.w,
+          h: frame.h,
+        });
+      }
+    }
+
     placeableFrames.sort((a, b) => b.h - a.h);
 
     for (const placeable of placeableFrames) {
@@ -1290,6 +1339,44 @@ export class Atlas {
           frameImg = this.tmpCanvas;
           break;
         }
+        case FrameType.Emote: {
+          const emoteId = Math.floor(placeable.typeId / 10000);
+          const frameIndex = placeable.typeId % 10000;
+          const emote = this.emotes.find((e) => e.emoteId === emoteId);
+
+          if (!emote) {
+            continue;
+          }
+
+          const frame = emote.frames[frameIndex];
+          const bmp = this.getBmp(GfxType.PostLoginUI, 38);
+          if (!bmp) {
+            continue;
+          }
+
+          this.tmpCanvas.width = frame.w;
+          this.tmpCanvas.height = frame.h;
+          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
+          this.tmpCtx.drawImage(
+            bmp,
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h,
+            0,
+            0,
+            frame.w,
+            frame.h,
+          );
+
+          frame.atlasIndex = this.currentAtlasIndex;
+          frame.x = rect.x;
+          frame.y = rect.y;
+
+          frameImg = this.tmpCanvas;
+
+          break;
+        }
       }
 
       if (frameImg) {
@@ -1466,6 +1553,10 @@ export class Atlas {
 
     for (const [id, frame] of this.staticEntries) {
       this.calculateStaticSize(id, frame);
+    }
+
+    for (const emote of this.emotes) {
+      this.calculateEmoteSize(emote);
     }
   }
 
@@ -1694,70 +1785,6 @@ export class Atlas {
         entry.h = bmp.height;
         break;
       }
-      case id >= StaticAtlasEntryType.Emote &&
-        id <= StaticAtlasEntryType.Emote + 60: {
-        const base = id - StaticAtlasEntryType.Emote;
-        const emoteIndex = Math.floor(base / 4);
-        const frame = base % 4;
-
-        this.tmpCanvas.width = 50;
-        this.tmpCanvas.height = 50;
-        this.tmpCtx.clearRect(
-          0,
-          0,
-          this.tmpCanvas.width,
-          this.tmpCanvas.height,
-        );
-        this.tmpCtx.drawImage(
-          bmp,
-          emoteIndex * 200 + frame * 50,
-          0,
-          50,
-          50,
-          0,
-          0,
-          50,
-          50,
-        );
-
-        const imgData = this.tmpCtx.getImageData(
-          0,
-          0,
-          this.tmpCanvas.width,
-          this.tmpCanvas.height,
-        );
-        const bounds = {
-          x: 50,
-          y: 50,
-          maxX: 0,
-          maxY: 0,
-        };
-
-        for (let y = 0; y < 50; ++y) {
-          for (let x = 0; x < 50; ++x) {
-            const base = (y * 50 + x) * 4;
-            const alpha = imgData.data[base + 3];
-            if (alpha !== 0) {
-              if (x < bounds.x) bounds.x = x;
-              if (y < bounds.y) bounds.y = y;
-              if (x > bounds.maxX) bounds.maxX = x;
-              if (y > bounds.maxY) bounds.maxY = y;
-            }
-          }
-        }
-
-        // Calculate width and height from min/max values
-        const w = bounds.maxX - bounds.x + 1;
-        const h = bounds.maxY - bounds.y + 1;
-
-        entry.xOffset = bounds.x - 25;
-        entry.yOffset = bounds.y - 25;
-        entry.x = emoteIndex * 200 + frame * 50 + bounds.x;
-        entry.y = bounds.y;
-        entry.w = w;
-        entry.h = h;
-        break;
-      }
       default: {
         entry.x = 0;
         entry.y = 0;
@@ -1765,6 +1792,68 @@ export class Atlas {
         entry.h = bmp.height;
         break;
       }
+    }
+  }
+
+  private calculateEmoteSize(emote: EmoteAtlasEntry) {
+    this.tmpCanvas.width = 50;
+    this.tmpCanvas.height = 50;
+
+    const bmp = this.getBmp(GfxType.PostLoginUI, 38);
+    if (!bmp) {
+      return;
+    }
+
+    for (const [frameIndex, frame] of emote.frames.entries()) {
+      this.tmpCtx.clearRect(0, 0, this.tmpCanvas.width, this.tmpCanvas.height);
+      this.tmpCtx.drawImage(
+        bmp,
+        (emote.emoteId - 1) * 200 + frameIndex * 50,
+        0,
+        50,
+        50,
+        0,
+        0,
+        50,
+        50,
+      );
+
+      const imgData = this.tmpCtx.getImageData(
+        0,
+        0,
+        this.tmpCanvas.width,
+        this.tmpCanvas.height,
+      );
+      const bounds = {
+        x: 50,
+        y: 50,
+        maxX: 0,
+        maxY: 0,
+      };
+
+      for (let y = 0; y < 50; ++y) {
+        for (let x = 0; x < 50; ++x) {
+          const base = (y * 50 + x) * 4;
+          const alpha = imgData.data[base + 3];
+          if (alpha !== 0) {
+            if (x < bounds.x) bounds.x = x;
+            if (y < bounds.y) bounds.y = y;
+            if (x > bounds.maxX) bounds.maxX = x;
+            if (y > bounds.maxY) bounds.maxY = y;
+          }
+        }
+      }
+
+      // Calculate width and height from min/max values
+      const w = bounds.maxX - bounds.x + 1;
+      const h = bounds.maxY - bounds.y + 1;
+
+      frame.xOffset = bounds.x - 25;
+      frame.yOffset = bounds.y - 25;
+      frame.x = (emote.emoteId - 1) * 200 + frameIndex * 50 + bounds.x;
+      frame.y = bounds.y;
+      frame.w = w;
+      frame.h = h;
     }
   }
 
