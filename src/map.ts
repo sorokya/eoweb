@@ -32,7 +32,6 @@ import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
-import { renderCharacterChatBubble } from './render/character-chat-bubble';
 import { CharacterDeathAnimation } from './render/character-death';
 import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
@@ -47,7 +46,6 @@ import type { HealthBar } from './render/health-bar';
 import { NpcAttackAnimation } from './render/npc-attack';
 import { NpcDeathAnimation } from './render/npc-death';
 import { NpcWalkAnimation } from './render/npc-walk';
-import { renderSpellChant } from './render/spell-chant';
 import { capitalize } from './utils/capitalize';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';
@@ -1029,37 +1027,36 @@ export class MapRenderer {
         ? null
         : this.client.characterEmotes.get(character.playerId);
 
+      if (
+        !bubble &&
+        !healthBar &&
+        !emote &&
+        (!(animation instanceof CharacterSpellChantAnimation) ||
+          animation.animationFrame)
+      ) {
+        return;
+      }
+
       this.topLayer.push(() => {
         const rect = getCharacterRectangle(character.playerId);
-        renderCharacterChatBubble(bubble, character, ctx);
-        this.renderHealthBar(
-          healthBar,
-          {
-            x: rect.position.x + (rect.width >> 1),
-            y: rect.position.y,
-          },
-          ctx,
-        );
+        const characterTopCenter = {
+          x: rect.position.x + (rect.width >> 1),
+          y: rect.position.y,
+        };
+
+        if (bubble) {
+          bubble.render(characterTopCenter, ctx);
+        }
+        this.renderHealthBar(healthBar, characterTopCenter, ctx);
         if (emote) {
-          this.renderEmote(
-            emote,
-            {
-              x: rect.position.x + (rect.width >> 1),
-              y: rect.position.y,
-            },
-            ctx,
-          );
+          this.renderEmote(emote, characterTopCenter, ctx);
         }
 
         if (
           animation instanceof CharacterSpellChantAnimation &&
           !animation.animationFrame
         ) {
-          renderSpellChant(
-            getCharacterRectangle(character.playerId),
-            animation.chant,
-            ctx,
-          );
+          this.renderSpellChant(characterTopCenter, animation.chant, ctx);
         }
       });
     }
@@ -1721,6 +1718,24 @@ export class MapRenderer {
       ),
       frame.w,
       frame.h,
+    );
+  }
+
+  private renderSpellChant(
+    position: { x: number; y: number },
+    chant: string,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    ctx.font = '12px w95fa';
+    ctx.fillStyle = '#fff';
+
+    const metrics = ctx.measureText(chant);
+    const textWidth = metrics.width;
+
+    ctx.fillText(
+      chant,
+      Math.floor(position.x - (textWidth >> 1)),
+      position.y - 10,
     );
   }
 }

@@ -93,10 +93,6 @@ export function setNpcRectangle(index: number, rectangle: Rectangle) {
   npcRectangles.set(index, rectangle);
 }
 
-export function getNpcRectangle(index: number): Rectangle | undefined {
-  return npcRectangles.get(index);
-}
-
 export function getNpcIntersecting(point: Vector2): EntityRect | null {
   let rect: Rectangle | null = null;
   let found = -1;
