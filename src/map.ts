@@ -725,7 +725,7 @@ export class MapRenderer {
       return;
     }
 
-    const offset = this.getOffset(entity.layer);
+    const offset = this.getOffset(entity.layer, tile.w, tile.h);
     const tileScreen = isoToScreen({ x: entity.x, y: entity.y });
 
     const screenX = Math.floor(
@@ -1388,18 +1388,28 @@ export class MapRenderer {
     return row ? (row[x] ?? null) : null;
   }
 
-  // NOTE: There are more offsets defined in atlas.ts, search for GfxType.MapObjects
-  getOffset(layer: number): { x: number; y: number } {
+  getOffset(
+    layer: number,
+    width: number,
+    height: number,
+  ): { x: number; y: number } {
     if (layer === Layer.Shadow) {
       return { x: -24, y: -12 };
     }
 
+    if ([Layer.Objects, Layer.Overlay, Layer.Overlay2].includes(layer)) {
+      return {
+        x: -2 - width / 2 + HALF_TILE_WIDTH,
+        y: -2 - height + TILE_HEIGHT,
+      };
+    }
+
     if (layer === Layer.DownWall) {
-      return { x: -32 + HALF_TILE_WIDTH, y: 0 };
+      return { x: -32 + HALF_TILE_WIDTH, y: -1 - (height - TILE_HEIGHT) };
     }
 
     if (layer === Layer.RightWall) {
-      return { x: HALF_TILE_WIDTH, y: 0 };
+      return { x: HALF_TILE_WIDTH, y: -1 - (height - TILE_HEIGHT) };
     }
 
     if (layer === Layer.Roof) {

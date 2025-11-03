@@ -18,10 +18,8 @@ import {
   CHARACTER_WALKING_HEIGHT,
   CHARACTER_WALKING_WIDTH,
   CHARACTER_WIDTH,
-  HALF_TILE_WIDTH,
   NUMBER_OF_EFFECTS,
   NUMBER_OF_EMOTES,
-  TILE_HEIGHT,
 } from './consts';
 import { GfxType } from './gfx';
 import { LAYER_GFX_MAP } from './map';
@@ -1519,17 +1517,7 @@ export class Atlas {
       this.tmpCanvas.width = tile.w;
       this.tmpCanvas.height = tile.h;
       this.tmpCtx.clearRect(0, 0, tile.w, tile.h);
-      this.tmpCtx.drawImage(
-        bmp,
-        tile.x,
-        tile.y,
-        tile.w,
-        tile.h,
-        0,
-        0,
-        tile.w,
-        tile.h,
-      );
+      this.tmpCtx.drawImage(bmp, 0, 0, tile.w, tile.h);
 
       tile.atlasIndex = this.currentAtlasIndex;
       tile.x = rect.x;
@@ -2016,55 +2004,10 @@ export class Atlas {
       return;
     }
 
-    this.tmpCanvas.width = bmp.width;
-    this.tmpCanvas.height = bmp.height;
-    this.tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
-    this.tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
-
-    const imgData = this.tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
-    const bounds = {
-      x: bmp.width,
-      y: bmp.height,
-      maxX: 0,
-      maxY: 0,
-    };
-
-    for (let y = 0; y < bmp.height; ++y) {
-      for (let x = 0; x < bmp.width; ++x) {
-        const base = (y * bmp.width + x) * 4;
-        const alpha = imgData.data[base + 3];
-        if (alpha !== 0) {
-          if (x < bounds.x) bounds.x = x;
-          if (y < bounds.y) bounds.y = y;
-          if (x > bounds.maxX) bounds.maxX = x;
-          if (y > bounds.maxY) bounds.maxY = y;
-        }
-      }
-    }
-
-    // Calculate width and height from min/max values
-    const w = bounds.maxX - bounds.x + 1;
-    const h = bounds.maxY - bounds.y + 1;
-    tile.xOffset = bounds.x;
-    tile.yOffset = bounds.y;
-
-    switch (tile.gfxType) {
-      case GfxType.MapObjects:
-      case GfxType.MapOverlay: {
-        tile.xOffset += -2 - Math.floor(bmp.width >> 1) + HALF_TILE_WIDTH;
-        tile.yOffset += -2 - bmp.height + TILE_HEIGHT;
-        break;
-      }
-      case GfxType.MapWalls: {
-        tile.yOffset += -(bmp.height - TILE_HEIGHT);
-        break;
-      }
-    }
-
-    tile.x = bounds.x;
-    tile.y = bounds.y;
-    tile.w = w;
-    tile.h = h;
+    tile.w = bmp.width;
+    tile.h = bmp.height;
+    tile.x = 0;
+    tile.y = 0;
   }
 
   private calculateStaticSize(id: StaticAtlasEntryType, entry: TileAtlasEntry) {
