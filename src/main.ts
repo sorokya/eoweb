@@ -20,9 +20,7 @@ import { PacketBus } from './bus';
 import { ChatTab, Client, GameState } from './client';
 import {
   GAME_FPS,
-  LOCKER_BASE_SIZE,
   LOCKER_MAX_ITEM_AMOUNT,
-  LOCKER_SIZE_STEP,
   LOCKER_UPGRADE_BASE_COST,
   LOCKER_UPGRADE_COST_STEP,
   MAX_CHALLENGE,
@@ -724,18 +722,6 @@ inventory.on('addLockerItem', (itemId) => {
   if (itemId === 1) {
     const strings = client.getDialogStrings(
       DialogResourceID.LOCKER_DEPOSIT_GOLD_ERROR,
-    );
-    smallAlert.setContent(strings[1], strings[0]);
-    smallAlert.show();
-    return;
-  }
-
-  const lockerSize =
-    LOCKER_BASE_SIZE + client.lockerUpgrades * LOCKER_SIZE_STEP;
-  const itemCount = lockerDialog.getItemCount();
-  if (itemCount + 1 >= lockerSize) {
-    const strings = client.getDialogStrings(
-      DialogResourceID.LOCKER_FULL_DIFF_ITEMS_MAX,
     );
     smallAlert.setContent(strings[1], strings[0]);
     smallAlert.show();
