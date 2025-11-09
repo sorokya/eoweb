@@ -23,7 +23,7 @@ import { playSfxById, SfxId } from './sfx';
 import { bigCoordsToCoords } from './utils/big-coords-to-coords';
 import { getNextCoords } from './utils/get-next-coords';
 
-export function inputToDirection(input: Input): Direction | null {
+function inputToDirection(input: Input): Direction | null {
   switch (input) {
     case Input.Up:
       return Direction.Up;
@@ -48,6 +48,7 @@ export class MovementController {
   attackTicks = ATTACK_TICKS;
   hotbarTicks = HOTBAR_COOLDOWN_TICKS;
   minimapTicks = WALK_TICKS;
+  refreshTicks = WALK_TICKS;
   freeze = false;
 
   constructor(client: Client) {
@@ -61,6 +62,7 @@ export class MovementController {
     this.attackTicks = Math.max(this.attackTicks - 1, -1);
     this.hotbarTicks = Math.max(this.hotbarTicks - 1, 0);
     this.minimapTicks = Math.max(this.minimapTicks - 1, 0);
+    this.refreshTicks = Math.max(this.refreshTicks - 1, 0);
 
     if (
       this.freeze ||
@@ -97,6 +99,11 @@ export class MovementController {
       playSfxById(SfxId.ButtonClick);
       this.client.toggleMinimap();
       this.minimapTicks = WALK_TICKS;
+    }
+
+    if (isOrWasInputHeld(Input.Refresh) && this.refreshTicks === 0) {
+      this.client.refresh();
+      this.refreshTicks = WALK_TICKS;
     }
 
     const animation = this.client.characterAnimations.get(character.playerId);

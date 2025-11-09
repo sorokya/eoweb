@@ -10,6 +10,9 @@ export class NpcDeathAnimation extends NpcAnimation {
   }
 
   tick() {
+    if (this.base) {
+      this.base.tick();
+    }
     this.ticks = Math.max(this.ticks - 1, 0);
   }
 }

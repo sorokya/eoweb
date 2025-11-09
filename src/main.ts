@@ -56,7 +56,7 @@ import { LockerDialog } from './ui/locker-dialog';
 import { LoginForm } from './ui/login';
 import { MainMenu } from './ui/main-menu';
 import { MobileControls } from './ui/mobile-controls';
-import { OffsetTweaker } from './ui/offset-tweaker';
+//import { OffsetTweaker } from './ui/offset-tweaker';
 import { OnlineList } from './ui/online-list';
 import { Paperdoll } from './ui/paperdoll';
 import { PartyDialog } from './ui/party-dialog';
@@ -94,11 +94,6 @@ export function zoomIn() {
 export function zoomOut() {
   userOverride = true;
   setZoom(Math.max(1, ZOOM - 1));
-  resizeCanvases();
-}
-
-export function zoomReset() {
-  userOverride = false;
   resizeCanvases();
 }
 
@@ -350,25 +345,7 @@ const initializeSocket = (next: 'login' | 'create' | '' = '') => {
       }
     }
 
-    const bus = new PacketBus(socket);
-    bus.on('receive', (_data) => {
-      /*
-      packetLogModal.addEntry({
-        source: PacketSource.Server,
-        ...data,
-      });
-      */
-    });
-    bus.on('send', (_data) => {
-      /*
-      packetLogModal.addEntry({
-        source: PacketSource.Client,
-        ...data,
-      });
-      */
-    });
-
-    client.setBus(bus);
+    client.setBus(new PacketBus(socket));
     client.challenge = randomRange(1, MAX_CHALLENGE);
 
     const init = new InitInitClientPacket();
@@ -407,8 +384,7 @@ const smallAlertLargeHeader = new SmallAlertLargeHeader();
 const exitGame = new ExitGame();
 const smallConfirm = new SmallConfirm();
 const chat = new Chat();
-// biome-ignore lint/correctness/noUnusedVariables: Only used sometimes
-const offsetTweaker = new OffsetTweaker();
+//const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
 const stats = new Stats(client);

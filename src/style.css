@@ -17,18 +17,14 @@ html {
 body {
   padding: 0;
   margin: 0;
-  /*
-  height: 100vh;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  /*overflow: hidden;*/
 }
 
 * {
   /* biome-ignore lint/a11y/useGenericFontNames: Only custom font!! */
   font-family: w95fa !important;
-  /*user-select: none;*/
+  -webkit-touch-callout: none; /* Disable “Save Image” / “Copy” popup */
+  -webkit-user-select: none; /* Disable text selection */
+  user-select: none;
 }
 
 ::selection {
@@ -612,6 +608,11 @@ input[type="password"] {
   }
 }
 
+#chat ul,
+#chat ul * {
+  user-select: text !important;
+}
+
 #chat {
   position: absolute;
   z-index: 1020;
@@ -621,6 +622,10 @@ input[type="password"] {
   color: #fff;
   opacity: 0.8;
   padding: 5px 10px;
+}
+
+#chat a {
+  color: #fff;
 }
 
 #chat-message {
@@ -668,12 +673,6 @@ input[type="password"] {
 #mobile-controls {
   opacity: 0.8;
   z-index: 1020;
-}
-
-#mobile-controls,
-#mobile-controls * {
-  user-select: none;
-  -webkit-user-select: none;
 }
 
 #joystick-container {
@@ -2404,8 +2403,8 @@ div.icon[data-id="23"] {
 }
 
 .debug {
-  width: 2048px;
-  height: 2048px;
+  width: 100%;
+  height: auto;
   position: static;
 }
 
@@ -2852,7 +2851,7 @@ div.icon[data-id="23"] {
 }
 
 #party .remove-icon {
-  background: url("gfx/gfx002/143.png");
+  background: url("/gfx/gfx002/143.png");
   width: 14px;
   height: 10px;
   cursor: pointer;

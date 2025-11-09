@@ -81,7 +81,7 @@ export class Chat extends Base {
     li.appendChild(img);
 
     const msg = document.createElement('span');
-    msg.innerText = message;
+    msg.innerHTML = this.replaceLinks(this.sanitize(message));
     li.appendChild(msg);
 
     let chatWindow: HTMLUListElement;
@@ -223,5 +223,17 @@ export class Chat extends Base {
     handler: (data: Events[Event]) => void,
   ) {
     this.emitter.on(event, handler);
+  }
+
+  private sanitize(input: string): string {
+    const sanitized = input.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
+    return sanitized;
+  }
+
+  private replaceLinks(input: string): string {
+    const urlRegex = /(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g;
+    return input.replace(urlRegex, (url) => {
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    });
   }
 }

@@ -24,6 +24,7 @@ export enum Input {
   Hotbar4 = 20,
   Hotbar5 = 21,
   Tab = 22,
+  Refresh = 23,
   Unknown = -1,
 }
 
@@ -162,6 +163,9 @@ window.addEventListener('keydown', (e) => {
       updateInputHeld(Input.Tab, true);
       e.preventDefault();
       break;
+    case 'KeyR':
+      updateInputHeld(Input.Refresh, true);
+      break;
   }
 });
 
@@ -241,6 +245,9 @@ window.addEventListener('keyup', (e) => {
       break;
     case 'Tab':
       updateInputHeld(Input.Tab, false);
+      break;
+    case 'KeyR':
+      updateInputHeld(Input.Refresh, false);
       break;
   }
 });

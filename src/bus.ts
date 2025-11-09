@@ -13,20 +13,6 @@ import {
   SequenceStart,
   swapMultiples,
 } from 'eolib';
-import mitt, { type Emitter } from 'mitt';
-
-export type PacketLog = {
-  action: PacketAction;
-  family: PacketFamily;
-  data: Uint8Array;
-  timestamp: Date;
-};
-
-type PacketBusEvents = {
-  send: PacketLog;
-  receive: PacketLog;
-};
-
 export class PacketBus {
   private socket: WebSocket;
   private sequencer: PacketSequencer;
@@ -36,8 +22,6 @@ export class PacketBus {
     PacketFamily,
     Map<PacketAction, (reader: EoReader) => void>
   > = new Map();
-  private emitter: Emitter<PacketBusEvents>;
-
   constructor(socket: WebSocket) {
     this.socket = socket;
     this.sequencer = new PacketSequencer(SequenceStart.zero());
@@ -51,14 +35,6 @@ export class PacketBus {
           console.error('Failed to get array buffer', err);
         });
     });
-    this.emitter = mitt<PacketBusEvents>();
-  }
-
-  on<Event extends keyof PacketBusEvents>(
-    event: Event,
-    handler: (data: PacketBusEvents[Event]) => void,
-  ) {
-    this.emitter.on(event, handler);
   }
 
   disconnect() {
@@ -87,13 +63,6 @@ export class PacketBus {
 
     const packetBuf = data.slice(2);
 
-    this.emitter.emit('receive', {
-      action,
-      family,
-      data: packetBuf,
-      timestamp: new Date(),
-    });
-
     const reader = new EoReader(packetBuf);
     const familyHandlers = this.handlers.get(family);
     if (familyHandlers) {
@@ -121,13 +90,6 @@ export class PacketBus {
   sendBuf(family: PacketFamily, action: PacketAction, buf: Uint8Array) {
     const data = [...buf];
     const sequence = this.sequencer.nextSequence();
-
-    this.emitter.emit('send', {
-      action: action,
-      family: family,
-      data: buf,
-      timestamp: new Date(),
-    });
 
     if (action !== 0xff && family !== 0xff) {
       const sequenceBytes = encodeNumber(sequence);

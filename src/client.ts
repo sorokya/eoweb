@@ -157,7 +157,6 @@ import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
 import { Door } from './door';
 import { type DialogResourceID, type Edf, EOResourceID } from './edf';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
-import { GfxType, loadBitmapById } from './gfx';
 import { registerAccountHandlers } from './handlers/account';
 import { registerAdminInteractHandlers } from './handlers/admin-interact';
 import { registerArenaHandlers } from './handlers/arena';
@@ -310,14 +309,6 @@ export enum GameState {
   InGame = 4,
 }
 
-export enum CharacterAction {
-  None = 0,
-  Walking = 1,
-  MeleeAttack = 2,
-  RangedAttack = 3,
-  CastingSpell = 4,
-}
-
 export enum EquipmentSlot {
   Boots = 0,
   Accessory = 1,
@@ -430,6 +421,17 @@ enum SpellTarget {
   Group = 1,
   Npc = 2,
   Player = 3,
+}
+
+enum PlayerMenuItem {
+  Paperdoll = 0,
+  Book = 1,
+  Join = 2,
+  Invite = 3,
+  Trade = 4,
+  Whisper = 5,
+  Friend = 6,
+  Ignore = 7,
 }
 
 export class Client {
@@ -554,6 +556,10 @@ export class Client {
   cursorClickAnimation: CursorClickAnimation | undefined;
   autoWalkPath: Vector2[] = [];
   onlinePlayers: OnlinePlayer[];
+  equipmentSwap: {
+    slot: EquipmentSlot;
+    itemId: number;
+  } | null = null;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -590,7 +596,6 @@ export class Client {
     this.mapRenderer = new MapRenderer(this);
     this.minimapRenderer = new MinimapRenderer(this);
     this.movementController = new MovementController(this);
-    this.preloadCharacterSprites();
     loadConfig().then((config) => {
       this.config = config;
       const txtHost =
@@ -606,24 +611,6 @@ export class Client {
       mainMenuLogo.setAttribute('data-slogan', config.slogan);
     });
     this.atlas = new Atlas(this);
-  }
-
-  private preloadCharacterSprites() {
-    loadBitmapById(GfxType.SkinSprites, 1); // standing
-    loadBitmapById(GfxType.SkinSprites, 2); // walking
-    loadBitmapById(GfxType.SkinSprites, 3); // attacking
-    loadBitmapById(GfxType.SkinSprites, 6); // sitting on ground
-  }
-
-  preloadNpcSprites(id: number) {
-    const record = this.getEnfRecordById(id);
-    if (!record) {
-      return;
-    }
-
-    for (let i = 1; i <= 18; ++i) {
-      loadBitmapById(GfxType.NPC, (record.graphicId - 1) * 40 + i);
-    }
   }
 
   getCharacterById(id: number): CharacterMapInfo | undefined {
@@ -1601,7 +1588,7 @@ export class Client {
 
     // Helper function to check if coordinates are within map bounds
     const isInBounds = (x: number, y: number): boolean => {
-      return x >= 0 && y >= 0 && x < this.map.width && y < this.map.height;
+      return x >= 0 && y >= 0 && x <= this.map.width && y <= this.map.height;
     };
 
     // Create start node
@@ -2490,12 +2477,15 @@ export class Client {
 
     const equipment = this.getEquipmentArray();
     if (equipment[slot]) {
-      this.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-        this.getResourceString(
-          EOResourceID.STATUS_LABEL_ITEM_EQUIP_TYPE_ALREADY_EQUIPPED,
-        ),
-      );
+      if (equipment[slot] === itemId) {
+        return;
+      }
+
+      this.equipmentSwap = {
+        slot,
+        itemId,
+      };
+      this.unequipItem(slot);
       return;
     }
 
@@ -2601,7 +2591,7 @@ export class Client {
     this.bus.send(packet);
   }
 
-  isVisisbleEquipmentChange(slot: EquipmentSlot): boolean {
+  isVisibleEquipmentChange(slot: EquipmentSlot): boolean {
     return [
       EquipmentSlot.Boots,
       EquipmentSlot.Armor,
@@ -3174,15 +3164,4 @@ export class Client {
 
     this.minimapEnabled = !this.minimapEnabled;
   }
-}
-
-export enum PlayerMenuItem {
-  Paperdoll = 0,
-  Book = 1,
-  Join = 2,
-  Invite = 3,
-  Trade = 4,
-  Whisper = 5,
-  Friend = 6,
-  Ignore = 7,
 }
