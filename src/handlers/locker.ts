@@ -5,10 +5,12 @@ import {
   LockerGetServerPacket,
   LockerOpenServerPacket,
   LockerReplyServerPacket,
+  LockerSpecServerPacket,
   PacketAction,
   PacketFamily,
 } from 'eolib';
 import type { Client } from '../client';
+import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 
 function handleLockerBuy(client: Client, reader: EoReader) {
@@ -72,6 +74,17 @@ function handleLockerReply(client: Client, reader: EoReader) {
   });
 }
 
+function handleLockerSpec(client: Client, reader: EoReader) {
+  const packet = LockerSpecServerPacket.deserialize(reader);
+  const strings = client.getDialogStrings(
+    DialogResourceID.LOCKER_FULL_DIFF_ITEMS_MAX,
+  );
+  client.showError(
+    strings[1].replace('25', packet.lockerMaxItems.toString()),
+    strings[0],
+  );
+}
+
 export function registerLockerHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Locker,
@@ -92,5 +105,10 @@ export function registerLockerHandlers(client: Client) {
     PacketFamily.Locker,
     PacketAction.Reply,
     (reader) => handleLockerReply(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Locker,
+    PacketAction.Spec,
+    (reader) => handleLockerSpec(client, reader),
   );
 }
