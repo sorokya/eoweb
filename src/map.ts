@@ -1,5 +1,10 @@
 import { AdminLevel, Coords, Direction, MapTileSpec, SitState } from 'eolib';
-import { CharacterFrame, NpcFrame, StaticAtlasEntryType } from './atlas';
+import {
+  CHARACTER_FRAME_OFFSETS,
+  CharacterFrame,
+  NpcFrame,
+  StaticAtlasEntryType,
+} from './atlas';
 import { type Client, GameState } from './client';
 import {
   getCharacterIntersecting,
@@ -17,7 +22,6 @@ import {
   DEATH_TICKS,
   DOOR_HEIGHT,
   EMOTE_ANIMATION_TICKS,
-  HALF_HALF_TILE_HEIGHT,
   HALF_TILE_HEIGHT,
   HALF_TILE_WIDTH,
   NPC_IDLE_ANIMATION_TICKS,
@@ -46,6 +50,7 @@ import type { HealthBar } from './render/health-bar';
 import { NpcAttackAnimation } from './render/npc-attack';
 import { NpcDeathAnimation } from './render/npc-death';
 import { NpcWalkAnimation } from './render/npc-walk';
+import { getOffsetX, getOffsetY } from './ui/offset-tweaker';
 import { capitalize } from './utils/capitalize';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';
@@ -840,8 +845,8 @@ export class MapRenderer {
     const downRight = [Direction.Down, Direction.Right].includes(
       character.direction,
     );
-    const additionalOffset = { x: 0, y: 0 };
     let characterFrame: CharacterFrame;
+    const additionalOffset = { x: 0, y: 0 };
     let coords: Vector2 = character.coords;
     switch (true) {
       case animation instanceof CharacterWalkAnimation: {
@@ -904,17 +909,22 @@ export class MapRenderer {
       character.direction,
     );
 
+    const frameOffset =
+      CHARACTER_FRAME_OFFSETS[character.gender][characterFrame][
+        character.direction
+      ];
+    additionalOffset.x += frameOffset.x;
+    additionalOffset.y += frameOffset.y;
+
     const screenX = Math.floor(
       screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + additionalOffset.x,
     );
 
     const screenY = Math.floor(
       screenCoords.y -
-        HALF_HALF_TILE_HEIGHT +
-        TILE_HEIGHT +
-        frame.yOffset -
         playerScreen.y +
         HALF_GAME_HEIGHT +
+        frame.yOffset +
         additionalOffset.y,
     );
 
