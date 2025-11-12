@@ -278,8 +278,9 @@ type ItemAtlasEntry = {
 };
 
 type Bmp = {
-  gfxType: GfxType;
-  id: number;
+  gfxType?: GfxType;
+  id?: number;
+  path?: string;
   img: HTMLImageElement;
   loaded: boolean;
 };
@@ -351,6 +352,7 @@ export enum StaticAtlasEntryType {
   Miss = 4,
   PlayerMenu = 5,
   Cursor = 6,
+  Sans11 = 7,
 }
 
 export class Atlas {
@@ -798,6 +800,24 @@ export class Atlas {
     }
   }
 
+  private addBmpToLoadByPath(path: string) {
+    if (!this.bmpsToLoad.find((bmp) => bmp.path === path)) {
+      const img = new Image();
+      const bmp = {
+        path,
+        img,
+        loaded: false,
+      };
+
+      img.onload = () => {
+        bmp.loaded = true;
+      };
+
+      img.src = path;
+      this.bmpsToLoad.push(bmp);
+    }
+  }
+
   reset() {
     this.characters = [];
     this.npcs = [];
@@ -1000,6 +1020,19 @@ export class Atlas {
       yOffset: 0,
     });
     this.addBmpToLoad(GfxType.PostLoginUI, 24);
+
+    this.staticEntries.set(StaticAtlasEntryType.Sans11, {
+      gfxType: GfxType.PostLoginUI,
+      graphicId: -1,
+      atlasIndex: -1,
+      x: -1,
+      y: -1,
+      w: -1,
+      h: -1,
+      xOffset: 0,
+      yOffset: 0,
+    });
+    this.addBmpToLoadByPath('/sans-11.png');
   }
 
   private loadEmoteEntries() {
@@ -1509,7 +1542,10 @@ export class Atlas {
             continue;
           }
 
-          const bmp = this.getBmp(frame.gfxType, frame.graphicId);
+          const bmp =
+            placeable.typeId === StaticAtlasEntryType.Sans11
+              ? this.getBmpByPath('/sans-11.png')
+              : this.getBmp(frame.gfxType, frame.graphicId);
           if (!bmp) {
             continue;
           }
@@ -2042,11 +2078,6 @@ export class Atlas {
           }
         }
 
-        this.tmpCanvas.classList.add('debug');
-        this.tmpBehindCanvas.classList.add('debug');
-        document.body.appendChild(this.tmpCanvas); // Debugging
-        document.body.appendChild(this.tmpBehindCanvas); // Debugging
-
         this.tmpBehindCtx.drawImage(
           this.tmpCanvas,
           0,
@@ -2274,7 +2305,10 @@ export class Atlas {
       return;
     }
 
-    const bmp = this.getBmp(entry.gfxType, entry.graphicId);
+    const bmp =
+      id === StaticAtlasEntryType.Sans11
+        ? this.getBmpByPath('/sans-11.png')
+        : this.getBmp(entry.gfxType, entry.graphicId);
     if (!bmp) {
       return;
     }
@@ -2505,6 +2539,10 @@ export class Atlas {
     return this.bmpsToLoad.find(
       (bmp) => bmp.gfxType === gfxType && bmp.id === graphicId,
     )?.img;
+  }
+
+  private getBmpByPath(path: string): HTMLImageElement | undefined {
+    return this.bmpsToLoad.find((bmp) => bmp.path === path)?.img;
   }
 
   private renderCharacterHairBehind(
@@ -3029,20 +3067,20 @@ const BOOTS_OFFSETS = {
     [CharacterFrame.RangeAttackUpLeft]: { x: 2, y: 21 },
   },
   [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: 21 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: 21 },
-    [CharacterFrame.WalkingDownRight1]: { x: 0, y: 19 },
-    [CharacterFrame.WalkingDownRight2]: { x: 0, y: 19 },
-    [CharacterFrame.WalkingDownRight3]: { x: 0, y: 19 },
-    [CharacterFrame.WalkingDownRight4]: { x: 0, y: 19 },
+    [CharacterFrame.StandingDownRight]: { x: 0, y: 20 },
+    [CharacterFrame.StandingUpLeft]: { x: 0, y: 20 },
+    [CharacterFrame.WalkingDownRight1]: { x: 1, y: 19 },
+    [CharacterFrame.WalkingDownRight2]: { x: 1, y: 19 },
+    [CharacterFrame.WalkingDownRight3]: { x: 1, y: 19 },
+    [CharacterFrame.WalkingDownRight4]: { x: 1, y: 19 },
     [CharacterFrame.WalkingUpLeft1]: { x: 0, y: 19 },
     [CharacterFrame.WalkingUpLeft2]: { x: 0, y: 19 },
     [CharacterFrame.WalkingUpLeft3]: { x: 0, y: 19 },
     [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 19 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 2, y: 19 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -2, y: 19 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 2, y: 20 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -2, y: 20 },
     [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: 20 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: 19 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: 20 },
     [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 21 },
     [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 21 },
     [CharacterFrame.ChairDownRight]: { x: 3, y: 16 },
@@ -3080,26 +3118,26 @@ const ARMOR_OFFSETS = {
     [CharacterFrame.RangeAttackUpLeft]: { x: 1, y: -3 },
   },
   [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: -5 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: -5 },
-    [CharacterFrame.WalkingDownRight1]: { x: 1, y: -6 },
-    [CharacterFrame.WalkingDownRight2]: { x: 1, y: -6 },
-    [CharacterFrame.WalkingDownRight3]: { x: 1, y: -6 },
-    [CharacterFrame.WalkingDownRight4]: { x: 1, y: -6 },
+    [CharacterFrame.StandingDownRight]: { x: 0, y: -4 },
+    [CharacterFrame.StandingUpLeft]: { x: 0, y: -4 },
+    [CharacterFrame.WalkingDownRight1]: { x: 1, y: -5 },
+    [CharacterFrame.WalkingDownRight2]: { x: 1, y: -5 },
+    [CharacterFrame.WalkingDownRight3]: { x: 1, y: -5 },
+    [CharacterFrame.WalkingDownRight4]: { x: 1, y: -5 },
     [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -5 },
     [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -5 },
     [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -5 },
     [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -5 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: -5 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -1, y: -5 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: -5 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -1, y: -5 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 2, y: -4 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -2, y: -4 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: -4 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: -4 },
     [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -3 },
     [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -3 },
     [CharacterFrame.ChairDownRight]: { x: 3, y: -7 },
     [CharacterFrame.ChairUpLeft]: { x: 3, y: -7 },
     [CharacterFrame.FloorDownRight]: { x: 3, y: -3 },
-    [CharacterFrame.FloorUpLeft]: { x: 3, y: -3 },
+    [CharacterFrame.FloorUpLeft]: { x: 3, y: -2 },
     [CharacterFrame.RangeAttackDownRight]: { x: 2, y: -5 },
     [CharacterFrame.RangeAttackUpLeft]: { x: 2, y: -5 },
   },
@@ -3141,16 +3179,16 @@ const HAT_OFFSETS = {
     [CharacterFrame.WalkingUpLeft2]: { x: 0, y: 22 },
     [CharacterFrame.WalkingUpLeft3]: { x: 0, y: 22 },
     [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 22 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: 22 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -3, y: 27 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: 22 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -3, y: 23 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 2, y: 22 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -4, y: 26 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: 22 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: 23 },
     [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 24 },
     [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 24 },
     [CharacterFrame.ChairDownRight]: { x: 3, y: 25 },
     [CharacterFrame.ChairUpLeft]: { x: 3, y: 25 },
-    [CharacterFrame.FloorDownRight]: { x: 2, y: 30 },
-    [CharacterFrame.FloorUpLeft]: { x: 6, y: 30 },
+    [CharacterFrame.FloorDownRight]: { x: 3, y: 30 },
+    [CharacterFrame.FloorUpLeft]: { x: 5, y: 30 },
     [CharacterFrame.RangeAttackDownRight]: { x: 5, y: 22 },
     [CharacterFrame.RangeAttackUpLeft]: { x: 3, y: 22 },
   },
@@ -3178,24 +3216,24 @@ const WEAPON_OFFSETS = {
     [CharacterFrame.RangeAttackUpLeft]: { x: -8, y: -6 },
   },
   [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: -9, y: -6 },
-    [CharacterFrame.StandingUpLeft]: { x: -9, y: -6 },
-    [CharacterFrame.WalkingDownRight1]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingDownRight2]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingDownRight3]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingDownRight4]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingUpLeft1]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingUpLeft2]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingUpLeft3]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingUpLeft4]: { x: -9, y: -7 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: -8, y: -6 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -10, y: -6 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: -8, y: -6 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -10, y: -6 },
-    [CharacterFrame.RaisedHandDownRight]: { x: -9, y: -4 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: -9, y: -4 },
-    [CharacterFrame.RangeAttackDownRight]: { x: -8, y: -6 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: -8, y: -6 },
+    [CharacterFrame.StandingDownRight]: { x: -9, y: -7 },
+    [CharacterFrame.StandingUpLeft]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingDownRight1]: { x: -9, y: -8 },
+    [CharacterFrame.WalkingDownRight2]: { x: -9, y: -8 },
+    [CharacterFrame.WalkingDownRight3]: { x: -9, y: -8 },
+    [CharacterFrame.WalkingDownRight4]: { x: -9, y: -8 },
+    [CharacterFrame.WalkingUpLeft1]: { x: -9, y: -8 },
+    [CharacterFrame.WalkingUpLeft2]: { x: -9, y: -8 },
+    [CharacterFrame.WalkingUpLeft3]: { x: -9, y: -8 },
+    [CharacterFrame.WalkingUpLeft4]: { x: -9, y: -8 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: -8, y: -7 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -10, y: -7 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: -8, y: -7 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -10, y: -7 },
+    [CharacterFrame.RaisedHandDownRight]: { x: -9, y: -5 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: -9, y: -5 },
+    [CharacterFrame.RangeAttackDownRight]: { x: -8, y: -7 },
+    [CharacterFrame.RangeAttackUpLeft]: { x: -8, y: -7 },
   },
 };
 
@@ -3264,28 +3302,28 @@ const BACK_OFFSETS = {
     [CharacterFrame.RangeAttackUpLeft]: { x: 1, y: -17 },
   },
   [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: -17 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingDownRight1]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingDownRight2]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingDownRight3]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingDownRight4]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: 0, y: -17 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -15 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -15 },
-    [CharacterFrame.ChairDownRight]: { x: 2, y: -16 },
+    [CharacterFrame.StandingDownRight]: { x: 0, y: -18 },
+    [CharacterFrame.StandingUpLeft]: { x: 0, y: -18 },
+    [CharacterFrame.WalkingDownRight1]: { x: 1, y: -18 },
+    [CharacterFrame.WalkingDownRight2]: { x: 1, y: -18 },
+    [CharacterFrame.WalkingDownRight3]: { x: 1, y: -18 },
+    [CharacterFrame.WalkingDownRight4]: { x: 1, y: -18 },
+    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -18 },
+    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -18 },
+    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -18 },
+    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -18 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 2, y: -18 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -2, y: -18 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: -18 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: -18 },
+    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -16 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -16 },
+    [CharacterFrame.ChairDownRight]: { x: 3, y: -15 },
     [CharacterFrame.ChairUpLeft]: { x: 3, y: -16 },
-    [CharacterFrame.FloorDownRight]: { x: 2, y: -11 },
-    [CharacterFrame.FloorUpLeft]: { x: 4, y: -11 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 1, y: -17 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 1, y: -17 },
+    [CharacterFrame.FloorDownRight]: { x: 3, y: -10 },
+    [CharacterFrame.FloorUpLeft]: { x: 5, y: -10 },
+    [CharacterFrame.RangeAttackDownRight]: { x: 1, y: -18 },
+    [CharacterFrame.RangeAttackUpLeft]: { x: 1, y: -18 },
   },
 };
 
