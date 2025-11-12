@@ -65,3 +65,4 @@ export const PLAYER_MENU_ITEM_HEIGHT = 15;
 export const PLAYER_MENU_OFFSET_Y = 10;
 
 export const NUMBER_OF_EFFECTS = 34;
+export const NUMBER_OF_SLASHES = 9;

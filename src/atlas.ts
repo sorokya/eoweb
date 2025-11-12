@@ -23,6 +23,7 @@ import {
   HALF_HALF_TILE_HEIGHT,
   NUMBER_OF_EFFECTS,
   NUMBER_OF_EMOTES,
+  NUMBER_OF_SLASHES,
   TILE_HEIGHT,
 } from './consts';
 import { GfxType } from './gfx';
@@ -258,6 +259,11 @@ type EffectAtlasEntry = {
   frontFrames: Frame[];
 };
 
+type SlashAtlasEntry = {
+  index: number;
+  frames: Frame[];
+};
+
 type NpcAtlasEntry = {
   graphicId: number;
   tickCount: number;
@@ -293,6 +299,7 @@ enum FrameType {
   EffectBehind = 6,
   EffectTransparent = 7,
   EffectFront = 8,
+  Slash = 9,
 }
 
 type PlaceableFrame = {
@@ -359,6 +366,7 @@ export class Atlas {
   private tiles: TileAtlasEntry[] = [];
   private emotes: EmoteAtlasEntry[] = [];
   private effects: EffectAtlasEntry[] = [];
+  private slashes: SlashAtlasEntry[] = [];
   private staticEntries: Map<StaticAtlasEntryType, TileAtlasEntry> = new Map();
   private client: Client;
   mapId = 0;
@@ -781,6 +789,7 @@ export class Atlas {
     this.loadStaticEntries();
     this.loadEmoteEntries();
     this.loadEffectEntries();
+    this.loadSlashEntries();
   }
 
   private loadMapGraphicLayers() {
@@ -1027,6 +1036,38 @@ export class Atlas {
         this.addBmpToLoad(GfxType.Spells, (i - 1) * 3 + 3);
       }
     }
+  }
+
+  private loadSlashEntries() {
+    if (this.slashes.length > 0) {
+      return;
+    }
+
+    for (let i = 1; i <= NUMBER_OF_SLASHES; ++i) {
+      const makeFrames = () => {
+        const frames = [];
+        for (let j = 0; j < 4; ++j) {
+          frames.push({
+            atlasIndex: -1,
+            x: -1,
+            y: -1,
+            w: -1,
+            h: -1,
+            xOffset: 0,
+            yOffset: 0,
+            mirroredXOffset: 0,
+          });
+        }
+        return frames;
+      };
+
+      this.slashes.push({
+        index: i,
+        frames: makeFrames(),
+      });
+    }
+
+    this.addBmpToLoad(GfxType.PostLoginUI, 40);
   }
 
   private refreshCharacters() {
@@ -1436,6 +1477,22 @@ export class Atlas {
       }
     }
 
+    for (const slash of this.slashes) {
+      for (const [index, frame] of slash.frames.entries()) {
+        if (!frame || frame.atlasIndex !== -1) {
+          continue;
+        }
+
+        placeableFrames.push({
+          type: FrameType.Slash,
+          typeId: slash.index,
+          frameIndex: index,
+          w: frame.w,
+          h: frame.h,
+        });
+      }
+    }
+
     placeableFrames.sort((a, b) => b.h - a.h);
 
     if (placeableFrames.length) {
@@ -1552,6 +1609,41 @@ export class Atlas {
             GfxType.Spells,
             (effect.effectId - 1) * 3 + offset,
           );
+          if (!bmp) {
+            continue;
+          }
+
+          this.tmpCanvas.width = frame.w;
+          this.tmpCanvas.height = frame.h;
+          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
+          this.tmpCtx.drawImage(
+            bmp,
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h,
+            0,
+            0,
+            frame.w,
+            frame.h,
+          );
+
+          frame.atlasIndex = this.currentAtlasIndex;
+          frame.x = rect.x;
+          frame.y = rect.y;
+
+          frameImg = this.tmpCanvas;
+          break;
+        }
+        case FrameType.Slash: {
+          const slash = this.slashes.find((s) => s.index === placeable.typeId);
+
+          if (!slash) {
+            continue;
+          }
+
+          const frame = slash.frames[placeable.frameIndex];
+          const bmp = this.getBmp(GfxType.PostLoginUI, 40);
           if (!bmp) {
             continue;
           }
@@ -2044,6 +2136,10 @@ export class Atlas {
     for (const effect of this.effects) {
       this.calculateEffectSize(effect);
     }
+
+    for (const slash of this.slashes) {
+      this.calculateSlashSize(slash);
+    }
   }
 
   private calculateNpcFrameSizes(npc: NpcAtlasEntry) {
@@ -2406,6 +2502,77 @@ export class Atlas {
       for (const i of blankIndexes) {
         frameArray[i] = undefined;
       }
+    }
+  }
+
+  private calculateSlashSize(slash: SlashAtlasEntry) {
+    const bmp = this.getBmp(GfxType.PostLoginUI, 40);
+
+    if (!bmp) {
+      return;
+    }
+
+    const slashHeight = bmp.height / NUMBER_OF_SLASHES;
+
+    for (const [frameIndex, frame] of slash.frames.entries()) {
+      if (!frame || frame.w !== -1) {
+        continue;
+      }
+
+      const frameWidth = Math.floor(bmp.width / slash.frames.length);
+
+      this.tmpCanvas.width = frameWidth;
+      this.tmpCanvas.height = slashHeight;
+      this.tmpCtx.clearRect(0, 0, frameWidth, slashHeight);
+      this.tmpCtx.drawImage(
+        bmp,
+        frameIndex * frameWidth,
+        slashHeight * slash.index,
+        frameWidth,
+        slashHeight,
+        0,
+        0,
+        frameWidth,
+        slashHeight,
+      );
+
+      const imgData = this.tmpCtx.getImageData(0, 0, frameWidth, slashHeight);
+      const bounds = {
+        x: frameWidth,
+        y: slashHeight,
+        maxX: 0,
+        maxY: 0,
+      };
+
+      const colors: Set<number> = new Set();
+      for (let y = 0; y < slashHeight; ++y) {
+        for (let x = 0; x < frameWidth; ++x) {
+          const base = (y * frameWidth + x) * 4;
+          colors.add(
+            (imgData.data[base] << 16) |
+              (imgData.data[base + 1] << 8) |
+              imgData.data[base + 2],
+          );
+          const alpha = imgData.data[base + 3];
+          if (alpha !== 0) {
+            if (x < bounds.x) bounds.x = x;
+            if (y < bounds.y) bounds.y = y;
+            if (x > bounds.maxX) bounds.maxX = x;
+            if (y > bounds.maxY) bounds.maxY = y;
+          }
+        }
+      }
+
+      // Calculate width and height from min/max values
+      const w = bounds.maxX - bounds.x + 1;
+      const h = bounds.maxY - bounds.y + 1;
+
+      frame.xOffset = bounds.x - (frameWidth >> 1);
+      frame.yOffset = bounds.y - (slashHeight >> 1);
+      frame.x = bounds.x + frameIndex * frameWidth;
+      frame.y = bounds.y;
+      frame.w = w;
+      frame.h = h;
     }
   }
 
