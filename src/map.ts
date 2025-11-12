@@ -31,6 +31,8 @@ import {
   PLAYER_MENU_WIDTH,
   TILE_HEIGHT,
   TILE_WIDTH,
+  WALK_HEIGHT_FACTOR,
+  WALK_WIDTH_FACTOR,
 } from './consts';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType } from './gfx';
@@ -50,7 +52,6 @@ import type { HealthBar } from './render/health-bar';
 import { NpcAttackAnimation } from './render/npc-attack';
 import { NpcDeathAnimation } from './render/npc-death';
 import { NpcWalkAnimation } from './render/npc-walk';
-import { getOffsetX, getOffsetY } from './ui/offset-tweaker';
 import { capitalize } from './utils/capitalize';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';
@@ -121,6 +122,33 @@ export const LAYER_GFX_MAP = [
 ];
 
 type StaticTile = { bmpId: number; layer: number; depth: number };
+
+const WALK_OFFSETS = [
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR, y: WALK_HEIGHT_FACTOR },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR, y: WALK_HEIGHT_FACTOR },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR, y: -WALK_HEIGHT_FACTOR },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR, y: -WALK_HEIGHT_FACTOR },
+  },
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR * 2, y: WALK_HEIGHT_FACTOR * 2 },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR * 2, y: WALK_HEIGHT_FACTOR * 2 },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR * 2, y: -WALK_HEIGHT_FACTOR * 2 },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR * 2, y: -WALK_HEIGHT_FACTOR * 2 },
+  },
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR * 3, y: WALK_HEIGHT_FACTOR * 3 },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR * 3, y: WALK_HEIGHT_FACTOR * 3 },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR * 3, y: -WALK_HEIGHT_FACTOR * 3 },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR * 3, y: -WALK_HEIGHT_FACTOR * 3 },
+  },
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR * 4, y: WALK_HEIGHT_FACTOR * 4 },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR * 4, y: WALK_HEIGHT_FACTOR * 4 },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR * 4, y: -WALK_HEIGHT_FACTOR * 4 },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR * 4, y: -WALK_HEIGHT_FACTOR * 4 },
+  },
+];
 
 export class MapRenderer {
   client: Client;
@@ -226,8 +254,12 @@ export class MapRenderer {
 
     if (mainCharacterAnimation instanceof CharacterWalkAnimation) {
       playerScreen = isoToScreen(mainCharacterAnimation.from);
-      playerScreen.x += mainCharacterAnimation.walkOffset.x;
-      playerScreen.y += mainCharacterAnimation.walkOffset.y;
+      const walkOffset =
+        WALK_OFFSETS[mainCharacterAnimation.animationFrame][
+          mainCharacterAnimation.direction
+        ];
+      playerScreen.x += walkOffset.x;
+      playerScreen.y += walkOffset.y;
     }
 
     playerScreen.x += this.client.quakeOffset;
@@ -419,6 +451,7 @@ export class MapRenderer {
         TILE_WIDTH,
         TILE_HEIGHT,
       );
+      effect.renderedFirstFrame = true;
       this.renderEffectBehind(effect, ctx);
       this.renderEffectTransparent(effect, ctx);
       this.renderEffectFront(effect, ctx);
@@ -538,10 +571,9 @@ export class MapRenderer {
       x: npcAt.coords.x,
       y: npcAt.coords.y,
     };
-    const walkOffset = { x: 0, y: 0 };
+    let walkOffset = { x: 0, y: 0 };
     if (animation instanceof NpcWalkAnimation) {
-      walkOffset.x = animation.walkOffset.x;
-      walkOffset.y = animation.walkOffset.y;
+      walkOffset = WALK_OFFSETS[animation.animationFrame][animation.direction];
       coords.x = animation.from.x;
       coords.y = animation.from.y;
     }
@@ -842,6 +874,10 @@ export class MapRenderer {
       }
     }
 
+    if (animation) {
+      animation.renderedFirstFrame = true;
+    }
+
     const downRight = [Direction.Down, Direction.Right].includes(
       character.direction,
     );
@@ -850,8 +886,10 @@ export class MapRenderer {
     let coords: Vector2 = character.coords;
     switch (true) {
       case animation instanceof CharacterWalkAnimation: {
-        additionalOffset.x = animation.walkOffset.x;
-        additionalOffset.y = animation.walkOffset.y;
+        const walkOffset =
+          WALK_OFFSETS[animation.animationFrame][animation.direction];
+        additionalOffset.x = walkOffset.x;
+        additionalOffset.y = walkOffset.y;
         coords = animation.from;
         characterFrame = downRight
           ? CharacterFrame.WalkingDownRight1 + animation.animationFrame
@@ -948,6 +986,7 @@ export class MapRenderer {
         );
     for (const effect of effects) {
       effect.target.rect = rect;
+      effect.renderedFirstFrame = true;
       this.renderEffectBehind(effect, ctx);
     }
 
@@ -1085,6 +1124,10 @@ export class MapRenderer {
     let dyingTicks = 0;
     let dying = false;
     let animation = this.client.npcAnimations.get(npc.index);
+    if (animation) {
+      animation.renderedFirstFrame = true;
+    }
+
     if (animation instanceof NpcDeathAnimation) {
       dying = true;
       dyingTicks = animation.ticks;
@@ -1094,14 +1137,14 @@ export class MapRenderer {
     }
     const meta = this.client.getNpcMetadata(record.graphicId);
     const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
-    const walkOffset = { x: 0, y: 0 };
+    let walkOffset = { x: 0, y: 0 };
     let npcFrame: NpcFrame;
     let coords: Vector2 = npc.coords;
 
     switch (true) {
       case animation instanceof NpcWalkAnimation: {
-        walkOffset.x += animation.walkOffset.x;
-        walkOffset.y += animation.walkOffset.y;
+        walkOffset =
+          WALK_OFFSETS[animation.animationFrame][animation.direction];
         coords = animation.from;
         npcFrame = downRight
           ? NpcFrame.WalkingDownRight1 + animation.animationFrame
@@ -1178,6 +1221,7 @@ export class MapRenderer {
 
     for (const effect of effects) {
       effect.target.rect = rect;
+      effect.renderedFirstFrame = true;
       this.renderEffectBehind(effect, ctx);
     }
 
@@ -1362,6 +1406,17 @@ export class MapRenderer {
 
     const animation = this.client.cursorClickAnimation;
     if (animation) {
+      animation.renderedFirstFrame = true;
+      const animationScreen = isoToScreen(animation.at);
+      const animationX = Math.floor(
+        animationScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+      );
+      const animationY = Math.floor(
+        animationScreen.y -
+          HALF_TILE_HEIGHT -
+          playerScreen.y +
+          HALF_GAME_HEIGHT,
+      );
       const sourceX = Math.floor((3 + animation.animationFrame) * TILE_WIDTH);
       ctx.drawImage(
         atlas,
@@ -1369,8 +1424,8 @@ export class MapRenderer {
         frame.y,
         TILE_WIDTH,
         TILE_HEIGHT,
-        screenX,
-        screenY,
+        animationX,
+        animationY,
         TILE_WIDTH,
         TILE_HEIGHT,
       );
@@ -1437,6 +1492,8 @@ export class MapRenderer {
     if (!healthBar) {
       return;
     }
+
+    healthBar.renderedFirstFrame = true;
 
     const frame = this.client.atlas.getStaticEntry(
       StaticAtlasEntryType.HealthBars,
@@ -1566,6 +1623,8 @@ export class MapRenderer {
     position: { x: number; y: number },
     ctx: CanvasRenderingContext2D,
   ) {
+    emote.renderedFirstFrame = true;
+
     const frame = this.client.atlas.getEmoteFrame(
       emote.type,
       emote.animationFrame,

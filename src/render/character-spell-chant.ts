@@ -9,10 +9,14 @@ export class CharacterSpellChantAnimation extends CharacterAnimation {
     super();
     this.spellId = spellId;
     this.chant = chant;
-    this.ticks = castTime * TICKS_PER_CAST_TIME;
+    this.ticks = castTime * TICKS_PER_CAST_TIME - 1;
   }
 
   tick(): void {
+    if (this.ticks === 0 || !this.renderedFirstFrame) {
+      return;
+    }
+
     this.ticks = Math.max(this.ticks - 1, 0);
 
     // animation frame should alternate between 0 and 1 every 2 ticks

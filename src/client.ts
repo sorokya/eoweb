@@ -1061,10 +1061,7 @@ export class Client {
 
     if (this.autoWalkPath.length) {
       const animation = this.characterAnimations.get(this.playerId);
-      if (
-        animation instanceof CharacterWalkAnimation &&
-        !animation.isOnLastFrame()
-      ) {
+      if (animation instanceof CharacterWalkAnimation) {
         return;
       }
 
@@ -1549,7 +1546,7 @@ export class Client {
       this.mouseCoords &&
       this.canWalk(this.mouseCoords, true)
     ) {
-      this.cursorClickAnimation = new CursorClickAnimation();
+      this.cursorClickAnimation = new CursorClickAnimation(this.mouseCoords);
 
       const path = this.findPathTo(this.mouseCoords);
       if (path.length) {
