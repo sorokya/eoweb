@@ -374,6 +374,8 @@ export class Atlas {
   private ctx: CanvasRenderingContext2D;
   private staleFrames: Frame[] = [];
   private temporaryCharacterFrames: Map<number, ImageData[]> = new Map();
+  private tmpBehindCanvas: HTMLCanvasElement;
+  private tmpBehindCtx: CanvasRenderingContext2D;
   private tmpCanvas: HTMLCanvasElement;
   private tmpCtx: CanvasRenderingContext2D;
 
@@ -394,6 +396,13 @@ export class Atlas {
     this.tmpCanvas.width = CHARACTER_FRAME_SIZE;
     this.tmpCanvas.height = CHARACTER_FRAME_SIZE;
     this.tmpCtx = this.tmpCanvas.getContext('2d', {
+      willReadFrequently: true,
+    });
+
+    this.tmpBehindCanvas = document.createElement('canvas');
+    this.tmpBehindCanvas.width = CHARACTER_FRAME_SIZE;
+    this.tmpBehindCanvas.height = CHARACTER_FRAME_SIZE;
+    this.tmpBehindCtx = this.tmpBehindCanvas.getContext('2d', {
       willReadFrequently: true,
     });
   }
@@ -1837,6 +1846,12 @@ export class Atlas {
         }
 
         this.tmpCtx.clearRect(0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
+        this.tmpBehindCtx.clearRect(
+          0,
+          0,
+          CHARACTER_FRAME_SIZE,
+          CHARACTER_FRAME_SIZE,
+        );
 
         const weaponVisible = WEAPON_VISIBLE_MAP[index];
 
@@ -1965,6 +1980,7 @@ export class Atlas {
               character.gender,
               character.equipment.shield,
               index,
+              false,
             );
           }
         }
@@ -1987,6 +2003,19 @@ export class Atlas {
           }
         }
 
+        this.tmpCanvas.classList.add('debug');
+        this.tmpBehindCanvas.classList.add('debug');
+        document.body.appendChild(this.tmpCanvas); // Debugging
+        document.body.appendChild(this.tmpBehindCanvas); // Debugging
+
+        this.tmpBehindCtx.drawImage(
+          this.tmpCanvas,
+          0,
+          0,
+          CHARACTER_FRAME_SIZE,
+          CHARACTER_FRAME_SIZE,
+        );
+
         const frameBounds = {
           x: CHARACTER_FRAME_SIZE,
           y: CHARACTER_FRAME_SIZE,
@@ -1994,7 +2023,7 @@ export class Atlas {
           maxY: 0,
         };
 
-        const imgData = this.tmpCtx.getImageData(
+        const imgData = this.tmpBehindCtx.getImageData(
           0,
           0,
           CHARACTER_FRAME_SIZE,
@@ -2027,7 +2056,7 @@ export class Atlas {
         frame.mirroredXOffset =
           HALF_CHARACTER_FRAME_SIZE - (frameBounds.x + frame.w);
 
-        const croppedImgData = this.tmpCtx.getImageData(
+        const croppedImgData = this.tmpBehindCtx.getImageData(
           frameBounds.x,
           frameBounds.y,
           frame.w,
@@ -2469,7 +2498,7 @@ export class Atlas {
       HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y,
     );
 
-    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    this.tmpBehindCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
   private renderCharacterHair(
@@ -2570,7 +2599,7 @@ export class Atlas {
       HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y,
     );
 
-    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    this.tmpBehindCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
   private renderCharacterWeaponFront(gender: Gender, weapon: number) {
@@ -2596,7 +2625,12 @@ export class Atlas {
     this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
   }
 
-  private renderCharacterBack(gender: Gender, back: number, frame: number) {
+  private renderCharacterBack(
+    gender: Gender,
+    back: number,
+    frame: number,
+    behind = true,
+  ) {
     const graphicId = (back - 1) * 50 + BACK_FRAME_MAP[frame] + 1;
 
     const bmp = this.getBmp(
@@ -2615,7 +2649,11 @@ export class Atlas {
     const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
     const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
 
-    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    if (behind) {
+      this.tmpBehindCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    } else {
+      this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+    }
   }
 
   private renderCharacterShield(gender: Gender, shield: number, frame: number) {
