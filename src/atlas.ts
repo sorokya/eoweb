@@ -683,9 +683,48 @@ export class Atlas {
     for (const [index, atlas] of this.atlases.entries()) {
       const ctx = atlas.getContext();
 
+      const clearedFrames: Rect[] = [];
       for (const frame of this.staleFrames) {
         if (frame.atlasIndex !== index) continue;
         ctx.clearRect(frame.x, frame.y, frame.w, frame.h);
+        clearedFrames.push({ x: frame.x, y: frame.y, w: frame.w, h: frame.h });
+      }
+
+      // Reclaim skyline space
+      for (const cleared of clearedFrames) {
+        let insertIndex = -1;
+        for (let i = 0; i < atlas.skyline.length; ++i) {
+          const node = atlas.skyline[i];
+          if (node.x >= cleared.x + cleared.w) {
+            insertIndex = i;
+            break;
+          }
+        }
+
+        if (insertIndex === -1) {
+          atlas.skyline.push({
+            x: cleared.x,
+            y: 0,
+            w: cleared.w,
+          });
+        } else {
+          atlas.skyline.splice(insertIndex, 0, {
+            x: cleared.x,
+            y: 0,
+            w: cleared.w,
+          });
+        }
+
+        // Merge adjacent nodes with same height
+        for (let i = 0; i < atlas.skyline.length - 1; ++i) {
+          const a = atlas.skyline[i];
+          const b = atlas.skyline[i + 1];
+          if (a.y === b.y) {
+            a.w += b.w;
+            atlas.skyline.splice(i + 1, 1);
+            i--;
+          }
+        }
       }
     }
 
@@ -1328,9 +1367,9 @@ export class Atlas {
   }
 
   private updateAtlas() {
-    this.clearStaleFrames();
     this.preRenderCharacterFrames();
     this.calculateFrameSizes();
+    this.clearStaleFrames();
     this.placeFrames();
     this.temporaryCharacterFrames.clear();
 
