@@ -882,14 +882,12 @@ export class MapRenderer {
       character.direction,
     );
     let characterFrame: CharacterFrame;
-    const additionalOffset = { x: 0, y: 0 };
+    let walkOffset = { x: 0, y: 0 };
     let coords: Vector2 = character.coords;
     switch (true) {
       case animation instanceof CharacterWalkAnimation: {
-        const walkOffset =
+        walkOffset =
           WALK_OFFSETS[animation.animationFrame][animation.direction];
-        additionalOffset.x = walkOffset.x;
-        additionalOffset.y = walkOffset.y;
         coords = animation.from;
         characterFrame = downRight
           ? CharacterFrame.WalkingDownRight1 + animation.animationFrame
@@ -951,11 +949,13 @@ export class MapRenderer {
       CHARACTER_FRAME_OFFSETS[character.gender][characterFrame][
         character.direction
       ];
-    additionalOffset.x += frameOffset.x;
-    additionalOffset.y += frameOffset.y;
 
     const screenX = Math.floor(
-      screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + additionalOffset.x,
+      screenCoords.x -
+        playerScreen.x +
+        HALF_GAME_WIDTH +
+        walkOffset.x +
+        frameOffset.x,
     );
 
     const screenY = Math.floor(
@@ -963,7 +963,8 @@ export class MapRenderer {
         playerScreen.y +
         HALF_GAME_HEIGHT +
         frame.yOffset +
-        additionalOffset.y,
+        walkOffset.y +
+        frameOffset.y,
     );
 
     const rect = new Rectangle(
@@ -984,8 +985,22 @@ export class MapRenderer {
             e.target instanceof EffectTargetCharacter &&
             e.target.playerId === character.playerId,
         );
+
     for (const effect of effects) {
-      effect.target.rect = rect;
+      effect.target.rect = {
+        position: {
+          x:
+            screenCoords.x -
+            playerScreen.x +
+            HALF_GAME_WIDTH -
+            HALF_TILE_WIDTH +
+            walkOffset.x,
+          y: rect.position.y,
+        },
+        width: TILE_WIDTH,
+        height: rect.height,
+        depth: 0,
+      };
       effect.renderedFirstFrame = true;
       this.renderEffectBehind(effect, ctx);
     }
@@ -1088,7 +1103,7 @@ export class MapRenderer {
       this.topLayer.push(() => {
         const rect = getCharacterRectangle(character.playerId);
         const characterTopCenter = {
-          x: rect.position.x + (rect.width >> 1),
+          x: screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + walkOffset.x,
           y: rect.position.y,
         };
 
@@ -1220,7 +1235,20 @@ export class MapRenderer {
     );
 
     for (const effect of effects) {
-      effect.target.rect = rect;
+      effect.target.rect = {
+        position: {
+          x:
+            screenCoords.x -
+            playerScreen.x +
+            HALF_GAME_WIDTH -
+            HALF_TILE_WIDTH +
+            walkOffset.x,
+          y: rect.position.y,
+        },
+        width: TILE_WIDTH,
+        height: rect.height,
+        depth: 0,
+      };
       effect.renderedFirstFrame = true;
       this.renderEffectBehind(effect, ctx);
     }
