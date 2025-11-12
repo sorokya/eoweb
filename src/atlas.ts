@@ -1955,7 +1955,7 @@ export class Atlas {
               character.equipment.shield,
               index,
             );
-          } else if (upLeft) {
+          } else if (meta.back && upLeft) {
             this.renderCharacterBack(
               character.gender,
               character.equipment.shield,
