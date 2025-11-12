@@ -894,6 +894,12 @@ export class Client {
           animation instanceof CharacterSpellChantAnimation
         ) {
           this.castSpell(animation.spellId);
+        } else if (
+          id === this.playerId &&
+          this.spellCooldownTicks !== SPELL_COOLDOWN_TICKS
+        ) {
+          this.queuedSpellId = 0;
+          this.spellCooldownTicks = SPELL_COOLDOWN_TICKS;
         }
 
         if (
@@ -3055,6 +3061,7 @@ export class Client {
       }
     }
 
+    this.queuedSpellId = 0;
     this.spellCooldownTicks = SPELL_COOLDOWN_TICKS;
   }
 
