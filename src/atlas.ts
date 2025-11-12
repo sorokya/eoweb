@@ -133,6 +133,77 @@ const FRAME_TO_FRAME_NUMBER_MAP = {
   [CharacterFrame.RangeAttackUpLeft]: 0,
 };
 
+const WEAPON_VISIBLE_MAP = {
+  [CharacterFrame.StandingDownRight]: true,
+  [CharacterFrame.StandingUpLeft]: true,
+  [CharacterFrame.WalkingDownRight1]: true,
+  [CharacterFrame.WalkingDownRight2]: true,
+  [CharacterFrame.WalkingDownRight3]: true,
+  [CharacterFrame.WalkingDownRight4]: true,
+  [CharacterFrame.WalkingUpLeft1]: true,
+  [CharacterFrame.WalkingUpLeft2]: true,
+  [CharacterFrame.WalkingUpLeft3]: true,
+  [CharacterFrame.WalkingUpLeft4]: true,
+  [CharacterFrame.MeleeAttackDownRight1]: true,
+  [CharacterFrame.MeleeAttackDownRight2]: true,
+  [CharacterFrame.MeleeAttackUpLeft1]: true,
+  [CharacterFrame.MeleeAttackUpLeft2]: true,
+  [CharacterFrame.RaisedHandDownRight]: true,
+  [CharacterFrame.RaisedHandUpLeft]: true,
+  [CharacterFrame.ChairDownRight]: false,
+  [CharacterFrame.ChairUpLeft]: false,
+  [CharacterFrame.FloorDownRight]: false,
+  [CharacterFrame.FloorUpLeft]: false,
+  [CharacterFrame.RangeAttackDownRight]: true,
+  [CharacterFrame.RangeAttackUpLeft]: true,
+};
+
+const WEAPON_FRAME_MAP = {
+  [CharacterFrame.StandingDownRight]: 0,
+  [CharacterFrame.StandingUpLeft]: 1,
+  [CharacterFrame.WalkingDownRight1]: 2,
+  [CharacterFrame.WalkingDownRight2]: 3,
+  [CharacterFrame.WalkingDownRight3]: 4,
+  [CharacterFrame.WalkingDownRight4]: 5,
+  [CharacterFrame.WalkingUpLeft1]: 6,
+  [CharacterFrame.WalkingUpLeft2]: 7,
+  [CharacterFrame.WalkingUpLeft3]: 8,
+  [CharacterFrame.WalkingUpLeft4]: 9,
+  [CharacterFrame.RaisedHandDownRight]: 10,
+  [CharacterFrame.RaisedHandUpLeft]: 11,
+  [CharacterFrame.MeleeAttackDownRight1]: 12,
+  [CharacterFrame.MeleeAttackDownRight2]: 13,
+  [CharacterFrame.MeleeAttackUpLeft1]: 14,
+  [CharacterFrame.MeleeAttackUpLeft2]: 15,
+  [CharacterFrame.RangeAttackDownRight]: 17,
+  [CharacterFrame.RangeAttackUpLeft]: 18,
+};
+
+const BACK_FRAME_MAP = {
+  [CharacterFrame.StandingDownRight]: 0,
+  [CharacterFrame.StandingUpLeft]: 1,
+  [CharacterFrame.WalkingDownRight1]: 0,
+  [CharacterFrame.WalkingDownRight2]: 0,
+  [CharacterFrame.WalkingDownRight3]: 0,
+  [CharacterFrame.WalkingDownRight4]: 0,
+  [CharacterFrame.WalkingUpLeft1]: 1,
+  [CharacterFrame.WalkingUpLeft2]: 1,
+  [CharacterFrame.WalkingUpLeft3]: 1,
+  [CharacterFrame.WalkingUpLeft4]: 1,
+  [CharacterFrame.RaisedHandDownRight]: 0,
+  [CharacterFrame.RaisedHandUpLeft]: 1,
+  [CharacterFrame.MeleeAttackDownRight1]: 2,
+  [CharacterFrame.MeleeAttackDownRight2]: 2,
+  [CharacterFrame.MeleeAttackUpLeft1]: 3,
+  [CharacterFrame.MeleeAttackUpLeft2]: 3,
+  [CharacterFrame.ChairDownRight]: 0,
+  [CharacterFrame.ChairUpLeft]: 1,
+  [CharacterFrame.FloorDownRight]: 0,
+  [CharacterFrame.FloorUpLeft]: 1,
+  [CharacterFrame.RangeAttackDownRight]: 2,
+  [CharacterFrame.RangeAttackUpLeft]: 3,
+};
+
 type Rect = {
   x: number;
   y: number;
@@ -1041,7 +1112,9 @@ export class Atlas {
               ? GfxType.FemaleWeapons
               : GfxType.MaleWeapons;
 
-          for (let i = 1; i <= 17; ++i) {
+          const frames = ranged ? 19 : 17;
+
+          for (let i = 1; i <= frames; ++i) {
             this.addBmpToLoad(gfxType, baseId + i);
           }
         }
@@ -1760,6 +1833,8 @@ export class Atlas {
 
         this.tmpCtx.clearRect(0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
 
+        const weaponVisible = WEAPON_VISIBLE_MAP[index];
+
         const upLeft = [
           CharacterFrame.StandingUpLeft,
           CharacterFrame.WalkingUpLeft1,
@@ -1775,6 +1850,27 @@ export class Atlas {
         ].includes(index);
 
         const maskType = this.client.getHatMetadata(character.equipment.hat);
+
+        if (character.equipment.shield && !upLeft) {
+          const meta = this.client.getShieldMetadata(
+            character.equipment.shield,
+          );
+          if (meta.back) {
+            this.renderCharacterBack(
+              character.gender,
+              character.equipment.shield,
+              index,
+            );
+          }
+        }
+
+        if (character.equipment.weapon && weaponVisible) {
+          this.renderCharacterWeaponBehind(
+            character.gender,
+            character.equipment.weapon,
+            index,
+          );
+        }
 
         if (maskType !== HatMaskType.HideHair && character.hairStyle) {
           this.renderCharacterHairBehind(
@@ -1811,6 +1907,16 @@ export class Atlas {
           );
         }
 
+        if (
+          character.equipment.weapon &&
+          index === CharacterFrame.MeleeAttackDownRight2
+        ) {
+          this.renderCharacterWeaponFront(
+            character.gender,
+            character.equipment.weapon,
+          );
+        }
+
         if (maskType === HatMaskType.FaceMask && character.equipment.hat) {
           this.renderCharacterHat(
             character.gender,
@@ -1837,6 +1943,25 @@ export class Atlas {
             index,
             upLeft,
           );
+        }
+
+        if (character.equipment.shield) {
+          const meta = this.client.getShieldMetadata(
+            character.equipment.shield,
+          );
+          if (!meta.back && weaponVisible) {
+            this.renderCharacterShield(
+              character.gender,
+              character.equipment.shield,
+              index,
+            );
+          } else if (upLeft) {
+            this.renderCharacterBack(
+              character.gender,
+              character.equipment.shield,
+              index,
+            );
+          }
         }
 
         clipHair(this.tmpCtx, 0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
@@ -2399,6 +2524,99 @@ export class Atlas {
     );
   }
 
+  private renderCharacterWeaponBehind(
+    gender: Gender,
+    weapon: number,
+    frame: CharacterFrame,
+  ) {
+    const graphicId = (weapon - 1) * 100 + WEAPON_FRAME_MAP[frame] + 1;
+
+    const bmp = this.getBmp(
+      gender === Gender.Female ? GfxType.FemaleWeapons : GfxType.MaleWeapons,
+      graphicId,
+    );
+
+    if (!bmp) {
+      return;
+    }
+
+    const offset = WEAPON_OFFSETS[gender][frame];
+
+    const destX = Math.floor(
+      HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x,
+    );
+    const destY = Math.floor(
+      HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y,
+    );
+
+    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+  }
+
+  private renderCharacterWeaponFront(gender: Gender, weapon: number) {
+    const graphicId = (weapon - 1) * 100 + 17;
+
+    const bmp = this.getBmp(
+      gender === Gender.Female ? GfxType.FemaleWeapons : GfxType.MaleWeapons,
+      graphicId,
+    );
+
+    if (!bmp) {
+      console.error(
+        `Missing weapon bitmap for ${Gender[gender]} ${weapon} MeleeAttackDownRight2`,
+      );
+      return;
+    }
+
+    const offset = WEAPON_OFFSETS[gender][CharacterFrame.MeleeAttackDownRight2];
+
+    const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
+    const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
+
+    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+  }
+
+  private renderCharacterBack(gender: Gender, back: number, frame: number) {
+    const graphicId = (back - 1) * 50 + BACK_FRAME_MAP[frame] + 1;
+
+    const bmp = this.getBmp(
+      gender === Gender.Female ? GfxType.FemaleBack : GfxType.MaleBack,
+      graphicId,
+    );
+
+    if (!bmp) {
+      console.error(
+        `Missing back bitmap for ${Gender[gender]} ${back} ${CharacterFrame[frame]}`,
+      );
+      return;
+    }
+
+    const offset = BACK_OFFSETS[gender][frame];
+    const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
+    const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
+
+    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+  }
+
+  private renderCharacterShield(gender: Gender, shield: number, frame: number) {
+    const graphicId = (shield - 1) * 50 + frame + 1;
+
+    const bmp = this.getBmp(
+      gender === Gender.Female ? GfxType.FemaleBack : GfxType.MaleBack,
+      graphicId,
+    );
+
+    if (!bmp) {
+      return;
+    }
+
+    const offset = SHIELD_OFFSETS[gender][frame];
+
+    const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
+    const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
+
+    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
+  }
+
   private renderCharacterBoots(
     gender: Gender,
     boots: number,
@@ -2800,6 +3018,139 @@ const HAT_OFFSETS = {
     [CharacterFrame.FloorUpLeft]: { x: 6, y: 30 },
     [CharacterFrame.RangeAttackDownRight]: { x: 5, y: 22 },
     [CharacterFrame.RangeAttackUpLeft]: { x: 3, y: 22 },
+  },
+};
+
+const WEAPON_OFFSETS = {
+  [Gender.Female]: {
+    [CharacterFrame.StandingDownRight]: { x: -9, y: -6 },
+    [CharacterFrame.StandingUpLeft]: { x: -9, y: -6 },
+    [CharacterFrame.WalkingDownRight1]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingDownRight2]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingDownRight3]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingDownRight4]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingUpLeft1]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingUpLeft2]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingUpLeft3]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingUpLeft4]: { x: -9, y: -7 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: -8, y: -6 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -10, y: -6 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: -8, y: -6 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -10, y: -6 },
+    [CharacterFrame.RaisedHandDownRight]: { x: -9, y: -4 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: -9, y: -4 },
+    [CharacterFrame.RangeAttackDownRight]: { x: -8, y: -6 },
+    [CharacterFrame.RangeAttackUpLeft]: { x: -8, y: -6 },
+  },
+  [Gender.Male]: {
+    [CharacterFrame.StandingDownRight]: { x: -9, y: -6 },
+    [CharacterFrame.StandingUpLeft]: { x: -9, y: -6 },
+    [CharacterFrame.WalkingDownRight1]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingDownRight2]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingDownRight3]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingDownRight4]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingUpLeft1]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingUpLeft2]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingUpLeft3]: { x: -9, y: -7 },
+    [CharacterFrame.WalkingUpLeft4]: { x: -9, y: -7 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: -8, y: -6 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -10, y: -6 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: -8, y: -6 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -10, y: -6 },
+    [CharacterFrame.RaisedHandDownRight]: { x: -9, y: -4 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: -9, y: -4 },
+    [CharacterFrame.RangeAttackDownRight]: { x: -8, y: -6 },
+    [CharacterFrame.RangeAttackUpLeft]: { x: -8, y: -6 },
+  },
+};
+
+const SHIELD_OFFSETS = {
+  [Gender.Female]: {
+    [CharacterFrame.StandingDownRight]: { x: -5, y: 5 },
+    [CharacterFrame.StandingUpLeft]: { x: -5, y: 5 },
+    [CharacterFrame.WalkingDownRight1]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingDownRight2]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingDownRight3]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingDownRight4]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingUpLeft1]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingUpLeft2]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingUpLeft3]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingUpLeft4]: { x: -5, y: 4 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: -4, y: 5 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -6, y: 5 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: -4, y: 5 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -6, y: 5 },
+    [CharacterFrame.RaisedHandDownRight]: { x: -5, y: 7 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: -5, y: 7 },
+  },
+  [Gender.Male]: {
+    [CharacterFrame.StandingDownRight]: { x: -5, y: 5 },
+    [CharacterFrame.StandingUpLeft]: { x: -5, y: 5 },
+    [CharacterFrame.WalkingDownRight1]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingDownRight2]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingDownRight3]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingDownRight4]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingUpLeft1]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingUpLeft2]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingUpLeft3]: { x: -5, y: 4 },
+    [CharacterFrame.WalkingUpLeft4]: { x: -5, y: 4 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: -4, y: 5 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -6, y: 5 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: -4, y: 5 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -6, y: 5 },
+    [CharacterFrame.RaisedHandDownRight]: { x: -5, y: 7 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: -5, y: 7 },
+  },
+};
+
+const BACK_OFFSETS = {
+  [Gender.Female]: {
+    [CharacterFrame.StandingDownRight]: { x: 0, y: -17 },
+    [CharacterFrame.StandingUpLeft]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingDownRight1]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingDownRight2]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingDownRight3]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingDownRight4]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -17 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 0, y: -17 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: 0, y: -17 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 0, y: -17 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: 0, y: -17 },
+    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -15 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -15 },
+    [CharacterFrame.ChairDownRight]: { x: 2, y: -16 },
+    [CharacterFrame.ChairUpLeft]: { x: 3, y: -16 },
+    [CharacterFrame.FloorDownRight]: { x: 2, y: -11 },
+    [CharacterFrame.FloorUpLeft]: { x: 4, y: -11 },
+    [CharacterFrame.RangeAttackDownRight]: { x: 1, y: -17 },
+    [CharacterFrame.RangeAttackUpLeft]: { x: 1, y: -17 },
+  },
+  [Gender.Male]: {
+    [CharacterFrame.StandingDownRight]: { x: 0, y: -17 },
+    [CharacterFrame.StandingUpLeft]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingDownRight1]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingDownRight2]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingDownRight3]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingDownRight4]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -17 },
+    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -17 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 0, y: -17 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: 0, y: -17 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 0, y: -17 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: 0, y: -17 },
+    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -15 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -15 },
+    [CharacterFrame.ChairDownRight]: { x: 2, y: -16 },
+    [CharacterFrame.ChairUpLeft]: { x: 3, y: -16 },
+    [CharacterFrame.FloorDownRight]: { x: 2, y: -11 },
+    [CharacterFrame.FloorUpLeft]: { x: 4, y: -11 },
+    [CharacterFrame.RangeAttackDownRight]: { x: 1, y: -17 },
+    [CharacterFrame.RangeAttackUpLeft]: { x: 1, y: -17 },
   },
 };
 
