@@ -72,9 +72,9 @@ export class Chat extends Base {
     this.focus();
   }
 
-  addMessage(tab: ChatTab, message: string, icon: ChatIcon, player?: string) {
+  addMessage(tab: ChatTab, message: string, icon: ChatIcon, name?: string) {
     const li = document.createElement('li');
-    li.setAttribute('data-author', player);
+    li.setAttribute('data-author', name);
 
     const img = document.createElement('div');
     img.classList.add('icon');
@@ -84,10 +84,10 @@ export class Chat extends Base {
     const msgContainer = document.createElement('div');
     msgContainer.classList.add('msg');
 
-    if (player) {
+    if (name) {
       const playerName = document.createElement('span');
       playerName.classList.add('author');
-      playerName.innerText = player;
+      playerName.innerText = name;
       msgContainer.prepend(playerName);
     }
 
