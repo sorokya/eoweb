@@ -153,6 +153,7 @@ function handleEnterGame(
   client.usageTicks = USAGE_TICKS;
   client.emit('enterGame', { news: data.news });
   client.bus.send(new GlobalOpenClientPacket());
+  client.atlas.reset();
   client.atlas.refresh();
 }
 
