@@ -1160,7 +1160,7 @@ export class MapRenderer {
           animation instanceof CharacterSpellChantAnimation &&
           !animation.animationFrame
         ) {
-          this.renderSpellChant(characterTopCenter, animation.chant, ctx);
+          animation.render(this.client, characterTopCenter, ctx);
         }
       });
     }
@@ -1855,24 +1855,6 @@ export class MapRenderer {
       ),
       frame.w,
       frame.h,
-    );
-  }
-
-  private renderSpellChant(
-    position: { x: number; y: number },
-    chant: string,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    ctx.font = '12px w95fa';
-    ctx.fillStyle = '#fff';
-
-    const metrics = ctx.measureText(chant);
-    const textWidth = metrics.width;
-
-    ctx.fillText(
-      chant,
-      Math.floor(position.x - (textWidth >> 1)),
-      position.y - 10,
     );
   }
 }

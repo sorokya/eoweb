@@ -123,6 +123,7 @@ export class ChatBubble {
       tmpCtx.fillRect(0, 0, tmpCanvas.width, tmpCanvas.height);
 
       this.ctx.drawImage(tmpCanvas, padding, 4);
+      this.rendered = true;
     }
 
     ctx.drawImage(
