@@ -498,9 +498,16 @@ export class MapRenderer {
     const characterRect = getCharacterIntersecting(this.client.mousePosition);
     if (characterRect) {
       const character = this.client.getCharacterById(characterRect.id);
-      const bubble = this.client.characterChats.get(character.playerId);
+      const bubble =
+        character && !!this.client.characterChats.get(character.playerId);
+      const bar =
+        character && !!this.client.characterHealthBars.get(character.playerId);
+      const animation =
+        character && this.client.characterAnimations.get(character.playerId);
       if (
         !bubble &&
+        !bar &&
+        !(animation instanceof CharacterDeathAnimation) &&
         character &&
         (!character.invisible || this.client.admin !== AdminLevel.Player)
       ) {
@@ -526,11 +533,6 @@ export class MapRenderer {
           name += ` ${character.guildTag}`;
         }
 
-        let animation = this.client.characterAnimations.get(character.playerId);
-        if (animation instanceof CharacterDeathAnimation) {
-          animation = animation.base;
-        }
-
         if (animation instanceof CharacterWalkAnimation) {
           const walkOffset =
             WALK_OFFSETS[animation.animationFrame][animation.direction];
@@ -546,8 +548,15 @@ export class MapRenderer {
       const npcRect = getNpcIntersecting(this.client.mousePosition);
       if (npcRect) {
         const npc = this.client.getNpcByIndex(npcRect.id);
-        const bubble = this.client.npcChats.get(npcRect.id);
-        if (!bubble && npc) {
+        const bubble = npc && !!this.client.npcChats.get(npc.index);
+        const bar = npc && !!this.client.npcHealthBars.get(npc.index);
+        const animation = npc && this.client.npcAnimations.get(npc.index);
+        if (
+          !bubble &&
+          !bar &&
+          !(animation instanceof NpcDeathAnimation) &&
+          npc
+        ) {
           const record = this.client.getEnfRecordById(npc.id);
           if (record) {
             name = record.name;
@@ -558,11 +567,6 @@ export class MapRenderer {
             const meta = this.client.getNpcMetadata(record.graphicId);
             if (meta) {
               offset.y -= meta.nameLabelOffset - 4;
-            }
-
-            let animation = this.client.npcAnimations.get(npc.index);
-            if (animation instanceof NpcDeathAnimation && animation.base) {
-              animation = animation.base;
             }
 
             if (animation instanceof NpcWalkAnimation) {
