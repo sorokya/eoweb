@@ -66,3 +66,16 @@ export const PLAYER_MENU_OFFSET_Y = 10;
 
 export const NUMBER_OF_EFFECTS = 34;
 export const NUMBER_OF_SLASHES = 9;
+
+export const COLORS = {
+  Nameplate: '#fff',
+  NameplateIgnored: '#b9b9b9',
+  NameplateFriend: '#fafad2',
+  NameplateRare: '#f5c89c',
+  NameplateLegendary: '#fff0a5',
+  NameplateUnique: '#fff0a5',
+  NameplateLore: '#fafad3',
+  ChatBubbleBackground: '#fff',
+  ChatBubble: '#101010',
+  ChatBubbleBackgroundParty: '#dcc8aa',
+};
