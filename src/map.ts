@@ -1,5 +1,10 @@
 import { AdminLevel, Coords, Direction, MapTileSpec, SitState } from 'eolib';
-import { CharacterFrame, NpcFrame, StaticAtlasEntryType } from './atlas';
+import {
+  CHARACTER_FRAME_OFFSETS,
+  CharacterFrame,
+  NpcFrame,
+  StaticAtlasEntryType,
+} from './atlas';
 import { type Client, GameState } from './client';
 import {
   getCharacterIntersecting,
@@ -17,7 +22,6 @@ import {
   DEATH_TICKS,
   DOOR_HEIGHT,
   EMOTE_ANIMATION_TICKS,
-  HALF_HALF_TILE_HEIGHT,
   HALF_TILE_HEIGHT,
   HALF_TILE_WIDTH,
   NPC_IDLE_ANIMATION_TICKS,
@@ -27,6 +31,8 @@ import {
   PLAYER_MENU_WIDTH,
   TILE_HEIGHT,
   TILE_WIDTH,
+  WALK_HEIGHT_FACTOR,
+  WALK_WIDTH_FACTOR,
 } from './consts';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType } from './gfx';
@@ -116,6 +122,33 @@ export const LAYER_GFX_MAP = [
 ];
 
 type StaticTile = { bmpId: number; layer: number; depth: number };
+
+const WALK_OFFSETS = [
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR, y: WALK_HEIGHT_FACTOR },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR, y: WALK_HEIGHT_FACTOR },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR, y: -WALK_HEIGHT_FACTOR },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR, y: -WALK_HEIGHT_FACTOR },
+  },
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR * 2, y: WALK_HEIGHT_FACTOR * 2 },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR * 2, y: WALK_HEIGHT_FACTOR * 2 },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR * 2, y: -WALK_HEIGHT_FACTOR * 2 },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR * 2, y: -WALK_HEIGHT_FACTOR * 2 },
+  },
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR * 3, y: WALK_HEIGHT_FACTOR * 3 },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR * 3, y: WALK_HEIGHT_FACTOR * 3 },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR * 3, y: -WALK_HEIGHT_FACTOR * 3 },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR * 3, y: -WALK_HEIGHT_FACTOR * 3 },
+  },
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR * 4, y: WALK_HEIGHT_FACTOR * 4 },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR * 4, y: WALK_HEIGHT_FACTOR * 4 },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR * 4, y: -WALK_HEIGHT_FACTOR * 4 },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR * 4, y: -WALK_HEIGHT_FACTOR * 4 },
+  },
+];
 
 export class MapRenderer {
   client: Client;
@@ -221,8 +254,12 @@ export class MapRenderer {
 
     if (mainCharacterAnimation instanceof CharacterWalkAnimation) {
       playerScreen = isoToScreen(mainCharacterAnimation.from);
-      playerScreen.x += mainCharacterAnimation.walkOffset.x;
-      playerScreen.y += mainCharacterAnimation.walkOffset.y;
+      const walkOffset =
+        WALK_OFFSETS[mainCharacterAnimation.animationFrame][
+          mainCharacterAnimation.direction
+        ];
+      playerScreen.x += walkOffset.x;
+      playerScreen.y += walkOffset.y;
     }
 
     playerScreen.x += this.client.quakeOffset;
@@ -414,6 +451,7 @@ export class MapRenderer {
         TILE_WIDTH,
         TILE_HEIGHT,
       );
+      effect.renderedFirstFrame = true;
       this.renderEffectBehind(effect, ctx);
       this.renderEffectTransparent(effect, ctx);
       this.renderEffectFront(effect, ctx);
@@ -444,178 +482,218 @@ export class MapRenderer {
       return;
     }
 
-    let rendered = this.renderCharacterNameTag(playerScreen, ctx);
-    if (!rendered) {
-      rendered = this.renderNpcNameTag(playerScreen, ctx);
-    }
-
-    if (!rendered && this.client.mouseCoords) {
-      this.renderItemNameTag(playerScreen, ctx);
-    }
-  }
-
-  renderCharacterNameTag(
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ): boolean {
-    const entityRect = getCharacterIntersecting(this.client.mousePosition);
-    if (!entityRect) {
-      return false;
-    }
-
-    const characterAt = this.client.getCharacterById(entityRect.id);
-    if (
-      !characterAt ||
-      (characterAt.invisible && this.client.admin === AdminLevel.Player)
-    ) {
-      return false;
-    }
-
-    if (this.client.characterAnimations.has(characterAt.playerId)) {
-      return false;
-    }
-
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px w95fa';
-    let name = capitalize(characterAt.name);
-    if (characterAt.guildTag !== '   ') {
-      name += ` ${characterAt.guildTag}`;
-    }
-    const position = isoToScreen(characterAt.coords);
-    const metrics = ctx.measureText(name);
-    ctx.fillText(
-      name,
-      Math.floor(
-        position.x - metrics.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
-      ),
-      Math.floor(
-        position.y -
-          playerScreen.y -
-          8 -
-          entityRect.rect.height +
-          HALF_GAME_HEIGHT,
-      ),
-    );
-
-    return true;
-  }
-
-  renderNpcNameTag(
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ): boolean {
-    const entityRect = getNpcIntersecting(this.client.mousePosition);
-    if (!entityRect) {
-      return false;
-    }
-
-    const npcAt = this.client.getNpcByIndex(entityRect.id);
-    if (!npcAt) {
-      return false;
-    }
-
-    const record = this.client.getEnfRecordById(npcAt.id);
-    if (!record) {
+    const frame = this.client.atlas.getStaticEntry(StaticAtlasEntryType.Sans11);
+    if (!frame) {
       return;
     }
 
-    const meta = this.client.getNpcMetadata(record.graphicId);
-    if (!meta) {
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
       return;
     }
 
-    let animation = this.client.npcAnimations.get(npcAt.index);
-    if (animation instanceof NpcDeathAnimation && animation.base) {
-      animation = animation.base;
+    const coords = { x: 0, y: 0 };
+    const offset = { x: 0, y: 0 };
+    let name = '';
+    const characterRect = getCharacterIntersecting(this.client.mousePosition);
+    if (characterRect) {
+      const character = this.client.getCharacterById(characterRect.id);
+      const bubble =
+        character && !!this.client.characterChats.get(character.playerId);
+      const bar =
+        character && !!this.client.characterHealthBars.get(character.playerId);
+      const animation =
+        character && this.client.characterAnimations.get(character.playerId);
+      if (
+        !bubble &&
+        !bar &&
+        !(animation instanceof CharacterDeathAnimation) &&
+        character &&
+        (!character.invisible || this.client.admin !== AdminLevel.Player)
+      ) {
+        name = capitalize(character.name);
+        coords.x = character.coords.x;
+        coords.y = character.coords.y;
+
+        // TODO: Party member color
+
+        switch (character.sitState) {
+          case SitState.Floor:
+            offset.y -= 50;
+            break;
+          case SitState.Chair:
+            offset.y -= 56;
+            break;
+          case SitState.Stand:
+            offset.y -= 72;
+            break;
+        }
+
+        if (character.guildTag !== '   ') {
+          name += ` ${character.guildTag}`;
+        }
+
+        if (animation instanceof CharacterWalkAnimation) {
+          const walkOffset =
+            WALK_OFFSETS[animation.animationFrame][animation.direction];
+          offset.x += walkOffset.x;
+          offset.y += walkOffset.y;
+          coords.x = animation.from.x;
+          coords.y = animation.from.y;
+        }
+      }
     }
 
-    const coords = {
-      x: npcAt.coords.x,
-      y: npcAt.coords.y,
-    };
-    const walkOffset = { x: 0, y: 0 };
-    if (animation instanceof NpcWalkAnimation) {
-      walkOffset.x = animation.walkOffset.x;
-      walkOffset.y = animation.walkOffset.y;
-      coords.x = animation.from.x;
-      coords.y = animation.from.y;
+    if (!name) {
+      const npcRect = getNpcIntersecting(this.client.mousePosition);
+      if (npcRect) {
+        const npc = this.client.getNpcByIndex(npcRect.id);
+        const bubble = npc && !!this.client.npcChats.get(npc.index);
+        const bar = npc && !!this.client.npcHealthBars.get(npc.index);
+        const animation = npc && this.client.npcAnimations.get(npc.index);
+        if (
+          !bubble &&
+          !bar &&
+          !(animation instanceof NpcDeathAnimation) &&
+          npc
+        ) {
+          const record = this.client.getEnfRecordById(npc.id);
+          if (record) {
+            name = record.name;
+            coords.x = npc.coords.x;
+            coords.y = npc.coords.y;
+            offset.y -= TILE_HEIGHT;
+
+            const meta = this.client.getNpcMetadata(record.graphicId);
+            if (meta) {
+              offset.y -= meta.nameLabelOffset - 4;
+            }
+
+            if (animation instanceof NpcWalkAnimation) {
+              const walkOffset =
+                WALK_OFFSETS[animation.animationFrame][animation.direction];
+              offset.x += walkOffset.x;
+              offset.y += walkOffset.y;
+              coords.x = animation.from.x;
+              coords.y = animation.from.y;
+            }
+          }
+        }
+      }
     }
 
-    coords.x -= 1;
-    coords.y -= 1;
+    if (!name) {
+      if (!this.client.mouseCoords) {
+        return;
+      }
 
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px w95fa';
+      const items = this.client.nearby.items.filter(
+        (i) =>
+          i.coords.x === this.client.mouseCoords.x &&
+          i.coords.y === this.client.mouseCoords.y,
+      );
+      if (!items.length) {
+        return false;
+      }
 
-    const screenCoords = isoToScreen(coords);
-    const npcTopCenter = {
-      x: Math.floor(
-        screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + walkOffset.x,
-      ),
-      y: Math.floor(
-        screenCoords.y -
-          playerScreen.y +
-          HALF_GAME_HEIGHT -
-          meta.nameLabelOffset +
-          walkOffset.y +
-          4,
-      ),
-    };
+      items.sort((a, b) => b.uid - a.uid);
 
-    const metrics = ctx.measureText(record.name);
-    ctx.fillText(
-      record.name,
-      Math.floor(npcTopCenter.x - (metrics.width >> 1)),
-      Math.floor(npcTopCenter.y),
+      const item = items[0];
+
+      const data = this.client.getEifRecordById(item.id);
+      if (!data) {
+        return;
+      }
+
+      // TODO: Item name color
+
+      name =
+        item.id === 1
+          ? `${item.amount} ${data.name}`
+          : item.amount > 1
+            ? `${data.name} x${item.amount}`
+            : data.name;
+      coords.x = item.coords.x;
+      coords.y = item.coords.y;
+
+      offset.y -= HALF_TILE_HEIGHT + 6;
+    }
+
+    const shadowCanvas = document.createElement('canvas');
+    const shadowCtx = shadowCanvas.getContext('2d');
+    const tmpCanvas = document.createElement('canvas');
+    const tmpCtx = tmpCanvas.getContext('2d');
+
+    const characters = name
+      .split('')
+      .map((char) => this.client.sans11.getCharacter(char.charCodeAt(0)));
+
+    const textWidth = characters.reduce(
+      (sum, char) => sum + (char ? char.width : 0),
+      0,
     );
 
-    return true;
-  }
-
-  renderItemNameTag(
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ): boolean {
-    const items = this.client.nearby.items.filter(
-      (i) =>
-        i.coords.x === this.client.mouseCoords.x &&
-        i.coords.y === this.client.mouseCoords.y,
-    );
-    if (!items.length) {
-      return false;
-    }
-
-    items.sort((a, b) => b.uid - a.uid);
-
-    const item = items[0];
-
-    const data = this.client.getEifRecordById(item.id);
-    if (!data) {
-      return;
-    }
-
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px w95fa';
-
-    const position = isoToScreen(item.coords);
-    const name =
-      item.id === 1
-        ? `${item.amount} ${data.name}`
-        : item.amount > 1
-          ? `${data.name} x${item.amount}`
-          : data.name;
-    const metrics = ctx.measureText(name);
-    ctx.fillText(
-      name,
-      Math.floor(
-        position.x - metrics.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
-      ),
-      Math.floor(
-        position.y - playerScreen.y - TILE_HEIGHT + 10 + HALF_GAME_HEIGHT,
-      ),
+    const textHeight = Math.max(
+      ...characters.map((char) => (char ? char.height : 0)),
     );
 
-    return true;
+    tmpCanvas.width = textWidth;
+    tmpCanvas.height = textHeight;
+    shadowCanvas.width = textWidth;
+    shadowCanvas.height = textHeight;
+
+    let x = 0;
+    for (const char of characters) {
+      shadowCtx.drawImage(
+        atlas,
+        frame.x + char.x,
+        frame.y + char.y,
+        char.width,
+        char.height,
+        x,
+        0,
+        char.width,
+        char.height,
+      );
+      x += char.width;
+    }
+
+    shadowCtx.globalCompositeOperation = 'source-in';
+    shadowCtx.fillStyle = '#000';
+    shadowCtx.fillRect(0, 0, shadowCanvas.width, shadowCanvas.height);
+
+    x = 0;
+    for (const char of characters) {
+      tmpCtx.drawImage(
+        atlas,
+        frame.x + char.x,
+        frame.y + char.y,
+        char.width,
+        char.height,
+        x,
+        0,
+        char.width,
+        char.height,
+      );
+      x += char.width;
+    }
+
+    const position = isoToScreen(coords);
+
+    const drawX = Math.floor(
+      position.x -
+        (textWidth >> 1) -
+        playerScreen.x +
+        HALF_GAME_WIDTH +
+        offset.x,
+    );
+
+    const drawY = Math.floor(
+      position.y - playerScreen.y - textHeight + HALF_GAME_HEIGHT + offset.y,
+    );
+
+    ctx.drawImage(shadowCanvas, drawX + 1, drawY + 1);
+    ctx.drawImage(tmpCanvas, drawX, drawY);
   }
 
   renderPlayerMenu(ctx: CanvasRenderingContext2D) {
@@ -837,16 +915,20 @@ export class MapRenderer {
       }
     }
 
+    if (animation) {
+      animation.renderedFirstFrame = true;
+    }
+
     const downRight = [Direction.Down, Direction.Right].includes(
       character.direction,
     );
-    const additionalOffset = { x: 0, y: 0 };
     let characterFrame: CharacterFrame;
+    let walkOffset = { x: 0, y: 0 };
     let coords: Vector2 = character.coords;
     switch (true) {
       case animation instanceof CharacterWalkAnimation: {
-        additionalOffset.x = animation.walkOffset.x;
-        additionalOffset.y = animation.walkOffset.y;
+        walkOffset =
+          WALK_OFFSETS[animation.animationFrame][animation.direction];
         coords = animation.from;
         characterFrame = downRight
           ? CharacterFrame.WalkingDownRight1 + animation.animationFrame
@@ -904,18 +986,26 @@ export class MapRenderer {
       character.direction,
     );
 
+    const frameOffset =
+      CHARACTER_FRAME_OFFSETS[character.gender][characterFrame][
+        character.direction
+      ];
+
     const screenX = Math.floor(
-      screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + additionalOffset.x,
+      screenCoords.x -
+        playerScreen.x +
+        HALF_GAME_WIDTH +
+        walkOffset.x +
+        frameOffset.x,
     );
 
     const screenY = Math.floor(
       screenCoords.y -
-        HALF_HALF_TILE_HEIGHT +
-        TILE_HEIGHT +
-        frame.yOffset -
         playerScreen.y +
         HALF_GAME_HEIGHT +
-        additionalOffset.y,
+        frame.yOffset +
+        walkOffset.y +
+        frameOffset.y,
     );
 
     const rect = new Rectangle(
@@ -936,8 +1026,23 @@ export class MapRenderer {
             e.target instanceof EffectTargetCharacter &&
             e.target.playerId === character.playerId,
         );
+
     for (const effect of effects) {
-      effect.target.rect = rect;
+      effect.target.rect = {
+        position: {
+          x:
+            screenCoords.x -
+            playerScreen.x +
+            HALF_GAME_WIDTH -
+            HALF_TILE_WIDTH +
+            walkOffset.x,
+          y: rect.position.y,
+        },
+        width: TILE_WIDTH,
+        height: rect.height,
+        depth: 0,
+      };
+      effect.renderedFirstFrame = true;
       this.renderEffectBehind(effect, ctx);
     }
 
@@ -1039,12 +1144,12 @@ export class MapRenderer {
       this.topLayer.push(() => {
         const rect = getCharacterRectangle(character.playerId);
         const characterTopCenter = {
-          x: rect.position.x + (rect.width >> 1),
+          x: screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + walkOffset.x,
           y: rect.position.y,
         };
 
         if (bubble) {
-          bubble.render(characterTopCenter, ctx);
+          bubble.render(this.client, characterTopCenter, ctx);
         }
         this.renderHealthBar(healthBar, characterTopCenter, ctx);
         if (emote) {
@@ -1055,7 +1160,7 @@ export class MapRenderer {
           animation instanceof CharacterSpellChantAnimation &&
           !animation.animationFrame
         ) {
-          this.renderSpellChant(characterTopCenter, animation.chant, ctx);
+          animation.render(this.client, characterTopCenter, ctx);
         }
       });
     }
@@ -1075,6 +1180,10 @@ export class MapRenderer {
     let dyingTicks = 0;
     let dying = false;
     let animation = this.client.npcAnimations.get(npc.index);
+    if (animation) {
+      animation.renderedFirstFrame = true;
+    }
+
     if (animation instanceof NpcDeathAnimation) {
       dying = true;
       dyingTicks = animation.ticks;
@@ -1084,14 +1193,14 @@ export class MapRenderer {
     }
     const meta = this.client.getNpcMetadata(record.graphicId);
     const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
-    const walkOffset = { x: 0, y: 0 };
+    let walkOffset = { x: 0, y: 0 };
     let npcFrame: NpcFrame;
     let coords: Vector2 = npc.coords;
 
     switch (true) {
       case animation instanceof NpcWalkAnimation: {
-        walkOffset.x += animation.walkOffset.x;
-        walkOffset.y += animation.walkOffset.y;
+        walkOffset =
+          WALK_OFFSETS[animation.animationFrame][animation.direction];
         coords = animation.from;
         npcFrame = downRight
           ? NpcFrame.WalkingDownRight1 + animation.animationFrame
@@ -1167,7 +1276,21 @@ export class MapRenderer {
     );
 
     for (const effect of effects) {
-      effect.target.rect = rect;
+      effect.target.rect = {
+        position: {
+          x:
+            screenCoords.x -
+            playerScreen.x +
+            HALF_GAME_WIDTH -
+            HALF_TILE_WIDTH +
+            walkOffset.x,
+          y: rect.position.y,
+        },
+        width: TILE_WIDTH,
+        height: rect.height,
+        depth: 0,
+      };
+      effect.renderedFirstFrame = true;
       this.renderEffectBehind(effect, ctx);
     }
 
@@ -1247,7 +1370,7 @@ export class MapRenderer {
       };
 
       if (bubble) {
-        bubble.render(npcTopCenter, ctx);
+        bubble.render(this.client, npcTopCenter, ctx);
       }
 
       if (healthBar) {
@@ -1352,6 +1475,17 @@ export class MapRenderer {
 
     const animation = this.client.cursorClickAnimation;
     if (animation) {
+      animation.renderedFirstFrame = true;
+      const animationScreen = isoToScreen(animation.at);
+      const animationX = Math.floor(
+        animationScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+      );
+      const animationY = Math.floor(
+        animationScreen.y -
+          HALF_TILE_HEIGHT -
+          playerScreen.y +
+          HALF_GAME_HEIGHT,
+      );
       const sourceX = Math.floor((3 + animation.animationFrame) * TILE_WIDTH);
       ctx.drawImage(
         atlas,
@@ -1359,8 +1493,8 @@ export class MapRenderer {
         frame.y,
         TILE_WIDTH,
         TILE_HEIGHT,
-        screenX,
-        screenY,
+        animationX,
+        animationY,
         TILE_WIDTH,
         TILE_HEIGHT,
       );
@@ -1427,6 +1561,8 @@ export class MapRenderer {
     if (!healthBar) {
       return;
     }
+
+    healthBar.renderedFirstFrame = true;
 
     const frame = this.client.atlas.getStaticEntry(
       StaticAtlasEntryType.HealthBars,
@@ -1556,6 +1692,8 @@ export class MapRenderer {
     position: { x: number; y: number },
     ctx: CanvasRenderingContext2D,
   ) {
+    emote.renderedFirstFrame = true;
+
     const frame = this.client.atlas.getEmoteFrame(
       emote.type,
       emote.animationFrame,
@@ -1717,24 +1855,6 @@ export class MapRenderer {
       ),
       frame.w,
       frame.h,
-    );
-  }
-
-  private renderSpellChant(
-    position: { x: number; y: number },
-    chant: string,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    ctx.font = '12px w95fa';
-    ctx.fillStyle = '#fff';
-
-    const metrics = ctx.measureText(chant);
-    const textWidth = metrics.width;
-
-    ctx.fillText(
-      chant,
-      Math.floor(position.x - (textWidth >> 1)),
-      position.y - 10,
     );
   }
 }

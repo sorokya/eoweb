@@ -7,12 +7,17 @@ export class NpcDeathAnimation extends NpcAnimation {
     super();
     this.ticks = DEATH_TICKS;
     this.base = base;
+    this.renderedFirstFrame = base?.renderedFirstFrame ?? false;
   }
 
   tick() {
+    if (this.ticks === 0 || !this.renderedFirstFrame) {
+      return;
+    }
+
+    this.ticks = Math.max(this.ticks - 1, 0);
     if (this.base) {
       this.base.tick();
     }
-    this.ticks = Math.max(this.ticks - 1, 0);
   }
 }

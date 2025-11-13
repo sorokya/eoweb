@@ -156,6 +156,7 @@ import {
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
 import { Door } from './door';
 import { type DialogResourceID, type Edf, EOResourceID } from './edf';
+import { Sans11Font } from './fonts/sans-11';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { registerAccountHandlers } from './handlers/account';
 import { registerAdminInteractHandlers } from './handlers/admin-interact';
@@ -560,6 +561,7 @@ export class Client {
     slot: EquipmentSlot;
     itemId: number;
   } | null = null;
+  sans11 = new Sans11Font();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -894,6 +896,12 @@ export class Client {
           animation instanceof CharacterSpellChantAnimation
         ) {
           this.castSpell(animation.spellId);
+        } else if (
+          id === this.playerId &&
+          this.spellCooldownTicks !== SPELL_COOLDOWN_TICKS
+        ) {
+          this.queuedSpellId = 0;
+          this.spellCooldownTicks = SPELL_COOLDOWN_TICKS;
         }
 
         if (
@@ -1061,10 +1069,7 @@ export class Client {
 
     if (this.autoWalkPath.length) {
       const animation = this.characterAnimations.get(this.playerId);
-      if (
-        animation instanceof CharacterWalkAnimation &&
-        !animation.isOnLastFrame()
-      ) {
+      if (animation instanceof CharacterWalkAnimation) {
         return;
       }
 
@@ -1549,7 +1554,7 @@ export class Client {
       this.mouseCoords &&
       this.canWalk(this.mouseCoords, true)
     ) {
-      this.cursorClickAnimation = new CursorClickAnimation();
+      this.cursorClickAnimation = new CursorClickAnimation(this.mouseCoords);
 
       const path = this.findPathTo(this.mouseCoords);
       if (path.length) {
@@ -3058,6 +3063,7 @@ export class Client {
       }
     }
 
+    this.queuedSpellId = 0;
     this.spellCooldownTicks = SPELL_COOLDOWN_TICKS;
   }
 

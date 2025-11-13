@@ -2,7 +2,7 @@ import { SfxId } from '../sfx';
 
 export class WeaponMetadata {
   constructor(
-    public slash: number,
+    public slash: number | null,
     public sfx: SfxId[],
     public ranged: boolean,
   ) {}

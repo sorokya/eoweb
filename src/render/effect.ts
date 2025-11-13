@@ -32,6 +32,7 @@ export class EffectAnimation {
   animationFrame = 0;
   loops: number;
   metadata: EffectMetadata;
+  renderedFirstFrame = false;
 
   constructor(id: number, target: EffectTarget, metadata: EffectMetadata) {
     this.id = id;
@@ -42,7 +43,7 @@ export class EffectAnimation {
   }
 
   tick() {
-    if (!this.loops) {
+    if (!this.loops || !this.renderedFirstFrame) {
       return;
     }
 

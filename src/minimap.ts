@@ -1,11 +1,7 @@
-import { MapTileSpec, NpcType } from 'eolib';
+import { Direction, MapTileSpec, NpcType } from 'eolib';
 import { StaticAtlasEntryType } from './atlas';
 import type { Client } from './client';
-import {
-  DEATH_TICKS,
-  WALK_HEIGHT_FACTOR as ORIGINAL_WALK_HEIGHT_FACTOR,
-  WALK_WIDTH_FACTOR as ORIGINAL_WALK_WIDTH_FACTOR,
-} from './consts';
+import { DEATH_TICKS } from './consts';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { CharacterDeathAnimation } from './render/character-death';
 import { CharacterWalkAnimation } from './render/character-walk';
@@ -21,6 +17,33 @@ const RANGE = 20;
 const START_X = 80;
 const WALK_WIDTH_FACTOR = HALF_TILE_WIDTH / 4;
 const WALK_HEIGHT_FACTOR = HALF_TILE_HEIGHT / 4;
+
+const WALK_OFFSETS = [
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR, y: WALK_HEIGHT_FACTOR },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR, y: WALK_HEIGHT_FACTOR },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR, y: -WALK_HEIGHT_FACTOR },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR, y: -WALK_HEIGHT_FACTOR },
+  },
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR * 2, y: WALK_HEIGHT_FACTOR * 2 },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR * 2, y: WALK_HEIGHT_FACTOR * 2 },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR * 2, y: -WALK_HEIGHT_FACTOR * 2 },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR * 2, y: -WALK_HEIGHT_FACTOR * 2 },
+  },
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR * 3, y: WALK_HEIGHT_FACTOR * 3 },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR * 3, y: WALK_HEIGHT_FACTOR * 3 },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR * 3, y: -WALK_HEIGHT_FACTOR * 3 },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR * 3, y: -WALK_HEIGHT_FACTOR * 3 },
+  },
+  {
+    [Direction.Down]: { x: -WALK_WIDTH_FACTOR * 4, y: WALK_HEIGHT_FACTOR * 4 },
+    [Direction.Right]: { x: WALK_WIDTH_FACTOR * 4, y: WALK_HEIGHT_FACTOR * 4 },
+    [Direction.Up]: { x: WALK_WIDTH_FACTOR * 4, y: -WALK_HEIGHT_FACTOR * 4 },
+    [Direction.Left]: { x: -WALK_WIDTH_FACTOR * 4, y: -WALK_HEIGHT_FACTOR * 4 },
+  },
+];
 
 enum MiniMapIcon {
   Wall = 0,
@@ -100,12 +123,12 @@ export class MinimapRenderer {
 
     if (mainCharacterAnimation instanceof CharacterWalkAnimation) {
       playerScreen = isoToScreen(mainCharacterAnimation.from);
-      playerScreen.x +=
-        (mainCharacterAnimation.walkOffset.x / ORIGINAL_WALK_WIDTH_FACTOR) *
-        WALK_WIDTH_FACTOR;
-      playerScreen.y +=
-        (mainCharacterAnimation.walkOffset.y / ORIGINAL_WALK_HEIGHT_FACTOR) *
-        WALK_HEIGHT_FACTOR;
+      const walkOffset =
+        WALK_OFFSETS[mainCharacterAnimation.animationFrame][
+          mainCharacterAnimation.direction
+        ];
+      playerScreen.x += walkOffset.x;
+      playerScreen.y += walkOffset.y;
     }
 
     playerScreen.x += this.client.quakeOffset;
@@ -178,12 +201,10 @@ export class MinimapRenderer {
 
       if (animation instanceof NpcWalkAnimation) {
         tileScreen = isoToScreen(animation.from);
-        tileScreen.x +=
-          (animation.walkOffset.x / ORIGINAL_WALK_WIDTH_FACTOR) *
-          WALK_WIDTH_FACTOR;
-        tileScreen.y +=
-          (animation.walkOffset.y / ORIGINAL_WALK_HEIGHT_FACTOR) *
-          WALK_HEIGHT_FACTOR;
+        const walkOffset =
+          WALK_OFFSETS[animation.animationFrame][animation.direction];
+        tileScreen.x += walkOffset.x;
+        tileScreen.y += walkOffset.y;
       }
 
       const screenX = Math.floor(
@@ -242,15 +263,10 @@ export class MinimapRenderer {
       }
 
       let coords: Vector2 = character.coords;
-      const offset = { x: 0, y: 0 };
+      let offset = { x: 0, y: 0 };
       if (animation instanceof CharacterWalkAnimation) {
         coords = animation.from;
-        offset.x =
-          (animation.walkOffset.x / ORIGINAL_WALK_WIDTH_FACTOR) *
-          WALK_WIDTH_FACTOR;
-        offset.y =
-          (animation.walkOffset.y / ORIGINAL_WALK_HEIGHT_FACTOR) *
-          WALK_HEIGHT_FACTOR;
+        offset = WALK_OFFSETS[animation.animationFrame][animation.direction];
       }
 
       const tileScreen = isoToScreen(coords);
