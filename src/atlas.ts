@@ -235,7 +235,7 @@ type CharacterAtlasEntry = {
   frames: (Frame | undefined)[];
 };
 
-type TileAtlasEntry = {
+export type TileAtlasEntry = {
   gfxType: GfxType;
   graphicId: number;
   atlasIndex: number;

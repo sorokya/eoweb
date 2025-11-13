@@ -88,7 +88,7 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
       continue;
     }
 
-    client.npcChats.set(npc.index, new ChatBubble(chat.message));
+    client.npcChats.set(npc.index, new ChatBubble(client.sans11, chat.message));
 
     client.emit('chat', {
       tab: ChatTab.Local,
@@ -236,7 +236,7 @@ function handleNpcDialog(client: Client, reader: EoReader) {
     return;
   }
 
-  client.npcChats.set(npc.index, new ChatBubble(packet.message));
+  client.npcChats.set(npc.index, new ChatBubble(client.sans11, packet.message));
   client.emit('chat', {
     tab: ChatTab.Local,
     message: `${capitalize(record.name)} ${packet.message}`,
