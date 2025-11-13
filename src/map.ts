@@ -498,7 +498,9 @@ export class MapRenderer {
     const characterRect = getCharacterIntersecting(this.client.mousePosition);
     if (characterRect) {
       const character = this.client.getCharacterById(characterRect.id);
+      const bubble = this.client.characterChats.get(character.playerId);
       if (
+        !bubble &&
         character &&
         (!character.invisible || this.client.admin !== AdminLevel.Player)
       ) {
@@ -544,7 +546,8 @@ export class MapRenderer {
       const npcRect = getNpcIntersecting(this.client.mousePosition);
       if (npcRect) {
         const npc = this.client.getNpcByIndex(npcRect.id);
-        if (npc) {
+        const bubble = this.client.npcChats.get(npcRect.id);
+        if (!bubble && npc) {
           const record = this.client.getEnfRecordById(npc.id);
           if (record) {
             name = record.name;
