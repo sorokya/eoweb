@@ -1142,7 +1142,7 @@ export class MapRenderer {
         };
 
         if (bubble) {
-          bubble.render(characterTopCenter, ctx);
+          bubble.render(this.client, characterTopCenter, ctx);
         }
         this.renderHealthBar(healthBar, characterTopCenter, ctx);
         if (emote) {
@@ -1363,7 +1363,7 @@ export class MapRenderer {
       };
 
       if (bubble) {
-        bubble.render(npcTopCenter, ctx);
+        bubble.render(this.client, npcTopCenter, ctx);
       }
 
       if (healthBar) {
