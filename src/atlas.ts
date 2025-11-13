@@ -401,8 +401,6 @@ export class Atlas {
     this.atlases = [new AtlasCanvas()];
     this.ctx = this.atlases[0].getContext();
     this.tmpCanvas = document.createElement('canvas');
-    this.tmpCanvas.width = CHARACTER_FRAME_SIZE;
-    this.tmpCanvas.height = CHARACTER_FRAME_SIZE;
     this.tmpCtx = this.tmpCanvas.getContext('2d', {
       willReadFrequently: true,
     });
@@ -875,10 +873,10 @@ export class Atlas {
     }
   }
 
-  private waitForCharacterFramesThenPlaceFinishUpdatingAtlas() {
+  private waitForCharacterFramesThenFinishUpdatingAtlas() {
     if (this.temporaryCharacterFrames.some((f) => !f.loaded)) {
       setTimeout(
-        () => this.waitForCharacterFramesThenPlaceFinishUpdatingAtlas(),
+        () => this.waitForCharacterFramesThenFinishUpdatingAtlas(),
         50,
       );
     } else {
@@ -1491,7 +1489,7 @@ export class Atlas {
     this.defragmentAtlases();
     this.preRenderCharacterFrames();
     this.calculateFrameSizes();
-    this.waitForCharacterFramesThenPlaceFinishUpdatingAtlas();
+    this.waitForCharacterFramesThenFinishUpdatingAtlas();
   }
 
   private finishUpdatingAtlas() {
@@ -1539,6 +1537,8 @@ export class Atlas {
 
   private placeFrames() {
     const placeableFrames: PlaceableFrame[] = [];
+    let sourceX = 0;
+    let sourceY = 0;
 
     for (const [id, frame] of this.staticEntries.entries()) {
       if (frame.atlasIndex !== -1) {
@@ -1622,7 +1622,7 @@ export class Atlas {
 
     for (const placeable of placeableFrames) {
       const rect = this.insert(placeable.w, placeable.h);
-      let frameImg: HTMLCanvasElement | undefined;
+      let frameImg: HTMLImageElement | undefined;
 
       switch (placeable.type) {
         case FrameType.Static: {
@@ -1641,26 +1641,12 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h,
-            0,
-            0,
-            frame.w,
-            frame.h,
-          );
-
           frame.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame.x;
+          sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
+          frameImg = bmp;
           break;
         }
         case FrameType.Emote: {
@@ -1676,27 +1662,12 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h,
-            0,
-            0,
-            frame.w,
-            frame.h,
-          );
-
           frame.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame.x;
+          sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
-
+          frameImg = bmp;
           break;
         }
 
@@ -1736,32 +1707,28 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h,
-            0,
-            0,
-            frame.w,
-            frame.h,
-          );
-
           frame.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame.x;
+          sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
+          frameImg = bmp;
           break;
         }
       }
 
       if (frameImg) {
-        this.ctx.drawImage(frameImg, rect.x, rect.y, rect.w, rect.h);
+        this.ctx.drawImage(
+          frameImg,
+          sourceX,
+          sourceY,
+          rect.w,
+          rect.h,
+          rect.x,
+          rect.y,
+          rect.w,
+          rect.h,
+        );
       }
     }
 
@@ -1807,16 +1774,23 @@ export class Atlas {
         continue;
       }
 
-      this.tmpCanvas.width = tile.w;
-      this.tmpCanvas.height = tile.h;
-      this.tmpCtx.clearRect(0, 0, tile.w, tile.h);
-      this.tmpCtx.drawImage(bmp, 0, 0, tile.w, tile.h);
-
       tile.atlasIndex = this.currentAtlasIndex;
+      sourceX = tile.x;
+      sourceY = tile.y;
       tile.x = rect.x;
       tile.y = rect.y;
 
-      this.ctx.drawImage(this.tmpCanvas, rect.x, rect.y, rect.w, rect.h);
+      this.ctx.drawImage(
+        bmp,
+        sourceX,
+        sourceY,
+        rect.w,
+        rect.h,
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+      );
     }
 
     if (placeableFrames.length) {
@@ -1877,7 +1851,7 @@ export class Atlas {
 
     for (const placeable of placeableFrames) {
       const rect = this.insert(placeable.w, placeable.h);
-      let frameImg: HTMLCanvasElement | undefined;
+      let frameImg: HTMLImageElement | undefined;
 
       switch (placeable.type) {
         case FrameType.Character: {
@@ -1900,26 +1874,12 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.drawImage(
-            imgData.img,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h,
-            0,
-            0,
-            frame.w,
-            frame.h,
-          );
-
           frame.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame.x;
+          sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
+          frameImg = imgData.img;
           break;
         }
         case FrameType.Npc: {
@@ -1939,26 +1899,12 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h,
-            0,
-            0,
-            frame.w,
-            frame.h,
-          );
-
           frame.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame.x;
+          sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
+          frameImg = bmp;
           break;
         }
         case FrameType.Item: {
@@ -1972,32 +1918,28 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = item.w;
-          this.tmpCanvas.height = item.h;
-          this.tmpCtx.clearRect(0, 0, item.w, item.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            item.x,
-            item.y,
-            item.w,
-            item.h,
-            0,
-            0,
-            item.w,
-            item.h,
-          );
-
           item.atlasIndex = this.currentAtlasIndex;
+          sourceX = item.x;
+          sourceY = item.y;
           item.x = rect.x;
           item.y = rect.y;
-
-          frameImg = this.tmpCanvas;
+          frameImg = bmp;
           break;
         }
       }
 
       if (frameImg) {
-        this.ctx.drawImage(frameImg, rect.x, rect.y, rect.w, rect.h);
+        this.ctx.drawImage(
+          frameImg,
+          sourceX,
+          sourceY,
+          rect.w,
+          rect.h,
+          rect.x,
+          rect.y,
+          rect.w,
+          rect.h,
+        );
       }
     }
   }
