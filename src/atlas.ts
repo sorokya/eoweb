@@ -285,6 +285,13 @@ type Bmp = {
   loaded: boolean;
 };
 
+type CharacterFrameImg = {
+  playerId: number;
+  frameIndex: number;
+  img: HTMLImageElement;
+  loaded: boolean;
+};
+
 enum FrameType {
   Character = 0,
   Npc = 1,
@@ -374,8 +381,7 @@ export class Atlas {
   private atlases: AtlasCanvas[];
   private currentAtlasIndex = 0;
   private ctx: CanvasRenderingContext2D;
-  private staleFrames: Frame[] = [];
-  private temporaryCharacterFrames: Map<number, ImageData[]> = new Map();
+  private temporaryCharacterFrames: CharacterFrameImg[] = [];
   private tmpBehindCanvas: HTMLCanvasElement;
   private tmpBehindCtx: CanvasRenderingContext2D;
   private tmpCanvas: HTMLCanvasElement;
@@ -395,8 +401,6 @@ export class Atlas {
     this.atlases = [new AtlasCanvas()];
     this.ctx = this.atlases[0].getContext();
     this.tmpCanvas = document.createElement('canvas');
-    this.tmpCanvas.width = CHARACTER_FRAME_SIZE;
-    this.tmpCanvas.height = CHARACTER_FRAME_SIZE;
     this.tmpCtx = this.tmpCanvas.getContext('2d', {
       willReadFrequently: true,
     });
@@ -675,64 +679,154 @@ export class Atlas {
     }
   }
 
-  private addStaleFrame(frame: Frame) {
-    this.staleFrames.push({ ...frame });
-  }
+  defragmentAtlases() {
+    const placeableFrames: {
+      atlasIndex: number;
+      type: FrameType;
+      typeId: number;
+      frameIndex: number;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    }[] = [];
 
-  clearStaleFrames() {
-    if (!this.staleFrames.length) return;
+    for (const character of this.characters) {
+      for (const [index, frame] of character.frames.entries()) {
+        if (!frame || frame.atlasIndex === -1) continue;
 
-    for (const [index, atlas] of this.atlases.entries()) {
-      const ctx = atlas.getContext();
+        placeableFrames.push({
+          atlasIndex: frame.atlasIndex,
+          type: FrameType.Character,
+          typeId: character.playerId,
+          frameIndex: index,
+          x: frame.x,
+          y: frame.y,
+          w: frame.w,
+          h: frame.h,
+        });
+      }
+    }
 
-      const clearedFrames: Rect[] = [];
-      for (const frame of this.staleFrames) {
-        if (frame.atlasIndex !== index) continue;
-        ctx.clearRect(frame.x, frame.y, frame.w, frame.h);
-        clearedFrames.push({ x: frame.x, y: frame.y, w: frame.w, h: frame.h });
+    for (const npc of this.npcs) {
+      for (const [index, frame] of npc.frames.entries()) {
+        if (!frame || frame.atlasIndex === -1) {
+          continue;
+        }
+
+        placeableFrames.push({
+          atlasIndex: frame.atlasIndex,
+          type: FrameType.Npc,
+          typeId: npc.graphicId,
+          frameIndex: index,
+          x: frame.x,
+          y: frame.y,
+          w: frame.w,
+          h: frame.h,
+        });
+      }
+    }
+
+    for (const item of this.items) {
+      if (item.atlasIndex === -1) {
+        continue;
       }
 
-      // Reclaim skyline space
-      for (const cleared of clearedFrames) {
-        let insertIndex = -1;
-        for (let i = 0; i < atlas.skyline.length; ++i) {
-          const node = atlas.skyline[i];
-          if (node.x >= cleared.x + cleared.w) {
-            insertIndex = i;
-            break;
-          }
-        }
+      placeableFrames.push({
+        atlasIndex: item.atlasIndex,
+        type: FrameType.Item,
+        typeId: item.graphicId,
+        frameIndex: 0,
+        x: item.x,
+        y: item.y,
+        w: item.w,
+        h: item.h,
+      });
+    }
 
-        if (insertIndex === -1) {
-          atlas.skyline.push({
-            x: cleared.x,
-            y: 0,
-            w: cleared.w,
-          });
-        } else {
-          atlas.skyline.splice(insertIndex, 0, {
-            x: cleared.x,
-            y: 0,
-            w: cleared.w,
-          });
-        }
+    placeableFrames.sort((a, b) => b.h - a.h);
 
-        // Merge adjacent nodes with same height
-        for (let i = 0; i < atlas.skyline.length - 1; ++i) {
-          const a = atlas.skyline[i];
-          const b = atlas.skyline[i + 1];
-          if (a.y === b.y) {
-            a.w += b.w;
-            atlas.skyline.splice(i + 1, 1);
-            i--;
+    if (!placeableFrames.length) {
+      return;
+    }
+
+    for (const atlas of this.atlases) {
+      const ctx = atlas.getContext();
+      ctx.clearRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
+      atlas.skyline = [{ x: 0, y: 0, w: ATLAS_SIZE }];
+    }
+
+    for (const placeable of placeableFrames) {
+      const rect = this.insert(placeable.w, placeable.h);
+      const atlas = this.atlases[placeable.atlasIndex];
+      if (!atlas) {
+        console.error(
+          'Atlas not found for defragmentation',
+          placeable.atlasIndex,
+        );
+        continue;
+      }
+
+      const img = atlas.getImg();
+      if (!img) {
+        console.error(
+          'Atlas image not found for defragmentation',
+          placeable.atlasIndex,
+        );
+        continue;
+      }
+
+      this.ctx.drawImage(
+        img,
+        placeable.x,
+        placeable.y,
+        placeable.w,
+        placeable.h,
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+      );
+
+      switch (placeable.type) {
+        case FrameType.Character: {
+          const character = this.characters.find(
+            (c) => c.playerId === placeable.typeId,
+          );
+          if (character) {
+            const frame = character.frames[placeable.frameIndex];
+            frame.atlasIndex = this.currentAtlasIndex;
+            frame.x = rect.x;
+            frame.y = rect.y;
           }
+          break;
+        }
+        case FrameType.Npc: {
+          const npc = this.npcs.find((n) => n.graphicId === placeable.typeId);
+          if (npc) {
+            const frame = npc.frames[placeable.frameIndex];
+            frame.atlasIndex = this.currentAtlasIndex;
+            frame.x = rect.x;
+            frame.y = rect.y;
+          }
+          break;
+        }
+        case FrameType.Item: {
+          const item = this.items.find((i) => i.graphicId === placeable.typeId);
+
+          if (item) {
+            item.atlasIndex = this.currentAtlasIndex;
+            item.x = rect.x;
+            item.y = rect.y;
+          }
+          break;
         }
       }
     }
 
-    this.staleFrames = [];
-    this.currentAtlasIndex = 0;
-    this.ctx = this.atlases[0].getContext();
+    for (const atlas of this.atlases) {
+      atlas.commit();
+    }
   }
 
   refresh() {
@@ -776,6 +870,17 @@ export class Atlas {
       setTimeout(() => this.waitForBmpsToLoadThenUpdateAtlas(), 50);
     } else {
       this.updateAtlas();
+    }
+  }
+
+  private waitForCharacterFramesThenFinishUpdatingAtlas() {
+    if (this.temporaryCharacterFrames.some((f) => !f.loaded)) {
+      setTimeout(
+        () => this.waitForCharacterFramesThenFinishUpdatingAtlas(),
+        50,
+      );
+    } else {
+      this.finishUpdatingAtlas();
     }
   }
 
@@ -1212,12 +1317,6 @@ export class Atlas {
           existing.skin = char.skin;
           existing.gender = char.gender;
           existing.equipment = char.equipment;
-
-          for (const frame of existing.frames) {
-            if (frame && frame.atlasIndex !== -1) {
-              this.addStaleFrame(frame);
-            }
-          }
         }
 
         const frames = [];
@@ -1296,12 +1395,6 @@ export class Atlas {
           (c) => c.playerId === character.playerId,
         )
       ) {
-        for (const frame of character.frames) {
-          if (frame && frame.atlasIndex !== -1) {
-            this.addStaleFrame(frame);
-          }
-        }
-
         this.characters.splice(i, 1);
       }
     }
@@ -1344,12 +1437,6 @@ export class Atlas {
 
       const ticksSinceSeen = this.client.tickCount - npc.tickCount;
       if (ticksSinceSeen > ATLAS_EXPIRY_TICKS && !npc.keep) {
-        for (const frame of npc.frames) {
-          if (frame && frame.atlasIndex !== -1) {
-            this.addStaleFrame(frame);
-          }
-        }
-
         this.npcs.splice(i, 1);
       }
     }
@@ -1393,18 +1480,21 @@ export class Atlas {
           return gfxId === item.graphicId;
         })
       ) {
-        this.addStaleFrame({ ...item, mirroredXOffset: 0 });
         this.items.splice(i, 1);
       }
     }
   }
 
   private updateAtlas() {
+    this.defragmentAtlases();
     this.preRenderCharacterFrames();
     this.calculateFrameSizes();
-    this.clearStaleFrames();
+    this.waitForCharacterFramesThenFinishUpdatingAtlas();
+  }
+
+  private finishUpdatingAtlas() {
     this.placeFrames();
-    this.temporaryCharacterFrames.clear();
+    this.temporaryCharacterFrames = [];
 
     for (const atlas of this.atlases) {
       atlas.commit();
@@ -1447,6 +1537,8 @@ export class Atlas {
 
   private placeFrames() {
     const placeableFrames: PlaceableFrame[] = [];
+    let sourceX = 0;
+    let sourceY = 0;
 
     for (const [id, frame] of this.staticEntries.entries()) {
       if (frame.atlasIndex !== -1) {
@@ -1522,16 +1614,15 @@ export class Atlas {
       }
     }
 
-    placeableFrames.sort((a, b) => b.h - a.h);
-
     if (placeableFrames.length) {
+      placeableFrames.sort((a, b) => b.h - a.h);
       this.currentAtlasIndex = STATIC_ATLAS_INDEX;
       this.ctx = this.staticAtlas.getContext();
     }
 
     for (const placeable of placeableFrames) {
       const rect = this.insert(placeable.w, placeable.h);
-      let frameImg: HTMLCanvasElement | undefined;
+      let frameImg: HTMLImageElement | undefined;
 
       switch (placeable.type) {
         case FrameType.Static: {
@@ -1550,26 +1641,12 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h,
-            0,
-            0,
-            frame.w,
-            frame.h,
-          );
-
           frame.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame.x;
+          sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
+          frameImg = bmp;
           break;
         }
         case FrameType.Emote: {
@@ -1585,27 +1662,12 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h,
-            0,
-            0,
-            frame.w,
-            frame.h,
-          );
-
           frame.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame.x;
+          sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
-
+          frameImg = bmp;
           break;
         }
 
@@ -1645,32 +1707,28 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h,
-            0,
-            0,
-            frame.w,
-            frame.h,
-          );
-
           frame.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame.x;
+          sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
+          frameImg = bmp;
           break;
         }
       }
 
       if (frameImg) {
-        this.ctx.drawImage(frameImg, rect.x, rect.y, rect.w, rect.h);
+        this.ctx.drawImage(
+          frameImg,
+          sourceX,
+          sourceY,
+          rect.w,
+          rect.h,
+          rect.x,
+          rect.y,
+          rect.w,
+          rect.h,
+        );
       }
     }
 
@@ -1694,9 +1752,8 @@ export class Atlas {
       });
     }
 
-    placeableFrames.sort((a, b) => b.h - a.h);
-
     if (placeableFrames.length) {
+      placeableFrames.sort((a, b) => b.h - a.h);
       this.currentAtlasIndex = MAP_ATLAS_INDEX;
       this.ctx = this.mapAtlas.getContext();
     }
@@ -1717,16 +1774,23 @@ export class Atlas {
         continue;
       }
 
-      this.tmpCanvas.width = tile.w;
-      this.tmpCanvas.height = tile.h;
-      this.tmpCtx.clearRect(0, 0, tile.w, tile.h);
-      this.tmpCtx.drawImage(bmp, 0, 0, tile.w, tile.h);
-
       tile.atlasIndex = this.currentAtlasIndex;
+      sourceX = tile.x;
+      sourceY = tile.y;
       tile.x = rect.x;
       tile.y = rect.y;
 
-      this.ctx.drawImage(this.tmpCanvas, rect.x, rect.y, rect.w, rect.h);
+      this.ctx.drawImage(
+        bmp,
+        sourceX,
+        sourceY,
+        rect.w,
+        rect.h,
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+      );
     }
 
     if (placeableFrames.length) {
@@ -1787,7 +1851,7 @@ export class Atlas {
 
     for (const placeable of placeableFrames) {
       const rect = this.insert(placeable.w, placeable.h);
-      let frameImg: HTMLCanvasElement | undefined;
+      let frameImg: HTMLImageElement | undefined;
 
       switch (placeable.type) {
         case FrameType.Character: {
@@ -1800,24 +1864,22 @@ export class Atlas {
           }
 
           const frame = character.frames[placeable.frameIndex];
-          const imgData = this.temporaryCharacterFrames.get(
-            character.playerId,
-          )?.[placeable.frameIndex];
+          const imgData = this.temporaryCharacterFrames.find(
+            (f) =>
+              f.playerId === character.playerId &&
+              f.frameIndex === placeable.frameIndex,
+          );
 
           if (!imgData) {
             continue;
           }
 
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.putImageData(imgData, 0, 0);
-
           frame.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame.x;
+          sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
+          frameImg = imgData.img;
           break;
         }
         case FrameType.Npc: {
@@ -1837,26 +1899,12 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = frame.w;
-          this.tmpCanvas.height = frame.h;
-          this.tmpCtx.clearRect(0, 0, frame.w, frame.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h,
-            0,
-            0,
-            frame.w,
-            frame.h,
-          );
-
           frame.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame.x;
+          sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-
-          frameImg = this.tmpCanvas;
+          frameImg = bmp;
           break;
         }
         case FrameType.Item: {
@@ -1870,38 +1918,34 @@ export class Atlas {
             continue;
           }
 
-          this.tmpCanvas.width = item.w;
-          this.tmpCanvas.height = item.h;
-          this.tmpCtx.clearRect(0, 0, item.w, item.h);
-          this.tmpCtx.drawImage(
-            bmp,
-            item.x,
-            item.y,
-            item.w,
-            item.h,
-            0,
-            0,
-            item.w,
-            item.h,
-          );
-
           item.atlasIndex = this.currentAtlasIndex;
+          sourceX = item.x;
+          sourceY = item.y;
           item.x = rect.x;
           item.y = rect.y;
-
-          frameImg = this.tmpCanvas;
+          frameImg = bmp;
           break;
         }
       }
 
       if (frameImg) {
-        this.ctx.drawImage(frameImg, rect.x, rect.y, rect.w, rect.h);
+        this.ctx.drawImage(
+          frameImg,
+          sourceX,
+          sourceY,
+          rect.w,
+          rect.h,
+          rect.x,
+          rect.y,
+          rect.w,
+          rect.h,
+        );
       }
     }
   }
 
   private preRenderCharacterFrames() {
-    this.temporaryCharacterFrames.clear();
+    this.temporaryCharacterFrames = [];
     this.tmpCanvas.width = CHARACTER_FRAME_SIZE;
     this.tmpCanvas.height = CHARACTER_FRAME_SIZE;
 
@@ -1910,13 +1954,8 @@ export class Atlas {
         continue;
       }
 
-      this.temporaryCharacterFrames.set(character.playerId, []);
-
       for (const [index, frame] of character.frames.entries()) {
         if (!frame) {
-          this.temporaryCharacterFrames
-            .get(character.playerId)
-            ?.push(undefined);
           continue;
         }
 
@@ -2126,16 +2165,19 @@ export class Atlas {
         frame.mirroredXOffset =
           HALF_CHARACTER_FRAME_SIZE - (frameBounds.x + frame.w);
 
-        const croppedImgData = this.tmpBehindCtx.getImageData(
-          frameBounds.x,
-          frameBounds.y,
-          frame.w,
-          frame.h,
-        );
+        const img = document.createElement('img');
+        const characterFrameImg: CharacterFrameImg = {
+          playerId: character.playerId,
+          frameIndex: index,
+          img,
+          loaded: false,
+        };
+        img.src = this.tmpBehindCtx.canvas.toDataURL();
+        img.onload = () => {
+          characterFrameImg.loaded = true;
+        };
 
-        this.temporaryCharacterFrames
-          .get(character.playerId)
-          ?.push(croppedImgData);
+        this.temporaryCharacterFrames.push(characterFrameImg);
       }
     }
   }
