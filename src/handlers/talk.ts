@@ -24,7 +24,10 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
     return;
   }
 
-  client.characterChats.set(character.playerId, new ChatBubble(packet.message));
+  client.characterChats.set(
+    character.playerId,
+    new ChatBubble(client.sans11, packet.message),
+  );
 
   client.emit('chat', {
     tab: ChatTab.Local,
@@ -69,7 +72,10 @@ function handleTalkTell(client: Client, reader: EoReader) {
 
 function handleTalkAnnounce(client: Client, reader: EoReader) {
   const packet = TalkAnnounceServerPacket.deserialize(reader);
-  client.characterChats.set(client.playerId, new ChatBubble(packet.message));
+  client.characterChats.set(
+    client.playerId,
+    new ChatBubble(client.sans11, packet.message),
+  );
   client.emit('chat', {
     tab: ChatTab.Local,
     message: `${capitalize(packet.playerName)} ${packet.message}`,

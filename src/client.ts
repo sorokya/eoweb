@@ -561,7 +561,7 @@ export class Client {
     slot: EquipmentSlot;
     itemId: number;
   } | null = null;
-  sans11 = new Sans11Font();
+  sans11: Sans11Font;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -613,6 +613,7 @@ export class Client {
       mainMenuLogo.setAttribute('data-slogan', config.slogan);
     });
     this.atlas = new Atlas(this);
+    this.sans11 = new Sans11Font(this.atlas);
   }
 
   getCharacterById(id: number): CharacterMapInfo | undefined {
@@ -871,7 +872,7 @@ export class Client {
         message: `${capitalize(record.name)} ${messages[0]}`,
         tab: ChatTab.Local,
       });
-      this.npcChats.set(index, new ChatBubble(messages[0]));
+      this.npcChats.set(index, new ChatBubble(this.sans11, messages[0]));
 
       if (messages.length > 1) {
         messages.splice(0, 1);
@@ -1932,7 +1933,10 @@ export class Client {
     if (trimmed.startsWith('@') && this.admin !== AdminLevel.Player) {
       const packet = new TalkAnnounceClientPacket();
       packet.message = trimmed.substring(1);
-      this.characterChats.set(this.playerId, new ChatBubble(packet.message));
+      this.characterChats.set(
+        this.playerId,
+        new ChatBubble(this.sans11, packet.message),
+      );
       this.emit('chat', {
         icon: ChatIcon.GlobalAnnounce,
         tab: ChatTab.Local,
@@ -1977,7 +1981,10 @@ export class Client {
     packet.message = trimmed;
     this.bus.send(packet);
 
-    this.characterChats.set(this.playerId, new ChatBubble(trimmed));
+    this.characterChats.set(
+      this.playerId,
+      new ChatBubble(this.sans11, trimmed),
+    );
 
     this.emit('chat', {
       tab: ChatTab.Local,
@@ -3019,6 +3026,7 @@ export class Client {
     this.characterAnimations.set(
       this.playerId,
       new CharacterSpellChantAnimation(
+        this.sans11,
         this.queuedSpellId,
         record.chant,
         record.castTime,

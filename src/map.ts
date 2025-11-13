@@ -1,4 +1,11 @@
-import { AdminLevel, Coords, Direction, MapTileSpec, SitState } from 'eolib';
+import {
+  AdminLevel,
+  Coords,
+  Direction,
+  ItemSpecial,
+  MapTileSpec,
+  SitState,
+} from 'eolib';
 import {
   CHARACTER_FRAME_OFFSETS,
   CharacterFrame,
@@ -19,6 +26,7 @@ import {
 } from './collision';
 import {
   ANIMATION_TICKS,
+  COLORS,
   DEATH_TICKS,
   DOOR_HEIGHT,
   EMOTE_ANIMATION_TICKS,
@@ -469,7 +477,7 @@ export class MapRenderer {
       ctx.globalAlpha = 1;
     }
 
-    this.renderNameTag(playerScreen, ctx);
+    this.renderNameplate(playerScreen, ctx);
     for (const renderTopLayerEntity of this.topLayer) {
       renderTopLayerEntity();
     }
@@ -477,7 +485,7 @@ export class MapRenderer {
     this.renderPlayerMenu(ctx);
   }
 
-  renderNameTag(playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
+  renderNameplate(playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
     if (!this.client.mousePosition) {
       return;
     }
@@ -495,6 +503,7 @@ export class MapRenderer {
     const coords = { x: 0, y: 0 };
     const offset = { x: 0, y: 0 };
     let name = '';
+    let color = COLORS.Nameplate;
     const characterRect = getCharacterIntersecting(this.client.mousePosition);
     if (characterRect) {
       const character = this.client.getCharacterById(characterRect.id);
@@ -515,7 +524,9 @@ export class MapRenderer {
         coords.x = character.coords.x;
         coords.y = character.coords.y;
 
-        // TODO: Party member color
+        // TODO: Friend color
+        // if (this.client.isFriend(character.name)) {
+        // color = COLORS.NameplateFriend;
 
         switch (character.sitState) {
           case SitState.Floor:
@@ -605,7 +616,20 @@ export class MapRenderer {
         return;
       }
 
-      // TODO: Item name color
+      switch (data.special) {
+        case ItemSpecial.Rare:
+          color = COLORS.NameplateRare;
+          break;
+        case ItemSpecial.Legendary:
+          color = COLORS.NameplateLegendary;
+          break;
+        case ItemSpecial.Unique:
+          color = COLORS.NameplateUnique;
+          break;
+        case ItemSpecial.Lore:
+          color = COLORS.NameplateLore;
+          break;
+      }
 
       name =
         item.id === 1
@@ -619,81 +643,24 @@ export class MapRenderer {
       offset.y -= HALF_TILE_HEIGHT + 6;
     }
 
-    const shadowCanvas = document.createElement('canvas');
-    const shadowCtx = shadowCanvas.getContext('2d');
-    const tmpCanvas = document.createElement('canvas');
-    const tmpCtx = tmpCanvas.getContext('2d');
-
-    const characters = name
-      .split('')
-      .map((char) => this.client.sans11.getCharacter(char.charCodeAt(0)));
-
-    const textWidth = characters.reduce(
-      (sum, char) => sum + (char ? char.width : 0),
-      0,
-    );
-
-    const textHeight = Math.max(
-      ...characters.map((char) => (char ? char.height : 0)),
-    );
-
-    tmpCanvas.width = textWidth;
-    tmpCanvas.height = textHeight;
-    shadowCanvas.width = textWidth;
-    shadowCanvas.height = textHeight;
-
-    let x = 0;
-    for (const char of characters) {
-      shadowCtx.drawImage(
-        atlas,
-        frame.x + char.x,
-        frame.y + char.y,
-        char.width,
-        char.height,
-        x,
-        0,
-        char.width,
-        char.height,
-      );
-      x += char.width;
-    }
-
-    shadowCtx.globalCompositeOperation = 'source-in';
-    shadowCtx.fillStyle = '#000';
-    shadowCtx.fillRect(0, 0, shadowCanvas.width, shadowCanvas.height);
-
-    x = 0;
-    for (const char of characters) {
-      tmpCtx.drawImage(
-        atlas,
-        frame.x + char.x,
-        frame.y + char.y,
-        char.width,
-        char.height,
-        x,
-        0,
-        char.width,
-        char.height,
-      );
-      x += char.width;
-    }
-
     const position = isoToScreen(coords);
 
     const drawX = Math.floor(
-      position.x -
-        (textWidth >> 1) -
-        playerScreen.x +
-        HALF_GAME_WIDTH +
-        offset.x,
+      position.x - playerScreen.x + HALF_GAME_WIDTH + offset.x,
     );
 
     const drawY = Math.floor(
-      position.y - playerScreen.y - textHeight + HALF_GAME_HEIGHT + offset.y,
+      position.y - playerScreen.y + HALF_GAME_HEIGHT + offset.y,
     );
 
-    ctx.drawImage(shadowCanvas, drawX + 1, drawY + 1);
-    ctx.drawImage(tmpCanvas, drawX, drawY);
+    this.client.sans11.render(
+      ctx,
+      name,
+      { x: drawX + 1, y: drawY + 1 },
+      '#000',
+    );
+
+    this.client.sans11.render(ctx, name, { x: drawX, y: drawY }, color);
   }
 
   renderPlayerMenu(ctx: CanvasRenderingContext2D) {
@@ -1149,7 +1116,7 @@ export class MapRenderer {
         };
 
         if (bubble) {
-          bubble.render(this.client, characterTopCenter, ctx);
+          bubble.render(characterTopCenter, ctx);
         }
         this.renderHealthBar(healthBar, characterTopCenter, ctx);
         if (emote) {
@@ -1160,7 +1127,7 @@ export class MapRenderer {
           animation instanceof CharacterSpellChantAnimation &&
           !animation.animationFrame
         ) {
-          animation.render(this.client, characterTopCenter, ctx);
+          animation.render(characterTopCenter, ctx);
         }
       });
     }
@@ -1370,7 +1337,7 @@ export class MapRenderer {
       };
 
       if (bubble) {
-        bubble.render(this.client, npcTopCenter, ctx);
+        bubble.render(npcTopCenter, ctx);
       }
 
       if (healthBar) {

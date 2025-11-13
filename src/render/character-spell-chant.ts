@@ -1,6 +1,5 @@
-import { StaticAtlasEntryType } from '../atlas';
-import type { Client } from '../client';
 import { TICKS_PER_CAST_TIME } from '../consts';
+import { type Font, TextAlign } from '../fonts/base';
 import type { Vector2 } from '../vector';
 import { CharacterAnimation } from './character-base-animation';
 
@@ -10,9 +9,11 @@ export class CharacterSpellChantAnimation extends CharacterAnimation {
   private rendered = false;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
+  private font: Font;
 
-  constructor(spellId: number, chant: string, castTime: number) {
+  constructor(font: Font, spellId: number, chant: string, castTime: number) {
     super();
+    this.font = font;
     this.spellId = spellId;
     this.chant = chant;
     this.ticks = castTime * TICKS_PER_CAST_TIME - 1;
@@ -31,77 +32,27 @@ export class CharacterSpellChantAnimation extends CharacterAnimation {
     this.animationFrame = Math.floor((this.ticks % 4) / 2);
   }
 
-  render(client: Client, position: Vector2, ctx: CanvasRenderingContext2D) {
+  render(position: Vector2, ctx: CanvasRenderingContext2D) {
     if (!this.rendered) {
-      const frame = client.atlas.getStaticEntry(StaticAtlasEntryType.Sans11);
-      if (!frame) {
-        return;
-      }
-
-      const atlas = client.atlas.getAtlas(frame.atlasIndex);
-      if (!atlas) {
-        return;
-      }
-
-      const chars = this.chant
-        .split('')
-        .map((c) => client.sans11.getCharacter(c.charCodeAt(0)));
-
-      const width = chars.reduce(
-        (sum, char) => sum + (char ? char.width : 0),
-        0,
-      );
-
-      const height = Math.max(...chars.map((char) => (char ? char.height : 0)));
-
-      const shadowCanvas = document.createElement('canvas');
-      const shadowCtx = shadowCanvas.getContext('2d');
-      shadowCanvas.width = width;
-      shadowCanvas.height = height;
-
-      let x = 0;
-      for (const char of chars) {
-        if (char) {
-          shadowCtx.drawImage(
-            atlas,
-            frame.x + char.x,
-            frame.y + char.y,
-            char.width,
-            char.height,
-            x,
-            0,
-            char.width,
-            char.height,
-          );
-        }
-        x += char.width;
-      }
-
-      shadowCtx.globalCompositeOperation = 'source-in';
-      shadowCtx.fillStyle = 'black';
-      shadowCtx.fillRect(0, 0, shadowCanvas.width, shadowCanvas.height);
-
+      const { width, height } = this.font.measureText(this.chant);
       this.canvas.width = width + 1;
       this.canvas.height = height + 1;
-      this.ctx.drawImage(shadowCanvas, 1, 1);
 
-      x = 0;
-      for (const char of chars) {
-        if (char) {
-          this.ctx.drawImage(
-            atlas,
-            frame.x + char.x,
-            frame.y + char.y,
-            char.width,
-            char.height,
-            x,
-            0,
-            char.width,
-            char.height,
-          );
-        }
-        x += char.width;
-      }
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.font.render(
+        this.ctx,
+        this.chant,
+        { x: 1, y: 1 },
+        '#000',
+        TextAlign.None,
+      );
+      this.font.render(
+        this.ctx,
+        this.chant,
+        { x: 0, y: 0 },
+        '#fff',
+        TextAlign.None,
+      );
 
       this.rendered = true;
     }

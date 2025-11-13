@@ -1,6 +1,5 @@
-import { StaticAtlasEntryType } from './atlas';
-import type { Client } from './client';
-import type { Font } from './fonts/base';
+import { COLORS } from './consts';
+import { type Font, TextAlign } from './fonts/base';
 import type { Vector2 } from './vector';
 
 const softLimit = 100;
@@ -17,12 +16,22 @@ export class ChatBubble {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private rendered = false;
+  private font: Font;
+  private foreground: string;
+  private background: string;
 
-  constructor(message: string) {
+  constructor(
+    font: Font,
+    message: string,
+    foreground = COLORS.ChatBubble,
+    background = COLORS.ChatBubbleBackground,
+  ) {
+    this.font = font;
     this.message = message;
+    this.foreground = foreground;
+    this.background = background;
     // https://discord.com/channels/723989119503696013/787685796055482368/1039092169937530890
     this.ticks = 24 + Math.floor(message.length / 3);
-
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d');
   }
@@ -31,23 +40,13 @@ export class ChatBubble {
     this.ticks = Math.max(this.ticks - 1, 0);
   }
 
-  render(client: Client, position: Vector2, ctx: CanvasRenderingContext2D) {
-    const frame = client.atlas.getStaticEntry(StaticAtlasEntryType.Sans11);
-    if (!frame) {
-      return;
-    }
-
-    const atlas = client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
+  render(position: Vector2, ctx: CanvasRenderingContext2D) {
     if (!this.rendered) {
-      const lines = wrapText(client.sans11, this.message);
+      const lines = this.wrapText(this.message);
       const width =
         Math.min(
           hardLimit,
-          Math.max(...lines.map((line) => measureText(client.sans11, line))),
+          Math.max(...lines.map((line) => this.font.measureText(line).width)),
         ) +
         padding * 2;
       const height = lineHeight * lines.length + padding * 2 - 5;
@@ -55,132 +54,99 @@ export class ChatBubble {
       this.canvas.width = width;
       this.canvas.height = height + triangleHeight;
 
-      const x = 0; //position.x - (this.width >> 1);
-      const y = 0; //position.y - this.height - triangleHeight;
-
       this.ctx.beginPath();
-      this.ctx.moveTo(x + radius, y);
-      this.ctx.lineTo(x + width - radius, y);
-      this.ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      this.ctx.lineTo(x + width, y + height - radius);
-      this.ctx.quadraticCurveTo(
-        x + width,
-        y + height,
-        x + width - radius,
-        y + height,
-      );
+      this.ctx.moveTo(radius, 0);
+      this.ctx.lineTo(width - radius, 0);
+      this.ctx.quadraticCurveTo(width, 0, width, radius);
+      this.ctx.lineTo(width, height - radius);
+      this.ctx.quadraticCurveTo(width, height, width - radius, height);
 
-      const midX = x + width / 2;
-      this.ctx.lineTo(midX + triangleWidth / 2, y + height);
-      this.ctx.lineTo(midX, y + height + triangleWidth);
-      this.ctx.lineTo(midX - triangleWidth / 2, y + height);
+      const halfWidth = Math.floor(width >> 1);
+      const halfTriangleWidth = triangleWidth >> 1;
+      this.ctx.lineTo(halfWidth + halfTriangleWidth, height);
+      this.ctx.lineTo(halfWidth, height + triangleHeight);
+      this.ctx.lineTo(halfWidth - halfTriangleWidth, height);
 
-      this.ctx.lineTo(x + radius, y + height);
-      this.ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      this.ctx.lineTo(x, y + radius);
-      this.ctx.quadraticCurveTo(x, y, x + radius, y);
+      this.ctx.lineTo(radius, height);
+      this.ctx.quadraticCurveTo(0, height, 0, height - radius);
+      this.ctx.lineTo(0, radius);
+      this.ctx.quadraticCurveTo(0, 0, radius, 0);
       this.ctx.closePath();
 
-      this.ctx.fillStyle = 'white';
-      this.ctx.strokeStyle = 'black';
+      this.ctx.fillStyle = this.background;
+      this.ctx.strokeStyle = this.foreground;
       this.ctx.lineWidth = 1;
       this.ctx.stroke();
       this.ctx.globalAlpha = 0.65;
       this.ctx.fill();
       this.ctx.globalAlpha = 1.0;
 
-      const tmpCanvas = document.createElement('canvas');
-      tmpCanvas.width = width;
-      tmpCanvas.height = height;
-      const tmpCtx = tmpCanvas.getContext('2d');
-
-      let charY = 0;
-      for (const line of lines) {
-        const chars = line
-          .split('')
-          .map((c: string) => client.sans11.getCharacter(c.charCodeAt(0)));
-        let charX = 0;
-
-        for (const char of chars) {
-          tmpCtx.drawImage(
-            atlas,
-            frame.x + char.x,
-            frame.y + char.y,
-            char.width,
-            char.height,
-            Math.floor(charX),
-            Math.floor(charY),
-            char.width,
-            char.height,
-          );
-          charX += char.width;
-        }
-        charY += lineHeight;
+      for (const [index, line] of lines.entries()) {
+        this.font.render(
+          this.ctx,
+          line,
+          { x: halfWidth, y: 3 + index * lineHeight },
+          this.foreground,
+          TextAlign.CenterHorizontal,
+        );
       }
 
-      tmpCtx.globalCompositeOperation = 'source-in';
-      tmpCtx.fillStyle = '#000';
-      tmpCtx.fillRect(0, 0, tmpCanvas.width, tmpCanvas.height);
-
-      this.ctx.drawImage(tmpCanvas, padding, 4);
       this.rendered = true;
     }
 
     ctx.drawImage(
       this.canvas,
-      Math.floor(position.x - this.canvas.width / 2),
+      Math.floor(position.x - (this.canvas.width >> 1)),
       Math.floor(position.y - this.canvas.height),
     );
   }
-}
 
-function wrapText(font: Font, text: string) {
-  const words = text.split(' ');
-  const lines = [];
-  let line = '';
+  private wrapText(text: string) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
 
-  for (const word of words) {
-    const testLine = line ? `${line} ${word}` : word;
-    const width = measureText(font, testLine);
+    for (const word of words) {
+      const testLine = line ? `${line} ${word}` : word;
+      const { width } = this.font.measureText(testLine);
 
-    if (width <= softLimit) {
-      line = testLine;
-    } else if (measureText(font, word) > hardLimit) {
-      if (line) {
-        lines.push(line);
-        line = '';
+      if (width <= softLimit) {
+        line = testLine;
+      } else if (this.font.measureText(word).width > hardLimit) {
+        if (line) {
+          lines.push(line);
+          line = '';
+        }
+
+        const hyphenated = this.hyphenateWord(word);
+        lines.push(...hyphenated);
+      } else {
+        if (line) lines.push(line);
+        line = word;
       }
-
-      const hyphenated = hyphenateWord(font, word);
-      lines.push(...hyphenated);
-    } else {
-      if (line) lines.push(line);
-      line = word;
     }
+
+    if (line) lines.push(line);
+    return lines;
   }
 
-  if (line) lines.push(line);
-  return lines;
-}
+  private hyphenateWord(word: string) {
+    const parts = [];
+    let piece = '';
 
-function hyphenateWord(font: Font, word: string) {
-  const parts = [];
-  let piece = '';
-
-  for (const char of word) {
-    const testPiece = piece + char;
-    if (measureText(font, `${testPiece}-`) > hardLimit && piece.length > 0) {
-      parts.push(`${piece}-`);
-      piece = char;
-    } else {
-      piece += char;
+    for (const char of word) {
+      const testPiece = piece + char;
+      if (
+        this.font.measureText(`${testPiece}-`).width > hardLimit &&
+        piece.length > 0
+      ) {
+        parts.push(`${piece}-`);
+        piece = char;
+      } else {
+        piece += char;
+      }
     }
+    if (piece) parts.push(piece);
+    return parts;
   }
-  if (piece) parts.push(piece);
-  return parts;
-}
-
-function measureText(font: Font, text: string): number {
-  const chars = text.split('').map((c) => font.getCharacter(c.charCodeAt(0)));
-  return chars.reduce((sum, c) => sum + (c ? c.width : 0), 0);
 }

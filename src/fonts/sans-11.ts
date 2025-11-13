@@ -1,8 +1,17 @@
+import {
+  type Atlas,
+  StaticAtlasEntryType,
+  type TileAtlasEntry,
+} from '../atlas';
 import { Font, FontCharacter } from './base';
 
 export class Sans11Font extends Font {
-  constructor() {
-    super();
+  getFrame(): TileAtlasEntry | undefined {
+    return this.atlas.getStaticEntry(StaticAtlasEntryType.Sans11);
+  }
+
+  constructor(atlas: Atlas) {
+    super(atlas);
     this.characters = [
       new FontCharacter(0x20, 1, 1, 3, 9),
       new FontCharacter(0x21, 14, 1, 3, 9),
