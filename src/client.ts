@@ -156,6 +156,7 @@ import {
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
 import { Door } from './door';
 import { type DialogResourceID, type Edf, EOResourceID } from './edf';
+import { Sans11Font } from './fonts/sans-11';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { registerAccountHandlers } from './handlers/account';
 import { registerAdminInteractHandlers } from './handlers/admin-interact';
@@ -560,6 +561,7 @@ export class Client {
     slot: EquipmentSlot;
     itemId: number;
   } | null = null;
+  sans11 = new Sans11Font();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();

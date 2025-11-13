@@ -482,177 +482,211 @@ export class MapRenderer {
       return;
     }
 
-    let rendered = this.renderCharacterNameTag(playerScreen, ctx);
-    if (!rendered) {
-      rendered = this.renderNpcNameTag(playerScreen, ctx);
-    }
-
-    if (!rendered && this.client.mouseCoords) {
-      this.renderItemNameTag(playerScreen, ctx);
-    }
-  }
-
-  renderCharacterNameTag(
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ): boolean {
-    const entityRect = getCharacterIntersecting(this.client.mousePosition);
-    if (!entityRect) {
-      return false;
-    }
-
-    const characterAt = this.client.getCharacterById(entityRect.id);
-    if (
-      !characterAt ||
-      (characterAt.invisible && this.client.admin === AdminLevel.Player)
-    ) {
-      return false;
-    }
-
-    if (this.client.characterAnimations.has(characterAt.playerId)) {
-      return false;
-    }
-
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px w95fa';
-    let name = capitalize(characterAt.name);
-    if (characterAt.guildTag !== '   ') {
-      name += ` ${characterAt.guildTag}`;
-    }
-    const position = isoToScreen(characterAt.coords);
-    const metrics = ctx.measureText(name);
-    ctx.fillText(
-      name,
-      Math.floor(
-        position.x - metrics.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
-      ),
-      Math.floor(
-        position.y -
-          playerScreen.y -
-          8 -
-          entityRect.rect.height +
-          HALF_GAME_HEIGHT,
-      ),
-    );
-
-    return true;
-  }
-
-  renderNpcNameTag(
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ): boolean {
-    const entityRect = getNpcIntersecting(this.client.mousePosition);
-    if (!entityRect) {
-      return false;
-    }
-
-    const npcAt = this.client.getNpcByIndex(entityRect.id);
-    if (!npcAt) {
-      return false;
-    }
-
-    const record = this.client.getEnfRecordById(npcAt.id);
-    if (!record) {
+    const frame = this.client.atlas.getStaticEntry(StaticAtlasEntryType.Sans11);
+    if (!frame) {
       return;
     }
 
-    const meta = this.client.getNpcMetadata(record.graphicId);
-    if (!meta) {
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
       return;
     }
 
-    let animation = this.client.npcAnimations.get(npcAt.index);
-    if (animation instanceof NpcDeathAnimation && animation.base) {
-      animation = animation.base;
+    const coords = { x: 0, y: 0 };
+    const offset = { x: 0, y: 0 };
+    let name = '';
+    const characterRect = getCharacterIntersecting(this.client.mousePosition);
+    if (characterRect) {
+      const character = this.client.getCharacterById(characterRect.id);
+      if (
+        character &&
+        (!character.invisible || this.client.admin !== AdminLevel.Player)
+      ) {
+        name = capitalize(character.name);
+        coords.x = character.coords.x;
+        coords.y = character.coords.y;
+
+        // TODO: Party member color
+
+        switch (character.sitState) {
+          case SitState.Floor:
+            offset.y -= 50;
+            break;
+          case SitState.Chair:
+            offset.y -= 56;
+            break;
+          case SitState.Stand:
+            offset.y -= 72;
+            break;
+        }
+
+        if (character.guildTag !== '   ') {
+          name += ` ${character.guildTag}`;
+        }
+
+        let animation = this.client.characterAnimations.get(character.playerId);
+        if (animation instanceof CharacterDeathAnimation) {
+          animation = animation.base;
+        }
+
+        if (animation instanceof CharacterWalkAnimation) {
+          const walkOffset =
+            WALK_OFFSETS[animation.animationFrame][animation.direction];
+          offset.x += walkOffset.x;
+          offset.y += walkOffset.y;
+          coords.x = animation.from.x;
+          coords.y = animation.from.y;
+        }
+      }
     }
 
-    const coords = {
-      x: npcAt.coords.x,
-      y: npcAt.coords.y,
-    };
-    let walkOffset = { x: 0, y: 0 };
-    if (animation instanceof NpcWalkAnimation) {
-      walkOffset = WALK_OFFSETS[animation.animationFrame][animation.direction];
-      coords.x = animation.from.x;
-      coords.y = animation.from.y;
+    if (!name) {
+      const npcRect = getNpcIntersecting(this.client.mousePosition);
+      if (npcRect) {
+        const npc = this.client.getNpcByIndex(npcRect.id);
+        if (npc) {
+          const record = this.client.getEnfRecordById(npc.id);
+          if (record) {
+            name = record.name;
+            coords.x = npc.coords.x;
+            coords.y = npc.coords.y;
+            offset.y -= TILE_HEIGHT;
+
+            const meta = this.client.getNpcMetadata(record.graphicId);
+            if (meta) {
+              offset.y -= meta.nameLabelOffset - 4;
+            }
+
+            let animation = this.client.npcAnimations.get(npc.index);
+            if (animation instanceof NpcDeathAnimation && animation.base) {
+              animation = animation.base;
+            }
+
+            if (animation instanceof NpcWalkAnimation) {
+              const walkOffset =
+                WALK_OFFSETS[animation.animationFrame][animation.direction];
+              offset.x += walkOffset.x;
+              offset.y += walkOffset.y;
+              coords.x = animation.from.x;
+              coords.y = animation.from.y;
+            }
+          }
+        }
+      }
     }
 
-    coords.x -= 1;
-    coords.y -= 1;
+    if (!name) {
+      if (!this.client.mouseCoords) {
+        return;
+      }
 
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px w95fa';
+      const items = this.client.nearby.items.filter(
+        (i) =>
+          i.coords.x === this.client.mouseCoords.x &&
+          i.coords.y === this.client.mouseCoords.y,
+      );
+      if (!items.length) {
+        return false;
+      }
 
-    const screenCoords = isoToScreen(coords);
-    const npcTopCenter = {
-      x: Math.floor(
-        screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + walkOffset.x,
-      ),
-      y: Math.floor(
-        screenCoords.y -
-          playerScreen.y +
-          HALF_GAME_HEIGHT -
-          meta.nameLabelOffset +
-          walkOffset.y +
-          4,
-      ),
-    };
+      items.sort((a, b) => b.uid - a.uid);
 
-    const metrics = ctx.measureText(record.name);
-    ctx.fillText(
-      record.name,
-      Math.floor(npcTopCenter.x - (metrics.width >> 1)),
-      Math.floor(npcTopCenter.y),
+      const item = items[0];
+
+      const data = this.client.getEifRecordById(item.id);
+      if (!data) {
+        return;
+      }
+
+      // TODO: Item name color
+
+      name =
+        item.id === 1
+          ? `${item.amount} ${data.name}`
+          : item.amount > 1
+            ? `${data.name} x${item.amount}`
+            : data.name;
+      coords.x = item.coords.x;
+      coords.y = item.coords.y;
+
+      offset.y -= HALF_TILE_HEIGHT + 6;
+    }
+
+    const shadowCanvas = document.createElement('canvas');
+    const shadowCtx = shadowCanvas.getContext('2d');
+    const tmpCanvas = document.createElement('canvas');
+    const tmpCtx = tmpCanvas.getContext('2d');
+
+    const characters = name
+      .split('')
+      .map((char) => this.client.sans11.getCharacter(char.charCodeAt(0)));
+
+    const textWidth = characters.reduce(
+      (sum, char) => sum + (char ? char.width : 0),
+      0,
     );
 
-    return true;
-  }
-
-  renderItemNameTag(
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ): boolean {
-    const items = this.client.nearby.items.filter(
-      (i) =>
-        i.coords.x === this.client.mouseCoords.x &&
-        i.coords.y === this.client.mouseCoords.y,
-    );
-    if (!items.length) {
-      return false;
-    }
-
-    items.sort((a, b) => b.uid - a.uid);
-
-    const item = items[0];
-
-    const data = this.client.getEifRecordById(item.id);
-    if (!data) {
-      return;
-    }
-
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px w95fa';
-
-    const position = isoToScreen(item.coords);
-    const name =
-      item.id === 1
-        ? `${item.amount} ${data.name}`
-        : item.amount > 1
-          ? `${data.name} x${item.amount}`
-          : data.name;
-    const metrics = ctx.measureText(name);
-    ctx.fillText(
-      name,
-      Math.floor(
-        position.x - metrics.width / 2 - playerScreen.x + HALF_GAME_WIDTH,
-      ),
-      Math.floor(
-        position.y - playerScreen.y - TILE_HEIGHT + 10 + HALF_GAME_HEIGHT,
-      ),
+    const textHeight = Math.max(
+      ...characters.map((char) => (char ? char.height : 0)),
     );
 
-    return true;
+    tmpCanvas.width = textWidth;
+    tmpCanvas.height = textHeight;
+    shadowCanvas.width = textWidth;
+    shadowCanvas.height = textHeight;
+
+    let x = 0;
+    for (const char of characters) {
+      shadowCtx.drawImage(
+        atlas,
+        frame.x + char.x,
+        frame.y + char.y,
+        char.width,
+        char.height,
+        x,
+        0,
+        char.width,
+        char.height,
+      );
+      x += char.width;
+    }
+
+    shadowCtx.globalCompositeOperation = 'source-in';
+    shadowCtx.fillStyle = '#000';
+    shadowCtx.fillRect(0, 0, shadowCanvas.width, shadowCanvas.height);
+
+    x = 0;
+    for (const char of characters) {
+      tmpCtx.drawImage(
+        atlas,
+        frame.x + char.x,
+        frame.y + char.y,
+        char.width,
+        char.height,
+        x,
+        0,
+        char.width,
+        char.height,
+      );
+      x += char.width;
+    }
+
+    const position = isoToScreen(coords);
+
+    const drawX = Math.floor(
+      position.x -
+        (textWidth >> 1) -
+        playerScreen.x +
+        HALF_GAME_WIDTH +
+        offset.x,
+    );
+
+    const drawY = Math.floor(
+      position.y - playerScreen.y - textHeight + HALF_GAME_HEIGHT + offset.y,
+    );
+
+    ctx.drawImage(shadowCanvas, drawX + 1, drawY + 1);
+    ctx.drawImage(tmpCanvas, drawX, drawY);
   }
 
   renderPlayerMenu(ctx: CanvasRenderingContext2D) {
