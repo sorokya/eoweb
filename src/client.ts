@@ -259,7 +259,7 @@ type ClientEvents = {
     tab: ChatTab;
     message: string;
     icon?: ChatIcon | null;
-    player?: string;
+    name?: string;
   };
   serverChat: { message: string; sfxId?: SfxId | null; icon?: ChatIcon | null };
   accountCreated: undefined;
@@ -876,7 +876,7 @@ export class Client {
       this.emit('chat', {
         message: `${messages[0]}`,
         tab: ChatTab.Local,
-        player: `${capitalize(record.name)}`,
+        name: `${capitalize(record.name)}`,
       });
       this.npcChats.set(index, new ChatBubble(this.sans11, messages[0]));
 
@@ -1946,17 +1946,20 @@ export class Client {
       this.emit('chat', {
         icon: ChatIcon.GlobalAnnounce,
         tab: ChatTab.Local,
-        message: `${capitalize(this.name)} ${packet.message}`,
+        message: `${packet.message}`,
+        name: `${capitalize(this.name)}`,
       });
       this.emit('chat', {
         icon: ChatIcon.GlobalAnnounce,
         tab: ChatTab.Group,
-        message: `${capitalize(this.name)} ${packet.message}`,
+        message: `${packet.message}`,
+        name: `${capitalize(this.name)}`,
       });
       this.emit('chat', {
         icon: ChatIcon.GlobalAnnounce,
         tab: ChatTab.Global,
-        message: `${capitalize(this.name)} ${packet.message}`,
+        message: `${packet.message}`,
+        name: `${capitalize(this.name)}`,
       });
       playSfxById(SfxId.AdminAnnounceReceived);
       this.bus.send(packet);
@@ -1995,7 +1998,7 @@ export class Client {
     this.emit('chat', {
       tab: ChatTab.Local,
       message: `${trimmed}`,
-      player: `${capitalize(this.name)}`,
+      name: `${capitalize(this.name)}`,
     });
   }
 
