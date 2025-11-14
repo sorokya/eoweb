@@ -227,8 +227,8 @@ client.on('characterDeleted', (characters) => {
 
 client.on('selectCharacter', () => {});
 
-client.on('chat', ({ icon, tab, message, player }) => {
-  chat.addMessage(tab, message, icon || ChatIcon.None, player);
+client.on('chat', ({ icon, tab, message, name }) => {
+  chat.addMessage(tab, message, icon || ChatIcon.None, name);
 });
 
 client.on('enterGame', ({ news }) => {

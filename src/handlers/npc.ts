@@ -93,7 +93,7 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     client.emit('chat', {
       tab: ChatTab.Local,
       message: `${chat.message}`,
-      player: `${capitalize(record.name)}`,
+      name: `${capitalize(record.name)}`,
     });
   }
 
@@ -241,7 +241,7 @@ function handleNpcDialog(client: Client, reader: EoReader) {
   client.emit('chat', {
     tab: ChatTab.Local,
     message: `${packet.message}`,
-    player: `${capitalize(record.name)}`,
+    name: `${capitalize(record.name)}`,
   });
 }
 
