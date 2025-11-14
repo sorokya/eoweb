@@ -563,6 +563,7 @@ export class Client {
     itemId: number;
   } | null = null;
   sans11: Sans11Font;
+  interpolation = true;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -1104,8 +1105,8 @@ export class Client {
   }
 
   render(ctx: CanvasRenderingContext2D, interpolation: number) {
-    this.mapRenderer.render(ctx, interpolation);
-    this.minimapRenderer.render(ctx, interpolation);
+    this.mapRenderer.render(ctx, this.interpolation ? interpolation : 1);
+    this.minimapRenderer.render(ctx, this.interpolation ? interpolation : 1);
   }
 
   setMap(map: Emf) {
@@ -2037,6 +2038,15 @@ export class Client {
 
         this.nowall = !this.nowall;
         playSfxById(SfxId.TextBoxFocus);
+        return true;
+      }
+
+      case '#smooth': {
+        this.interpolation = !this.interpolation;
+        this.emit('serverChat', {
+          message: `Movement interpolation ${this.interpolation ? 'enabled' : 'disabled'}!`,
+        });
+        return true;
       }
     }
 
