@@ -12,7 +12,7 @@
     "find-dead-code": "ts-prune"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.0.5",
+    "@biomejs/biome": "2.3.5",
     "lefthook": "^2.0.4",
     "ts-prune": "^0.10.3",
     "typescript": "~5.9.3",

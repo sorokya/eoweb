@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Biome: Lint entire project",
+      "type": "process",
+      "command": "pnpm",
+      "args": ["biome", "lint", ".", "--reporter=github"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": {
+        "owner": "biome",
+        "source": "biome",
+        "pattern": [
+          {
+            "regexp": "^::(?<severity>\\S+)\\s+title=(?<title>.+),file=(?<file>.+),line=(?<line>\\d+),endLine=(?<endLine>\\d+),col=(?<col>\\d+),endColumn=(?<endColumn>\\d+)::(?<message>.+)$",
+            "kind": "location",
+            "severity": 1,
+            "code": 2,
+            "file": 3,
+            "line": 4,
+            "endLine": 5,
+            "column": 6,
+            "endColumn": 7,
+            "message": 8
+          }
+        ]
+      }
+    }
+  ]
+}

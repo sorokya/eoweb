@@ -4,7 +4,6 @@ import { calculateTnl, getExpForLevel } from '../utils/calculate-tnl';
 import { Base } from './base-ui';
 
 export class HUD extends Base {
-  private client: Client;
   protected container = document.getElementById('hud');
   private hpText: HTMLDivElement = this.container.querySelector(
     '.stat-container[data-id="hp"] span',
