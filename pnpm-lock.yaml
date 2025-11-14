@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       eolib:
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.0.1
+        version: 2.0.1
       idb:
         specifier: ^8.0.3
         version: 8.0.3
@@ -418,8 +418,8 @@ packages:
     resolution: {integrity: sha512-AdmX6xUzdNASswsFtmwSt7Vj8po9IuqXm0UXz7QKPuEUmPB4XyjGfaAr2PSuELMwkRMVH1EpIkX5bTZGRB3eCA==}
     engines: {node: '>=10'}
 
-  eolib@2.0.0:
-    resolution: {integrity: sha512-XZ75hxKllNtjWkGhJ1sIaULTPQKjhCXfBFDm8OG3sn5MJmRgwf44sNjjxavs/5mRHp2Qn0e5J86YvLm39HMBvA==}
+  eolib@2.0.1:
+    resolution: {integrity: sha512-AcAhkzhado0JXxPa7q8n+KXEscQEioy/edxCHeOJIMqKgAl9Ks8+AyX3uOwwrhOhIyqAySqlftLiM3HoA862Vg==}
 
   error-ex@1.3.4:
     resolution: {integrity: sha512-sqQamAnR14VgCr1A618A3sGrygcpK+HEbenA/HiEAkkUwcZIIB/tgWqHFxWgOyDh4nB4JCRimh79dR5Ywc9MDQ==}
@@ -946,7 +946,7 @@ snapshots:
       path-type: 4.0.0
       yaml: 1.10.2
 
-  eolib@2.0.0: {}
+  eolib@2.0.1: {}
 
   error-ex@1.3.4:
     dependencies:
