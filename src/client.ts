@@ -2018,7 +2018,7 @@ export class Client {
       case '#loc': {
         const coords = this.getPlayerCoords();
         this.emit('serverChat', {
-          message: `Your current location is at map ${this.mapId} x:${coords.x} y:${coords.y}`,
+          message: `${this.getResourceString(EOResourceID.STATUS_LABEL_YOUR_LOCATION_IS_AT)} ${this.mapId} x:${coords.x} y:${coords.y}`,
         });
         return true;
       }
