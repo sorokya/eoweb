@@ -16,7 +16,7 @@
     "lefthook": "^1.11.14",
     "ts-prune": "^0.10.3",
     "typescript": "~5.8.3",
-    "vite": "^7.1.12"
+    "vite": "^7.2.2"
   },
   "dependencies": {
     "eolib": "^2.0.0",
