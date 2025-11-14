@@ -19,7 +19,7 @@ export class OnlineList extends BaseDialogMd<Events> {
       this.updateLabelText(`Online Players (${players.length})`);
       playersContainer.innerHTML = '';
 
-      players.map((player) => {
+      for (const player of players) {
         const playerElement = document.createElement('div');
         playerElement.className = 'player';
 
@@ -71,7 +71,7 @@ export class OnlineList extends BaseDialogMd<Events> {
             chatBox.value = `!${player.name} `;
           }
         });
-      });
+      }
     });
   }
 

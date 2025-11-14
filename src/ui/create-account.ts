@@ -32,9 +32,6 @@ export class CreateAccountForm extends Base {
     this.container.querySelector('#create-location');
   private email: HTMLInputElement =
     this.container.querySelector('#create-email');
-  private btnCreate: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="create"]',
-  );
   private btnCancel: HTMLButtonElement = this.container.querySelector(
     'button[data-id="cancel-big"]',
   );

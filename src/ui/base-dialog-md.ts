@@ -14,7 +14,6 @@ export abstract class BaseDialogMd<
   private btnCancel: HTMLButtonElement;
   private label: HTMLSpanElement;
   private scrollHandle: HTMLDivElement;
-  private open = false;
 
   constructor(client: Client, container: HTMLDivElement, labelText: string) {
     super();
@@ -89,13 +88,11 @@ export abstract class BaseDialogMd<
     this.render();
     this.container.classList.remove('hidden');
     this.dialogs.classList.remove('hidden');
-    this.open = true;
     this.setScrollThumbPosition();
   }
 
   hide() {
     this.container.classList.add('hidden');
-    this.open = false;
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
       this.dialogs.classList.add('hidden');
