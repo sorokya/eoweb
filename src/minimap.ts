@@ -88,12 +88,30 @@ function getIconForTile(
 }
 
 export class MinimapRenderer {
+  private interpolation = 0;
   constructor(private client: Client) {}
 
-  render(ctx: CanvasRenderingContext2D) {
+  private interpolateWalkOffset(frame: number, direction: Direction): Vector2 {
+    const prevOffset =
+      frame > 0 ? WALK_OFFSETS[frame - 1][direction] : { x: 0, y: 0 };
+    const walkOffset = WALK_OFFSETS[frame][direction];
+
+    return {
+      x: Math.floor(
+        prevOffset.x + (walkOffset.x - prevOffset.x) * this.interpolation,
+      ),
+      y: Math.floor(
+        prevOffset.y + (walkOffset.y - prevOffset.y) * this.interpolation,
+      ),
+    };
+  }
+
+  render(ctx: CanvasRenderingContext2D, interpolation: number) {
     if (!this.client.minimapEnabled) {
       return;
     }
+
+    this.interpolation = interpolation;
 
     const bmp = this.client.atlas.getStaticEntry(
       StaticAtlasEntryType.MinimapIcons,
@@ -123,10 +141,10 @@ export class MinimapRenderer {
 
     if (mainCharacterAnimation instanceof CharacterWalkAnimation) {
       playerScreen = isoToScreen(mainCharacterAnimation.from);
-      const walkOffset =
-        WALK_OFFSETS[mainCharacterAnimation.animationFrame][
-          mainCharacterAnimation.direction
-        ];
+      const walkOffset = this.interpolateWalkOffset(
+        mainCharacterAnimation.animationFrame,
+        mainCharacterAnimation.direction,
+      );
       playerScreen.x += walkOffset.x;
       playerScreen.y += walkOffset.y;
     }
@@ -201,8 +219,12 @@ export class MinimapRenderer {
 
       if (animation instanceof NpcWalkAnimation) {
         tileScreen = isoToScreen(animation.from);
-        const walkOffset =
-          WALK_OFFSETS[animation.animationFrame][animation.direction];
+        const walkOffset = dying
+          ? WALK_OFFSETS[animation.animationFrame][animation.direction]
+          : this.interpolateWalkOffset(
+              animation.animationFrame,
+              animation.direction,
+            );
         tileScreen.x += walkOffset.x;
         tileScreen.y += walkOffset.y;
       }
@@ -266,7 +288,12 @@ export class MinimapRenderer {
       let offset = { x: 0, y: 0 };
       if (animation instanceof CharacterWalkAnimation) {
         coords = animation.from;
-        offset = WALK_OFFSETS[animation.animationFrame][animation.direction];
+        offset = dying
+          ? WALK_OFFSETS[animation.animationFrame][animation.direction]
+          : this.interpolateWalkOffset(
+              animation.animationFrame,
+              animation.direction,
+            );
       }
 
       const tileScreen = isoToScreen(coords);

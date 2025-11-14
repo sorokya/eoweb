@@ -5,7 +5,7 @@ export class NpcDeathAnimation extends NpcAnimation {
   base: NpcAnimation | undefined;
   constructor(base?: NpcAnimation) {
     super();
-    this.ticks = DEATH_TICKS;
+    this.ticks = DEATH_TICKS - 1;
     this.base = base;
     this.renderedFirstFrame = base?.renderedFirstFrame ?? false;
   }

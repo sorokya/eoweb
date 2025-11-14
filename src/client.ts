@@ -1103,9 +1103,9 @@ export class Client {
     }
   }
 
-  render(ctx: CanvasRenderingContext2D) {
-    this.mapRenderer.render(ctx);
-    this.minimapRenderer.render(ctx);
+  render(ctx: CanvasRenderingContext2D, interpolation: number) {
+    this.mapRenderer.render(ctx, interpolation);
+    this.minimapRenderer.render(ctx, interpolation);
   }
 
   setMap(map: Emf) {
