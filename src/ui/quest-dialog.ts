@@ -37,6 +37,7 @@ export class QuestDialog extends Base {
   );
 
   private questId = 0;
+  private dialogId = 0;
   private name = '';
   private title = '';
   private quests: DialogQuestEntry[] = [];
@@ -53,11 +54,13 @@ export class QuestDialog extends Base {
 
   setData(
     questId: number,
+    dialogId: number,
     name: string,
     quests: DialogQuestEntry[],
     dialog: DialogEntry[],
   ) {
     this.questId = questId;
+    this.dialogId = dialogId;
     this.name = name;
     this.quests = quests;
     this.dialog = dialog;
@@ -131,7 +134,7 @@ export class QuestDialog extends Base {
         this.cover.classList.add('hidden');
         this.emitter.emit('reply', {
           questId: this.questId,
-          dialogId: this.dialogIndex,
+          dialogId: this.dialogId,
           action: data.linkId,
         });
       });

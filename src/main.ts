@@ -273,7 +273,13 @@ client.on('reconnect', () => {
 
 client.on('openQuestDialog', (data) => {
   client.typing = true;
-  questDialog.setData(data.questId, data.name, data.quests, data.dialog);
+  questDialog.setData(
+    data.questId,
+    data.dialogId,
+    data.name,
+    data.quests,
+    data.dialog,
+  );
   questDialog.show();
 });
 

@@ -266,6 +266,7 @@ type ClientEvents = {
   playersListUpdated: OnlinePlayer[];
   openQuestDialog: {
     name: string;
+    dialogId: number;
     questId: number;
     quests: DialogQuestEntry[];
     dialog: DialogEntry[];
