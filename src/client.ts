@@ -78,6 +78,7 @@ import {
   PartyRequestType,
   PartyTakeClientPacket,
   PlayerRangeRequestClientPacket,
+  PlayersAcceptClientPacket,
   PriestOpenClientPacket,
   QuestAcceptClientPacket,
   QuestUseClientPacket,
@@ -1994,11 +1995,23 @@ export class Client {
     });
   }
 
-  handleCommand(command: string): boolean {
-    switch (command) {
+  handleCommand(input: string): boolean {
+    const args = input.split(' ');
+    switch (args[0]) {
       case '#ping': {
         this.pingStart = Date.now();
         this.bus.send(new MessagePingClientPacket());
+        return true;
+      }
+
+      case '#find': {
+        const packet = new PlayersAcceptClientPacket();
+        packet.name = args[1] || '';
+        if (!packet.name) {
+          return false;
+        }
+
+        this.bus.send(packet);
         return true;
       }
 
