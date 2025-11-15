@@ -8,12 +8,15 @@ import {
   TalkMsgServerPacket,
   TalkOpenServerPacket,
   TalkPlayerServerPacket,
+  TalkReply,
+  TalkReplyServerPacket,
   TalkServerServerPacket,
   TalkTellServerPacket,
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
 import { COLORS } from '../consts';
+import { EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { ChatIcon } from '../ui/chat';
 import { capitalize } from '../utils/capitalize';
@@ -142,6 +145,18 @@ function handleTalkOpen(client: Client, reader: EoReader) {
   playSfxById(SfxId.GroupChatReceived);
 }
 
+function handleTalkReply(client: Client, reader: EoReader) {
+  const packet = TalkReplyServerPacket.deserialize(reader);
+  if (packet.replyCode === TalkReply.NotFound) {
+    client.emit('chat', {
+      icon: ChatIcon.Error,
+      message: `${capitalize(packet.name)} ${client.getResourceString(EOResourceID.SYS_CHAT_PM_PLAYER_COULD_NOT_BE_FOUND)}`,
+      tab: ChatTab.Local,
+    });
+    playSfxById(SfxId.PrivateMessageSent);
+  }
+}
+
 export function registerTalkHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Talk,
@@ -177,5 +192,10 @@ export function registerTalkHandlers(client: Client) {
     PacketFamily.Talk,
     PacketAction.Open,
     (reader) => handleTalkOpen(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Talk,
+    PacketAction.Reply,
+    (reader) => handleTalkReply(client, reader),
   );
 }
