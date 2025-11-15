@@ -1,16 +1,19 @@
 import {
+  AdminLevel,
   type EoReader,
   PacketAction,
   PacketFamily,
   TalkAdminServerPacket,
   TalkAnnounceServerPacket,
   TalkMsgServerPacket,
+  TalkOpenServerPacket,
   TalkPlayerServerPacket,
   TalkServerServerPacket,
   TalkTellServerPacket,
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
+import { COLORS } from '../consts';
 import { playSfxById, SfxId } from '../sfx';
 import { ChatIcon } from '../ui/chat';
 import { capitalize } from '../utils/capitalize';
@@ -101,6 +104,43 @@ function handleTalkAnnounce(client: Client, reader: EoReader) {
   playSfxById(SfxId.AdminAnnounceReceived);
 }
 
+function handleTalkOpen(client: Client, reader: EoReader) {
+  const packet = TalkOpenServerPacket.deserialize(reader);
+  const player = client.partyMembers.find(
+    (m) => m.playerId === packet.playerId,
+  );
+  if (!player) {
+    return;
+  }
+
+  client.emit('chat', {
+    tab: ChatTab.Group,
+    name: capitalize(player.name),
+    message: packet.message,
+    icon: ChatIcon.PlayerParty,
+  });
+
+  if (
+    client.nearby.characters.some(
+      (c) =>
+        c.playerId === packet.playerId &&
+        (!c.invisible || client.admin !== AdminLevel.Player),
+    )
+  ) {
+    client.characterChats.set(
+      packet.playerId,
+      new ChatBubble(
+        client.sans11,
+        packet.message,
+        COLORS.ChatBubble,
+        COLORS.ChatBubbleBackgroundParty,
+      ),
+    );
+  }
+
+  playSfxById(SfxId.GroupChatReceived);
+}
+
 export function registerTalkHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Talk,
@@ -131,5 +171,10 @@ export function registerTalkHandlers(client: Client) {
     PacketFamily.Talk,
     PacketAction.Tell,
     (reader) => handleTalkTell(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Talk,
+    PacketAction.Open,
+    (reader) => handleTalkOpen(client, reader),
   );
 }

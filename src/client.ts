@@ -2017,6 +2017,7 @@ export class Client {
 
       this.emit('chat', {
         tab: ChatTab.Group,
+        icon: ChatIcon.PlayerParty,
         message: `${packet.message}`,
         name: `${capitalize(this.name)}`,
       });
