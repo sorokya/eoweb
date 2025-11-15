@@ -54,7 +54,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
   }
 
   const data = packet.replyCodeData as LoginReplyServerPacket.ReplyCodeDataOk;
-  client.state = GameState.LoggedIn;
+  client.setState(GameState.LoggedIn);
 
   if (
     client.rememberMe &&

@@ -875,254 +875,257 @@ export class Client {
       }
 
       this.spellCooldownTicks = Math.max(this.spellCooldownTicks - 1, 0);
-    }
 
-    const emptyQueuedNpcChats: number[] = [];
-    for (const [index, messages] of this.queuedNpcChats) {
-      const existingChat = this.npcChats.get(index);
-      if (existingChat) {
-        continue;
-      }
-
-      const npc = this.getNpcByIndex(index);
-      if (!npc) {
-        emptyQueuedNpcChats.push(index);
-        continue;
-      }
-
-      const record = this.getEnfRecordById(npc.id);
-      if (!record) {
-        emptyQueuedNpcChats.push(index);
-        continue;
-      }
-
-      this.npcChats.set(index, new ChatBubble(this.sans11, messages[0]));
-
-      if (messages.length > 1) {
-        messages.splice(0, 1);
-      } else {
-        emptyQueuedNpcChats.push(index);
-      }
-    }
-    for (const index of emptyQueuedNpcChats) {
-      this.queuedNpcChats.delete(index);
-    }
-
-    const endedCharacterAnimations: number[] = [];
-    let playerWalking = false;
-    let playerDying = false;
-    for (const [id, animation] of this.characterAnimations) {
-      if (
-        !animation.ticks ||
-        !this.nearby.characters.some((c) => c.playerId === id)
-      ) {
-        if (
-          id === this.playerId &&
-          animation instanceof CharacterSpellChantAnimation
-        ) {
-          this.castSpell(animation.spellId);
-        } else if (
-          id === this.playerId &&
-          this.spellCooldownTicks !== SPELL_COOLDOWN_TICKS
-        ) {
-          this.queuedSpellId = 0;
-          this.spellCooldownTicks = SPELL_COOLDOWN_TICKS;
+      const emptyQueuedNpcChats: number[] = [];
+      for (const [index, messages] of this.queuedNpcChats) {
+        const existingChat = this.npcChats.get(index);
+        if (existingChat) {
+          continue;
         }
 
+        const npc = this.getNpcByIndex(index);
+        if (!npc) {
+          emptyQueuedNpcChats.push(index);
+          continue;
+        }
+
+        const record = this.getEnfRecordById(npc.id);
+        if (!record) {
+          emptyQueuedNpcChats.push(index);
+          continue;
+        }
+
+        this.npcChats.set(index, new ChatBubble(this.sans11, messages[0]));
+
+        if (messages.length > 1) {
+          messages.splice(0, 1);
+        } else {
+          emptyQueuedNpcChats.push(index);
+        }
+      }
+      for (const index of emptyQueuedNpcChats) {
+        this.queuedNpcChats.delete(index);
+      }
+
+      const endedCharacterAnimations: number[] = [];
+      let playerWalking = false;
+      let playerDying = false;
+      for (const [id, animation] of this.characterAnimations) {
         if (
-          id !== this.playerId &&
+          !animation.ticks ||
+          !this.nearby.characters.some((c) => c.playerId === id)
+        ) {
+          if (
+            id === this.playerId &&
+            animation instanceof CharacterSpellChantAnimation
+          ) {
+            this.castSpell(animation.spellId);
+          } else if (
+            id === this.playerId &&
+            this.spellCooldownTicks !== SPELL_COOLDOWN_TICKS
+          ) {
+            this.queuedSpellId = 0;
+            this.spellCooldownTicks = SPELL_COOLDOWN_TICKS;
+          }
+
+          if (
+            id !== this.playerId &&
+            animation instanceof CharacterDeathAnimation
+          ) {
+            this.nearby.characters = this.nearby.characters.filter(
+              (c) => c.playerId !== id,
+            );
+          }
+
+          endedCharacterAnimations.push(id);
+          continue;
+        }
+        if (
+          id === this.playerId &&
+          animation instanceof CharacterWalkAnimation
+        ) {
+          playerWalking = true;
+        }
+        if (
+          id === this.playerId &&
           animation instanceof CharacterDeathAnimation
         ) {
-          this.nearby.characters = this.nearby.characters.filter(
-            (c) => c.playerId !== id,
-          );
+          playerDying = true;
+        }
+        animation.tick();
+      }
+      for (const id of endedCharacterAnimations) {
+        this.characterAnimations.delete(id);
+      }
+
+      const endedCharacterEmotes: number[] = [];
+      for (const [id, emote] of this.characterEmotes) {
+        if (
+          !emote.ticks ||
+          !this.nearby.characters.some((c) => c.playerId === id)
+        ) {
+          endedCharacterEmotes.push(id);
+          continue;
+        }
+        emote.tick();
+      }
+      for (const id of endedCharacterEmotes) {
+        this.characterEmotes.delete(id);
+      }
+
+      const endedNpcAnimations: number[] = [];
+      for (const [id, animation] of this.npcAnimations) {
+        if (!animation.ticks || !this.nearby.npcs.some((n) => n.index === id)) {
+          endedNpcAnimations.push(id);
+          continue;
+        }
+        animation.tick();
+      }
+      for (const id of endedNpcAnimations) {
+        if (this.npcAnimations.get(id) instanceof NpcDeathAnimation) {
+          this.nearby.npcs = this.nearby.npcs.filter((n) => n.index !== id);
+        }
+        this.npcAnimations.delete(id);
+      }
+
+      if (this.cursorClickAnimation) {
+        this.cursorClickAnimation.tick();
+        if (!this.cursorClickAnimation.ticks) {
+          this.cursorClickAnimation = undefined;
+        }
+      }
+
+      const endedCharacterChatBubbles: number[] = [];
+      for (const [id, bubble] of this.characterChats) {
+        if (
+          !bubble.ticks ||
+          !this.nearby.characters.some((c) => c.playerId === id)
+        ) {
+          endedCharacterChatBubbles.push(id);
+          continue;
+        }
+        bubble.tick();
+      }
+      for (const id of endedCharacterChatBubbles) {
+        this.characterChats.delete(id);
+      }
+
+      const endedNpcHealthBars: number[] = [];
+      for (const [id, healthBar] of this.npcHealthBars) {
+        if (
+          !this.nearby.npcs.some((n) => n.index === id) ||
+          healthBar.ticks <= 0
+        ) {
+          endedNpcHealthBars.push(id);
+          continue;
+        }
+        healthBar.tick();
+      }
+      for (const id of endedNpcHealthBars) {
+        this.npcHealthBars.delete(id);
+      }
+
+      const endedCharacterHealthBars: number[] = [];
+      for (const [id, healthBar] of this.characterHealthBars) {
+        if (
+          !this.nearby.characters.some((c) => c.playerId === id) ||
+          healthBar.ticks <= 0
+        ) {
+          endedCharacterHealthBars.push(id);
+          continue;
+        }
+        healthBar.tick();
+      }
+      for (const id of endedCharacterHealthBars) {
+        this.characterHealthBars.delete(id);
+      }
+
+      const endedNpcChatBubbles: number[] = [];
+      for (const [id, bubble] of this.npcChats) {
+        if (!bubble.ticks || !this.nearby.npcs.some((n) => n.index === id)) {
+          endedNpcChatBubbles.push(id);
+          continue;
+        }
+        bubble.tick();
+      }
+      for (const id of endedNpcChatBubbles) {
+        this.npcChats.delete(id);
+      }
+
+      for (let i = this.effects.length - 1; i >= 0; i--) {
+        const effect = this.effects[i];
+        if (!effect.ticks && !effect.loops) {
+          this.effects.splice(i, 1);
+          continue;
+        }
+        effect.tick();
+      }
+
+      for (const door of this.doors) {
+        if (!door.open) {
+          continue;
         }
 
-        endedCharacterAnimations.push(id);
-        continue;
-      }
-      if (id === this.playerId && animation instanceof CharacterWalkAnimation) {
-        playerWalking = true;
-      }
-      if (
-        id === this.playerId &&
-        animation instanceof CharacterDeathAnimation
-      ) {
-        playerDying = true;
-      }
-      animation.tick();
-    }
-    for (const id of endedCharacterAnimations) {
-      this.characterAnimations.delete(id);
-    }
-
-    const endedCharacterEmotes: number[] = [];
-    for (const [id, emote] of this.characterEmotes) {
-      if (
-        !emote.ticks ||
-        !this.nearby.characters.some((c) => c.playerId === id)
-      ) {
-        endedCharacterEmotes.push(id);
-        continue;
-      }
-      emote.tick();
-    }
-    for (const id of endedCharacterEmotes) {
-      this.characterEmotes.delete(id);
-    }
-
-    const endedNpcAnimations: number[] = [];
-    for (const [id, animation] of this.npcAnimations) {
-      if (!animation.ticks || !this.nearby.npcs.some((n) => n.index === id)) {
-        endedNpcAnimations.push(id);
-        continue;
-      }
-      animation.tick();
-    }
-    for (const id of endedNpcAnimations) {
-      if (this.npcAnimations.get(id) instanceof NpcDeathAnimation) {
-        this.nearby.npcs = this.nearby.npcs.filter((n) => n.index !== id);
-      }
-      this.npcAnimations.delete(id);
-    }
-
-    if (this.cursorClickAnimation) {
-      this.cursorClickAnimation.tick();
-      if (!this.cursorClickAnimation.ticks) {
-        this.cursorClickAnimation = undefined;
-      }
-    }
-
-    const endedCharacterChatBubbles: number[] = [];
-    for (const [id, bubble] of this.characterChats) {
-      if (
-        !bubble.ticks ||
-        !this.nearby.characters.some((c) => c.playerId === id)
-      ) {
-        endedCharacterChatBubbles.push(id);
-        continue;
-      }
-      bubble.tick();
-    }
-    for (const id of endedCharacterChatBubbles) {
-      this.characterChats.delete(id);
-    }
-
-    const endedNpcHealthBars: number[] = [];
-    for (const [id, healthBar] of this.npcHealthBars) {
-      if (
-        !this.nearby.npcs.some((n) => n.index === id) ||
-        healthBar.ticks <= 0
-      ) {
-        endedNpcHealthBars.push(id);
-        continue;
-      }
-      healthBar.tick();
-    }
-    for (const id of endedNpcHealthBars) {
-      this.npcHealthBars.delete(id);
-    }
-
-    const endedCharacterHealthBars: number[] = [];
-    for (const [id, healthBar] of this.characterHealthBars) {
-      if (
-        !this.nearby.characters.some((c) => c.playerId === id) ||
-        healthBar.ticks <= 0
-      ) {
-        endedCharacterHealthBars.push(id);
-        continue;
-      }
-      healthBar.tick();
-    }
-    for (const id of endedCharacterHealthBars) {
-      this.characterHealthBars.delete(id);
-    }
-
-    const endedNpcChatBubbles: number[] = [];
-    for (const [id, bubble] of this.npcChats) {
-      if (!bubble.ticks || !this.nearby.npcs.some((n) => n.index === id)) {
-        endedNpcChatBubbles.push(id);
-        continue;
-      }
-      bubble.tick();
-    }
-    for (const id of endedNpcChatBubbles) {
-      this.npcChats.delete(id);
-    }
-
-    for (let i = this.effects.length - 1; i >= 0; i--) {
-      const effect = this.effects[i];
-      if (!effect.ticks && !effect.loops) {
-        this.effects.splice(i, 1);
-        continue;
-      }
-      effect.tick();
-    }
-
-    for (const door of this.doors) {
-      if (!door.open) {
-        continue;
+        door.openTicks = Math.max(door.openTicks - 1, 0);
+        if (!door.openTicks) {
+          door.open = false;
+          playSfxById(SfxId.DoorClose);
+        }
       }
 
-      door.openTicks = Math.max(door.openTicks - 1, 0);
-      if (!door.openTicks) {
-        door.open = false;
-        playSfxById(SfxId.DoorClose);
-      }
-    }
-
-    if (this.warpQueued && !playerWalking && !playerDying) {
-      this.acceptWarp();
-    }
-
-    if (this.quakeTicks) {
-      this.quakeTicks = Math.max(this.quakeTicks - 1, 0);
-      if (this.quakePower) {
-        this.quakeOffset = randomRange(0, this.quakePower);
-      } else {
-        this.quakeOffset = 0;
+      if (this.warpQueued && !playerWalking && !playerDying) {
+        this.acceptWarp();
       }
 
-      if (randomRange(0, 1) >= 1) {
-        this.quakeOffset = -this.quakeOffset;
+      if (this.autoWalkPath.length) {
+        const animation = this.characterAnimations.get(this.playerId);
+        if (animation instanceof CharacterWalkAnimation) {
+          return;
+        }
+
+        const current = this.getPlayerCoords();
+        const character = this.getPlayerCharacter();
+        const next = this.autoWalkPath.splice(0, 1)[0];
+
+        if (!this.canWalk(next, true)) {
+          this.autoWalkPath = [];
+          return;
+        }
+
+        const diffX = next.x - current.x;
+        const diffY = next.y - current.y;
+        let direction: Direction;
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+          direction = diffX > 0 ? Direction.Right : Direction.Left;
+        } else {
+          direction = diffY > 0 ? Direction.Down : Direction.Up;
+        }
+        this.characterAnimations.set(
+          this.playerId,
+          new CharacterWalkAnimation(current, next, direction),
+        );
+        character.coords.x = next.x;
+        character.coords.y = next.y;
+        character.direction = direction;
+        this.walk(direction, next, getTimestamp());
       }
 
-      if (!this.quakeTicks) {
-        this.quakeOffset = 0;
-      }
-    }
+      if (this.quakeTicks) {
+        this.quakeTicks = Math.max(this.quakeTicks - 1, 0);
+        if (this.quakePower) {
+          this.quakeOffset = randomRange(0, this.quakePower);
+        } else {
+          this.quakeOffset = 0;
+        }
 
-    if (this.autoWalkPath.length) {
-      const animation = this.characterAnimations.get(this.playerId);
-      if (animation instanceof CharacterWalkAnimation) {
-        return;
-      }
+        if (randomRange(0, 1) >= 1) {
+          this.quakeOffset = -this.quakeOffset;
+        }
 
-      const current = this.getPlayerCoords();
-      const character = this.getPlayerCharacter();
-      const next = this.autoWalkPath.splice(0, 1)[0];
-
-      if (!this.canWalk(next, true)) {
-        this.autoWalkPath = [];
-        return;
+        if (!this.quakeTicks) {
+          this.quakeOffset = 0;
+        }
       }
-
-      const diffX = next.x - current.x;
-      const diffY = next.y - current.y;
-      let direction: Direction;
-      if (Math.abs(diffX) > Math.abs(diffY)) {
-        direction = diffX > 0 ? Direction.Right : Direction.Left;
-      } else {
-        direction = diffY > 0 ? Direction.Down : Direction.Up;
-      }
-      this.characterAnimations.set(
-        this.playerId,
-        new CharacterWalkAnimation(current, next, direction),
-      );
-      character.coords.x = next.x;
-      character.coords.y = next.y;
-      character.direction = direction;
-      this.walk(direction, next, getTimestamp());
     }
   }
 
@@ -2411,9 +2414,35 @@ export class Client {
     this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
-  disconnect() {
+  setState(state: GameState) {
+    this.state = state;
     this.minimapEnabled = false;
-    this.state = GameState.Initial;
+    this.characterAnimations.clear();
+    this.npcAnimations.clear();
+    this.characterChats.clear();
+    this.npcChats.clear();
+    this.queuedNpcChats.clear();
+    this.npcHealthBars.clear();
+    this.characterHealthBars.clear();
+    this.characterEmotes.clear();
+    this.effects = [];
+    this.autoWalkPath = [];
+    this.spellTarget = null;
+    this.downloadQueue = [];
+    this.idleTicks = INITIAL_IDLE_TICKS;
+    this.drunk = false;
+    this.drunkEmoteTicks = 0;
+    this.selectedSpellId = 0;
+    this.queuedSpellId = 0;
+    this.spellCooldownTicks = 0;
+    this.menuPlayerId = 0;
+    this.onlinePlayers = [];
+    this.equipmentSwap = null;
+    this.itemProtectionTimers.clear();
+  }
+
+  disconnect() {
+    this.setState(GameState.Initial);
     this.clearSession();
     if (this.bus) {
       this.bus.disconnect();

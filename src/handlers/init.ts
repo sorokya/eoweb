@@ -125,7 +125,7 @@ function handleInitOk(
   packet.serverEncryptionMultiple = data.serverEncryptionMultiple;
   packet.playerId = data.playerId;
   bus.send(packet);
-  client.state = GameState.Connected;
+  client.setState(GameState.Connected);
 
   if (client.rememberMe && client.loginToken) {
     const writer = new EoWriter();
