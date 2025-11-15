@@ -1984,7 +1984,7 @@ export class Client {
         const message = trimmed.substring(target.length + 2);
 
         const packet = new TalkTellClientPacket();
-        packet.name = target;
+        packet.name = target.toLowerCase();
         packet.message = message;
         this.bus.send(packet);
 
