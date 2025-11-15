@@ -146,6 +146,7 @@ import {
 import { getDefaultConfig, loadConfig } from './config';
 import {
   CLEAR_OUT_OF_RANGE_TICKS,
+  COLORS,
   HALF_TILE_HEIGHT,
   IDLE_TICKS,
   INITIAL_IDLE_TICKS,
@@ -2015,6 +2016,16 @@ export class Client {
       const packet = new TalkOpenClientPacket();
       packet.message = trimmed.substring(1);
       this.bus.send(packet);
+
+      this.characterChats.set(
+        this.playerId,
+        new ChatBubble(
+          this.sans11,
+          packet.message,
+          COLORS.ChatBubble,
+          COLORS.ChatBubbleBackgroundParty,
+        ),
+      );
 
       this.emit('chat', {
         tab: ChatTab.Group,
