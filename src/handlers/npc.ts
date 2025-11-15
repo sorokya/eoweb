@@ -16,6 +16,7 @@ import {
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
+import { ITEM_PROTECT_TICKS_NPC } from '../consts';
 import { EOResourceID } from '../edf';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
@@ -89,12 +90,6 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     }
 
     client.npcChats.set(npc.index, new ChatBubble(client.sans11, chat.message));
-
-    client.emit('chat', {
-      tab: ChatTab.Local,
-      message: `${chat.message}`,
-      name: `${capitalize(record.name)}`,
-    });
   }
 
   if (unknownNpcsIndexes.size) {
@@ -132,7 +127,11 @@ function handleNpcSpec(client: Client, reader: EoReader) {
     item.id = packet.npcKilledData.dropId;
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
-    client.nearby.items.push(item);
+    client.addItemDrop(
+      item,
+      ITEM_PROTECT_TICKS_NPC,
+      packet.npcKilledData.killerId,
+    );
     client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);
@@ -173,7 +172,11 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     item.id = packet.npcKilledData.dropId;
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
-    client.nearby.items.push(item);
+    client.addItemDrop(
+      item,
+      ITEM_PROTECT_TICKS_NPC,
+      packet.npcKilledData.killerId,
+    );
     client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);

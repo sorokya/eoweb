@@ -593,7 +593,7 @@ input[type="password"] {
 
 @media screen and (min-width: 470px) {
   #chat {
-    width: 370px !important;
+    width: 400px !important;
     left: 10px;
   }
 }
@@ -610,13 +610,23 @@ input[type="password"] {
   user-select: text !important;
 }
 
+#chat ul {
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+#chat ul::-webkit-scrollbar {
+  display: none;
+}
+
 #chat {
   position: absolute;
   z-index: 1020;
   top: 30px;
   background: rgba(0, 0, 0, 0.4);
   border-image: url("/border-thin.png") 9 / 9px 9px;
-
   width: 200px;
   color: #fff;
   padding: 5px;
@@ -686,6 +696,10 @@ input[type="password"] {
 #chat li div.msg > .author {
   color: #f0f0c8;
   padding-right: 5px;
+}
+
+#chat li.error-message {
+  color: #ff4c4c;
 }
 
 #mobile-controls {

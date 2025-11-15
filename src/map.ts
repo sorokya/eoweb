@@ -4,6 +4,7 @@ import {
   Direction,
   ItemSpecial,
   MapTileSpec,
+  NpcType,
   SitState,
 } from 'eolib';
 import {
@@ -42,6 +43,7 @@ import {
   WALK_HEIGHT_FACTOR,
   WALK_WIDTH_FACTOR,
 } from './consts';
+import { TextAlign } from './fonts/base';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
@@ -1151,6 +1153,7 @@ export class MapRenderer {
         !bubble &&
         !healthBar &&
         !emote &&
+        !this.client.debug &&
         (!(animation instanceof CharacterSpellChantAnimation) ||
           animation.animationFrame)
       ) {
@@ -1177,6 +1180,15 @@ export class MapRenderer {
           !animation.animationFrame
         ) {
           animation.render(characterTopCenter, ctx);
+        }
+
+        if (this.client.debug) {
+          this.renderDebugRectangle(
+            rect,
+            `id[${character.playerId}]`,
+            'green',
+            ctx,
+          );
         }
       });
     }
@@ -1365,7 +1377,7 @@ export class MapRenderer {
     const bubble = this.client.npcChats.get(npc.index);
     const healthBar = this.client.npcHealthBars.get(npc.index);
 
-    if (!bubble && !healthBar) {
+    if (!bubble && !healthBar && !this.client.debug) {
       return;
     }
 
@@ -1396,6 +1408,17 @@ export class MapRenderer {
 
       if (healthBar) {
         this.renderHealthBar(healthBar, npcTopCenter, ctx);
+      }
+
+      if (this.client.debug) {
+        this.renderDebugRectangle(
+          rect,
+          `idx[${npc.index}]`,
+          [NpcType.Aggressive, NpcType.Passive].includes(record.type)
+            ? 'red'
+            : 'purple',
+          ctx,
+        );
       }
     });
   }
@@ -1441,6 +1464,51 @@ export class MapRenderer {
       screenY,
       frame.w,
       frame.h,
+    );
+
+    if (this.client.debug) {
+      this.renderDebugRectangle(
+        new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
+        `idx[${item.uid}]`,
+        'blue',
+        ctx,
+      );
+    }
+  }
+
+  private renderDebugRectangle(
+    rect: Rectangle,
+    label: string,
+    color: string,
+    ctx: CanvasRenderingContext2D,
+  ) {
+    ctx.strokeStyle = color;
+    ctx.strokeRect(rect.position.x, rect.position.y, rect.width, rect.height);
+
+    const frame = this.client.atlas.getStaticEntry(StaticAtlasEntryType.Sans11);
+    if (!frame) {
+      return;
+    }
+
+    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
+    if (!atlas) {
+      return;
+    }
+
+    ctx.fillStyle = color;
+    ctx.fillRect(
+      rect.position.x,
+      rect.position.y - 12,
+      ctx.measureText(label).width + 4,
+      12,
+    );
+
+    this.client.sans11.render(
+      ctx,
+      label,
+      { x: rect.position.x, y: rect.position.y - 12 },
+      '#fff',
+      TextAlign.None,
     );
   }
 

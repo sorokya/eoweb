@@ -109,7 +109,10 @@ import {
   StatSkillOpenClientPacket,
   StatSkillRemoveClientPacket,
   StatSkillTakeClientPacket,
+  TalkAdminClientPacket,
   TalkAnnounceClientPacket,
+  TalkMsgClientPacket,
+  TalkOpenClientPacket,
   TalkReportClientPacket,
   TalkTellClientPacket,
   ThreeItem,
@@ -143,6 +146,7 @@ import {
 import { getDefaultConfig, loadConfig } from './config';
 import {
   CLEAR_OUT_OF_RANGE_TICKS,
+  COLORS,
   HALF_TILE_HEIGHT,
   IDLE_TICKS,
   INITIAL_IDLE_TICKS,
@@ -570,6 +574,14 @@ export class Client {
   } | null = null;
   sans11: Sans11Font;
   interpolation = true;
+  debug = false;
+  itemProtectionTimers: Map<
+    number,
+    {
+      ticks: number;
+      ownerId: number;
+    }
+  > = new Map();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -814,6 +826,14 @@ export class Client {
         this.idleTicks = IDLE_TICKS;
       }
 
+      for (const [index, { ticks, ownerId }] of this.itemProtectionTimers) {
+        if (ticks <= 1) {
+          this.itemProtectionTimers.delete(index);
+        } else {
+          this.itemProtectionTimers.set(index, { ticks: ticks - 1, ownerId });
+        }
+      }
+
       if (this.drunk) {
         this.drunkEmoteTicks = Math.max(this.drunkEmoteTicks - 1, 0);
         if (!this.drunkEmoteTicks) {
@@ -876,11 +896,6 @@ export class Client {
         continue;
       }
 
-      this.emit('chat', {
-        message: `${messages[0]}`,
-        tab: ChatTab.Local,
-        name: `${capitalize(record.name)}`,
-      });
       this.npcChats.set(index, new ChatBubble(this.sans11, messages[0]));
 
       if (messages.length > 1) {
@@ -1122,6 +1137,7 @@ export class Client {
     this.npcChats.clear();
     this.npcHealthBars.clear();
     this.characterHealthBars.clear();
+    this.itemProtectionTimers.clear();
     if (this.map) {
       clearRectangles();
       this.mapRenderer.buildCaches();
@@ -1488,12 +1504,49 @@ export class Client {
           i.coords.x === this.mouseCoords.x &&
           i.coords.y === this.mouseCoords.y,
       );
-      itemsAtCoords.sort((a, b) => b.uid - a.uid);
+
       if (itemsAtCoords.length) {
-        const packet = new ItemGetClientPacket();
-        packet.itemIndex = itemsAtCoords[0].uid;
-        this.bus.send(packet);
-        return;
+        itemsAtCoords.sort((a, b) => b.uid - a.uid);
+
+        const protectedItems = itemsAtCoords.filter((i) => {
+          const p = this.itemProtectionTimers.get(i.uid);
+          return p && p.ticks > 0 && p.ownerId !== this.playerId;
+        });
+
+        if (protectedItems.length < itemsAtCoords.length) {
+          const item = itemsAtCoords.find((i) => {
+            const p = this.itemProtectionTimers.get(i.uid);
+            return !p || p.ticks === 0 || p.ownerId === this.playerId;
+          });
+
+          if (item) {
+            const packet = new ItemGetClientPacket();
+            packet.itemIndex = item.uid;
+            this.bus.send(packet);
+          }
+
+          return;
+        }
+
+        const protectedItem = protectedItems[0];
+        const protection = this.itemProtectionTimers.get(protectedItem.uid);
+
+        if (protection) {
+          const owner = protection.ownerId
+            ? this.getCharacterById(protection.ownerId)
+            : undefined;
+
+          const message = owner
+            ? `${this.getResourceString(
+                EOResourceID.STATUS_LABEL_ITEM_PICKUP_PROTECTED_BY,
+              )} ${capitalize(owner.name)}`
+            : this.getResourceString(
+                EOResourceID.STATUS_LABEL_ITEM_PICKUP_PROTECTED,
+              );
+
+          this.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, message);
+          return;
+        }
       }
 
       // Check tile specs for chests and chairs
@@ -1981,21 +2034,76 @@ export class Client {
     if (trimmed.startsWith('!')) {
       const target = trimmed.substring(1).split(' ')[0];
       if (target.trim().length) {
-        const msg = trimmed.substring(target.length + 2);
+        const message = trimmed.substring(target.length + 2);
 
         const packet = new TalkTellClientPacket();
-        packet.name = target;
-        packet.message = msg;
+        packet.name = target.toLowerCase();
+        packet.message = message;
         this.bus.send(packet);
 
         this.emit('chat', {
           icon: ChatIcon.Note,
           tab: ChatTab.Local,
-          message: `${capitalize(this.name)}->${capitalize(target)} ${msg}`,
+          name: `${capitalize(this.name)}->${capitalize(target)}`,
+          message,
         });
 
         return;
       }
+    }
+
+    if (trimmed.startsWith('~')) {
+      const packet = new TalkMsgClientPacket();
+      packet.message = trimmed.substring(1);
+      this.bus.send(packet);
+
+      this.emit('chat', {
+        tab: ChatTab.Global,
+        message: `${packet.message}`,
+        name: `${capitalize(this.name)}`,
+      });
+      return;
+    }
+
+    if (trimmed.startsWith("'") && this.partyMembers.length) {
+      const packet = new TalkOpenClientPacket();
+      packet.message = trimmed.substring(1);
+      this.bus.send(packet);
+
+      this.characterChats.set(
+        this.playerId,
+        new ChatBubble(
+          this.sans11,
+          packet.message,
+          COLORS.ChatBubble,
+          COLORS.ChatBubbleBackgroundParty,
+        ),
+      );
+
+      this.emit('chat', {
+        tab: ChatTab.Group,
+        icon: ChatIcon.PlayerParty,
+        message: `${packet.message}`,
+        name: `${capitalize(this.name)}`,
+      });
+      return;
+    }
+
+    if (trimmed.startsWith('+') && this.admin !== AdminLevel.Player) {
+      const packet = new TalkAdminClientPacket();
+      packet.message = trimmed.substring(1);
+      this.bus.send(packet);
+
+      this.emit('chat', {
+        tab: ChatTab.Group,
+        icon: ChatIcon.GM,
+        message: `${packet.message}`,
+        name: `${capitalize(this.name)}`,
+      });
+
+      playSfxById(SfxId.AdminChatSent);
+
+      return;
     }
 
     const packet = new TalkReportClientPacket();
@@ -2078,6 +2186,12 @@ export class Client {
         this.emit('serverChat', {
           message: `Movement interpolation ${this.interpolation ? 'enabled' : 'disabled'}!`,
         });
+        return true;
+      }
+
+      case '#debug': {
+        this.debug = !this.debug;
+        playSfxById(SfxId.TextBoxFocus);
         return true;
       }
     }
@@ -2256,6 +2370,10 @@ export class Client {
     const metadata = this.getWeaponMetadata(player.equipment.weapon);
     const index = randomRange(0, metadata.sfx.length - 1);
     playSfxById(metadata.sfx[index]);
+
+    if (metadata.sfx[0] === SfxId.Harp1 || metadata.sfx[0] === SfxId.Guitar1) {
+      this.characterEmotes.set(this.playerId, new Emote(EmoteType.Playful + 1));
+    }
 
     const spec = this.map.tileSpecRows
       .find((r) => r.y === player.coords.y)
@@ -3225,5 +3343,15 @@ export class Client {
     }
 
     this.minimapEnabled = !this.minimapEnabled;
+  }
+
+  addItemDrop(item: ItemMapInfo, protectedFor = 0, ownerId = 0) {
+    this.nearby.items.push(item);
+    if (protectedFor) {
+      this.itemProtectionTimers.set(item.uid, {
+        ticks: protectedFor,
+        ownerId,
+      });
+    }
   }
 }

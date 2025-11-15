@@ -218,7 +218,8 @@ client.on('login', (characters) => {
 client.on('serverChat', ({ message, sfxId, icon }) => {
   client.emit('chat', {
     tab: ChatTab.Local,
-    message: `${client.getResourceString(EOResourceID.STRING_SERVER)} ${message}`,
+    name: client.getResourceString(EOResourceID.STRING_SERVER),
+    message,
     icon: icon || ChatIcon.Exclamation,
   });
   playSfxById(sfxId || SfxId.ServerMessage);
@@ -400,7 +401,7 @@ const changePasswordForm = new ChangePasswordForm(client);
 const smallAlertLargeHeader = new SmallAlertLargeHeader();
 const exitGame = new ExitGame();
 const smallConfirm = new SmallConfirm();
-const chat = new Chat();
+const chat = new Chat(client);
 //const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);

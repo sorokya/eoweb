@@ -102,7 +102,7 @@ export class ChatBubble {
   }
 
   private wrapText(text: string) {
-    const words = text.split(' ');
+    const words = text.split(text.trim() === '' ? '' : ' ');
     const lines = [];
     let line = '';
 
