@@ -1821,6 +1821,15 @@ export class Client {
   }
 
   canWalk(coords: Vector2, silent = false): boolean {
+    if (
+      coords.x < 0 ||
+      coords.y < 0 ||
+      coords.x > this.map.width ||
+      coords.y > this.map.height
+    ) {
+      return false;
+    }
+
     if (this.nowall) {
       return true;
     }
@@ -2110,6 +2119,10 @@ export class Client {
   }
 
   acceptWarp() {
+    if (this.autoWalkPath.length) {
+      this.autoWalkPath = [];
+    }
+
     const packet = new WarpAcceptClientPacket();
     packet.sessionId = this.sessionId;
     packet.mapId = this.warpMapId;
@@ -2271,6 +2284,7 @@ export class Client {
   }
 
   disconnect() {
+    this.minimapEnabled = false;
     this.state = GameState.Initial;
     this.clearSession();
     if (this.bus) {
