@@ -118,6 +118,10 @@ export class Chat extends Base {
     msgContainer.appendChild(msg);
     li.appendChild(msgContainer);
 
+    if (icon === ChatIcon.Error) {
+      li.classList.add('error-message');
+    }
+
     let chatWindow: HTMLUListElement;
     let chatTab: HTMLButtonElement;
     switch (tab) {

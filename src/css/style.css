@@ -698,6 +698,10 @@ input[type="password"] {
   padding-right: 5px;
 }
 
+#chat li.error-message {
+  color: #ff4c4c;
+}
+
 #mobile-controls {
   opacity: 0.8;
   z-index: 1020;
