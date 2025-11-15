@@ -377,7 +377,7 @@ const initializeSocket = (next: 'login' | 'create' | '' = '') => {
     hideAllUi();
     mainMenu.show();
     if (client.state !== GameState.Initial) {
-      client.state = GameState.Initial;
+      client.setState(GameState.Initial);
       const text = client.getDialogStrings(
         DialogResourceID.CONNECTION_LOST_CONNECTION,
       );
