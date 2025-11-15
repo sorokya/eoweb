@@ -240,8 +240,8 @@ client.on('characterDeleted', (characters) => {
 
 client.on('selectCharacter', () => {});
 
-client.on('chat', ({ icon, tab, message }) => {
-  chat.addMessage(tab, message, icon || ChatIcon.None);
+client.on('chat', ({ icon, tab, message, name }) => {
+  chat.addMessage(tab, message, icon || ChatIcon.None, name);
 });
 
 client.on('enterGame', ({ news }) => {

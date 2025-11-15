@@ -72,17 +72,30 @@ export class Chat extends Base {
     this.focus();
   }
 
-  addMessage(tab: ChatTab, message: string, icon: ChatIcon) {
+  addMessage(tab: ChatTab, message: string, icon: ChatIcon, name?: string) {
     const li = document.createElement('li');
+    li.setAttribute('data-author', name);
 
     const img = document.createElement('div');
     img.classList.add('icon');
     img.setAttribute('data-id', icon.toString());
     li.appendChild(img);
 
+    const msgContainer = document.createElement('div');
+    msgContainer.classList.add('msg');
+
+    if (name) {
+      const playerName = document.createElement('span');
+      playerName.classList.add('author');
+      playerName.innerText = name;
+      msgContainer.prepend(playerName);
+    }
+
     const msg = document.createElement('span');
+    msg.classList.add('chat-message');
     msg.innerHTML = this.replaceLinks(this.sanitize(message));
-    li.appendChild(msg);
+    msgContainer.appendChild(msg);
+    li.appendChild(msgContainer);
 
     let chatWindow: HTMLUListElement;
     let chatTab: HTMLButtonElement;
