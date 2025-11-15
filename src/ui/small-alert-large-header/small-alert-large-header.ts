@@ -1,6 +1,8 @@
 import { playSfxById, SfxId } from '../../sfx';
 import { Base } from '../base-ui';
 
+import './small-alert-large-header.css';
+
 export class SmallAlertLargeHeader extends Base {
   protected container = document.getElementById('small-alert');
   private cover = document.getElementById('cover');
