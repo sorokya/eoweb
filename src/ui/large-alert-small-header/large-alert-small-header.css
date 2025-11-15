@@ -1,0 +1,30 @@
+#large-alert-small-header {
+  position: absolute;
+  background: url("/gfx/gfx001/125.png");
+  background-color: #000;
+  width: 290px;
+  height: 189px;
+  user-select: none;
+  z-index: 1020;
+}
+
+#large-alert-small-header .title {
+  position: absolute;
+  left: 18px;
+  top: 15px;
+  width: 258px;
+}
+
+#large-alert-small-header .message {
+  position: absolute;
+  left: 18px;
+  top: 40px;
+  width: 255px;
+  height: 40px;
+}
+
+#large-alert-small-header button {
+  position: absolute;
+  top: 145px;
+  right: 18px;
+}

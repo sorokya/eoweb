@@ -1,0 +1,197 @@
+#stats {
+  position: relative;
+  width: 240px;
+  height: 233px;
+  background: #000;
+  color: #fff;
+  font-size: 12px;
+  background-position: -3px 0;
+  border-radius: 5px;
+  z-index: 9999;
+  user-select: none;
+}
+
+#stats > div:first-child {
+  position: absolute;
+  top: 0;
+  width: 240px;
+  height: 120px;
+  background-image: url(/gfx/gfx002/134.png);
+}
+
+#stats > div:nth-child(2) {
+  position: absolute;
+  width: 240px;
+  height: 115px;
+  top: 119px;
+  background-image: url(/gfx/gfx002/134.png);
+  background-position: -239px -4px;
+}
+
+#stats button[data-id="cancel"] {
+  position: absolute;
+  bottom: -32px;
+  left: 76px;
+}
+
+#stats .stat {
+  position: absolute;
+}
+
+#stats .stat[data-id="str"] {
+  left: 52px;
+  top: 10px;
+  width: 75px;
+}
+
+#stats .upgrade[data-target="str"] {
+  position: absolute;
+  left: 102px;
+  top: 7px;
+}
+
+#stats .stat[data-id="int"] {
+  left: 52px;
+  top: 28px;
+  width: 75px;
+}
+
+#stats .upgrade[data-target="int"] {
+  position: absolute;
+  left: 102px;
+  top: 25px;
+}
+
+#stats .stat[data-id="wis"] {
+  left: 52px;
+  top: 46px;
+  width: 75px;
+}
+
+#stats .upgrade[data-target="wis"] {
+  position: absolute;
+  left: 102px;
+  top: 43px;
+}
+
+#stats .stat[data-id="agi"] {
+  left: 52px;
+  top: 64px;
+  width: 75px;
+}
+
+#stats .upgrade[data-target="agi"] {
+  position: absolute;
+  left: 102px;
+  top: 61px;
+}
+
+#stats .stat[data-id="con"] {
+  left: 52px;
+  top: 82px;
+  width: 75px;
+}
+
+#stats .upgrade[data-target="con"] {
+  position: absolute;
+  left: 102px;
+  top: 79px;
+}
+
+#stats .stat[data-id="cha"] {
+  left: 52px;
+  top: 100px;
+  width: 75px;
+}
+
+#stats .upgrade[data-target="cha"] {
+  position: absolute;
+  left: 102px;
+  top: 97px;
+}
+
+#stats .stat[data-id="hp"] {
+  left: 160px;
+  top: 10px;
+  width: 75px;
+}
+
+#stats .stat[data-id="tp"] {
+  left: 160px;
+  top: 28px;
+  width: 75px;
+}
+
+#stats .stat[data-id="dam"] {
+  left: 160px;
+  top: 46px;
+  width: 75px;
+}
+
+#stats .stat[data-id="acc"] {
+  left: 160px;
+  top: 64px;
+  width: 75px;
+}
+
+#stats .stat[data-id="arm"] {
+  left: 160px;
+  top: 82px;
+  width: 75px;
+}
+
+#stats .stat[data-id="eva"] {
+  left: 160px;
+  top: 100px;
+  width: 75px;
+}
+
+#stats .stat[data-id="name"] {
+  left: 44px;
+  top: 6px;
+}
+
+#stats .stat[data-id="lvl"] {
+  left: 215px;
+  top: 6px;
+}
+
+#stats .stat[data-id="guild"] {
+  left: 44px;
+  top: 24px;
+}
+
+#stats .stat[data-id="weight"] {
+  left: 44px;
+  top: 43px;
+}
+
+#stats .stat[data-id="stat-points"] {
+  left: 44px;
+  top: 61px;
+}
+
+#stats .stat[data-id="skill-points"] {
+  left: 44px;
+  top: 79px;
+}
+
+#stats .stat[data-id="gold"] {
+  left: 142px;
+  top: 43px;
+}
+
+#stats .stat[data-id="exp"] {
+  left: 142px;
+  top: 61px;
+}
+
+#stats .stat[data-id="tnl"] {
+  left: 142px;
+  top: 79px;
+}
+
+#stats .stat[data-id="karma"] {
+  left: 142px;
+  top: 97px;
+}

@@ -1,0 +1,32 @@
+#small-confirm {
+  position: absolute;
+  background: url("/gfx/gfx001/123.png");
+  background-color: #000;
+  width: 290px;
+  height: 125px;
+  user-select: none;
+  z-index: 10000;
+}
+
+#small-confirm .title {
+  position: absolute;
+  left: 18px;
+  top: 15px;
+  width: 258px;
+}
+
+#small-confirm .message {
+  position: absolute;
+  left: 18px;
+  top: 40px;
+  width: 255px;
+  height: 40px;
+}
+
+#small-confirm .buttons {
+  position: absolute;
+  bottom: 14px;
+  right: 17px;
+  display: flex;
+  gap: 2px;
+}

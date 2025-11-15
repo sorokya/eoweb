@@ -1,0 +1,71 @@
+#quest-dialog {
+  position: relative;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/167.png");
+  width: 284px;
+  height: 190px;
+  user-select: none;
+  z-index: 1020;
+}
+
+#quest-dialog .title {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  color: #fff;
+}
+
+#quest-dialog .entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 48px;
+  left: 20px;
+  color: #fff;
+  font-size: 12px;
+  width: 224px;
+}
+
+#quest-dialog li {
+  position: relative;
+}
+
+#quest-dialog li.link {
+  text-decoration: underline;
+}
+
+#quest-dialog li::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(248, 248, 190, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+#quest-dialog li:hover::before {
+  opacity: 0.3 !important;
+}
+
+#quest-dialog button[data-id="quest-select"] {
+  position: absolute;
+  right: 17px;
+  top: 16px;
+}
+
+#quest-dialog button[data-id="cancel"],
+#quest-dialog button[data-id="back"] {
+  position: absolute;
+  right: 104px;
+  bottom: 10px;
+}
+
+#quest-dialog button[data-id="next"],
+#quest-dialog button[data-id="ok"] {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+}

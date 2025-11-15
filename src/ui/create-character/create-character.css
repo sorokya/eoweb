@@ -1,0 +1,45 @@
+#create-character-form {
+  position: absolute;
+  width: 360px;
+  height: 240px;
+  background-color: #000;
+  background-image: url("/gfx/gfx001/120.png");
+  z-index: 1020;
+}
+
+#create-character-preview {
+  position: absolute;
+  top: 75px;
+  right: 47px;
+}
+
+#create-character-name {
+  background: transparent;
+  border: none;
+  position: absolute;
+  color: #b4a08c;
+  top: 58px;
+  left: 82px;
+  width: 130px;
+}
+
+#create-character-form .buttons {
+  position: absolute;
+  display: flex;
+  gap: 2px;
+  bottom: 16px;
+  right: 19px;
+}
+
+#create-character-toggles {
+  position: absolute;
+  display: flex;
+  flex-flow: column;
+  top: 84px;
+  left: 170px;
+  gap: 9px;
+}
+
+#create-character-toggles > div {
+  display: flex;
+}

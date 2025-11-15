@@ -1,0 +1,25 @@
+#main-menu {
+  display: flex;
+  flex-flow: column;
+  width: 100%;
+  align-self: center;
+  align-items: center;
+  gap: 2px;
+}
+
+#main-menu-logo {
+  margin-bottom: 10px;
+  position: relative;
+}
+
+#main-menu-logo::after {
+  content: attr(data-slogan);
+  position: absolute;
+  display: inline-block;
+  font-style: italic;
+  font-family: monospace;
+  color: #f9f92c;
+  bottom: 15px;
+  right: 0;
+  animation: pulse 2s infinite;
+}

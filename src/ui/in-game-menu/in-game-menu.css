@@ -1,0 +1,9 @@
+#in-game-menu {
+  position: absolute;
+  right: 0;
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  justify-content: center;
+  z-index: 1020;
+}
