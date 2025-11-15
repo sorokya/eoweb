@@ -16,6 +16,7 @@ import {
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
 import { ChatTab, type Client } from '../client';
+import { ITEM_PROTECT_TICKS_NPC } from '../consts';
 import { EOResourceID } from '../edf';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
@@ -126,7 +127,11 @@ function handleNpcSpec(client: Client, reader: EoReader) {
     item.id = packet.npcKilledData.dropId;
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
-    client.nearby.items.push(item);
+    client.addItemDrop(
+      item,
+      ITEM_PROTECT_TICKS_NPC,
+      packet.npcKilledData.killerId,
+    );
     client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);
@@ -167,7 +172,11 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     item.id = packet.npcKilledData.dropId;
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
-    client.nearby.items.push(item);
+    client.addItemDrop(
+      item,
+      ITEM_PROTECT_TICKS_NPC,
+      packet.npcKilledData.killerId,
+    );
     client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);

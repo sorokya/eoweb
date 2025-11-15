@@ -67,6 +67,9 @@ export const PLAYER_MENU_OFFSET_Y = 10;
 export const NUMBER_OF_EFFECTS = 34;
 export const NUMBER_OF_SLASHES = 9;
 
+export const ITEM_PROTECT_TICKS_NPC = 250;
+export const ITEM_PROTECT_TICKS_PLAYER = 42; // It's actually 41.66666.. but it doesn't divide by 120ms
+
 export const COLORS = {
   Nameplate: '#fff',
   NameplateIgnored: '#b9b9b9',

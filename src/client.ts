@@ -575,6 +575,13 @@ export class Client {
   sans11: Sans11Font;
   interpolation = true;
   debug = false;
+  itemProtectionTimers: Map<
+    number,
+    {
+      ticks: number;
+      ownerId: number;
+    }
+  > = new Map();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -817,6 +824,14 @@ export class Client {
       if (!this.idleTicks) {
         this.emote(EmoteType.Moon);
         this.idleTicks = IDLE_TICKS;
+      }
+
+      for (const [index, { ticks, ownerId }] of this.itemProtectionTimers) {
+        if (ticks <= 1) {
+          this.itemProtectionTimers.delete(index);
+        } else {
+          this.itemProtectionTimers.set(index, { ticks: ticks - 1, ownerId });
+        }
       }
 
       if (this.drunk) {
@@ -1122,6 +1137,7 @@ export class Client {
     this.npcChats.clear();
     this.npcHealthBars.clear();
     this.characterHealthBars.clear();
+    this.itemProtectionTimers.clear();
     if (this.map) {
       clearRectangles();
       this.mapRenderer.buildCaches();
@@ -1488,12 +1504,49 @@ export class Client {
           i.coords.x === this.mouseCoords.x &&
           i.coords.y === this.mouseCoords.y,
       );
-      itemsAtCoords.sort((a, b) => b.uid - a.uid);
+
       if (itemsAtCoords.length) {
-        const packet = new ItemGetClientPacket();
-        packet.itemIndex = itemsAtCoords[0].uid;
-        this.bus.send(packet);
-        return;
+        itemsAtCoords.sort((a, b) => b.uid - a.uid);
+
+        const protectedItems = itemsAtCoords.filter((i) => {
+          const p = this.itemProtectionTimers.get(i.uid);
+          return p && p.ticks > 0 && p.ownerId !== this.playerId;
+        });
+
+        if (protectedItems.length < itemsAtCoords.length) {
+          const item = itemsAtCoords.find((i) => {
+            const p = this.itemProtectionTimers.get(i.uid);
+            return !p || p.ticks === 0 || p.ownerId === this.playerId;
+          });
+
+          if (item) {
+            const packet = new ItemGetClientPacket();
+            packet.itemIndex = item.uid;
+            this.bus.send(packet);
+          }
+
+          return;
+        }
+
+        const protectedItem = protectedItems[0];
+        const protection = this.itemProtectionTimers.get(protectedItem.uid);
+
+        if (protection) {
+          const owner = protection.ownerId
+            ? this.getCharacterById(protection.ownerId)
+            : undefined;
+
+          const message = owner
+            ? `${this.getResourceString(
+                EOResourceID.STATUS_LABEL_ITEM_PICKUP_PROTECTED_BY,
+              )} ${capitalize(owner.name)}`
+            : this.getResourceString(
+                EOResourceID.STATUS_LABEL_ITEM_PICKUP_PROTECTED,
+              );
+
+          this.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, message);
+          return;
+        }
       }
 
       // Check tile specs for chests and chairs
@@ -3290,5 +3343,15 @@ export class Client {
     }
 
     this.minimapEnabled = !this.minimapEnabled;
+  }
+
+  addItemDrop(item: ItemMapInfo, protectedFor = 0, ownerId = 0) {
+    this.nearby.items.push(item);
+    if (protectedFor) {
+      this.itemProtectionTimers.set(item.uid, {
+        ticks: protectedFor,
+        ownerId,
+      });
+    }
   }
 }

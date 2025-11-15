@@ -9,6 +9,7 @@ import {
   PacketFamily,
 } from 'eolib';
 import { ChatTab, type Client } from '../client';
+import { ITEM_PROTECT_TICKS_NPC } from '../consts';
 import { EOResourceID } from '../edf';
 import { EffectTargetNpc } from '../render/effect';
 import { Emote } from '../render/emote';
@@ -68,7 +69,11 @@ function handleCastSpec(client: Client, reader: EoReader) {
     item.id = packet.npcKilledData.dropId;
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
-    client.nearby.items.push(item);
+    client.addItemDrop(
+      item,
+      ITEM_PROTECT_TICKS_NPC,
+      packet.npcKilledData.killerId,
+    );
     client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);
@@ -126,7 +131,11 @@ function handleCastAccept(client: Client, reader: EoReader) {
     item.id = packet.npcKilledData.dropId;
     item.coords = packet.npcKilledData.dropCoords;
     item.amount = packet.npcKilledData.dropAmount;
-    client.nearby.items.push(item);
+    client.addItemDrop(
+      item,
+      ITEM_PROTECT_TICKS_NPC,
+      packet.npcKilledData.killerId,
+    );
     client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);

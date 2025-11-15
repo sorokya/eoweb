@@ -17,6 +17,7 @@ import {
   PacketFamily,
 } from 'eolib';
 import { ChatTab, type Client, EquipmentSlot } from '../client';
+import { ITEM_PROTECT_TICKS_PLAYER } from '../consts';
 import { EOResourceID } from '../edf';
 import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
 import { Emote } from '../render/emote';
@@ -37,7 +38,7 @@ function handleItemAdd(client: Client, reader: EoReader) {
     item.id = packet.itemId;
     item.amount = packet.itemAmount;
     item.coords = packet.coords;
-    client.nearby.items.push(item);
+    client.addItemDrop(item, ITEM_PROTECT_TICKS_PLAYER);
   }
 
   client.atlas.refresh();
@@ -89,7 +90,7 @@ function handleItemDrop(client: Client, reader: EoReader) {
   mapItem.id = packet.droppedItem.id;
   mapItem.amount = packet.droppedItem.amount;
   mapItem.coords = packet.coords;
-  client.nearby.items.push(mapItem);
+  client.addItemDrop(mapItem, ITEM_PROTECT_TICKS_PLAYER, client.playerId);
 
   client.weight = packet.weight;
 

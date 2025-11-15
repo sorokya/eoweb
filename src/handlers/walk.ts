@@ -72,7 +72,7 @@ function handleWalkReply(client: Client, reader: EoReader) {
   let newItems = false;
   for (const item of packet.items) {
     if (!client.nearby.items.some((i) => i.uid === item.uid)) {
-      client.nearby.items.push(item);
+      client.addItemDrop(item);
       newItems = true;
     }
   }
