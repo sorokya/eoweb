@@ -2,6 +2,8 @@ import mitt from 'mitt';
 import { playSfxById, SfxId } from '../../sfx';
 import { Base } from '../base-ui';
 
+import './login.css';
+
 type Events = {
   login: { username: string; password: string; rememberMe: boolean };
   cancel: undefined;
