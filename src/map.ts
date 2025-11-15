@@ -172,6 +172,7 @@ export class MapRenderer {
   private signCache: ({ title: string; message: string } | null)[][] = [];
   private damageNumberCanvas: HTMLCanvasElement;
   private damageNumberCtx: CanvasRenderingContext2D;
+  private interpolation = 0;
 
   constructor(client: Client) {
     this.client = client;
@@ -242,10 +243,27 @@ export class MapRenderer {
     return layerDepth[layer] + y * RDG + x * layerDepth.length * TDG;
   }
 
-  render(ctx: CanvasRenderingContext2D) {
+  private interpolateWalkOffset(frame: number, direction: Direction): Vector2 {
+    const prevOffset =
+      frame > 0 ? WALK_OFFSETS[frame - 1][direction] : { x: 0, y: 0 };
+    const walkOffset = WALK_OFFSETS[frame][direction];
+
+    return {
+      x: Math.floor(
+        prevOffset.x + (walkOffset.x - prevOffset.x) * this.interpolation,
+      ),
+      y: Math.floor(
+        prevOffset.y + (walkOffset.y - prevOffset.y) * this.interpolation,
+      ),
+    };
+  }
+
+  render(ctx: CanvasRenderingContext2D, interpolation: number) {
     if (!this.client.map || this.buildingCache) {
       return;
     }
+
+    this.interpolation = interpolation;
 
     const player = this.client.getPlayerCoords();
     let playerScreen = isoToScreen(player);
@@ -262,12 +280,13 @@ export class MapRenderer {
 
     if (mainCharacterAnimation instanceof CharacterWalkAnimation) {
       playerScreen = isoToScreen(mainCharacterAnimation.from);
-      const walkOffset =
-        WALK_OFFSETS[mainCharacterAnimation.animationFrame][
-          mainCharacterAnimation.direction
-        ];
-      playerScreen.x += walkOffset.x;
-      playerScreen.y += walkOffset.y;
+      const interOffset = this.interpolateWalkOffset(
+        mainCharacterAnimation.animationFrame,
+        mainCharacterAnimation.direction,
+      );
+
+      playerScreen.x += interOffset.x;
+      playerScreen.y += interOffset.y;
     }
 
     playerScreen.x += this.client.quakeOffset;
@@ -511,8 +530,17 @@ export class MapRenderer {
         character && !!this.client.characterChats.get(character.playerId);
       const bar =
         character && !!this.client.characterHealthBars.get(character.playerId);
-      const animation =
+      let animation =
         character && this.client.characterAnimations.get(character.playerId);
+      let dying = false;
+
+      if (animation instanceof CharacterDeathAnimation) {
+        dying = true;
+        if (animation.base) {
+          animation = animation.base;
+        }
+      }
+
       if (
         !bubble &&
         !bar &&
@@ -545,8 +573,12 @@ export class MapRenderer {
         }
 
         if (animation instanceof CharacterWalkAnimation) {
-          const walkOffset =
-            WALK_OFFSETS[animation.animationFrame][animation.direction];
+          const walkOffset = dying
+            ? WALK_OFFSETS[animation.animationFrame][animation.direction]
+            : this.interpolateWalkOffset(
+                animation.animationFrame,
+                animation.direction,
+              );
           offset.x += walkOffset.x;
           offset.y += walkOffset.y;
           coords.x = animation.from.x;
@@ -561,7 +593,16 @@ export class MapRenderer {
         const npc = this.client.getNpcByIndex(npcRect.id);
         const bubble = npc && !!this.client.npcChats.get(npc.index);
         const bar = npc && !!this.client.npcHealthBars.get(npc.index);
-        const animation = npc && this.client.npcAnimations.get(npc.index);
+        let animation = npc && this.client.npcAnimations.get(npc.index);
+        let dying = false;
+
+        if (animation instanceof NpcDeathAnimation) {
+          dying = true;
+          if (animation.base) {
+            animation = animation.base;
+          }
+        }
+
         if (
           !bubble &&
           !bar &&
@@ -581,8 +622,12 @@ export class MapRenderer {
             }
 
             if (animation instanceof NpcWalkAnimation) {
-              const walkOffset =
-                WALK_OFFSETS[animation.animationFrame][animation.direction];
+              const walkOffset = dying
+                ? WALK_OFFSETS[animation.animationFrame][animation.direction]
+                : this.interpolateWalkOffset(
+                    animation.animationFrame,
+                    animation.direction,
+                  );
               offset.x += walkOffset.x;
               offset.y += walkOffset.y;
               coords.x = animation.from.x;
@@ -894,8 +939,12 @@ export class MapRenderer {
     let coords: Vector2 = character.coords;
     switch (true) {
       case animation instanceof CharacterWalkAnimation: {
-        walkOffset =
-          WALK_OFFSETS[animation.animationFrame][animation.direction];
+        walkOffset = dying
+          ? WALK_OFFSETS[animation.animationFrame][animation.direction]
+          : this.interpolateWalkOffset(
+              animation.animationFrame,
+              animation.direction,
+            );
         coords = animation.from;
         characterFrame = downRight
           ? CharacterFrame.WalkingDownRight1 + animation.animationFrame
@@ -1166,8 +1215,13 @@ export class MapRenderer {
 
     switch (true) {
       case animation instanceof NpcWalkAnimation: {
-        walkOffset =
-          WALK_OFFSETS[animation.animationFrame][animation.direction];
+        walkOffset = dying
+          ? WALK_OFFSETS[animation.animationFrame][animation.direction]
+          : this.interpolateWalkOffset(
+              animation.animationFrame,
+              animation.direction,
+            );
+
         coords = animation.from;
         npcFrame = downRight
           ? NpcFrame.WalkingDownRight1 + animation.animationFrame

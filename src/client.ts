@@ -78,6 +78,7 @@ import {
   PartyRequestType,
   PartyTakeClientPacket,
   PlayerRangeRequestClientPacket,
+  PlayersAcceptClientPacket,
   PriestOpenClientPacket,
   QuestAcceptClientPacket,
   QuestUseClientPacket,
@@ -266,6 +267,7 @@ type ClientEvents = {
   playersListUpdated: OnlinePlayer[];
   openQuestDialog: {
     name: string;
+    dialogId: number;
     questId: number;
     quests: DialogQuestEntry[];
     dialog: DialogEntry[];
@@ -562,6 +564,7 @@ export class Client {
     itemId: number;
   } | null = null;
   sans11: Sans11Font;
+  interpolation = true;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -1102,9 +1105,9 @@ export class Client {
     }
   }
 
-  render(ctx: CanvasRenderingContext2D) {
-    this.mapRenderer.render(ctx);
-    this.minimapRenderer.render(ctx);
+  render(ctx: CanvasRenderingContext2D, interpolation: number) {
+    this.mapRenderer.render(ctx, this.interpolation ? interpolation : 1);
+    this.minimapRenderer.render(ctx, this.interpolation ? interpolation : 1);
   }
 
   setMap(map: Emf) {
@@ -1818,6 +1821,15 @@ export class Client {
   }
 
   canWalk(coords: Vector2, silent = false): boolean {
+    if (
+      coords.x < 0 ||
+      coords.y < 0 ||
+      coords.x > this.map.width ||
+      coords.y > this.map.height
+    ) {
+      return false;
+    }
+
     if (this.nowall) {
       return true;
     }
@@ -1992,18 +2004,30 @@ export class Client {
     });
   }
 
-  handleCommand(command: string): boolean {
-    switch (command) {
+  handleCommand(input: string): boolean {
+    const args = input.split(' ');
+    switch (args[0]) {
       case '#ping': {
         this.pingStart = Date.now();
         this.bus.send(new MessagePingClientPacket());
         return true;
       }
 
+      case '#find': {
+        const packet = new PlayersAcceptClientPacket();
+        packet.name = args[1] || '';
+        if (!packet.name) {
+          return false;
+        }
+
+        this.bus.send(packet);
+        return true;
+      }
+
       case '#loc': {
         const coords = this.getPlayerCoords();
         this.emit('serverChat', {
-          message: `Your current location is at map ${this.mapId} x:${coords.x} y:${coords.y}`,
+          message: `${this.getResourceString(EOResourceID.STATUS_LABEL_YOUR_LOCATION_IS_AT)} ${this.mapId} x:${coords.x} y:${coords.y}`,
         });
         return true;
       }
@@ -2036,6 +2060,15 @@ export class Client {
 
         this.nowall = !this.nowall;
         playSfxById(SfxId.TextBoxFocus);
+        return true;
+      }
+
+      case '#smooth': {
+        this.interpolation = !this.interpolation;
+        this.emit('serverChat', {
+          message: `Movement interpolation ${this.interpolation ? 'enabled' : 'disabled'}!`,
+        });
+        return true;
       }
     }
 
@@ -2086,6 +2119,10 @@ export class Client {
   }
 
   acceptWarp() {
+    if (this.autoWalkPath.length) {
+      this.autoWalkPath = [];
+    }
+
     const packet = new WarpAcceptClientPacket();
     packet.sessionId = this.sessionId;
     packet.mapId = this.warpMapId;
@@ -2247,6 +2284,7 @@ export class Client {
   }
 
   disconnect() {
+    this.minimapEnabled = false;
     this.state = GameState.Initial;
     this.clearSession();
     if (this.bus) {

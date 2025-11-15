@@ -146,6 +146,8 @@ resizeCanvases();
 window.addEventListener('resize', resizeCanvases);
 
 let lastTime: DOMHighResTimeStamp | undefined;
+let accumulator = 0;
+const TICK = 120;
 const render = (now: DOMHighResTimeStamp) => {
   if (!lastTime) {
     lastTime = now;
@@ -157,10 +159,21 @@ const render = (now: DOMHighResTimeStamp) => {
     return;
   }
 
+  const dt = now - lastTime;
+  accumulator += dt;
+
+  while (accumulator >= TICK) {
+    client.tick();
+    accumulator -= TICK;
+  }
+
   lastTime = now;
+
+  const interpolation = accumulator / TICK;
+
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  client.render(ctx);
+  client.render(ctx, interpolation);
   requestAnimationFrame(render);
 };
 
@@ -273,7 +286,13 @@ client.on('reconnect', () => {
 
 client.on('openQuestDialog', (data) => {
   client.typing = true;
-  questDialog.setData(data.questId, data.name, data.quests, data.dialog);
+  questDialog.setData(
+    data.questId,
+    data.dialogId,
+    data.name,
+    data.quests,
+    data.dialog,
+  );
   questDialog.show();
 });
 
@@ -1038,11 +1057,6 @@ stats.on('confirmTraining', () => {
 spellBook.on('assignToSlot', ({ spellId, slotIndex }) => {
   hotbar.setSlot(slotIndex, SlotType.Skill, spellId);
 });
-
-// Tick loop
-setInterval(() => {
-  client.tick();
-}, 120);
 
 window.addEventListener('keyup', (e) => {
   if (client.state === GameState.InGame && e.key === 'Enter') {

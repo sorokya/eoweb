@@ -22,6 +22,7 @@ function handleQuestDialog(client: Client, reader: EoReader) {
 
   client.emit('openQuestDialog', {
     name: record.name,
+    dialogId: packet.dialogId,
     questId: packet.questId,
     quests: packet.questEntries,
     dialog: packet.dialogEntries,
