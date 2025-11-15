@@ -570,6 +570,7 @@ export class Client {
   } | null = null;
   sans11: Sans11Font;
   interpolation = true;
+  debug = false;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -2078,6 +2079,12 @@ export class Client {
         this.emit('serverChat', {
           message: `Movement interpolation ${this.interpolation ? 'enabled' : 'disabled'}!`,
         });
+        return true;
+      }
+
+      case '#debug': {
+        this.debug = !this.debug;
+        playSfxById(SfxId.TextBoxFocus);
         return true;
       }
     }
