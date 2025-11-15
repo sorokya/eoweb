@@ -89,12 +89,6 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     }
 
     client.npcChats.set(npc.index, new ChatBubble(client.sans11, chat.message));
-
-    client.emit('chat', {
-      tab: ChatTab.Local,
-      message: `${chat.message}`,
-      name: `${capitalize(record.name)}`,
-    });
   }
 
   if (unknownNpcsIndexes.size) {
