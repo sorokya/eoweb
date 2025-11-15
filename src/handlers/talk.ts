@@ -31,7 +31,8 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
 
   client.emit('chat', {
     tab: ChatTab.Local,
-    message: `${capitalize(character.name)} ${packet.message}`,
+    name: capitalize(character.name),
+    message: packet.message,
   });
 }
 
@@ -45,7 +46,8 @@ function handleTalkServer(client: Client, reader: EoReader) {
 function handleTalkMsg(client: Client, reader: EoReader) {
   const packet = TalkMsgServerPacket.deserialize(reader);
   client.emit('chat', {
-    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    name: capitalize(packet.playerName),
+    message: packet.message,
     tab: ChatTab.Global,
   });
 }
@@ -54,7 +56,8 @@ function handleTalkAdmin(client: Client, reader: EoReader) {
   const packet = TalkAdminServerPacket.deserialize(reader);
   client.emit('chat', {
     icon: ChatIcon.HGM,
-    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    name: capitalize(packet.playerName),
+    message: packet.message,
     tab: ChatTab.Group,
   });
   playSfxById(SfxId.AdminChatReceived);
@@ -64,7 +67,8 @@ function handleTalkTell(client: Client, reader: EoReader) {
   const packet = TalkTellServerPacket.deserialize(reader);
   client.emit('chat', {
     icon: ChatIcon.Note,
-    message: `${capitalize(packet.playerName)}->${capitalize(client.name)} ${packet.message}`,
+    name: `${capitalize(packet.playerName)}->${capitalize(client.name)}`,
+    message: packet.message,
     tab: ChatTab.Local,
   });
   playSfxById(SfxId.PrivateMessageReceived);
@@ -78,17 +82,20 @@ function handleTalkAnnounce(client: Client, reader: EoReader) {
   );
   client.emit('chat', {
     tab: ChatTab.Local,
-    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    name: capitalize(packet.playerName),
+    message: packet.message,
     icon: ChatIcon.GlobalAnnounce,
   });
   client.emit('chat', {
     tab: ChatTab.Group,
-    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    name: capitalize(packet.playerName),
+    message: packet.message,
     icon: ChatIcon.GlobalAnnounce,
   });
   client.emit('chat', {
     tab: ChatTab.Global,
-    message: `${capitalize(packet.playerName)} ${packet.message}`,
+    name: capitalize(packet.playerName),
+    message: packet.message,
     icon: ChatIcon.GlobalAnnounce,
   });
   playSfxById(SfxId.AdminAnnounceReceived);

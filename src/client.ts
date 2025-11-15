@@ -877,11 +877,6 @@ export class Client {
         continue;
       }
 
-      this.emit('chat', {
-        message: `${messages[0]}`,
-        tab: ChatTab.Local,
-        name: `${capitalize(record.name)}`,
-      });
       this.npcChats.set(index, new ChatBubble(this.sans11, messages[0]));
 
       if (messages.length > 1) {
@@ -1982,17 +1977,18 @@ export class Client {
     if (trimmed.startsWith('!')) {
       const target = trimmed.substring(1).split(' ')[0];
       if (target.trim().length) {
-        const msg = trimmed.substring(target.length + 2);
+        const message = trimmed.substring(target.length + 2);
 
         const packet = new TalkTellClientPacket();
         packet.name = target;
-        packet.message = msg;
+        packet.message = message;
         this.bus.send(packet);
 
         this.emit('chat', {
           icon: ChatIcon.Note,
           tab: ChatTab.Local,
-          message: `${capitalize(this.name)}->${capitalize(target)} ${msg}`,
+          name: `${capitalize(this.name)}->${capitalize(target)}`,
+          message,
         });
 
         return;
