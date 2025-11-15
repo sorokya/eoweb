@@ -1,5 +1,5 @@
 import mitt from 'mitt';
-import { ChatTab } from '../client';
+import { ChatTab, type Client } from '../client';
 import { Base } from './base-ui';
 
 type Events = {
@@ -66,6 +66,7 @@ export class Chat extends Base {
     '#btn-chat-tab-system',
   );
   private collapsed = false;
+  private client: Client;
 
   setMessage(message: string) {
     this.message.value = message;
@@ -88,6 +89,26 @@ export class Chat extends Base {
       const playerName = document.createElement('span');
       playerName.classList.add('author');
       playerName.innerText = name;
+
+      const click = () => {
+        let playerName = name;
+        if (playerName.includes('->')) {
+          playerName = playerName
+            .split('->')
+            .filter(
+              (n) => n.toLowerCase() !== this.client.name.toLowerCase(),
+            )[0];
+        }
+
+        this.setMessage(`!${playerName} `);
+      };
+
+      playerName.addEventListener('click', click);
+      playerName.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        click();
+      });
+
       msgContainer.prepend(playerName);
     }
 
@@ -136,8 +157,9 @@ export class Chat extends Base {
     this.message.focus();
   }
 
-  constructor() {
+  constructor(client: Client) {
     super();
+    this.client = client;
     this.form.addEventListener('submit', (e) => {
       e.preventDefault();
       this.emitter.emit('chat', this.message.value);
