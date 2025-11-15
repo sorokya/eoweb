@@ -6,7 +6,6 @@ import {
   MapTileSpec,
   NpcType,
   SitState,
-  ThreeItem,
 } from 'eolib';
 import {
   CHARACTER_FRAME_OFFSETS,
@@ -44,6 +43,7 @@ import {
   WALK_HEIGHT_FACTOR,
   WALK_WIDTH_FACTOR,
 } from './consts';
+import { TextAlign } from './fonts/base';
 import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
@@ -1495,11 +1495,20 @@ export class MapRenderer {
       return;
     }
 
+    ctx.fillStyle = color;
+    ctx.fillRect(
+      rect.position.x,
+      rect.position.y - 12,
+      ctx.measureText(label).width + 4,
+      12,
+    );
+
     this.client.sans11.render(
       ctx,
       label,
       { x: rect.position.x, y: rect.position.y - 12 },
-      color,
+      '#fff',
+      TextAlign.None,
     );
   }
 
