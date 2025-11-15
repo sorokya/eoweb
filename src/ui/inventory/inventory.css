@@ -1,0 +1,161 @@
+#inventory {
+  position: absolute;
+  right: 40px;
+  width: 186px;
+  height: 270px;
+  padding: 6px;
+  border-image: url("/border-thin.png") 9 / 9px 9px;
+  background: #7b5a29;
+  user-select: none;
+  z-index: 1030;
+}
+
+#inventory .top {
+  display: flex;
+  justify-content: space-between;
+}
+
+#inventory .top > div {
+  user-select: none;
+}
+
+#inventory .weight {
+  margin-right: 6px;
+  margin-top: 3px;
+  color: #ccc;
+  font-size: 12px;
+}
+
+#inventory .grid {
+  height: 229px;
+  width: 185px;
+  cursor: default;
+  display: grid;
+  border-top: 1px solid #000;
+  border-bottom: 1px solid #000;
+  grid-template-columns: repeat(8, 23px);
+  grid-template-rows: repeat(10, 23px);
+}
+
+#inventory .item {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#inventory .item .tooltip {
+  position: absolute;
+  bottom: 100%;
+  /* Position above the item */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: black;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#inventory .item:hover .tooltip {
+  opacity: 0.8;
+}
+
+#inventory .item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(248, 248, 190, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+#inventory .item:hover::before {
+  opacity: 0.3 !important;
+}
+
+#inventory .item img {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+#inventory .item[data-size="Size1x1"] {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+#inventory .item[data-size="Size1x2"] {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+
+#inventory .item[data-size="Size1x3"] {
+  grid-column: span 1;
+  grid-row: span 3;
+}
+
+#inventory .item[data-size="Size1x4"] {
+  grid-column: span 1;
+  grid-row: span 4;
+}
+
+#inventory .item[data-size="Size2x1"] {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+
+#inventory .item[data-size="Size2x2"] {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+#inventory .item[data-size="Size2x3"] {
+  grid-column: span 2;
+  grid-row: span 3;
+}
+
+#inventory .item[data-size="Size2x4"] {
+  grid-column: span 2;
+  grid-row: span 4;
+}
+
+#inventory .tabs {
+  display: flex;
+  gap: 1px;
+}
+
+#inventory .tabs button,
+#inventory .buttons button {
+  background: transparent;
+  border: 1px solid #000;
+  border-bottom: none;
+  color: #8a8a8a;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+#inventory .tabs button.active {
+  color: #cccccc;
+}
+
+#inventory .buttons {
+  display: flex;
+  gap: 1px;
+  position: absolute;
+  right: 5px;
+  bottom: 1px;
+}
+
+#inventory .buttons button {
+  color: #ccc;
+}

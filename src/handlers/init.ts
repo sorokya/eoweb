@@ -19,7 +19,7 @@ import { ChatTab, type Client, GameState } from '../client';
 import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '../db';
 import { DialogResourceID, EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat';
+import { ChatIcon } from '../ui/chat/chat';
 
 function handleInitInit(client: Client, reader: EoReader) {
   const packet = InitInitServerPacket.deserialize(reader);

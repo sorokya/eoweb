@@ -1,0 +1,6 @@
+#exit-game {
+  position: absolute;
+  z-index: 1020;
+  top: 0;
+  right: 0;
+}
