@@ -111,6 +111,7 @@ import {
   StatSkillTakeClientPacket,
   TalkAnnounceClientPacket,
   TalkMsgClientPacket,
+  TalkOpenClientPacket,
   TalkReportClientPacket,
   TalkTellClientPacket,
   ThreeItem,
@@ -2003,6 +2004,19 @@ export class Client {
 
       this.emit('chat', {
         tab: ChatTab.Global,
+        message: `${packet.message}`,
+        name: `${capitalize(this.name)}`,
+      });
+      return;
+    }
+
+    if (trimmed.startsWith("'") && this.partyMembers.length) {
+      const packet = new TalkOpenClientPacket();
+      packet.message = trimmed.substring(1);
+      this.bus.send(packet);
+
+      this.emit('chat', {
+        tab: ChatTab.Group,
         message: `${packet.message}`,
         name: `${capitalize(this.name)}`,
       });
