@@ -58,7 +58,7 @@ function handleTalkMsg(client: Client, reader: EoReader) {
 function handleTalkAdmin(client: Client, reader: EoReader) {
   const packet = TalkAdminServerPacket.deserialize(reader);
   client.emit('chat', {
-    icon: ChatIcon.HGM,
+    icon: ChatIcon.GM,
     name: capitalize(packet.playerName),
     message: packet.message,
     tab: ChatTab.Group,

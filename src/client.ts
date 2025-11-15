@@ -109,6 +109,7 @@ import {
   StatSkillOpenClientPacket,
   StatSkillRemoveClientPacket,
   StatSkillTakeClientPacket,
+  TalkAdminClientPacket,
   TalkAnnounceClientPacket,
   TalkMsgClientPacket,
   TalkOpenClientPacket,
@@ -2021,6 +2022,23 @@ export class Client {
         message: `${packet.message}`,
         name: `${capitalize(this.name)}`,
       });
+      return;
+    }
+
+    if (trimmed.startsWith('+') && this.admin !== AdminLevel.Player) {
+      const packet = new TalkAdminClientPacket();
+      packet.message = trimmed.substring(1);
+      this.bus.send(packet);
+
+      this.emit('chat', {
+        tab: ChatTab.Group,
+        icon: ChatIcon.GM,
+        message: `${packet.message}`,
+        name: `${capitalize(this.name)}`,
+      });
+
+      playSfxById(SfxId.AdminChatSent);
+
       return;
     }
 
