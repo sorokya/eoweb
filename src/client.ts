@@ -110,6 +110,7 @@ import {
   StatSkillRemoveClientPacket,
   StatSkillTakeClientPacket,
   TalkAnnounceClientPacket,
+  TalkMsgClientPacket,
   TalkReportClientPacket,
   TalkTellClientPacket,
   ThreeItem,
@@ -1993,6 +1994,19 @@ export class Client {
 
         return;
       }
+    }
+
+    if (trimmed.startsWith('~')) {
+      const packet = new TalkMsgClientPacket();
+      packet.message = trimmed.substring(1);
+      this.bus.send(packet);
+
+      this.emit('chat', {
+        tab: ChatTab.Global,
+        message: `${packet.message}`,
+        name: `${capitalize(this.name)}`,
+      });
+      return;
     }
 
     const packet = new TalkReportClientPacket();
