@@ -1,0 +1,83 @@
+#chest {
+  position: relative;
+  user-select: none;
+  box-sizing: border-box;
+  width: 272px;
+  height: 270px;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/151.png");
+}
+
+#chest .chest-items {
+  position: absolute;
+  top: 25px;
+  left: 20px;
+  color: #fff;
+  font-size: 12px;
+  width: 230px;
+  height: 192px;
+}
+
+#chest .chest-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px auto;
+  align-items: center;
+  padding: 0 0.5rem;
+  cursor: pointer;
+  height: 38px;
+  background-image: url("/gfx/gfx003/100.png");
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+
+#chest .chest-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+#chest .chest-item:hover::before {
+  opacity: 1;
+}
+
+#chest .chest-item .item-image {
+  max-width: 48px;
+  max-height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+}
+
+#chest .chest-item .item-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+#chest .chest-item .item-name {
+  color: #fff;
+  font-size: 12px;
+  margin: 0;
+}
+
+#chest .chest-item .item-quantity {
+  color: #b4a08c;
+  font-size: 11px;
+  margin: 2px 0 0 0;
+}
+
+#chest button[data-id="cancel"] {
+  position: absolute;
+  top: 227px;
+  left: 92px;
+}

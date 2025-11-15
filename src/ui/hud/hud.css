@@ -1,0 +1,89 @@
+#hud {
+  position: fixed;
+  z-index: 1020;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  user-select: none;
+  pointer-events: none;
+  display: flex;
+  gap: 8px;
+}
+
+#hud .stat-container {
+  position: relative;
+}
+
+#hud .bar {
+  width: 110px;
+  height: 14px;
+  background: none;
+  border-radius: 10px;
+  overflow: hidden;
+  transform: scale(var(--ui-scale, 1));
+  transform-origin: left center;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 20;
+}
+
+#hud .dropdown {
+  width: 110px;
+  height: 20px;
+  background-image: url("/gfx/gfx002/158.png");
+  background-position: -221px -30px;
+  background-repeat: no-repeat;
+  background-size: 440px 64px;
+  pointer-events: auto;
+  z-index: 10;
+  white-space: nowrap;
+  color: #d4c4a8;
+  font-size: 12px;
+  line-height: 21px;
+
+  position: absolute;
+  bottom: calc(-17px * var(--ui-scale));
+
+  transform: scale(var(--ui-scale));
+  /* scales visually with rest of UI */
+  transform-origin: left center;
+  /* scaling doesn't shift it sideways */
+}
+
+#hud .dropdown span {
+  padding: 2px 6px;
+  line-height: 18px;
+}
+
+#hud .stat-empty {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("/gfx/gfx002/158.png");
+  background-repeat: no-repeat;
+  background-size: 439px 63px;
+}
+
+#hud .stat-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background-image: url("/gfx/gfx002/158.png");
+  background-repeat: no-repeat;
+  background-size: 439px 63px;
+  background-position-y: -14px;
+}
+
+#hud .stat-container[data-id="tp"] .stat-empty,
+#hud .stat-container[data-id="tp"] .stat-fill {
+  background-position-x: -110px;
+}
+
+#hud .stat-container[data-id="exp"] .stat-empty,
+#hud .stat-container[data-id="exp"] .stat-fill {
+  background-position-x: -329px;
+}

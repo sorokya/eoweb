@@ -12,7 +12,7 @@ import { getEmf } from '../db';
 import { EOResourceID } from '../edf';
 import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat';
+import { ChatIcon } from '../ui/chat/chat';
 
 function handleWarpRequest(client: Client, reader: EoReader) {
   const packet = WarpRequestServerPacket.deserialize(reader);

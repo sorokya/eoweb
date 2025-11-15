@@ -218,8 +218,8 @@ import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
-import { ChatIcon } from './ui/chat';
-import { type Slot, SlotType } from './ui/hotbar';
+import { ChatIcon } from './ui/chat/chat';
+import { type Slot, SlotType } from './ui/hotbar/hotbar';
 import { capitalize } from './utils/capitalize';
 import {
   EffectAnimationType,
