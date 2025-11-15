@@ -1,5 +1,6 @@
 import {
   AttackPlayerServerPacket,
+  Emote as EmoteType,
   type EoReader,
   MapTileSpec,
   PacketAction,
@@ -9,7 +10,8 @@ import type { Client } from '../client';
 import { CharacterAttackAnimation } from '../render/character-attack';
 import { CharacterRangedAttackAnimation } from '../render/character-attack-ranged';
 import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
-import { playSfxById } from '../sfx';
+import { Emote } from '../render/emote';
+import { playSfxById, SfxId } from '../sfx';
 import { randomRange } from '../utils/random-range';
 
 function handleAttackPlayer(client: Client, reader: EoReader) {
@@ -34,6 +36,13 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
 
   const index = randomRange(0, metadata.sfx.length - 1);
   playSfxById(metadata.sfx[index]);
+
+  if (metadata.sfx[0] === SfxId.Harp1 || metadata.sfx[0] === SfxId.Guitar1) {
+    client.characterEmotes.set(
+      packet.playerId,
+      new Emote(EmoteType.Playful + 1),
+    );
+  }
 
   const spec = client.map.tileSpecRows
     .find((r) => r.y === character.coords.y)

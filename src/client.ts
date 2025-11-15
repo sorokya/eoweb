@@ -2318,6 +2318,10 @@ export class Client {
     const index = randomRange(0, metadata.sfx.length - 1);
     playSfxById(metadata.sfx[index]);
 
+    if (metadata.sfx[0] === SfxId.Harp1 || metadata.sfx[0] === SfxId.Guitar1) {
+      this.characterEmotes.set(this.playerId, new Emote(EmoteType.Playful + 1));
+    }
+
     const spec = this.map.tileSpecRows
       .find((r) => r.y === player.coords.y)
       ?.tiles.find((t) => t.x === player.coords.x);
