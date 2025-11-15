@@ -49,6 +49,7 @@ function handleTalkServer(client: Client, reader: EoReader) {
 function handleTalkMsg(client: Client, reader: EoReader) {
   const packet = TalkMsgServerPacket.deserialize(reader);
   client.emit('chat', {
+    icon: ChatIcon.GlobalAnnounce,
     name: capitalize(packet.playerName),
     message: packet.message,
     tab: ChatTab.Global,
