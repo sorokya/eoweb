@@ -14,7 +14,7 @@ import {
   NpcMapInfo,
   SitState,
 } from 'eolib';
-import './style.css';
+import './css/style.css';
 import 'notyf/notyf.min.css';
 import { PacketBus } from './bus';
 import { ChatTab, Client, GameState } from './client';
