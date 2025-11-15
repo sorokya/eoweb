@@ -126,7 +126,10 @@ function handleAvatarReply(client: Client, reader: EoReader) {
 function handleAvatarAdmin(client: Client, reader: EoReader) {
   const packet = AvatarAdminServerPacket.deserialize(reader);
 
-  if (packet.victimId === client.playerId) {
+  if (
+    packet.victimId === client.playerId &&
+    packet.casterId !== client.playerId
+  ) {
     client.hp = Math.max(client.hp - packet.damage, 0);
     client.emit('statsUpdate', undefined);
   }
