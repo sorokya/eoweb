@@ -1146,6 +1146,10 @@ export class Client {
       this.mapRenderer.buildCaches();
       this.loadDoors();
 
+      if (this.map.type === MapType.Pk) {
+        playSfxById(SfxId.EnterPkMap);
+      }
+
       if (this.ambientSound && this.ambientVolume) {
         this.ambientSound.disconnect();
         this.ambientSound = null;

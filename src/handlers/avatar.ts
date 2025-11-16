@@ -1,8 +1,10 @@
 import {
+  AvatarAdminServerPacket,
   AvatarAgreeServerPacket,
   type AvatarChange,
   AvatarChangeType,
   AvatarRemoveServerPacket,
+  AvatarReplyServerPacket,
   type EoReader,
   PacketAction,
   PacketFamily,
@@ -10,7 +12,12 @@ import {
 } from 'eolib';
 import type { Client } from '../client';
 import { CharacterDeathAnimation } from '../render/character-death';
-import { EffectAnimation, EffectTargetTile } from '../render/effect';
+import {
+  EffectAnimation,
+  EffectTargetCharacter,
+  EffectTargetTile,
+} from '../render/effect';
+import { HealthBar } from '../render/health-bar';
 import { playSfxById, SfxId } from '../sfx';
 
 function handleAvatarRemove(client: Client, reader: EoReader) {
@@ -91,6 +98,77 @@ function handleAvatarAgree(client: Client, reader: EoReader) {
   client.atlas.refresh();
 }
 
+function handleAvatarReply(client: Client, reader: EoReader) {
+  const packet = AvatarReplyServerPacket.deserialize(reader);
+
+  if (packet.victimId === client.playerId) {
+    client.hp = Math.max(client.hp - packet.damage, 0);
+    client.emit('statsUpdate', undefined);
+  }
+
+  const victim = client.getCharacterById(packet.victimId);
+  if (!victim) {
+    client.requestCharacterRange([packet.victimId]);
+    return;
+  }
+
+  client.characterHealthBars.set(
+    packet.victimId,
+    new HealthBar(packet.hpPercentage, packet.damage),
+  );
+
+  if (packet.dead) {
+    client.setCharacterDeathAnimation(packet.victimId);
+    playSfxById(SfxId.Dead);
+  }
+}
+
+function handleAvatarAdmin(client: Client, reader: EoReader) {
+  const packet = AvatarAdminServerPacket.deserialize(reader);
+
+  if (
+    packet.victimId === client.playerId &&
+    packet.casterId !== client.playerId
+  ) {
+    client.hp = Math.max(client.hp - packet.damage, 0);
+    client.emit('statsUpdate', undefined);
+  }
+
+  const victim = client.getCharacterById(packet.victimId);
+  if (!victim) {
+    client.requestCharacterRange([packet.victimId]);
+    return;
+  }
+
+  client.characterHealthBars.set(
+    packet.victimId,
+    new HealthBar(packet.hpPercentage, packet.damage),
+  );
+
+  if (packet.victimDied) {
+    client.setCharacterDeathAnimation(packet.victimId);
+    playSfxById(SfxId.Dead);
+  }
+
+  const record = client.getEsfRecordById(packet.spellId);
+  if (!record) {
+    return;
+  }
+
+  const meta = client.getEffectMetadata(record.graphicId);
+  if (meta.sfx) {
+    playSfxById(meta.sfx);
+  }
+
+  client.effects.push(
+    new EffectAnimation(
+      record.graphicId,
+      new EffectTargetCharacter(packet.victimId),
+      meta,
+    ),
+  );
+}
+
 export function registerAvatarHandlers(client: Client) {
   client.bus.registerPacketHandler(
     PacketFamily.Avatar,
@@ -101,5 +179,15 @@ export function registerAvatarHandlers(client: Client) {
     PacketFamily.Avatar,
     PacketAction.Agree,
     (reader) => handleAvatarAgree(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Avatar,
+    PacketAction.Reply,
+    (reader) => handleAvatarReply(client, reader),
+  );
+  client.bus.registerPacketHandler(
+    PacketFamily.Avatar,
+    PacketAction.Admin,
+    (reader) => handleAvatarAdmin(client, reader),
   );
 }
