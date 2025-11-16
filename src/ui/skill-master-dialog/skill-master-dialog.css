@@ -1,0 +1,56 @@
+#skill-master {
+  position: relative;
+  user-select: none;
+  box-sizing: border-box;
+  width: 284px;
+  height: 290px;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/152.png");
+}
+
+#skill-master .name {
+  position: absolute;
+  color: #fff;
+  font-size: 12px;
+  left: 24px;
+  top: 18px;
+}
+
+#skill-master .buttons {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  width: 260px;
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+}
+
+#skill-master .scroll-handle {
+  position: absolute;
+  right: 16px;
+  width: 16px;
+  height: 15px;
+  background: url("/gfx/gfx002/129.png") 0 -75px;
+  touch-action: none;
+  user-select: none;
+}
+
+#skill-master .item-list {
+  position: absolute;
+  top: 50px;
+  left: 22px;
+  width: 232px;
+  height: 193px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+#skill-master .item-list::-webkit-scrollbar {
+  display: none;
+}

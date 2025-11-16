@@ -1,0 +1,208 @@
+#paperdoll {
+  position: relative;
+  background: url("/gfx/gfx002/149.png") #000;
+  height: 290px;
+  width: 380px;
+  z-index: 1020;
+}
+
+#paperdoll[data-gender="1"] {
+  background-position-y: -290px;
+}
+
+#paperdoll button[data-id="ok"] {
+  position: absolute;
+  bottom: 8px;
+  right: 13px;
+}
+
+#paperdoll .item,
+#paperdoll span {
+  position: absolute;
+}
+
+#paperdoll .item {
+  display: flex;
+  justify-content: center;
+}
+
+#paperdoll img {
+  align-self: center;
+}
+
+#paperdoll .item[data-id="boots"] {
+  left: 85px;
+  bottom: 17px;
+  width: 57px;
+  height: 55px;
+}
+
+#paperdoll .item[data-id="accessory"] {
+  left: 52px;
+  bottom: 16px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="gloves"] {
+  left: 20px;
+  bottom: 48px;
+  width: 57px;
+  height: 55px;
+}
+
+#paperdoll .item[data-id="belt"] {
+  left: 86px;
+  bottom: 79px;
+  width: 56px;
+  height: 25px;
+}
+
+#paperdoll .item[data-id="armor"] {
+  left: 85px;
+  top: 81px;
+  height: 99px;
+  width: 57px;
+}
+
+#paperdoll .item[data-id="necklace"] {
+  left: 151px;
+  top: 50px;
+  width: 56px;
+  height: 25px;
+}
+
+#paperdoll .item[data-id="hat"] {
+  left: 85px;
+  top: 19px;
+  width: 57px;
+  height: 55px;
+}
+
+#paperdoll .item[data-id="shield"] {
+  left: 150px;
+  top: 80px;
+  height: 99px;
+  width: 57px;
+}
+
+#paperdoll .item[data-id="weapon"] {
+  left: 20px;
+  top: 81px;
+  height: 99px;
+  width: 57px;
+}
+
+#paperdoll .item[data-id="ring-1"] {
+  left: 150px;
+  top: 186px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="ring-2"] {
+  left: 183px;
+  top: 186px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="armlet-1"] {
+  left: 150px;
+  top: 217px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="armlet-2"] {
+  left: 183px;
+  top: 217px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="bracer-1"] {
+  left: 150px;
+  top: 248px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item[data-id="bracer-2"] {
+  left: 183px;
+  top: 248px;
+  width: 26px;
+  height: 26px;
+}
+
+#paperdoll .item .tooltip {
+  position: absolute;
+  bottom: 100%;
+  /* Position above the item */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: black;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#paperdoll .item:hover .tooltip {
+  opacity: 0.8;
+}
+
+#paperdoll div.icon {
+  position: absolute;
+  left: 240px;
+  top: 262px;
+}
+
+#paperdoll span {
+  color: #f0f0c8;
+  font-size: 12px;
+}
+
+#paperdoll span[data-id="name"] {
+  left: 230px;
+  top: 24px;
+}
+
+#paperdoll span[data-id="home"] {
+  left: 230px;
+  top: 54px;
+}
+
+#paperdoll span[data-id="class"] {
+  left: 230px;
+  top: 84px;
+}
+
+#paperdoll span[data-id="partner"] {
+  left: 230px;
+  top: 114px;
+}
+
+#paperdoll span[data-id="title"] {
+  left: 230px;
+  top: 144px;
+}
+
+#paperdoll span[data-id="job"] {
+  left: 230px;
+  top: 174px;
+}
+
+#paperdoll span[data-id="guild"] {
+  left: 230px;
+  top: 204px;
+}
+
+#paperdoll span[data-id="rank"] {
+  left: 230px;
+  top: 234px;
+}

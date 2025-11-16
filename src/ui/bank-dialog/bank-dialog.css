@@ -1,0 +1,30 @@
+#bank {
+  position: relative;
+  user-select: none;
+  box-sizing: border-box;
+  width: 272px;
+  height: 235px;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/153.png");
+}
+
+#bank .balance {
+  position: absolute;
+  left: 130px;
+  top: 21px;
+  width: 120px;
+  color: #fff;
+  text-align: right;
+}
+
+#bank button[data-id="ok"] {
+  position: absolute;
+  bottom: 15px;
+  left: 92px;
+}
+
+#bank .item-list {
+  position: absolute;
+  left: 28px;
+  top: 58px;
+}
