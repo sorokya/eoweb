@@ -109,11 +109,17 @@ export class CreateCharacterForm extends Base {
         : CharacterFrame.StandingUpLeft,
     );
     if (!frame) {
+      requestAnimationFrame((n) => {
+        this.render(n);
+      });
       return;
     }
 
     const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
     if (!atlas) {
+      requestAnimationFrame((n) => {
+        this.render(n);
+      });
       return;
     }
 
@@ -137,7 +143,7 @@ export class CreateCharacterForm extends Base {
         (this.canvas.width >> 1) +
           (mirrored ? frame.mirroredXOffset : frame.xOffset),
       ),
-      this.canvas.height + frame.yOffset,
+      this.canvas.height + frame.yOffset - 20,
       frame.w,
       frame.h,
     );
