@@ -31,13 +31,6 @@ export enum Input {
 const held: boolean[] = [];
 const lastInputHeld: Input[] = []; // | null = null;
 
-let touchStartX: number | null = null;
-let touchStartY: number | null = null;
-let touchId: number | null = null;
-let activeTouchDir: Input | null = null;
-
-const DRAG_THRESHOLD = 30;
-
 export function isInputHeld(input: Input): boolean {
   return held[input] || false;
 }
@@ -71,13 +64,6 @@ function updateInputHeld(input: Input, down: boolean) {
   if (down) {
     if (index === -1) lastInputHeld.push(input); // track most recent
   }
-}
-
-function swipedDir(dx: number, dy: number): Input {
-  if (Math.abs(dx) > Math.abs(dy)) {
-    return dx < 0 ? Input.Left : Input.Right;
-  }
-  return dy < 0 ? Input.Up : Input.Down;
 }
 
 window.addEventListener('keydown', (e) => {
@@ -252,6 +238,7 @@ window.addEventListener('keyup', (e) => {
   }
 });
 
+/*
 const joystickContainer = document.getElementById('joystick-container');
 const thumb = document.getElementById('joystick-thumb');
 
@@ -358,6 +345,8 @@ window.addEventListener(
   },
   { passive: false },
 );
+
+*/
 
 /*
 window.addEventListener('contextmenu', (e) => {

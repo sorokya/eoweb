@@ -314,10 +314,10 @@ type ClientEvents = {
 };
 
 export enum GameState {
-  Initial = 0,
-  Connected = 1,
+  MainMenu = 0,
+  CreateAccount = 1,
   Login = 2,
-  LoggedIn = 3,
+  CharacterSelect = 3,
   InGame = 4,
 }
 
@@ -487,7 +487,7 @@ export class Client {
   mapId = 5;
   warpMapId = 0;
   warpQueued = false;
-  state = GameState.Initial;
+  state = GameState.MainMenu;
   sessionId = 0;
   serverSettings: ServerSettings | null = null;
   motd = '';
@@ -2446,7 +2446,7 @@ export class Client {
   }
 
   disconnect() {
-    this.setState(GameState.Initial);
+    this.setState(GameState.MainMenu);
     this.clearSession();
     if (this.bus) {
       this.bus.disconnect();

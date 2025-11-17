@@ -15,7 +15,7 @@ import {
   PacketFamily,
   serverVerificationHash,
 } from 'eolib';
-import { ChatTab, type Client, GameState } from '../client';
+import { ChatTab, type Client } from '../client';
 import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '../db';
 import { DialogResourceID, EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
@@ -125,7 +125,6 @@ function handleInitOk(
   packet.serverEncryptionMultiple = data.serverEncryptionMultiple;
   packet.playerId = data.playerId;
   bus.send(packet);
-  client.setState(GameState.Connected);
 
   if (client.rememberMe && client.loginToken) {
     const writer = new EoWriter();
