@@ -15,7 +15,7 @@ import { EffectTargetNpc } from '../render/effect';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon } from '../ui/chat-icon';
 
 function handleCastReply(client: Client, reader: EoReader) {
   const packet = CastReplyServerPacket.deserialize(reader);

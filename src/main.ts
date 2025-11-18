@@ -171,6 +171,7 @@ window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
 });
 
+/*
 function loadInventoryGrid() {
   const img = new Image();
   img.src = '/gfx/gfx002/144.png';
@@ -188,6 +189,7 @@ function loadInventoryGrid() {
     grid.style.background = `url(${dataUrl})`;
   };
 }
+  */
 
 window.addEventListener('DOMContentLoaded', async () => {
   const response = await fetch('/maps/00005.emf');
@@ -219,6 +221,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   client.nearby.characters = [character];
   client.atlas.refresh();
 
-  loadInventoryGrid();
+  //loadInventoryGrid();
   requestAnimationFrame(render);
 });

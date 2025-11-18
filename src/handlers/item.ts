@@ -23,7 +23,7 @@ import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon } from '../ui/chat-icon';
 
 function handleItemAdd(client: Client, reader: EoReader) {
   const packet = ItemAddServerPacket.deserialize(reader);

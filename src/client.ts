@@ -218,8 +218,11 @@ import type { HealthBar } from './render/health-bar';
 import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
-import { ChatIcon } from './ui/chat/chat';
-import { type Slot, SlotType } from './ui/hotbar/hotbar';
+import { ChatIcon } from './ui/chat-icon';
+import { type HotbarSlot, HotbarSlotType } from './ui/hotbar-slot';
+import { InGameUI } from './ui/in-game/in-game-ui';
+import { PreGameUI } from './ui/pre-game/pre-game-ui';
+import { SharedUI } from './ui/shared/shared-ui';
 import { capitalize } from './utils/capitalize';
 import {
   EffectAnimationType,
@@ -554,7 +557,7 @@ export class Client {
   lockerUpgrades = 0;
   lockerCoords = new Coords();
   atlas: Atlas;
-  hotbarSlots: Slot[] = [];
+  hotbarSlots: HotbarSlot[] = [];
   selectedSpellId = 0;
   queuedSpellId = 0;
   spellCastTimestamp = 0;
@@ -582,6 +585,9 @@ export class Client {
       ownerId: number;
     }
   > = new Map();
+  preGameUI: PreGameUI;
+  inGameUI: InGameUI;
+  sharedUI: SharedUI;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -620,20 +626,34 @@ export class Client {
     this.movementController = new MovementController(this);
     loadConfig().then((config) => {
       this.config = config;
+
+      // TODO: implement these UI changes
+      /*
       const txtHost =
         document.querySelector<HTMLInputElement>('input[name="host"]');
       if (this.config.staticHost) {
         txtHost.classList.add('hidden');
       }
       txtHost.value = config.host;
+      */
       document.title = config.title;
 
+      /*
       const mainMenuLogo =
         document.querySelector<HTMLDivElement>('#main-menu-logo');
       mainMenuLogo.setAttribute('data-slogan', config.slogan);
+      */
     });
     this.atlas = new Atlas(this);
     this.sans11 = new Sans11Font(this.atlas);
+
+    const uiContainer = document.querySelector<HTMLDivElement>('#ui');
+    if (!uiContainer) {
+      throw new Error('UI container not found');
+    }
+    this.preGameUI = new PreGameUI(uiContainer);
+    this.inGameUI = new InGameUI(uiContainer);
+    this.sharedUI = new SharedUI(uiContainer);
   }
 
   getCharacterById(id: number): CharacterMapInfo | undefined {
@@ -3107,7 +3127,7 @@ export class Client {
       return;
     }
 
-    if (slot.type === SlotType.Item) {
+    if (slot.type === HotbarSlotType.Item) {
       this.useItem(slot.typeId);
     } else {
       if (!this.spells.find((s) => s.id === slot.typeId)) {

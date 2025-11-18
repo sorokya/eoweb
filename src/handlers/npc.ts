@@ -23,7 +23,7 @@ import { HealthBar } from '../render/health-bar';
 import { NpcAttackAnimation } from '../render/npc-attack';
 import { NpcWalkAnimation } from '../render/npc-walk';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon } from '../ui/chat-icon';
 import { capitalize } from '../utils/capitalize';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
