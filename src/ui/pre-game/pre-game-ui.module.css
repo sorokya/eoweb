@@ -1,0 +1,12 @@
+.container {
+  display: flex;
+  width: 100%;
+
+  input[type="text"],
+  input[type="password"] {
+    background: #a38269;
+    color: #000;
+    border: 1px solid #000;
+    outline: none;
+  }
+}

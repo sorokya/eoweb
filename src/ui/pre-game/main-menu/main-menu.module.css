@@ -1,4 +1,4 @@
-#main-menu {
+.container {
   display: flex;
   flex-flow: column;
   width: 100%;
@@ -7,12 +7,29 @@
   gap: 2px;
 }
 
-#main-menu-logo {
+.logo {
   margin-bottom: 10px;
   position: relative;
 }
 
-#main-menu-logo::after {
+@keyframes pulse {
+  0% {
+    font-size: 1em;
+    rotate: -1deg;
+  }
+
+  50% {
+    font-size: 1.1em;
+    rotate: 2deg;
+  }
+
+  100% {
+    font-size: 1em;
+    rotate: -1deg;
+  }
+}
+
+.logo::after {
   content: attr(data-slogan);
   position: absolute;
   display: inline-block;

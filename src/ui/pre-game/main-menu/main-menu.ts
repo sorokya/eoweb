@@ -1,54 +1,52 @@
-import mitt from 'mitt';
 import { playSfxById, SfxId } from '../../../sfx';
 import { Base } from '../../base-ui';
-
-import './main-menu.css';
-
-type Events = {
-  'create-account': undefined;
-  'play-game': undefined;
-  'view-credits': undefined;
-  'host-change': string;
-};
+import { ImgButton } from '../../shared/img-button/img-button';
+import classes from './main-menu.module.css';
 
 export class MainMenu extends Base {
-  protected container = document.querySelector('#main-menu');
-  private btnCreateAccount: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="create-account"]',
-  );
-  private btnPlayGame: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="play-game"]',
-  );
-  private btnViewCredits: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="view-credits"]',
-  );
-  private txtHost: HTMLInputElement =
-    this.container.querySelector('input[name="host"]');
-  private emitter = mitt<Events>();
+  protected declare container: HTMLElement;
+  private btnCreateAccount: HTMLButtonElement;
+  private btnPlayGame: HTMLButtonElement;
+  private btnViewCredits: HTMLButtonElement;
+  private txtHost: HTMLInputElement;
 
-  constructor() {
+  constructor(parent: HTMLElement, slogan: string) {
     super();
+
+    this.container = document.createElement('div');
+    this.container.className = classes.container;
+
+    const logoContainer = document.createElement('div');
+    logoContainer.className = classes.logo;
+    logoContainer.setAttribute('data-slogan', slogan);
+
+    const logo = document.createElement('img');
+    logo.src = 'logo.png';
+    logo.alt = 'Game Logo';
+    logoContainer.appendChild(logo);
+    this.container.appendChild(logoContainer);
+
+    this.txtHost = document.createElement('input');
+    this.txtHost.type = 'text';
+    this.txtHost.value = 'wss://ws.reoserv.net';
+    this.txtHost.addEventListener('change', () => {});
+    this.container.appendChild(this.txtHost);
+
+    this.btnCreateAccount = new ImgButton('create-account', this.container);
     this.btnCreateAccount.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
-      this.emitter.emit('create-account', undefined);
     });
+
+    this.btnPlayGame = new ImgButton('play-game', this.container);
     this.btnPlayGame.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
-      this.emitter.emit('play-game', undefined);
     });
+
+    this.btnViewCredits = new ImgButton('view-credits', this.container);
     this.btnViewCredits.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
-      this.emitter.emit('view-credits', undefined);
     });
-    this.txtHost.addEventListener('change', () => {
-      this.emitter.emit('host-change', this.txtHost.value);
-    });
-  }
 
-  on<Event extends keyof Events>(
-    event: Event,
-    handler: (data: Events[Event]) => void,
-  ) {
-    this.emitter.on(event, handler);
+    parent.appendChild(this.container);
   }
 }

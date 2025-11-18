@@ -643,17 +643,17 @@ export class Client {
         document.querySelector<HTMLDivElement>('#main-menu-logo');
       mainMenuLogo.setAttribute('data-slogan', config.slogan);
       */
+
+      const uiContainer = document.querySelector<HTMLDivElement>('#ui');
+      if (!uiContainer) {
+        throw new Error('UI container not found');
+      }
+      this.preGameUI = new PreGameUI(uiContainer, this);
+      this.inGameUI = new InGameUI(uiContainer);
+      this.sharedUI = new SharedUI(uiContainer);
     });
     this.atlas = new Atlas(this);
     this.sans11 = new Sans11Font(this.atlas);
-
-    const uiContainer = document.querySelector<HTMLDivElement>('#ui');
-    if (!uiContainer) {
-      throw new Error('UI container not found');
-    }
-    this.preGameUI = new PreGameUI(uiContainer);
-    this.inGameUI = new InGameUI(uiContainer);
-    this.sharedUI = new SharedUI(uiContainer);
   }
 
   getCharacterById(id: number): CharacterMapInfo | undefined {

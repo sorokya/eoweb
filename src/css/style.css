@@ -101,23 +101,6 @@ body {
   display: none !important;
 }
 
-@keyframes pulse {
-  0% {
-    font-size: 1em;
-    rotate: -1deg;
-  }
-
-  50% {
-    font-size: 1.1em;
-    rotate: 2deg;
-  }
-
-  100% {
-    font-size: 1em;
-    rotate: -1deg;
-  }
-}
-
 #cover {
   position: fixed;
   top: 0;
