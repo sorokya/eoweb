@@ -4,21 +4,28 @@
 }
 
 @font-face {
-  font-family: w95fa;
-  src: url("/w95fa.woff2");
-  font-weight: normal;
-  font-style: normal;
+  font-family: ms_sans_serif;
+  src: url("/fonts/ms_sans_serif.woff2");
+}
+
+@font-face {
+  font-family: ms_sans_serif_bold;
+  src: url("/fonts/ms_sans_serif_bold.woff2");
+}
+
+@font-face {
+  font-family: forte;
+  src: url("/fonts/forte.woff2");
 }
 
 body {
+  font-family: "ms_sans_serif", sans-serif;
   padding: 0;
   margin: 0;
   overflow: hidden;
 }
 
 * {
-  /* biome-ignore lint/a11y/useGenericFontNames: Only custom font!! */
-  font-family: w95fa !important;
   -webkit-touch-callout: none; /* Disable “Save Image” / “Copy” popup */
   -webkit-user-select: none; /* Disable text selection */
   user-select: none;
