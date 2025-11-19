@@ -41,6 +41,8 @@ export class LoginDialog extends Base {
 
     this.form = document.createElement('form');
 
+    const formContainer = document.createElement('div');
+
     const usernameRow = document.createElement('div');
     usernameRow.className = classes['form-row'];
     const usernameLabel = document.createElement('label');
@@ -55,7 +57,7 @@ export class LoginDialog extends Base {
     this.username.name = 'username';
     this.username.addEventListener('focus', focus);
     usernameRow.appendChild(this.username);
-    this.form.appendChild(usernameRow);
+    formContainer.appendChild(usernameRow);
 
     const passwordRow = document.createElement('div');
     passwordRow.className = classes['form-row'];
@@ -71,7 +73,7 @@ export class LoginDialog extends Base {
     this.password.name = 'password';
     this.password.addEventListener('focus', focus);
     passwordRow.appendChild(this.password);
-    this.form.appendChild(passwordRow);
+    formContainer.appendChild(passwordRow);
 
     const rememberMeRow = document.createElement('div');
     rememberMeRow.className = classes['form-row'];
@@ -85,7 +87,7 @@ export class LoginDialog extends Base {
     this.chkRememberMe.id = 'login-remember';
     this.chkRememberMe.name = 'remember-me';
     rememberMeLabel.appendChild(this.chkRememberMe);
-    this.form.appendChild(rememberMeRow);
+    formContainer.appendChild(rememberMeRow);
 
     const buttonRow = document.createElement('div');
     buttonRow.className = classes['button-row'];
@@ -97,8 +99,9 @@ export class LoginDialog extends Base {
       client.setState(GameState.MainMenu);
     });
 
+    this.form.appendChild(formContainer);
+    this.form.appendChild(buttonRow);
     this.el.appendChild(this.form);
-    this.el.appendChild(buttonRow);
     parent.appendChild(this.el);
 
     this.formElements = [this.username, this.password];
@@ -106,6 +109,11 @@ export class LoginDialog extends Base {
     this.form.addEventListener('submit', (e) => {
       e.preventDefault();
       playSfxById(SfxId.ButtonClick);
+      this.client.login(
+        this.username.value,
+        this.password.value,
+        this.chkRememberMe.checked,
+      );
 
       this.password.value = '';
       this.password.focus();

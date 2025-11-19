@@ -17,7 +17,6 @@ export class CreateAccountDialog extends Base {
   private name: HTMLInputElement;
   private location: HTMLInputElement;
   private email: HTMLInputElement;
-  private btnCancel: HTMLButtonElement;
   private formElements: HTMLInputElement[];
 
   show() {
