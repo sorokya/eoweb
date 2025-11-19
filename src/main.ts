@@ -823,30 +823,33 @@ shopDialog.on('buyItem', (item) => {
   itemAmountDialog.setLabel(
     `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${item.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_BUY)}`,
   );
-  itemAmountDialog.setCallback((amount) => {
-    const total = amount * item.price;
-    const goldAmount = client.items.find((i) => i.id === 1).amount;
-    itemAmountDialog.hide();
-    if (total > goldAmount) {
-      const text = client.getDialogStrings(
-        DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
-      );
-      smallAlert.setContent(text[1], text[0]);
-      smallAlert.show();
-    } else {
-      const wordBuy = client.getResourceString(EOResourceID.DIALOG_WORD_BUY);
-      const wordFor = client.getResourceString(EOResourceID.DIALOG_WORD_FOR);
-      const goldRecord = client.getEifRecordById(1);
-      smallConfirm.setContent(
-        `${wordBuy} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord.name} ?`,
-        client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS),
-      );
-      smallConfirm.setCallback(() => {
-        client.buyShopItem(item.id, amount);
-      });
-      smallConfirm.show();
-    }
-  });
+  itemAmountDialog.setCallback(
+    (amount) => {
+      const total = amount * item.price;
+      const goldAmount = client.items.find((i) => i.id === 1).amount;
+      itemAmountDialog.hide();
+      if (total > goldAmount) {
+        const text = client.getDialogStrings(
+          DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
+        );
+        smallAlert.setContent(text[1], text[0]);
+        smallAlert.show();
+      } else {
+        const wordBuy = client.getResourceString(EOResourceID.DIALOG_WORD_BUY);
+        const wordFor = client.getResourceString(EOResourceID.DIALOG_WORD_FOR);
+        const goldRecord = client.getEifRecordById(1);
+        smallConfirm.setContent(
+          `${wordBuy} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord.name} ?`,
+          client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS),
+        );
+        smallConfirm.setCallback(() => {
+          client.buyShopItem(item.id, amount);
+        }, true);
+        smallConfirm.show();
+      }
+    },
+    () => {},
+  );
   itemAmountDialog.show();
 });
 
