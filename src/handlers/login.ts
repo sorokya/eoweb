@@ -98,6 +98,8 @@ function handleLoginReply(client: Client, reader: EoReader) {
     }),
   );
 
+  client.atlas.refresh();
+
   client.setState(GameState.CharacterSelect);
 }
 
