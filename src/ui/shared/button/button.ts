@@ -7,7 +7,9 @@ export class Button extends HTMLButtonElement {
     type: 'button' | 'submit' | 'reset' = 'button',
   ) {
     super();
-    this.innerText = label;
+    const text = document.createElement('span');
+    text.innerText = label;
+    this.appendChild(text);
     this.type = type;
     this.className = classes.button;
     parent.appendChild(this);
