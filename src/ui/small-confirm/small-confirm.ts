@@ -15,6 +15,7 @@ export class SmallConfirm extends Base {
     'button[data-id="cancel"]',
   );
   private callback: (() => undefined) | null = null;
+  private keepOpen = false;
 
   show() {
     this.cover.classList.remove('hidden');
@@ -33,8 +34,10 @@ export class SmallConfirm extends Base {
 
     this.btnOk.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
-      this.hide();
-      this.cover.classList.add('hidden');
+      if (!this.keepOpen) {
+        this.hide();
+        this.cover.classList.add('hidden');
+      }
 
       if (this.callback) {
         this.callback();
@@ -47,7 +50,8 @@ export class SmallConfirm extends Base {
     this.message.innerText = message;
   }
 
-  setCallback(callback: () => undefined) {
+  setCallback(callback: () => undefined, keepOpen = false) {
     this.callback = callback;
+    this.keepOpen = keepOpen;
   }
 }
