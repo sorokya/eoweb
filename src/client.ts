@@ -2385,6 +2385,18 @@ export class Client {
     }
   }
 
+  showAlert(
+    title: string,
+    message: string,
+    componentId = ComponentId.SmallAlertLargeHeader,
+  ) {
+    this.ui.showAlert(title, message, componentId);
+  }
+
+  dismissAlert(id?: ComponentId) {
+    this.ui.dismissAlert(id);
+  }
+
   connect(postConnectState: GameState) {
     if (this.bus.connected()) {
       this.setState(postConnectState);

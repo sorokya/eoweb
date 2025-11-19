@@ -48,6 +48,8 @@ export class CreateAccountDialog extends Base {
 
     this.form = document.createElement('form');
 
+    const formContainer = document.createElement('div');
+
     const usernameRow = document.createElement('div');
     usernameRow.className = classes['form-row'];
     const usernameLabel = document.createElement('label');
@@ -63,7 +65,7 @@ export class CreateAccountDialog extends Base {
     this.username.maxLength = MAX_USERNAME_LENGTH;
     this.username.addEventListener('focus', focus);
     usernameRow.appendChild(this.username);
-    this.form.appendChild(usernameRow);
+    formContainer.appendChild(usernameRow);
 
     const passwordRow = document.createElement('div');
     passwordRow.className = classes['form-row'];
@@ -80,7 +82,7 @@ export class CreateAccountDialog extends Base {
     this.password.maxLength = MAX_PASSWORD_LENGTH;
     this.password.addEventListener('focus', focus);
     passwordRow.appendChild(this.password);
-    this.form.appendChild(passwordRow);
+    formContainer.appendChild(passwordRow);
 
     const confirmPasswordRow = document.createElement('div');
     confirmPasswordRow.className = classes['form-row'];
@@ -97,7 +99,7 @@ export class CreateAccountDialog extends Base {
     this.confirmPassword.maxLength = MAX_PASSWORD_LENGTH;
     this.confirmPassword.addEventListener('focus', focus);
     confirmPasswordRow.appendChild(this.confirmPassword);
-    this.form.appendChild(confirmPasswordRow);
+    formContainer.appendChild(confirmPasswordRow);
 
     const nameRow = document.createElement('div');
     nameRow.className = classes['form-row'];
@@ -113,7 +115,7 @@ export class CreateAccountDialog extends Base {
     this.name.name = 'name';
     this.name.addEventListener('focus', focus);
     nameRow.appendChild(this.name);
-    this.form.appendChild(nameRow);
+    formContainer.appendChild(nameRow);
 
     const locationRow = document.createElement('div');
     locationRow.className = classes['form-row'];
@@ -129,7 +131,7 @@ export class CreateAccountDialog extends Base {
     this.location.name = 'location';
     this.location.addEventListener('focus', focus);
     locationRow.appendChild(this.location);
-    this.form.appendChild(locationRow);
+    formContainer.appendChild(locationRow);
 
     const emailRow = document.createElement('div');
     emailRow.className = classes['form-row'];
@@ -145,7 +147,7 @@ export class CreateAccountDialog extends Base {
     this.email.name = 'email';
     this.email.addEventListener('focus', focus);
     emailRow.appendChild(this.email);
-    this.form.appendChild(emailRow);
+    formContainer.appendChild(emailRow);
 
     const buttonRow = document.createElement('div');
     buttonRow.className = classes['button-row'];
@@ -157,8 +159,9 @@ export class CreateAccountDialog extends Base {
       client.setState(GameState.MainMenu);
     });
 
+    this.form.appendChild(formContainer);
+    this.form.appendChild(buttonRow);
     this.el.appendChild(this.form);
-    this.el.appendChild(buttonRow);
     parent.appendChild(this.el);
 
     this.formElements = [
@@ -188,23 +191,26 @@ export class CreateAccountDialog extends Base {
         !location ||
         !email
       ) {
-        const text = client.getDialogStrings(
+        const strings = client.getDialogStrings(
           DialogResourceID.ACCOUNT_CREATE_FIELDS_STILL_EMPTY,
         );
+        client.showAlert(strings[0], strings[1]);
         return false;
       }
 
       if (password !== confirmPassword) {
-        const text = client.getDialogStrings(
+        const strings = client.getDialogStrings(
           DialogResourceID.ACCOUNT_CREATE_PASSWORD_MISMATCH,
         );
+        client.showAlert(strings[0], strings[1]);
         return false;
       }
 
       if (!email.includes('@') || !email.includes('.')) {
-        const text = client.getDialogStrings(
+        const strings = client.getDialogStrings(
           DialogResourceID.ACCOUNT_CREATE_EMAIL_INVALID,
         );
+        client.showAlert(strings[0], strings[1]);
         return false;
       }
 

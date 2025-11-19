@@ -6,5 +6,9 @@ export enum ComponentId {
   ExitGame = 4,
   CreateCharacterDialog = 5,
   ChangePasswordDialog = 6,
-  MessageBox = 7,
+  SmallAlertLargeHeader = 7,
+  SmallAlertSmallHeader = 8,
+  LargeAlertSmallHeader = 9,
+  SmallConfirmSmallHeader = 10,
+  LargeConfirmSmallHeader = 11,
 }

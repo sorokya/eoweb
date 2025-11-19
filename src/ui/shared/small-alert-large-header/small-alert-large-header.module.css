@@ -1,0 +1,69 @@
+.small-alert-large-header {
+  width: clamp(200px, 40%, 300px);
+  aspect-ratio: 2 / 1;
+  background: url("/img/wood.png");
+  border-image: url("/img/border-medium.png") 9 / 9px 9px;
+  padding: 6px;
+  color: #fff;
+}
+
+.container {
+  position: relative;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.title-background {
+  position: absolute;
+  z-index: 0;
+  background: rgba(255, 255, 255, 0.3);
+  width: 96%;
+  height: 38px;
+  left: 4px;
+  top: 4px;
+  border: 1px solid #000;
+}
+
+.title {
+  position: absolute;
+  z-index: 1;
+  font-family: "ms_sans_serif_bold", sans-serif;
+  left: 45px;
+  top: 18px;
+}
+
+.title::before {
+  content: " ";
+  display: block;
+  background: url("/img/note.png");
+  width: 30px;
+  height: 32px;
+  position: absolute;
+  left: -36px;
+  top: -11px;
+}
+
+.message {
+  position: absolute;
+  z-index: 1;
+  top: 54px;
+  left: 6px;
+  width: 95%;
+}
+
+.btn-container {
+  position: absolute;
+  z-index: 1;
+
+  bottom: 4px;
+  right: 4px;
+
+  button {
+    width: 100px;
+    text-align: center;
+
+    span {
+      width: 100%;
+    }
+  }
+}

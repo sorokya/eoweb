@@ -14,8 +14,9 @@ import {
   SequenceStart,
   swapMultiples,
 } from 'eolib';
-import type { Client } from './client';
+import { type Client, GameState } from './client';
 import { MAX_CHALLENGE } from './consts';
+import { DialogResourceID } from './edf';
 import { registerAccountHandlers } from './handlers/account';
 import { registerAdminInteractHandlers } from './handlers/admin-interact';
 import { registerArenaHandlers } from './handlers/arena';
@@ -93,6 +94,16 @@ export class PacketBus {
     this.socket.addEventListener('error', (err) => {
       console.error('WebSocket error', err);
       this.client.disconnect();
+    });
+
+    this.socket.addEventListener('close', () => {
+      this.client.setState(GameState.MainMenu);
+
+      const strings = this.client.getDialogStrings(
+        DialogResourceID.CONNECTION_LOST_CONNECTION,
+      );
+      this.client.showAlert(strings[0], strings[1]);
+      this.socket = null;
     });
 
     this.sequencer.sequenceStart = SequenceStart.zero();

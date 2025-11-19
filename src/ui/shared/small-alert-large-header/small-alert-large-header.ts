@@ -1,35 +1,48 @@
+import type { Client } from '../../../client';
 import { playSfxById, SfxId } from '../../../sfx';
-import { Base } from '../../base-ui';
+import { ComponentId } from '../../component-id';
+import { BaseAlert } from '../base-alert';
+import { Button } from '../button';
 
-import './small-alert-large-header.css';
+import classes from './small-alert-large-header.module.css';
 
-export class SmallAlertLargeHeader extends Base {
-  public el = document.getElementById('small-alert');
-  private cover = document.getElementById('cover');
-  private title: HTMLSpanElement = this.el.querySelector('.title');
-  private message: HTMLSpanElement = this.el.querySelector('.message');
-  private btnCancel: HTMLButtonElement = this.el.querySelector(
-    'button[data-id="ok"]',
-  );
+export class SmallAlertLargeHeader extends BaseAlert {
+  public declare el: HTMLDivElement;
+  protected declare title: HTMLSpanElement;
+  protected declare message: HTMLSpanElement;
 
-  show() {
-    this.cover.classList.remove('hidden');
-    this.el.classList.remove('hidden');
-    this.el.style.left = `${Math.floor(window.innerWidth / 2 - this.el.clientWidth / 2)}px`;
-    this.el.style.top = `${Math.floor(window.innerHeight / 2 - this.el.clientHeight / 2)}px`;
-  }
-
-  constructor() {
+  constructor(parent: HTMLElement, client: Client) {
     super();
-    this.btnCancel.addEventListener('click', () => {
-      playSfxById(SfxId.ButtonClick);
-      this.hide();
-      this.cover.classList.add('hidden');
-    });
-  }
 
-  setContent(message: string, title = 'Error') {
-    this.title.innerText = title;
-    this.message.innerText = message;
+    this.el = document.createElement('div');
+    this.el.className = classes['small-alert-large-header'];
+
+    const container = document.createElement('div');
+    container.className = classes.container;
+
+    const titleBackground = document.createElement('div');
+    titleBackground.className = classes['title-background'];
+    container.appendChild(titleBackground);
+
+    this.title = document.createElement('span');
+    this.title.className = classes.title;
+    container.appendChild(this.title);
+
+    this.message = document.createElement('span');
+    this.message.className = classes.message;
+    container.appendChild(this.message);
+
+    const btnContainer = document.createElement('div');
+    btnContainer.className = classes['btn-container'];
+    container.appendChild(btnContainer);
+
+    const btnCancel = new Button('OK!', btnContainer);
+    btnCancel.addEventListener('click', () => {
+      playSfxById(SfxId.ButtonClick);
+      client.dismissAlert(ComponentId.SmallAlertLargeHeader);
+    });
+
+    this.el.appendChild(container);
+    parent.appendChild(this.el);
   }
 }

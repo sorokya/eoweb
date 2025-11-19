@@ -4,15 +4,17 @@ import { ComponentId } from './component-id';
 import { CreateAccountDialog } from './pre-game/create-account-dialog';
 import { LoginDialog } from './pre-game/login-dialog/login-dialog';
 import { MainMenu } from './pre-game/main-menu';
+import type { BaseAlert } from './shared/base-alert';
 import { Cover } from './shared/cover';
 import { DialogContainer } from './shared/dialog-container';
+import { SmallAlertLargeHeader } from './shared/small-alert-large-header';
 
 export class UIManager {
   private baseComponents: Map<ComponentId, Base> = new Map();
   private dialogContainer: DialogContainer;
   private dialogs: Map<ComponentId, Base> = new Map();
-  private messageBoxContainer: DialogContainer;
-  private messageBoxes: Map<ComponentId, Base> = new Map();
+  private alertContainer: DialogContainer;
+  private alerts: Map<ComponentId, BaseAlert> = new Map();
   private cover: Cover;
 
   hideAll() {
@@ -22,12 +24,82 @@ export class UIManager {
     for (const child of this.dialogs.values()) {
       child.hide();
     }
-    for (const child of this.baseComponents.values()) {
+    for (const child of this.alerts.values()) {
       child.hide();
     }
     this.cover.hide();
     this.dialogContainer.hide();
-    this.messageBoxContainer.hide();
+    this.alertContainer.hide();
+  }
+
+  showAlert(title: string, message: string, id: ComponentId) {
+    const alert = this.alerts.get(id);
+    if (!alert) {
+      throw new Error('UIManager: No alert with the given ID');
+    }
+
+    alert.setContent(title, message);
+    this.alertContainer.show();
+    this.cover.show();
+    alert.show();
+  }
+
+  dismissAlert(id?: ComponentId) {
+    if (id) {
+      const alert = this.alerts.get(id);
+      if (alert) {
+        alert.hide();
+      }
+    } else {
+      for (const child of this.alerts.values()) {
+        child.hide();
+      }
+    }
+
+    const alertVisible = Array.from(this.alerts.values()).some(
+      (a) => !a.hidden,
+    );
+
+    const dialogVisible = Array.from(this.dialogs.values()).some(
+      (d) => !d.hidden,
+    );
+
+    if (!dialogVisible && !alertVisible) {
+      this.cover.hide();
+    }
+
+    if (!alertVisible) {
+      this.alertContainer.hide();
+    }
+  }
+
+  dismissDialog(id?: ComponentId) {
+    if (id) {
+      const dialog = this.dialogs.get(id);
+      if (dialog) {
+        dialog.hide();
+      }
+    } else {
+      for (const child of this.dialogs.values()) {
+        child.hide();
+      }
+    }
+
+    const alertVisible = Array.from(this.alerts.values()).some(
+      (a) => !a.hidden,
+    );
+
+    const dialogVisible = Array.from(this.dialogs.values()).some(
+      (d) => !d.hidden,
+    );
+
+    if (!dialogVisible && !alertVisible) {
+      this.cover.hide();
+    }
+
+    if (!dialogVisible) {
+      this.dialogContainer.hide();
+    }
   }
 
   showBaseComponent(id: ComponentId) {
@@ -64,7 +136,11 @@ export class UIManager {
       new CreateAccountDialog(this.dialogContainer.el, client),
     );
 
-    this.messageBoxContainer = new DialogContainer(parent);
+    this.alertContainer = new DialogContainer(parent);
+    this.alerts.set(
+      ComponentId.SmallAlertLargeHeader,
+      new SmallAlertLargeHeader(this.alertContainer.el, client),
+    );
 
     this.hideAll();
   }

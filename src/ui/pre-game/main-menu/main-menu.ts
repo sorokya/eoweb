@@ -41,19 +41,29 @@ export class MainMenu extends Base {
       this.el.appendChild(this.txtHost);
     }
 
-    this.btnCreateAccount = new Button('Create Account', this.el);
+    this.btnCreateAccount = new Button(
+      'Create Account',
+      this.el,
+      'button',
+      'large',
+    );
     this.btnCreateAccount.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       client.connect(GameState.CreateAccount);
     });
 
-    this.btnPlayGame = new Button('Play Game', this.el);
+    this.btnPlayGame = new Button('Play Game', this.el, 'button', 'large');
     this.btnPlayGame.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       client.connect(GameState.Login);
     });
 
-    this.btnViewCredits = new Button('View Credits', this.el);
+    this.btnViewCredits = new Button(
+      'View Credits',
+      this.el,
+      'button',
+      'large',
+    );
     this.btnViewCredits.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       if (client.config.creditsUrl) {

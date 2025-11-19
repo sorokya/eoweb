@@ -5,13 +5,14 @@ export class Button extends HTMLButtonElement {
     label: string,
     parent: HTMLElement,
     type: 'button' | 'submit' | 'reset' = 'button',
+    variant: 'large' | 'small' = 'small',
   ) {
     super();
     const text = document.createElement('span');
     text.innerText = label;
     this.appendChild(text);
     this.type = type;
-    this.className = classes.button;
+    this.classList.add(classes.button, classes[variant]);
     parent.appendChild(this);
   }
 }
