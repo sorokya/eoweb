@@ -29,43 +29,43 @@ type Events = {
 };
 
 export class CreateCharacterForm extends Base {
-  protected container = document.getElementById('create-character-form');
+  public el = document.getElementById('create-character-form');
   private emitter = mitt<Events>();
   private cover = document.getElementById('cover');
-  private form: HTMLFormElement = this.container.querySelector('form');
-  private preview: HTMLImageElement = this.container.querySelector(
+  private form: HTMLFormElement = this.el.querySelector('form');
+  private preview: HTMLImageElement = this.el.querySelector(
     '#create-character-preview',
   );
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private name: HTMLInputElement = this.container.querySelector(
+  private name: HTMLInputElement = this.el.querySelector(
     '#create-character-name',
   );
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
+  private btnCancel: HTMLButtonElement = this.el.querySelector(
     'button[data-id="cancel"]',
   );
-  private btnToggleGender: HTMLButtonElement = this.container.querySelector(
+  private btnToggleGender: HTMLButtonElement = this.el.querySelector(
     'button[data-toggle="gender"]',
   );
-  private lblGender: HTMLDivElement = this.container.querySelector(
+  private lblGender: HTMLDivElement = this.el.querySelector(
     'div[data-id="gender"]',
   );
-  private btnToggleHairStyle: HTMLButtonElement = this.container.querySelector(
+  private btnToggleHairStyle: HTMLButtonElement = this.el.querySelector(
     'button[data-toggle="hair-style"]',
   );
-  private lblHairStyle: HTMLDivElement = this.container.querySelector(
+  private lblHairStyle: HTMLDivElement = this.el.querySelector(
     'div[data-id="hair-style"]',
   );
-  private btnToggleHairColor: HTMLButtonElement = this.container.querySelector(
+  private btnToggleHairColor: HTMLButtonElement = this.el.querySelector(
     'button[data-toggle="hair-color"]',
   );
-  private lblHairColor: HTMLDivElement = this.container.querySelector(
+  private lblHairColor: HTMLDivElement = this.el.querySelector(
     'div[data-id="hair-color"]',
   );
-  private btnToggleSkin: HTMLButtonElement = this.container.querySelector(
+  private btnToggleSkin: HTMLButtonElement = this.el.querySelector(
     'button[data-toggle="skin"]',
   );
-  private lblSkin: HTMLDivElement = this.container.querySelector(
+  private lblSkin: HTMLDivElement = this.el.querySelector(
     'div[data-id="skin"]',
   );
   private character: CharacterMapInfo | undefined;
@@ -169,9 +169,9 @@ export class CreateCharacterForm extends Base {
 
   show() {
     this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    this.el.classList.remove('hidden');
+    this.el.style.left = `${Math.floor(window.innerWidth / 2 - this.el.clientWidth / 2)}px`;
+    this.el.style.top = `${Math.floor(window.innerHeight / 2 - this.el.clientHeight / 2)}px`;
     this.name.value = '';
     this.character = this.client.getCharacterById(this.client.playerId);
     this.character.gender = Gender.Female;
@@ -192,7 +192,7 @@ export class CreateCharacterForm extends Base {
   }
 
   hide() {
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
     this.cover.classList.add('hidden');
     this.open = false;
   }

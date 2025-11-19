@@ -4,22 +4,21 @@ import { Base } from '../../base-ui';
 import './item-amount-dialog.css';
 
 export class ItemAmountDialog extends Base {
-  protected container = document.getElementById('item-amount-dialog');
+  public el = document.getElementById('item-amount-dialog');
   private cover = document.getElementById('cover');
-  private header = this.container.querySelector<HTMLDivElement>('.header');
-  private label: HTMLParagraphElement = this.container.querySelector('.label');
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
+  private header = this.el.querySelector<HTMLDivElement>('.header');
+  private label: HTMLParagraphElement = this.el.querySelector('.label');
+  private btnCancel: HTMLButtonElement = this.el.querySelector(
     'button[data-id="cancel"]',
   );
-  private form: HTMLFormElement = this.container.querySelector('form');
-  private txtAmount: HTMLInputElement = this.container.querySelector('input');
+  private form: HTMLFormElement = this.el.querySelector('form');
+  private txtAmount: HTMLInputElement = this.el.querySelector('input');
   private amount = 1;
   private maxAmount = 1;
   private callback: ((amount: number) => void) | null = null;
   private cancelCallback: (() => void) | null = null;
-  private slider: HTMLDivElement =
-    this.container.querySelector('.slider-container');
-  private thumb: HTMLDivElement = this.container.querySelector('.slider-thumb');
+  private slider: HTMLDivElement = this.el.querySelector('.slider-container');
+  private thumb: HTMLDivElement = this.el.querySelector('.slider-thumb');
   private dragging = false;
 
   setHeader(header: 'drop' | 'junk' | 'give' | 'trade' | 'shop' | 'bank') {
@@ -48,9 +47,9 @@ export class ItemAmountDialog extends Base {
     this.txtAmount.value = this.amount.toString();
     this.thumb.style.left = '0';
     this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    this.el.classList.remove('hidden');
+    this.el.style.left = `${Math.floor(window.innerWidth / 2 - this.el.clientWidth / 2)}px`;
+    this.el.style.top = `${Math.floor(window.innerHeight / 2 - this.el.clientHeight / 2)}px`;
     this.txtAmount.focus();
   }
 

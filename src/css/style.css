@@ -1,7 +1,4 @@
-:root {
-  --eo-brown: #7b5a29;
-  --eo-font-color-light: #f0f0c8;
-}
+@import "./variables.css";
 
 @font-face {
   font-family: ms_sans_serif;
@@ -22,7 +19,6 @@ body {
   font-family: "ms_sans_serif", sans-serif;
   padding: 0;
   margin: 0;
-  overflow: hidden;
 }
 
 * {
@@ -79,38 +75,16 @@ body {
 
 #ui {
   position: absolute;
-  display: flex;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   z-index: 1;
-}
-
-#dialogs {
   display: flex;
-  gap: 1em;
-  width: 100%;
-  height: 100%;
   justify-content: center;
   align-items: center;
-  position: absolute;
-  top: 0;
-  z-index: 1010;
 }
 
 .hidden {
   display: none !important;
-}
-
-#cover {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.1);
-  /* optional dimming effect */
-  z-index: 1000;
-  /* higher than game UI, lower than modal */
 }
 
 .title {

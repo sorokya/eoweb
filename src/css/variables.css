@@ -1,0 +1,7 @@
+:root {
+  /* Used for styling Button component */
+  --button-text-color: #cdbd83;
+  --button-stroke-color: #080808;
+  --button-hover-text-color: #e6c59c;
+  --button-hover-text-shadow: #fff;
+}

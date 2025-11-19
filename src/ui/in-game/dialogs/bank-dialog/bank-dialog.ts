@@ -18,16 +18,16 @@ export class BankDialog extends Base {
   private client: Client;
   private dialogs = document.getElementById('dialogs');
   private cover = document.querySelector<HTMLDivElement>('#cover');
-  protected container = document.getElementById('bank');
-  private itemList = this.container.querySelector<HTMLDivElement>('.item-list');
-  private balance = this.container.querySelector<HTMLSpanElement>('.balance');
+  public el = document.getElementById('bank');
+  private itemList = this.el.querySelector<HTMLDivElement>('.item-list');
+  private balance = this.el.querySelector<HTMLSpanElement>('.balance');
   private emitter = mitt<Events>();
 
   constructor(client: Client) {
     super();
     this.client = client;
 
-    const btnOk = this.container.querySelector<HTMLButtonElement>(
+    const btnOk = this.el.querySelector<HTMLButtonElement>(
       'button[data-id="ok"]',
     );
     btnOk.addEventListener('click', () => {
@@ -90,14 +90,14 @@ export class BankDialog extends Base {
   show() {
     this.render();
     this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
     this.dialogs.classList.remove('hidden');
     this.client.typing = true;
   }
 
   hide() {
     this.cover.classList.add('hidden');
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
       this.dialogs.classList.add('hidden');

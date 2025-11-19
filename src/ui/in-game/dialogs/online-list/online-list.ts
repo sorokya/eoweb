@@ -13,10 +13,10 @@ export class OnlineList extends BaseDialogMd<Events> {
   constructor(client: Client) {
     super(client, document.querySelector('#online-list'), 'Online Players');
 
-    const playersContainer = this.container.querySelector('.players');
+    const playersContainer = this.el.querySelector('.players');
 
     this.client.on('playersListUpdated', (players) => {
-      if (!this.container) return;
+      if (!this.el) return;
 
       this.updateLabelText(`Online Players (${players.length})`);
       playersContainer.innerHTML = '';

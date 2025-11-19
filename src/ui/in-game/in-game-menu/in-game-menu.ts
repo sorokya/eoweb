@@ -13,16 +13,14 @@ export class InGameMenu extends Base {
 
   constructor() {
     super();
-    this.container = document.querySelector('#in-game-menu');
+    this.el = document.querySelector('#in-game-menu');
 
-    const btnInventory = this.container.querySelector(
-      'button[data-id="inventory"]',
-    );
-    const btnMap = this.container.querySelector('button[data-id="map"]');
-    const btnSpells = this.container.querySelector('button[data-id="spells"]');
-    const btnStats = this.container.querySelector('button[data-id="stats"]');
-    const btnOnline = this.container.querySelector('button[data-id="online"]');
-    const btnParty = this.container.querySelector('button[data-id="party"]');
+    const btnInventory = this.el.querySelector('button[data-id="inventory"]');
+    const btnMap = this.el.querySelector('button[data-id="map"]');
+    const btnSpells = this.el.querySelector('button[data-id="spells"]');
+    const btnStats = this.el.querySelector('button[data-id="stats"]');
+    const btnOnline = this.el.querySelector('button[data-id="online"]');
+    const btnParty = this.el.querySelector('button[data-id="party"]');
 
     btnInventory.addEventListener('click', (e) => {
       e.stopPropagation();

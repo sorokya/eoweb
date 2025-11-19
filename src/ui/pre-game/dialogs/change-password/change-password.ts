@@ -16,23 +16,23 @@ type Events = {
 };
 
 export class ChangePasswordForm extends Base {
-  protected container = document.getElementById('change-password-form');
+  public el = document.getElementById('change-password-form');
   private emitter = mitt<Events>();
   private cover: HTMLDivElement = document.querySelector('#cover');
-  private username: HTMLInputElement = this.container.querySelector(
+  private username: HTMLInputElement = this.el.querySelector(
     'input[name="username"]',
   );
-  private oldPassword: HTMLInputElement = this.container.querySelector(
+  private oldPassword: HTMLInputElement = this.el.querySelector(
     'input[name="old-password"]',
   );
-  private newPassword: HTMLInputElement = this.container.querySelector(
+  private newPassword: HTMLInputElement = this.el.querySelector(
     'input[name="new-password"]',
   );
-  private confirmNewPassword: HTMLInputElement = this.container.querySelector(
+  private confirmNewPassword: HTMLInputElement = this.el.querySelector(
     'input[name="confirm-new-password"]',
   );
-  private form: HTMLFormElement = this.container.querySelector('form');
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
+  private form: HTMLFormElement = this.el.querySelector('form');
+  private btnCancel: HTMLButtonElement = this.el.querySelector(
     'button[data-id="cancel"]',
   );
 
@@ -57,15 +57,15 @@ export class ChangePasswordForm extends Base {
     this.newPassword.value = '';
     this.confirmNewPassword.value = '';
     this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    this.el.classList.remove('hidden');
+    this.el.style.left = `${Math.floor(window.innerWidth / 2 - this.el.clientWidth / 2)}px`;
+    this.el.style.top = `${Math.floor(window.innerHeight / 2 - this.el.clientHeight / 2)}px`;
     this.username.focus();
   }
 
   hide() {
     this.open = false;
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
     this.cover.classList.add('hidden');
   }
 

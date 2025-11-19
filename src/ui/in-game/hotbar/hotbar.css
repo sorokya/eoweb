@@ -15,7 +15,7 @@
   position: relative;
   width: 4em;
   height: 4em;
-  border-image: url("/border-thin.png") 9 / 9px 9px;
+  border-image: url("/img/border-thin.png") 9 / 9px 9px;
   display: flex;
   justify-content: center;
   align-items: center;

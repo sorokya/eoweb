@@ -17,7 +17,7 @@ export abstract class BaseDialogMd<
 
   constructor(client: Client, container: HTMLDivElement, labelText: string) {
     super();
-    this.container = container;
+    this.el = container;
     this.client = client;
     this.dialogContents = container.querySelector('.dialog-contents');
     this.btnCancel = container.querySelector('button[data-id="cancel"]');
@@ -86,13 +86,13 @@ export abstract class BaseDialogMd<
 
   show() {
     this.render();
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
     this.dialogs.classList.remove('hidden');
     this.setScrollThumbPosition();
   }
 
   hide() {
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
       this.dialogs.classList.add('hidden');

@@ -132,7 +132,7 @@ import {
 import mitt, { type Emitter } from 'mitt';
 import { Notyf } from 'notyf';
 import { Atlas } from './atlas';
-import type { PacketBus } from './bus';
+import { PacketBus } from './bus';
 import { ChatBubble } from './chat-bubble';
 import {
   clearRectangles,
@@ -143,7 +143,7 @@ import {
   getNpcIntersecting,
   getSignIntersecting,
 } from './collision';
-import { getDefaultConfig, loadConfig } from './config';
+import { type Config, loadConfig } from './config';
 import {
   CLEAR_OUT_OF_RANGE_TICKS,
   COLORS,
@@ -163,43 +163,6 @@ import { Door } from './door';
 import { type DialogResourceID, type Edf, EOResourceID } from './edf';
 import { Sans11Font } from './fonts/sans-11';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
-import { registerAccountHandlers } from './handlers/account';
-import { registerAdminInteractHandlers } from './handlers/admin-interact';
-import { registerArenaHandlers } from './handlers/arena';
-import { registerAttackHandlers } from './handlers/attack';
-import { registerAvatarHandlers } from './handlers/avatar';
-import { registerBankHandlers } from './handlers/bank';
-import { registerCastHandlers } from './handlers/cast';
-import { registerChairHandlers } from './handlers/chair';
-import { registerCharacterHandlers } from './handlers/character';
-import { registerChestHandlers } from './handlers/chest';
-import { registerConnectionHandlers } from './handlers/connection';
-import { registerDoorHandlers } from './handlers/door';
-import { registerEffectHandlers } from './handlers/effect';
-import { registerEmoteHandlers } from './handlers/emote';
-import { registerFaceHandlers } from './handlers/face';
-import { registerInitHandlers } from './handlers/init';
-import { registerItemHandlers } from './handlers/item';
-import { registerLockerHandlers } from './handlers/locker';
-import { registerLoginHandlers } from './handlers/login';
-import { registerMessageHandlers } from './handlers/message';
-import { registerMusicHandlers } from './handlers/music';
-import { registerNpcHandlers } from './handlers/npc';
-import { registerPaperdollHandlers } from './handlers/paperdoll';
-import { registerPartyHandlers } from './handlers/party';
-import { registerPlayersHandlers } from './handlers/players';
-import { registerQuestHandlers } from './handlers/quest';
-import { registerRangeHandlers } from './handlers/range';
-import { registerRecoverHandlers } from './handlers/recover';
-import { registerRefreshHandlers } from './handlers/refresh';
-import { registerShopHandlers } from './handlers/shop';
-import { registerSitHandlers } from './handlers/sit';
-import { registerSpellHandlers } from './handlers/spell';
-import { registerStatSkillHandlers } from './handlers/stat-skill';
-import { registerTalkHandlers } from './handlers/talk';
-import { registerWalkHandlers } from './handlers/walk';
-import { registerWarpHandlers } from './handlers/warp';
-import { registerWelcomeHandlers } from './handlers/welcome';
 import { MapRenderer } from './map';
 import { MinimapRenderer } from './minimap';
 import { getTimestamp, MovementController } from './movement-controller';
@@ -219,10 +182,9 @@ import type { NpcAnimation } from './render/npc-base-animation';
 import { NpcDeathAnimation } from './render/npc-death';
 import { playSfxById, SfxId } from './sfx';
 import { ChatIcon } from './ui/chat-icon';
+import { ComponentId } from './ui/component-id';
 import { type HotbarSlot, HotbarSlotType } from './ui/hotbar-slot';
-import { InGameUI } from './ui/in-game/in-game-ui';
-import { PreGameUI } from './ui/pre-game/pre-game-ui';
-import { SharedUI } from './ui/shared/shared-ui';
+import { UIManager } from './ui/ui-manager';
 import { capitalize } from './utils/capitalize';
 import {
   EffectAnimationType,
@@ -452,8 +414,8 @@ enum PlayerMenuItem {
 export class Client {
   private emitter: Emitter<ClientEvents>;
   tickCount = 0;
-  bus: PacketBus | null = null;
-  config = getDefaultConfig();
+  bus: PacketBus;
+  config: Config;
   version: Version;
   challenge: number;
   accountCreateData: AccountCreateData | null = null;
@@ -585,9 +547,8 @@ export class Client {
       ownerId: number;
     }
   > = new Map();
-  preGameUI: PreGameUI;
-  inGameUI: InGameUI;
-  sharedUI: SharedUI;
+  ui: UIManager;
+  postConnectState: GameState | undefined;
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -596,27 +557,38 @@ export class Client {
     this.version.minor = 0;
     this.version.patch = 28;
     this.challenge = 0;
-    getEif().then((eif) => {
+
+    const uiContainer = document.querySelector<HTMLDivElement>('#ui');
+    if (!uiContainer) {
+      throw new Error('UI container not found');
+    }
+
+    Promise.all([
+      getEif(),
+      getEcf(),
+      getEnf(),
+      getEsf(),
+      getEdf(4),
+      getEdf(5),
+      getEdf(6),
+      loadConfig(),
+    ]).then(([eif, ecf, enf, esf, edf4, edf5, edf6, config]) => {
       this.eif = eif;
-    });
-    getEcf().then((ecf) => {
       this.ecf = ecf;
-    });
-    getEnf().then((enf) => {
       this.enf = enf;
-    });
-    getEsf().then((esf) => {
       this.esf = esf;
+      this.edfs.jukebox = edf4;
+      this.edfs.game1 = edf5;
+      this.edfs.game2 = edf6;
+      this.config = config;
+
+      this.ui = new UIManager(uiContainer, this);
+      this.bus = new PacketBus(this);
+      this.setState(GameState.MainMenu);
+
+      document.title = config.title;
     });
-    getEdf(4).then((edf) => {
-      this.edfs.jukebox = edf;
-    });
-    getEdf(5).then((edf) => {
-      this.edfs.game1 = edf;
-    });
-    getEdf(6).then((edf) => {
-      this.edfs.game2 = edf;
-    });
+
     this.nearby = new NearbyInfo();
     this.nearby.characters = [];
     this.nearby.npcs = [];
@@ -624,34 +596,6 @@ export class Client {
     this.mapRenderer = new MapRenderer(this);
     this.minimapRenderer = new MinimapRenderer(this);
     this.movementController = new MovementController(this);
-    loadConfig().then((config) => {
-      this.config = config;
-
-      // TODO: implement these UI changes
-      /*
-      const txtHost =
-        document.querySelector<HTMLInputElement>('input[name="host"]');
-      if (this.config.staticHost) {
-        txtHost.classList.add('hidden');
-      }
-      txtHost.value = config.host;
-      */
-      document.title = config.title;
-
-      /*
-      const mainMenuLogo =
-        document.querySelector<HTMLDivElement>('#main-menu-logo');
-      mainMenuLogo.setAttribute('data-slogan', config.slogan);
-      */
-
-      const uiContainer = document.querySelector<HTMLDivElement>('#ui');
-      if (!uiContainer) {
-        throw new Error('UI container not found');
-      }
-      this.preGameUI = new PreGameUI(uiContainer, this);
-      this.inGameUI = new InGameUI(uiContainer);
-      this.sharedUI = new SharedUI(uiContainer);
-    });
     this.atlas = new Atlas(this);
     this.sans11 = new Sans11Font(this.atlas);
   }
@@ -1411,47 +1355,6 @@ export class Client {
     handler: (data: ClientEvents[Event]) => void,
   ) {
     this.emitter.on(event, handler);
-  }
-
-  setBus(bus: PacketBus) {
-    this.bus = bus;
-    registerInitHandlers(this);
-    registerConnectionHandlers(this);
-    registerLoginHandlers(this);
-    registerWelcomeHandlers(this);
-    registerPlayersHandlers(this);
-    registerRecoverHandlers(this);
-    registerMessageHandlers(this);
-    registerAvatarHandlers(this);
-    registerFaceHandlers(this);
-    registerWalkHandlers(this);
-    registerSitHandlers(this);
-    registerChairHandlers(this);
-    registerWarpHandlers(this);
-    registerRefreshHandlers(this);
-    registerNpcHandlers(this);
-    registerRangeHandlers(this);
-    registerTalkHandlers(this);
-    registerAttackHandlers(this);
-    registerArenaHandlers(this);
-    registerAccountHandlers(this);
-    registerCharacterHandlers(this);
-    registerDoorHandlers(this);
-    registerEffectHandlers(this);
-    registerItemHandlers(this);
-    registerAdminInteractHandlers(this);
-    registerQuestHandlers(this);
-    registerMusicHandlers(this);
-    registerEmoteHandlers(this);
-    registerPaperdollHandlers(this);
-    registerChestHandlers(this);
-    registerShopHandlers(this);
-    registerBankHandlers(this);
-    registerLockerHandlers(this);
-    registerStatSkillHandlers(this);
-    registerSpellHandlers(this);
-    registerCastHandlers(this);
-    registerPartyHandlers(this);
   }
 
   occupied(coords: Vector2): boolean {
@@ -2463,14 +2366,31 @@ export class Client {
     this.onlinePlayers = [];
     this.equipmentSwap = null;
     this.itemProtectionTimers.clear();
+
+    switch (state) {
+      case GameState.MainMenu:
+        this.ui.showBaseComponent(ComponentId.MainMenu);
+        break;
+      case GameState.CreateAccount:
+        break;
+      case GameState.Login:
+        break;
+      case GameState.CharacterSelect:
+        break;
+      case GameState.InGame:
+        break;
+    }
+  }
+
+  connect(postConnectState: GameState) {
+    this.postConnectState = postConnectState;
+    this.bus.connect();
   }
 
   disconnect() {
     this.setState(GameState.MainMenu);
     this.clearSession();
-    if (this.bus) {
-      this.bus.disconnect();
-    }
+    this.bus.disconnect();
   }
 
   clearSession() {

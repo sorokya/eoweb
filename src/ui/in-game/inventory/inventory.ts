@@ -49,8 +49,8 @@ type Events = {
 export class Inventory extends Base {
   private client: Client;
   private emitter = mitt<Events>();
-  protected container: HTMLDivElement = document.querySelector('#inventory');
-  private grid: HTMLDivElement = this.container.querySelector('.grid');
+  protected el: HTMLDivElement = document.querySelector('#inventory');
+  private grid: HTMLDivElement = this.el.querySelector('.grid');
   private positions: ItemPosition[] = [];
   private tab = 0;
   private uiContainer = document.getElementById('ui');
@@ -66,22 +66,21 @@ export class Inventory extends Base {
   } | null = null;
 
   private currentWeight: HTMLSpanElement =
-    this.container.querySelector('.weight .current');
-  private maxWeight: HTMLSpanElement =
-    this.container.querySelector('.weight .max');
-  private btnPaperdoll: HTMLButtonElement = this.container.querySelector(
+    this.el.querySelector('.weight .current');
+  private maxWeight: HTMLSpanElement = this.el.querySelector('.weight .max');
+  private btnPaperdoll: HTMLButtonElement = this.el.querySelector(
     'button[data-id="paperdoll"]',
   );
-  private btnDrop: HTMLButtonElement = this.container.querySelector(
+  private btnDrop: HTMLButtonElement = this.el.querySelector(
     'button[data-id="drop"]',
   );
-  private btnJunk: HTMLButtonElement = this.container.querySelector(
+  private btnJunk: HTMLButtonElement = this.el.querySelector(
     'button[data-id="junk"]',
   );
-  private btnTab1: HTMLButtonElement = this.container.querySelector(
+  private btnTab1: HTMLButtonElement = this.el.querySelector(
     '.tabs > button:nth-child(1)',
   );
-  private btnTab2: HTMLButtonElement = this.container.querySelector(
+  private btnTab2: HTMLButtonElement = this.el.querySelector(
     '.tabs > button:nth-child(2)',
   );
   private lastItemSelected = 0;
@@ -324,7 +323,7 @@ export class Inventory extends Base {
     });
 
     window.addEventListener('resize', () => {
-      this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+      this.el.style.top = `${Math.floor(window.innerHeight / 2 - this.el.clientHeight / 2)}px`;
     });
   }
 
@@ -581,12 +580,12 @@ export class Inventory extends Base {
 
   show() {
     this.render();
-    this.container.classList.remove('hidden');
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    this.el.classList.remove('hidden');
+    this.el.style.top = `${Math.floor(window.innerHeight / 2 - this.el.clientHeight / 2)}px`;
   }
 
   toggle() {
-    if (this.container.classList.contains('hidden')) {
+    if (this.el.classList.contains('hidden')) {
       this.show();
     } else {
       this.hide();

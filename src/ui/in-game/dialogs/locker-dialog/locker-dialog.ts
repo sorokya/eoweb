@@ -10,17 +10,16 @@ import './locker-dialog.css';
 
 export class LockerDialog extends Base {
   private client: Client;
-  protected container = document.getElementById('locker');
+  public el = document.getElementById('locker');
   private cover = document.querySelector<HTMLDivElement>('#cover');
-  private btnCancel = this.container.querySelector<HTMLButtonElement>(
+  private btnCancel = this.el.querySelector<HTMLButtonElement>(
     'button[data-id="cancel"]',
   );
   private scrollHandle =
-    this.container.querySelector<HTMLDivElement>('.scroll-handle');
-  private title = this.container.querySelector<HTMLSpanElement>('.title');
+    this.el.querySelector<HTMLDivElement>('.scroll-handle');
+  private title = this.el.querySelector<HTMLSpanElement>('.title');
   private dialogs = document.getElementById('dialogs');
-  private itemList =
-    this.container.querySelector<HTMLDivElement>('.locker-items');
+  private itemList = this.el.querySelector<HTMLDivElement>('.locker-items');
   private items: ThreeItem[] = [];
 
   constructor(client: Client) {
@@ -89,7 +88,7 @@ export class LockerDialog extends Base {
 
   show() {
     this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
     this.dialogs.classList.remove('hidden');
     this.client.typing = true;
     this.setScrollThumbPosition();
@@ -97,7 +96,7 @@ export class LockerDialog extends Base {
 
   hide() {
     this.cover.classList.add('hidden');
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
       this.dialogs.classList.add('hidden');

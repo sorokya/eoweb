@@ -4,7 +4,7 @@
   width: 186px;
   height: 270px;
   padding: 6px;
-  border-image: url("/border-thin.png") 9 / 9px 9px;
+  border-image: url("/img/border-thin.png") 9 / 9px 9px;
   background: #7b5a29;
   user-select: none;
   z-index: 1030;

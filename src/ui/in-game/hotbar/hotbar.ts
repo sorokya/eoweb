@@ -7,7 +7,7 @@ import { HotbarSlot, HotbarSlotType } from '../../hotbar-slot';
 import './hotbar.css';
 
 export class Hotbar extends Base {
-  protected container: HTMLDivElement = document.querySelector('#hotbar');
+  protected el: HTMLDivElement = document.querySelector('#hotbar');
   private client: Client;
 
   constructor(client: Client) {
@@ -22,7 +22,7 @@ export class Hotbar extends Base {
         this.client.useHotbarSlot(i);
       });
 
-      this.container.appendChild(slot);
+      this.el.appendChild(slot);
     }
   }
 
@@ -32,7 +32,7 @@ export class Hotbar extends Base {
 
   show() {
     this.render();
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
   }
 
   setSlot(slotIndex: number, type: HotbarSlotType, typeId: number) {
@@ -54,7 +54,7 @@ export class Hotbar extends Base {
         continue;
       }
 
-      const element = this.container.children[index] as HTMLDivElement;
+      const element = this.el.children[index] as HTMLDivElement;
       element.innerHTML = '';
 
       if (slot.type === HotbarSlotType.Skill) {

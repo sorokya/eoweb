@@ -12,15 +12,15 @@ export function getOffsetY(index: number): number {
 }
 
 export class OffsetTweaker extends Base {
-  protected container = document.querySelector('#offset-tweaker');
-  private txtX0: HTMLInputElement = this.container.querySelector('#tweak-x-0');
-  private txtY0: HTMLInputElement = this.container.querySelector('#tweak-y-0');
-  private txtX1: HTMLInputElement = this.container.querySelector('#tweak-x-1');
-  private txtY1: HTMLInputElement = this.container.querySelector('#tweak-y-1');
-  private txtX2: HTMLInputElement = this.container.querySelector('#tweak-x-2');
-  private txtY2: HTMLInputElement = this.container.querySelector('#tweak-y-2');
-  private txtX3: HTMLInputElement = this.container.querySelector('#tweak-x-3');
-  private txtY3: HTMLInputElement = this.container.querySelector('#tweak-y-3');
+  public el = document.querySelector('#offset-tweaker');
+  private txtX0: HTMLInputElement = this.el.querySelector('#tweak-x-0');
+  private txtY0: HTMLInputElement = this.el.querySelector('#tweak-y-0');
+  private txtX1: HTMLInputElement = this.el.querySelector('#tweak-x-1');
+  private txtY1: HTMLInputElement = this.el.querySelector('#tweak-y-1');
+  private txtX2: HTMLInputElement = this.el.querySelector('#tweak-x-2');
+  private txtY2: HTMLInputElement = this.el.querySelector('#tweak-y-2');
+  private txtX3: HTMLInputElement = this.el.querySelector('#tweak-x-3');
+  private txtY3: HTMLInputElement = this.el.querySelector('#tweak-y-3');
 
   constructor() {
     super();

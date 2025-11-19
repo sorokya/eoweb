@@ -130,6 +130,8 @@ function handleInitOk(
     const writer = new EoWriter();
     writer.addString(client.loginToken);
     bus.sendBuf(PacketFamily.Login, PacketAction.Use, writer.toByteArray());
+  } else if (client.postConnectState) {
+    client.setState(client.postConnectState);
   }
 }
 

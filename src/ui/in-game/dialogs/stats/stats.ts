@@ -50,7 +50,7 @@ class StatUpgradeButton {
 }
 
 export class Stats extends Base {
-  protected container: HTMLDivElement = document.querySelector('#stats');
+  protected el: HTMLDivElement = document.querySelector('#stats');
   private dialogs = document.getElementById('dialogs');
   private client: Client;
   private statItems: { [key: string]: StatItem };
@@ -108,7 +108,7 @@ export class Stats extends Base {
       }),
     };
 
-    const btnBack = this.container.querySelector<HTMLButtonElement>(
+    const btnBack = this.el.querySelector<HTMLButtonElement>(
       'button[data-id="cancel"]',
     );
     if (btnBack) {
@@ -208,13 +208,13 @@ export class Stats extends Base {
   show() {
     this.open = true;
     this.render();
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
     this.dialogs.classList.remove('hidden');
   }
 
   hide() {
     this.open = false;
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
       this.dialogs.classList.add('hidden');
@@ -223,7 +223,7 @@ export class Stats extends Base {
   }
 
   toggle() {
-    if (this.container.classList.contains('hidden')) {
+    if (this.el.classList.contains('hidden')) {
       this.show();
     } else {
       this.hide();

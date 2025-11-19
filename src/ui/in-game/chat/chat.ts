@@ -13,31 +13,27 @@ type Events = {
 };
 
 export class Chat extends Base {
-  protected container = document.getElementById('chat');
-  private form: HTMLFormElement = this.container.querySelector('form');
-  private localChat =
-    this.container.querySelector<HTMLUListElement>('#local-chat');
-  private globalChat =
-    this.container.querySelector<HTMLUListElement>('#global-chat');
-  private groupChat =
-    this.container.querySelector<HTMLUListElement>('#group-chat');
-  private systemChat =
-    this.container.querySelector<HTMLUListElement>('#system-chat');
+  public el = document.getElementById('chat');
+  private form: HTMLFormElement = this.el.querySelector('form');
+  private localChat = this.el.querySelector<HTMLUListElement>('#local-chat');
+  private globalChat = this.el.querySelector<HTMLUListElement>('#global-chat');
+  private groupChat = this.el.querySelector<HTMLUListElement>('#group-chat');
+  private systemChat = this.el.querySelector<HTMLUListElement>('#system-chat');
   private activeChat: HTMLUListElement = this.localChat;
-  private message: HTMLInputElement = this.container.querySelector('input');
+  private message: HTMLInputElement = this.el.querySelector('input');
   private emitter = mitt<Events>();
   private btnToggle: HTMLButtonElement =
-    this.container.querySelector('#btn-toggle-chat');
-  private btnLocal: HTMLButtonElement = this.container.querySelector(
+    this.el.querySelector('#btn-toggle-chat');
+  private btnLocal: HTMLButtonElement = this.el.querySelector(
     '#btn-chat-tab-local',
   );
-  private btnGlobal: HTMLButtonElement = this.container.querySelector(
+  private btnGlobal: HTMLButtonElement = this.el.querySelector(
     '#btn-chat-tab-global',
   );
-  private btnGroup: HTMLButtonElement = this.container.querySelector(
+  private btnGroup: HTMLButtonElement = this.el.querySelector(
     '#btn-chat-tab-group',
   );
-  private btnSystem: HTMLButtonElement = this.container.querySelector(
+  private btnSystem: HTMLButtonElement = this.el.querySelector(
     '#btn-chat-tab-system',
   );
   private collapsed = false;

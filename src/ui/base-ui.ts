@@ -1,16 +1,19 @@
 export abstract class Base {
-  protected container: Element;
+  public el: Element;
+  public hidden = true;
 
   show() {
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
+    this.hidden = false;
   }
 
   hide() {
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
+    this.hidden = true;
   }
 
   toggle() {
-    if (this.container.classList.contains('hidden')) {
+    if (this.el.classList.contains('hidden')) {
       this.show();
     } else {
       this.hide();

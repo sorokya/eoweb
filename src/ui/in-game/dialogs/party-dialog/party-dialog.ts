@@ -7,17 +7,16 @@ import { ChatIcon } from '../../../chat-icon';
 import './party-dialog.css';
 
 export class PartyDialog extends Base {
-  protected container = document.getElementById('party');
+  public el = document.getElementById('party');
   private client: Client;
   private dialogs = document.getElementById('dialogs');
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
+  private btnCancel: HTMLButtonElement = this.el.querySelector(
     'button[data-id="cancel"]',
   );
-  private memberList: HTMLDivElement =
-    this.container.querySelector('.member-list');
-  private label: HTMLSpanElement = this.container.querySelector('.label');
+  private memberList: HTMLDivElement = this.el.querySelector('.member-list');
+  private label: HTMLSpanElement = this.el.querySelector('.label');
   private scrollHandle: HTMLDivElement =
-    this.container.querySelector('.scroll-handle');
+    this.el.querySelector('.scroll-handle');
   private open = false;
 
   constructor(client: Client) {
@@ -73,14 +72,14 @@ export class PartyDialog extends Base {
 
   show() {
     this.render();
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
     this.dialogs.classList.remove('hidden');
     this.open = true;
     this.setScrollThumbPosition();
   }
 
   hide() {
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
     this.open = false;
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {

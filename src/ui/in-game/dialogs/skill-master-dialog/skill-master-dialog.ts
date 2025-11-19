@@ -30,19 +30,19 @@ type Events = {
 export class SkillMasterDialog extends Base {
   private client: Client;
   private emitter = mitt<Events>();
-  protected container = document.getElementById('skill-master');
+  public el = document.getElementById('skill-master');
   private dialogs = document.getElementById('dialogs');
   private cover = document.querySelector<HTMLDivElement>('#cover');
-  private btnCancel = this.container.querySelector<HTMLButtonElement>(
+  private btnCancel = this.el.querySelector<HTMLButtonElement>(
     'button[data-id="cancel"]',
   );
-  private btnBack = this.container.querySelector<HTMLButtonElement>(
+  private btnBack = this.el.querySelector<HTMLButtonElement>(
     'button[data-id="back"]',
   );
-  private txtName = this.container.querySelector<HTMLSpanElement>('.name');
-  private itemList = this.container.querySelector<HTMLDivElement>('.item-list');
+  private txtName = this.el.querySelector<HTMLSpanElement>('.name');
+  private itemList = this.el.querySelector<HTMLDivElement>('.item-list');
   private scrollHandle =
-    this.container.querySelector<HTMLDivElement>('.scroll-handle');
+    this.el.querySelector<HTMLDivElement>('.scroll-handle');
   private name = '';
   private skills: SkillLearn[] = [];
   private state = [State.Initial];
@@ -140,7 +140,7 @@ export class SkillMasterDialog extends Base {
 
   show() {
     this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
     this.dialogs.classList.remove('hidden');
     this.client.typing = true;
     this.setScrollThumbPosition();
@@ -149,7 +149,7 @@ export class SkillMasterDialog extends Base {
 
   hide() {
     this.cover.classList.add('hidden');
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
       this.dialogs.classList.add('hidden');

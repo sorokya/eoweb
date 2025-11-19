@@ -10,14 +10,13 @@ import './chest-dialog.css';
 
 export class ChestDialog extends Base {
   private client: Client;
-  protected container = document.getElementById('chest');
+  public el = document.getElementById('chest');
   private cover = document.querySelector<HTMLDivElement>('#cover');
-  private btnCancel = this.container.querySelector<HTMLButtonElement>(
+  private btnCancel = this.el.querySelector<HTMLButtonElement>(
     'button[data-id="cancel"]',
   );
   private dialogs = document.getElementById('dialogs');
-  private itemsList =
-    this.container.querySelector<HTMLDivElement>('.chest-items');
+  private itemsList = this.el.querySelector<HTMLDivElement>('.chest-items');
   private items: ThreeItem[] = [];
 
   constructor(client: Client) {
@@ -37,14 +36,14 @@ export class ChestDialog extends Base {
 
   show() {
     this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
     this.dialogs.classList.remove('hidden');
     this.client.typing = true;
   }
 
   hide() {
     this.cover.classList.add('hidden');
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
       this.dialogs.classList.add('hidden');

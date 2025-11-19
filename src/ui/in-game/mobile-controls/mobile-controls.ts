@@ -3,5 +3,5 @@ import { Base } from '../../base-ui';
 import './mobile-controls.css';
 
 export class MobileControls extends Base {
-  protected container = document.getElementById('mobile-controls');
+  public el = document.getElementById('mobile-controls');
 }

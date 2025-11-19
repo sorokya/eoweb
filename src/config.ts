@@ -1,6 +1,6 @@
 import { HOST } from './consts';
 
-type Config = {
+export type Config = {
   host: string;
   staticHost: boolean;
   title: string;

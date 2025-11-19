@@ -20,21 +20,20 @@ type Events = {
 };
 
 export class CreateAccountForm extends Base {
-  protected container = document.getElementById('create-account-form');
-  private form: HTMLFormElement = this.container.querySelector('form');
+  public el = document.getElementById('create-account-form');
+  private form: HTMLFormElement = this.el.querySelector('form');
   private username: HTMLInputElement =
-    this.container.querySelector('#create-username');
+    this.el.querySelector('#create-username');
   private password: HTMLInputElement =
-    this.container.querySelector('#create-password');
-  private confirmPassword: HTMLInputElement = this.container.querySelector(
+    this.el.querySelector('#create-password');
+  private confirmPassword: HTMLInputElement = this.el.querySelector(
     '#create-confirm-password',
   );
-  private name: HTMLInputElement = this.container.querySelector('#create-name');
+  private name: HTMLInputElement = this.el.querySelector('#create-name');
   private location: HTMLInputElement =
-    this.container.querySelector('#create-location');
-  private email: HTMLInputElement =
-    this.container.querySelector('#create-email');
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
+    this.el.querySelector('#create-location');
+  private email: HTMLInputElement = this.el.querySelector('#create-email');
+  private btnCancel: HTMLButtonElement = this.el.querySelector(
     'button[data-id="cancel-big"]',
   );
   private emitter = mitt<Events>();
@@ -48,7 +47,7 @@ export class CreateAccountForm extends Base {
     this.name.value = '';
     this.location.value = '';
     this.email.value = '';
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
     this.username.focus();
   }
 
@@ -141,7 +140,7 @@ export class CreateAccountForm extends Base {
   private setupTabTrapping() {
     this.formElements.forEach((element, index) => {
       element.addEventListener('keydown', (e: KeyboardEvent) => {
-        if (e.key === 'Tab' && !this.container.classList.contains('hidden')) {
+        if (e.key === 'Tab' && !this.el.classList.contains('hidden')) {
           e.preventDefault();
 
           if (e.shiftKey) {

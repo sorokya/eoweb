@@ -1,0 +1,33 @@
+.button {
+  font-family: "forte", "ms_sans_serif_bold", sans-serif;
+  background: url("/img/wood.png");
+  color: var(--button-text-color);
+  font-size: 1.5em;
+  letter-spacing: -2px;
+  -webkit-text-stroke: 1px var(--button-stroke-color);
+  outline: none;
+  border-style: solid;
+  border-width: 2px 1px 1px 1px;
+  border-image: url("/img/border-button.png") 3 2 2 2 fill;
+  border-image-repeat: stretch;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+
+  &:hover {
+    color: var(--button-hover-text-color);
+    text-shadow: var(--button-hover-text-shadow) 0 0 6px;
+  }
+
+  &:after,
+  &:before {
+    content: " ";
+    display: inline-block;
+    width: 16px;
+    height: 15px;
+    background: url("/img/screw.png");
+  }
+}

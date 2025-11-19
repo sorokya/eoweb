@@ -9,80 +9,80 @@ import { characterIconToChatIcon } from '../../../utils/character-icon-to-chat-i
 import './paperdoll.css';
 
 export class Paperdoll extends Base {
-  protected container = document.getElementById('paperdoll');
+  public el = document.getElementById('paperdoll');
   private dialogs = document.getElementById('dialogs');
   private client: Client;
   private cover = document.getElementById('cover');
-  private bntOk = this.container.querySelector<HTMLButtonElement>(
+  private bntOk = this.el.querySelector<HTMLButtonElement>(
     'button[data-id="ok"]',
   );
-  private imgBoots: HTMLDivElement = this.container.querySelector(
+  private imgBoots: HTMLDivElement = this.el.querySelector(
     '.item[data-id="boots"]',
   );
-  private imgAccessory: HTMLDivElement = this.container.querySelector(
+  private imgAccessory: HTMLDivElement = this.el.querySelector(
     '.item[data-id="accessory"]',
   );
-  private imgGloves: HTMLDivElement = this.container.querySelector(
+  private imgGloves: HTMLDivElement = this.el.querySelector(
     '.item[data-id="gloves"]',
   );
-  private imgBelt: HTMLDivElement = this.container.querySelector(
+  private imgBelt: HTMLDivElement = this.el.querySelector(
     '.item[data-id="belt"]',
   );
-  private imgArmor: HTMLDivElement = this.container.querySelector(
+  private imgArmor: HTMLDivElement = this.el.querySelector(
     '.item[data-id="armor"]',
   );
-  private imgNecklace: HTMLDivElement = this.container.querySelector(
+  private imgNecklace: HTMLDivElement = this.el.querySelector(
     '.item[data-id="necklace"]',
   );
-  private imgHat: HTMLImageElement = this.container.querySelector(
+  private imgHat: HTMLImageElement = this.el.querySelector(
     '.item[data-id="hat"]',
   );
-  private imgShield: HTMLDivElement = this.container.querySelector(
+  private imgShield: HTMLDivElement = this.el.querySelector(
     '.item[data-id="shield"]',
   );
-  private imgWeapon: HTMLDivElement = this.container.querySelector(
+  private imgWeapon: HTMLDivElement = this.el.querySelector(
     '.item[data-id="weapon"]',
   );
-  private imgRing1: HTMLDivElement = this.container.querySelector(
+  private imgRing1: HTMLDivElement = this.el.querySelector(
     '.item[data-id="ring-1"]',
   );
-  private imgRing2: HTMLDivElement = this.container.querySelector(
+  private imgRing2: HTMLDivElement = this.el.querySelector(
     '.item[data-id="ring-2"]',
   );
-  private imgArmlet1: HTMLDivElement = this.container.querySelector(
+  private imgArmlet1: HTMLDivElement = this.el.querySelector(
     '.item[data-id="armlet-1"]',
   );
-  private imgArmlet2: HTMLDivElement = this.container.querySelector(
+  private imgArmlet2: HTMLDivElement = this.el.querySelector(
     '.item[data-id="armlet-2"]',
   );
-  private imgBracer1: HTMLDivElement = this.container.querySelector(
+  private imgBracer1: HTMLDivElement = this.el.querySelector(
     '.item[data-id="bracer-1"]',
   );
-  private imgBracer2: HTMLDivElement = this.container.querySelector(
+  private imgBracer2: HTMLDivElement = this.el.querySelector(
     '.item[data-id="bracer-2"]',
   );
-  private spanName: HTMLSpanElement = this.container.querySelector(
+  private spanName: HTMLSpanElement = this.el.querySelector(
     'span[data-id="name"]',
   );
-  private spanHome: HTMLSpanElement = this.container.querySelector(
+  private spanHome: HTMLSpanElement = this.el.querySelector(
     'span[data-id="home"]',
   );
-  private spanClass: HTMLSpanElement = this.container.querySelector(
+  private spanClass: HTMLSpanElement = this.el.querySelector(
     'span[data-id="class"]',
   );
-  private spanPartner: HTMLSpanElement = this.container.querySelector(
+  private spanPartner: HTMLSpanElement = this.el.querySelector(
     'span[data-id="partner"]',
   );
-  private spanTitle: HTMLSpanElement = this.container.querySelector(
+  private spanTitle: HTMLSpanElement = this.el.querySelector(
     'span[data-id="title"]',
   );
-  private spanGuild: HTMLSpanElement = this.container.querySelector(
+  private spanGuild: HTMLSpanElement = this.el.querySelector(
     'span[data-id="guild"]',
   );
-  private spanRank: HTMLSpanElement = this.container.querySelector(
+  private spanRank: HTMLSpanElement = this.el.querySelector(
     'span[data-id="rank"]',
   );
-  private divIcon: HTMLDivElement = this.container.querySelector('div.icon');
+  private divIcon: HTMLDivElement = this.el.querySelector('div.icon');
 
   private icon = CharacterIcon.Player;
   private details = new CharacterDetails();
@@ -231,7 +231,7 @@ export class Paperdoll extends Base {
   }
 
   private render() {
-    this.container.setAttribute('data-gender', this.details.gender.toString());
+    this.el.setAttribute('data-gender', this.details.gender.toString());
 
     this.spanName.innerText = capitalize(this.details.name);
     this.spanHome.innerText = this.details.home;
@@ -344,13 +344,13 @@ export class Paperdoll extends Base {
   show() {
     this.render();
     this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
+    this.el.classList.remove('hidden');
     this.dialogs.classList.remove('hidden');
     this.client.typing = true;
   }
 
   hide() {
-    this.container.classList.add('hidden');
+    this.el.classList.add('hidden');
     this.cover.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
