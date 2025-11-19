@@ -420,6 +420,7 @@ export class Client {
   challenge: number;
   accountCreateData: AccountCreateData | null = null;
   characterCreateData: CharacterCreateData | null = null;
+  characters: CharacterSelectionListEntry[] = [];
   playerId = 0;
   characterId = 0;
   name = '';
@@ -2379,6 +2380,8 @@ export class Client {
         this.ui.showDialog(ComponentId.Login);
         break;
       case GameState.CharacterSelect:
+        this.ui.hideAll();
+        this.ui.showBaseComponent(ComponentId.CharacterSelect);
         break;
       case GameState.InGame:
         break;

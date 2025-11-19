@@ -1,5 +1,8 @@
 import {
+  CharacterMapInfo,
+  Direction,
   type EoReader,
+  EquipmentMapInfo,
   LoginReply,
   LoginReplyServerPacket,
   PacketAction,
@@ -8,6 +11,7 @@ import {
 } from 'eolib';
 import { type Client, GameState } from '../client';
 import { DialogResourceID } from '../edf';
+import { playSfxById, SfxId } from '../sfx';
 
 function handleLoginReply(client: Client, reader: EoReader) {
   const packet = LoginReplyServerPacket.deserialize(reader);
@@ -16,7 +20,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.LOGIN_BANNED_FROM_SERVER,
     );
-    client.showError(text[1], text[0]);
+    client.showAlert(text[0], text[1]);
     return;
   }
 
@@ -25,7 +29,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.LOGIN_ACCOUNT_ALREADY_LOGGED_ON,
     );
-    client.showError(text[1], text[0]);
+    client.showAlert(text[0], text[1]);
     return;
   }
 
@@ -37,7 +41,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.LOGIN_ACCOUNT_NAME_OR_PASSWORD_NOT_FOUND,
     );
-    client.showError(text[1], text[0]);
+    client.showAlert(text[0], text[1]);
     return;
   }
 
@@ -45,7 +49,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_SERVER_BUSY,
     );
-    client.showError(text[1], text[0]);
+    client.showAlert(text[0], text[1]);
   }
 
   if (reader.remaining > 0) {
@@ -54,7 +58,6 @@ function handleLoginReply(client: Client, reader: EoReader) {
   }
 
   const data = packet.replyCodeData as LoginReplyServerPacket.ReplyCodeDataOk;
-  client.setState(GameState.CharacterSelect);
 
   if (
     client.rememberMe &&
@@ -67,7 +70,35 @@ function handleLoginReply(client: Client, reader: EoReader) {
     return;
   }
 
-  client.emit('login', data.characters);
+  playSfxById(SfxId.Login);
+
+  client.characters = data.characters;
+
+  client.nearby.characters = client.nearby.characters.filter(
+    (c) => c.playerId === client.playerId,
+  );
+  client.nearby.characters.push(
+    ...client.characters.map((c, i) => {
+      const info = new CharacterMapInfo();
+      info.playerId = client.playerId + i + 1;
+      info.name = c.name;
+      info.mapId = client.mapId;
+      info.direction = Direction.Down;
+      info.gender = c.gender;
+      info.hairStyle = c.hairStyle;
+      info.hairColor = c.hairColor;
+      info.skin = c.skin;
+      info.equipment = new EquipmentMapInfo();
+      info.equipment.armor = c.equipment.armor;
+      info.equipment.weapon = c.equipment.weapon;
+      info.equipment.boots = c.equipment.boots;
+      info.equipment.shield = c.equipment.shield;
+      info.equipment.hat = c.equipment.hat;
+      return info;
+    }),
+  );
+
+  client.setState(GameState.CharacterSelect);
 }
 
 export function registerLoginHandlers(client: Client) {

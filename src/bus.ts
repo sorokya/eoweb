@@ -76,6 +76,7 @@ export class PacketBus {
   }
 
   connect() {
+    this.sequencer = new PacketSequencer(SequenceStart.zero());
     this.socket = new WebSocket(this.client.config.host);
     this.socket.addEventListener(
       'message',
@@ -105,8 +106,6 @@ export class PacketBus {
       this.client.showAlert(strings[0], strings[1]);
       this.socket = null;
     });
-
-    this.sequencer.sequenceStart = SequenceStart.zero();
 
     registerInitHandlers(this.client);
     registerConnectionHandlers(this.client);

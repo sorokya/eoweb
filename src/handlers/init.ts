@@ -109,27 +109,28 @@ function handleInitOk(
   client.playerId = data.playerId;
   // Hack to keep pre-game UI stable
   client.nearby.characters[0].playerId = data.playerId;
-  const bus = client.bus;
-  if (!bus) {
-    throw new Error('Bus is null');
-  }
-
-  bus.setEncryption(
+  client.bus.setEncryption(
     data.clientEncryptionMultiple,
     data.serverEncryptionMultiple,
   );
-  bus.setSequence(InitSequenceStart.fromInitValues(data.seq1, data.seq2));
+  client.bus.setSequence(
+    InitSequenceStart.fromInitValues(data.seq1, data.seq2),
+  );
 
   const packet = new ConnectionAcceptClientPacket();
   packet.clientEncryptionMultiple = data.clientEncryptionMultiple;
   packet.serverEncryptionMultiple = data.serverEncryptionMultiple;
   packet.playerId = data.playerId;
-  bus.send(packet);
+  client.bus.send(packet);
 
   if (client.rememberMe && client.loginToken) {
     const writer = new EoWriter();
     writer.addString(client.loginToken);
-    bus.sendBuf(PacketFamily.Login, PacketAction.Use, writer.toByteArray());
+    client.bus.sendBuf(
+      PacketFamily.Login,
+      PacketAction.Use,
+      writer.toByteArray(),
+    );
   } else if (client.postConnectState) {
     client.setState(client.postConnectState);
   }
