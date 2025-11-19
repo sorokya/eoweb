@@ -1,6 +1,7 @@
 import type { Client } from '../client';
 import type { Base } from './base-ui';
 import { ComponentId } from './component-id';
+import { CreateAccountDialog } from './pre-game/create-account-dialog';
 import { LoginDialog } from './pre-game/login-dialog/login-dialog';
 import { MainMenu } from './pre-game/main-menu';
 import { Cover } from './shared/cover';
@@ -56,6 +57,11 @@ export class UIManager {
     this.dialogs.set(
       ComponentId.Login,
       new LoginDialog(this.dialogContainer.el, client),
+    );
+
+    this.dialogs.set(
+      ComponentId.CreateAccount,
+      new CreateAccountDialog(this.dialogContainer.el, client),
     );
 
     this.messageBoxContainer = new DialogContainer(parent);

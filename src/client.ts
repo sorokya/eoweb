@@ -2373,6 +2373,7 @@ export class Client {
         this.ui.showBaseComponent(ComponentId.MainMenu);
         break;
       case GameState.CreateAccount:
+        this.ui.showDialog(ComponentId.CreateAccount);
         break;
       case GameState.Login:
         this.ui.showDialog(ComponentId.Login);
