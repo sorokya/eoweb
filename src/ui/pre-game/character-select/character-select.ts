@@ -3,8 +3,8 @@ import {
   type CharacterSelectionListEntry,
   Direction,
   EquipmentMapInfo,
+  ThreeItem,
 } from 'eolib';
-import mitt from 'mitt';
 import { CharacterFrame } from '../../../atlas';
 import type { Client } from '../../../client';
 import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../../../consts';
@@ -12,69 +12,61 @@ import { DialogResourceID } from '../../../edf';
 import { playSfxById, SfxId } from '../../../sfx';
 import { capitalize } from '../../../utils/capitalize';
 import { Base } from '../../base-ui';
-
-import './character-select.css';
-
-type Events = {
-  cancel: undefined;
-  selectCharacter: number;
-  requestCharacterDeletion: {
-    id: number;
-    name: string;
-  };
-  deleteCharacter: {
-    id: number;
-    name: string;
-  };
-  create: undefined;
-  changePassword: undefined;
-  error: { title: string; message: string };
-};
+import { Button } from '../../shared/button';
+import classes from './character-select.module.css';
 
 let lastTime: DOMHighResTimeStamp | undefined;
 
+class CharacterEntry {
+  el: HTMLDivElement;
+  preview: HTMLImageElement;
+  name: HTMLDivElement;
+  level: HTMLDivElement;
+  icon: HTMLDivElement;
+
+  constructor(parent: HTMLElement) {
+    this.el = document.createElement('div');
+    this.el.className = classes.character;
+
+    this.preview = document.createElement('img');
+    this.preview.src = '';
+    this.el.appendChild(this.preview);
+
+    this.name = document.createElement('div');
+    this.name.className = classes.name;
+    this.el.appendChild(this.name);
+
+    this.level = document.createElement('div');
+    this.level.className = classes.level;
+    this.el.appendChild(this.level);
+
+    this.icon = document.createElement('div');
+    this.icon.className = classes.icon;
+    this.el.appendChild(this.icon);
+
+    parent.appendChild(this.el);
+  }
+}
+
 export class CharacterSelect extends Base {
-  public el = document.getElementById('character-select');
-  private btnCreate: HTMLButtonElement = this.el.querySelector(
-    'button[data-id="create"]',
-  );
-  private btnPassword: HTMLButtonElement = this.el.querySelector(
-    'button[data-id="password"]',
-  );
-  private btnCancel: HTMLButtonElement = this.el.querySelector(
-    'button[data-id="cancel-big"]',
-  );
-  private characters: CharacterSelectionListEntry[] = [];
+  public declare el: HTMLElement;
+  private btnCreate: HTMLButtonElement;
+  private btnPassword: HTMLButtonElement;
+  private btnCancel: HTMLButtonElement;
+  private characters: CharacterEntry[] = [];
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private open = false;
   confirmed = false;
 
-  isOpen(): boolean {
-    return this.open;
-  }
-
-  private emitter = mitt<Events>();
-
-  private onLogin: ((e: Event) => undefined)[] = [];
-  private onDelete: ((e: Event) => undefined)[] = [];
   private client: Client;
 
   show() {
-    this.el.classList.remove('hidden');
-    this.el.style.left = `${Math.floor(window.innerWidth / 2 - this.el.clientWidth / 2)}px`;
-    this.el.style.top = `${Math.floor(window.innerHeight / 2 - this.el.clientHeight / 2)}px`;
-    this.open = true;
+    super.show();
     for (const el of this.el.querySelectorAll('.preview')) {
       const image = el as HTMLImageElement;
       image.src = '';
     }
     window.requestAnimationFrame(this.render.bind(this));
-  }
-
-  hide() {
-    this.el.classList.add('hidden');
-    this.open = false;
   }
 
   render(now: DOMHighResTimeStamp) {
@@ -92,22 +84,20 @@ export class CharacterSelect extends Base {
 
     lastTime = now;
 
-    for (let i = 0; i < 3; ++i) {
-      const preview: HTMLImageElement = this.el.querySelectorAll('.preview')[
-        i
-      ] as HTMLImageElement;
-      const adminLevel: HTMLImageElement =
-        this.el.querySelector('.admin-level');
+    for (const [index, character] of this.characters.entries()) {
+      const data: CharacterSelectionListEntry | undefined =
+        this.client.characters[index];
 
-      const character = this.characters[i];
-      if (!character) {
-        preview.src = '';
-        adminLevel.className = 'admin-level';
+      character.name.innerText = capitalize(data?.name || '');
+      character.icon.setAttribute('data-id', (data?.admin || 0).toString());
+      character.level.innerText = data?.level.toString() || '';
+
+      if (!data) {
         continue;
       }
 
       const frame = this.client.atlas.getCharacterFrame(
-        this.client.playerId + i + 1,
+        this.client.playerId + index + 1,
         CharacterFrame.StandingDownRight,
       );
       if (!frame) {
@@ -132,108 +122,16 @@ export class CharacterSelect extends Base {
         frame.h,
       );
 
-      if (preview) {
-        preview.src = this.canvas.toDataURL();
-      }
-
-      if (adminLevel) {
-        adminLevel.classList.add(`level-${character.admin}`);
-      }
+      character.preview.src = this.canvas.toDataURL();
     }
 
-    if (this.open) {
+    if (!this.hidden) {
       window.requestAnimationFrame(this.render.bind(this));
       return;
     }
   }
 
-  setCharacters(characters: CharacterSelectionListEntry[]) {
-    this.confirmed = false;
-    this.characters = characters;
-
-    this.client.nearby.characters = this.client.nearby.characters.filter(
-      (c) => c.playerId === this.client.playerId,
-    );
-    this.client.nearby.characters.push(
-      ...this.characters.map((c, i) => {
-        const info = new CharacterMapInfo();
-        info.playerId = this.client.playerId + i + 1;
-        info.name = c.name;
-        info.mapId = this.client.mapId;
-        info.direction = Direction.Down;
-        info.gender = c.gender;
-        info.hairStyle = c.hairStyle;
-        info.hairColor = c.hairColor;
-        info.skin = c.skin;
-        info.equipment = new EquipmentMapInfo();
-        info.equipment.armor = c.equipment.armor;
-        info.equipment.weapon = c.equipment.weapon;
-        info.equipment.boots = c.equipment.boots;
-        info.equipment.shield = c.equipment.shield;
-        info.equipment.hat = c.equipment.hat;
-        return info;
-      }),
-    );
-
-    this.client.atlas.refresh();
-    const characterBoxes = this.el.querySelectorAll('.character');
-    let index = 0;
-    for (const box of characterBoxes) {
-      const nameLabel: HTMLSpanElement = box.querySelector('.name');
-      nameLabel.innerText = '';
-      const levelLabel: HTMLSpanElement = box.querySelector('.level');
-      levelLabel.innerText = '';
-
-      const btnLogin: HTMLButtonElement = box.querySelector(
-        'button[data-id="login"]',
-      );
-      const btnDelete: HTMLButtonElement = box.querySelector(
-        'button[data-id="delete"]',
-      );
-
-      const character = characters[index];
-      if (character) {
-        nameLabel.innerText = capitalize(character.name);
-        levelLabel.innerText = character.level.toString();
-      }
-
-      btnLogin.removeEventListener('click', this.onLogin[index]);
-      this.onLogin[index] = () => {
-        playSfxById(SfxId.ButtonClick);
-        if (!character) {
-          return;
-        }
-
-        this.emitter.emit('selectCharacter', character.id);
-      };
-      btnLogin.addEventListener('click', this.onLogin[index]);
-
-      btnDelete.removeEventListener('click', this.onDelete[index]);
-      this.onDelete[index] = () => {
-        playSfxById(SfxId.ButtonClick);
-        if (!character) {
-          return;
-        }
-
-        if (this.confirmed) {
-          this.emitter.emit('deleteCharacter', {
-            id: character.id,
-            name: character.name,
-          });
-        } else {
-          this.emitter.emit('requestCharacterDeletion', {
-            id: character.id,
-            name: character.name,
-          });
-        }
-      };
-      btnDelete.addEventListener('click', this.onDelete[index]);
-
-      index += 1;
-    }
-  }
-
-  constructor(client: Client) {
+  constructor(parent: HTMLElement, client: Client) {
     super();
 
     this.client = client;
@@ -245,46 +143,50 @@ export class CharacterSelect extends Base {
     this.canvas.height = h;
     this.ctx = this.canvas.getContext('2d');
 
+    this.el = document.createElement('div');
+    this.el.className = classes['character-select'];
+
+    const characterList = document.createElement('div');
+    characterList.className = classes['character-list'];
+
+    for (let i = 0; i < 3; ++i) {
+      const character = new CharacterEntry(characterList);
+      this.characters.push(character);
+    }
+
+    this.el.appendChild(characterList);
+
+    const buttonRow = document.createElement('div');
+    buttonRow.className = classes['button-row'];
+
+    this.btnCreate = new Button('Create', buttonRow, 'button', 'large');
     this.btnCreate.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
 
-      if (this.characters.length >= 3) {
+      if (this.client.characters.length >= 3) {
         const text = this.client.getDialogStrings(
           DialogResourceID.CHARACTER_CREATE_TOO_MANY_CHARS,
         );
-        this.emitter.emit('error', {
-          title: text[0],
-          message: text[1],
-        });
+        this.client.showAlert(text[0], text[1]);
         return;
       }
 
-      this.emitter.emit('create', undefined);
+      // Show create
     });
 
+    this.btnPassword = new Button('Password', buttonRow, 'button', 'large');
     this.btnPassword.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
-      this.emitter.emit('changePassword', undefined);
+      // Show password
     });
 
+    this.btnCancel = new Button('Cancel', buttonRow, 'button', 'large');
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
-      this.emitter.emit('cancel', undefined);
+      // Show something
     });
-  }
 
-  selectCharacter(index: number) {
-    const character = this.characters[index - 1];
-    if (character) {
-      playSfxById(SfxId.ButtonClick);
-      this.emitter.emit('selectCharacter', character.id);
-    }
-  }
-
-  on<Event extends keyof Events>(
-    event: Event,
-    handler: (data: Events[Event]) => void,
-  ) {
-    this.emitter.on(event, handler);
+    this.el.appendChild(buttonRow);
+    parent.appendChild(this.el);
   }
 }

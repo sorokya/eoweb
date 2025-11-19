@@ -1,5 +1,5 @@
 export abstract class Base {
-  public el: Element;
+  public el: HTMLElement;
   public hidden = true;
 
   show() {

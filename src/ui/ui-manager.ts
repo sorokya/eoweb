@@ -1,6 +1,7 @@
 import type { Client } from '../client';
 import type { Base } from './base-ui';
 import { ComponentId } from './component-id';
+import { CharacterSelect } from './pre-game/character-select';
 import { CreateAccountDialog } from './pre-game/create-account-dialog';
 import { LoginDialog } from './pre-game/login-dialog/login-dialog';
 import { MainMenu } from './pre-game/main-menu';
@@ -124,6 +125,10 @@ export class UIManager {
   constructor(parent: HTMLElement, client: Client) {
     this.cover = new Cover(parent);
     this.baseComponents.set(ComponentId.MainMenu, new MainMenu(parent, client));
+    this.baseComponents.set(
+      ComponentId.CharacterSelect,
+      new CharacterSelect(parent, client),
+    );
 
     this.dialogContainer = new DialogContainer(parent);
     this.dialogs.set(

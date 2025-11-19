@@ -1,0 +1,27 @@
+.character-select {
+  display: flex;
+  flex-direction: column;
+}
+
+.character-list {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+}
+
+.character {
+  background: url("/img/wood.png");
+  border-image: url("/img/border-medium.png") 9 / 9px 9px;
+}
+
+.name {
+}
+
+.level {
+}
+
+.icon {
+}
+
+.button-row {
+}
