@@ -2,7 +2,7 @@
   font-family: "forte", "ms_sans_serif_bold", sans-serif;
   background: url("/img/wood.png");
   color: var(--button-text-color);
-  font-size: 1.5em;
+  font-size: 2em;
   letter-spacing: -2px;
   -webkit-text-stroke: 1px var(--button-stroke-color);
   outline: none;

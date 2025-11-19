@@ -2369,11 +2369,13 @@ export class Client {
 
     switch (state) {
       case GameState.MainMenu:
+        this.ui.hideAll();
         this.ui.showBaseComponent(ComponentId.MainMenu);
         break;
       case GameState.CreateAccount:
         break;
       case GameState.Login:
+        this.ui.showDialog(ComponentId.Login);
         break;
       case GameState.CharacterSelect:
         break;
@@ -2383,6 +2385,11 @@ export class Client {
   }
 
   connect(postConnectState: GameState) {
+    if (this.bus.connected()) {
+      this.setState(postConnectState);
+      return;
+    }
+
     this.postConnectState = postConnectState;
     this.bus.connect();
   }

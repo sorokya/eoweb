@@ -6,4 +6,7 @@
   height: 100vh;
   display: flex;
   z-index: 2;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
 }

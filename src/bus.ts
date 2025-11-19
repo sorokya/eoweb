@@ -70,6 +70,10 @@ export class PacketBus {
     this.sequencer = new PacketSequencer(SequenceStart.zero());
   }
 
+  connected(): boolean {
+    return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
+  }
+
   connect() {
     this.socket = new WebSocket(this.client.config.host);
     this.socket.addEventListener(
@@ -144,6 +148,7 @@ export class PacketBus {
   disconnect() {
     if (!this.socket) return;
     this.socket.close();
+    this.socket = null;
   }
 
   setSequence(sequence: SequenceStart) {
