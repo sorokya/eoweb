@@ -233,6 +233,7 @@ type CharacterAtlasEntry = {
   equipment: EquipmentMapInfo;
   hash: string;
   frames: (Frame | undefined)[];
+  pendingFrames?: (Frame | undefined)[];
 };
 
 export type TileAtlasEntry = {
@@ -849,9 +850,10 @@ export class Atlas {
     this.refreshItems();
 
     if (
-      this.characters.some((c) =>
-        c.frames.some((f) => f && f.atlasIndex === -1),
-      )
+      this.characters.some((c) => {
+        const f = c.pendingFrames || c.frames;
+        return f.some((f) => f && f.atlasIndex === -1);
+      })
     ) {
       for (let i = 1; i <= 8; ++i) {
         this.addBmpToLoad(GfxType.SkinSprites, i);
@@ -1369,7 +1371,7 @@ export class Atlas {
         }
 
         if (existing) {
-          existing.frames = frames;
+          existing.pendingFrames = frames;
         } else {
           this.characters.push({
             playerId: char.playerId,
@@ -1495,6 +1497,14 @@ export class Atlas {
   private finishUpdatingAtlas() {
     this.placeFrames();
     this.temporaryCharacterFrames = [];
+
+    // Swap pending frames → active now that compositing is complete
+    for (const character of this.characters) {
+      if (character.pendingFrames) {
+        character.frames = character.pendingFrames;
+        character.pendingFrames = undefined;
+      }
+    }
 
     for (const atlas of this.atlases) {
       atlas.commit();
@@ -1802,7 +1812,8 @@ export class Atlas {
     this.ctx = this.atlases[0].getContext();
 
     for (const character of this.characters) {
-      for (const [index, frame] of character.frames.entries()) {
+      const activeFrames = character.pendingFrames || character.frames;
+      for (const [index, frame] of activeFrames.entries()) {
         if (!frame || frame.atlasIndex !== -1) {
           continue;
         }
@@ -1863,7 +1874,8 @@ export class Atlas {
             continue;
           }
 
-          const frame = character.frames[placeable.frameIndex];
+          const activeFrames = character.pendingFrames || character.frames;
+          const frame = activeFrames[placeable.frameIndex];
           const imgData = this.temporaryCharacterFrames.find(
             (f) =>
               f.playerId === character.playerId &&
@@ -1950,11 +1962,12 @@ export class Atlas {
     this.tmpCanvas.height = CHARACTER_FRAME_SIZE;
 
     for (const character of this.characters) {
-      if (!character.frames.some((f) => f && f.atlasIndex === -1)) {
+      const activeFrames = character.pendingFrames || character.frames;
+      if (!activeFrames.some((f) => f && f.atlasIndex === -1)) {
         continue;
       }
 
-      for (const [index, frame] of character.frames.entries()) {
+      for (const [index, frame] of activeFrames.entries()) {
         if (!frame) {
           continue;
         }
@@ -2240,8 +2253,8 @@ export class Atlas {
           const base = (y * bmp.width + x) * 4;
           colors.add(
             (imgData.data[base] << 16) |
-              (imgData.data[base + 1] << 8) |
-              imgData.data[base + 2],
+            (imgData.data[base + 1] << 8) |
+            imgData.data[base + 2],
           );
           const alpha = imgData.data[base + 3];
           if (alpha !== 0) {
@@ -2516,8 +2529,8 @@ export class Atlas {
             const base = (y * frameWidth + x) * 4;
             colors.add(
               (imgData.data[base] << 16) |
-                (imgData.data[base + 1] << 8) |
-                imgData.data[base + 2],
+              (imgData.data[base + 1] << 8) |
+              imgData.data[base + 2],
             );
             const alpha = imgData.data[base + 3];
             if (alpha !== 0) {
@@ -2814,15 +2827,15 @@ export class Atlas {
 
     const destX = Math.floor(
       HALF_CHARACTER_FRAME_SIZE -
-        (frameWidth >> 1) +
-        (frame === CharacterFrame.MeleeAttackDownRight2 ? -9 : -13) +
-        (gender === Gender.Female ? 0 : -1),
+      (frameWidth >> 1) +
+      (frame === CharacterFrame.MeleeAttackDownRight2 ? -9 : -13) +
+      (gender === Gender.Female ? 0 : -1),
     );
     const destY = Math.floor(
       HALF_CHARACTER_FRAME_SIZE -
-        (frameHeight >> 1) +
-        (frame === CharacterFrame.MeleeAttackDownRight2 ? 4 : -9) +
-        (gender === Gender.Female ? 0 : -1),
+      (frameHeight >> 1) +
+      (frame === CharacterFrame.MeleeAttackDownRight2 ? 4 : -9) +
+      (gender === Gender.Female ? 0 : -1),
     );
 
     this.tmpCtx.globalAlpha = 0.4;
