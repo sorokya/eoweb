@@ -2253,8 +2253,8 @@ export class Atlas {
           const base = (y * bmp.width + x) * 4;
           colors.add(
             (imgData.data[base] << 16) |
-            (imgData.data[base + 1] << 8) |
-            imgData.data[base + 2],
+              (imgData.data[base + 1] << 8) |
+              imgData.data[base + 2],
           );
           const alpha = imgData.data[base + 3];
           if (alpha !== 0) {
@@ -2529,8 +2529,8 @@ export class Atlas {
             const base = (y * frameWidth + x) * 4;
             colors.add(
               (imgData.data[base] << 16) |
-              (imgData.data[base + 1] << 8) |
-              imgData.data[base + 2],
+                (imgData.data[base + 1] << 8) |
+                imgData.data[base + 2],
             );
             const alpha = imgData.data[base + 3];
             if (alpha !== 0) {
@@ -2827,15 +2827,15 @@ export class Atlas {
 
     const destX = Math.floor(
       HALF_CHARACTER_FRAME_SIZE -
-      (frameWidth >> 1) +
-      (frame === CharacterFrame.MeleeAttackDownRight2 ? -9 : -13) +
-      (gender === Gender.Female ? 0 : -1),
+        (frameWidth >> 1) +
+        (frame === CharacterFrame.MeleeAttackDownRight2 ? -9 : -13) +
+        (gender === Gender.Female ? 0 : -1),
     );
     const destY = Math.floor(
       HALF_CHARACTER_FRAME_SIZE -
-      (frameHeight >> 1) +
-      (frame === CharacterFrame.MeleeAttackDownRight2 ? 4 : -9) +
-      (gender === Gender.Female ? 0 : -1),
+        (frameHeight >> 1) +
+        (frame === CharacterFrame.MeleeAttackDownRight2 ? 4 : -9) +
+        (gender === Gender.Female ? 0 : -1),
     );
 
     this.tmpCtx.globalAlpha = 0.4;
