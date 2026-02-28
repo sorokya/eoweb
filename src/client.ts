@@ -2680,16 +2680,16 @@ export class Client {
     this.bus.send(packet);
   }
 
-  equipItem(slot: EquipmentSlot, itemId: number) {
+  equipItem(slot: EquipmentSlot, itemId: number): boolean {
     const item = this.items.find((i) => i.id === itemId && i.amount > 0);
     if (!item) {
-      return;
+      return false;
     }
 
     const equipment = this.getEquipmentArray();
     if (equipment[slot]) {
       if (equipment[slot] === itemId) {
-        return;
+        return false;
       }
 
       this.equipmentSwap = {
@@ -2697,17 +2697,17 @@ export class Client {
         itemId,
       };
       this.unequipItem(slot);
-      return;
+      return false;
     }
 
     const character = this.getPlayerCharacter();
     if (!character) {
-      return;
+      return false;
     }
 
     const record = this.getEifRecordById(item.id);
     if (!record) {
-      return;
+      return false;
     }
 
     if (record.type === ItemType.Armor && record.spec2 !== character.gender) {
@@ -2717,7 +2717,7 @@ export class Client {
           EOResourceID.STATUS_LABEL_ITEM_EQUIP_DOES_NOT_FIT_GENDER,
         ),
       );
-      return;
+      return false;
     }
 
     if (record.classRequirement && record.classRequirement !== this.classId) {
@@ -2726,7 +2726,7 @@ export class Client {
         EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
         `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_CAN_ONLY_BE_USED_BY)} ${classRecord?.name || 'Unknown'}`,
       );
-      return;
+      return false;
     }
 
     if (record.strRequirement > this.baseStats.str) {
@@ -2734,7 +2734,7 @@ export class Client {
         EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
         `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.strRequirement} STR`,
       );
-      return;
+      return false;
     }
 
     if (record.intRequirement > this.baseStats.intl) {
@@ -2742,7 +2742,7 @@ export class Client {
         EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
         `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.intRequirement} INT`,
       );
-      return;
+      return false;
     }
 
     if (record.wisRequirement > this.baseStats.wis) {
@@ -2750,7 +2750,7 @@ export class Client {
         EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
         `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.wisRequirement} WIS`,
       );
-      return;
+      return false;
     }
 
     if (record.agiRequirement > this.baseStats.agi) {
@@ -2758,7 +2758,7 @@ export class Client {
         EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
         `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.agiRequirement} AGI`,
       );
-      return;
+      return false;
     }
 
     if (record.chaRequirement > this.baseStats.cha) {
@@ -2766,7 +2766,7 @@ export class Client {
         EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
         `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.chaRequirement} CHA`,
       );
-      return;
+      return false;
     }
 
     if (record.conRequirement > this.baseStats.con) {
@@ -2774,7 +2774,7 @@ export class Client {
         EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
         `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${record.conRequirement} CON`,
       );
-      return;
+      return false;
     }
 
     if (record.levelRequirement > this.level) {
@@ -2782,7 +2782,7 @@ export class Client {
         EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
         `${this.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} LVL ${record.levelRequirement}`,
       );
-      return;
+      return false;
     }
 
     const packet = new PaperdollAddClientPacket();
@@ -2800,6 +2800,7 @@ export class Client {
     }
 
     this.bus.send(packet);
+    return true;
   }
 
   isVisibleEquipmentChange(slot: EquipmentSlot): boolean {

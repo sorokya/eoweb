@@ -54,7 +54,8 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
   client.setEquipmentSlot(slot, 0);
   client.emit('equipmentChanged', undefined);
 
-  if (client.isVisibleEquipmentChange(slot) && !client.equipmentSwap) {
+  const isVisibleChange = client.isVisibleEquipmentChange(slot);
+  if (isVisibleChange && !client.equipmentSwap) {
     client.setNearbyCharacterEquipment(client.playerId, slot, 0);
   }
 
@@ -90,7 +91,15 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
   client.emit('inventoryChanged', undefined);
 
   if (client.equipmentSwap) {
-    client.equipItem(client.equipmentSwap.slot, client.equipmentSwap.itemId);
+    if (
+      !client.equipItem(
+        client.equipmentSwap.slot,
+        client.equipmentSwap.itemId,
+      ) &&
+      isVisibleChange
+    ) {
+      client.setNearbyCharacterEquipment(client.playerId, slot, 0);
+    }
     client.equipmentSwap = null;
   }
 }
