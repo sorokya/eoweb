@@ -17,7 +17,7 @@
     }
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.13",
+    "@biomejs/biome": "2.4.5",
     "lefthook": "^2.0.16",
     "postcss-nesting": "^14.0.0",
     "ts-prune": "^0.10.3",
