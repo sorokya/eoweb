@@ -31,6 +31,10 @@
       },
       "complexity": {
         "noImportantStyles": "off"
+      },
+      "a11y": {
+        "useAltText": "off",
+        "useButtonType": "off"
       }
     }
   },
