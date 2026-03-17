@@ -19,6 +19,7 @@ import {
   getCharacterRectangle,
   getNpcIntersecting,
   Rectangle,
+  setBoardRectangle,
   setCharacterRectangle,
   setDoorRectangle,
   setLockerRectangle,
@@ -850,6 +851,15 @@ export class MapRenderer {
       );
     } else if (spec === MapTileSpec.BankVault) {
       setLockerRectangle(
+        coords,
+        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
+      );
+    } else if (
+      spec !== null &&
+      spec >= MapTileSpec.Board1 &&
+      spec <= MapTileSpec.Board8
+    ) {
+      setBoardRectangle(
         coords,
         new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
       );

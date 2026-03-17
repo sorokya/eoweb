@@ -25,6 +25,7 @@ const npcRectangles: Map<number, Rectangle> = new Map();
 const doorRectangles: CoordsRect[] = [];
 const signRectangles: CoordsRect[] = [];
 const lockerRectangles: CoordsRect[] = [];
+const boardRectangles: CoordsRect[] = [];
 
 function rectIntersect(a: Rectangle, b: Rectangle): boolean {
   return (
@@ -191,10 +192,36 @@ export function getLockerIntersecting(point: Vector2): Coords | null {
   return null;
 }
 
+export function setBoardRectangle(coords: Coords, rectangle: Rectangle) {
+  const existing = boardRectangles.find(
+    (r) => r.coords.x === coords.x && r.coords.y === coords.y,
+  );
+  if (existing) {
+    existing.rectangle = rectangle;
+    return;
+  }
+
+  boardRectangles.push({
+    coords,
+    rectangle,
+  });
+}
+
+export function getBoardIntersecting(point: Vector2): Coords | null {
+  for (const { coords, rectangle } of boardRectangles) {
+    if (pointIntersectRect(point, rectangle)) {
+      return coords;
+    }
+  }
+
+  return null;
+}
+
 export function clearRectangles() {
   characterRectangles.clear();
   npcRectangles.clear();
   doorRectangles.splice(0, doorRectangles.length);
   signRectangles.splice(0, signRectangles.length);
   lockerRectangles.splice(0, lockerRectangles.length);
+  boardRectangles.splice(0, boardRectangles.length);
 }

@@ -1,4 +1,4 @@
-import { Direction, Emote, ItemSubtype, SitState } from 'eolib';
+import { Direction, Emote, ItemSubtype, MapTileSpec, SitState } from 'eolib';
 import { type Client, GameState } from './client';
 import {
   ATTACK_TICKS,
@@ -230,6 +230,13 @@ export class MovementController {
 
         if (this.client.lockerAt(to)) {
           this.client.openLocker(to);
+          this.walkTicks = WALK_TICKS;
+          return;
+        }
+
+        const boardSpec = this.client.boardAt(to);
+        if (boardSpec !== undefined) {
+          this.client.openBoard(boardSpec - MapTileSpec.Board1);
           this.walkTicks = WALK_TICKS;
           return;
         }
