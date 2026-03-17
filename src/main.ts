@@ -36,6 +36,7 @@ import {
 } from './game-state';
 import { playSfxById, SfxId } from './sfx';
 import { BankDialog } from './ui/bank-dialog/bank-dialog';
+import { BoardDialog } from './ui/board-dialog';
 import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
 import { Chat, ChatIcon } from './ui/chat/chat';
@@ -320,6 +321,11 @@ client.on('bankOpened', () => {
   bankDialog.show();
 });
 
+client.on('boardOpened', ({ posts }) => {
+  boardDialog.setData(posts);
+  boardDialog.show();
+});
+
 client.on('lockerOpened', ({ items }) => {
   lockerDialog.setItems(items);
   lockerDialog.show();
@@ -413,6 +419,7 @@ const itemAmountDialog = new ItemAmountDialog();
 const questDialog = new QuestDialog(client);
 const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
+const boardDialog = new BoardDialog(client);
 const bankDialog = new BankDialog(client);
 const lockerDialog = new LockerDialog(client);
 const skillMasterDialog = new SkillMasterDialog(client);

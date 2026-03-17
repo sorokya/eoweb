@@ -7,6 +7,11 @@ import {
   BankOpenClientPacket,
   BankTakeClientPacket,
   BarberOpenClientPacket,
+  BoardCreateClientPacket,
+  BoardOpenClientPacket,
+  type BoardPostListing,
+  BoardRemoveClientPacket,
+  BoardTakeClientPacket,
   BookRequestClientPacket,
   ByteCoords,
   ChairRequestClientPacket,
@@ -136,6 +141,7 @@ import type { PacketBus } from './bus';
 import { ChatBubble } from './chat-bubble';
 import {
   clearRectangles,
+  getBoardIntersecting,
   getCharacterIntersecting,
   getCharacterRectangle,
   getDoorIntersecting,
@@ -169,6 +175,7 @@ import { registerArenaHandlers } from './handlers/arena';
 import { registerAttackHandlers } from './handlers/attack';
 import { registerAvatarHandlers } from './handlers/avatar';
 import { registerBankHandlers } from './handlers/bank';
+import { registerBoardHandlers } from './handlers/board';
 import { registerCastHandlers } from './handlers/cast';
 import { registerChairHandlers } from './handlers/chair';
 import { registerCharacterHandlers } from './handlers/character';
@@ -301,6 +308,8 @@ type ClientEvents = {
   itemBought: undefined;
   bankOpened: undefined;
   bankUpdated: undefined;
+  boardOpened: { posts: BoardPostListing[] };
+  postRead: { postId: number; body: string };
   lockerOpened: { items: ThreeItem[] };
   lockerChanged: { items: ThreeItem[] };
   skillMasterOpened: {
@@ -552,6 +561,8 @@ export class Client {
   });
   goldBank = 0;
   lockerUpgrades = 0;
+  boardId = 0;
+  boardPosts: BoardPostListing[] = [];
   lockerCoords = new Coords();
   atlas: Atlas;
   hotbarSlots: Slot[] = [];
@@ -1250,6 +1261,22 @@ export class Client {
     );
   }
 
+  boardAt(coords: Coords): MapTileSpec | undefined {
+    for (const r of this.map.tileSpecRows) {
+      if (r.y !== coords.y) continue;
+      for (const t of r.tiles) {
+        if (
+          t.x === coords.x &&
+          t.tileSpec >= MapTileSpec.Board1 &&
+          t.tileSpec <= MapTileSpec.Board8
+        ) {
+          return t.tileSpec;
+        }
+      }
+    }
+    return undefined;
+  }
+
   openLocker(coords: Coords) {
     if (!this.isAdjacentToSpec(MapTileSpec.BankVault)) {
       return;
@@ -1426,6 +1453,7 @@ export class Client {
     registerPaperdollHandlers(this);
     registerChestHandlers(this);
     registerShopHandlers(this);
+    registerBoardHandlers(this);
     registerBankHandlers(this);
     registerLockerHandlers(this);
     registerStatSkillHandlers(this);
@@ -1617,6 +1645,15 @@ export class Client {
         this.emit('smallAlert', sign);
         return;
       }
+    }
+
+    const boardAt = getBoardIntersecting(this.mousePosition);
+    if (boardAt) {
+      const boardSpec = this.boardAt(boardAt);
+      if (boardSpec !== undefined) {
+        this.openBoard(boardSpec - MapTileSpec.Board1);
+      }
+      return;
     }
 
     if (
@@ -2892,6 +2929,34 @@ export class Client {
     }
 
     this.atlas.refresh();
+  }
+
+  openBoard(boardId: number) {
+    const packet = new BoardOpenClientPacket();
+    packet.boardId = boardId;
+    this.bus.send(packet);
+  }
+
+  readPost(postId: number) {
+    const packet = new BoardTakeClientPacket();
+    packet.boardId = this.boardId;
+    packet.postId = postId;
+    this.bus.send(packet);
+  }
+
+  createPost(subject: string, body: string) {
+    const packet = new BoardCreateClientPacket();
+    packet.boardId = this.boardId;
+    packet.postSubject = subject;
+    packet.postBody = body.replace(/\n/g, '\r');
+    this.bus.send(packet);
+  }
+
+  deletePost(postId: number) {
+    const packet = new BoardRemoveClientPacket();
+    packet.boardId = this.boardId;
+    packet.postId = postId;
+    this.bus.send(packet);
   }
 
   openChest(coords: Vector2) {
