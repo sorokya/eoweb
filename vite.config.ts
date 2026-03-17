@@ -2,8 +2,12 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
-    target: 'ES2022',
     chunkSizeWarningLimit: 2000,
+    rolldownOptions: {
+      checks: {
+        pluginTimings: false,
+      },
+    },
   },
   server: {
     port: 3000,
