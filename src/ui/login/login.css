@@ -17,9 +17,10 @@ label[for="login-remember"] {
 
 input[type="text"],
 input[type="password"] {
-  background: #a38269;
-  color: #000;
-  border: 1px solid #000;
+  background: rgba(91, 91, 91, 0.6);
+  padding: 4px 2px;
+  color: #fff;
+  border: 1px solid #484848;
   outline: none;
 }
 

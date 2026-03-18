@@ -7,3 +7,8 @@
   justify-content: center;
   z-index: 1020;
 }
+
+#in-game-menu button {
+  min-width: 45px;
+  padding: 4px;
+}

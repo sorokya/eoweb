@@ -565,91 +565,23 @@ div.icon[data-id="23"] {
   text-transform: capitalize;
 }
 
-.img-btn {
+button.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: #1e1e1e;
   border: 1px solid #444;
   color: #ccc;
-  font-size: 11px;
   padding: 4px 10px;
   cursor: pointer;
   user-select: none;
-  min-width: 60px;
-  min-height: 22px;
   white-space: nowrap;
+  font-size: 1rem;
 }
 
-.img-btn:hover {
+button.btn:hover {
   background: #2e2e2e;
   color: #eee;
-}
-
-.img-btn::after {
-  content: attr(data-id);
-  text-transform: capitalize;
-  letter-spacing: 0.02em;
-}
-
-/* Specific button sizes */
-.img-btn[data-id="create-account"],
-.img-btn[data-id="play-game"],
-.img-btn[data-id="view-credits"] {
-  min-width: 140px;
-  min-height: 34px;
-  font-size: 12px;
-}
-
-.img-btn[data-id="create"],
-.img-btn[data-id="cancel-big"],
-.img-btn[data-id="connect-big"],
-.img-btn[data-id="password"] {
-  min-width: 100px;
-  min-height: 34px;
-}
-
-.img-btn[data-id="toggle-arrow"] {
-  min-width: 16px;
-  min-height: 16px;
-  padding: 2px;
-  font-size: 10px;
-}
-
-.img-btn[data-id="exit-game"] {
-  min-width: 44px;
-  min-height: 44px;
-}
-
-.img-btn[data-id="inventory"],
-.img-btn[data-id="map"],
-.img-btn[data-id="spells"],
-.img-btn[data-id="stats"],
-.img-btn[data-id="online"],
-.img-btn[data-id="party"] {
-  min-width: 32px;
-  min-height: 16px;
-  padding: 2px 4px;
-  font-size: 10px;
-}
-
-.img-btn[data-id="quest-select"],
-.img-btn[data-id="upgrade-stat"] {
-  min-width: 14px;
-  min-height: 13px;
-  padding: 1px 3px;
-  font-size: 9px;
-}
-
-#offset-tweaker {
-  color: #fff;
-  position: absolute;
-  top: 20px;
-  right: 100px;
-}
-
-#offset-tweaker input {
-  width: 40px;
 }
 
 .slider-container {
