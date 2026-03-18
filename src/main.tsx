@@ -14,8 +14,10 @@ import {
   NpcMapInfo,
   SitState,
 } from 'eolib';
+import React from 'react';
 import './css/style.css';
 import 'notyf/notyf.min.css';
+import App from './app/app';
 import { PacketBus } from './bus';
 import { ChatTab, Client, GameState } from './client';
 import {
@@ -1272,3 +1274,5 @@ function _setDebugData() {
 
   client.atlas.refresh();
 }
+
+React.render(<App />, document.getElementById('app'));
