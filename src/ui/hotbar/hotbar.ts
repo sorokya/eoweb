@@ -1,7 +1,10 @@
 import type { Client } from '../../client';
 import { HOTBAR_SLOTS } from '../../consts';
-import { getItemGraphicPath } from '../../utils/get-item-graphic-id';
 import { Base } from '../base-ui';
+import {
+  setItemImageFromGfx,
+  setSkillBackgroundFromGfx,
+} from '../utils/gfx-resource';
 
 import './hotbar.css';
 
@@ -80,7 +83,7 @@ export class Hotbar extends Base {
 
         const img = document.createElement('div');
         img.classList.add('skill');
-        img.style.backgroundImage = `url(/gfx/gfx025/${skill.iconId + 100}.png)`;
+        void setSkillBackgroundFromGfx(img, skill.iconId);
 
         if (this.client.selectedSpellId === slot.typeId) {
           img.style.backgroundPositionX = '-34px';
@@ -97,7 +100,7 @@ export class Hotbar extends Base {
         itemContainer.classList.add('item');
 
         const img = document.createElement('img');
-        img.src = getItemGraphicPath(slot.typeId, item.graphicId);
+        void setItemImageFromGfx(img, slot.typeId, item.graphicId);
         itemContainer.appendChild(img);
 
         element.appendChild(itemContainer);
