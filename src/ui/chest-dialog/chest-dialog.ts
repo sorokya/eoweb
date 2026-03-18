@@ -1,10 +1,10 @@
-import type { EifRecord, ThreeItem } from 'eolib';
+import type { ThreeItem } from 'eolib';
 import { Gender, ItemType } from 'eolib';
 import type { Client } from '../../client';
 import { EOResourceID } from '../../edf';
 import { playSfxById, SfxId } from '../../sfx';
-import { getItemGraphicId } from '../../utils/get-item-graphic-id';
 import { Base } from '../base-ui';
+import { setItemImageFromGfx } from '../utils/gfx-resource';
 
 import './chest-dialog.css';
 
@@ -52,16 +52,6 @@ export class ChestDialog extends Base {
     }
   }
 
-  private getChestItemGraphicPath(
-    id: number,
-    eifRecord: EifRecord,
-    amount: number,
-  ): string {
-    const graphicId = getItemGraphicId(id, eifRecord.graphicId, amount);
-    const fileId = 100 + graphicId;
-    return `/gfx/gfx023/${fileId}.png`;
-  }
-
   private render() {
     this.itemsList!.innerHTML = '';
 
@@ -79,9 +69,10 @@ export class ChestDialog extends Base {
       itemElement.className = 'chest-item';
 
       const itemImage = document.createElement('img');
-      itemImage.src = this.getChestItemGraphicPath(
+      void setItemImageFromGfx(
+        itemImage,
         item.id,
-        record,
+        record.graphicId,
         item.amount,
       );
       itemImage.classList.add('item-image');

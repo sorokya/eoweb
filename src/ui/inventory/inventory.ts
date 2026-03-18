@@ -9,6 +9,7 @@ import { playSfxById, SfxId } from '../../sfx';
 import { getItemMeta } from '../../utils/get-item-meta';
 import type { Vector2 } from '../../vector';
 import { Base } from '../base-ui';
+import { setItemGridImageFromGfx } from '../utils/gfx-resource';
 
 import './inventory.css';
 
@@ -414,7 +415,7 @@ export class Inventory extends Base {
       imgContainer.classList.add('item');
       const img = document.createElement('img');
 
-      img.src = `/gfx/gfx023/${100 + record.graphicId * 2}.png`;
+      void setItemGridImageFromGfx(img, record.graphicId);
 
       const size = ITEM_SIZE[record.size];
 

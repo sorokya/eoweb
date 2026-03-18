@@ -1,7 +1,7 @@
 import type { EifRecord, EsfRecord } from 'eolib';
-import { getItemGraphicPath } from '../../utils/get-item-graphic-id';
 import { getItemMeta } from '../../utils/get-item-meta';
 import type { DialogIcon } from '../dialog-icon';
+import { setItemImageFromGfx, setSkillBackgroundFromGfx } from './gfx-resource';
 
 export function createIconMenuItem(
   icon: DialogIcon,
@@ -40,7 +40,7 @@ export function createItemMenuItem(
   menuItem.classList.add('menu-item', 'item');
 
   const menuImg = document.createElement('img');
-  menuImg.src = getItemGraphicPath(itemId, record.graphicId, itemAmount);
+  void setItemImageFromGfx(menuImg, itemId, record.graphicId, itemAmount);
   menuImg.classList.add('menu-item-img');
   menuItem.appendChild(menuImg);
 
@@ -74,7 +74,7 @@ export function createSkillMenuItem(
 
   const menuIcon = document.createElement('div');
   menuIcon.classList.add('menu-item-icon', 'skill-icon');
-  menuIcon.style.backgroundImage = `url('gfx/gfx025/${record.iconId + 100}.png')`;
+  void setSkillBackgroundFromGfx(menuIcon, record.iconId);
   menuIcon.style.width = '33px';
   menuIcon.style.height = '31px';
   menuItem.appendChild(menuIcon);

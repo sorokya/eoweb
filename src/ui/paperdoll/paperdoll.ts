@@ -5,6 +5,7 @@ import { capitalize } from '../../utils/capitalize';
 import { getItemMeta } from '../../utils/get-item-meta';
 import { Base } from '../base-ui';
 import { characterIconToChatIcon } from '../utils/character-icon-to-chat-icon';
+import { setItemGridImageFromGfx } from '../utils/gfx-resource';
 
 import './paperdoll.css';
 
@@ -336,7 +337,7 @@ export class Paperdoll extends Base {
     }
 
     const meta = getItemMeta(record);
-    img!.src = `/gfx/gfx023/${100 + record.graphicId * 2}.png`;
+    void setItemGridImageFromGfx(img!, record.graphicId);
     tooltip!.innerText = `${record.name}\n${meta.join('\n')}`;
     tooltip!.classList.remove('hidden');
   }

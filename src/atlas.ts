@@ -1926,7 +1926,7 @@ export class Atlas {
           sourceY = frame!.y;
           frame!.x = rect.x;
           frame!.y = rect.y;
-          frameImg = imgData.img;
+          frameImg = imgData.img!;
           break;
         }
         case FrameType.Npc: {

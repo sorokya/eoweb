@@ -1,6 +1,7 @@
 import type { Client } from '../../client';
 import { playSfxById, SfxId } from '../../sfx';
 import { BaseDialogMd } from '../base-dialog-md';
+import { setSkillBackgroundFromGfx } from '../utils/gfx-resource';
 
 import './spell-book.css';
 
@@ -40,7 +41,7 @@ export class SpellBook extends BaseDialogMd<Events> {
       const spellElement = document.createElement('div');
       const icon = document.createElement('div');
       icon.classList.add('spell-icon');
-      icon.style.backgroundImage = `url('/gfx/gfx025/${record.iconId + 100}.png')`;
+      void setSkillBackgroundFromGfx(icon, record.iconId);
 
       icon.addEventListener('pointerdown', (e) => {
         this.onPointerDown(e, icon, spell.id);
