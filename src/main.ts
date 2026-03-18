@@ -67,6 +67,7 @@ import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
 import { SpellBook } from './ui/spell-book';
 import { Stats } from './ui/stats/stats';
+import { bootstrapUiFramework } from './ui-framework';
 import { capitalize } from './utils/capitalize';
 import { randomRange } from './utils/random-range';
 
@@ -78,6 +79,8 @@ if (!ctx) {
   throw new Error('Failed to get canvas context!');
 }
 ctx.imageSmoothingEnabled = false;
+
+bootstrapUiFramework();
 
 const client = new Client();
 const mobileControls = new MobileControls();
@@ -431,7 +434,7 @@ const spellBook = new SpellBook(client);
 const partyDialog = new PartyDialog(client);
 
 const hideAllUi = () => {
-  const uiElements = document.querySelectorAll('#ui>div');
+  const uiElements = document.querySelectorAll('#ui>div:not(#ui-root)');
   for (const el of uiElements) {
     el.classList.add('hidden');
   }
@@ -440,6 +443,12 @@ const hideAllUi = () => {
   for (const el of dialogs) {
     el.classList.add('hidden');
   }
+
+  smallAlert.hide();
+  smallAlertLargeHeader.hide();
+  largeAlertSmallHeader.hide();
+  smallConfirm.hide();
+  largeConfirmSmallHeader.hide();
 };
 
 exitGame.on('click', () => {
