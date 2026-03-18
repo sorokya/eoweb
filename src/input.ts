@@ -31,10 +31,10 @@ export enum Input {
 const held: boolean[] = [];
 const lastInputHeld: Input[] = []; // | null = null;
 
-let touchStartX: number | null = null;
-let touchStartY: number | null = null;
-let touchId: number | null = null;
-let activeTouchDir: Input | null = null;
+const touchStartX: number | null = null;
+const touchStartY: number | null = null;
+const touchId: number | null = null;
+const activeTouchDir: Input | null = null;
 
 const DRAG_THRESHOLD = 30;
 
@@ -252,6 +252,7 @@ window.addEventListener('keyup', (e) => {
   }
 });
 
+/*
 const joystickContainer = document.getElementById('joystick-container');
 const thumb = document.getElementById('joystick-thumb');
 
@@ -346,6 +347,8 @@ btnSit.addEventListener('touchstart', () => {
 btnSit.addEventListener('touchend', () => {
   updateInputHeld(Input.SitStand, false);
 });
+
+*/
 
 window.addEventListener(
   'wheel',
