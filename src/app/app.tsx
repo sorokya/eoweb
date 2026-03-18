@@ -1,18 +1,10 @@
-import type { TargetedEvent } from 'preact';
-import { useState } from 'react';
+import type { Client } from '../client';
+import { ClientProvider } from './contexts/client-context';
 
-export default function App() {
-  const [name, setName] = useState('Preact');
+export default function App({ client }: { client: Client }) {
   return (
-    <div>
-      <h1>Hello {name}!</h1>
-      <input
-        type="text"
-        value={name}
-        onChange={(e: TargetedEvent<HTMLInputElement>) =>
-          setName(e.currentTarget.value)
-        }
-      />
-    </div>
+    <ClientProvider client={client}>
+      <pre>{JSON.stringify(client.version)}</pre>
+    </ClientProvider>
   );
 }

@@ -1275,4 +1275,4 @@ function _setDebugData() {
   client.atlas.refresh();
 }
 
-React.render(<App />, document.getElementById('app'));
+React.render(<App client={client} />, document.getElementById('app'));
