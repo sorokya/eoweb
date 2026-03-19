@@ -1,10 +1,14 @@
 import type { Client } from '../client';
-import { ClientProvider } from './contexts/client-context';
+import { Test } from './components/test';
+import { AlertProvider } from './contexts/alert';
+import { ClientProvider } from './contexts/client/';
 
 export default function App({ client }: { client: Client }) {
   return (
     <ClientProvider client={client}>
-      <span>App</span>
+      <AlertProvider>
+        <Test />
+      </AlertProvider>
     </ClientProvider>
   );
 }
