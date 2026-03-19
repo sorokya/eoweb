@@ -1,11 +1,4 @@
-import {
-  BigCoords,
-  CharacterMapInfo,
-  Direction,
-  EquipmentMapInfo,
-  Gender,
-  SitState,
-} from 'eolib';
+import { type CharacterMapInfo, Direction, Gender } from 'eolib';
 import mitt from 'mitt';
 import { CharacterFrame } from '../../atlas';
 import type { Client } from '../../client';
@@ -19,7 +12,6 @@ const MAX_GENDER = 2;
 const MAX_HAIR_STYLE = 20;
 const MAX_HAIR_COLOR = 10;
 const MAX_SKIN = 4;
-const CREATE_CHARACTER_PREVIEW_PLAYER_ID = -1;
 let lastTime: DOMHighResTimeStamp | undefined;
 
 type Events = {
@@ -74,7 +66,6 @@ export class CreateCharacterForm extends Base {
   );
   private character: CharacterMapInfo | undefined;
   private client: Client;
-  private previewPrimeTimeout: number | null = null;
 
   private gender = 0;
   private hairStyle = 0;
@@ -114,7 +105,7 @@ export class CreateCharacterForm extends Base {
     );
 
     const frame = this.client.atlas.getCharacterFrame(
-      this.character.playerId,
+      this.client.playerId,
       downRight
         ? CharacterFrame.StandingDownRight
         : CharacterFrame.StandingUpLeft,
@@ -173,20 +164,40 @@ export class CreateCharacterForm extends Base {
   }
 
   show() {
-    this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    /// Step 1: reuse the current hidden preview character and reset base looks.
     this.name.value = '';
-    this.primePreview();
+    this.character = this.client.getCharacterById(this.client.playerId);
+    this.character.gender = Gender.Female;
+    this.character.skin = 0;
+    this.character.direction = Direction.Down;
+    this.character.hairStyle = 1;
+    this.character.hairColor = 0;
+
+    /// Step 2: clear the preview equipment before we rebuild the atlas.
+    this.character.equipment.armor = 0;
+    this.character.equipment.weapon = 0;
+    this.character.equipment.boots = 0;
+    this.character.equipment.shield = 0;
+    this.character.equipment.hat = 0;
+
     this.gender = 0;
     this.hairStyle = 0;
     this.hairColor = 0;
     this.skin = 0;
-    this.open = true;
-    this.updateIcons();
-    window.requestAnimationFrame((now) => {
-      this.render(now);
+
+    /// Step 3: wait for the atlas refresh, then show and render the dialog.
+    this.client.atlas.refreshAsync().then(() => {
+      window.requestAnimationFrame((now) => {
+        this.render(now);
+      });
+
+      this.cover.classList.remove('hidden');
+      this.container.classList.remove('hidden');
+      this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
+      this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+
+      this.open = true;
+      this.updateIcons();
     });
   }
 
@@ -194,7 +205,6 @@ export class CreateCharacterForm extends Base {
     this.container.classList.add('hidden');
     this.cover.classList.add('hidden');
     this.open = false;
-    this.primePreview();
   }
 
   private updateIcons() {
@@ -202,66 +212,6 @@ export class CreateCharacterForm extends Base {
     this.lblHairStyle.style.backgroundPositionX = `-${this.hairStyle * 23}px`;
     this.lblHairColor.style.backgroundPositionX = `-${this.hairColor * 23}px`;
     this.lblSkin.style.backgroundPositionX = `-${this.skin * 23 + 46}px`;
-  }
-
-  primePreview() {
-    this.character = this.getPreviewCharacter();
-    this.applyDefaults(this.character);
-    this.ensurePreviewReady();
-  }
-
-  private getPreviewCharacter(): CharacterMapInfo {
-    const index = this.client.nearby.characters.findIndex(
-      (character) => character.playerId === CREATE_CHARACTER_PREVIEW_PLAYER_ID,
-    );
-
-    const character =
-      index === -1 ? new CharacterMapInfo() : this.client.nearby.characters[index];
-    character.playerId = CREATE_CHARACTER_PREVIEW_PLAYER_ID;
-    character.coords = new BigCoords();
-    character.name = '';
-    character.guildTag = '   ';
-    character.direction = Direction.Down;
-    character.sitState = SitState.Stand;
-    character.equipment = new EquipmentMapInfo();
-
-    if (index === -1) {
-      this.client.nearby.characters.push(character);
-    } else {
-      this.client.nearby.characters[index] = character;
-    }
-
-    return character;
-  }
-
-  private applyDefaults(character: CharacterMapInfo) {
-    character.gender = Gender.Female;
-    character.skin = 0;
-    character.direction = Direction.Down;
-    character.sitState = SitState.Stand;
-    character.hairStyle = 1;
-    character.hairColor = 0;
-    character.equipment = new EquipmentMapInfo();
-  }
-
-  private ensurePreviewReady() {
-    if (this.previewPrimeTimeout !== null) {
-      window.clearTimeout(this.previewPrimeTimeout);
-      this.previewPrimeTimeout = null;
-    }
-
-    this.client.atlas.refresh();
-
-    if (
-      !this.client.atlas.getCharacterFrame(
-        CREATE_CHARACTER_PREVIEW_PLAYER_ID,
-        CharacterFrame.StandingDownRight,
-      )
-    ) {
-      this.previewPrimeTimeout = window.setTimeout(() => {
-        this.ensurePreviewReady();
-      }, 50);
-    }
   }
 
   constructor(client: Client) {
@@ -277,6 +227,7 @@ export class CreateCharacterForm extends Base {
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.hide();
+      this.cover.classList.add('hidden');
     });
 
     this.preview.addEventListener('click', () => {
@@ -321,7 +272,7 @@ export class CreateCharacterForm extends Base {
       this.gender = incrementOrWrap(this.gender, MAX_GENDER);
       this.character.gender = this.gender as Gender;
       this.updateIcons();
-      this.ensurePreviewReady();
+      this.client.atlas.refresh();
     });
 
     this.btnToggleHairStyle.addEventListener('click', () => {
@@ -329,7 +280,7 @@ export class CreateCharacterForm extends Base {
       this.hairStyle = incrementOrWrap(this.hairStyle, MAX_HAIR_STYLE);
       this.character.hairStyle = this.hairStyle + 1;
       this.updateIcons();
-      this.ensurePreviewReady();
+      this.client.atlas.refresh();
     });
 
     this.btnToggleHairColor.addEventListener('click', () => {
@@ -337,7 +288,7 @@ export class CreateCharacterForm extends Base {
       this.hairColor = incrementOrWrap(this.hairColor, MAX_HAIR_COLOR);
       this.character.hairColor = this.hairColor;
       this.updateIcons();
-      this.ensurePreviewReady();
+      this.client.atlas.refresh();
     });
 
     this.btnToggleSkin.addEventListener('click', () => {
@@ -345,7 +296,7 @@ export class CreateCharacterForm extends Base {
       this.skin = incrementOrWrap(this.skin, MAX_SKIN);
       this.character.skin = this.skin;
       this.updateIcons();
-      this.ensurePreviewReady();
+      this.client.atlas.refresh();
     });
   }
 }

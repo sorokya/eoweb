@@ -212,7 +212,6 @@ client.on('login', (characters) => {
   playSfxById(SfxId.Login);
   loginForm.hide();
   characterSelect.setCharacters(characters);
-  createCharacterForm.primePreview();
   mainMenu.hide();
   characterSelect.show();
 });
@@ -239,7 +238,6 @@ client.on('characterCreated', (characters) => {
 
 client.on('characterDeleted', (characters) => {
   characterSelect.setCharacters(characters);
-  createCharacterForm.primePreview();
 });
 
 client.on('selectCharacter', () => {});
