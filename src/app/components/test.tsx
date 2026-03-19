@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'preact/hooks';
+import { useCallback } from 'preact/hooks';
 import { DialogResourceID } from '../../edf';
 import { useAlert } from '../contexts/alert';
 import { useClient } from '../contexts/client';

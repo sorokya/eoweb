@@ -31,4 +31,7 @@
   --radius-lg: 16px;
 
   --backdrop-color: rgba(0, 0, 0, 0.2);
+
+  /* === Main Menu === */
+  --main-menu-slogan-color: rgba(243, 250, 57, 1);
 }
