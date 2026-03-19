@@ -7,6 +7,12 @@
   gap: 2px;
 }
 
+#main-menu .btn {
+  min-width: 200px;
+  padding: 10px 20px;
+  font-size: 1.2rem;
+}
+
 #main-menu-logo {
   margin-bottom: 10px;
   position: relative;

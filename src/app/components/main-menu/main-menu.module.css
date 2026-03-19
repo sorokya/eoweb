@@ -1,0 +1,65 @@
+.mainMenu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 1.5rem;
+}
+
+.logo {
+  display: inline-block;
+  position: relative;
+}
+
+.logo::after {
+  content: attr(data-slogan);
+  position: absolute;
+  display: inline-block;
+  color: var(--main-menu-slogan-color);
+  font-style: italic;
+  font-family: monospace;
+  bottom: 1rem;
+  right: 0;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    font-size: 1em;
+    rotate: -1deg;
+  }
+
+  50% {
+    font-size: 1.1em;
+    rotate: 2deg;
+  }
+
+  to {
+    font-size: 1em;
+    rotate: -1deg;
+  }
+}
+
+.mainMenu input {
+  width: 15rem;
+  font-size: 0.9rem;
+  background: var(--bg-panel);
+}
+
+.mainMenu menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 2rem;
+  padding: 0;
+  margin: 0;
+}
+
+.mainMenu button:hover {
+  background: var(--bg-panel);
+}
+
+.mainMenu button:active {
+  background: var(--bg-base);
+}

@@ -15,6 +15,45 @@
 - Supports the 0.0.28 network protocol (classic Endless Online servers)
 - Works with game servers that support WebSocket connections, or via a [WebSocket bridge](https://github.com/sorokya/eo-ws-bridge)
 
+## 🧱 UI Framework Migration Matrix
+
+Current migration strategy is phased compatibility: legacy static dialogs and the new `ui-framework` runtime coexist during rollout.  
+`#ui-root` is the new manager-owned mount for dynamic dialogs.
+
+| Current UI element | Target family | Status | Notes |
+| --- | --- | --- | --- |
+| `small-alert-small-header` | `AlertDialog` | Migrated | Runtime-rendered modal under `#ui-root`, API-compatible wrapper kept. |
+| `small-alert-large-header` | `AlertDialog` | Migrated | Runtime-rendered modal under `#ui-root`, API-compatible wrapper kept. |
+| `large-alert-small-header` | `AlertDialog` | Migrated | Runtime-rendered modal under `#ui-root`, API-compatible wrapper kept. |
+| `small-confirm` | `ConfirmationDialog` | Migrated | Runtime-rendered modal with callback/keep-open compatibility. |
+| `large-confirm-small-header` | `ConfirmationDialog` | Migrated | Runtime-rendered modal with callback compatibility. |
+| `item-amount-dialog` | `FormDialog` (slider + numeric) | Pending | Still legacy static markup and behavior. |
+| `login` | `FormDialog` | Pending | Still legacy static markup and behavior. |
+| `create-account` | `FormDialog` | Pending | Still legacy static markup and behavior. |
+| `change-password` | `FormDialog` | Pending | Still legacy static markup and behavior. |
+| `create-character` | `FormDialog` (+ preview region) | Pending | Still legacy static markup and behavior. |
+| `shop` | `ScrollableListDialog` | Pending | Still legacy static list and state flow. |
+| `bank` | `ScrollableListDialog` | Pending | Still legacy static list and transfer flow. |
+| `locker` | `ScrollableListDialog` | Pending | Still legacy static list and transfer flow. |
+| `skill-master` | `ScrollableListDialog` | Pending | Still legacy static list and state flow. |
+| `chest` | `ScrollableListDialog` | Pending | Still legacy static list and transfer flow. |
+| `quest-dialog` | `ScrollableListDialog` (text/link items) | Pending | Still legacy static dialog state machine. |
+| `board` | `ScrollableListDialog` + state controller | Pending | Still legacy static board state controller. |
+| `spell-book` | `ScrollableGridDialog` | Pending | Still legacy static grid dialog. |
+| `online-list` | `ScrollableGridDialog` | Pending | Still legacy static grid dialog. |
+| `party` | `ScrollableGridDialog` (member cards) | Pending | Still legacy static grid/list hybrid dialog. |
+| `inventory` | `CustomDialog` | Pending | Drag/drop controller still legacy and static. |
+| `paperdoll` | `CustomDialog` | Pending | Equipment layout still legacy and static. |
+| `stats` | `CustomDialog` | Pending | Still legacy static dialog. |
+| `hud` | Custom managed window | Pending | Persistent legacy window. |
+| `hotbar` | Custom managed window | Pending | Persistent legacy window. |
+| `chat` | Custom managed window | Pending | Persistent legacy window. |
+| `mobile-controls` | Custom managed window | Pending | Persistent legacy window. |
+| `in-game-menu` | Custom managed window | Pending | Persistent legacy window. |
+| `character-select` | `CustomDialog` | Pending | Pre-game flow still legacy static markup. |
+| `main-menu` | `CustomDialog` | Pending | Pre-game flow still legacy static markup. |
+| `exit-game` | Custom managed control | Pending | Still legacy static control. |
+
 ---
 
 ## 🔧 Building from Source

@@ -27,11 +27,11 @@ import {
   TILE_HEIGHT,
 } from './consts';
 import { GfxType } from './gfx';
+import { GfxLoader } from './gfx-loader/gfx-loader';
 import { LAYER_GFX_MAP } from './map';
 import { clipHair } from './utils/clip-hair';
 import { HatMaskType } from './utils/get-hat-metadata';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
-import { padWithZeros } from './utils/pad-with-zeros';
 
 const ATLAS_SIZE = 2048;
 const CHARACTER_FRAME_SIZE = 100;
@@ -282,14 +282,14 @@ type Bmp = {
   gfxType?: GfxType;
   id?: number;
   path?: string;
-  img: HTMLImageElement;
+  img: ImageBitmap | null;
   loaded: boolean;
 };
 
 type CharacterFrameImg = {
   playerId: number;
   frameIndex: number;
-  img: HTMLImageElement;
+  img: ImageBitmap | null;
   loaded: boolean;
 };
 
@@ -372,6 +372,7 @@ export class Atlas {
   private effects: EffectAtlasEntry[] = [];
   private staticEntries: Map<StaticAtlasEntryType, TileAtlasEntry> = new Map();
   private client: Client;
+  private gfxLoader = new GfxLoader();
   mapId = 0;
   private mapHasChairs = false;
   private bmpsToLoad: Bmp[] = [];
@@ -906,38 +907,38 @@ export class Atlas {
     if (
       !this.bmpsToLoad.find((bmp) => bmp.gfxType === gfxType && bmp.id === id)
     ) {
-      const img = new Image();
-      const bmp = {
-        gfxType,
-        id,
-        img,
-        loaded: false,
-      };
-
-      img.onload = () => {
-        bmp.loaded = true;
-      };
-
-      img.src = `/gfx/gfx${padWithZeros(gfxType, 3)}/${id + 100}.png`;
+      const bmp: Bmp = { gfxType, id, img: null, loaded: false };
       this.bmpsToLoad.push(bmp);
+
+      this.gfxLoader
+        .loadResource(gfxType, id + 100)
+        .then((imageBitmap) => {
+          bmp.img = imageBitmap;
+          bmp.loaded = true;
+        })
+        .catch((err) => {
+          console.error(`Failed to load gfx ${gfxType}/${id}:`, err);
+          bmp.loaded = true;
+        });
     }
   }
 
   private addBmpToLoadByPath(path: string) {
     if (!this.bmpsToLoad.find((bmp) => bmp.path === path)) {
-      const img = new Image();
-      const bmp = {
-        path,
-        img,
-        loaded: false,
-      };
-
-      img.onload = () => {
-        bmp.loaded = true;
-      };
-
-      img.src = path;
+      const bmp: Bmp = { path, img: null, loaded: false };
       this.bmpsToLoad.push(bmp);
+
+      fetch(path)
+        .then((r) => r.blob())
+        .then((blob) => createImageBitmap(blob))
+        .then((imageBitmap) => {
+          bmp.img = imageBitmap;
+          bmp.loaded = true;
+        })
+        .catch((err) => {
+          console.error(`Failed to load ${path}:`, err);
+          bmp.loaded = true;
+        });
     }
   }
 
@@ -1648,7 +1649,7 @@ export class Atlas {
 
     for (const placeable of placeableFrames) {
       const rect = this.insert(placeable.w, placeable.h);
-      let frameImg: HTMLImageElement | undefined;
+      let frameImg: ImageBitmap | undefined;
 
       switch (placeable.type) {
         case FrameType.Static: {
@@ -1878,7 +1879,7 @@ export class Atlas {
 
     for (const placeable of placeableFrames) {
       const rect = this.insert(placeable.w, placeable.h);
-      let frameImg: HTMLImageElement | undefined;
+      let frameImg: ImageBitmap | undefined;
 
       switch (placeable.type) {
         case FrameType.Character: {
@@ -1907,7 +1908,7 @@ export class Atlas {
           sourceY = frame.y;
           frame.x = rect.x;
           frame.y = rect.y;
-          frameImg = imgData.img;
+          frameImg = imgData.img ?? undefined;
           break;
         }
         case FrameType.Npc: {
@@ -2194,17 +2195,16 @@ export class Atlas {
         frame.mirroredXOffset =
           HALF_CHARACTER_FRAME_SIZE - (frameBounds.x + frame.w);
 
-        const img = document.createElement('img');
         const characterFrameImg: CharacterFrameImg = {
           playerId: character.playerId,
           frameIndex: index,
-          img,
+          img: null,
           loaded: false,
         };
-        img.src = this.tmpBehindCtx.canvas.toDataURL();
-        img.onload = () => {
+        createImageBitmap(this.tmpBehindCtx.canvas).then((bm) => {
+          characterFrameImg.img = bm;
           characterFrameImg.loaded = true;
-        };
+        });
 
         this.temporaryCharacterFrames.push(characterFrameImg);
       }
@@ -2603,17 +2603,16 @@ export class Atlas {
     }
   }
 
-  private getBmp(
-    gfxType: GfxType,
-    graphicId: number,
-  ): HTMLImageElement | undefined {
-    return this.bmpsToLoad.find(
-      (bmp) => bmp.gfxType === gfxType && bmp.id === graphicId,
-    )?.img;
+  private getBmp(gfxType: GfxType, graphicId: number): ImageBitmap | undefined {
+    return (
+      this.bmpsToLoad.find(
+        (bmp) => bmp.gfxType === gfxType && bmp.id === graphicId,
+      )?.img ?? undefined
+    );
   }
 
-  private getBmpByPath(path: string): HTMLImageElement | undefined {
-    return this.bmpsToLoad.find((bmp) => bmp.path === path)?.img;
+  private getBmpByPath(path: string): ImageBitmap | undefined {
+    return this.bmpsToLoad.find((bmp) => bmp.path === path)?.img ?? undefined;
   }
 
   private renderCharacterHairBehind(

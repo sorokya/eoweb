@@ -1,0 +1,15 @@
+.textBox {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-default);
+  color: var(--text-primary);
+  font-size: inherit;
+}
+
+.textBox:focus {
+  outline: none;
+  border-color: var(--border-primary);
+  box-shadow: 0 0 0 2px var(--border-primary);
+}

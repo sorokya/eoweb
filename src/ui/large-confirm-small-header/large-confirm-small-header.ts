@@ -1,53 +1,66 @@
 import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
+import { ConfirmationDialog, getUiFrameworkRuntime } from '../../ui-framework';
 
 import './large-confirm-small-header.css';
 
-export class LargeConfirmSmallHeader extends Base {
-  protected container = document.getElementById('large-confirm-small-header');
-  private cover = document.getElementById('cover');
-  private title: HTMLSpanElement = this.container.querySelector('.title');
-  private message: HTMLSpanElement = this.container.querySelector('.message');
-  private btnOk: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="ok"]',
-  );
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
-    'button[data-id="cancel"]',
-  );
-  private callback: (() => undefined) | null = null;
-
-  show() {
-    this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
-  }
+export class LargeConfirmSmallHeader {
+  private readonly dialog: ConfirmationDialog;
+  private callback: (() => void) | null = null;
 
   constructor() {
-    super();
-    this.btnCancel.addEventListener('click', () => {
-      playSfxById(SfxId.ButtonClick);
-      this.hide();
-      this.cover.classList.add('hidden');
+    const runtime = getUiFrameworkRuntime();
+    this.dialog = new ConfirmationDialog(runtime, {
+      id: 'large-confirm-small-header',
+      title: 'Confirm',
+      body: '',
+      modal: true,
+      classNames: {
+        panel:
+          'ui-framework-confirm ui-framework-confirm--large-confirm-small-header',
+        title: 'ui-framework-confirm__title',
+        body: 'ui-framework-confirm__message',
+        buttonRow: 'ui-framework-confirm__buttons',
+      },
+      confirmButton: {
+        label: 'OK',
+        onSelect: () => {
+          playSfxById(SfxId.ButtonClick);
+          this.callback?.();
+          return undefined;
+        },
+      },
+      cancelButton: {
+        label: 'Cancel',
+        onSelect: () => {
+          playSfxById(SfxId.ButtonClick);
+          return undefined;
+        },
+      },
     });
+  }
 
-    this.btnOk.addEventListener('click', () => {
-      playSfxById(SfxId.ButtonClick);
+  show() {
+    this.dialog.open();
+  }
+
+  hide() {
+    this.dialog.close();
+  }
+
+  toggle() {
+    if (this.dialog.isOpen()) {
       this.hide();
-      this.cover.classList.add('hidden');
+      return;
+    }
 
-      if (this.callback) {
-        this.callback();
-      }
-    });
+    this.show();
   }
 
   setContent(message: string, title = 'Error') {
-    this.title.innerText = title;
-    this.message.innerText = message;
+    this.dialog.setContent(message, title);
   }
 
-  setCallback(callback: () => undefined) {
+  setCallback(callback: () => void) {
     this.callback = callback;
   }
 }

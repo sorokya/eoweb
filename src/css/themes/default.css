@@ -1,0 +1,37 @@
+:root {
+  /* === Background layers (all translucent) === */
+  --bg-base: rgba(10, 10, 10, 0.55);
+  --bg-panel: rgba(20, 20, 20, 0.65);
+  --bg-elevated: rgba(45, 45, 45, 0.75);
+
+  /* === Borders / separators === */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  /* === Text === */
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --text-muted: rgba(255, 255, 255, 0.45);
+
+  /* === Hover / interaction === */
+  --bg-hover: rgba(255, 255, 255, 0.06);
+  --bg-active: rgba(255, 255, 255, 0.12);
+
+  /* === Blur + glass effect === */
+  --blur-strength: 6px;
+  --backdrop-blur: blur(var(--blur-strength));
+
+  /* === Shadows (very soft for glass look) === */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.35);
+
+  /* === Radius === */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --backdrop-color: rgba(0, 0, 0, 0.2);
+
+  /* === Main Menu === */
+  --main-menu-slogan-color: rgba(243, 250, 57, 1);
+}

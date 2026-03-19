@@ -1,0 +1,32 @@
+*,
+*::after,
+*::before {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 62.5%;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 1.4rem;
+}
+
+@media screen and (max-width: 600px) {
+  body {
+    font-size: 1.2rem;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  body {
+    font-size: 1rem;
+  }
+}

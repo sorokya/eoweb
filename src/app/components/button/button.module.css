@@ -1,0 +1,17 @@
+.button {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.button:hover {
+  background: var(--bg-hover);
+}
+
+.button:active {
+  background: var(--bg-active);
+}
