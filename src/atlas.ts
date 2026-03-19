@@ -830,6 +830,22 @@ export class Atlas {
     }
   }
 
+  async refreshAsync(): Promise<void> {
+    return new Promise((resolve) => {
+      this.refresh();
+
+      const checkLoaded = () => {
+        if (this.loading) {
+          setTimeout(checkLoaded, 50);
+        } else {
+          resolve();
+        }
+      };
+
+      checkLoaded();
+    });
+  }
+
   refresh() {
     if (this.loading) return;
     this.loading = true;

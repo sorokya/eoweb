@@ -164,10 +164,7 @@ export class CreateCharacterForm extends Base {
   }
 
   show() {
-    this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    /// Step 1: reuse the current hidden preview character and reset base looks.
     this.name.value = '';
     this.character = this.client.getCharacterById(this.client.playerId);
     this.character.gender = Gender.Female;
@@ -175,15 +172,32 @@ export class CreateCharacterForm extends Base {
     this.character.direction = Direction.Down;
     this.character.hairStyle = 1;
     this.character.hairColor = 0;
+
+    /// Step 2: clear the preview equipment before we rebuild the atlas.
+    this.character.equipment.armor = 0;
+    this.character.equipment.weapon = 0;
+    this.character.equipment.boots = 0;
+    this.character.equipment.shield = 0;
+    this.character.equipment.hat = 0;
+
     this.gender = 0;
     this.hairStyle = 0;
     this.hairColor = 0;
     this.skin = 0;
-    this.open = true;
-    this.updateIcons();
-    this.client.atlas.refresh();
-    window.requestAnimationFrame((now) => {
-      this.render(now);
+
+    /// Step 3: wait for the atlas refresh, then show and render the dialog.
+    this.client.atlas.refreshAsync().then(() => {
+      window.requestAnimationFrame((now) => {
+        this.render(now);
+      });
+
+      this.cover.classList.remove('hidden');
+      this.container.classList.remove('hidden');
+      this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
+      this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+
+      this.open = true;
+      this.updateIcons();
     });
   }
 
