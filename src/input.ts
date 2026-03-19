@@ -31,12 +31,14 @@ export enum Input {
 const held: boolean[] = [];
 const lastInputHeld: Input[] = []; // | null = null;
 
+/*
 const touchStartX: number | null = null;
 const touchStartY: number | null = null;
 const touchId: number | null = null;
 const activeTouchDir: Input | null = null;
 
 const DRAG_THRESHOLD = 30;
+*/
 
 export function isInputHeld(input: Input): boolean {
   return held[input] || false;
@@ -73,12 +75,14 @@ function updateInputHeld(input: Input, down: boolean) {
   }
 }
 
+/*
 function swipedDir(dx: number, dy: number): Input {
   if (Math.abs(dx) > Math.abs(dy)) {
     return dx < 0 ? Input.Left : Input.Right;
   }
   return dy < 0 ? Input.Up : Input.Down;
 }
+  */
 
 window.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && ['=', '+', '-', '_'].includes(e.key)) {
