@@ -74,9 +74,9 @@ export class GfxLoader {
         pending.reject(data.error);
       } else {
         pending.resolve({
-          pixels: data.pixels,
-          width: data.width,
-          height: data.height,
+          pixels: data.pixels!,
+          width: data.width!,
+          height: data.height!,
         });
       }
     }
@@ -93,7 +93,7 @@ export class GfxLoader {
       if (data.error) {
         pending.reject(data.error);
       } else {
-        pending.resolve(data.resourceInfo);
+        pending.resolve(data.resourceInfo!);
       }
     }
   }
@@ -158,7 +158,7 @@ export class GfxLoader {
     // Tier 2: in-memory LRU
     if (this.bitmapCache.has(cacheKey)) {
       // Move to end (most recently used)
-      const bm = this.bitmapCache.get(cacheKey);
+      const bm = this.bitmapCache.get(cacheKey)!;
       this.bitmapCache.delete(cacheKey);
       this.bitmapCache.set(cacheKey, bm);
       return bm;
@@ -167,7 +167,7 @@ export class GfxLoader {
     await this.loadEGF(fileID);
 
     if (this.pendingResources.has(cacheKey)) {
-      const result = await this.pendingResources.get(cacheKey)?.promise;
+      const result = await this.pendingResources.get(cacheKey)!.promise;
       return this.toImageBitmap(cacheKey, result);
     }
 
@@ -201,7 +201,7 @@ export class GfxLoader {
 
     // LRU eviction
     if (this.bitmapCache.size >= LRU_MAX_SIZE) {
-      const firstKey = this.bitmapCache.keys().next().value;
+      const firstKey = this.bitmapCache.keys().next().value as string;
       this.bitmapCache.get(firstKey)?.close();
       this.bitmapCache.delete(firstKey);
     }

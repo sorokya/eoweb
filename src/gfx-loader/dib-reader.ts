@@ -715,9 +715,9 @@ class RGBReadStrategy extends LineByLineReadStrategy {
   readLine(outBuffer: Uint8ClampedArray, outPos: number, linePos: number) {
     for (let i = 0; i < this.width; ++i) {
       const p = this.readUint32WithZeroPadding(linePos);
-      const r = this.reader.bitFields?.r.read(p);
-      const g = this.reader.bitFields?.g.read(p);
-      const b = this.reader.bitFields?.b.read(p);
+      const r = this.reader.bitFields!.r.read(p);
+      const g = this.reader.bitFields!.g.read(p);
+      const b = this.reader.bitFields!.b.read(p);
 
       outBuffer[outPos++] = r;
       outBuffer[outPos++] = g;
@@ -850,7 +850,7 @@ class RLEReadStrategy extends ReadStrategy {
       case Compression.RLE4:
         return function* (this: RLEReadStrategy, outBuffer: Uint8ClampedArray) {
           const indices = this.readUint8();
-          let color: PaletteColor;
+          let color: PaletteColor = this.reader.colorFromPalette(0);
           let i = 0;
           while (true) {
             switch (i++ % 2) {
@@ -861,7 +861,7 @@ class RLEReadStrategy extends ReadStrategy {
                 color = this.reader.colorFromPalette(indices & 0x0f);
                 break;
             }
-            this.setPixel(color?.r, color?.g, color?.b, outBuffer);
+            this.setPixel(color.r, color.g, color.b, outBuffer);
             yield;
           }
         };

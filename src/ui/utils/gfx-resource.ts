@@ -28,7 +28,7 @@ function touchCachedUrl(cacheKey: string, url: string): void {
 
 function addCachedUrl(cacheKey: string, url: string): void {
   if (urlCache.has(cacheKey)) {
-    URL.revokeObjectURL(urlCache.get(cacheKey));
+    URL.revokeObjectURL(urlCache.get(cacheKey)!);
   }
   urlCache.set(cacheKey, url);
 
