@@ -20,14 +20,14 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.requestCharacterRange([packet.playerId]);
+    client.sessionController.requestCharacterRange([packet.playerId]);
     return;
   }
 
   character.direction = packet.direction;
 
   const metadata = client.getWeaponMetadata(character.equipment.weapon);
-  client.characterAnimations.set(
+  client.animationController.characterAnimations.set(
     packet.playerId,
     metadata.ranged
       ? new CharacterRangedAttackAnimation()
@@ -38,7 +38,7 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
   playSfxById(metadata.sfx[index]);
 
   if (metadata.sfx[0] === SfxId.Harp1 || metadata.sfx[0] === SfxId.Guitar1) {
-    client.characterEmotes.set(
+    client.animationController.characterEmotes.set(
       packet.playerId,
       new Emote(EmoteType.Playful + 1),
     );
@@ -51,7 +51,7 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
   if (spec && spec.tileSpec === MapTileSpec.Water) {
     const metadata = client.getEffectMetadata(9);
     playSfxById(metadata.sfx);
-    client.effects.push(
+    client.animationController.effects.push(
       new EffectAnimation(
         9,
         new EffectTargetCharacter(packet.playerId),

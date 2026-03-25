@@ -7,12 +7,9 @@ import {
   PaperdollRemoveServerPacket,
   PaperdollReplyServerPacket,
 } from 'eolib';
-import {
-  type Client,
-  EquipmentSlot,
-  getEquipmentSlotForItemType,
-} from '../client';
+import type { Client } from '../client';
 import { playSfxById, SfxId } from '../sfx';
+import { EquipmentSlot, getEquipmentSlotForItemType } from '../types';
 
 function handlePaperdollReply(client: Client, reader: EoReader) {
   const packet = PaperdollReplyServerPacket.deserialize(reader);
@@ -30,7 +27,7 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
     return;
   }
 
-  const equipment = client.getEquipmentArray();
+  const equipment = client.inventoryController.getEquipmentArray();
   let slot = equipment.indexOf(packet.itemId);
   if (slot === -1) {
     return;
@@ -51,12 +48,17 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
     return;
   }
 
-  client.setEquipmentSlot(slot, 0);
+  client.inventoryController.setEquipmentSlot(slot, 0);
   client.emit('equipmentChanged', undefined);
 
-  const isVisibleChange = client.isVisibleEquipmentChange(slot);
-  if (isVisibleChange && !client.equipmentSwap) {
-    client.setNearbyCharacterEquipment(client.playerId, slot, 0);
+  const isVisibleChange =
+    client.inventoryController.isVisibleEquipmentChange(slot);
+  if (isVisibleChange && !client.inventoryController.equipmentSwap) {
+    client.inventoryController.setNearbyCharacterEquipment(
+      client.playerId,
+      slot,
+      0,
+    );
   }
 
   client.baseStats.str = packet.stats.baseStats.str;
@@ -90,17 +92,21 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
 
   client.emit('inventoryChanged', undefined);
 
-  if (client.equipmentSwap) {
+  if (client.inventoryController.equipmentSwap) {
     if (
-      !client.equipItem(
-        client.equipmentSwap.slot,
-        client.equipmentSwap.itemId,
+      !client.inventoryController.equipItem(
+        client.inventoryController.equipmentSwap.slot,
+        client.inventoryController.equipmentSwap.itemId,
       ) &&
       isVisibleChange
     ) {
-      client.setNearbyCharacterEquipment(client.playerId, slot, 0);
+      client.inventoryController.setNearbyCharacterEquipment(
+        client.playerId,
+        slot,
+        0,
+      );
     }
-    client.equipmentSwap = null;
+    client.inventoryController.equipmentSwap = null;
   }
 }
 
@@ -111,17 +117,21 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
     return;
   }
 
-  const equipment = client.getEquipmentArray();
+  const equipment = client.inventoryController.getEquipmentArray();
   const slot = getEquipmentSlotForItemType(record.type, packet.subLoc);
   if (equipment[slot!]) {
     return;
   }
 
-  client.setEquipmentSlot(slot!, packet.itemId);
+  client.inventoryController.setEquipmentSlot(slot!, packet.itemId);
   client.emit('equipmentChanged', undefined);
 
-  if (client.isVisibleEquipmentChange(slot!)) {
-    client.setNearbyCharacterEquipment(client.playerId, slot!, record.spec1);
+  if (client.inventoryController.isVisibleEquipmentChange(slot!)) {
+    client.inventoryController.setNearbyCharacterEquipment(
+      client.playerId,
+      slot!,
+      record.spec1,
+    );
   }
 
   client.baseStats.str = packet.stats.baseStats.str;

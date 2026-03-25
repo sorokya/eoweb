@@ -6,8 +6,9 @@ import {
   PacketFamily,
   WelcomeRequestClientPacket,
 } from 'eolib';
-import { type Client, GameState } from '../client';
+import type { Client } from '../client';
 import { DialogResourceID } from '../edf';
+import { GameState } from '../types';
 
 function handleLoginReply(client: Client, reader: EoReader) {
   const packet = LoginReplyServerPacket.deserialize(reader);

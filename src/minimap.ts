@@ -2,7 +2,6 @@ import { Direction, MapTileSpec, NpcType } from 'eolib';
 import { StaticAtlasEntryType } from './atlas';
 import type { Client } from './client';
 import { DEATH_TICKS } from './consts';
-import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { CharacterDeathAnimation } from './render/character-death';
 import { CharacterWalkAnimation } from './render/character-walk';
 import { NpcDeathAnimation } from './render/npc-death';
@@ -128,9 +127,10 @@ export class MinimapRenderer {
 
     const player = this.client.getPlayerCoords();
     let playerScreen = isoToScreen(player);
-    let mainCharacterAnimation = this.client.characterAnimations.get(
-      this.client.playerId,
-    );
+    let mainCharacterAnimation =
+      this.client.animationController.characterAnimations.get(
+        this.client.playerId,
+      );
 
     if (
       mainCharacterAnimation instanceof CharacterDeathAnimation &&
@@ -149,7 +149,7 @@ export class MinimapRenderer {
       playerScreen.y += walkOffset.y;
     }
 
-    playerScreen.x += this.client.quakeOffset;
+    playerScreen.x += this.client.quakeController.quakeOffset;
 
     ctx.globalAlpha = 0.5;
     for (let y = player.y - RANGE; y <= player.y + RANGE; y++) {
@@ -181,10 +181,16 @@ export class MinimapRenderer {
 
         const tileScreen = isoToScreen({ x, y });
         const screenX = Math.floor(
-          tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+          tileScreen.x -
+            HALF_TILE_WIDTH -
+            playerScreen.x +
+            this.client.viewportController.getHalfGameWidth(),
         );
         const screenY = Math.floor(
-          tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
+          tileScreen.y -
+            HALF_TILE_HEIGHT -
+            playerScreen.y +
+            this.client.viewportController.getHalfGameHeight(),
         );
 
         const sourceX = START_X + icon * TILE_WIDTH + icon;
@@ -207,7 +213,9 @@ export class MinimapRenderer {
 
       let dyingTicks = 0;
       let dying = false;
-      let animation = this.client.npcAnimations.get(npc.index);
+      let animation = this.client.animationController.npcAnimations.get(
+        npc.index,
+      );
 
       if (animation instanceof NpcDeathAnimation) {
         dying = true;
@@ -230,10 +238,16 @@ export class MinimapRenderer {
       }
 
       const screenX = Math.floor(
-        tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+        tileScreen.x -
+          HALF_TILE_WIDTH -
+          playerScreen.x +
+          this.client.viewportController.getHalfGameWidth(),
       );
       const screenY = Math.floor(
-        tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
+        tileScreen.y -
+          HALF_TILE_HEIGHT -
+          playerScreen.y +
+          this.client.viewportController.getHalfGameHeight(),
       );
 
       const record = this.client.getEnfRecordById(npc.id);
@@ -274,7 +288,9 @@ export class MinimapRenderer {
     for (const character of this.client.nearby.characters) {
       let dyingTicks = 0;
       let dying = false;
-      let animation = this.client.characterAnimations.get(character.playerId);
+      let animation = this.client.animationController.characterAnimations.get(
+        character.playerId,
+      );
       if (animation instanceof CharacterDeathAnimation) {
         dying = true;
         dyingTicks = animation.ticks;
@@ -301,14 +317,14 @@ export class MinimapRenderer {
         tileScreen.x -
           HALF_TILE_WIDTH -
           playerScreen.x +
-          HALF_GAME_WIDTH +
+          this.client.viewportController.getHalfGameWidth() +
           offset.x,
       );
       const screenY = Math.floor(
         tileScreen.y -
           HALF_TILE_HEIGHT -
           playerScreen.y +
-          HALF_GAME_HEIGHT +
+          this.client.viewportController.getHalfGameHeight() +
           offset.y,
       );
 

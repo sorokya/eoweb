@@ -1,8 +1,9 @@
 import mitt from 'mitt';
-import { ChatTab, type Client } from '../../client';
+import type { Client } from '../../client';
 import { Base } from '../base-ui';
 
 import './chat.css';
+import { ChatIcon, ChatTab } from '../../types';
 
 type Events = {
   click: undefined;
@@ -10,34 +11,6 @@ type Events = {
   focus: undefined;
   blur: undefined;
 };
-
-export enum ChatIcon {
-  None = -1,
-  SpeechBubble = 0,
-  Note = 1,
-  Error = 2,
-  NoteLeftArrow = 3,
-  GlobalAnnounce = 4,
-  Star = 5,
-  Exclamation = 6,
-  LookingDude = 7,
-  Heart = 8,
-  Player = 9,
-  PlayerParty = 10,
-  PlayerPartyDark = 11,
-  GM = 12,
-  GMParty = 13,
-  HGM = 14,
-  HGMParty = 15,
-  DownArrow = 16,
-  UpArrow = 17,
-  DotDotDotDot = 18,
-  Guild = 19,
-  Skeleton = 20,
-  Trophy = 21,
-  Information = 22,
-  QuestMessage = 23,
-}
 
 export class Chat extends Base {
   protected container = document.getElementById('chat')!;

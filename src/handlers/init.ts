@@ -15,11 +15,11 @@ import {
   PacketFamily,
   serverVerificationHash,
 } from 'eolib';
-import { ChatTab, type Client, GameState } from '../client';
+import type { Client } from '../client';
 import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '../db';
 import { DialogResourceID, EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon, ChatTab, GameState } from '../types';
 
 function handleInitInit(client: Client, reader: EoReader) {
   const packet = InitInitServerPacket.deserialize(reader);
@@ -178,9 +178,9 @@ function handleInitFileEcf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.requestFile(download!.type, download!.id);
+    client.sessionController.requestFile(download!.type, download!.id);
   } else {
-    client.enterGame();
+    client.sessionController.enterGame();
   }
 }
 
@@ -194,9 +194,9 @@ function handleInitFileEif(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.requestFile(download!.type, download!.id);
+    client.sessionController.requestFile(download!.type, download!.id);
   } else {
-    client.enterGame();
+    client.sessionController.enterGame();
   }
 }
 
@@ -210,9 +210,9 @@ function handleInitFileEnf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.requestFile(download!.type, download!.id);
+    client.sessionController.requestFile(download!.type, download!.id);
   } else {
-    client.enterGame();
+    client.sessionController.enterGame();
   }
 }
 
@@ -226,9 +226,9 @@ function handleInitFileEsf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.requestFile(download!.type, download!.id);
+    client.sessionController.requestFile(download!.type, download!.id);
   } else {
-    client.enterGame();
+    client.sessionController.enterGame();
   }
 }
 
@@ -242,9 +242,9 @@ function handleInitFileEmf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.requestFile(download!.type, download!.id);
+    client.sessionController.requestFile(download!.type, download!.id);
   } else {
-    client.enterGame();
+    client.sessionController.enterGame();
   }
 }
 

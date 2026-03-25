@@ -20,7 +20,7 @@ function handleSitPlayer(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.requestCharacterRange([packet.playerId]);
+    client.sessionController.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -40,7 +40,7 @@ function handleSitPlayer(client: Client, reader: EoReader) {
   if (spec && spec.tileSpec === MapTileSpec.Water) {
     const metadata = client.getEffectMetadata(9);
     playSfxById(metadata.sfx);
-    client.effects.push(
+    client.animationController.effects.push(
       new EffectAnimation(
         9,
         new EffectTargetCharacter(packet.playerId),
@@ -56,7 +56,7 @@ function handleSitRemove(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.requestCharacterRange([packet.playerId]);
+    client.sessionController.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -71,7 +71,7 @@ function handleSitClose(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.requestCharacterRange([packet.playerId]);
+    client.sessionController.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -86,7 +86,7 @@ function handleSitReply(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.requestCharacterRange([packet.playerId]);
+    client.sessionController.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -102,7 +102,7 @@ function handleSitReply(client: Client, reader: EoReader) {
   if (spec && spec.tileSpec === MapTileSpec.Water) {
     const metadata = client.getEffectMetadata(9);
     playSfxById(metadata.sfx);
-    client.effects.push(
+    client.animationController.effects.push(
       new EffectAnimation(
         9,
         new EffectTargetCharacter(client.playerId),

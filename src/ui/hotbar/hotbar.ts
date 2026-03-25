@@ -1,5 +1,6 @@
 import type { Client } from '../../client';
 import { HOTBAR_SLOTS } from '../../consts';
+import { SlotType } from '../../types/ui';
 import { Base } from '../base-ui';
 import {
   setItemImageFromGfx,
@@ -7,12 +8,6 @@ import {
 } from '../utils/gfx-resource';
 
 import './hotbar.css';
-
-export enum SlotType {
-  Empty = 0,
-  Item = 1,
-  Skill = 2,
-}
 
 export class Slot {
   type: SlotType;
@@ -37,7 +32,7 @@ export class Hotbar extends Base {
       slot.classList.add('slot');
 
       slot.addEventListener('click', () => {
-        this.client.useHotbarSlot(i);
+        this.client.spellController.useHotbarSlot(i);
       });
 
       this.container.appendChild(slot);
@@ -85,7 +80,7 @@ export class Hotbar extends Base {
         img.classList.add('skill');
         void setSkillBackgroundFromGfx(img, skill.iconId);
 
-        if (this.client.selectedSpellId === slot.typeId) {
+        if (this.client.spellController.selectedSpellId === slot.typeId) {
           img.style.backgroundPositionX = '-34px';
         }
 

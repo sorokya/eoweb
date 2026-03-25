@@ -8,20 +8,20 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import { ChatTab, type Client } from '../client';
+import type { Client } from '../client';
 import { ITEM_PROTECT_TICKS_NPC } from '../consts';
 import { EOResourceID } from '../edf';
 import { EffectTargetNpc } from '../render/effect';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon, ChatTab } from '../types';
 
 function handleCastReply(client: Client, reader: EoReader) {
   const packet = CastReplyServerPacket.deserialize(reader);
   const npc = client.getNpcByIndex(packet.npcIndex);
   if (!npc) {
-    client.requestNpcRange([packet.npcIndex]);
+    client.sessionController.requestNpcRange([packet.npcIndex]);
     return;
   }
 
@@ -30,19 +30,22 @@ function handleCastReply(client: Client, reader: EoReader) {
     client.emit('statsUpdate', undefined);
   }
 
-  client.npcHealthBars.set(
+  client.animationController.npcHealthBars.set(
     packet.npcIndex,
     new HealthBar(packet.hpPercentage, packet.damage),
   );
 
-  client.playSpellEffect(packet.spellId, new EffectTargetNpc(packet.npcIndex));
+  client.spellController.playSpellEffect(
+    packet.spellId,
+    new EffectTargetNpc(packet.npcIndex),
+  );
 }
 
 function handleCastSpec(client: Client, reader: EoReader) {
   const packet = CastSpecServerPacket.deserialize(reader);
   const npc = client.getNpcByIndex(packet.npcKilledData.npcIndex);
   if (!npc) {
-    client.requestNpcRange([packet.npcKilledData.npcIndex]);
+    client.sessionController.requestNpcRange([packet.npcKilledData.npcIndex]);
     return;
   }
 
@@ -51,12 +54,12 @@ function handleCastSpec(client: Client, reader: EoReader) {
     client.emit('statsUpdate', undefined);
   }
 
-  client.npcHealthBars.set(
+  client.animationController.npcHealthBars.set(
     packet.npcKilledData.npcIndex,
     new HealthBar(0, packet.npcKilledData.damage),
   );
 
-  client.playSpellEffect(
+  client.spellController.playSpellEffect(
     packet.spellId,
     new EffectTargetNpc(packet.npcKilledData.npcIndex),
   );
@@ -104,7 +107,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
   const packet = CastAcceptServerPacket.deserialize(reader);
   const npc = client.getNpcByIndex(packet.npcKilledData.npcIndex);
   if (!npc) {
-    client.requestNpcRange([packet.npcKilledData.npcIndex]);
+    client.sessionController.requestNpcRange([packet.npcKilledData.npcIndex]);
     return;
   }
 
@@ -113,12 +116,12 @@ function handleCastAccept(client: Client, reader: EoReader) {
     client.emit('statsUpdate', undefined);
   }
 
-  client.npcHealthBars.set(
+  client.animationController.npcHealthBars.set(
     packet.npcKilledData.npcIndex,
     new HealthBar(0, packet.npcKilledData.damage),
   );
 
-  client.playSpellEffect(
+  client.spellController.playSpellEffect(
     packet.spellId,
     new EffectTargetNpc(packet.npcKilledData.npcIndex),
   );
@@ -146,7 +149,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
     });
   }
 
-  client.characterEmotes.set(
+  client.animationController.characterEmotes.set(
     packet.npcKilledData.killerId,
     new Emote(EmoteType.LevelUp),
   );

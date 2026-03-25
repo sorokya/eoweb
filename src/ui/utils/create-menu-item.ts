@@ -1,6 +1,6 @@
 import type { EifRecord, EsfRecord } from 'eolib';
+import type { DialogIcon } from '../../types';
 import { getItemMeta } from '../../utils/get-item-meta';
-import type { DialogIcon } from '../dialog-icon';
 import { setItemImageFromGfx, setSkillBackgroundFromGfx } from './gfx-resource';
 
 export function createIconMenuItem(

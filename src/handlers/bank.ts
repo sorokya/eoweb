@@ -11,8 +11,8 @@ import { playSfxById, SfxId } from '../sfx';
 function handleBankOpen(client: Client, reader: EoReader) {
   const packet = BankOpenServerPacket.deserialize(reader);
   client.sessionId = packet.sessionId;
-  client.goldBank = packet.goldBank;
-  client.lockerUpgrades = packet.lockerUpgrades;
+  client.bankController.goldBank = packet.goldBank;
+  client.bankController.lockerUpgrades = packet.lockerUpgrades;
   client.emit('bankOpened', undefined);
 }
 
@@ -24,7 +24,7 @@ function handleBankReply(client: Client, reader: EoReader) {
   }
 
   gold.amount = packet.goldInventory;
-  client.goldBank = packet.goldBank;
+  client.bankController.goldBank = packet.goldBank;
   playSfxById(SfxId.BuySell);
   client.emit('bankUpdated', undefined);
   client.emit('inventoryChanged', undefined);

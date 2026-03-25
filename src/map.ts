@@ -13,7 +13,7 @@ import {
   NpcFrame,
   StaticAtlasEntryType,
 } from './atlas';
-import { type Client, GameState } from './client';
+import type { Client } from './client';
 import {
   getCharacterIntersecting,
   getCharacterRectangle,
@@ -45,7 +45,6 @@ import {
   WALK_WIDTH_FACTOR,
 } from './consts';
 import { TextAlign } from './fonts/base';
-import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
@@ -63,6 +62,7 @@ import type { HealthBar } from './render/health-bar';
 import { NpcAttackAnimation } from './render/npc-attack';
 import { NpcDeathAnimation } from './render/npc-death';
 import { NpcWalkAnimation } from './render/npc-walk';
+import { GameState } from './types';
 import { capitalize } from './utils/capitalize';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';
@@ -274,9 +274,10 @@ export class MapRenderer {
 
     const player = this.client.getPlayerCoords();
     let playerScreen = isoToScreen(player);
-    let mainCharacterAnimation = this.client.characterAnimations.get(
-      this.client.playerId,
-    );
+    let mainCharacterAnimation =
+      this.client.animationController.characterAnimations.get(
+        this.client.playerId,
+      );
 
     if (
       mainCharacterAnimation instanceof CharacterDeathAnimation &&
@@ -296,7 +297,7 @@ export class MapRenderer {
       playerScreen.y += interOffset.y;
     }
 
-    playerScreen.x += this.client.quakeOffset;
+    playerScreen.x += this.client.quakeController.quakeOffset;
 
     const diag = Math.hypot(ctx.canvas.width, ctx.canvas.height);
     const rangeX = Math.min(
@@ -467,7 +468,7 @@ export class MapRenderer {
       return;
     }
 
-    const tileEffects = this.client.effects.filter(
+    const tileEffects = this.client.animationController.effects.filter(
       (e) => e.target instanceof EffectTargetTile,
     );
     for (const effect of tileEffects) {
@@ -476,10 +477,16 @@ export class MapRenderer {
       effect.target.rect = new Rectangle(
         {
           x: Math.floor(
-            tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+            tileScreen.x -
+              HALF_TILE_WIDTH -
+              playerScreen.x +
+              this.client.viewportController.getHalfGameWidth(),
           ),
           y: Math.floor(
-            tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
+            tileScreen.y -
+              HALF_TILE_HEIGHT -
+              playerScreen.y +
+              this.client.viewportController.getHalfGameHeight(),
           ),
         },
         TILE_WIDTH,
@@ -534,11 +541,20 @@ export class MapRenderer {
     if (characterRect) {
       const character = this.client.getCharacterById(characterRect.id);
       const bubble =
-        character && !!this.client.characterChats.get(character.playerId);
+        character &&
+        !!this.client.animationController.characterChats.get(
+          character.playerId,
+        );
       const bar =
-        character && !!this.client.characterHealthBars.get(character.playerId);
+        character &&
+        !!this.client.animationController.characterHealthBars.get(
+          character.playerId,
+        );
       let animation =
-        character && this.client.characterAnimations.get(character.playerId);
+        character &&
+        this.client.animationController.characterAnimations.get(
+          character.playerId,
+        );
       let dying = false;
 
       if (animation instanceof CharacterDeathAnimation) {
@@ -598,9 +614,12 @@ export class MapRenderer {
       const npcRect = getNpcIntersecting(this.client.mousePosition);
       if (npcRect) {
         const npc = this.client.getNpcByIndex(npcRect.id);
-        const bubble = npc && !!this.client.npcChats.get(npc.index);
-        const bar = npc && !!this.client.npcHealthBars.get(npc.index);
-        let animation = npc && this.client.npcAnimations.get(npc.index);
+        const bubble =
+          npc && !!this.client.animationController.npcChats.get(npc.index);
+        const bar =
+          npc && !!this.client.animationController.npcHealthBars.get(npc.index);
+        let animation =
+          npc && this.client.animationController.npcAnimations.get(npc.index);
         let dying = false;
 
         if (animation instanceof NpcDeathAnimation) {
@@ -698,11 +717,17 @@ export class MapRenderer {
     const position = isoToScreen(coords);
 
     const drawX = Math.floor(
-      position.x - playerScreen.x + HALF_GAME_WIDTH + offset.x,
+      position.x -
+        playerScreen.x +
+        this.client.viewportController.getHalfGameWidth() +
+        offset.x,
     );
 
     const drawY = Math.floor(
-      position.y - playerScreen.y + HALF_GAME_HEIGHT + offset.y,
+      position.y -
+        playerScreen.y +
+        this.client.viewportController.getHalfGameHeight() +
+        offset.y,
     );
 
     this.client.sans11.render(
@@ -750,7 +775,7 @@ export class MapRenderer {
       PLAYER_MENU_HEIGHT,
     );
 
-    const hovered = this.client.getHoveredPlayerMenuItem();
+    const hovered = this.client.mouseController.getHoveredPlayerMenuItem();
     if (hovered !== undefined) {
       ctx.drawImage(
         atlas,
@@ -784,7 +809,7 @@ export class MapRenderer {
     let bmpOffset = 0;
 
     if (entity.layer === Layer.DownWall || entity.layer === Layer.RightWall) {
-      const door = this.client.getDoor(coords);
+      const door = this.client.mapController.getDoor(coords);
       if (door?.open) {
         bmpOffset = 1;
       }
@@ -826,7 +851,7 @@ export class MapRenderer {
       tileScreen.x -
         HALF_TILE_WIDTH -
         playerScreen.x +
-        HALF_GAME_WIDTH +
+        this.client.viewportController.getHalfGameWidth() +
         offset.x +
         tile.xOffset,
     );
@@ -834,12 +859,12 @@ export class MapRenderer {
       tileScreen.y -
         HALF_TILE_HEIGHT -
         playerScreen.y +
-        HALF_GAME_HEIGHT +
+        this.client.viewportController.getHalfGameHeight() +
         offset.y +
         tile.yOffset,
     );
 
-    if (this.client.getDoor(coords)) {
+    if (this.client.mapController.getDoor(coords)) {
       setDoorRectangle(
         coords,
         new Rectangle(
@@ -934,7 +959,9 @@ export class MapRenderer {
 
     let dyingTicks = 0;
     let dying = false;
-    let animation = this.client.characterAnimations.get(character.playerId);
+    let animation = this.client.animationController.characterAnimations.get(
+      character.playerId,
+    );
     if (animation instanceof CharacterDeathAnimation) {
       dying = true;
       dyingTicks = animation.ticks;
@@ -1028,7 +1055,7 @@ export class MapRenderer {
     const screenX = Math.floor(
       screenCoords.x -
         playerScreen.x +
-        HALF_GAME_WIDTH +
+        this.client.viewportController.getHalfGameWidth() +
         walkOffset.x +
         frameOffset.x,
     );
@@ -1036,7 +1063,7 @@ export class MapRenderer {
     const screenY = Math.floor(
       screenCoords.y -
         playerScreen.y +
-        HALF_GAME_HEIGHT +
+        this.client.viewportController.getHalfGameHeight() +
         frame.yOffset +
         walkOffset.y +
         frameOffset.y,
@@ -1055,7 +1082,7 @@ export class MapRenderer {
 
     const effects = justCharacter
       ? []
-      : this.client.effects.filter(
+      : this.client.animationController.effects.filter(
           (e) =>
             e.target instanceof EffectTargetCharacter &&
             e.target.playerId === character.playerId,
@@ -1067,7 +1094,7 @@ export class MapRenderer {
           x:
             screenCoords.x -
             playerScreen.x +
-            HALF_GAME_WIDTH -
+            this.client.viewportController.getHalfGameWidth() -
             HALF_TILE_WIDTH +
             walkOffset.x,
           y: rect.position.y,
@@ -1082,13 +1109,16 @@ export class MapRenderer {
 
     if (mirrored) {
       ctx.save();
-      ctx.translate(GAME_WIDTH, 0);
+      ctx.translate(this.client.viewportController.getGameWidth(), 0);
       ctx.scale(-1, 1);
     }
 
     const drawX = Math.floor(
       mirrored
-        ? GAME_WIDTH - screenX - frame.w - frame.mirroredXOffset
+        ? this.client.viewportController.getGameWidth() -
+            screenX -
+            frame.w -
+            frame.mirroredXOffset
         : screenX + frame.xOffset,
     );
 
@@ -1157,19 +1187,25 @@ export class MapRenderer {
     ) {
       const bubble = justCharacter
         ? null
-        : this.client.characterChats.get(character.playerId);
+        : this.client.animationController.characterChats.get(
+            character.playerId,
+          );
       const healthBar = justCharacter
         ? null
-        : this.client.characterHealthBars.get(character.playerId);
+        : this.client.animationController.characterHealthBars.get(
+            character.playerId,
+          );
       const emote = justCharacter
         ? null
-        : this.client.characterEmotes.get(character.playerId);
+        : this.client.animationController.characterEmotes.get(
+            character.playerId,
+          );
 
       if (
         !bubble &&
         !healthBar &&
         !emote &&
-        !this.client.debug &&
+        !this.client.commandController.debug &&
         (!(animation instanceof CharacterSpellChantAnimation) ||
           animation.animationFrame)
       ) {
@@ -1179,7 +1215,11 @@ export class MapRenderer {
       this.topLayer.push(() => {
         const rect = getCharacterRectangle(character.playerId);
         const characterTopCenter = {
-          x: screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + walkOffset.x,
+          x:
+            screenCoords.x -
+            playerScreen.x +
+            this.client.viewportController.getHalfGameWidth() +
+            walkOffset.x,
           y: rect!.position.y,
         };
 
@@ -1198,7 +1238,7 @@ export class MapRenderer {
           animation.render(characterTopCenter, ctx);
         }
 
-        if (this.client.debug) {
+        if (this.client.commandController.debug) {
           this.renderDebugRectangle(
             rect!,
             `id[${character.playerId}]`,
@@ -1223,7 +1263,9 @@ export class MapRenderer {
 
     let dyingTicks = 0;
     let dying = false;
-    let animation = this.client.npcAnimations.get(npc.index);
+    let animation = this.client.animationController.npcAnimations.get(
+      npc.index,
+    );
     if (animation) {
       animation.renderedFirstFrame = true;
     }
@@ -1298,12 +1340,15 @@ export class MapRenderer {
 
     const screenCoords = isoToScreen(coords);
     const screenX = Math.floor(
-      screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + additionalOffset.x,
+      screenCoords.x -
+        playerScreen.x +
+        this.client.viewportController.getHalfGameWidth() +
+        additionalOffset.x,
     );
     const screenY = Math.floor(
       screenCoords.y -
         playerScreen.y +
-        HALF_GAME_HEIGHT +
+        this.client.viewportController.getHalfGameHeight() +
         frame.yOffset +
         additionalOffset.y,
     );
@@ -1319,7 +1364,7 @@ export class MapRenderer {
 
     setNpcRectangle(npc.index, rect);
 
-    const effects = this.client.effects.filter(
+    const effects = this.client.animationController.effects.filter(
       (e) =>
         e.target instanceof EffectTargetNpc && e.target.index === npc.index,
     );
@@ -1330,7 +1375,7 @@ export class MapRenderer {
           x:
             screenCoords.x -
             playerScreen.x +
-            HALF_GAME_WIDTH -
+            this.client.viewportController.getHalfGameWidth() -
             HALF_TILE_WIDTH +
             walkOffset.x,
           y: rect.position.y,
@@ -1345,13 +1390,16 @@ export class MapRenderer {
 
     if (mirrored) {
       ctx.save(); // Save the current context state
-      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
+      ctx.translate(this.client.viewportController.getGameWidth(), 0); // Move origin to the right edge
       ctx.scale(-1, 1); // Flip horizontally
     }
 
     const drawX = Math.floor(
       mirrored
-        ? GAME_WIDTH - screenX - frame.w - frame.mirroredXOffset
+        ? this.client.viewportController.getGameWidth() -
+            screenX -
+            frame.w -
+            frame.mirroredXOffset
         : screenX + frame.xOffset,
     );
 
@@ -1390,10 +1438,12 @@ export class MapRenderer {
       this.renderEffectFront(effect, ctx);
     }
 
-    const bubble = this.client.npcChats.get(npc.index);
-    const healthBar = this.client.npcHealthBars.get(npc.index);
+    const bubble = this.client.animationController.npcChats.get(npc.index);
+    const healthBar = this.client.animationController.npcHealthBars.get(
+      npc.index,
+    );
 
-    if (!bubble && !healthBar && !this.client.debug) {
+    if (!bubble && !healthBar && !this.client.commandController.debug) {
       return;
     }
 
@@ -1406,12 +1456,15 @@ export class MapRenderer {
 
       const npcTopCenter = {
         x: Math.floor(
-          screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + walkOffset.x,
+          screenCoords.x -
+            playerScreen.x +
+            this.client.viewportController.getHalfGameWidth() +
+            walkOffset.x,
         ),
         y: Math.floor(
           screenCoords.y -
             playerScreen.y +
-            HALF_GAME_HEIGHT -
+            this.client.viewportController.getHalfGameHeight() -
             meta.nameLabelOffset +
             walkOffset.y +
             16,
@@ -1426,7 +1479,7 @@ export class MapRenderer {
         this.renderHealthBar(healthBar, npcTopCenter, ctx);
       }
 
-      if (this.client.debug) {
+      if (this.client.commandController.debug) {
         this.renderDebugRectangle(
           rect,
           `idx[${npc.index}]`,
@@ -1464,10 +1517,16 @@ export class MapRenderer {
     const tileScreen = isoToScreen(item.coords);
 
     const screenX = Math.floor(
-      tileScreen.x - playerScreen.x + HALF_GAME_WIDTH + frame.xOffset,
+      tileScreen.x -
+        playerScreen.x +
+        this.client.viewportController.getHalfGameWidth() +
+        frame.xOffset,
     );
     const screenY = Math.floor(
-      tileScreen.y - playerScreen.y + HALF_GAME_HEIGHT + frame.yOffset,
+      tileScreen.y -
+        playerScreen.y +
+        this.client.viewportController.getHalfGameHeight() +
+        frame.yOffset,
     );
 
     ctx.drawImage(
@@ -1482,7 +1541,7 @@ export class MapRenderer {
       frame.h,
     );
 
-    if (this.client.debug) {
+    if (this.client.commandController.debug) {
       this.renderDebugRectangle(
         new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
         `idx[${item.uid}]`,
@@ -1560,10 +1619,16 @@ export class MapRenderer {
     const sourceX = entity.typeId * TILE_WIDTH;
 
     const screenX = Math.floor(
-      tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+      tileScreen.x -
+        HALF_TILE_WIDTH -
+        playerScreen.x +
+        this.client.viewportController.getHalfGameWidth(),
     );
     const screenY = Math.floor(
-      tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
+      tileScreen.y -
+        HALF_TILE_HEIGHT -
+        playerScreen.y +
+        this.client.viewportController.getHalfGameHeight(),
     );
 
     ctx.drawImage(
@@ -1578,18 +1643,21 @@ export class MapRenderer {
       TILE_HEIGHT,
     );
 
-    const animation = this.client.cursorClickAnimation;
+    const animation = this.client.animationController.cursorClickAnimation;
     if (animation) {
       animation.renderedFirstFrame = true;
       const animationScreen = isoToScreen(animation.at);
       const animationX = Math.floor(
-        animationScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+        animationScreen.x -
+          HALF_TILE_WIDTH -
+          playerScreen.x +
+          this.client.viewportController.getHalfGameWidth(),
       );
       const animationY = Math.floor(
         animationScreen.y -
           HALF_TILE_HEIGHT -
           playerScreen.y +
-          HALF_GAME_HEIGHT,
+          this.client.viewportController.getHalfGameHeight(),
       );
       const sourceX = Math.floor((3 + animation.animationFrame) * TILE_WIDTH);
       ctx.drawImage(

@@ -9,8 +9,8 @@ import type { Client } from '../client';
 
 function handleBoardOpen(client: Client, reader: EoReader) {
   const packet = BoardOpenServerPacket.deserialize(reader);
-  client.boardId = packet.boardId;
-  client.boardPosts = packet.posts;
+  client.boardController.boardId = packet.boardId;
+  client.boardController.boardPosts = packet.posts;
   client.emit('boardOpened', { posts: packet.posts });
 }
 

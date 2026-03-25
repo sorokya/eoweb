@@ -34,7 +34,7 @@ function handleAvatarRemove(client: Client, reader: EoReader) {
   switch (packet.warpEffect) {
     case WarpEffect.Admin: {
       const metadata = client.getEffectMetadata(3);
-      client.effects.push(
+      client.animationController.effects.push(
         new EffectAnimation(
           3,
           new EffectTargetTile(character.coords),
@@ -49,7 +49,9 @@ function handleAvatarRemove(client: Client, reader: EoReader) {
       break;
   }
 
-  const animation = client.characterAnimations.get(packet.playerId);
+  const animation = client.animationController.characterAnimations.get(
+    packet.playerId,
+  );
   if (animation instanceof CharacterDeathAnimation) {
     return;
   }
@@ -108,11 +110,11 @@ function handleAvatarReply(client: Client, reader: EoReader) {
 
   const victim = client.getCharacterById(packet.victimId);
   if (!victim) {
-    client.requestCharacterRange([packet.victimId]);
+    client.sessionController.requestCharacterRange([packet.victimId]);
     return;
   }
 
-  client.characterHealthBars.set(
+  client.animationController.characterHealthBars.set(
     packet.victimId,
     new HealthBar(packet.hpPercentage, packet.damage),
   );
@@ -136,11 +138,11 @@ function handleAvatarAdmin(client: Client, reader: EoReader) {
 
   const victim = client.getCharacterById(packet.victimId);
   if (!victim) {
-    client.requestCharacterRange([packet.victimId]);
+    client.sessionController.requestCharacterRange([packet.victimId]);
     return;
   }
 
-  client.characterHealthBars.set(
+  client.animationController.characterHealthBars.set(
     packet.victimId,
     new HealthBar(packet.hpPercentage, packet.damage),
   );
@@ -160,7 +162,7 @@ function handleAvatarAdmin(client: Client, reader: EoReader) {
     playSfxById(meta.sfx);
   }
 
-  client.effects.push(
+  client.animationController.effects.push(
     new EffectAnimation(
       record.graphicId,
       new EffectTargetCharacter(packet.victimId),

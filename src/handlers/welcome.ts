@@ -8,9 +8,10 @@ import {
   WelcomeCode,
   WelcomeReplyServerPacket,
 } from 'eolib';
-import { type Client, GameState } from '../client';
+import type { Client } from '../client';
 import { USAGE_TICKS } from '../consts';
 import { DialogResourceID } from '../edf';
+import { GameState } from '../types';
 
 function handleWelcomeReply(client: Client, reader: EoReader) {
   const packet = WelcomeReplyServerPacket.deserialize(reader);
@@ -52,7 +53,7 @@ function handleSelectCharacter(
   client.admin = data.admin;
   client.level = data.level;
   client.experience = data.experience;
-  client.usage = data.usage;
+  client.usageController.usage = data.usage;
   client.baseStats.str = data.stats.base.str;
   client.baseStats.intl = data.stats.base.intl;
   client.baseStats.wis = data.stats.base.wis;
@@ -127,9 +128,9 @@ function handleSelectCharacter(
 
     if (client.downloadQueue.length > 0) {
       const download = client.downloadQueue.pop();
-      client.requestFile(download!.type, download!.id);
+      client.sessionController.requestFile(download!.type, download!.id);
     } else {
-      client.enterGame();
+      client.sessionController.enterGame();
     }
   });
 }
@@ -149,7 +150,7 @@ function handleEnterGame(
   client.spells = data.spells;
   client.weight = data.weight;
   client.nearby = data.nearby;
-  client.usageTicks = USAGE_TICKS;
+  client.usageController.usageTicks = USAGE_TICKS;
   client.setState(GameState.InGame);
   client.emit('enterGame', { news: data.news });
   client.bus!.send(new GlobalOpenClientPacket());

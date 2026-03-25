@@ -3,10 +3,10 @@ import type { Client } from '../../client';
 import { EOResourceID } from '../../edf';
 import { playSfxById, SfxId } from '../../sfx';
 import { Base } from '../base-ui';
-import { DialogIcon } from '../dialog-icon';
 import { createIconMenuItem } from '../utils/create-menu-item';
 
 import './bank-dialog.css';
+import { DialogIcon } from '../../types';
 
 type Events = {
   deposit: undefined;
@@ -49,7 +49,7 @@ export class BankDialog extends Base {
   }
 
   render() {
-    this.balance!.innerText = `${this.client.goldBank}`;
+    this.balance!.innerText = `${this.client.bankController.goldBank}`;
     this.itemList!.innerHTML = '';
 
     const gold = this.client.getEifRecordById(1);

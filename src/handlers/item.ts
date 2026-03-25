@@ -16,14 +16,14 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import { ChatTab, type Client, EquipmentSlot } from '../client';
+import type { Client } from '../client';
 import { ITEM_PROTECT_TICKS_PLAYER } from '../consts';
 import { EOResourceID } from '../edf';
 import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon, ChatTab, EquipmentSlot } from '../types';
 
 function handleItemAdd(client: Client, reader: EoReader) {
   const packet = ItemAddServerPacket.deserialize(reader);
@@ -142,7 +142,7 @@ function handleItemReply(client: Client, reader: EoReader) {
       client.tp = data.tp;
       if (data.hpGain) {
         const percent = (client.hp / client.maxHp) * 100;
-        client.characterHealthBars.set(
+        client.animationController.characterHealthBars.set(
           client.playerId,
           new HealthBar(percent, 0, data.hpGain),
         );
@@ -157,7 +157,7 @@ function handleItemReply(client: Client, reader: EoReader) {
       if (metadata.sfx) {
         playSfxById(metadata.sfx);
       }
-      client.effects.push(
+      client.animationController.effects.push(
         new EffectAnimation(
           data.effectId + 1,
           new EffectTargetCharacter(client.playerId),
@@ -176,9 +176,9 @@ function handleItemReply(client: Client, reader: EoReader) {
         EOResourceID.STATUS_LABEL_TYPE_WARNING,
         client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_USE_DRUNK),
       );
-      client.drunk = true;
-      client.drunkTicks = 100 + record.spec1 * 10;
-      client.drunkEmoteTicks = 20;
+      client.drunkController.drunk = true;
+      client.drunkController.drunkTicks = 100 + record.spec1 * 10;
+      client.drunkController.drunkEmoteTicks = 20;
       break;
     }
     case ItemType.HairDye: {
@@ -196,7 +196,7 @@ function handleItemReply(client: Client, reader: EoReader) {
         packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataExpReward;
       client.experience = data.experience;
       if (data.levelUp) {
-        client.characterEmotes.set(
+        client.animationController.characterEmotes.set(
           client.playerId,
           new Emote(EmoteType.LevelUp),
         );
@@ -233,7 +233,7 @@ function handleItemReply(client: Client, reader: EoReader) {
       client.emit('statsUpdate', undefined);
 
       const cursedEquipmentSlots: EquipmentSlot[] = [];
-      const equipmentArray = client.getEquipmentArray();
+      const equipmentArray = client.inventoryController.getEquipmentArray();
       equipmentArray.forEach((id, index) => {
         const record = client.getEifRecordById(id);
         if (record && record.special === ItemSpecial.Cursed) {
@@ -334,7 +334,10 @@ function handleItemAccept(client: Client, reader: EoReader) {
     return;
   }
 
-  client.characterEmotes.set(packet.playerId, new Emote(EmoteType.LevelUp));
+  client.animationController.characterEmotes.set(
+    packet.playerId,
+    new Emote(EmoteType.LevelUp),
+  );
   playSfxById(SfxId.LevelUp);
 }
 

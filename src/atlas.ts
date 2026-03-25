@@ -1023,7 +1023,7 @@ export class Atlas {
 
             if (
               gfxType === GfxType.MapWalls &&
-              this.client.getDoor({ x: tile.x, y: row.y })
+              this.client.mapController.getDoor({ x: tile.x, y: row.y })
             ) {
               this.addBmpToLoad(gfxType, tile.graphic + 1);
               this.tiles.push({

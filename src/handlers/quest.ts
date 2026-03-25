@@ -31,7 +31,7 @@ function handleQuestDialog(client: Client, reader: EoReader) {
 
 function handleQuestReport(client: Client, reader: EoReader) {
   const packet = QuestReportServerPacket.deserialize(reader);
-  client.queuedNpcChats.set(packet.npcIndex, packet.messages);
+  client.npcController.queuedNpcChats.set(packet.npcIndex, packet.messages);
 }
 
 export function registerQuestHandlers(client: Client) {

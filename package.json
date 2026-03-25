@@ -17,12 +17,12 @@
     }
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.7",
+    "@biomejs/biome": "2.4.8",
     "lefthook": "^2.1.4",
     "postcss-nesting": "^14.0.0",
     "ts-prune": "^0.10.3",
-    "typescript": "~5.9.3",
-    "vite": "^8.0.0"
+    "typescript": "~6.0.2",
+    "vite": "^8.0.2"
   },
   "dependencies": {
     "eolib": "^2.0.1",

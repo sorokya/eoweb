@@ -19,14 +19,14 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.requestCharacterRange([packet.playerId]);
+    client.sessionController.requestCharacterRange([packet.playerId]);
     return;
   }
 
   character.direction = packet.direction;
   character.coords.x = packet.coords.x;
   character.coords.y = packet.coords.y;
-  client.characterAnimations.set(
+  client.animationController.characterAnimations.set(
     packet.playerId,
     new CharacterWalkAnimation(
       getPrevCoords(
@@ -51,7 +51,7 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
   if (spec && spec.tileSpec === MapTileSpec.Water) {
     const metadata = client.getEffectMetadata(9);
     playSfxById(metadata.sfx);
-    client.effects.push(
+    client.animationController.effects.push(
       new EffectAnimation(
         9,
         new EffectTargetCharacter(packet.playerId),
@@ -81,7 +81,7 @@ function handleWalkReply(client: Client, reader: EoReader) {
     client.atlas.refresh();
   }
 
-  client.rangeRequest(unknownPlayerIds, unknownNpcIndexes);
+  client.sessionController.rangeRequest(unknownPlayerIds, unknownNpcIndexes);
 }
 
 export function registerWalkHandlers(client: Client) {

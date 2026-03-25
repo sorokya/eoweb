@@ -50,7 +50,7 @@ function handleCharacterReply(client: Client, reader: EoReader) {
       return;
     }
     default: {
-      const characterData = client.characterCreateData;
+      const characterData = client.authenticationController.characterCreateData;
       if (!characterData) {
         return;
       }

@@ -14,11 +14,11 @@ import {
   PartyRequestType,
   PartyTargetGroupServerPacket,
 } from 'eolib';
-import { ChatTab, type Client } from '../client';
+import type { Client } from '../client';
 import { DialogResourceID, EOResourceID } from '../edf';
 import { Emote } from '../render/emote';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon, ChatTab } from '../types';
 import { capitalize } from '../utils/capitalize';
 
 function handlePartyReply(client: Client, reader: EoReader) {
@@ -79,7 +79,7 @@ function handlePartyRequest(client: Client, reader: EoReader) {
   const packet = PartyRequestServerPacket.deserialize(reader);
   const inviter = client.getCharacterById(packet.inviterPlayerId);
   if (!inviter) {
-    client.requestCharacterRange([packet.inviterPlayerId]);
+    client.sessionController.requestCharacterRange([packet.inviterPlayerId]);
   }
 
   const strings = client.getDialogStrings(
@@ -92,7 +92,10 @@ function handlePartyRequest(client: Client, reader: EoReader) {
     `${capitalize(packet.playerName)} ${strings[1]}`,
     strings[0],
     () => {
-      client.acceptPartyRequest(packet.inviterPlayerId, packet.requestType);
+      client.socialController.acceptPartyRequest(
+        packet.inviterPlayerId,
+        packet.requestType,
+      );
     },
   );
 }
@@ -215,7 +218,10 @@ function handlePartyTargetGroup(client: Client, reader: EoReader) {
       const memberCharacter = client.getCharacterById(gain.playerId);
       if (memberCharacter) {
         playSfxById(SfxId.LevelUp);
-        client.characterEmotes.set(gain.playerId, new Emote(EmoteType.LevelUp));
+        client.animationController.characterEmotes.set(
+          gain.playerId,
+          new Emote(EmoteType.LevelUp),
+        );
       }
 
       const member = client.partyMembers.find(

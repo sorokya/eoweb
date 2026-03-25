@@ -1,8 +1,8 @@
 import type { Client } from '../../client';
 import { playSfxById, SfxId } from '../../sfx';
+import { ChatIcon } from '../../types';
 import { capitalize } from '../../utils/capitalize';
 import { Base } from '../base-ui';
-import { ChatIcon } from '../chat/chat';
 
 import './party-dialog.css';
 
@@ -93,7 +93,7 @@ export class PartyDialog extends Base {
     if (this.open) {
       this.hide();
     } else {
-      this.client.requestPartyList();
+      this.client.socialController.requestPartyList();
       this.show();
     }
   }
@@ -164,7 +164,7 @@ export class PartyDialog extends Base {
         removeIcon.classList.add('remove-icon');
         removeIcon.title = 'Remove from party';
         removeIcon.addEventListener('click', () => {
-          this.client.removePartyMember(member.playerId);
+          this.client.socialController.removePartyMember(member.playerId);
         });
         memberDiv.appendChild(removeIcon);
       }

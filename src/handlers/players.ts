@@ -22,7 +22,7 @@ function handlePlayersAgree(client: Client, reader: EoReader) {
     switch (character.warpEffect) {
       case WarpEffect.Admin: {
         const metadata = client.getEffectMetadata(4);
-        client.effects.push(
+        client.animationController.effects.push(
           new EffectAnimation(
             4,
             new EffectTargetCharacter(character.playerId),
