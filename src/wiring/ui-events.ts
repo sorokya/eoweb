@@ -12,51 +12,54 @@ import { ChatIcon } from '../ui/chat/chat';
 import { SlotType } from '../ui/hotbar/hotbar';
 import { capitalize } from '../utils';
 
+// biome-ignore lint/suspicious/noExplicitAny: Event emitter callbacks require flexible argument types
+type EventCallback = (...args: any[]) => void;
+
 export interface UiEventDeps {
   client: Client;
   mainMenu: {
     show(): void;
     hide(): void;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
   };
   loginForm: {
     show(): void;
     hide(): void;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
   };
   createAccountForm: {
     show(): void;
     hide(): void;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
   };
   characterSelect: {
     show(): void;
     hide(): void;
     confirmed: boolean;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
     selectCharacter(index: number): void;
     isOpen?(): boolean;
   };
   createCharacterForm: {
     show(): void;
     hide(): void;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
     isOpen(): boolean;
   };
   changePasswordForm: {
     show(): void;
     hide(): void;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
     isOpen(): boolean;
   };
   exitGame: {
     show(): void;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
   };
   chat: {
     focus(): void;
     addMessage(tab: ChatTab, msg: string, icon: ChatIcon, name?: string): void;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
     show(): void;
   };
   smallConfirm: {
@@ -82,22 +85,22 @@ export interface UiEventDeps {
   inventory: {
     toggle(): void;
     show(): void;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
   };
   stats: {
     toggle(): void;
     setTrainingConfirmed(): void;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
   };
   spellBook: {
     toggle(): void;
-    on(event: string, cb: (...args: any[]) => void): void;
+    on(event: string, cb: EventCallback): void;
   };
   onlineList: { toggle(): void };
-  inGameMenu: { on(event: string, cb: (...args: any[]) => void): void };
-  questDialog: { on(event: string, cb: (...args: any[]) => void): void };
-  shopDialog: { on(event: string, cb: (...args: any[]) => void): void };
-  bankDialog: { on(event: string, cb: (...args: any[]) => void): void };
+  inGameMenu: { on(event: string, cb: EventCallback): void };
+  questDialog: { on(event: string, cb: EventCallback): void };
+  shopDialog: { on(event: string, cb: EventCallback): void };
+  bankDialog: { on(event: string, cb: EventCallback): void };
   lockerDialog: {
     getItemAmount(id: number): number;
   };
