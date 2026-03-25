@@ -37,7 +37,7 @@ export class Hotbar extends Base {
       slot.classList.add('slot');
 
       slot.addEventListener('click', () => {
-        this.client.combatController.useHotbarSlot(i);
+        this.client.spellController.useHotbarSlot(i);
       });
 
       this.container.appendChild(slot);
@@ -85,7 +85,7 @@ export class Hotbar extends Base {
         img.classList.add('skill');
         void setSkillBackgroundFromGfx(img, skill.iconId);
 
-        if (this.client.selectedSpellId === slot.typeId) {
+        if (this.client.spellController.selectedSpellId === slot.typeId) {
           img.style.backgroundPositionX = '-34px';
         }
 

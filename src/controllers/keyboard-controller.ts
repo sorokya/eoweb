@@ -88,19 +88,19 @@ export class KeyboardController {
     }
 
     if (isOrWasInputHeld(Input.Hotbar1) && this.hotbarTicks === 0) {
-      this.client.combatController.useHotbarSlot(0);
+      this.client.spellController.useHotbarSlot(0);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     } else if (isOrWasInputHeld(Input.Hotbar2) && this.hotbarTicks === 0) {
-      this.client.combatController.useHotbarSlot(1);
+      this.client.spellController.useHotbarSlot(1);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     } else if (isOrWasInputHeld(Input.Hotbar3) && this.hotbarTicks === 0) {
-      this.client.combatController.useHotbarSlot(2);
+      this.client.spellController.useHotbarSlot(2);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     } else if (isOrWasInputHeld(Input.Hotbar4) && this.hotbarTicks === 0) {
-      this.client.combatController.useHotbarSlot(3);
+      this.client.spellController.useHotbarSlot(3);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     } else if (isOrWasInputHeld(Input.Hotbar5) && this.hotbarTicks === 0) {
-      this.client.combatController.useHotbarSlot(4);
+      this.client.spellController.useHotbarSlot(4);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     }
 
@@ -115,14 +115,19 @@ export class KeyboardController {
       this.refreshTicks = WALK_TICKS;
     }
 
-    const animation = this.client.characterAnimations.get(character.playerId);
+    const animation = this.client.animationController.characterAnimations.get(
+      character.playerId,
+    );
     const lastHeldDirection = getLastHeldDirection();
     const attackHeld = wasInputHeldLastTick(Input.Attack);
     const sitStandHeld = wasInputHeldLastTick(Input.SitStand);
     clearUnheldInput();
 
-    if (lastHeldDirection !== null && this.client.autoWalkPath.length) {
-      this.client.autoWalkPath = [];
+    if (
+      lastHeldDirection !== null &&
+      this.client.movementController.autoWalkPath.length
+    ) {
+      this.client.movementController.autoWalkPath = [];
     }
 
     if (animation?.ticks) {
@@ -179,7 +184,7 @@ export class KeyboardController {
         }
       }
 
-      this.client.characterAnimations.set(
+      this.client.animationController.characterAnimations.set(
         character.playerId,
         metadata.ranged
           ? new CharacterRangedAttackAnimation()
@@ -267,7 +272,7 @@ export class KeyboardController {
           return;
         }
 
-        this.client.characterAnimations.set(
+        this.client.animationController.characterAnimations.set(
           character.playerId,
           new CharacterWalkAnimation(from, to, lastDirectionHeld),
         );
@@ -295,7 +300,9 @@ export class KeyboardController {
       this.sitTicks = SIT_TICKS;
     }
 
-    const emote = this.client.characterEmotes.get(this.client.playerId);
+    const emote = this.client.animationController.characterEmotes.get(
+      this.client.playerId,
+    );
     if (emote) {
       return;
     }

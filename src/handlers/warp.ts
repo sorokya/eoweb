@@ -54,7 +54,7 @@ function handleWarpAgree(client: Client, reader: EoReader) {
     if (packet.warpTypeData.warpEffect === WarpEffect.Admin) {
       const metadata = client.getEffectMetadata(4);
       playSfxById(SfxId.AdminWarp);
-      client.effects.push(
+      client.animationController.effects.push(
         new EffectAnimation(
           4,
           new EffectTargetCharacter(client.playerId),

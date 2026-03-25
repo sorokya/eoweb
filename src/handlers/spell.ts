@@ -25,7 +25,7 @@ function handleSpellRequest(client: Client, reader: EoReader) {
     return;
   }
 
-  client.characterAnimations.set(
+  client.animationController.characterAnimations.set(
     packet.playerId,
     new CharacterSpellChantAnimation(
       client.sans11!,
@@ -56,12 +56,12 @@ function handleSpellTargetSelf(client: Client, reader: EoReader) {
     return;
   }
 
-  client.characterHealthBars.set(
+  client.animationController.characterHealthBars.set(
     packet.playerId,
     new HealthBar(packet.hpPercentage, 0, packet.spellHealHp),
   );
 
-  client.combatController.playSpellEffect(
+  client.spellController.playSpellEffect(
     packet.spellId,
     new EffectTargetCharacter(packet.playerId),
   );
@@ -87,12 +87,12 @@ function handleSpellTargetOther(client: Client, reader: EoReader) {
     return;
   }
 
-  client.characterHealthBars.set(
+  client.animationController.characterHealthBars.set(
     packet.victimId,
     new HealthBar(packet.hpPercentage, 0, packet.spellHealHp),
   );
 
-  client.combatController.playSpellEffect(
+  client.spellController.playSpellEffect(
     packet.spellId,
     new EffectTargetCharacter(packet.victimId),
   );
@@ -119,12 +119,12 @@ function handleSpellTargetGroup(client: Client, reader: EoReader) {
       continue;
     }
 
-    client.characterHealthBars.set(
+    client.animationController.characterHealthBars.set(
       player.playerId,
       new HealthBar(player.hpPercentage, 0, packet.spellHealHp),
     );
 
-    client.combatController.playSpellEffect(
+    client.spellController.playSpellEffect(
       packet.spellId,
       new EffectTargetCharacter(player.playerId),
     );

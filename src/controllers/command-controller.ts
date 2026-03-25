@@ -59,8 +59,8 @@ export class CommandController {
       }
 
       case '#usage': {
-        const hours = Math.floor(this.client.usage / 60);
-        const minutes = this.client.usage - hours * 60;
+        const hours = Math.floor(this.client.usageController.usage / 60);
+        const minutes = this.client.usageController.usage - hours * 60;
         this.client.emit('serverChat', {
           message: hours
             ? `usage: ${hours}hrs. ${minutes}min.`

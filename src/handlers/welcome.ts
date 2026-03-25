@@ -52,7 +52,7 @@ function handleSelectCharacter(
   client.admin = data.admin;
   client.level = data.level;
   client.experience = data.experience;
-  client.usage = data.usage;
+  client.usageController.usage = data.usage;
   client.baseStats.str = data.stats.base.str;
   client.baseStats.intl = data.stats.base.intl;
   client.baseStats.wis = data.stats.base.wis;
@@ -149,7 +149,7 @@ function handleEnterGame(
   client.spells = data.spells;
   client.weight = data.weight;
   client.nearby = data.nearby;
-  client.tickController.usageTicks = USAGE_TICKS;
+  client.usageController.usageTicks = USAGE_TICKS;
   client.setState(GameState.InGame);
   client.emit('enterGame', { news: data.news });
   client.bus!.send(new GlobalOpenClientPacket());

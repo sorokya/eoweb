@@ -36,7 +36,10 @@ export class SocialController {
   emote(type: EmoteType): void {
     const packet = new EmoteReportClientPacket();
     packet.emote = type;
-    this.client.characterEmotes.set(this.client.playerId, new Emote(type));
+    this.client.animationController.characterEmotes.set(
+      this.client.playerId,
+      new Emote(type),
+    );
     this.client.bus!.send(packet);
   }
 

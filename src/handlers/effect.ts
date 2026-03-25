@@ -73,7 +73,7 @@ function handleEffectSpec(client: Client, reader: EoReader) {
   client.hp = data.hp;
   playSfxById(SfxId.Spikes);
 
-  client.characterHealthBars.set(
+  client.animationController.characterHealthBars.set(
     client.playerId,
     new HealthBar(Math.floor((client.hp / client.maxHp) * 100), damage),
   );
@@ -89,9 +89,9 @@ function handleEffectUse(client: Client, reader: EoReader) {
   const packet = EffectUseServerPacket.deserialize(reader);
   if (packet.effect === MapEffect.Quake) {
     const data = packet.effectData as EffectUseServerPacket.EffectDataQuake;
-    client.tickController.quakeTicks = 3 * data.quakeStrength + 10;
-    client.tickController.quakePower = 4 * data.quakeStrength + 10;
-    client.tickController.quakeOffset = 0;
+    client.quakeController.quakeTicks = 3 * data.quakeStrength + 10;
+    client.quakeController.quakePower = 4 * data.quakeStrength + 10;
+    client.quakeController.quakeOffset = 0;
     playSfxById(SfxId.Earthquake);
   }
 }
@@ -103,7 +103,7 @@ function handleEffectAgree(client: Client, reader: EoReader) {
     if (meta.sfx) {
       playSfxById(meta.sfx);
     }
-    client.effects.push(
+    client.animationController.effects.push(
       new EffectAnimation(
         effect.effectId + 1,
         new EffectTargetTile(effect.coords),
@@ -120,7 +120,7 @@ function handleEffectPlayer(client: Client, reader: EoReader) {
     if (meta.sfx) {
       playSfxById(meta.sfx);
     }
-    client.effects.push(
+    client.animationController.effects.push(
       new EffectAnimation(
         effect.effectId + 1,
         new EffectTargetCharacter(effect.playerId),
@@ -146,7 +146,7 @@ function handleEffectAdmin(client: Client, reader: EoReader) {
     playSfxById(SfxId.Spikes, volume);
   }
 
-  client.characterHealthBars.set(
+  client.animationController.characterHealthBars.set(
     packet.playerId,
     new HealthBar(packet.hpPercentage, packet.damage),
   );

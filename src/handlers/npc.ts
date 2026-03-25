@@ -38,7 +38,7 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
 
     npc.direction = position.direction;
     if (npc.coords !== position.coords) {
-      client.npcAnimations.set(
+      client.animationController.npcAnimations.set(
         npc.index,
         new NpcWalkAnimation(npc.coords, position.coords, position.direction),
       );
@@ -61,8 +61,11 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
 
     npc.direction = attack.direction;
     playSfxById(SfxId.PunchAttack);
-    client.npcAnimations.set(npc.index, new NpcAttackAnimation());
-    client.characterHealthBars.set(
+    client.animationController.npcAnimations.set(
+      npc.index,
+      new NpcAttackAnimation(),
+    );
+    client.animationController.characterHealthBars.set(
       attack.playerId,
       new HealthBar(attack.hpPercentage, attack.damage),
     );
@@ -89,7 +92,7 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
       continue;
     }
 
-    client.npcChats.set(
+    client.animationController.npcChats.set(
       npc.index,
       new ChatBubble(client.sans11!, chat.message),
     );
@@ -117,7 +120,7 @@ function handleNpcAgree(client: Client, reader: EoReader) {
 
 function handleNpcSpec(client: Client, reader: EoReader) {
   const packet = NpcSpecServerPacket.deserialize(reader);
-  client.npcHealthBars.set(
+  client.animationController.npcHealthBars.set(
     packet.npcKilledData.npcIndex,
     new HealthBar(0, packet.npcKilledData.damage),
   );
@@ -163,7 +166,7 @@ function handleNpcSpec(client: Client, reader: EoReader) {
 
 function handleNpcAccept(client: Client, reader: EoReader) {
   const packet = NpcAcceptServerPacket.deserialize(reader);
-  client.npcHealthBars.set(
+  client.animationController.npcHealthBars.set(
     packet.npcKilledData.npcIndex,
     new HealthBar(0, packet.npcKilledData.damage),
   );
@@ -190,7 +193,7 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     });
   }
 
-  client.characterEmotes.set(
+  client.animationController.characterEmotes.set(
     packet.npcKilledData.killerId,
     new Emote(EmoteType.LevelUp),
   );
@@ -226,7 +229,10 @@ function handleNpcJunk(client: Client, reader: EoReader) {
     .filter((n) => n.id === packet.npcId)
     .map((n) => n.index)
     .forEach((npcIndex) => {
-      client.npcHealthBars.set(npcIndex, new HealthBar(0, 1));
+      client.animationController.npcHealthBars.set(
+        npcIndex,
+        new HealthBar(0, 1),
+      );
       client.setNpcDeathAnimation(npcIndex);
     });
 }
@@ -243,7 +249,7 @@ function handleNpcDialog(client: Client, reader: EoReader) {
     return;
   }
 
-  client.npcChats.set(
+  client.animationController.npcChats.set(
     npc.index,
     new ChatBubble(client.sans11!, packet.message),
   );
@@ -266,7 +272,7 @@ function handleNpcReply(client: Client, reader: EoReader) {
     return;
   }
 
-  client.npcHealthBars.set(
+  client.animationController.npcHealthBars.set(
     npc.index,
     new HealthBar(packet.hpPercentage, packet.damage),
   );

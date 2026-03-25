@@ -218,7 +218,10 @@ function handlePartyTargetGroup(client: Client, reader: EoReader) {
       const memberCharacter = client.getCharacterById(gain.playerId);
       if (memberCharacter) {
         playSfxById(SfxId.LevelUp);
-        client.characterEmotes.set(gain.playerId, new Emote(EmoteType.LevelUp));
+        client.animationController.characterEmotes.set(
+          gain.playerId,
+          new Emote(EmoteType.LevelUp),
+        );
       }
 
       const member = client.partyMembers.find(

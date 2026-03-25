@@ -12,12 +12,14 @@ import {
   ShopOpenClientPacket,
   StatSkillOpenClientPacket,
 } from 'eolib';
+import { ChatBubble } from '../chat-bubble';
 import type { Client } from '../client';
 import { SpellTarget } from '../types';
 
 export class NpcController {
   private client: Client;
   interactNpcIndex = 0;
+  queuedNpcChats: Map<number, string[]> = new Map();
 
   constructor(client: Client) {
     this.client = client;
@@ -88,16 +90,17 @@ export class NpcController {
       case NpcType.Aggressive:
       case NpcType.Passive: {
         if (
-          !this.client.selectedSpellId ||
-          this.client.queuedSpellId > 0 ||
-          this.client.spellCooldownTicks > 0
+          !this.client.spellController.selectedSpellId ||
+          this.client.spellController.queuedSpellId > 0 ||
+          this.client.spellController.spellCooldownTicks > 0
         ) {
           return;
         }
-        this.client.spellTarget = SpellTarget.Npc;
-        this.client.spellTargetId = npc.index;
-        this.client.queuedSpellId = this.client.selectedSpellId;
-        this.client.spellCooldownTicks = 999;
+        this.client.spellController.spellTarget = SpellTarget.Npc;
+        this.client.spellController.spellTargetId = npc.index;
+        this.client.spellController.queuedSpellId =
+          this.client.spellController.selectedSpellId;
+        this.client.spellController.spellCooldownTicks = 999;
         break;
       }
       default:
@@ -109,16 +112,53 @@ export class NpcController {
 
   clickCharacter(character: CharacterMapInfo): void {
     if (
-      !this.client.selectedSpellId ||
-      this.client.queuedSpellId > 0 ||
-      this.client.spellCooldownTicks > 0
+      !this.client.spellController.selectedSpellId ||
+      this.client.spellController.queuedSpellId > 0 ||
+      this.client.spellController.spellCooldownTicks > 0
     ) {
       return;
     }
 
-    this.client.spellTarget = SpellTarget.Player;
-    this.client.spellTargetId = character.playerId;
-    this.client.queuedSpellId = this.client.selectedSpellId;
-    this.client.spellCooldownTicks = 999;
+    this.client.spellController.spellTarget = SpellTarget.Player;
+    this.client.spellController.spellTargetId = character.playerId;
+    this.client.spellController.queuedSpellId =
+      this.client.spellController.selectedSpellId;
+    this.client.spellController.spellCooldownTicks = 999;
+  }
+
+  tick(): void {
+    const emptyQueuedNpcChats: number[] = [];
+    for (const [index, messages] of this.queuedNpcChats) {
+      const existingChat = this.client.animationController.npcChats.get(index);
+      if (existingChat) {
+        continue;
+      }
+
+      const npc = this.client.getNpcByIndex(index);
+      if (!npc) {
+        emptyQueuedNpcChats.push(index);
+        continue;
+      }
+
+      const record = this.client.getEnfRecordById(npc.id);
+      if (!record) {
+        emptyQueuedNpcChats.push(index);
+        continue;
+      }
+
+      this.client.animationController.npcChats.set(
+        index,
+        new ChatBubble(this.client.sans11, messages[0]),
+      );
+
+      if (messages.length > 1) {
+        messages.splice(0, 1);
+      } else {
+        emptyQueuedNpcChats.push(index);
+      }
+    }
+    for (const index of emptyQueuedNpcChats) {
+      this.queuedNpcChats.delete(index);
+    }
   }
 }

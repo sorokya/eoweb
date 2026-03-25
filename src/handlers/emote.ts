@@ -17,7 +17,10 @@ function handleEmotePlayer(client: Client, reader: EoReader) {
     return;
   }
 
-  client.characterEmotes.set(character.playerId, new Emote(packet.emote));
+  client.animationController.characterEmotes.set(
+    character.playerId,
+    new Emote(packet.emote),
+  );
 }
 
 export function registerEmoteHandlers(client: Client) {

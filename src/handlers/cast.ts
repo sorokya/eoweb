@@ -30,12 +30,12 @@ function handleCastReply(client: Client, reader: EoReader) {
     client.emit('statsUpdate', undefined);
   }
 
-  client.npcHealthBars.set(
+  client.animationController.npcHealthBars.set(
     packet.npcIndex,
     new HealthBar(packet.hpPercentage, packet.damage),
   );
 
-  client.combatController.playSpellEffect(
+  client.spellController.playSpellEffect(
     packet.spellId,
     new EffectTargetNpc(packet.npcIndex),
   );
@@ -54,12 +54,12 @@ function handleCastSpec(client: Client, reader: EoReader) {
     client.emit('statsUpdate', undefined);
   }
 
-  client.npcHealthBars.set(
+  client.animationController.npcHealthBars.set(
     packet.npcKilledData.npcIndex,
     new HealthBar(0, packet.npcKilledData.damage),
   );
 
-  client.combatController.playSpellEffect(
+  client.spellController.playSpellEffect(
     packet.spellId,
     new EffectTargetNpc(packet.npcKilledData.npcIndex),
   );
@@ -116,12 +116,12 @@ function handleCastAccept(client: Client, reader: EoReader) {
     client.emit('statsUpdate', undefined);
   }
 
-  client.npcHealthBars.set(
+  client.animationController.npcHealthBars.set(
     packet.npcKilledData.npcIndex,
     new HealthBar(0, packet.npcKilledData.damage),
   );
 
-  client.combatController.playSpellEffect(
+  client.spellController.playSpellEffect(
     packet.spellId,
     new EffectTargetNpc(packet.npcKilledData.npcIndex),
   );
@@ -149,7 +149,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
     });
   }
 
-  client.characterEmotes.set(
+  client.animationController.characterEmotes.set(
     packet.npcKilledData.killerId,
     new Emote(EmoteType.LevelUp),
   );

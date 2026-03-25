@@ -23,8 +23,14 @@ import { playSfxById } from '../sfx';
 import { SfxId, SlotType, SpellTarget } from '../types';
 import { getTimestamp } from './movement-controller';
 
-export class CombatController {
+export class SpellController {
   private client: Client;
+  selectedSpellId = 0;
+  queuedSpellId = 0;
+  spellCastTimestamp = 0;
+  spellTarget: SpellTarget | null = null;
+  spellTargetId = 0;
+  spellCooldownTicks = 0;
 
   constructor(client: Client) {
     this.client = client;
@@ -48,7 +54,7 @@ export class CombatController {
         return;
       }
 
-      const animation = this.client.characterAnimations.get(
+      const animation = this.client.animationController.characterAnimations.get(
         this.client.playerId,
       );
       if (animation) {
@@ -72,23 +78,23 @@ export class CombatController {
           record.targetType,
         )
       ) {
-        this.client.spellTarget =
+        this.spellTarget =
           record.targetType === SkillTargetType.Self
             ? SpellTarget.Self
             : SpellTarget.Group;
-        this.client.spellTargetId = 0;
-        this.client.queuedSpellId = slot.typeId;
+        this.spellTargetId = 0;
+        this.queuedSpellId = slot.typeId;
         return;
       }
 
-      this.client.selectedSpellId = slot.typeId;
+      this.selectedSpellId = slot.typeId;
       this.client.emit('spellQueued', undefined);
       playSfxById(SfxId.SpellActivate);
     }
   }
 
   beginSpellChant(): void {
-    const record = this.client.getEsfRecordById(this.client.queuedSpellId);
+    const record = this.client.getEsfRecordById(this.queuedSpellId);
     if (!record) {
       return;
     }
@@ -98,81 +104,83 @@ export class CombatController {
         EOResourceID.STATUS_LABEL_TYPE_WARNING,
         this.client.getResourceString(EOResourceID.ATTACK_YOU_ARE_EXHAUSTED_TP),
       );
-      this.client.queuedSpellId = 0;
+      this.queuedSpellId = 0;
       return;
     }
 
     if (
       record.type === SkillType.Heal &&
-      this.client.spellTarget === SpellTarget.Npc
+      this.spellTarget === SpellTarget.Npc
     ) {
-      this.client.queuedSpellId = 0;
+      this.queuedSpellId = 0;
       return;
     }
 
     if (
       record.type === SkillType.Attack &&
-      this.client.spellTarget !== SpellTarget.Npc &&
+      this.spellTarget !== SpellTarget.Npc &&
       this.client.map!.type !== MapType.Pk
     ) {
-      this.client.queuedSpellId = 0;
+      this.queuedSpellId = 0;
       return;
     }
 
-    if (this.client.spellTarget === SpellTarget.Npc) {
-      const npc = this.client.getNpcByIndex(this.client.spellTargetId);
+    if (this.spellTarget === SpellTarget.Npc) {
+      const npc = this.client.getNpcByIndex(this.spellTargetId);
       if (!npc) {
-        this.client.queuedSpellId = 0;
+        this.queuedSpellId = 0;
         return;
       }
 
-      const animation = this.client.npcAnimations.get(npc.index);
+      const animation = this.client.animationController.npcAnimations.get(
+        npc.index,
+      );
       if (animation instanceof NpcDeathAnimation) {
-        this.client.queuedSpellId = 0;
+        this.queuedSpellId = 0;
         return;
       }
     }
 
-    if (this.client.spellTarget === SpellTarget.Player) {
-      const character = this.client.getCharacterById(this.client.spellTargetId);
+    if (this.spellTarget === SpellTarget.Player) {
+      const character = this.client.getCharacterById(this.spellTargetId);
       if (!character) {
-        this.client.queuedSpellId = 0;
+        this.queuedSpellId = 0;
         return;
       }
 
-      const animation = this.client.characterAnimations.get(
-        this.client.spellTargetId,
+      const animation = this.client.animationController.characterAnimations.get(
+        this.spellTargetId,
       );
       if (animation instanceof CharacterDeathAnimation) {
-        this.client.queuedSpellId = 0;
+        this.queuedSpellId = 0;
         return;
       }
     }
 
-    this.client.spellCastTimestamp = getTimestamp();
+    this.spellCastTimestamp = getTimestamp();
     const packet = new SpellRequestClientPacket();
-    packet.spellId = this.client.queuedSpellId;
-    packet.timestamp = this.client.spellCastTimestamp;
+    packet.spellId = this.queuedSpellId;
+    packet.timestamp = this.spellCastTimestamp;
     this.client.bus!.send(packet);
 
-    this.client.characterAnimations.set(
+    this.client.animationController.characterAnimations.set(
       this.client.playerId,
       new CharacterSpellChantAnimation(
         this.client.sans11,
-        this.client.queuedSpellId,
+        this.queuedSpellId,
         record.chant,
         record.castTime,
       ),
     );
 
-    this.client.queuedSpellId = 0;
+    this.queuedSpellId = 0;
   }
 
   castSpell(spellId: number): void {
     const timestamp = getTimestamp();
     const character = this.client.getPlayerCharacter();
 
-    switch (this.client.spellTarget) {
+    switch (this.spellTarget) {
       case SpellTarget.Self: {
         const packet = new SpellTargetSelfClientPacket();
         packet.spellId = spellId;
@@ -192,19 +200,19 @@ export class CombatController {
         const packet = new SpellTargetOtherClientPacket();
         packet.spellId = spellId;
         packet.targetType =
-          this.client.spellTarget === SpellTarget.Npc
+          this.spellTarget === SpellTarget.Npc
             ? SpellTargetType.Npc
             : SpellTargetType.Player;
-        packet.victimId = this.client.spellTargetId;
-        packet.previousTimestamp = this.client.spellCastTimestamp;
+        packet.victimId = this.spellTargetId;
+        packet.previousTimestamp = this.spellCastTimestamp;
         packet.timestamp = timestamp;
         this.client.bus!.send(packet);
         break;
       }
     }
 
-    this.client.queuedSpellId = 0;
-    this.client.spellCooldownTicks = SPELL_COOLDOWN_TICKS;
+    this.queuedSpellId = 0;
+    this.spellCooldownTicks = SPELL_COOLDOWN_TICKS;
   }
 
   playSpellEffect(spellId: number, target: EffectTarget): void {
@@ -218,12 +226,20 @@ export class CombatController {
       return;
     }
 
-    this.client.effects.push(
+    this.client.animationController.effects.push(
       new EffectAnimation(record.graphicId, target, metadata),
     );
 
     if (metadata.sfx) {
       playSfxById(metadata.sfx);
     }
+  }
+
+  tick(): void {
+    if (this.queuedSpellId) {
+      this.beginSpellChant();
+    }
+
+    this.spellCooldownTicks = Math.max(this.spellCooldownTicks - 1, 0);
   }
 }

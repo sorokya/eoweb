@@ -128,9 +128,10 @@ export class MinimapRenderer {
 
     const player = this.client.getPlayerCoords();
     let playerScreen = isoToScreen(player);
-    let mainCharacterAnimation = this.client.characterAnimations.get(
-      this.client.playerId,
-    );
+    let mainCharacterAnimation =
+      this.client.animationController.characterAnimations.get(
+        this.client.playerId,
+      );
 
     if (
       mainCharacterAnimation instanceof CharacterDeathAnimation &&
@@ -149,7 +150,7 @@ export class MinimapRenderer {
       playerScreen.y += walkOffset.y;
     }
 
-    playerScreen.x += this.client.tickController.quakeOffset;
+    playerScreen.x += this.client.quakeController.quakeOffset;
 
     ctx.globalAlpha = 0.5;
     for (let y = player.y - RANGE; y <= player.y + RANGE; y++) {
@@ -207,7 +208,9 @@ export class MinimapRenderer {
 
       let dyingTicks = 0;
       let dying = false;
-      let animation = this.client.npcAnimations.get(npc.index);
+      let animation = this.client.animationController.npcAnimations.get(
+        npc.index,
+      );
 
       if (animation instanceof NpcDeathAnimation) {
         dying = true;
@@ -274,7 +277,9 @@ export class MinimapRenderer {
     for (const character of this.client.nearby.characters) {
       let dyingTicks = 0;
       let dying = false;
-      let animation = this.client.characterAnimations.get(character.playerId);
+      let animation = this.client.animationController.characterAnimations.get(
+        character.playerId,
+      );
       if (animation instanceof CharacterDeathAnimation) {
         dying = true;
         dyingTicks = animation.ticks;

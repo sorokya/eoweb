@@ -27,7 +27,7 @@ export class ChatController {
     }
 
     const trimmed = (
-      this.client.drunk ? makeDrunk(message) : message
+      this.client.drunkController.drunk ? makeDrunk(message) : message
     ).substring(0, MAX_CHAT_LENGTH);
 
     if (
@@ -40,7 +40,7 @@ export class ChatController {
     if (trimmed.startsWith('@') && this.client.admin !== AdminLevel.Player) {
       const packet = new TalkAnnounceClientPacket();
       packet.message = trimmed.substring(1);
-      this.client.characterChats.set(
+      this.client.animationController.characterChats.set(
         this.client.playerId,
         new ChatBubble(this.client.sans11, packet.message),
       );
@@ -106,7 +106,7 @@ export class ChatController {
       packet.message = trimmed.substring(1);
       this.client.bus!.send(packet);
 
-      this.client.characterChats.set(
+      this.client.animationController.characterChats.set(
         this.client.playerId,
         new ChatBubble(
           this.client.sans11,
@@ -146,7 +146,7 @@ export class ChatController {
     packet.message = trimmed;
     this.client.bus!.send(packet);
 
-    this.client.characterChats.set(
+    this.client.animationController.characterChats.set(
       this.client.playerId,
       new ChatBubble(this.client.sans11, trimmed),
     );

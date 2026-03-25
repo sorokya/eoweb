@@ -26,8 +26,8 @@ export class SessionController {
   }
 
   acceptWarp(): void {
-    if (this.client.autoWalkPath.length) {
-      this.client.autoWalkPath = [];
+    if (this.client.movementController.autoWalkPath.length) {
+      this.client.movementController.autoWalkPath = [];
     }
 
     const packet = new WarpAcceptClientPacket();

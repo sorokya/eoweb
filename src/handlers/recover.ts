@@ -21,7 +21,7 @@ function handleRecoverPlayer(client: Client, reader: EoReader) {
     const amount = packet.hp - client.hp;
     const percentage = (packet.hp / client.maxHp) * 100;
     client.hp = packet.hp;
-    client.characterHealthBars.set(
+    client.animationController.characterHealthBars.set(
       client.playerId,
       new HealthBar(percentage, 0, amount),
     );
@@ -40,7 +40,7 @@ function handleRecoverAgree(client: Client, reader: EoReader) {
   }
 
   character.hp += packet.healHp;
-  client.characterHealthBars.set(
+  client.animationController.characterHealthBars.set(
     packet.playerId,
     new HealthBar(packet.hpPercentage, 0, packet.healHp),
   );
@@ -75,7 +75,10 @@ function handleRecoverReply(client: Client, reader: EoReader) {
   client.experience = packet.experience;
 
   if (packet.levelUp) {
-    client.characterEmotes.set(client.playerId, new Emote(EmoteType.LevelUp));
+    client.animationController.characterEmotes.set(
+      client.playerId,
+      new Emote(EmoteType.LevelUp),
+    );
     playSfxById(SfxId.LevelUp);
     client.level = packet.levelUp;
     client.statPoints = packet.statPoints!;

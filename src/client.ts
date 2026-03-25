@@ -32,51 +32,45 @@ import mitt, { type Emitter } from 'mitt';
 import { Notyf } from 'notyf';
 import { Atlas } from './atlas';
 import type { PacketBus } from './bus';
-import type { ChatBubble } from './chat-bubble';
 import { clearRectangles } from './collision';
 import { getDefaultConfig, loadConfig } from './config';
 import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS } from './consts';
 import {
+  AnimationController,
   AudioController,
   AuthenticationController,
   BankController,
   BoardController,
   ChatController,
   ChestController,
-  CombatController,
+  CleanupController,
   CommandController,
+  DrunkController,
   InventoryController,
+  ItemProtectionController,
   KeyboardController,
   LockerController,
   MapController,
   MouseController,
   MovementController,
   NpcController,
+  QuakeController,
   QuestController,
   SessionController,
   ShopController,
   SocialController,
+  SpellController,
   StatSkillController,
-  TickController,
+  UsageController,
 } from './controllers';
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
-import type { Door } from './door';
 import { type DialogResourceID, type Edf, EOResourceID } from './edf';
 import { Sans11Font } from './fonts/sans-11';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { registerAllHandlers } from './handlers';
 import { MapRenderer } from './map';
 import { MinimapRenderer } from './minimap';
-import {
-  type CharacterAnimation,
-  CharacterDeathAnimation,
-  type CursorClickAnimation,
-  type EffectAnimation,
-  type Emote,
-  type HealthBar,
-  type NpcAnimation,
-  NpcDeathAnimation,
-} from './render';
+import { CharacterDeathAnimation, NpcDeathAnimation } from './render';
 import { playSfxById } from './sfx';
 import type {
   ClientEvents,
@@ -86,13 +80,7 @@ import type {
   ISlot,
   IWeaponMetadata,
 } from './types';
-import {
-  EffectAnimationType,
-  GameState,
-  HatMaskType,
-  SfxId,
-  type SpellTarget,
-} from './types';
+import { EffectAnimationType, GameState, HatMaskType, SfxId } from './types';
 import {
   getEffectMetaData,
   getHatMetadata,
@@ -133,7 +121,6 @@ export class Client {
   admin = AdminLevel.Player;
   level = 0;
   experience = 0;
-  usage = 0;
   hp = 0;
   maxHp = 0;
   tp = 0;
@@ -163,17 +150,9 @@ export class Client {
   map!: Emf;
   mapRenderer: MapRenderer;
   downloadQueue: { type: FileType; id: number }[] = [];
-  characterAnimations: Map<number, CharacterAnimation> = new Map();
-  npcAnimations: Map<number, NpcAnimation> = new Map();
-  characterChats: Map<number, ChatBubble> = new Map();
-  npcChats: Map<number, ChatBubble> = new Map();
-  queuedNpcChats: Map<number, string[]> = new Map();
-  npcHealthBars: Map<number, HealthBar> = new Map();
-  characterHealthBars: Map<number, HealthBar> = new Map();
-  characterEmotes: Map<number, Emote> = new Map();
-  effects: EffectAnimation[] = [];
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
+  animationController: AnimationController;
   movementController: MovementController;
   keyboardController: KeyboardController;
   audioController: AudioController;
@@ -182,7 +161,8 @@ export class Client {
   boardController: BoardController;
   chatController: ChatController;
   chestController: ChestController;
-  combatController: CombatController;
+  cleanupController: CleanupController;
+  drunkController: DrunkController;
   commandController: CommandController;
   inventoryController: InventoryController;
   lockerController: LockerController;
@@ -194,16 +174,16 @@ export class Client {
   shopController: ShopController;
   socialController: SocialController;
   statSkillController: StatSkillController;
-  tickController: TickController;
+  itemProtectionController: ItemProtectionController;
+  quakeController: QuakeController;
+  spellController: SpellController;
+  usageController: UsageController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, IWeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
   effectMetadata = getEffectMetaData();
   hatMetadata = getHatMetadata();
-  doors: Door[] = [];
   typing = false;
-  idleTicks = INITIAL_IDLE_TICKS;
-  drunk = false;
   reconnecting = false;
   rememberMe = Boolean(localStorage.getItem('remember-me')) || false;
   loginToken = localStorage.getItem('login-token');
@@ -226,27 +206,12 @@ export class Client {
   });
   atlas: Atlas;
   hotbarSlots: ISlot[] = [];
-  selectedSpellId = 0;
-  queuedSpellId = 0;
-  spellCastTimestamp = 0;
-  spellTarget: SpellTarget | null = null;
-  spellTargetId = 0;
-  spellCooldownTicks = 0;
+  sans11: Sans11Font;
   menuPlayerId = 0;
   partyMembers: PartyMember[] = [];
   minimapEnabled = false;
   minimapRenderer: MinimapRenderer;
-  cursorClickAnimation: CursorClickAnimation | undefined;
-  autoWalkPath: Vector2[] = [];
   onlinePlayers: OnlinePlayer[] = [];
-  sans11: Sans11Font;
-  itemProtectionTimers: Map<
-    number,
-    {
-      ticks: number;
-      ownerId: number;
-    }
-  > = new Map();
 
   constructor() {
     this.emitter = mitt<ClientEvents>();
@@ -285,6 +250,7 @@ export class Client {
     this.nearby.items = [];
     this.mapRenderer = new MapRenderer(this);
     this.minimapRenderer = new MinimapRenderer(this);
+    this.animationController = new AnimationController(this);
     this.movementController = new MovementController(this);
     this.keyboardController = new KeyboardController(this);
     this.audioController = new AudioController(this);
@@ -293,19 +259,23 @@ export class Client {
     this.boardController = new BoardController(this);
     this.chatController = new ChatController(this);
     this.chestController = new ChestController(this);
-    this.combatController = new CombatController(this);
+    this.cleanupController = new CleanupController(this);
     this.commandController = new CommandController(this);
+    this.drunkController = new DrunkController(this);
     this.inventoryController = new InventoryController(this);
+    this.itemProtectionController = new ItemProtectionController();
     this.lockerController = new LockerController(this);
     this.mapController = new MapController(this);
     this.mouseController = new MouseController(this);
     this.npcController = new NpcController(this);
     this.questController = new QuestController(this);
+    this.quakeController = new QuakeController();
     this.sessionController = new SessionController(this);
     this.shopController = new ShopController(this);
     this.socialController = new SocialController(this);
+    this.spellController = new SpellController(this);
     this.statSkillController = new StatSkillController(this);
-    this.tickController = new TickController(this);
+    this.usageController = new UsageController(this);
     loadConfig().then((config) => {
       this.config = config;
       const txtHost =
@@ -518,32 +488,26 @@ export class Client {
       );
       const activeNpcIds = new Set(this.nearby.npcs.map((n) => n.index));
 
-      this.tickController.tickUsage();
-      this.tickController.tickIdle();
-      this.tickController.tickItemProtection();
-      this.tickController.tickDrunk();
-      this.tickController.tickOutOfRange();
-      this.tickController.tickSpellQueue();
-      this.tickController.tickQueuedNpcChats();
+      this.usageController.tick();
+      this.itemProtectionController.tick();
+      this.drunkController.tick();
+      this.cleanupController.tick();
+      this.spellController.tick();
+      this.npcController.tick();
 
-      const { playerWalking, playerDying } =
-        this.tickController.tickCharacterAnimations(activeCharIds);
+      const { playerWalking, playerDying } = this.animationController.tick(
+        activeCharIds,
+        activeNpcIds,
+      );
 
-      this.tickController.tickCharacterEmotes(activeCharIds);
-      this.tickController.tickNpcAnimations(activeNpcIds);
-      this.tickController.tickCursorClick();
-      this.tickController.tickCharacterChatBubbles(activeCharIds);
-      this.tickController.tickHealthBars(activeCharIds, activeNpcIds);
-      this.tickController.tickNpcChatBubbles(activeNpcIds);
-      this.tickController.tickEffects();
-      this.tickController.tickDoors();
+      this.mapController.tick();
 
       if (this.warpQueued && !playerWalking && !playerDying) {
         this.sessionController.acceptWarp();
       }
 
-      this.tickController.tickAutoWalk();
-      this.tickController.tickQuake();
+      this.movementController.tick();
+      this.quakeController.tick();
     }
   }
 
@@ -554,11 +518,11 @@ export class Client {
 
   setMap(map: Emf) {
     this.map = map;
-    this.characterChats.clear();
-    this.npcChats.clear();
-    this.npcHealthBars.clear();
-    this.characterHealthBars.clear();
-    this.itemProtectionTimers.clear();
+    this.animationController.characterChats.clear();
+    this.animationController.npcChats.clear();
+    this.animationController.npcHealthBars.clear();
+    this.animationController.characterHealthBars.clear();
+    this.itemProtectionController.itemProtectionTimers.clear();
     if (this.map) {
       clearRectangles();
       this.mapRenderer.buildCaches();
@@ -626,28 +590,28 @@ export class Client {
       this.emit('reconnected', undefined);
     }
     this.minimapEnabled = false;
-    this.characterAnimations.clear();
-    this.npcAnimations.clear();
-    this.characterChats.clear();
-    this.npcChats.clear();
-    this.queuedNpcChats.clear();
-    this.npcHealthBars.clear();
-    this.characterHealthBars.clear();
-    this.characterEmotes.clear();
-    this.effects = [];
-    this.autoWalkPath = [];
-    this.spellTarget = null;
+    this.animationController.characterAnimations.clear();
+    this.animationController.npcAnimations.clear();
+    this.animationController.characterChats.clear();
+    this.animationController.npcChats.clear();
+    this.npcController.queuedNpcChats.clear();
+    this.animationController.npcHealthBars.clear();
+    this.animationController.characterHealthBars.clear();
+    this.animationController.characterEmotes.clear();
+    this.animationController.effects = [];
+    this.movementController.autoWalkPath = [];
+    this.spellController.spellTarget = null;
     this.downloadQueue = [];
-    this.idleTicks = INITIAL_IDLE_TICKS;
-    this.drunk = false;
-    this.tickController.drunkEmoteTicks = 0;
-    this.selectedSpellId = 0;
-    this.queuedSpellId = 0;
-    this.spellCooldownTicks = 0;
+    this.usageController.idleTicks = INITIAL_IDLE_TICKS;
+    this.drunkController.drunk = false;
+    this.drunkController.drunkEmoteTicks = 0;
+    this.spellController.selectedSpellId = 0;
+    this.spellController.queuedSpellId = 0;
+    this.spellController.spellCooldownTicks = 0;
     this.menuPlayerId = 0;
     this.onlinePlayers = [];
     this.inventoryController.equipmentSwap = null;
-    this.itemProtectionTimers.clear();
+    this.itemProtectionController.itemProtectionTimers.clear();
   }
 
   disconnect() {
@@ -681,8 +645,11 @@ export class Client {
       return;
     }
 
-    const current = this.npcAnimations.get(index);
-    this.npcAnimations.set(index, new NpcDeathAnimation(current));
+    const current = this.animationController.npcAnimations.get(index);
+    this.animationController.npcAnimations.set(
+      index,
+      new NpcDeathAnimation(current),
+    );
   }
 
   setCharacterDeathAnimation(playerId: number) {
@@ -691,8 +658,8 @@ export class Client {
       return;
     }
 
-    const current = this.characterAnimations.get(playerId);
-    this.characterAnimations.set(
+    const current = this.animationController.characterAnimations.get(playerId);
+    this.animationController.characterAnimations.set(
       playerId,
       new CharacterDeathAnimation(current),
     );
@@ -713,7 +680,7 @@ export class Client {
   addItemDrop(item: ItemMapInfo, protectedFor = 0, ownerId = 0) {
     this.nearby.items.push(item);
     if (protectedFor) {
-      this.itemProtectionTimers.set(item.uid, {
+      this.itemProtectionController.itemProtectionTimers.set(item.uid, {
         ticks: protectedFor,
         ownerId,
       });

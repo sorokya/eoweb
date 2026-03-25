@@ -142,7 +142,7 @@ function handleItemReply(client: Client, reader: EoReader) {
       client.tp = data.tp;
       if (data.hpGain) {
         const percent = (client.hp / client.maxHp) * 100;
-        client.characterHealthBars.set(
+        client.animationController.characterHealthBars.set(
           client.playerId,
           new HealthBar(percent, 0, data.hpGain),
         );
@@ -157,7 +157,7 @@ function handleItemReply(client: Client, reader: EoReader) {
       if (metadata.sfx) {
         playSfxById(metadata.sfx);
       }
-      client.effects.push(
+      client.animationController.effects.push(
         new EffectAnimation(
           data.effectId + 1,
           new EffectTargetCharacter(client.playerId),
@@ -176,9 +176,9 @@ function handleItemReply(client: Client, reader: EoReader) {
         EOResourceID.STATUS_LABEL_TYPE_WARNING,
         client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_USE_DRUNK),
       );
-      client.drunk = true;
-      client.tickController.drunkTicks = 100 + record.spec1 * 10;
-      client.tickController.drunkEmoteTicks = 20;
+      client.drunkController.drunk = true;
+      client.drunkController.drunkTicks = 100 + record.spec1 * 10;
+      client.drunkController.drunkEmoteTicks = 20;
       break;
     }
     case ItemType.HairDye: {
@@ -196,7 +196,7 @@ function handleItemReply(client: Client, reader: EoReader) {
         packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataExpReward;
       client.experience = data.experience;
       if (data.levelUp) {
-        client.characterEmotes.set(
+        client.animationController.characterEmotes.set(
           client.playerId,
           new Emote(EmoteType.LevelUp),
         );
@@ -334,7 +334,10 @@ function handleItemAccept(client: Client, reader: EoReader) {
     return;
   }
 
-  client.characterEmotes.set(packet.playerId, new Emote(EmoteType.LevelUp));
+  client.animationController.characterEmotes.set(
+    packet.playerId,
+    new Emote(EmoteType.LevelUp),
+  );
   playSfxById(SfxId.LevelUp);
 }
 

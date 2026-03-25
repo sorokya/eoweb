@@ -101,13 +101,19 @@ export class MouseController {
         itemsAtCoords.sort((a, b) => b.uid - a.uid);
 
         const protectedItems = itemsAtCoords.filter((i) => {
-          const p = this.client.itemProtectionTimers.get(i.uid);
+          const p =
+            this.client.itemProtectionController.itemProtectionTimers.get(
+              i.uid,
+            );
           return p && p.ticks > 0 && p.ownerId !== this.client.playerId;
         });
 
         if (protectedItems.length < itemsAtCoords.length) {
           const item = itemsAtCoords.find((i) => {
-            const p = this.client.itemProtectionTimers.get(i.uid);
+            const p =
+              this.client.itemProtectionController.itemProtectionTimers.get(
+                i.uid,
+              );
             return !p || p.ticks === 0 || p.ownerId === this.client.playerId;
           });
 
@@ -121,9 +127,10 @@ export class MouseController {
         }
 
         const protectedItem = protectedItems[0];
-        const protection = this.client.itemProtectionTimers.get(
-          protectedItem.uid,
-        );
+        const protection =
+          this.client.itemProtectionController.itemProtectionTimers.get(
+            protectedItem.uid,
+          );
 
         if (protection) {
           const owner = protection.ownerId
@@ -219,19 +226,18 @@ export class MouseController {
     }
 
     if (
-      !this.client.cursorClickAnimation &&
+      !this.client.animationController.cursorClickAnimation &&
       this.client.mouseCoords &&
       this.client.mapController.canWalk(this.client.mouseCoords, true)
     ) {
-      this.client.cursorClickAnimation = new CursorClickAnimation(
-        this.client.mouseCoords,
-      );
+      this.client.animationController.cursorClickAnimation =
+        new CursorClickAnimation(this.client.mouseCoords);
 
       const path = this.client.mapController.findPathTo(
         this.client.mouseCoords,
       );
       if (path.length) {
-        this.client.autoWalkPath = path;
+        this.client.movementController.autoWalkPath = path;
       }
     }
   }

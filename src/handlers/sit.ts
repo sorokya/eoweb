@@ -40,7 +40,7 @@ function handleSitPlayer(client: Client, reader: EoReader) {
   if (spec && spec.tileSpec === MapTileSpec.Water) {
     const metadata = client.getEffectMetadata(9);
     playSfxById(metadata.sfx);
-    client.effects.push(
+    client.animationController.effects.push(
       new EffectAnimation(
         9,
         new EffectTargetCharacter(packet.playerId),
@@ -102,7 +102,7 @@ function handleSitReply(client: Client, reader: EoReader) {
   if (spec && spec.tileSpec === MapTileSpec.Water) {
     const metadata = client.getEffectMetadata(9);
     playSfxById(metadata.sfx);
-    client.effects.push(
+    client.animationController.effects.push(
       new EffectAnimation(
         9,
         new EffectTargetCharacter(client.playerId),

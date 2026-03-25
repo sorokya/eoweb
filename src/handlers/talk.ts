@@ -30,7 +30,7 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
     return;
   }
 
-  client.characterChats.set(
+  client.animationController.characterChats.set(
     character.playerId,
     new ChatBubble(client.sans11!, packet.message),
   );
@@ -83,7 +83,7 @@ function handleTalkTell(client: Client, reader: EoReader) {
 
 function handleTalkAnnounce(client: Client, reader: EoReader) {
   const packet = TalkAnnounceServerPacket.deserialize(reader);
-  client.characterChats.set(
+  client.animationController.characterChats.set(
     client.playerId,
     new ChatBubble(client.sans11!, packet.message),
   );
@@ -131,7 +131,7 @@ function handleTalkOpen(client: Client, reader: EoReader) {
         (!c.invisible || client.admin !== AdminLevel.Player),
     )
   ) {
-    client.characterChats.set(
+    client.animationController.characterChats.set(
       packet.playerId,
       new ChatBubble(
         client.sans11!,

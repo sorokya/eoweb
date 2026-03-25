@@ -274,9 +274,10 @@ export class MapRenderer {
 
     const player = this.client.getPlayerCoords();
     let playerScreen = isoToScreen(player);
-    let mainCharacterAnimation = this.client.characterAnimations.get(
-      this.client.playerId,
-    );
+    let mainCharacterAnimation =
+      this.client.animationController.characterAnimations.get(
+        this.client.playerId,
+      );
 
     if (
       mainCharacterAnimation instanceof CharacterDeathAnimation &&
@@ -296,7 +297,7 @@ export class MapRenderer {
       playerScreen.y += interOffset.y;
     }
 
-    playerScreen.x += this.client.tickController.quakeOffset;
+    playerScreen.x += this.client.quakeController.quakeOffset;
 
     const diag = Math.hypot(ctx.canvas.width, ctx.canvas.height);
     const rangeX = Math.min(
@@ -467,7 +468,7 @@ export class MapRenderer {
       return;
     }
 
-    const tileEffects = this.client.effects.filter(
+    const tileEffects = this.client.animationController.effects.filter(
       (e) => e.target instanceof EffectTargetTile,
     );
     for (const effect of tileEffects) {
@@ -534,11 +535,20 @@ export class MapRenderer {
     if (characterRect) {
       const character = this.client.getCharacterById(characterRect.id);
       const bubble =
-        character && !!this.client.characterChats.get(character.playerId);
+        character &&
+        !!this.client.animationController.characterChats.get(
+          character.playerId,
+        );
       const bar =
-        character && !!this.client.characterHealthBars.get(character.playerId);
+        character &&
+        !!this.client.animationController.characterHealthBars.get(
+          character.playerId,
+        );
       let animation =
-        character && this.client.characterAnimations.get(character.playerId);
+        character &&
+        this.client.animationController.characterAnimations.get(
+          character.playerId,
+        );
       let dying = false;
 
       if (animation instanceof CharacterDeathAnimation) {
@@ -598,9 +608,12 @@ export class MapRenderer {
       const npcRect = getNpcIntersecting(this.client.mousePosition);
       if (npcRect) {
         const npc = this.client.getNpcByIndex(npcRect.id);
-        const bubble = npc && !!this.client.npcChats.get(npc.index);
-        const bar = npc && !!this.client.npcHealthBars.get(npc.index);
-        let animation = npc && this.client.npcAnimations.get(npc.index);
+        const bubble =
+          npc && !!this.client.animationController.npcChats.get(npc.index);
+        const bar =
+          npc && !!this.client.animationController.npcHealthBars.get(npc.index);
+        let animation =
+          npc && this.client.animationController.npcAnimations.get(npc.index);
         let dying = false;
 
         if (animation instanceof NpcDeathAnimation) {
@@ -934,7 +947,9 @@ export class MapRenderer {
 
     let dyingTicks = 0;
     let dying = false;
-    let animation = this.client.characterAnimations.get(character.playerId);
+    let animation = this.client.animationController.characterAnimations.get(
+      character.playerId,
+    );
     if (animation instanceof CharacterDeathAnimation) {
       dying = true;
       dyingTicks = animation.ticks;
@@ -1055,7 +1070,7 @@ export class MapRenderer {
 
     const effects = justCharacter
       ? []
-      : this.client.effects.filter(
+      : this.client.animationController.effects.filter(
           (e) =>
             e.target instanceof EffectTargetCharacter &&
             e.target.playerId === character.playerId,
@@ -1157,13 +1172,19 @@ export class MapRenderer {
     ) {
       const bubble = justCharacter
         ? null
-        : this.client.characterChats.get(character.playerId);
+        : this.client.animationController.characterChats.get(
+            character.playerId,
+          );
       const healthBar = justCharacter
         ? null
-        : this.client.characterHealthBars.get(character.playerId);
+        : this.client.animationController.characterHealthBars.get(
+            character.playerId,
+          );
       const emote = justCharacter
         ? null
-        : this.client.characterEmotes.get(character.playerId);
+        : this.client.animationController.characterEmotes.get(
+            character.playerId,
+          );
 
       if (
         !bubble &&
@@ -1223,7 +1244,9 @@ export class MapRenderer {
 
     let dyingTicks = 0;
     let dying = false;
-    let animation = this.client.npcAnimations.get(npc.index);
+    let animation = this.client.animationController.npcAnimations.get(
+      npc.index,
+    );
     if (animation) {
       animation.renderedFirstFrame = true;
     }
@@ -1319,7 +1342,7 @@ export class MapRenderer {
 
     setNpcRectangle(npc.index, rect);
 
-    const effects = this.client.effects.filter(
+    const effects = this.client.animationController.effects.filter(
       (e) =>
         e.target instanceof EffectTargetNpc && e.target.index === npc.index,
     );
@@ -1390,8 +1413,10 @@ export class MapRenderer {
       this.renderEffectFront(effect, ctx);
     }
 
-    const bubble = this.client.npcChats.get(npc.index);
-    const healthBar = this.client.npcHealthBars.get(npc.index);
+    const bubble = this.client.animationController.npcChats.get(npc.index);
+    const healthBar = this.client.animationController.npcHealthBars.get(
+      npc.index,
+    );
 
     if (!bubble && !healthBar && !this.client.commandController.debug) {
       return;
@@ -1578,7 +1603,7 @@ export class MapRenderer {
       TILE_HEIGHT,
     );
 
-    const animation = this.client.cursorClickAnimation;
+    const animation = this.client.animationController.cursorClickAnimation;
     if (animation) {
       animation.renderedFirstFrame = true;
       const animationScreen = isoToScreen(animation.at);

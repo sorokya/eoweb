@@ -15,27 +15,28 @@ import type { Vector2 } from '../vector';
 
 export class MapController {
   private client: Client;
+  doors: Door[] = [];
 
   constructor(client: Client) {
     this.client = client;
   }
 
   loadDoors(): void {
-    this.client.doors = [];
+    this.doors = [];
     for (const warpRow of this.client.map!.warpRows) {
       for (const warpTile of warpRow.tiles) {
         if (warpTile.warp.door) {
           const coords = new Coords();
           coords.x = warpTile.x;
           coords.y = warpRow.y;
-          this.client.doors.push(new Door(coords, warpTile.warp.door));
+          this.doors.push(new Door(coords, warpTile.warp.door));
         }
       }
     }
   }
 
   getDoor(coords: Vector2): Door | undefined {
-    return this.client.doors.find(
+    return this.doors.find(
       (d) => d.coords.x === coords.x && d.coords.y === coords.y,
     );
   }
@@ -486,5 +487,19 @@ export class MapController {
         c.x === this.client.mouseCoords!.x &&
         c.y === this.client.mouseCoords!.y,
     );
+  }
+
+  tick(): void {
+    for (const door of this.doors) {
+      if (!door.open) {
+        continue;
+      }
+
+      door.openTicks = Math.max(door.openTicks - 1, 0);
+      if (!door.openTicks) {
+        door.open = false;
+        playSfxById(SfxId.DoorClose);
+      }
+    }
   }
 }

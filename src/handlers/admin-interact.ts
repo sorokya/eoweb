@@ -20,7 +20,7 @@ function handleAdminInteractRemove(client: Client, reader: EoReader) {
   const character = client.getCharacterById(packet.playerId);
   if (character) {
     const metadata = client.getEffectMetadata(25);
-    client.effects.push(
+    client.animationController.effects.push(
       new EffectAnimation(25, new EffectTargetTile(character.coords), metadata),
     );
     playSfxById(SfxId.AdminHide);
@@ -35,7 +35,7 @@ function handleAdminInteractAgree(client: Client, reader: EoReader) {
   const character = client.getCharacterById(packet.playerId);
   if (character) {
     const metadata = client.getEffectMetadata(25);
-    client.effects.push(
+    client.animationController.effects.push(
       new EffectAnimation(
         25,
         new EffectTargetCharacter(character.playerId),

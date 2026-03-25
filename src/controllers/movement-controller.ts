@@ -1,7 +1,7 @@
 import {
   AttackUseClientPacket,
   Coords,
-  type Direction,
+  Direction,
   Emote as EmoteType,
   FacePlayerClientPacket,
   MapTileSpec,
@@ -14,7 +14,12 @@ import {
 
 import type { Client } from '../client';
 import { INITIAL_IDLE_TICKS } from '../consts';
-import { EffectAnimation, EffectTargetCharacter, Emote } from '../render';
+import {
+  CharacterWalkAnimation,
+  EffectAnimation,
+  EffectTargetCharacter,
+  Emote,
+} from '../render';
 import { playSfxById } from '../sfx';
 import { SfxId } from '../types';
 import { randomRange } from '../utils';
@@ -22,6 +27,7 @@ import type { Vector2 } from '../vector';
 
 export class MovementController {
   private client: Client;
+  autoWalkPath: Vector2[] = [];
 
   constructor(client: Client) {
     this.client = client;
@@ -31,7 +37,7 @@ export class MovementController {
     const packet = new FacePlayerClientPacket();
     packet.direction = direction;
     this.client.bus!.send(packet);
-    this.client.idleTicks = INITIAL_IDLE_TICKS;
+    this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   walk(direction: Direction, coords: Vector2, timestamp: number): void {
@@ -50,7 +56,7 @@ export class MovementController {
     if (spec && spec.tileSpec === MapTileSpec.Water) {
       const metadata = this.client.getEffectMetadata(9);
       playSfxById(metadata.sfx);
-      this.client.effects.push(
+      this.client.animationController.effects.push(
         new EffectAnimation(
           9,
           new EffectTargetCharacter(this.client.playerId),
@@ -66,7 +72,7 @@ export class MovementController {
     packet.walkAction.coords.y = coords.y;
     packet.walkAction.timestamp = timestamp;
     this.client.bus!.send(packet);
-    this.client.idleTicks = INITIAL_IDLE_TICKS;
+    this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
     this.client.audioController.setAmbientVolume();
   }
 
@@ -82,7 +88,7 @@ export class MovementController {
     playSfxById(metadata.sfx[index]);
 
     if (metadata.sfx[0] === SfxId.Harp1 || metadata.sfx[0] === SfxId.Guitar1) {
-      this.client.characterEmotes.set(
+      this.client.animationController.characterEmotes.set(
         this.client.playerId,
         new Emote(EmoteType.Playful + 1),
       );
@@ -95,7 +101,7 @@ export class MovementController {
     if (spec && spec.tileSpec === MapTileSpec.Water) {
       const metadata = this.client.getEffectMetadata(9);
       playSfxById(metadata.sfx);
-      this.client.effects.push(
+      this.client.animationController.effects.push(
         new EffectAnimation(
           9,
           new EffectTargetCharacter(this.client.playerId),
@@ -103,7 +109,7 @@ export class MovementController {
         ),
       );
     }
-    this.client.idleTicks = INITIAL_IDLE_TICKS;
+    this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   sit(): void {
@@ -114,14 +120,53 @@ export class MovementController {
     packet.sitActionData.cursorCoords.x = 0;
     packet.sitActionData.cursorCoords.y = 0;
     this.client.bus!.send(packet);
-    this.client.idleTicks = INITIAL_IDLE_TICKS;
+    this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   stand(): void {
     const packet = new SitRequestClientPacket();
     packet.sitAction = SitAction.Stand;
     this.client.bus!.send(packet);
-    this.client.idleTicks = INITIAL_IDLE_TICKS;
+    this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
+  }
+
+  tick(): void {
+    if (!this.autoWalkPath.length) {
+      return;
+    }
+
+    const animation = this.client.animationController.characterAnimations.get(
+      this.client.playerId,
+    );
+    if (animation instanceof CharacterWalkAnimation) {
+      return;
+    }
+
+    const current = this.client.getPlayerCoords();
+    const character = this.client.getPlayerCharacter();
+    const next = this.autoWalkPath.splice(0, 1)[0];
+
+    if (!this.client.mapController.canWalk(next, true)) {
+      this.autoWalkPath = [];
+      return;
+    }
+
+    const diffX = next.x - current.x;
+    const diffY = next.y - current.y;
+    let direction: Direction;
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      direction = diffX > 0 ? Direction.Right : Direction.Left;
+    } else {
+      direction = diffY > 0 ? Direction.Down : Direction.Up;
+    }
+    this.client.animationController.characterAnimations.set(
+      this.client.playerId,
+      new CharacterWalkAnimation(current, next, direction),
+    );
+    character!.coords.x = next.x;
+    character!.coords.y = next.y;
+    character!.direction = direction;
+    this.walk(direction, next, getTimestamp());
   }
 }
 
