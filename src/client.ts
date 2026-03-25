@@ -43,18 +43,31 @@ import type { ChatBubble } from './chat-bubble';
 import { clearRectangles } from './collision';
 import { getDefaultConfig, loadConfig } from './config';
 import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS, USAGE_TICKS } from './consts';
+import {
+  AudioController,
+  AuthController,
+  BankController,
+  BoardController,
+  ChatController,
+  ChestController,
+  CombatController,
+  CommandController,
+  InventoryController,
+  LockerController,
+  MapController,
+  MouseController,
+  MovementController as MovementCtrl,
+  NpcController,
+  ShopController,
+  SocialController,
+  TickController,
+} from './controllers';
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
 import type { Door } from './door';
 import { type DialogResourceID, type Edf, EOResourceID } from './edf';
 import { Sans11Font } from './fonts/sans-11';
 import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { registerAllHandlers } from './handlers';
-import * as Managers from './managers';
-import * as AudioManager from './managers/audio-manager';
-import * as AuthManager from './managers/auth-manager';
-import * as InputManager from './managers/input-manager';
-import * as MapManager from './managers/map-manager';
-import * as NpcInteractionManager from './managers/npc-interaction-manager';
 import { MapRenderer } from './map';
 import { MinimapRenderer } from './minimap';
 import { MovementController } from './movement-controller';
@@ -177,6 +190,23 @@ export class Client {
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
+  audio: AudioController;
+  auth: AuthController;
+  bank: BankController;
+  board: BoardController;
+  chatCtrl: ChatController;
+  chest: ChestController;
+  combat: CombatController;
+  command: CommandController;
+  inventory: InventoryController;
+  locker: LockerController;
+  map_: MapController;
+  mouse: MouseController;
+  movement: MovementCtrl;
+  npc: NpcController;
+  shop: ShopController;
+  social: SocialController;
+  tickCtrl: TickController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, IWeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
@@ -287,6 +317,23 @@ export class Client {
     this.mapRenderer = new MapRenderer(this);
     this.minimapRenderer = new MinimapRenderer(this);
     this.movementController = new MovementController(this);
+    this.audio = new AudioController(this);
+    this.auth = new AuthController(this);
+    this.bank = new BankController(this);
+    this.board = new BoardController(this);
+    this.chatCtrl = new ChatController(this);
+    this.chest = new ChestController(this);
+    this.combat = new CombatController(this);
+    this.command = new CommandController(this);
+    this.inventory = new InventoryController(this);
+    this.locker = new LockerController(this);
+    this.map_ = new MapController(this);
+    this.mouse = new MouseController(this);
+    this.movement = new MovementCtrl(this);
+    this.npc = new NpcController(this);
+    this.shop = new ShopController(this);
+    this.social = new SocialController(this);
+    this.tickCtrl = new TickController(this);
     loadConfig().then((config) => {
       this.config = config;
       const txtHost =
@@ -499,34 +546,32 @@ export class Client {
       );
       const activeNpcIds = new Set(this.nearby.npcs.map((n) => n.index));
 
-      Managers.tickUsage(this);
-      Managers.tickIdle(this);
-      Managers.tickItemProtection(this);
-      Managers.tickDrunk(this);
-      Managers.tickOutOfRange(this);
-      Managers.tickSpellQueue(this);
-      Managers.tickQueuedNpcChats(this);
+      this.tickCtrl.tickUsage();
+      this.tickCtrl.tickIdle();
+      this.tickCtrl.tickItemProtection();
+      this.tickCtrl.tickDrunk();
+      this.tickCtrl.tickOutOfRange();
+      this.tickCtrl.tickSpellQueue();
+      this.tickCtrl.tickQueuedNpcChats();
 
-      const { playerWalking, playerDying } = Managers.tickCharacterAnimations(
-        this,
-        activeCharIds,
-      );
+      const { playerWalking, playerDying } =
+        this.tickCtrl.tickCharacterAnimations(activeCharIds);
 
-      Managers.tickCharacterEmotes(this, activeCharIds);
-      Managers.tickNpcAnimations(this, activeNpcIds);
-      Managers.tickCursorClick(this);
-      Managers.tickCharacterChatBubbles(this, activeCharIds);
-      Managers.tickHealthBars(this, activeCharIds, activeNpcIds);
-      Managers.tickNpcChatBubbles(this, activeNpcIds);
-      Managers.tickEffects(this);
-      Managers.tickDoors(this);
+      this.tickCtrl.tickCharacterEmotes(activeCharIds);
+      this.tickCtrl.tickNpcAnimations(activeNpcIds);
+      this.tickCtrl.tickCursorClick();
+      this.tickCtrl.tickCharacterChatBubbles(activeCharIds);
+      this.tickCtrl.tickHealthBars(activeCharIds, activeNpcIds);
+      this.tickCtrl.tickNpcChatBubbles(activeNpcIds);
+      this.tickCtrl.tickEffects();
+      this.tickCtrl.tickDoors();
 
       if (this.warpQueued && !playerWalking && !playerDying) {
-        this.acceptWarp();
+        this.auth.acceptWarp();
       }
 
-      Managers.tickAutoWalk(this);
-      Managers.tickQuake(this);
+      this.tickCtrl.tickAutoWalk();
+      this.tickCtrl.tickQuake();
     }
   }
 
@@ -545,66 +590,22 @@ export class Client {
     if (this.map) {
       clearRectangles();
       this.mapRenderer.buildCaches();
-      this.loadDoors();
+      this.map_.loadDoors();
 
       if (this.map.type === MapType.Pk) {
         playSfxById(SfxId.EnterPkMap);
       }
 
-      AudioManager.stopAmbientSound(this);
+      this.audio.stopAmbientSound();
 
       if (this.map.ambientSoundId) {
-        AudioManager.startAmbientSound(this);
+        this.audio.startAmbientSound();
       }
 
       if (!this.map.mapAvailable) {
         this.minimapEnabled = false;
       }
     }
-  }
-
-  setAmbientVolume() {
-    AudioManager.setAmbientVolume(this);
-  }
-
-  loadDoors() {
-    MapManager.loadDoors(this);
-  }
-
-  getDoor(coords: Vector2): Door | undefined {
-    return MapManager.getDoor(this, coords);
-  }
-
-  chestAt(coords: Coords): boolean {
-    return MapManager.chestAt(this, coords);
-  }
-
-  lockerAt(coords: Coords): boolean {
-    return MapManager.lockerAt(this, coords);
-  }
-
-  boardAt(coords: Coords): MapTileSpec | undefined {
-    return MapManager.boardAt(this, coords);
-  }
-
-  openLocker(coords: Coords) {
-    MapManager.openLocker(this, coords);
-  }
-
-  openDoor(coords: Coords) {
-    MapManager.openDoor(this, coords);
-  }
-
-  isAdjacentToSpec(spec: MapTileSpec): boolean {
-    return MapManager.isAdjacentToSpec(this, spec);
-  }
-
-  isFacingChairAt(coords: Vector2): boolean {
-    return MapManager.isFacingChairAt(this, coords);
-  }
-
-  sitChair(coords: Coords) {
-    MapManager.sitChair(this, coords);
   }
 
   async loadMap(id: number): Promise<void> {
@@ -643,118 +644,6 @@ export class Client {
 
   clearBus() {
     this.bus = null!;
-  }
-
-  occupied(coords: Vector2): boolean {
-    return MapManager.occupied(this, coords);
-  }
-
-  handleClick(e: MouseEvent) {
-    InputManager.handleClick(this, e);
-  }
-
-  findPathTo(target: Vector2): Vector2[] {
-    return MapManager.findPathTo(this, target);
-  }
-
-  handleRightClick(e: MouseEvent) {
-    InputManager.handleRightClick(this, e);
-  }
-
-  clickNpc(npc: NpcMapInfo) {
-    NpcInteractionManager.clickNpc(this, npc);
-  }
-
-  clickCharacter(character: CharacterMapInfo) {
-    NpcInteractionManager.clickCharacter(this, character);
-  }
-
-  canWalk(coords: Vector2, silent = false): boolean {
-    return MapManager.canWalk(this, coords, silent);
-  }
-
-  requestAccountCreation(data: AccountCreateData) {
-    AuthManager.requestAccountCreation(this, data);
-  }
-
-  requestCharacterCreation(data: CharacterCreateData) {
-    AuthManager.requestCharacterCreation(this, data);
-  }
-
-  changePassword(username: string, oldPassword: string, newPassword: string) {
-    AuthManager.changePassword(this, username, oldPassword, newPassword);
-  }
-
-  chat(message: string) {
-    Managers.chat(this, message);
-  }
-
-  handleCommand(input: string): boolean {
-    return Managers.handleCommand(this, input);
-  }
-
-  login(username: string, password: string, rememberMe: boolean) {
-    AuthManager.login(this, username, password, rememberMe);
-  }
-
-  selectCharacter(characterId: number) {
-    AuthManager.selectCharacter(this, characterId);
-  }
-
-  requestCharacterDeletion(characterId: number) {
-    AuthManager.requestCharacterDeletion(this, characterId);
-  }
-
-  deleteCharacter(characterId: number) {
-    AuthManager.deleteCharacter(this, characterId);
-  }
-
-  requestWarpMap(id: number) {
-    AuthManager.requestWarpMap(this, id);
-  }
-
-  acceptWarp() {
-    AuthManager.acceptWarp(this);
-  }
-
-  requestFile(fileType: FileType, id: number) {
-    AuthManager.requestFile(this, fileType, id);
-  }
-
-  enterGame() {
-    AuthManager.enterGame(this);
-  }
-
-  rangeRequest(playerIds: number[], npcIndexes: number[]) {
-    AuthManager.rangeRequest(this, playerIds, npcIndexes);
-  }
-
-  requestCharacterRange(playerIds: number[]) {
-    AuthManager.requestCharacterRange(this, playerIds);
-  }
-
-  requestNpcRange(npcIndexes: number[]) {
-    AuthManager.requestNpcRange(this, npcIndexes);
-  }
-
-  face(direction: Direction) {
-    Managers.face(this, direction);
-  }
-
-  walk(direction: Direction, coords: Vector2, timestamp: number) {
-    Managers.walk(this, direction, coords, timestamp);
-  }
-
-  attack(direction: Direction, timestamp: number) {
-    Managers.attack(this, direction, timestamp);
-  }
-
-  sit() {
-    Managers.sit(this);
-  }
-
-  stand() {
-    Managers.stand(this);
   }
 
   setState(state: GameState) {
@@ -804,102 +693,6 @@ export class Client {
     localStorage.removeItem('last-character-id');
   }
 
-  cursorInDropRange(): boolean {
-    return MapManager.cursorInDropRange(this);
-  }
-
-  dropItem(id: number, amount: number, coords: Vector2) {
-    Managers.dropItem(this, id, amount, coords);
-  }
-
-  junkItem(id: number, amount: number) {
-    Managers.junkItem(this, id, amount);
-  }
-
-  useItem(id: number) {
-    Managers.useItem(this, id);
-  }
-
-  getEquipmentArray(): number[] {
-    return Managers.getEquipmentArray(this);
-  }
-
-  questReply(questId: number, dialogId: number, action: number | null) {
-    AuthManager.questReply(this, questId, dialogId, action);
-  }
-
-  emote(type: EmoteType) {
-    Managers.emote(this, type);
-  }
-
-  requestPaperdoll(playerId: number) {
-    Managers.requestPaperdoll(this, playerId);
-  }
-
-  unequipItem(slot: EquipmentSlot) {
-    Managers.unequipItem(this, slot);
-  }
-
-  equipItem(slot: EquipmentSlot, itemId: number): boolean {
-    return Managers.equipItem(this, slot, itemId);
-  }
-
-  isVisibleEquipmentChange(slot: EquipmentSlot): boolean {
-    return Managers.isVisibleEquipmentChange(slot);
-  }
-
-  setEquipmentSlot(slot: EquipmentSlot, itemId: number) {
-    Managers.setEquipmentSlot(this, slot, itemId);
-  }
-
-  setNearbyCharacterEquipment(
-    playerId: number,
-    slot: EquipmentSlot,
-    graphicId: number,
-  ) {
-    Managers.setNearbyCharacterEquipment(this, playerId, slot, graphicId);
-  }
-
-  openBoard(boardId: number) {
-    Managers.openBoard(this, boardId);
-  }
-
-  readPost(postId: number) {
-    Managers.readPost(this, postId);
-  }
-
-  createPost(subject: string, body: string) {
-    Managers.createPost(this, subject, body);
-  }
-
-  deletePost(postId: number) {
-    Managers.deletePost(this, postId);
-  }
-
-  openChest(coords: Vector2) {
-    Managers.openChest(this, coords);
-  }
-
-  takeChestItem(itemId: number) {
-    Managers.takeChestItem(this, itemId);
-  }
-
-  addChestItem(itemId: number, amount: number) {
-    Managers.addChestItem(this, itemId, amount);
-  }
-
-  buyShopItem(itemId: number, amount: number) {
-    Managers.buyShopItem(this, itemId, amount);
-  }
-
-  sellShopItem(itemId: number, amount: number) {
-    Managers.sellShopItem(this, itemId, amount);
-  }
-
-  craftShopItem(itemId: number) {
-    Managers.craftShopItem(this, itemId);
-  }
-
   setStatusLabel(type: EOResourceID, text: string) {
     this.notyf.open({
       message: `[ ${this.getResourceString(type)} ] ${text}`,
@@ -908,26 +701,6 @@ export class Client {
 
   refresh() {
     this.bus.send(new RefreshRequestClientPacket());
-  }
-
-  depositGold(amount: number) {
-    Managers.depositGold(this, amount);
-  }
-
-  withdrawGold(amount: number) {
-    Managers.withdrawGold(this, amount);
-  }
-
-  upgradeLocker() {
-    Managers.upgradeLocker(this);
-  }
-
-  takeLockerItem(itemId: number) {
-    Managers.takeLockerItem(this, itemId);
-  }
-
-  addLockerItem(itemId: number, amount: number) {
-    Managers.addLockerItem(this, itemId, amount);
   }
 
   setNpcDeathAnimation(index: number) {
@@ -951,70 +724,6 @@ export class Client {
       playerId,
       new CharacterDeathAnimation(current),
     );
-  }
-
-  trainStat(statId: StatId) {
-    AuthManager.trainStat(this, statId);
-  }
-
-  learnSkill(skillId: number) {
-    AuthManager.learnSkill(this, skillId);
-  }
-
-  forgetSkill(skillId: number) {
-    AuthManager.forgetSkill(this, skillId);
-  }
-
-  resetCharacter() {
-    AuthManager.resetCharacter(this);
-  }
-
-  useHotbarSlot(index: number) {
-    Managers.useHotbarSlot(this, index);
-  }
-
-  beginSpellChant() {
-    Managers.beginSpellChant(this);
-  }
-
-  castSpell(spellId: number) {
-    Managers.castSpell(this, spellId);
-  }
-
-  playSpellEffect(spellId: number, target: EffectTarget) {
-    Managers.playSpellEffect(this, spellId, target);
-  }
-
-  getHoveredPlayerMenuItem(): PlayerMenuItem | undefined {
-    return InputManager.getHoveredPlayerMenuItem(this);
-  }
-
-  requestBook(playerId: number) {
-    Managers.requestBook(this, playerId);
-  }
-
-  requestToJoinParty(playerId: number) {
-    Managers.requestToJoinParty(this, playerId);
-  }
-
-  inviteToParty(playerId: number) {
-    Managers.inviteToParty(this, playerId);
-  }
-
-  requestTrade(playerId: number) {
-    Managers.requestTrade(this, playerId);
-  }
-
-  acceptPartyRequest(playerId: number, requestType: PartyRequestType) {
-    Managers.acceptPartyRequest(this, playerId, requestType);
-  }
-
-  removePartyMember(playerId: number) {
-    Managers.removePartyMember(this, playerId);
-  }
-
-  requestPartyList() {
-    Managers.requestPartyList(this);
   }
 
   toggleMinimap() {

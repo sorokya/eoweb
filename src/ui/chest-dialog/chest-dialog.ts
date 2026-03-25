@@ -103,7 +103,7 @@ export class ChestDialog extends Base {
       }
 
       itemElement.addEventListener('contextmenu', () => {
-        this.client.takeChestItem(item.id);
+        this.client.chest.takeItem(item.id);
       });
 
       itemElement.appendChild(itemText);

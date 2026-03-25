@@ -144,7 +144,7 @@ export class LockerDialog extends Base {
           return;
         }
 
-        this.client.takeLockerItem(item.id);
+        this.client.locker.takeItem(item.id);
       });
 
       this.itemList!.appendChild(itemElement);

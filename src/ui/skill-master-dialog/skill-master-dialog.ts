@@ -326,7 +326,7 @@ export class SkillMasterDialog extends Base {
           `${strings[1]} ${record.name}`,
           strings[0],
           () => {
-            this.client.learnSkill(skill.id);
+            this.client.auth.learnSkill(skill.id);
           },
         );
       };
@@ -365,7 +365,7 @@ export class SkillMasterDialog extends Base {
           DialogResourceID.SKILL_PROMPT_TO_FORGET,
         );
         this.client.showConfirmation(strings[1], strings[0], () => {
-          this.client.forgetSkill(skill.id);
+          this.client.auth.forgetSkill(skill.id);
         });
       };
 
@@ -422,7 +422,7 @@ export class SkillMasterDialog extends Base {
             DialogResourceID.SKILL_RESET_CHARACTER_CONFIRMATION,
           );
           this.client.showConfirmation(lines![1], lines![0], () => {
-            this.client.resetCharacter();
+            this.client.auth.resetCharacter();
           });
         },
       ),

@@ -38,47 +38,6 @@ import { registerWalkHandlers } from './walk';
 import { registerWarpHandlers } from './warp';
 import { registerWelcomeHandlers } from './welcome';
 
-export {
-  registerAccountHandlers,
-  registerAdminInteractHandlers,
-  registerArenaHandlers,
-  registerAttackHandlers,
-  registerAvatarHandlers,
-  registerBankHandlers,
-  registerBoardHandlers,
-  registerCastHandlers,
-  registerChairHandlers,
-  registerCharacterHandlers,
-  registerChestHandlers,
-  registerConnectionHandlers,
-  registerDoorHandlers,
-  registerEffectHandlers,
-  registerEmoteHandlers,
-  registerFaceHandlers,
-  registerInitHandlers,
-  registerItemHandlers,
-  registerLockerHandlers,
-  registerLoginHandlers,
-  registerMessageHandlers,
-  registerMusicHandlers,
-  registerNpcHandlers,
-  registerPaperdollHandlers,
-  registerPartyHandlers,
-  registerPlayersHandlers,
-  registerQuestHandlers,
-  registerRangeHandlers,
-  registerRecoverHandlers,
-  registerRefreshHandlers,
-  registerShopHandlers,
-  registerSitHandlers,
-  registerSpellHandlers,
-  registerStatSkillHandlers,
-  registerTalkHandlers,
-  registerWalkHandlers,
-  registerWarpHandlers,
-  registerWelcomeHandlers,
-};
-
 export function registerAllHandlers(client: Client): void {
   registerInitHandlers(client);
   registerConnectionHandlers(client);

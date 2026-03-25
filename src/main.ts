@@ -103,7 +103,7 @@ export function zoomOut() {
 }
 
 function resizeCanvases() {
-  const container = document.getElementById('container')!;
+  const container = document.getElementById('container');
   if (!container) return;
   const viewportWidth =
     window.visualViewport?.width ?? container.getBoundingClientRect().width;
@@ -421,11 +421,11 @@ window.addEventListener('mousemove', (e) => {
 });
 
 window.addEventListener('click', (e) => {
-  client.handleClick(e);
+  client.mouse.handleClick(e);
 });
 
 window.addEventListener('contextmenu', (e) => {
-  client.handleRightClick(e);
+  client.mouse.handleRightClick(e);
   e.preventDefault();
 });
 

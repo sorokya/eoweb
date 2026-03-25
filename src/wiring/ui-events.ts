@@ -178,8 +178,8 @@ export function wireUiEvents(deps: UiEventDeps): void {
   );
 
   deps.createAccountForm.on('create', (data: unknown) => {
-    client.requestAccountCreation(
-      data as Parameters<typeof client.requestAccountCreation>[0],
+    client.auth.requestAccountCreation(
+      data as Parameters<typeof client.auth.requestAccountCreation>[0],
     );
   });
 
@@ -195,7 +195,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
       password: string;
       rememberMe: boolean;
     }) => {
-      client.login(username, password, rememberMe);
+      client.auth.login(username, password, rememberMe);
     },
   );
 
@@ -216,7 +216,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
   });
 
   deps.characterSelect.on('selectCharacter', (id: unknown) => {
-    client.selectCharacter(id as number);
+    client.auth.selectCharacter(id as number);
   });
 
   deps.characterSelect.on(
@@ -230,7 +230,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
         strings[0],
       );
       deps.smallConfirm.setCallback(() => {
-        client.requestCharacterDeletion(id);
+        client.auth.requestCharacterDeletion(id);
         deps.characterSelect.confirmed = true;
       });
       deps.smallConfirm.show();
@@ -248,7 +248,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
         strings[0],
       );
       deps.smallConfirm.setCallback(() => {
-        client.deleteCharacter(id);
+        client.auth.deleteCharacter(id);
       });
       deps.smallConfirm.show();
     },
@@ -268,8 +268,8 @@ export function wireUiEvents(deps: UiEventDeps): void {
 
   // Character creation
   deps.createCharacterForm.on('create', (data: unknown) => {
-    client.requestCharacterCreation(
-      data as Parameters<typeof client.requestCharacterCreation>[0],
+    client.auth.requestCharacterCreation(
+      data as Parameters<typeof client.auth.requestCharacterCreation>[0],
     );
   });
 
@@ -293,13 +293,13 @@ export function wireUiEvents(deps: UiEventDeps): void {
       oldPassword: string;
       newPassword: string;
     }) => {
-      client.changePassword(username, oldPassword, newPassword);
+      client.auth.changePassword(username, oldPassword, newPassword);
     },
   );
 
   // Chat
   deps.chat.on('chat', (message: unknown) => {
-    client.chat(message as string);
+    client.chatCtrl.chat(message as string);
   });
 
   deps.chat.on('focus', () => {
@@ -351,7 +351,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
       dialogId: number;
       action: number;
     }) => {
-      client.questReply(questId, dialogId, action);
+      client.auth.questReply(questId, dialogId, action);
       client.typing = false;
     },
   );
@@ -392,18 +392,21 @@ export function wireUiEvents(deps: UiEventDeps): void {
   );
 
   deps.inventory.on('openPaperdoll', () => {
-    client.requestPaperdoll(client.playerId);
+    client.social.requestPaperdoll(client.playerId);
   });
 
   deps.inventory.on(
     'equipItem',
     ({ slot, itemId }: { slot: unknown; itemId: number }) => {
-      client.equipItem(slot as Parameters<typeof client.equipItem>[0], itemId);
+      client.inventory.equipItem(
+        slot as Parameters<typeof client.inventory.equipItem>[0],
+        itemId,
+      );
     },
   );
 
   deps.inventory.on('useItem', (itemId: unknown) => {
-    client.useItem(itemId as number);
+    client.inventory.useItem(itemId as number);
   });
 
   // Keyboard
@@ -432,7 +435,7 @@ function wireInventoryEvents(deps: UiEventDeps): void {
       const item = client.items.find((i) => i.id === itemId);
       if (!item) return;
 
-      if (at === 'cursor' && !client.cursorInDropRange()) {
+      if (at === 'cursor' && !client.map_.cursorInDropRange()) {
         client.setStatusLabel(
           EOResourceID.STATUS_LABEL_TYPE_WARNING,
           client.getResourceString(
@@ -484,7 +487,7 @@ function wireInventoryEvents(deps: UiEventDeps): void {
         );
         deps.itemAmountDialog.setCallback(
           (amount) => {
-            client.dropItem(itemId, amount, coords!);
+            client.inventory.dropItem(itemId, amount, coords!);
             client.typing = false;
           },
           () => {
@@ -493,7 +496,7 @@ function wireInventoryEvents(deps: UiEventDeps): void {
         );
         deps.itemAmountDialog.show();
       } else {
-        client.dropItem(itemId, 1, coords!);
+        client.inventory.dropItem(itemId, 1, coords!);
       }
     },
   );
@@ -515,7 +518,7 @@ function wireInventoryEvents(deps: UiEventDeps): void {
       );
       deps.itemAmountDialog.setCallback(
         (amount) => {
-          client.junkItem(id, amount);
+          client.inventory.junkItem(id, amount);
           client.typing = false;
         },
         () => {
@@ -524,7 +527,7 @@ function wireInventoryEvents(deps: UiEventDeps): void {
       );
       deps.itemAmountDialog.show();
     } else {
-      client.junkItem(id, 1);
+      client.inventory.junkItem(id, 1);
     }
   });
 
@@ -545,7 +548,7 @@ function wireInventoryEvents(deps: UiEventDeps): void {
       );
       deps.itemAmountDialog.setCallback(
         (amount) => {
-          client.addChestItem(id, amount);
+          client.chest.addItem(id, amount);
           client.typing = false;
         },
         () => {
@@ -554,7 +557,7 @@ function wireInventoryEvents(deps: UiEventDeps): void {
       );
       deps.itemAmountDialog.show();
     } else {
-      client.addChestItem(id, 1);
+      client.chest.addItem(id, 1);
     }
   });
 
@@ -596,7 +599,7 @@ function wireInventoryEvents(deps: UiEventDeps): void {
       );
       deps.itemAmountDialog.setCallback(
         (amount) => {
-          client.addLockerItem(id, amount);
+          client.locker.addItem(id, amount);
           client.typing = false;
         },
         () => {
@@ -605,7 +608,7 @@ function wireInventoryEvents(deps: UiEventDeps): void {
       );
       deps.itemAmountDialog.show();
     } else {
-      client.addLockerItem(id, 1);
+      client.locker.addItem(id, 1);
     }
   });
 }
@@ -659,7 +662,7 @@ function wireShopEvents(deps: UiEventDeps): void {
             client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS) ?? '',
           );
           deps.smallConfirm.setCallback(() => {
-            client.buyShopItem(shopItem.id, amount);
+            client.shop.buyItem(shopItem.id, amount);
           }, true);
           deps.smallConfirm.show();
         }
@@ -681,7 +684,7 @@ function wireShopEvents(deps: UiEventDeps): void {
         client.getResourceString(EOResourceID.DIALOG_SHOP_SELL_ITEMS) ?? '',
       );
       deps.smallConfirm.setCallback(() => {
-        client.sellShopItem(shopItem.id, amount);
+        client.shop.sellItem(shopItem.id, amount);
       });
       deps.smallConfirm.show();
     };
@@ -739,7 +742,7 @@ function wireShopEvents(deps: UiEventDeps): void {
       `${client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_INGREDIENTS)} ${craftItem.name}`,
     );
     deps.largeConfirmSmallHeader.setCallback(() => {
-      client.craftShopItem(craftItem.id);
+      client.shop.craftItem(craftItem.id);
       deps.largeConfirmSmallHeader.hide();
     });
     deps.largeConfirmSmallHeader.show();
@@ -755,7 +758,6 @@ function wireBankEvents(deps: UiEventDeps): void {
       const strings = client.getDialogStrings(
         DialogResourceID.BANK_ACCOUNT_UNABLE_TO_DEPOSIT,
       );
-      if (!strings) throw new Error('Failed to fetch dialog strings');
       deps.smallAlert.setContent(strings[1], strings[0]);
       deps.smallAlert.show();
       return;
@@ -770,14 +772,14 @@ function wireBankEvents(deps: UiEventDeps): void {
         `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DEPOSIT)}`,
       );
       deps.itemAmountDialog.setCallback((amount) => {
-        client.depositGold(amount);
+        client.bank.depositGold(amount);
         deps.itemAmountDialog.hide();
       });
       deps.itemAmountDialog.show();
       return;
     }
 
-    client.depositGold(1);
+    client.bank.depositGold(1);
   });
 
   deps.bankDialog.on('withdraw', () => {
@@ -785,7 +787,6 @@ function wireBankEvents(deps: UiEventDeps): void {
       const strings = client.getDialogStrings(
         DialogResourceID.BANK_ACCOUNT_UNABLE_TO_WITHDRAW,
       );
-      if (!strings) throw new Error('Failed to fetch dialog strings');
       deps.smallAlert.setContent(strings[1], strings[0]);
       deps.smallAlert.show();
       return;
@@ -800,14 +801,14 @@ function wireBankEvents(deps: UiEventDeps): void {
         `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_WITHDRAW)}`,
       );
       deps.itemAmountDialog.setCallback((amount) => {
-        client.withdrawGold(amount);
+        client.bank.withdrawGold(amount);
         deps.itemAmountDialog.hide();
       });
       deps.itemAmountDialog.show();
       return;
     }
 
-    client.withdrawGold(1);
+    client.bank.withdrawGold(1);
   });
 
   deps.bankDialog.on('upgrade', () => {
@@ -845,7 +846,7 @@ function wireBankEvents(deps: UiEventDeps): void {
       strings[0],
     );
     deps.smallConfirm.setCallback(() => {
-      client.upgradeLocker();
+      client.locker.upgradeLocker();
     });
     deps.smallConfirm.show();
   });

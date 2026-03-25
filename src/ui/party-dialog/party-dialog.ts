@@ -93,7 +93,7 @@ export class PartyDialog extends Base {
     if (this.open) {
       this.hide();
     } else {
-      this.client.requestPartyList();
+      this.client.social.requestPartyList();
       this.show();
     }
   }
@@ -164,7 +164,7 @@ export class PartyDialog extends Base {
         removeIcon.classList.add('remove-icon');
         removeIcon.title = 'Remove from party';
         removeIcon.addEventListener('click', () => {
-          this.client.removePartyMember(member.playerId);
+          this.client.social.removePartyMember(member.playerId);
         });
         memberDiv.appendChild(removeIcon);
       }

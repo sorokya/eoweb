@@ -20,7 +20,7 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.requestCharacterRange([packet.playerId]);
+    client.auth.requestCharacterRange([packet.playerId]);
     return;
   }
 

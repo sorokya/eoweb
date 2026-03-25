@@ -79,19 +79,19 @@ export class MovementController {
     }
 
     if (isOrWasInputHeld(Input.Hotbar1) && this.hotbarTicks === 0) {
-      this.client.useHotbarSlot(0);
+      this.client.combat.useHotbarSlot(0);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     } else if (isOrWasInputHeld(Input.Hotbar2) && this.hotbarTicks === 0) {
-      this.client.useHotbarSlot(1);
+      this.client.combat.useHotbarSlot(1);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     } else if (isOrWasInputHeld(Input.Hotbar3) && this.hotbarTicks === 0) {
-      this.client.useHotbarSlot(2);
+      this.client.combat.useHotbarSlot(2);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     } else if (isOrWasInputHeld(Input.Hotbar4) && this.hotbarTicks === 0) {
-      this.client.useHotbarSlot(3);
+      this.client.combat.useHotbarSlot(3);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     } else if (isOrWasInputHeld(Input.Hotbar5) && this.hotbarTicks === 0) {
-      this.client.useHotbarSlot(4);
+      this.client.combat.useHotbarSlot(4);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     }
 
@@ -130,7 +130,7 @@ export class MovementController {
         !animation
       ) {
         character.direction = lastDirectionHeld;
-        this.client.face(lastDirectionHeld);
+        this.client.movement.face(lastDirectionHeld);
         this.faceTicks = FACE_TICKS;
         this.walkTicks = WALK_TICKS - 1;
         this.attackTicks = ATTACK_TICKS - 3;
@@ -177,7 +177,7 @@ export class MovementController {
           : new CharacterAttackAnimation(),
       );
 
-      this.client.attack(character.direction, getTimestamp());
+      this.client.movement.attack(character.direction, getTimestamp());
       this.attackTicks = ATTACK_TICKS;
       this.faceTicks = FACE_TICKS;
       this.walkTicks = WALK_TICKS - 1;
@@ -192,7 +192,7 @@ export class MovementController {
         !isInputHeld(Input.Attack)
       ) {
         character.direction = lastDirectionHeld;
-        this.client.face(lastDirectionHeld);
+        this.client.movement.face(lastDirectionHeld);
         this.faceTicks = FACE_TICKS;
         this.walkTicks = WALK_TICKS - 1;
         return;
@@ -215,39 +215,42 @@ export class MovementController {
           this.client.map!.height,
         );
 
-        const door = this.client.getDoor(to);
+        const door = this.client.map_.getDoor(to);
         if (door && !door.open) {
-          this.client.openDoor(to);
+          this.client.map_.openDoor(to);
           this.walkTicks = WALK_TICKS;
           return;
         }
 
-        if (this.client.chestAt(to)) {
-          this.client.openChest(to);
+        if (this.client.map_.chestAt(to)) {
+          this.client.chest.openChest(to);
           this.walkTicks = WALK_TICKS;
           return;
         }
 
-        if (this.client.lockerAt(to)) {
-          this.client.openLocker(to);
+        if (this.client.map_.lockerAt(to)) {
+          this.client.map_.openLocker(to);
           this.walkTicks = WALK_TICKS;
           return;
         }
 
-        const boardSpec = this.client.boardAt(to);
+        const boardSpec = this.client.map_.boardAt(to);
         if (boardSpec !== undefined) {
-          this.client.openBoard(boardSpec - MapTileSpec.Board1);
+          this.client.board.openBoard(boardSpec - MapTileSpec.Board1);
           this.walkTicks = WALK_TICKS;
           return;
         }
 
-        if (this.client.isFacingChairAt(to) && !this.client.occupied(to)) {
-          this.client.sitChair(to);
+        if (
+          this.client.map_.isFacingChairAt(to) &&
+          !this.client.map_.occupied(to)
+        ) {
+          this.client.map_.sitChair(to);
           this.walkTicks = WALK_TICKS;
           return;
         }
 
-        if (!this.client.canWalk(to)) {
+        if (!this.client.map_.canWalk(to)) {
           this.walkTicks = WALK_TICKS;
           return;
         }
@@ -259,7 +262,7 @@ export class MovementController {
         character.direction = lastDirectionHeld;
         character.coords.x = to.x;
         character.coords.y = to.y;
-        this.client.walk(lastDirectionHeld, to, getTimestamp());
+        this.client.movement.walk(lastDirectionHeld, to, getTimestamp());
         this.walkTicks = WALK_TICKS;
         this.faceTicks = FACE_TICKS;
         this.sitTicks = SIT_TICKS;
@@ -269,9 +272,9 @@ export class MovementController {
 
     if (!this.sitTicks && sitStandHeld) {
       if (character.sitState === SitState.Stand) {
-        this.client.sit();
+        this.client.movement.sit();
       } else {
-        this.client.stand();
+        this.client.movement.stand();
       }
       this.sitTicks = SIT_TICKS;
     }
@@ -282,57 +285,57 @@ export class MovementController {
     }
 
     if (isInputHeld(Input.EmotePlayful)) {
-      this.client.emote(Emote.Playful);
+      this.client.social.emote(Emote.Playful);
       return;
     }
 
     if (isInputHeld(Input.EmoteEmbarassed)) {
-      this.client.emote(Emote.Embarrassed);
+      this.client.social.emote(Emote.Embarrassed);
       return;
     }
 
     if (isInputHeld(Input.EmoteHappy)) {
-      this.client.emote(Emote.Happy);
+      this.client.social.emote(Emote.Happy);
       return;
     }
 
     if (isInputHeld(Input.EmoteDepressed)) {
-      this.client.emote(Emote.Depressed);
+      this.client.social.emote(Emote.Depressed);
       return;
     }
 
     if (isInputHeld(Input.EmoteSad)) {
-      this.client.emote(Emote.Sad);
+      this.client.social.emote(Emote.Sad);
       return;
     }
 
     if (isInputHeld(Input.EmoteAngry)) {
-      this.client.emote(Emote.Angry);
+      this.client.social.emote(Emote.Angry);
       return;
     }
 
     if (isInputHeld(Input.EmoteConfused)) {
-      this.client.emote(Emote.Confused);
+      this.client.social.emote(Emote.Confused);
       return;
     }
 
     if (isInputHeld(Input.EmoteSurprised)) {
-      this.client.emote(Emote.Surprised);
+      this.client.social.emote(Emote.Surprised);
       return;
     }
 
     if (isInputHeld(Input.EmoteHearts)) {
-      this.client.emote(Emote.Hearts);
+      this.client.social.emote(Emote.Hearts);
       return;
     }
 
     if (isInputHeld(Input.EmoteMoon)) {
-      this.client.emote(Emote.Moon);
+      this.client.social.emote(Emote.Moon);
       return;
     }
 
     if (isInputHeld(Input.EmoteSuicidal)) {
-      this.client.emote(Emote.Suicidal);
+      this.client.social.emote(Emote.Suicidal);
       return;
     }
   }

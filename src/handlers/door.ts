@@ -10,7 +10,7 @@ import { playSfxById, SfxId } from '../sfx';
 
 function handleDoorOpen(client: Client, reader: EoReader) {
   const packet = DoorOpenServerPacket.deserialize(reader);
-  const door = client.getDoor(packet.coords);
+  const door = client.map_.getDoor(packet.coords);
   if (!door) {
     return;
   }

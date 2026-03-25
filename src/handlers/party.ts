@@ -79,7 +79,7 @@ function handlePartyRequest(client: Client, reader: EoReader) {
   const packet = PartyRequestServerPacket.deserialize(reader);
   const inviter = client.getCharacterById(packet.inviterPlayerId);
   if (!inviter) {
-    client.requestCharacterRange([packet.inviterPlayerId]);
+    client.auth.requestCharacterRange([packet.inviterPlayerId]);
   }
 
   const strings = client.getDialogStrings(
@@ -92,7 +92,10 @@ function handlePartyRequest(client: Client, reader: EoReader) {
     `${capitalize(packet.playerName)} ${strings[1]}`,
     strings[0],
     () => {
-      client.acceptPartyRequest(packet.inviterPlayerId, packet.requestType);
+      client.social.acceptPartyRequest(
+        packet.inviterPlayerId,
+        packet.requestType,
+      );
     },
   );
 }

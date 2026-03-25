@@ -16,7 +16,7 @@ function handleSpellRequest(client: Client, reader: EoReader) {
   const packet = SpellRequestServerPacket.deserialize(reader);
   const character = client.getCharacterById(packet.playerId);
   if (!character) {
-    client.requestCharacterRange([packet.playerId]);
+    client.auth.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -52,7 +52,7 @@ function handleSpellTargetSelf(client: Client, reader: EoReader) {
 
   const character = client.getCharacterById(packet.playerId);
   if (!character) {
-    client.requestCharacterRange([packet.playerId]);
+    client.auth.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -61,7 +61,7 @@ function handleSpellTargetSelf(client: Client, reader: EoReader) {
     new HealthBar(packet.hpPercentage, 0, packet.spellHealHp),
   );
 
-  client.playSpellEffect(
+  client.combat.playSpellEffect(
     packet.spellId,
     new EffectTargetCharacter(packet.playerId),
   );
@@ -78,12 +78,12 @@ function handleSpellTargetOther(client: Client, reader: EoReader) {
   if (caster) {
     caster.direction = packet.casterDirection;
   } else {
-    client.requestCharacterRange([packet.casterId]);
+    client.auth.requestCharacterRange([packet.casterId]);
   }
 
   const character = client.getCharacterById(packet.victimId);
   if (!character) {
-    client.requestCharacterRange([packet.victimId]);
+    client.auth.requestCharacterRange([packet.victimId]);
     return;
   }
 
@@ -92,7 +92,7 @@ function handleSpellTargetOther(client: Client, reader: EoReader) {
     new HealthBar(packet.hpPercentage, 0, packet.spellHealHp),
   );
 
-  client.playSpellEffect(
+  client.combat.playSpellEffect(
     packet.spellId,
     new EffectTargetCharacter(packet.victimId),
   );
@@ -124,7 +124,7 @@ function handleSpellTargetGroup(client: Client, reader: EoReader) {
       new HealthBar(player.hpPercentage, 0, packet.spellHealHp),
     );
 
-    client.playSpellEffect(
+    client.combat.playSpellEffect(
       packet.spellId,
       new EffectTargetCharacter(player.playerId),
     );
