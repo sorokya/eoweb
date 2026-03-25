@@ -86,27 +86,27 @@ function handleLockerSpec(client: Client, reader: EoReader) {
 }
 
 export function registerLockerHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Locker,
     PacketAction.Buy,
     (reader) => handleLockerBuy(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Locker,
     PacketAction.Open,
     (reader) => handleLockerOpen(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Locker,
     PacketAction.Get,
     (reader) => handleLockerGet(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Locker,
     PacketAction.Reply,
     (reader) => handleLockerReply(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Locker,
     PacketAction.Spec,
     (reader) => handleLockerSpec(client, reader),

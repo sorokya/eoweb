@@ -126,6 +126,6 @@ export class PacketBus {
     }
 
     const actionMap = this.handlers.get(family);
-    actionMap.set(action, callback);
+    actionMap!.set(action, callback);
   }
 }

@@ -26,7 +26,7 @@ function handleRangeReply(client: Client, reader: EoReader) {
 }
 
 export function registerRangeHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Range,
     PacketAction.Reply,
     (reader) => handleRangeReply(client, reader),

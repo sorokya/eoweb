@@ -11,7 +11,7 @@ type Events = {
 
 export class OnlineList extends BaseDialogMd<Events> {
   constructor(client: Client) {
-    super(client, document.querySelector('#online-list'), 'Online Players');
+    super(client, document.querySelector('#online-list')!, 'Online Players');
 
     const playersContainer = this.container.querySelector('.players');
 
@@ -19,7 +19,7 @@ export class OnlineList extends BaseDialogMd<Events> {
       if (!this.container) return;
 
       this.updateLabelText(`Online Players (${players.length})`);
-      playersContainer.innerHTML = '';
+      playersContainer!.innerHTML = '';
 
       for (const player of players) {
         const playerElement = document.createElement('div');
@@ -57,13 +57,13 @@ export class OnlineList extends BaseDialogMd<Events> {
 
         const classElement = document.createElement('span');
         classElement.className = 'class';
-        classElement.textContent = `Lvl: ${player.level} ${this.client.ecf.classes[player.classId - 1]?.name || ''}`;
+        classElement.textContent = `Lvl: ${player.level} ${this.client.ecf!.classes[player.classId - 1]?.name || ''}`;
 
         nameElement.textContent = player.name;
         playerElement.appendChild(nameplateElement);
         playerElement.appendChild(classElement);
         playerElement.appendChild(titleElement);
-        playersContainer.appendChild(playerElement);
+        playersContainer!.appendChild(playerElement);
 
         playerElement.addEventListener('contextmenu', () => {
           const chatBox = document.getElementById(
@@ -78,7 +78,7 @@ export class OnlineList extends BaseDialogMd<Events> {
   }
 
   show() {
-    this.client.bus.send(new PlayersRequestClientPacket());
+    this.client.bus!.send(new PlayersRequestClientPacket());
     super.show();
   }
 

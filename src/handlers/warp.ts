@@ -66,6 +66,7 @@ function handleWarpAgree(client: Client, reader: EoReader) {
 
   if (client.mapId !== client.warpMapId) {
     getEmf(client.warpMapId).then((map) => {
+      if (!map) return;
       if (map.name) {
         client.emit('chat', {
           tab: ChatTab.System,
@@ -85,12 +86,12 @@ function handleWarpAgree(client: Client, reader: EoReader) {
 }
 
 export function registerWarpHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Warp,
     PacketAction.Request,
     (reader) => handleWarpRequest(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Warp,
     PacketAction.Agree,
     (reader) => handleWarpAgree(client, reader),

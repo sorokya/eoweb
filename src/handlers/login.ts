@@ -63,7 +63,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
   ) {
     const packet = new WelcomeRequestClientPacket();
     packet.characterId = client.lastCharacterId;
-    client.bus.send(packet);
+    client.bus!.send(packet);
     return;
   }
 
@@ -71,7 +71,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
 }
 
 export function registerLoginHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Login,
     PacketAction.Reply,
     (reader) => handleLoginReply(client, reader),

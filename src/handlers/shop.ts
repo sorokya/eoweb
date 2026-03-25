@@ -25,7 +25,7 @@ function handleShopBuy(client: Client, reader: EoReader) {
   const packet = ShopBuyServerPacket.deserialize(reader);
 
   const gold = client.items.find((i) => i.id === 1);
-  gold.amount = packet.goldAmount;
+  gold!.amount = packet.goldAmount;
 
   const item = client.items.find((i) => i.id === packet.boughtItem.id);
   if (item) {
@@ -44,11 +44,11 @@ function handleShopSell(client: Client, reader: EoReader) {
   const packet = ShopSellServerPacket.deserialize(reader);
 
   const gold = client.items.find((i) => i.id === 1);
-  gold.amount = packet.goldAmount;
+  gold!.amount = packet.goldAmount;
 
   if (packet.soldItem.amount) {
     const item = client.items.find((i) => i.id === packet.soldItem.id);
-    item.amount = packet.soldItem.amount;
+    item!.amount = packet.soldItem.amount;
   } else {
     client.items = client.items.filter((i) => i.id !== packet.soldItem.id);
   }
@@ -65,7 +65,7 @@ function handleShopCreate(client: Client, reader: EoReader) {
   for (const ingredient of packet.ingredients) {
     if (ingredient.amount) {
       const item = client.items.find((i) => i.id === ingredient.id);
-      item.amount = ingredient.amount;
+      item!.amount = ingredient.amount;
     } else {
       client.items = client.items.filter((i) => i.id !== ingredient.id);
     }
@@ -87,22 +87,22 @@ function handleShopCreate(client: Client, reader: EoReader) {
 }
 
 export function registerShopHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Shop,
     PacketAction.Open,
     (reader) => handleShopOpen(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Shop,
     PacketAction.Buy,
     (reader) => handleShopBuy(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Shop,
     PacketAction.Sell,
     (reader) => handleShopSell(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Shop,
     PacketAction.Create,
     (reader) => handleShopCreate(client, reader),

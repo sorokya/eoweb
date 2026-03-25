@@ -1,7 +1,7 @@
 import { deinterleave, swapMultiples } from 'eolib';
 
 export class Edf {
-  private lines: string[];
+  private lines!: string[];
 
   getLine(index: number): string | undefined {
     return this.lines[index];

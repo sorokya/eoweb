@@ -180,25 +180,29 @@ export class MapRenderer {
   constructor(client: Client) {
     this.client = client;
     this.damageNumberCanvas = document.createElement('canvas');
-    this.damageNumberCtx = this.damageNumberCanvas.getContext('2d');
+    this.damageNumberCtx = this.damageNumberCanvas.getContext('2d')!;
   }
 
   buildCaches() {
-    const w = this.client.map.width;
-    const h = this.client.map.height;
+    const w = this.client.map!.width;
+    const h = this.client.map!.height;
 
     this.staticTileGrid = Array.from({ length: h + 1 }, () =>
       Array.from({ length: w + 1 }, () => [] as StaticTile[]),
     );
 
     for (let layer = 0; layer <= 8; layer++) {
-      const layerRows = this.client.map.graphicLayers[layer].graphicRows;
+      const layerRows = this.client.map!.graphicLayers[layer].graphicRows;
       for (let y = 0; y <= h; y++) {
         const rowTiles = layerRows.find((r) => r.y === y)?.tiles ?? [];
         for (let x = 0; x <= w; x++) {
           let id = rowTiles.find((t) => t.x === x)?.graphic ?? null;
-          if (id === null && layer === Layer.Ground && this.client.map.fillTile)
-            id = this.client.map.fillTile;
+          if (
+            id === null &&
+            layer === Layer.Ground &&
+            this.client.map!.fillTile
+          )
+            id = this.client.map!.fillTile;
           if (id !== null)
             this.staticTileGrid[y][x].push({
               bmpId: id,
@@ -212,13 +216,13 @@ export class MapRenderer {
     this.tileSpecCache = Array.from({ length: h + 1 }, () =>
       new Array<MapTileSpec | null>(w + 1).fill(null),
     );
-    for (const row of this.client.map.tileSpecRows)
+    for (const row of this.client.map!.tileSpecRows)
       for (const t of row.tiles) this.tileSpecCache[row.y][t.x] = t.tileSpec;
 
     this.signCache = Array.from({ length: h + 1 }, () =>
       new Array<{ title: string; message: string } | null>(w + 1).fill(null),
     );
-    for (const sign of this.client.map.signs) {
+    for (const sign of this.client.map!.signs) {
       const title = sign.stringData.substring(0, sign.titleLength);
       const message = sign.stringData.substring(sign.titleLength);
       this.signCache[sign.coords.y][sign.coords.x] = { title, message };
@@ -399,24 +403,24 @@ export class MapRenderer {
             MapTileSpec.Board6,
             MapTileSpec.Board7,
             MapTileSpec.Board8,
-          ].includes(spec) ||
+          ].includes(spec!) ||
           this.client.nearby.characters.some(
             (c) =>
-              c.coords.x === this.client.mouseCoords.x &&
-              c.coords.y === this.client.mouseCoords.y,
+              c.coords.x === this.client.mouseCoords!.x &&
+              c.coords.y === this.client.mouseCoords!.y,
           ) ||
           this.client.nearby.npcs.some(
             (n) =>
-              n.coords.x === this.client.mouseCoords.x &&
-              n.coords.y === this.client.mouseCoords.y,
+              n.coords.x === this.client.mouseCoords!.x &&
+              n.coords.y === this.client.mouseCoords!.y,
           )
         ) {
           typeId = 1;
         } else if (
           this.client.nearby.items.some(
             (i) =>
-              i.coords.x === this.client.mouseCoords.x &&
-              i.coords.y === this.client.mouseCoords.y,
+              i.coords.x === this.client.mouseCoords!.x &&
+              i.coords.y === this.client.mouseCoords!.y,
           )
         ) {
           typeId = 2;
@@ -648,8 +652,8 @@ export class MapRenderer {
 
       const items = this.client.nearby.items.filter(
         (i) =>
-          i.coords.x === this.client.mouseCoords.x &&
-          i.coords.y === this.client.mouseCoords.y,
+          i.coords.x === this.client.mouseCoords!.x &&
+          i.coords.y === this.client.mouseCoords!.y,
       );
       if (!items.length) {
         return false;
@@ -1014,10 +1018,12 @@ export class MapRenderer {
       character.direction,
     );
 
-    const frameOffset =
-      CHARACTER_FRAME_OFFSETS[character.gender][characterFrame][
-        character.direction
-      ];
+    const frameOffset = (
+      CHARACTER_FRAME_OFFSETS[character.gender][characterFrame] as Record<
+        Direction,
+        { x: number; y: number }
+      >
+    )[character.direction];
 
     const screenX = Math.floor(
       screenCoords.x -
@@ -1174,13 +1180,13 @@ export class MapRenderer {
         const rect = getCharacterRectangle(character.playerId);
         const characterTopCenter = {
           x: screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + walkOffset.x,
-          y: rect.position.y,
+          y: rect!.position.y,
         };
 
         if (bubble) {
           bubble.render(characterTopCenter, ctx);
         }
-        this.renderHealthBar(healthBar, characterTopCenter, ctx);
+        this.renderHealthBar(healthBar!, characterTopCenter, ctx);
         if (emote) {
           this.renderEmote(emote, characterTopCenter, ctx);
         }
@@ -1194,7 +1200,7 @@ export class MapRenderer {
 
         if (this.client.debug) {
           this.renderDebugRectangle(
-            rect,
+            rect!,
             `id[${character.playerId}]`,
             'green',
             ctx,
@@ -1528,10 +1534,10 @@ export class MapRenderer {
     ctx: CanvasRenderingContext2D,
   ) {
     if (
-      this.client.mouseCoords.x < 0 ||
-      this.client.mouseCoords.x > this.client.map.width ||
-      this.client.mouseCoords.y < 0 ||
-      this.client.mouseCoords.y > this.client.map.height
+      this.client.mouseCoords!.x < 0 ||
+      this.client.mouseCoords!.x > this.client.map!.width ||
+      this.client.mouseCoords!.y < 0 ||
+      this.client.mouseCoords!.y > this.client.map!.height
     ) {
       return;
     }
@@ -1547,8 +1553,8 @@ export class MapRenderer {
     }
 
     const tileScreen = isoToScreen({
-      x: this.client.mouseCoords.x,
-      y: this.client.mouseCoords.y,
+      x: this.client.mouseCoords!.x,
+      y: this.client.mouseCoords!.y,
     });
 
     const sourceX = entity.typeId * TILE_WIDTH;

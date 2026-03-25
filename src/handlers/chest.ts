@@ -67,22 +67,22 @@ function handleChestReply(client: Client, reader: EoReader) {
 }
 
 export function registerChestHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Chest,
     PacketAction.Open,
     (reader) => handleChestOpen(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Chest,
     PacketAction.Agree,
     (reader) => handleChestAgree(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Chest,
     PacketAction.Get,
     (reader) => handleChestGet(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Chest,
     PacketAction.Reply,
     (reader) => handleChestReply(client, reader),

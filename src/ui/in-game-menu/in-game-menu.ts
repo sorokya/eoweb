@@ -13,7 +13,7 @@ export class InGameMenu extends Base {
 
   constructor() {
     super();
-    this.container = document.querySelector('#in-game-menu');
+    this.container = document.querySelector('#in-game-menu')!;
 
     const btnInventory = this.container.querySelector(
       'button[data-id="inventory"]',
@@ -24,37 +24,37 @@ export class InGameMenu extends Base {
     const btnOnline = this.container.querySelector('button[data-id="online"]');
     const btnParty = this.container.querySelector('button[data-id="party"]');
 
-    btnInventory.addEventListener('click', (e) => {
+    btnInventory!.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'inventory');
     });
 
-    btnMap.addEventListener('click', (e) => {
+    btnMap!.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'map');
     });
 
-    btnSpells.addEventListener('click', (e) => {
+    btnSpells!.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'spells');
     });
 
-    btnStats.addEventListener('click', (e) => {
+    btnStats!.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'stats');
     });
 
-    btnOnline.addEventListener('click', (e) => {
+    btnOnline!.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'online');
     });
 
-    btnParty.addEventListener('click', (e) => {
+    btnParty!.addEventListener('click', (e) => {
       e.stopPropagation();
       playSfxById(SfxId.ButtonClick);
       this.emitter.emit('toggle', 'party');

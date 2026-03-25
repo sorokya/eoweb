@@ -78,8 +78,8 @@ function handleRecoverReply(client: Client, reader: EoReader) {
     client.characterEmotes.set(client.playerId, new Emote(EmoteType.LevelUp));
     playSfxById(SfxId.LevelUp);
     client.level = packet.levelUp;
-    client.statPoints = packet.statPoints;
-    client.skillPoints = packet.skillPoints;
+    client.statPoints = packet.statPoints!;
+    client.skillPoints = packet.skillPoints!;
   }
 }
 
@@ -94,27 +94,27 @@ function handleRecoverTargetGroup(client: Client, reader: EoReader) {
 }
 
 export function registerRecoverHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Recover,
     PacketAction.Player,
     (reader) => handleRecoverPlayer(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Recover,
     PacketAction.Agree,
     (reader) => handleRecoverAgree(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Recover,
     PacketAction.List,
     (reader) => handleRecoverList(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Recover,
     PacketAction.Reply,
     (reader) => handleRecoverReply(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Recover,
     PacketAction.TargetGroup,
     (reader) => handleRecoverTargetGroup(client, reader),

@@ -63,7 +63,7 @@ function handleCharacterReply(client: Client, reader: EoReader) {
       reply.hairStyle = characterData.hairStyle;
       reply.skin = characterData.skin;
 
-      client.bus.send(reply);
+      client.bus!.send(reply);
       break;
     }
   }
@@ -75,12 +75,12 @@ function handleCharacterPlayer(client: Client, reader: EoReader) {
 }
 
 export function registerCharacterHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Character,
     PacketAction.Reply,
     (reader) => handleCharacterReply(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Character,
     PacketAction.Player,
     (reader) => handleCharacterPlayer(client, reader),

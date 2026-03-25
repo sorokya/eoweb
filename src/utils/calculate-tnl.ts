@@ -14,6 +14,9 @@ export function calculateTnl(experience: number): number {
   }
 
   const experienceRequired = EXP_TABLE.find((exp) => exp > experience);
+  if (experienceRequired === undefined) {
+    return 0;
+  }
   return experienceRequired - experience;
 }
 

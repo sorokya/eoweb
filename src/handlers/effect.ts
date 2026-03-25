@@ -28,11 +28,11 @@ function handleEffectReport(client: Client) {
   const playerAt = client.getPlayerCoords();
   const spikeTiles: Vector2[] = [];
   for (let x = playerAt.x - 6; x < playerAt.x + 6; ++x) {
-    if (x < 0 || x > client.map.width) continue;
+    if (x < 0 || x > client!.map!.width) continue;
     for (let y = playerAt.y - 6; y < playerAt.y + 6; ++y) {
-      if (y < 0 || y > client.map.height) continue;
-      const spec = client.map.tileSpecRows
-        .find((r) => r.y === y)
+      if (y < 0 || y > client!.map!.height) continue;
+      const spec = client!
+        .map!.tileSpecRows.find((r) => r.y === y)
         ?.tiles.find((t) => t.x === x);
       if (spec && spec.tileSpec === MapTileSpec.TimedSpikes) {
         spikeTiles.push({ x, y });
@@ -158,32 +158,32 @@ function handleEffectAdmin(client: Client, reader: EoReader) {
 }
 
 export function registerEffectHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Effect,
     PacketAction.Report,
     () => handleEffectReport(client),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Effect,
     PacketAction.Spec,
     (reader) => handleEffectSpec(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Effect,
     PacketAction.Use,
     (reader) => handleEffectUse(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Effect,
     PacketAction.Agree,
     (reader) => handleEffectAgree(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Effect,
     PacketAction.Player,
     (reader) => handleEffectPlayer(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Effect,
     PacketAction.Admin,
     (reader) => handleEffectAdmin(client, reader),

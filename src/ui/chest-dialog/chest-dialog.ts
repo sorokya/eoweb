@@ -10,21 +10,21 @@ import './chest-dialog.css';
 
 export class ChestDialog extends Base {
   private client: Client;
-  protected container = document.getElementById('chest');
+  protected container = document.getElementById('chest')!;
   private cover = document.querySelector<HTMLDivElement>('#cover');
-  private btnCancel = this.container.querySelector<HTMLButtonElement>(
+  private btnCancel = this.container!.querySelector<HTMLButtonElement>(
     'button[data-id="cancel"]',
   );
   private dialogs = document.getElementById('dialogs');
   private itemsList =
-    this.container.querySelector<HTMLDivElement>('.chest-items');
+    this.container!.querySelector<HTMLDivElement>('.chest-items');
   private items: ThreeItem[] = [];
 
   constructor(client: Client) {
     super();
     this.client = client;
 
-    this.btnCancel.addEventListener('click', () => {
+    this.btnCancel!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.hide();
     });
@@ -36,18 +36,18 @@ export class ChestDialog extends Base {
   }
 
   show() {
-    this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
+    this.cover!.classList.remove('hidden');
+    this.container!.classList.remove('hidden');
+    this.dialogs!.classList.remove('hidden');
     this.client.typing = true;
   }
 
   hide() {
-    this.cover.classList.add('hidden');
-    this.container.classList.add('hidden');
+    this.cover!.classList.add('hidden');
+    this.container!.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
+      this.dialogs!.classList.add('hidden');
       this.client.typing = false;
     }
   }
@@ -63,7 +63,7 @@ export class ChestDialog extends Base {
   }
 
   private render() {
-    this.itemsList.innerHTML = '';
+    this.itemsList!.innerHTML = '';
 
     if (this.items.length === 0) {
       return;
@@ -116,7 +116,7 @@ export class ChestDialog extends Base {
       });
 
       itemElement.appendChild(itemText);
-      this.itemsList.appendChild(itemElement);
+      this.itemsList!.appendChild(itemElement);
     }
   }
 }

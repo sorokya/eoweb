@@ -49,8 +49,8 @@ type Events = {
 export class Inventory extends Base {
   private client: Client;
   private emitter = mitt<Events>();
-  protected container: HTMLDivElement = document.querySelector('#inventory');
-  private grid: HTMLDivElement = this.container.querySelector('.grid');
+  protected container: HTMLDivElement = document.querySelector('#inventory')!;
+  private grid: HTMLDivElement = this.container.querySelector('.grid')!;
   private positions: ItemPosition[] = [];
   private tab = 0;
   private uiContainer = document.getElementById('ui');
@@ -66,24 +66,24 @@ export class Inventory extends Base {
   } | null = null;
 
   private currentWeight: HTMLSpanElement =
-    this.container.querySelector('.weight .current');
+    this.container.querySelector('.weight .current')!;
   private maxWeight: HTMLSpanElement =
-    this.container.querySelector('.weight .max');
+    this.container.querySelector('.weight .max')!;
   private btnPaperdoll: HTMLButtonElement = this.container.querySelector(
     'button[data-id="paperdoll"]',
-  );
+  )!;
   private btnDrop: HTMLButtonElement = this.container.querySelector(
     'button[data-id="drop"]',
-  );
+  )!;
   private btnJunk: HTMLButtonElement = this.container.querySelector(
     'button[data-id="junk"]',
-  );
+  )!;
   private btnTab1: HTMLButtonElement = this.container.querySelector(
     '.tabs > button:nth-child(1)',
-  );
+  )!;
   private btnTab2: HTMLButtonElement = this.container.querySelector(
     '.tabs > button:nth-child(2)',
-  );
+  )!;
   private lastItemSelected = 0;
 
   private onPointerDown(e: PointerEvent, el: HTMLDivElement, item: Item) {
@@ -106,7 +106,7 @@ export class Inventory extends Base {
     const offsetX = e.clientX - rect.left;
     const offsetY = e.clientY - rect.top;
 
-    const ghost = el.querySelector('img').cloneNode(true) as HTMLElement;
+    const ghost = el.querySelector('img')!.cloneNode(true) as HTMLElement;
     ghost.style.position = 'fixed';
     ghost.style.pointerEvents = 'none';
     ghost.style.margin = '0';
@@ -223,7 +223,7 @@ export class Inventory extends Base {
         return;
       }
 
-      const slot = getEquipmentSlotFromString(itemEl.getAttribute('data-id'));
+      const slot = getEquipmentSlotFromString(itemEl.getAttribute('data-id')!);
       if (typeof slot === 'undefined') {
         return;
       }

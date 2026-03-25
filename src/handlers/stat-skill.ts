@@ -133,42 +133,42 @@ function handleStatSkillJunk(client: Client, reader: EoReader) {
 }
 
 export function registerStatSkillHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Player,
     (reader) => {
       handleStatSkillPlayer(client, reader);
     },
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Open,
     (reader) => {
       handleStatSkillOpen(client, reader);
     },
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Reply,
     (reader) => {
       handleStatSkillReply(client, reader);
     },
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Take,
     (reader) => {
       handleStatSkillTake(client, reader);
     },
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Remove,
     (reader) => {
       handleStatSkillRemove(client, reader);
     },
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Junk,
     (reader) => {

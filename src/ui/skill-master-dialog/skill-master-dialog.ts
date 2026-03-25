@@ -30,19 +30,20 @@ type Events = {
 export class SkillMasterDialog extends Base {
   private client: Client;
   private emitter = mitt<Events>();
-  protected container = document.getElementById('skill-master');
+  protected container = document.getElementById('skill-master')!;
   private dialogs = document.getElementById('dialogs');
   private cover = document.querySelector<HTMLDivElement>('#cover');
-  private btnCancel = this.container.querySelector<HTMLButtonElement>(
+  private btnCancel = this.container!.querySelector<HTMLButtonElement>(
     'button[data-id="cancel"]',
   );
-  private btnBack = this.container.querySelector<HTMLButtonElement>(
+  private btnBack = this.container!.querySelector<HTMLButtonElement>(
     'button[data-id="back"]',
   );
-  private txtName = this.container.querySelector<HTMLSpanElement>('.name');
-  private itemList = this.container.querySelector<HTMLDivElement>('.item-list');
+  private txtName = this.container!.querySelector<HTMLSpanElement>('.name');
+  private itemList =
+    this.container!.querySelector<HTMLDivElement>('.item-list');
   private scrollHandle =
-    this.container.querySelector<HTMLDivElement>('.scroll-handle');
+    this.container!.querySelector<HTMLDivElement>('.scroll-handle');
   private name = '';
   private skills: SkillLearn[] = [];
   private state = [State.Initial];
@@ -53,18 +54,18 @@ export class SkillMasterDialog extends Base {
     super();
     this.client = client;
 
-    this.btnCancel.addEventListener('click', () => {
+    this.btnCancel!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.hide();
     });
 
-    this.btnBack.addEventListener('click', () => {
+    this.btnBack!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.state.pop();
       this.render();
     });
 
-    this.itemList.addEventListener('scroll', () => {
+    this.itemList!.addEventListener('scroll', () => {
       this.setScrollThumbPosition();
     });
 
@@ -76,9 +77,9 @@ export class SkillMasterDialog extends Base {
       this.render();
     });
 
-    this.scrollHandle.addEventListener('pointerdown', () => {
+    this.scrollHandle!.addEventListener('pointerdown', () => {
       const onPointerMove = (e: PointerEvent) => {
-        const rect = this.itemList.getBoundingClientRect();
+        const rect = this.itemList!.getBoundingClientRect();
         const min = 30;
         const max = 212;
         const clampedY = Math.min(
@@ -86,9 +87,10 @@ export class SkillMasterDialog extends Base {
           rect.top + max,
         );
         const scrollPercent = (clampedY - rect.top - min) / (max - min);
-        const scrollHeight = this.itemList.scrollHeight;
-        const clientHeight = this.itemList.clientHeight;
-        this.itemList.scrollTop = scrollPercent * (scrollHeight - clientHeight);
+        const scrollHeight = this.itemList!.scrollHeight;
+        const clientHeight = this.itemList!.clientHeight;
+        this.itemList!.scrollTop =
+          scrollPercent * (scrollHeight - clientHeight);
       };
 
       const onPointerUp = () => {
@@ -111,13 +113,13 @@ export class SkillMasterDialog extends Base {
   setScrollThumbPosition() {
     const min = 60;
     const max = 212;
-    const scrollTop = this.itemList.scrollTop;
-    const scrollHeight = this.itemList.scrollHeight;
-    const clientHeight = this.itemList.clientHeight;
+    const scrollTop = this.itemList!.scrollTop;
+    const scrollHeight = this.itemList!.scrollHeight;
+    const clientHeight = this.itemList!.clientHeight;
     const scrollPercent = scrollTop / (scrollHeight - clientHeight);
     const clampedPercent = Math.min(Math.max(scrollPercent, 0), 1);
     const top = min + (max - min) * clampedPercent || min;
-    this.scrollHandle.style.top = `${top}px`;
+    this.scrollHandle!.style.top = `${top}px`;
   }
 
   setData(name: string, skills: SkillLearn[]) {
@@ -139,28 +141,28 @@ export class SkillMasterDialog extends Base {
   }
 
   show() {
-    this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
+    this.cover!.classList.remove('hidden');
+    this.container!.classList.remove('hidden');
+    this.dialogs!.classList.remove('hidden');
     this.client.typing = true;
     this.setScrollThumbPosition();
     this.open = true;
   }
 
   hide() {
-    this.cover.classList.add('hidden');
-    this.container.classList.add('hidden');
+    this.cover!.classList.add('hidden');
+    this.container!.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
+      this.dialogs!.classList.add('hidden');
       this.client.typing = false;
     }
     this.open = false;
   }
 
   private render() {
-    this.txtName.innerText = this.name;
-    this.btnBack.classList.add('hidden');
+    this.txtName!.innerText = this.name;
+    this.btnBack!.classList.add('hidden');
 
     switch (this.state[this.state.length - 1]) {
       case State.Initial:
@@ -187,7 +189,7 @@ export class SkillMasterDialog extends Base {
   }
 
   private renderInitial() {
-    this.itemList.innerHTML = '';
+    this.itemList!.innerHTML = '';
 
     const learnCount = this.skills.filter((s) =>
       this.client.spells.every((p) => p.id !== s.id),
@@ -211,7 +213,7 @@ export class SkillMasterDialog extends Base {
     };
     learnItem.addEventListener('click', clickLearn);
     learnItem.addEventListener('contextmenu', clickLearn);
-    this.itemList.appendChild(learnItem);
+    this.itemList!.appendChild(learnItem);
 
     if (forgetCount) {
       const forgetItem = createIconMenuItem(
@@ -227,7 +229,7 @@ export class SkillMasterDialog extends Base {
       };
       forgetItem.addEventListener('click', clickForget);
       forgetItem.addEventListener('contextmenu', clickForget);
-      this.itemList.appendChild(forgetItem);
+      this.itemList!.appendChild(forgetItem);
     }
 
     const forgetAllItem = createIconMenuItem(
@@ -242,11 +244,11 @@ export class SkillMasterDialog extends Base {
     };
     forgetAllItem.addEventListener('click', clickForgetAll);
     forgetAllItem.addEventListener('contextmenu', clickForgetAll);
-    this.itemList.appendChild(forgetAllItem);
+    this.itemList!.appendChild(forgetAllItem);
   }
 
   renderLearn() {
-    this.itemList.innerHTML = '';
+    this.itemList!.innerHTML = '';
     let skillCount = 0;
     for (const skill of this.skills) {
       if (this.client.spells.some((s) => s.id === skill.id)) {
@@ -331,7 +333,7 @@ export class SkillMasterDialog extends Base {
 
       item.addEventListener('click', click);
       item.addEventListener('contextmenu', click);
-      this.itemList.appendChild(item);
+      this.itemList!.appendChild(item);
     }
 
     if (!skillCount) {
@@ -339,11 +341,11 @@ export class SkillMasterDialog extends Base {
       return;
     }
 
-    this.btnBack.classList.remove('hidden');
+    this.btnBack!.classList.remove('hidden');
   }
 
   renderForget() {
-    this.itemList.innerHTML = '';
+    this.itemList!.innerHTML = '';
 
     if (!this.client.spells.length) {
       this.reset();
@@ -369,48 +371,48 @@ export class SkillMasterDialog extends Base {
 
       item.addEventListener('click', click);
       item.addEventListener('contextmenu', click);
-      this.itemList.appendChild(item);
+      this.itemList!.appendChild(item);
     }
 
-    this.btnBack.classList.remove('hidden');
+    this.btnBack!.classList.remove('hidden');
   }
 
   renderForgetAll() {
-    this.itemList.innerHTML = '';
+    this.itemList!.innerHTML = '';
 
-    this.itemList.appendChild(
+    this.itemList!.appendChild(
       createTextMenuItem(
         this.client.getResourceString(EOResourceID.SKILLMASTER_FORGET_ALL),
       ),
     );
 
-    this.itemList.appendChild(createTextMenuItem());
-    this.itemList.append(
+    this.itemList!.appendChild(createTextMenuItem());
+    this.itemList!.append(
       createTextMenuItem(
         this.client.getResourceString(
           EOResourceID.SKILLMASTER_FORGET_ALL_MSG_1,
         ),
       ),
     );
-    this.itemList.appendChild(createTextMenuItem());
-    this.itemList.append(
+    this.itemList!.appendChild(createTextMenuItem());
+    this.itemList!.append(
       createTextMenuItem(
         this.client.getResourceString(
           EOResourceID.SKILLMASTER_FORGET_ALL_MSG_2,
         ),
       ),
     );
-    this.itemList.appendChild(createTextMenuItem());
-    this.itemList.append(
+    this.itemList!.appendChild(createTextMenuItem());
+    this.itemList!.append(
       createTextMenuItem(
         this.client.getResourceString(
           EOResourceID.SKILLMASTER_FORGET_ALL_MSG_3,
         ),
       ),
     );
-    this.itemList.appendChild(createTextMenuItem());
+    this.itemList!.appendChild(createTextMenuItem());
 
-    this.itemList.appendChild(
+    this.itemList!.appendChild(
       createTextMenuItem(
         this.client.getResourceString(
           EOResourceID.SKILLMASTER_CLICK_HERE_TO_FORGET_ALL,
@@ -419,18 +421,18 @@ export class SkillMasterDialog extends Base {
           const lines = this.client.getDialogStrings(
             DialogResourceID.SKILL_RESET_CHARACTER_CONFIRMATION,
           );
-          this.client.showConfirmation(lines[1], lines[0], () => {
+          this.client.showConfirmation(lines![1], lines![0], () => {
             this.client.resetCharacter();
           });
         },
       ),
     );
 
-    this.btnBack.classList.remove('hidden');
+    this.btnBack!.classList.remove('hidden');
   }
 
   renderRequirements() {
-    this.itemList.innerHTML = '';
+    this.itemList!.innerHTML = '';
 
     if (!this.skillId) {
       this.reset();
@@ -453,11 +455,11 @@ export class SkillMasterDialog extends Base {
     const classRequirement = learn.classRequirement
       ? `[${this.getClassName(learn.classRequirement)}]`
       : '';
-    this.itemList.appendChild(
+    this.itemList!.appendChild(
       createTextMenuItem(`${record.name} ${classRequirement}`),
     );
 
-    this.itemList.appendChild(createTextMenuItem());
+    this.itemList!.appendChild(createTextMenuItem());
 
     const skillRequirements = learn.skillRequirements.filter((id) => !!id);
     if (skillRequirements.length) {
@@ -470,16 +472,16 @@ export class SkillMasterDialog extends Base {
           continue;
         }
 
-        this.itemList.appendChild(
+        this.itemList!.appendChild(
           createTextMenuItem(`${wordSkill}: ${reqRecord.name}`),
         );
       }
 
-      this.itemList.appendChild(createTextMenuItem());
+      this.itemList!.appendChild(createTextMenuItem());
     }
 
     if (learn.statRequirements.str) {
-      this.itemList.appendChild(
+      this.itemList!.appendChild(
         createTextMenuItem(
           `${learn.statRequirements.str} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_STRENGTH)}`,
         ),
@@ -487,7 +489,7 @@ export class SkillMasterDialog extends Base {
     }
 
     if (learn.statRequirements.intl) {
-      this.itemList.appendChild(
+      this.itemList!.appendChild(
         createTextMenuItem(
           `${learn.statRequirements.intl} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_INTELLIGENCE)}`,
         ),
@@ -495,7 +497,7 @@ export class SkillMasterDialog extends Base {
     }
 
     if (learn.statRequirements.wis) {
-      this.itemList.appendChild(
+      this.itemList!.appendChild(
         createTextMenuItem(
           `${learn.statRequirements.wis} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_WISDOM)}`,
         ),
@@ -503,7 +505,7 @@ export class SkillMasterDialog extends Base {
     }
 
     if (learn.statRequirements.agi) {
-      this.itemList.appendChild(
+      this.itemList!.appendChild(
         createTextMenuItem(
           `${learn.statRequirements.agi} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_AGILITY)}`,
         ),
@@ -511,7 +513,7 @@ export class SkillMasterDialog extends Base {
     }
 
     if (learn.statRequirements.con) {
-      this.itemList.appendChild(
+      this.itemList!.appendChild(
         createTextMenuItem(
           `${learn.statRequirements.con} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_CONSTITUTION)}`,
         ),
@@ -519,26 +521,26 @@ export class SkillMasterDialog extends Base {
     }
 
     if (learn.statRequirements.cha) {
-      this.itemList.appendChild(
+      this.itemList!.appendChild(
         createTextMenuItem(
           `${learn.statRequirements.cha} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_CHARISMA)}`,
         ),
       );
     }
 
-    this.itemList.appendChild(createTextMenuItem());
+    this.itemList!.appendChild(createTextMenuItem());
 
-    this.itemList.appendChild(
+    this.itemList!.appendChild(
       createTextMenuItem(
         `${learn.levelRequirement} ${this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_LEVEL)}`,
       ),
     );
 
-    this.itemList.appendChild(
+    this.itemList!.appendChild(
       createTextMenuItem(`${learn.cost} ${goldRecord.name}`),
     );
 
-    this.btnBack.classList.remove('hidden');
+    this.btnBack!.classList.remove('hidden');
   }
 
   private getClassName(classId: number): string {

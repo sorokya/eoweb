@@ -44,8 +44,8 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
     );
   }
 
-  const spec = client.map.tileSpecRows
-    .find((r) => r.y === character.coords.y)
+  const spec = client!
+    .map!.tileSpecRows.find((r) => r.y === character.coords.y)
     ?.tiles.find((t) => t.x === character.coords.x);
 
   if (spec && spec.tileSpec === MapTileSpec.Water) {
@@ -62,7 +62,7 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
 }
 
 export function registerAttackHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Attack,
     PacketAction.Player,
     (reader) => handleAttackPlayer(client, reader),

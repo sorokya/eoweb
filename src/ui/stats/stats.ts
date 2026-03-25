@@ -24,7 +24,7 @@ class StatItem {
   }
 
   constructor(id: string) {
-    this.container = document.querySelector(`#stats span[data-id="${id}"]`);
+    this.container = document.querySelector(`#stats span[data-id="${id}"]`)!;
   }
 }
 
@@ -34,7 +34,7 @@ class StatUpgradeButton {
   constructor(target: string, callback: () => void) {
     this.container = document.querySelector(
       `#stats button[data-target="${target}"]`,
-    );
+    )!;
     this.container.addEventListener('click', () => {
       callback();
     });
@@ -50,7 +50,7 @@ class StatUpgradeButton {
 }
 
 export class Stats extends Base {
-  protected container: HTMLDivElement = document.querySelector('#stats');
+  protected container: HTMLDivElement = document.querySelector('#stats')!;
   private dialogs = document.getElementById('dialogs');
   private client: Client;
   private statItems: { [key: string]: StatItem };
@@ -209,7 +209,7 @@ export class Stats extends Base {
     this.open = true;
     this.render();
     this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
+    this.dialogs!.classList.remove('hidden');
   }
 
   hide() {
@@ -217,7 +217,7 @@ export class Stats extends Base {
     this.container.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
+      this.dialogs!.classList.add('hidden');
       this.client.typing = false;
     }
   }

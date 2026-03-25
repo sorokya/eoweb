@@ -211,8 +211,8 @@ export class MovementController {
         const to = getNextCoords(
           from,
           lastDirectionHeld,
-          this.client.map.width,
-          this.client.map.height,
+          this.client.map!.width,
+          this.client.map!.height,
         );
 
         const door = this.client.getDoor(to);

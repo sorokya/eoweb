@@ -7,17 +7,17 @@ import { ChatIcon } from '../chat/chat';
 import './party-dialog.css';
 
 export class PartyDialog extends Base {
-  protected container = document.getElementById('party');
+  protected container = document.getElementById('party')!;
   private client: Client;
   private dialogs = document.getElementById('dialogs');
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
+  private btnCancel: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="cancel"]',
-  );
+  )!;
   private memberList: HTMLDivElement =
-    this.container.querySelector('.member-list');
-  private label: HTMLSpanElement = this.container.querySelector('.label');
+    this.container!.querySelector('.member-list')!;
+  private label: HTMLSpanElement = this.container!.querySelector('.label')!;
   private scrollHandle: HTMLDivElement =
-    this.container.querySelector('.scroll-handle');
+    this.container!.querySelector('.scroll-handle')!;
   private open = false;
 
   constructor(client: Client) {
@@ -73,18 +73,18 @@ export class PartyDialog extends Base {
 
   show() {
     this.render();
-    this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
+    this.container!.classList.remove('hidden');
+    this.dialogs!.classList.remove('hidden');
     this.open = true;
     this.setScrollThumbPosition();
   }
 
   hide() {
-    this.container.classList.add('hidden');
+    this.container!.classList.add('hidden');
     this.open = false;
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
+      this.dialogs!.classList.add('hidden');
       this.client.typing = false;
     }
   }

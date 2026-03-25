@@ -20,12 +20,12 @@ function handleBoardPlayer(client: Client, reader: EoReader) {
 }
 
 export function registerBoardHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Board,
     PacketAction.Open,
     (reader) => handleBoardOpen(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Board,
     PacketAction.Player,
     (reader) => handleBoardPlayer(client, reader),

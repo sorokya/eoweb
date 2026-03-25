@@ -31,12 +31,12 @@ function handleBankReply(client: Client, reader: EoReader) {
 }
 
 export function registerBankHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Bank,
     PacketAction.Open,
     (reader) => handleBankOpen(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Bank,
     PacketAction.Reply,
     (reader) => handleBankReply(client, reader),

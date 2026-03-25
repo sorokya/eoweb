@@ -47,22 +47,22 @@ function handleArenaDrop(client: Client) {
 }
 
 export function registerArenaHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Arena,
     PacketAction.Use,
     (reader) => handleArenaUse(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Arena,
     PacketAction.Accept,
     (reader) => handleArenaAccept(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Arena,
     PacketAction.Spec,
     (reader) => handleArenaSpec(client, reader),
   );
-  client.bus.registerPacketHandler(PacketFamily.Arena, PacketAction.Drop, () =>
+  client.bus!.registerPacketHandler(PacketFamily.Arena, PacketAction.Drop, () =>
     handleArenaDrop(client),
   );
 }

@@ -16,44 +16,46 @@ enum State {
 
 export class BoardDialog extends Base {
   private client: Client;
-  protected container = document.getElementById('board');
+  protected container = document.getElementById('board')!;
   private dialogs = document.getElementById('dialogs');
   private cover = document.querySelector<HTMLDivElement>('#cover');
 
   private txtTitle =
-    this.container.querySelector<HTMLSpanElement>('.board-title');
+    this.container!.querySelector<HTMLSpanElement>('.board-title');
 
   // List state
-  private postList = this.container.querySelector<HTMLDivElement>('.post-list');
+  private postList =
+    this.container!.querySelector<HTMLDivElement>('.post-list');
   private scrollHandle =
-    this.container.querySelector<HTMLDivElement>('.scroll-handle');
-  private btnAdd = this.container.querySelector<HTMLButtonElement>(
+    this.container!.querySelector<HTMLDivElement>('.scroll-handle');
+  private btnAdd = this.container!.querySelector<HTMLButtonElement>(
     '.list-buttons button[data-id="add"]',
   );
-  private btnCancel = this.container.querySelector<HTMLButtonElement>(
+  private btnCancel = this.container!.querySelector<HTMLButtonElement>(
     '.list-buttons button[data-id="cancel"]',
   );
 
   // View post state
   private postSubjectView =
-    this.container.querySelector<HTMLInputElement>('.post-subject-view');
-  private postBody = this.container.querySelector<HTMLDivElement>('.post-body');
-  private btnDelete = this.container.querySelector<HTMLButtonElement>(
+    this.container!.querySelector<HTMLInputElement>('.post-subject-view');
+  private postBody =
+    this.container!.querySelector<HTMLDivElement>('.post-body');
+  private btnDelete = this.container!.querySelector<HTMLButtonElement>(
     '.view-buttons button[data-id="delete"]',
   );
-  private btnBack = this.container.querySelector<HTMLButtonElement>(
+  private btnBack = this.container!.querySelector<HTMLButtonElement>(
     '.view-buttons button[data-id="back"]',
   );
 
   // Create post state
   private createSubject =
-    this.container.querySelector<HTMLInputElement>('.create-subject');
+    this.container!.querySelector<HTMLInputElement>('.create-subject');
   private createBody =
-    this.container.querySelector<HTMLTextAreaElement>('.create-body');
-  private btnOk = this.container.querySelector<HTMLButtonElement>(
+    this.container!.querySelector<HTMLTextAreaElement>('.create-body');
+  private btnOk = this.container!.querySelector<HTMLButtonElement>(
     '.create-buttons button[data-id="ok"]',
   );
-  private btnCancelCreate = this.container.querySelector<HTMLButtonElement>(
+  private btnCancelCreate = this.container!.querySelector<HTMLButtonElement>(
     '.create-buttons button[data-id="cancel"]',
   );
 
@@ -65,12 +67,12 @@ export class BoardDialog extends Base {
     super();
     this.client = client;
 
-    this.btnCancel.addEventListener('click', () => {
+    this.btnCancel!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.hide();
     });
 
-    this.btnAdd.addEventListener('click', () => {
+    this.btnAdd!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       const playerPosts = this.posts.filter(
         (p) => p.author.toLowerCase() === this.client.name.toLowerCase(),
@@ -90,23 +92,23 @@ export class BoardDialog extends Base {
       this.changeState(State.CreatePost);
     });
 
-    this.btnBack.addEventListener('click', () => {
+    this.btnBack!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.changeState(State.List);
     });
 
-    this.btnDelete.addEventListener('click', () => {
+    this.btnDelete!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.client.deletePost(this.activePostId);
       this.changeState(State.List);
     });
 
-    this.btnOk.addEventListener('click', () => {
+    this.btnOk!.addEventListener('click', () => {
       // Play sfx before validation so the click is heard even if validation fails
       playSfxById(SfxId.ButtonClick);
 
-      const subject = this.createSubject.value.trim();
-      const body = this.createBody.value.trim();
+      const subject = this.createSubject!.value.trim();
+      const body = this.createBody!.value.trim();
 
       if (!subject) {
         const strings = this.client.getDialogStrings(
@@ -138,36 +140,37 @@ export class BoardDialog extends Base {
       this.hide();
     });
 
-    this.btnCancelCreate.addEventListener('click', () => {
+    this.btnCancelCreate!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.changeState(State.List);
     });
 
     const createFormElements = [this.createSubject, this.createBody];
     for (const [index, element] of createFormElements.entries()) {
-      element.addEventListener('keydown', (e: KeyboardEvent) => {
+      element!.addEventListener('keydown', (evt) => {
+        const e = evt as KeyboardEvent;
         if (e.key === 'Tab' && this.state === State.CreatePost) {
           e.preventDefault();
           if (e.shiftKey) {
             const prevIndex =
               index === 0 ? createFormElements.length - 1 : index - 1;
-            createFormElements[prevIndex].focus();
+            createFormElements[prevIndex]!.focus();
           } else {
             const nextIndex =
               index === createFormElements.length - 1 ? 0 : index + 1;
-            createFormElements[nextIndex].focus();
+            createFormElements[nextIndex]!.focus();
           }
         }
       });
     }
 
-    this.postList.addEventListener('scroll', () => {
+    this.postList!.addEventListener('scroll', () => {
       this.setScrollThumbPosition();
     });
 
-    this.scrollHandle.addEventListener('pointerdown', () => {
+    this.scrollHandle!.addEventListener('pointerdown', () => {
       const onPointerMove = (e: PointerEvent) => {
-        const rect = this.postList.getBoundingClientRect();
+        const rect = this.postList!.getBoundingClientRect();
         const min = 30;
         const max = 212;
         const clampedY = Math.min(
@@ -175,9 +178,9 @@ export class BoardDialog extends Base {
           rect.top + max,
         );
         const scrollPercent = (clampedY - rect.top - min) / (max - min);
-        this.postList.scrollTop =
+        this.postList!.scrollTop =
           scrollPercent *
-          (this.postList.scrollHeight - this.postList.clientHeight);
+          (this.postList!.scrollHeight - this.postList!.clientHeight);
       };
 
       const onPointerUp = () => {
@@ -191,7 +194,7 @@ export class BoardDialog extends Base {
 
     this.client.on('postRead', ({ postId, body }) => {
       if (this.state !== State.ViewPost || this.activePostId !== postId) return;
-      this.postBody.innerText = body;
+      this.postBody!.innerText = body;
     });
   }
 
@@ -201,39 +204,39 @@ export class BoardDialog extends Base {
   }
 
   show() {
-    this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
+    this.cover!.classList.remove('hidden');
+    this.container!.classList.remove('hidden');
+    this.dialogs!.classList.remove('hidden');
     this.client.typing = true;
     this.setScrollThumbPosition();
   }
 
   hide() {
-    this.cover.classList.add('hidden');
-    this.container.classList.add('hidden');
+    this.cover!.classList.add('hidden');
+    this.container!.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
+      this.dialogs!.classList.add('hidden');
       this.client.typing = false;
     }
   }
 
   private changeState(state: State) {
     this.state = state;
-    this.container.dataset.state = state;
+    this.container!.dataset.state = state;
     this.render();
   }
 
   private setScrollThumbPosition() {
     const min = 60;
     const max = 212;
-    const scrollTop = this.postList.scrollTop;
-    const scrollHeight = this.postList.scrollHeight;
-    const clientHeight = this.postList.clientHeight;
+    const scrollTop = this.postList!.scrollTop;
+    const scrollHeight = this.postList!.scrollHeight;
+    const clientHeight = this.postList!.clientHeight;
     const scrollPercent = scrollTop / (scrollHeight - clientHeight);
     const clampedPercent = Math.min(Math.max(scrollPercent, 0), 1);
     const top = min + (max - min) * clampedPercent || min;
-    this.scrollHandle.style.top = `${top}px`;
+    this.scrollHandle!.style.top = `${top}px`;
   }
 
   private render() {
@@ -251,10 +254,10 @@ export class BoardDialog extends Base {
   }
 
   private renderList() {
-    this.txtTitle.innerText =
+    this.txtTitle!.innerText =
       this.client.getResourceString(EOResourceID.BOARD_TOWN_BOARD) ??
       'Town Board';
-    this.postList.innerHTML = '';
+    this.postList!.innerHTML = '';
 
     for (const post of this.posts) {
       const item = document.createElement('div');
@@ -273,15 +276,15 @@ export class BoardDialog extends Base {
 
       const onClick = () => {
         this.activePostId = post.postId;
-        this.postSubjectView.value = post.subject;
-        this.postBody.innerText =
+        this.postSubjectView!.value = post.subject;
+        this.postBody!.innerText =
           this.client.getResourceString(EOResourceID.BOARD_LOADING_MESSAGE) ??
           'Loading...';
 
         const isOwner =
           post.author.toLowerCase() === this.client.name.toLowerCase() ||
           this.client.admin !== AdminLevel.Player;
-        this.btnDelete.classList.toggle('hidden', !isOwner);
+        this.btnDelete!.classList.toggle('hidden', !isOwner);
 
         this.client.readPost(post.postId);
         this.changeState(State.ViewPost);
@@ -289,7 +292,7 @@ export class BoardDialog extends Base {
 
       item.addEventListener('click', onClick);
       item.addEventListener('contextmenu', onClick);
-      this.postList.appendChild(item);
+      this.postList!.appendChild(item);
     }
 
     this.setScrollThumbPosition();
@@ -297,15 +300,15 @@ export class BoardDialog extends Base {
 
   private renderViewPost() {
     const post = this.posts.find((p) => p.postId === this.activePostId);
-    this.txtTitle.innerText = capitalize(post?.author ?? '');
+    this.txtTitle!.innerText = capitalize(post?.author ?? '');
   }
 
   private renderCreatePost() {
-    this.txtTitle.innerText =
+    this.txtTitle!.innerText =
       this.client.getResourceString(EOResourceID.BOARD_POSTING_NEW_MESSAGE) ??
       'Posting New Message';
-    this.createSubject.value = '';
-    this.createBody.value = '';
-    this.createSubject.focus();
+    this.createSubject!.value = '';
+    this.createBody!.value = '';
+    this.createSubject!.focus();
   }
 }

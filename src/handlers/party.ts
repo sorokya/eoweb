@@ -232,45 +232,47 @@ function handlePartyTargetGroup(client: Client, reader: EoReader) {
 }
 
 export function registerPartyHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Party,
     PacketAction.Reply,
     (reader) => handlePartyReply(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Party,
     PacketAction.Request,
     (reader) => handlePartyRequest(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Party,
     PacketAction.Create,
     (reader) => handlePartyCreate(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Party,
     PacketAction.Add,
     (reader) => handlePartyAdd(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Party,
     PacketAction.Remove,
     (reader) => handlePartyRemove(client, reader),
   );
-  client.bus.registerPacketHandler(PacketFamily.Party, PacketAction.Close, () =>
-    handlePartyClose(client),
+  client.bus!.registerPacketHandler(
+    PacketFamily.Party,
+    PacketAction.Close,
+    () => handlePartyClose(client),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Party,
     PacketAction.List,
     (reader) => handlePartyList(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Party,
     PacketAction.Agree,
     (reader) => handlePartyAgree(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Party,
     PacketAction.TargetGroup,
     (reader) => handlePartyTargetGroup(client, reader),

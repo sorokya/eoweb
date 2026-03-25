@@ -21,7 +21,7 @@ function handleFacePlayer(client: Client, reader: EoReader) {
 }
 
 export function registerFaceHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Face,
     PacketAction.Player,
     (reader) => handleFacePlayer(client, reader),

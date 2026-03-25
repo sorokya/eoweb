@@ -80,7 +80,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
     client.emit('chat', {
       tab: ChatTab.System,
       icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record.name}`,
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
     });
   }
 
@@ -142,7 +142,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
     client.emit('chat', {
       tab: ChatTab.System,
       icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record.name}`,
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
     });
   }
 
@@ -177,17 +177,17 @@ function handleCastAccept(client: Client, reader: EoReader) {
 }
 
 export function registerCastHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Cast,
     PacketAction.Reply,
     (reader) => handleCastReply(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Cast,
     PacketAction.Spec,
     (reader) => handleCastSpec(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Cast,
     PacketAction.Accept,
     (reader) => handleCastAccept(client, reader),

@@ -33,7 +33,7 @@ export class ChatBubble {
     // https://discord.com/channels/723989119503696013/787685796055482368/1039092169937530890
     this.ticks = 24 + Math.floor(message.length / 3);
     this.canvas = document.createElement('canvas');
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d')!;
   }
 
   tick() {

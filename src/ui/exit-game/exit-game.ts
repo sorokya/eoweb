@@ -8,10 +8,10 @@ type Events = {
 };
 
 export class ExitGame extends Base {
-  protected container = document.getElementById('exit-game');
-  private button: HTMLButtonElement = this.container.querySelector(
+  protected container = document.getElementById('exit-game')!;
+  private button: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="exit-game"]',
-  );
+  )!;
   private emitter = mitt<Events>();
 
   constructor() {

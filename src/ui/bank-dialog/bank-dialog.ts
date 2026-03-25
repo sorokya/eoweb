@@ -18,19 +18,20 @@ export class BankDialog extends Base {
   private client: Client;
   private dialogs = document.getElementById('dialogs');
   private cover = document.querySelector<HTMLDivElement>('#cover');
-  protected container = document.getElementById('bank');
-  private itemList = this.container.querySelector<HTMLDivElement>('.item-list');
-  private balance = this.container.querySelector<HTMLSpanElement>('.balance');
+  protected container = document.getElementById('bank')!;
+  private itemList =
+    this.container!.querySelector<HTMLDivElement>('.item-list');
+  private balance = this.container!.querySelector<HTMLSpanElement>('.balance');
   private emitter = mitt<Events>();
 
   constructor(client: Client) {
     super();
     this.client = client;
 
-    const btnOk = this.container.querySelector<HTMLButtonElement>(
+    const btnOk = this.container!.querySelector<HTMLButtonElement>(
       'button[data-id="ok"]',
     );
-    btnOk.addEventListener('click', () => {
+    btnOk!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.hide();
     });
@@ -48,8 +49,8 @@ export class BankDialog extends Base {
   }
 
   render() {
-    this.balance.innerText = `${this.client.goldBank}`;
-    this.itemList.innerHTML = '';
+    this.balance!.innerText = `${this.client.goldBank}`;
+    this.itemList!.innerHTML = '';
 
     const gold = this.client.getEifRecordById(1);
     if (!gold) {
@@ -64,7 +65,7 @@ export class BankDialog extends Base {
     depositItem.addEventListener('click', () => {
       this.emitter.emit('deposit', undefined);
     });
-    this.itemList.appendChild(depositItem);
+    this.itemList!.appendChild(depositItem);
 
     const withdrawItem = createIconMenuItem(
       DialogIcon.BankWithdraw,
@@ -74,7 +75,7 @@ export class BankDialog extends Base {
     withdrawItem.addEventListener('click', () => {
       this.emitter.emit('withdraw', undefined);
     });
-    this.itemList.appendChild(withdrawItem);
+    this.itemList!.appendChild(withdrawItem);
 
     const upgradeItem = createIconMenuItem(
       DialogIcon.BankLockerUpgrade,
@@ -84,23 +85,23 @@ export class BankDialog extends Base {
     upgradeItem.addEventListener('click', () => {
       this.emitter.emit('upgrade', undefined);
     });
-    this.itemList.appendChild(upgradeItem);
+    this.itemList!.appendChild(upgradeItem);
   }
 
   show() {
     this.render();
-    this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
+    this.cover!.classList.remove('hidden');
+    this.container!.classList.remove('hidden');
+    this.dialogs!.classList.remove('hidden');
     this.client.typing = true;
   }
 
   hide() {
-    this.cover.classList.add('hidden');
-    this.container.classList.add('hidden');
+    this.cover!.classList.add('hidden');
+    this.container!.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
+      this.dialogs!.classList.add('hidden');
       this.client.typing = false;
     }
   }

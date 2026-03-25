@@ -1,5 +1,5 @@
 export abstract class Base {
-  protected container: Element;
+  protected container!: Element;
 
   show() {
     this.container.classList.remove('hidden');

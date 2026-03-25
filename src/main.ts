@@ -111,7 +111,7 @@ function resizeCanvases() {
   // solution: screenshot the canvas before resize, then draw it back
   const snapshot =
     canvas.width > 0
-      ? ctx.getImageData(0, 0, canvas.width, canvas.height)
+      ? ctx!.getImageData(0, 0, canvas.width, canvas.height)
       : null;
   const prevW = canvas.width;
   const prevH = canvas.height;
@@ -119,7 +119,7 @@ function resizeCanvases() {
   canvas.height = h;
   canvas.style.width = `${w * ZOOM}px`;
   canvas.style.height = `${h * ZOOM}px`;
-  ctx.imageSmoothingEnabled = false;
+  ctx!.imageSmoothingEnabled = false;
   if (snapshot && prevW > 0) {
     // restore the screenshot but scaled to new size
     const temp = document.createElement('canvas');
@@ -128,12 +128,12 @@ function resizeCanvases() {
     const tempCtx = temp.getContext('2d');
     if (tempCtx) {
       tempCtx.putImageData(snapshot, 0, 0);
-      ctx.drawImage(temp, 0, 0, w, h);
+      ctx!.drawImage(temp, 0, 0, w, h);
     }
   } else {
     // no previous content, just fill black
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, w, h);
+    ctx!.fillStyle = '#000';
+    ctx!.fillRect(0, 0, w, h);
   }
   setGameSize(w, h);
   if (client.state === GameState.InGame && viewportWidth < 940) {
@@ -376,7 +376,7 @@ const initializeSocket = (next: 'login' | 'create' | '' = '') => {
     init.challenge = client.challenge;
     init.hdid = '111111111';
     init.version = client.version;
-    client.bus.send(init);
+    client.bus!.send(init);
   });
 
   socket.addEventListener('close', () => {
@@ -629,7 +629,7 @@ inventory.on('dropItem', ({ at, itemId }) => {
   if (
     client.nearby.items.some(
       (i) =>
-        i.coords.x === coords.x && i.coords.y === coords.y && i.id === itemId,
+        i.coords.x === coords!.x && i.coords.y === coords!.y && i.id === itemId,
     )
   ) {
     return;
@@ -656,7 +656,7 @@ inventory.on('dropItem', ({ at, itemId }) => {
     );
     itemAmountDialog.setCallback(
       (amount) => {
-        client.dropItem(itemId, amount, coords);
+        client.dropItem(itemId, amount, coords!);
         client.typing = false;
       },
       () => {
@@ -665,7 +665,7 @@ inventory.on('dropItem', ({ at, itemId }) => {
     );
     itemAmountDialog.show();
   } else {
-    client.dropItem(itemId, 1, coords);
+    client.dropItem(itemId, 1, coords!);
   }
 });
 
@@ -815,7 +815,7 @@ questDialog.on('cancel', () => {
 });
 
 shopDialog.on('buyItem', (item) => {
-  const goldAmount = client.items.find((i) => i.id === 1).amount;
+  const goldAmount = client.items.find((i) => i.id === 1)!.amount;
   if (item.price > goldAmount) {
     const text = client.getDialogStrings(
       DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
@@ -833,7 +833,7 @@ shopDialog.on('buyItem', (item) => {
   itemAmountDialog.setCallback(
     (amount) => {
       const total = amount * item.price;
-      const goldAmount = client.items.find((i) => i.id === 1).amount;
+      const goldAmount = client.items.find((i) => i.id === 1)!.amount;
       itemAmountDialog.hide();
       if (total > goldAmount) {
         const text = client.getDialogStrings(
@@ -846,7 +846,7 @@ shopDialog.on('buyItem', (item) => {
         const wordFor = client.getResourceString(EOResourceID.DIALOG_WORD_FOR);
         const goldRecord = client.getEifRecordById(1);
         smallConfirm.setContent(
-          `${wordBuy} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord.name} ?`,
+          `${wordBuy} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord!.name} ?`,
           client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS),
         );
         smallConfirm.setCallback(() => {
@@ -861,13 +861,13 @@ shopDialog.on('buyItem', (item) => {
 });
 
 shopDialog.on('sellItem', (item) => {
-  const itemAmount = client.items.find((i) => i.id === item.id).amount;
+  const itemAmount = client.items.find((i) => i.id === item.id)!.amount;
   const showConfirm = (amount: number, total: number) => {
     const wordSell = client.getResourceString(EOResourceID.DIALOG_WORD_SELL);
     const wordFor = client.getResourceString(EOResourceID.DIALOG_WORD_FOR);
     const goldRecord = client.getEifRecordById(1);
     smallConfirm.setContent(
-      `${wordSell} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord.name} ?`,
+      `${wordSell} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord!.name} ?`,
       client.getResourceString(EOResourceID.DIALOG_SHOP_SELL_ITEMS),
     );
     smallConfirm.setCallback(() => {
@@ -1138,13 +1138,13 @@ function loadInventoryGrid() {
     canvas.width = 23;
     canvas.height = 23;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, 23, 23);
-    ctx.drawImage(img, 12, 10, 23, 23, 0, 0, 23, 23);
+    ctx!.fillStyle = '#000';
+    ctx!.fillRect(0, 0, 23, 23);
+    ctx!.drawImage(img, 12, 10, 23, 23, 0, 0, 23, 23);
 
     const dataUrl = canvas.toDataURL();
     const grid = document.querySelector<HTMLDivElement>('#inventory .grid');
-    grid.style.background = `url(${dataUrl})`;
+    grid!.style.background = `url(${dataUrl})`;
   };
 }
 
@@ -1189,20 +1189,20 @@ function _setDebugData() {
   const numNpcs = 200;
   const numItems = 100;
 
-  const weapons = client.eif.items
-    .filter((i) => i.type === ItemType.Weapon)
+  const weapons = client
+    .eif!.items.filter((i) => i.type === ItemType.Weapon)
     .map((i) => i.spec1);
-  const armors = client.eif.items
-    .filter((i) => i.type === ItemType.Armor)
+  const armors = client
+    .eif!.items.filter((i) => i.type === ItemType.Armor)
     .map((i) => ({ gender: i.spec2, graphic: i.spec1 }));
-  const boots = client.eif.items
-    .filter((i) => i.type === ItemType.Boots)
+  const boots = client
+    .eif!.items.filter((i) => i.type === ItemType.Boots)
     .map((i) => i.spec1);
-  const hats = client.eif.items
-    .filter((i) => i.type === ItemType.Hat)
+  const hats = client
+    .eif!.items.filter((i) => i.type === ItemType.Hat)
     .map((i) => i.spec1);
-  const shields = client.eif.items
-    .filter((i) => i.type === ItemType.Shield)
+  const shields = client
+    .eif!.items.filter((i) => i.type === ItemType.Shield)
     .map((i) => i.spec1);
 
   for (let i = 1; i <= numCharacters; ++i) {
@@ -1237,7 +1237,7 @@ function _setDebugData() {
     client.nearby.characters.push(character);
   }
 
-  const npcCount = client.enf.npcs.length;
+  const npcCount = client.enf!.npcs.length;
   for (let i = 1; i <= numNpcs; ++i) {
     const npc = new NpcMapInfo();
     npc.index = i;
@@ -1249,7 +1249,7 @@ function _setDebugData() {
     client.nearby.npcs.push(npc);
   }
 
-  const itemCount = client.eif.totalItemsCount;
+  const itemCount = client.eif!.totalItemsCount;
   for (let i = 1; i <= numItems; ++i) {
     const item = new ItemMapInfo();
     item.uid = i;
