@@ -21,7 +21,7 @@ function handleCastReply(client: Client, reader: EoReader) {
   const packet = CastReplyServerPacket.deserialize(reader);
   const npc = client.getNpcByIndex(packet.npcIndex);
   if (!npc) {
-    client.authController.requestNpcRange([packet.npcIndex]);
+    client.sessionController.requestNpcRange([packet.npcIndex]);
     return;
   }
 
@@ -45,7 +45,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
   const packet = CastSpecServerPacket.deserialize(reader);
   const npc = client.getNpcByIndex(packet.npcKilledData.npcIndex);
   if (!npc) {
-    client.authController.requestNpcRange([packet.npcKilledData.npcIndex]);
+    client.sessionController.requestNpcRange([packet.npcKilledData.npcIndex]);
     return;
   }
 
@@ -107,7 +107,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
   const packet = CastAcceptServerPacket.deserialize(reader);
   const npc = client.getNpcByIndex(packet.npcKilledData.npcIndex);
   if (!npc) {
-    client.authController.requestNpcRange([packet.npcKilledData.npcIndex]);
+    client.sessionController.requestNpcRange([packet.npcKilledData.npcIndex]);
     return;
   }
 

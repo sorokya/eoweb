@@ -355,7 +355,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
       dialogId: number;
       action: number;
     }) => {
-      client.authController.questReply(questId, dialogId, action);
+      client.questController.questReply(questId, dialogId, action);
       client.typing = false;
     },
   );

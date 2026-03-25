@@ -54,8 +54,11 @@ import {
   MouseController,
   MovementController,
   NpcController,
+  QuestController,
+  SessionController,
   ShopController,
   SocialController,
+  StatSkillController,
   TickController,
 } from './controllers';
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
@@ -197,8 +200,11 @@ export class Client {
   mapController: MapController;
   mouseController: MouseController;
   npcController: NpcController;
+  questController: QuestController;
+  sessionController: SessionController;
   shopController: ShopController;
   socialController: SocialController;
+  statSkillController: StatSkillController;
   tickController: TickController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, IWeaponMetadata> = new Map();
@@ -324,8 +330,11 @@ export class Client {
     this.mapController = new MapController(this);
     this.mouseController = new MouseController(this);
     this.npcController = new NpcController(this);
+    this.questController = new QuestController(this);
+    this.sessionController = new SessionController(this);
     this.shopController = new ShopController(this);
     this.socialController = new SocialController(this);
+    this.statSkillController = new StatSkillController(this);
     this.tickController = new TickController(this);
     loadConfig().then((config) => {
       this.config = config;
@@ -560,7 +569,7 @@ export class Client {
       this.tickController.tickDoors();
 
       if (this.warpQueued && !playerWalking && !playerDying) {
-        this.authController.acceptWarp();
+        this.sessionController.acceptWarp();
       }
 
       this.tickController.tickAutoWalk();

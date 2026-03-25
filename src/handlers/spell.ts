@@ -16,7 +16,7 @@ function handleSpellRequest(client: Client, reader: EoReader) {
   const packet = SpellRequestServerPacket.deserialize(reader);
   const character = client.getCharacterById(packet.playerId);
   if (!character) {
-    client.authController.requestCharacterRange([packet.playerId]);
+    client.sessionController.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -52,7 +52,7 @@ function handleSpellTargetSelf(client: Client, reader: EoReader) {
 
   const character = client.getCharacterById(packet.playerId);
   if (!character) {
-    client.authController.requestCharacterRange([packet.playerId]);
+    client.sessionController.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -78,12 +78,12 @@ function handleSpellTargetOther(client: Client, reader: EoReader) {
   if (caster) {
     caster.direction = packet.casterDirection;
   } else {
-    client.authController.requestCharacterRange([packet.casterId]);
+    client.sessionController.requestCharacterRange([packet.casterId]);
   }
 
   const character = client.getCharacterById(packet.victimId);
   if (!character) {
-    client.authController.requestCharacterRange([packet.victimId]);
+    client.sessionController.requestCharacterRange([packet.victimId]);
     return;
   }
 

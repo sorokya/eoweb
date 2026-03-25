@@ -96,7 +96,7 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
   }
 
   if (unknownNpcsIndexes.size) {
-    client.authController.requestNpcRange(Array.from(unknownNpcsIndexes));
+    client.sessionController.requestNpcRange(Array.from(unknownNpcsIndexes));
   }
 }
 

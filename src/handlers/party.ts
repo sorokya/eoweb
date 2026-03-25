@@ -79,7 +79,7 @@ function handlePartyRequest(client: Client, reader: EoReader) {
   const packet = PartyRequestServerPacket.deserialize(reader);
   const inviter = client.getCharacterById(packet.inviterPlayerId);
   if (!inviter) {
-    client.authController.requestCharacterRange([packet.inviterPlayerId]);
+    client.sessionController.requestCharacterRange([packet.inviterPlayerId]);
   }
 
   const strings = client.getDialogStrings(

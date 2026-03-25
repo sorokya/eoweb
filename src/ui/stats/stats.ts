@@ -125,7 +125,7 @@ export class Stats extends Base {
       return;
     }
 
-    this.client.authController.trainStat(statId);
+    this.client.statSkillController.trainStat(statId);
   }
 
   on<Event extends keyof Events>(
