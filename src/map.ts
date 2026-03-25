@@ -176,6 +176,9 @@ export class MapRenderer {
   private damageNumberCanvas: HTMLCanvasElement;
   private damageNumberCtx: CanvasRenderingContext2D;
   private interpolation = 0;
+  // Viewport-cached sorted static entities — only rebuilt when player moves
+  private cachedStaticEntities: Entity[] = [];
+  private cachedViewportKey = '';
 
   constructor(client: Client) {
     this.client = client;
@@ -229,6 +232,34 @@ export class MapRenderer {
     }
 
     this.buildingCache = false;
+    this.cachedViewportKey = ''; // Invalidate viewport cache on map change
+  }
+
+  getRequiredTileIds(): { gfxType: GfxType; graphicId: number }[] {
+    const seen = new Set<string>();
+    const result: { gfxType: GfxType; graphicId: number }[] = [];
+    for (const row of this.staticTileGrid) {
+      for (const cell of row) {
+        for (const tile of cell) {
+          if (tile.bmpId === 0) continue; // Ground fill with id 0 is not rendered
+          const gfxType = LAYER_GFX_MAP[tile.layer];
+          const key = `${gfxType}:${tile.bmpId}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            result.push({ gfxType, graphicId: tile.bmpId });
+          }
+          // Door tiles (DownWall/RightWall) render bmpId+1 when open
+          if (tile.layer === Layer.DownWall || tile.layer === Layer.RightWall) {
+            const openKey = `${gfxType}:${tile.bmpId + 1}`;
+            if (!seen.has(openKey)) {
+              seen.add(openKey);
+              result.push({ gfxType, graphicId: tile.bmpId + 1 });
+            }
+          }
+        }
+      }
+    }
+    return result;
   }
 
   tick() {
@@ -308,72 +339,111 @@ export class MapRenderer {
       this.client.map.height,
       Math.ceil(diag / HALF_TILE_HEIGHT) + 2,
     );
-    const entities: Entity[] = [];
-
-    for (let y = player.y - rangeY; y <= player.y + rangeY; y++) {
-      if (y < 0 || y > this.client.map.height) continue;
-      for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
-        if (x < 0 || x > this.client.map.width) continue;
-
-        if (!this.staticTileGrid[y]?.[x]) {
-          return;
+    // --- Static entity caching: only rebuild when viewport changes ---
+    const viewportKey = `${player.x},${player.y},${rangeX},${rangeY}`;
+    if (viewportKey !== this.cachedViewportKey) {
+      this.cachedStaticEntities.length = 0;
+      for (let y = player.y - rangeY; y <= player.y + rangeY; y++) {
+        if (y < 0 || y > this.client.map.height) continue;
+        for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
+          if (x < 0 || x > this.client.map.width) continue;
+          if (!this.staticTileGrid[y]?.[x]) return;
+          for (const t of this.staticTileGrid[y][x]) {
+            this.cachedStaticEntities.push({
+              x,
+              y,
+              type: EntityType.Tile,
+              typeId: t.bmpId,
+              layer: t.layer,
+              depth: t.depth,
+            });
+          }
         }
+      }
+      this.cachedStaticEntities.sort((a, b) => a.depth - b.depth);
+      this.cachedViewportKey = viewportKey;
+    }
 
-        entities.push(
-          ...this.staticTileGrid[y][x].map((t) => ({
-            x,
-            y,
-            type: EntityType.Tile,
-            typeId: t.bmpId,
-            layer: t.layer,
-            depth: t.depth,
-          })),
-        );
+    // --- Collect dynamic entities (characters, npcs, items, cursor) ---
+    const dynamics: Entity[] = [];
 
-        if (this.client.state === GameState.InGame) {
-          for (const c of this.client.nearby.characters.filter(
-            (c) => c.coords.x === x && c.coords.y === y,
-          )) {
-            entities.push({
-              x,
-              y,
-              type: EntityType.Character,
-              typeId: c.playerId,
-              layer: Layer.Character,
-              depth: this.calculateDepth(Layer.Character, x, y),
-            });
+    // Build coordinate lookup maps — O(n) once per frame instead of O(n × tiles)
+    const inGame = this.client.state === GameState.InGame;
+    const charByCoord = new Map<string, typeof this.client.nearby.characters>();
+    const npcByCoord = new Map<string, typeof this.client.nearby.npcs>();
+    const itemByCoord = new Map<string, typeof this.client.nearby.items>();
+    if (inGame) {
+      for (const c of this.client.nearby.characters) {
+        const key = `${c.coords.x},${c.coords.y}`;
+        const arr = charByCoord.get(key);
+        if (arr) arr.push(c);
+        else charByCoord.set(key, [c]);
+      }
+      for (const n of this.client.nearby.npcs) {
+        const key = `${n.coords.x},${n.coords.y}`;
+        const arr = npcByCoord.get(key);
+        if (arr) arr.push(n);
+        else npcByCoord.set(key, [n]);
+      }
+      for (const i of this.client.nearby.items) {
+        const key = `${i.coords.x},${i.coords.y}`;
+        const arr = itemByCoord.get(key);
+        if (arr) arr.push(i);
+        else itemByCoord.set(key, [i]);
+      }
+
+      for (let y = player.y - rangeY; y <= player.y + rangeY; y++) {
+        if (y < 0 || y > this.client.map.height) continue;
+        for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
+          if (x < 0 || x > this.client.map.width) continue;
+          const key = `${x},${y}`;
+
+          const chars = charByCoord.get(key);
+          if (chars) {
+            for (const c of chars) {
+              dynamics.push({
+                x,
+                y,
+                type: EntityType.Character,
+                typeId: c.playerId,
+                layer: Layer.Character,
+                depth: this.calculateDepth(Layer.Character, x, y),
+              });
+            }
           }
 
-          for (const n of this.client.nearby.npcs.filter(
-            (n) => n.coords.x === x && n.coords.y === y,
-          )) {
-            entities.push({
-              x,
-              y,
-              type: EntityType.Npc,
-              typeId: n.index,
-              layer: Layer.Npc,
-              depth: this.calculateDepth(Layer.Npc, x, y),
-            });
+          const npcs = npcByCoord.get(key);
+          if (npcs) {
+            for (const n of npcs) {
+              dynamics.push({
+                x,
+                y,
+                type: EntityType.Npc,
+                typeId: n.index,
+                layer: Layer.Npc,
+                depth: this.calculateDepth(Layer.Npc, x, y),
+              });
+            }
           }
 
-          for (const i of this.client.nearby.items.filter(
-            (i) => i.coords.x === x && i.coords.y === y,
-          )) {
-            entities.push({
-              x,
-              y,
-              type: EntityType.Item,
-              typeId: i.uid,
-              layer: Layer.Item,
-              depth: this.calculateDepth(Layer.Item, x, y),
-            });
+          const items = itemByCoord.get(key);
+          if (items) {
+            for (const i of items) {
+              dynamics.push({
+                x,
+                y,
+                type: EntityType.Item,
+                typeId: i.uid,
+                layer: Layer.Item,
+                depth: this.calculateDepth(Layer.Item, x, y),
+              });
+            }
           }
         }
       }
     }
 
-    if (this.client.mouseCoords && this.client.state === GameState.InGame) {
+    if (this.client.mouseCoords && inGame) {
       const spec = this.getTileSpec(
         this.client.mouseCoords.x,
         this.client.mouseCoords.y,
@@ -427,7 +497,7 @@ export class MapRenderer {
           typeId = 2;
         }
 
-        entities.push({
+        dynamics.push({
           x: this.client.mouseCoords.x,
           y: this.client.mouseCoords.y,
           type: EntityType.Cursor,
@@ -442,9 +512,22 @@ export class MapRenderer {
       }
     }
 
-    entities.sort((a, b) => a.depth - b.depth);
+    // --- O(n+m) merge of pre-sorted statics with sorted dynamics ---
+    dynamics.sort((a, b) => a.depth - b.depth);
 
-    for (const e of entities) {
+    let si = 0;
+    let di = 0;
+    const statics = this.cachedStaticEntities;
+    while (si < statics.length || di < dynamics.length) {
+      let e: Entity;
+      if (
+        di >= dynamics.length ||
+        (si < statics.length && statics[si].depth <= dynamics[di].depth)
+      ) {
+        e = statics[si++];
+      } else {
+        e = dynamics[di++];
+      }
       switch (e.type) {
         case EntityType.Tile:
           this.renderTile(e, playerScreen, ctx);
@@ -464,7 +547,7 @@ export class MapRenderer {
       }
     }
 
-    if (this.client.state !== GameState.InGame) {
+    if (!inGame) {
       return;
     }
 
@@ -498,7 +581,7 @@ export class MapRenderer {
       this.renderEffectFront(effect, ctx);
     }
 
-    const main = entities.find(
+    const main = dynamics.find(
       (e) =>
         e.type === EntityType.Character && e.typeId === this.client.playerId,
     );
