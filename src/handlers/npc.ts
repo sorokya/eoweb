@@ -277,7 +277,7 @@ function handleNpcReply(client: Client, reader: EoReader) {
   ) {
     client.setStatusLabel(
       EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-      client.getResourceString(EOResourceID.STATUS_LABEL_UNABLE_TO_ATTACK)!,
+      client.getResourceString(EOResourceID.STATUS_LABEL_UNABLE_TO_ATTACK),
     );
   }
 }

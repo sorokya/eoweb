@@ -135,10 +135,10 @@ export class LockerDialog extends Base {
         ) {
           this.client.emit('smallAlert', {
             title: this.client.getResourceString(
-              EOResourceID.STATUS_LABEL_TYPE_WARNING!,
+              EOResourceID.STATUS_LABEL_TYPE_WARNING,
             ),
             message: this.client.getResourceString(
-              EOResourceID.DIALOG_ITS_TOO_HEAVY_WEIGHT!,
+              EOResourceID.DIALOG_ITS_TOO_HEAVY_WEIGHT,
             ),
           });
           return;

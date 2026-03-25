@@ -174,7 +174,7 @@ function handleItemReply(client: Client, reader: EoReader) {
 
       client.setStatusLabel(
         EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_USE_DRUNK)!,
+        client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_USE_DRUNK),
       );
       client.drunk = true;
       client.drunkTicks = 100 + record.spec1 * 10;

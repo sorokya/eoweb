@@ -59,7 +59,7 @@ export class BankDialog extends Base {
 
     const depositItem = createIconMenuItem(
       DialogIcon.BankDeposit,
-      this.client.getResourceString(EOResourceID.DIALOG_BANK_DEPOSIT)!,
+      this.client.getResourceString(EOResourceID.DIALOG_BANK_DEPOSIT),
       `${this.client.getResourceString(EOResourceID.DIALOG_BANK_TRANSFER)} ${gold.name} ${this.client.getResourceString(EOResourceID.DIALOG_BANK_TO_ACCOUNT)}`,
     );
     depositItem.addEventListener('click', () => {
@@ -69,7 +69,7 @@ export class BankDialog extends Base {
 
     const withdrawItem = createIconMenuItem(
       DialogIcon.BankWithdraw,
-      this.client.getResourceString(EOResourceID.DIALOG_BANK_WITHDRAW)!,
+      this.client.getResourceString(EOResourceID.DIALOG_BANK_WITHDRAW),
       `${this.client.getResourceString(EOResourceID.DIALOG_BANK_TRANSFER)} ${gold.name} ${this.client.getResourceString(EOResourceID.DIALOG_BANK_FROM_ACCOUNT)}`,
     );
     withdrawItem.addEventListener('click', () => {
@@ -79,8 +79,8 @@ export class BankDialog extends Base {
 
     const upgradeItem = createIconMenuItem(
       DialogIcon.BankLockerUpgrade,
-      this.client.getResourceString(EOResourceID.DIALOG_BANK_LOCKER_UPGRADE)!,
-      this.client.getResourceString(EOResourceID.DIALOG_BANK_MORE_SPACE)!,
+      this.client.getResourceString(EOResourceID.DIALOG_BANK_LOCKER_UPGRADE),
+      this.client.getResourceString(EOResourceID.DIALOG_BANK_MORE_SPACE),
     );
     upgradeItem.addEventListener('click', () => {
       this.emitter.emit('upgrade', undefined);

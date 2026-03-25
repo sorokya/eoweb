@@ -67,7 +67,7 @@ function handlePartyReply(client: Client, reader: EoReader) {
         tab: ChatTab.System,
         icon: ChatIcon.Error,
         message: client.getResourceString(
-          EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL!,
+          EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL,
         ),
       });
       return;
@@ -103,16 +103,16 @@ function handlePartyCreate(client: Client, reader: EoReader) {
   playSfxById(SfxId.JoinParty);
   client.setStatusLabel(
     EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED)!,
+    client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED),
   );
   client.emit('chat', {
     tab: ChatTab.System,
     icon: ChatIcon.PlayerParty,
     message: client.getResourceString(
-      EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED!,
+      EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED,
     ),
-  })!;
-  client.emit('partyUpdated', undefined)!;
+  });
+  client.emit('partyUpdated', undefined);
 }
 
 function handlePartyAdd(client: Client, reader: EoReader) {

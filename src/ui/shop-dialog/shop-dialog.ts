@@ -191,7 +191,7 @@ export class ShopDialog extends Base {
     if (buys.length) {
       const item = createIconMenuItem(
         DialogIcon.Buy,
-        this.client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS)!,
+        this.client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS),
         `${buys.length} ${this.client.getResourceString(EOResourceID.DIALOG_SHOP_ITEMS_IN_STORE)}`,
       );
       const click = () => {
@@ -209,7 +209,7 @@ export class ShopDialog extends Base {
     if (sells.length) {
       const item = createIconMenuItem(
         DialogIcon.Sell,
-        this.client.getResourceString(EOResourceID.DIALOG_SHOP_SELL_ITEMS)!,
+        this.client.getResourceString(EOResourceID.DIALOG_SHOP_SELL_ITEMS),
         `${sells.length} ${this.client.getResourceString(EOResourceID.DIALOG_SHOP_ITEMS_ACCEPTED)}`,
       );
       const click = () => {
@@ -223,7 +223,7 @@ export class ShopDialog extends Base {
     if (this.craftItems.length) {
       const item = createIconMenuItem(
         DialogIcon.Craft,
-        this.client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_ITEMS)!,
+        this.client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_ITEMS),
         `${this.craftItems.length} ${this.client.getResourceString(EOResourceID.DIALOG_SHOP_ITEMS_ACCEPTED)}`,
       );
       const click = () => {

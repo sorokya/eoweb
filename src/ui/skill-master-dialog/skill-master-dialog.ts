@@ -198,7 +198,7 @@ export class SkillMasterDialog extends Base {
 
     const learnItem = createIconMenuItem(
       DialogIcon.Learn,
-      this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_LEARN)!,
+      this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_LEARN),
       `${learnCount}${this.client.getResourceString(EOResourceID.SKILLMASTER_ITEMS_TO_LEARN)}`,
     );
     const clickLearn = () => {
@@ -218,7 +218,7 @@ export class SkillMasterDialog extends Base {
     if (forgetCount) {
       const forgetItem = createIconMenuItem(
         DialogIcon.Forget,
-        this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_FORGET)!,
+        this.client.getResourceString(EOResourceID.SKILLMASTER_WORD_FORGET),
         `${forgetCount}${this.client.getResourceString(EOResourceID.SKILLMASTER_ITEMS_LEARNED)}`,
       );
       const clickForget = () => {
@@ -234,7 +234,7 @@ export class SkillMasterDialog extends Base {
 
     const forgetAllItem = createIconMenuItem(
       DialogIcon.Forget,
-      this.client.getResourceString(EOResourceID.SKILLMASTER_FORGET_ALL)!,
+      this.client.getResourceString(EOResourceID.SKILLMASTER_FORGET_ALL),
       this.client.getResourceString(
         EOResourceID.SKILLMASTER_RESET_YOUR_CHARACTER,
       ),

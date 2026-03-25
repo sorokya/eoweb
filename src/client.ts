@@ -772,7 +772,7 @@ export class Client {
   }
 
   getEffectMetadata(graphicId: number): EffectMetadata {
-    const data = this.effectMetadata.get(graphicId)!;
+    const data = this.effectMetadata.get(graphicId);
     if (data) {
       return data;
     }
@@ -1395,7 +1395,10 @@ export class Client {
   }
 
   async loadMap(id: number): Promise<void> {
-    this.setMap((await getEmf(id))!);
+    const map = await getEmf(id);
+    if (map) {
+      this.setMap(map);
+    }
   }
 
   showError(message: string, title = '') {
@@ -2492,7 +2495,7 @@ export class Client {
 
   clearSession() {
     this.loginToken = '';
-    this.lastCharacterId = undefined!;
+    this.lastCharacterId = 0;
     localStorage.removeItem('login-token');
     localStorage.removeItem('last-character-id');
   }
@@ -2628,7 +2631,7 @@ export class Client {
     if (record.type === ItemType.Teleport && !this.map!.canScroll) {
       this.setStatusLabel(
         EOResourceID.STATUS_LABEL_TYPE_ACTION,
-        this.getResourceString(EOResourceID.STATUS_LABEL_NOTHING_HAPPENED)!,
+        this.getResourceString(EOResourceID.STATUS_LABEL_NOTHING_HAPPENED),
       );
       return;
     }
@@ -3231,7 +3234,7 @@ export class Client {
     if (this.tp < record.tpCost) {
       this.setStatusLabel(
         EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        this.getResourceString(EOResourceID.ATTACK_YOU_ARE_EXHAUSTED_TP)!,
+        this.getResourceString(EOResourceID.ATTACK_YOU_ARE_EXHAUSTED_TP),
       );
       this.queuedSpellId = 0;
       return;
@@ -3436,7 +3439,7 @@ export class Client {
     if (!this.map!.mapAvailable) {
       this.setStatusLabel(
         EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        this.getResourceString(EOResourceID.STATUS_LABEL_NO_MAP_OF_AREA)!,
+        this.getResourceString(EOResourceID.STATUS_LABEL_NO_MAP_OF_AREA),
       );
       return;
     }
