@@ -15,6 +15,7 @@ import { SfxId } from '../types';
 
 export class ChestController {
   private client: Client;
+  chestCoords = new Coords();
 
   constructor(client: Client) {
     this.client = client;
@@ -79,13 +80,13 @@ export class ChestController {
     packet.coords = new Coords();
     packet.coords.x = coords.x;
     packet.coords.y = coords.y;
-    this.client.chestCoords = packet.coords;
+    this.chestCoords = packet.coords;
     this.client.bus!.send(packet);
   }
 
   takeItem(itemId: number): void {
     const packet = new ChestTakeClientPacket();
-    packet.coords = this.client.chestCoords;
+    packet.coords = this.chestCoords;
     packet.takeItemId = itemId;
     this.client.bus!.send(packet);
   }
@@ -95,7 +96,7 @@ export class ChestController {
     packet.addItem = new ThreeItem();
     packet.addItem.id = itemId;
     packet.addItem.amount = amount;
-    packet.coords = this.client.chestCoords;
+    packet.coords = this.chestCoords;
     this.client.bus!.send(packet);
   }
 }

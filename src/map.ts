@@ -296,7 +296,7 @@ export class MapRenderer {
       playerScreen.y += interOffset.y;
     }
 
-    playerScreen.x += this.client.quakeOffset;
+    playerScreen.x += this.client.tickController.quakeOffset;
 
     const diag = Math.hypot(ctx.canvas.width, ctx.canvas.height);
     const rangeX = Math.min(
@@ -1169,7 +1169,7 @@ export class MapRenderer {
         !bubble &&
         !healthBar &&
         !emote &&
-        !this.client.debug &&
+        !this.client.commandController.debug &&
         (!(animation instanceof CharacterSpellChantAnimation) ||
           animation.animationFrame)
       ) {
@@ -1198,7 +1198,7 @@ export class MapRenderer {
           animation.render(characterTopCenter, ctx);
         }
 
-        if (this.client.debug) {
+        if (this.client.commandController.debug) {
           this.renderDebugRectangle(
             rect!,
             `id[${character.playerId}]`,
@@ -1393,7 +1393,7 @@ export class MapRenderer {
     const bubble = this.client.npcChats.get(npc.index);
     const healthBar = this.client.npcHealthBars.get(npc.index);
 
-    if (!bubble && !healthBar && !this.client.debug) {
+    if (!bubble && !healthBar && !this.client.commandController.debug) {
       return;
     }
 
@@ -1426,7 +1426,7 @@ export class MapRenderer {
         this.renderHealthBar(healthBar, npcTopCenter, ctx);
       }
 
-      if (this.client.debug) {
+      if (this.client.commandController.debug) {
         this.renderDebugRectangle(
           rect,
           `idx[${npc.index}]`,
@@ -1482,7 +1482,7 @@ export class MapRenderer {
       frame.h,
     );
 
-    if (this.client.debug) {
+    if (this.client.commandController.debug) {
       this.renderDebugRectangle(
         new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
         `idx[${item.uid}]`,

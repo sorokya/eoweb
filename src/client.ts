@@ -1,10 +1,8 @@
 import {
   AdminLevel,
-  type BoardPostListing,
   CharacterBaseStats,
   type CharacterMapInfo,
   CharacterSecondaryStats,
-  Coords,
   type Ecf,
   type EcfRecord,
   type Eif,
@@ -37,7 +35,7 @@ import type { PacketBus } from './bus';
 import type { ChatBubble } from './chat-bubble';
 import { clearRectangles } from './collision';
 import { getDefaultConfig, loadConfig } from './config';
-import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS, USAGE_TICKS } from './consts';
+import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS } from './consts';
 import {
   AudioController,
   AuthenticationController,
@@ -81,8 +79,6 @@ import {
 } from './render';
 import { playSfxById } from './sfx';
 import type {
-  AccountCreateData,
-  CharacterCreateData,
   ClientEvents,
   IEffectMetadata,
   INPCMetadata,
@@ -92,7 +88,6 @@ import type {
 } from './types';
 import {
   EffectAnimationType,
-  type EquipmentSlot,
   GameState,
   HatMaskType,
   SfxId,
@@ -126,8 +121,6 @@ export class Client {
   config = getDefaultConfig();
   version: Version;
   challenge: number;
-  accountCreateData: AccountCreateData | null = null;
-  characterCreateData: CharacterCreateData | null = null;
   playerId = 0;
   characterId = 0;
   name = '';
@@ -138,11 +131,9 @@ export class Client {
   guildRankName = '';
   classId = 0;
   admin = AdminLevel.Player;
-  nowall = false;
   level = 0;
   experience = 0;
   usage = 0;
-  usageTicks = USAGE_TICKS;
   hp = 0;
   maxHp = 0;
   tp = 0;
@@ -171,8 +162,6 @@ export class Client {
   esf!: Esf;
   map!: Emf;
   mapRenderer: MapRenderer;
-  ambientSound: AudioBufferSourceNode | null = null;
-  ambientVolume: GainNode | null = null;
   downloadQueue: { type: FileType; id: number }[] = [];
   characterAnimations: Map<number, CharacterAnimation> = new Map();
   npcAnimations: Map<number, NpcAnimation> = new Map();
@@ -213,16 +202,8 @@ export class Client {
   hatMetadata = getHatMetadata();
   doors: Door[] = [];
   typing = false;
-  clearOutofRangeTicks = 0;
-  pingStart = 0;
-  quakeTicks = 0;
-  quakePower = 0;
-  quakeOffset = 0;
-  interactNpcIndex = 0;
   idleTicks = INITIAL_IDLE_TICKS;
   drunk = false;
-  drunkEmoteTicks = 0;
-  drunkTicks = 0;
   reconnecting = false;
   rememberMe = Boolean(localStorage.getItem('remember-me')) || false;
   loginToken = localStorage.getItem('login-token');
@@ -237,18 +218,12 @@ export class Client {
     game2: null,
     jukebox: null,
   };
-  chestCoords = new Coords();
   notyf = new Notyf({
     position: {
       x: 'right',
       y: 'top',
     },
   });
-  goldBank = 0;
-  lockerUpgrades = 0;
-  boardId = 0;
-  boardPosts: BoardPostListing[] = [];
-  lockerCoords = new Coords();
   atlas: Atlas;
   hotbarSlots: ISlot[] = [];
   selectedSpellId = 0;
@@ -264,12 +239,7 @@ export class Client {
   cursorClickAnimation: CursorClickAnimation | undefined;
   autoWalkPath: Vector2[] = [];
   onlinePlayers: OnlinePlayer[] = [];
-  equipmentSwap: {
-    slot: EquipmentSlot;
-    itemId: number;
-  } | null = null;
   sans11: Sans11Font;
-  debug = false;
   itemProtectionTimers: Map<
     number,
     {
@@ -670,13 +640,13 @@ export class Client {
     this.downloadQueue = [];
     this.idleTicks = INITIAL_IDLE_TICKS;
     this.drunk = false;
-    this.drunkEmoteTicks = 0;
+    this.tickController.drunkEmoteTicks = 0;
     this.selectedSpellId = 0;
     this.queuedSpellId = 0;
     this.spellCooldownTicks = 0;
     this.menuPlayerId = 0;
     this.onlinePlayers = [];
-    this.equipmentSwap = null;
+    this.inventoryController.equipmentSwap = null;
     this.itemProtectionTimers.clear();
   }
 

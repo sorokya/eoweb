@@ -18,6 +18,10 @@ import type { Vector2 } from '../vector';
 
 export class InventoryController {
   private client: Client;
+  equipmentSwap: {
+    slot: EquipmentSlot;
+    itemId: number;
+  } | null = null;
 
   constructor(client: Client) {
     this.client = client;
@@ -170,7 +174,7 @@ export class InventoryController {
         return false;
       }
 
-      this.client.equipmentSwap = {
+      this.equipmentSwap = {
         slot,
         itemId,
       };

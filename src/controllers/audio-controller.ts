@@ -5,13 +5,15 @@ import type { Vector2 } from '../vector';
 
 export class AudioController {
   private client: Client;
+  ambientSound: AudioBufferSourceNode | null = null;
+  ambientVolume: GainNode | null = null;
 
   constructor(client: Client) {
     this.client = client;
   }
 
   setAmbientVolume(): void {
-    if (!this.client.map || !this.client.ambientSound) {
+    if (!this.client.map || !this.ambientSound) {
       return;
     }
 
@@ -31,16 +33,16 @@ export class AudioController {
     if (sources.length) {
       const distance = sources[0].distance;
       const volume = getVolumeFromDistance(distance);
-      this.client.ambientVolume!.gain.value = volume;
+      this.ambientVolume!.gain.value = volume;
     }
   }
 
   stopAmbientSound(): void {
-    if (this.client.ambientSound && this.client.ambientVolume) {
-      this.client.ambientSound.disconnect();
-      this.client.ambientSound = null;
-      this.client.ambientVolume.disconnect();
-      this.client.ambientVolume = null;
+    if (this.ambientSound && this.ambientVolume) {
+      this.ambientSound.disconnect();
+      this.ambientSound = null;
+      this.ambientVolume.disconnect();
+      this.ambientVolume = null;
     }
   }
 
@@ -54,14 +56,14 @@ export class AudioController {
       .then((response) => response.arrayBuffer())
       .then((data) => context.decodeAudioData(data))
       .then((buffer) => {
-        this.client.ambientSound = context.createBufferSource();
-        this.client.ambientVolume = context.createGain();
-        this.client.ambientSound.connect(this.client.ambientVolume);
-        this.client.ambientSound.buffer = buffer;
-        this.client.ambientSound.loop = true;
-        this.client.ambientVolume.connect(context.destination);
+        this.ambientSound = context.createBufferSource();
+        this.ambientVolume = context.createGain();
+        this.ambientSound.connect(this.ambientVolume);
+        this.ambientSound.buffer = buffer;
+        this.ambientSound.loop = true;
+        this.ambientVolume.connect(context.destination);
         this.setAmbientVolume();
-        this.client.ambientSound.start(0);
+        this.ambientSound.start(0);
       });
   }
 }

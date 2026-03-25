@@ -1,6 +1,7 @@
 import {
   BoardCreateClientPacket,
   BoardOpenClientPacket,
+  type BoardPostListing,
   BoardRemoveClientPacket,
   BoardTakeClientPacket,
 } from 'eolib';
@@ -9,6 +10,8 @@ import type { Client } from '../client';
 
 export class BoardController {
   private client: Client;
+  boardId = 0;
+  boardPosts: BoardPostListing[] = [];
 
   constructor(client: Client) {
     this.client = client;
@@ -22,14 +25,14 @@ export class BoardController {
 
   readPost(postId: number): void {
     const packet = new BoardTakeClientPacket();
-    packet.boardId = this.client.boardId;
+    packet.boardId = this.boardId;
     packet.postId = postId;
     this.client.bus!.send(packet);
   }
 
   createPost(subject: string, body: string): void {
     const packet = new BoardCreateClientPacket();
-    packet.boardId = this.client.boardId;
+    packet.boardId = this.boardId;
     packet.postSubject = subject;
     packet.postBody = body.replace(/\n/g, '\r');
     this.client.bus!.send(packet);
@@ -37,7 +40,7 @@ export class BoardController {
 
   deletePost(postId: number): void {
     const packet = new BoardRemoveClientPacket();
-    packet.boardId = this.client.boardId;
+    packet.boardId = this.boardId;
     packet.postId = postId;
     this.client.bus!.send(packet);
   }

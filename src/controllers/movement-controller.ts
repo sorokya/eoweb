@@ -35,11 +35,11 @@ export class MovementController {
   }
 
   walk(direction: Direction, coords: Vector2, timestamp: number): void {
-    const packet = this.client.nowall
+    const packet = this.client.commandController.nowall
       ? new WalkAdminClientPacket()
       : new WalkPlayerClientPacket();
 
-    if (this.client.nowall) {
+    if (this.client.commandController.nowall) {
       playSfxById(SfxId.GhostPlayer);
     }
 

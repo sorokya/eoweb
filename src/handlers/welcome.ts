@@ -149,7 +149,7 @@ function handleEnterGame(
   client.spells = data.spells;
   client.weight = data.weight;
   client.nearby = data.nearby;
-  client.usageTicks = USAGE_TICKS;
+  client.tickController.usageTicks = USAGE_TICKS;
   client.setState(GameState.InGame);
   client.emit('enterGame', { news: data.news });
   client.bus!.send(new GlobalOpenClientPacket());

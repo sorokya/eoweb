@@ -12,6 +12,9 @@ import { SfxId } from '../types';
 
 export class CommandController {
   private client: Client;
+  pingStart = 0;
+  debug = false;
+  nowall = false;
 
   constructor(client: Client) {
     this.client = client;
@@ -21,7 +24,7 @@ export class CommandController {
     const args = input.split(' ');
     switch (args[0]) {
       case '#ping': {
-        this.client.pingStart = Date.now();
+        this.pingStart = Date.now();
         this.client.bus!.send(new MessagePingClientPacket());
         return true;
       }
@@ -71,13 +74,13 @@ export class CommandController {
           return false;
         }
 
-        this.client.nowall = !this.client.nowall;
+        this.nowall = !this.nowall;
         playSfxById(SfxId.TextBoxFocus);
         return true;
       }
 
       case '#debug': {
-        this.client.debug = !this.client.debug;
+        this.debug = !this.debug;
         playSfxById(SfxId.TextBoxFocus);
         return true;
       }

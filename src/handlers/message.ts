@@ -10,7 +10,7 @@ import { playSfxById, SfxId } from '../sfx';
 import { ChatIcon } from '../ui/chat/chat';
 
 function handleMessagePing(client: Client) {
-  const delta = Date.now() - client.pingStart;
+  const delta = Date.now() - client.commandController.pingStart;
 
   client.emit('serverChat', {
     message: `${delta}ms ping`,

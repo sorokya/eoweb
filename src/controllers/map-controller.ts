@@ -358,7 +358,7 @@ export class MapController {
       return false;
     }
 
-    if (this.client.nowall) {
+    if (this.client.commandController.nowall) {
       return true;
     }
 

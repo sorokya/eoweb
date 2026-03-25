@@ -149,7 +149,7 @@ export class MinimapRenderer {
       playerScreen.y += walkOffset.y;
     }
 
-    playerScreen.x += this.client.quakeOffset;
+    playerScreen.x += this.client.tickController.quakeOffset;
 
     ctx.globalAlpha = 0.5;
     for (let y = player.y - RANGE; y <= player.y + RANGE; y++) {

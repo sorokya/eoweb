@@ -13,7 +13,7 @@ export class QuestController {
     const packet = new QuestAcceptClientPacket();
     packet.sessionId = this.client.sessionId;
     packet.questId = questId;
-    packet.npcIndex = this.client.interactNpcIndex;
+    packet.npcIndex = this.client.npcController.interactNpcIndex;
     packet.dialogId = dialogId;
     packet.replyType = action !== null ? DialogReply.Link : DialogReply.Ok;
     if (action !== null) {

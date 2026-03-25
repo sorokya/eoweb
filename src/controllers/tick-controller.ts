@@ -19,16 +19,23 @@ import { getTimestamp } from './movement-controller';
 
 export class TickController {
   private client: Client;
+  usageTicks = USAGE_TICKS;
+  clearOutofRangeTicks = 0;
+  drunkEmoteTicks = 0;
+  drunkTicks = 0;
+  quakeTicks = 0;
+  quakePower = 0;
+  quakeOffset = 0;
 
   constructor(client: Client) {
     this.client = client;
   }
 
   tickUsage(): void {
-    this.client.usageTicks = Math.max(this.client.usageTicks - 1, 0);
-    if (!this.client.usageTicks) {
+    this.usageTicks = Math.max(this.usageTicks - 1, 0);
+    if (!this.usageTicks) {
       this.client.usage += 1;
-      this.client.usageTicks = USAGE_TICKS;
+      this.usageTicks = USAGE_TICKS;
     }
   }
 
@@ -59,25 +66,22 @@ export class TickController {
       return;
     }
 
-    this.client.drunkEmoteTicks = Math.max(this.client.drunkEmoteTicks - 1, 0);
-    if (!this.client.drunkEmoteTicks) {
+    this.drunkEmoteTicks = Math.max(this.drunkEmoteTicks - 1, 0);
+    if (!this.drunkEmoteTicks) {
       this.client.socialController.emote(EmoteType.Drunk);
-      this.client.drunkEmoteTicks = 10 + randomRange(0, 8) * 5;
+      this.drunkEmoteTicks = 10 + randomRange(0, 8) * 5;
     }
 
-    this.client.drunkTicks = Math.max(this.client.drunkTicks - 1, 0);
-    if (!this.client.drunkTicks) {
+    this.drunkTicks = Math.max(this.drunkTicks - 1, 0);
+    if (!this.drunkTicks) {
       this.client.drunk = false;
-      this.client.drunkEmoteTicks = 0;
+      this.drunkEmoteTicks = 0;
     }
   }
 
   tickOutOfRange(): void {
-    this.client.clearOutofRangeTicks = Math.max(
-      this.client.clearOutofRangeTicks - 1,
-      0,
-    );
-    if (!this.client.clearOutofRangeTicks) {
+    this.clearOutofRangeTicks = Math.max(this.clearOutofRangeTicks - 1, 0);
+    if (!this.clearOutofRangeTicks) {
       const playerCoords = this.client.getPlayerCoords();
       this.client.nearby.characters = this.client.nearby.characters.filter(
         (c) => inRange(playerCoords, c.coords),
@@ -88,7 +92,7 @@ export class TickController {
       this.client.nearby.items = this.client.nearby.items.filter((i) =>
         inRange(playerCoords, i.coords),
       );
-      this.client.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
+      this.clearOutofRangeTicks = CLEAR_OUT_OF_RANGE_TICKS;
 
       if (this.client.menuPlayerId) {
         const character = this.client.getCharacterById(
@@ -366,23 +370,23 @@ export class TickController {
   }
 
   tickQuake(): void {
-    if (!this.client.quakeTicks) {
+    if (!this.quakeTicks) {
       return;
     }
 
-    this.client.quakeTicks = Math.max(this.client.quakeTicks - 1, 0);
-    if (this.client.quakePower) {
-      this.client.quakeOffset = randomRange(0, this.client.quakePower);
+    this.quakeTicks = Math.max(this.quakeTicks - 1, 0);
+    if (this.quakePower) {
+      this.quakeOffset = randomRange(0, this.quakePower);
     } else {
-      this.client.quakeOffset = 0;
+      this.quakeOffset = 0;
     }
 
     if (Math.random() < 0.5) {
-      this.client.quakeOffset = -this.client.quakeOffset;
+      this.quakeOffset = -this.quakeOffset;
     }
 
-    if (!this.client.quakeTicks) {
-      this.client.quakeOffset = 0;
+    if (!this.quakeTicks) {
+      this.quakeOffset = 0;
     }
   }
 }

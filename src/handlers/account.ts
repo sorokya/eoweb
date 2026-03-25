@@ -44,7 +44,7 @@ function handleAccountReply(client: Client, reader: EoReader) {
       client.emit('accountCreated', undefined);
       return;
     default: {
-      const accountData = client.accountCreateData;
+      const accountData = client.authenticationController.accountCreateData;
       if (!accountData) {
         return;
       }

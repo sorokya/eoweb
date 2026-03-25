@@ -791,7 +791,7 @@ function wireBankEvents(deps: UiEventDeps): void {
   });
 
   deps.bankDialog.on('withdraw', () => {
-    if (client.goldBank <= 0) {
+    if (client.bankController.goldBank <= 0) {
       const strings = client.getDialogStrings(
         DialogResourceID.BANK_ACCOUNT_UNABLE_TO_WITHDRAW,
       );
@@ -800,11 +800,11 @@ function wireBankEvents(deps: UiEventDeps): void {
       return;
     }
 
-    if (client.goldBank > 1) {
+    if (client.bankController.goldBank > 1) {
       const record = client.getEifRecordById(1);
       if (!record) throw new Error('Failed to fetch gold record');
       deps.itemAmountDialog.setHeader('bank');
-      deps.itemAmountDialog.setMaxAmount(client.goldBank);
+      deps.itemAmountDialog.setMaxAmount(client.bankController.goldBank);
       deps.itemAmountDialog.setLabel(
         `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_WITHDRAW)}`,
       );
@@ -820,7 +820,7 @@ function wireBankEvents(deps: UiEventDeps): void {
   });
 
   deps.bankDialog.on('upgrade', () => {
-    if (client.lockerUpgrades >= MAX_LOCKER_UPGRADES) {
+    if (client.bankController.lockerUpgrades >= MAX_LOCKER_UPGRADES) {
       const strings = client.getDialogStrings(
         DialogResourceID.LOCKER_UPGRADE_IMPOSSIBLE,
       );
@@ -831,7 +831,7 @@ function wireBankEvents(deps: UiEventDeps): void {
 
     const requiredGold =
       LOCKER_UPGRADE_BASE_COST +
-      LOCKER_UPGRADE_COST_STEP * client.lockerUpgrades;
+      LOCKER_UPGRADE_COST_STEP * client.bankController.lockerUpgrades;
     const gold = client.items.find((i) => i.id === 1)?.amount || 0;
 
     const record = client.getEifRecordById(1);

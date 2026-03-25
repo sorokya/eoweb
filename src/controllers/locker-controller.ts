@@ -1,4 +1,5 @@
 import {
+  Coords,
   LockerAddClientPacket,
   LockerBuyClientPacket,
   LockerTakeClientPacket,
@@ -9,6 +10,7 @@ import type { Client } from '../client';
 
 export class LockerController {
   private client: Client;
+  lockerCoords = new Coords();
 
   constructor(client: Client) {
     this.client = client;
@@ -21,7 +23,7 @@ export class LockerController {
   takeItem(itemId: number): void {
     const packet = new LockerTakeClientPacket();
     packet.takeItemId = itemId;
-    packet.lockerCoords = this.client.lockerCoords;
+    packet.lockerCoords = this.lockerCoords;
     this.client.bus!.send(packet);
   }
 
@@ -30,7 +32,7 @@ export class LockerController {
     packet.depositItem = new ThreeItem();
     packet.depositItem.id = itemId;
     packet.depositItem.amount = amount;
-    packet.lockerCoords = this.client.lockerCoords;
+    packet.lockerCoords = this.lockerCoords;
     this.client.bus!.send(packet);
   }
 }

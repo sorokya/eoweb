@@ -4,6 +4,8 @@ import type { Client } from '../client';
 
 export class BankController {
   private client: Client;
+  goldBank = 0;
+  lockerUpgrades = 0;
 
   constructor(client: Client) {
     this.client = client;
@@ -22,7 +24,7 @@ export class BankController {
   }
 
   withdrawGold(amount: number): void {
-    if (this.client.goldBank < amount) {
+    if (this.goldBank < amount) {
       return;
     }
 

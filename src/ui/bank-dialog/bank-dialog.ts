@@ -49,7 +49,7 @@ export class BankDialog extends Base {
   }
 
   render() {
-    this.balance!.innerText = `${this.client.goldBank}`;
+    this.balance!.innerText = `${this.client.bankController.goldBank}`;
     this.itemList!.innerHTML = '';
 
     const gold = this.client.getEifRecordById(1);

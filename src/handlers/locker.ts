@@ -21,7 +21,7 @@ function handleLockerBuy(client: Client, reader: EoReader) {
   }
 
   gold.amount = packet.goldAmount;
-  client.lockerUpgrades = packet.lockerUpgrades;
+  client.bankController.lockerUpgrades = packet.lockerUpgrades;
   playSfxById(SfxId.BuySell);
   client.emit('inventoryChanged', undefined);
 }
@@ -29,7 +29,7 @@ function handleLockerBuy(client: Client, reader: EoReader) {
 function handleLockerOpen(client: Client, reader: EoReader) {
   const packet = LockerOpenServerPacket.deserialize(reader);
   playSfxById(SfxId.ChestOpen);
-  client.lockerCoords = packet.lockerCoords;
+  client.lockerController.lockerCoords = packet.lockerCoords;
   client.emit('lockerOpened', { items: packet.lockerItems });
 }
 

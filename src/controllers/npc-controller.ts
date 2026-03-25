@@ -17,6 +17,7 @@ import { SpellTarget } from '../types';
 
 export class NpcController {
   private client: Client;
+  interactNpcIndex = 0;
 
   constructor(client: Client) {
     this.client = client;
@@ -103,7 +104,7 @@ export class NpcController {
         return;
     }
 
-    this.client.interactNpcIndex = npc.index;
+    this.interactNpcIndex = npc.index;
   }
 
   clickCharacter(character: CharacterMapInfo): void {

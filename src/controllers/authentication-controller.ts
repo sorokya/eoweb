@@ -14,13 +14,15 @@ import type { AccountCreateData, CharacterCreateData } from '../types';
 
 export class AuthenticationController {
   private client: Client;
+  accountCreateData: AccountCreateData | null = null;
+  characterCreateData: CharacterCreateData | null = null;
 
   constructor(client: Client) {
     this.client = client;
   }
 
   requestAccountCreation(data: AccountCreateData): void {
-    this.client.accountCreateData = data;
+    this.accountCreateData = data;
     const packet = new AccountRequestClientPacket();
     packet.username = data.username;
     this.client.bus!.send(packet);
@@ -35,7 +37,7 @@ export class AuthenticationController {
       return;
     }
 
-    this.client.characterCreateData = data;
+    this.characterCreateData = data;
     this.client.bus!.send(new CharacterRequestClientPacket());
   }
 
