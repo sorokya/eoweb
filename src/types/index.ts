@@ -20,9 +20,6 @@ export { GameState, PlayerMenuItem, SpellTarget } from './game';
 // Graphics
 export { GfxType } from './gfx';
 
-// Input
-export { Input } from './input';
-
 // Metadata (interfaces)
 export type {
   IEffectMetadata,

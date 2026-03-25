@@ -45,7 +45,6 @@ import {
   WALK_WIDTH_FACTOR,
 } from './consts';
 import { TextAlign } from './fonts/base';
-import { GAME_WIDTH, HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { GfxType } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
@@ -478,10 +477,16 @@ export class MapRenderer {
       effect.target.rect = new Rectangle(
         {
           x: Math.floor(
-            tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+            tileScreen.x -
+              HALF_TILE_WIDTH -
+              playerScreen.x +
+              this.client.viewportController.getHalfGameWidth(),
           ),
           y: Math.floor(
-            tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
+            tileScreen.y -
+              HALF_TILE_HEIGHT -
+              playerScreen.y +
+              this.client.viewportController.getHalfGameHeight(),
           ),
         },
         TILE_WIDTH,
@@ -712,11 +717,17 @@ export class MapRenderer {
     const position = isoToScreen(coords);
 
     const drawX = Math.floor(
-      position.x - playerScreen.x + HALF_GAME_WIDTH + offset.x,
+      position.x -
+        playerScreen.x +
+        this.client.viewportController.getHalfGameWidth() +
+        offset.x,
     );
 
     const drawY = Math.floor(
-      position.y - playerScreen.y + HALF_GAME_HEIGHT + offset.y,
+      position.y -
+        playerScreen.y +
+        this.client.viewportController.getHalfGameHeight() +
+        offset.y,
     );
 
     this.client.sans11.render(
@@ -840,7 +851,7 @@ export class MapRenderer {
       tileScreen.x -
         HALF_TILE_WIDTH -
         playerScreen.x +
-        HALF_GAME_WIDTH +
+        this.client.viewportController.getHalfGameWidth() +
         offset.x +
         tile.xOffset,
     );
@@ -848,7 +859,7 @@ export class MapRenderer {
       tileScreen.y -
         HALF_TILE_HEIGHT -
         playerScreen.y +
-        HALF_GAME_HEIGHT +
+        this.client.viewportController.getHalfGameHeight() +
         offset.y +
         tile.yOffset,
     );
@@ -1044,7 +1055,7 @@ export class MapRenderer {
     const screenX = Math.floor(
       screenCoords.x -
         playerScreen.x +
-        HALF_GAME_WIDTH +
+        this.client.viewportController.getHalfGameWidth() +
         walkOffset.x +
         frameOffset.x,
     );
@@ -1052,7 +1063,7 @@ export class MapRenderer {
     const screenY = Math.floor(
       screenCoords.y -
         playerScreen.y +
-        HALF_GAME_HEIGHT +
+        this.client.viewportController.getHalfGameHeight() +
         frame.yOffset +
         walkOffset.y +
         frameOffset.y,
@@ -1083,7 +1094,7 @@ export class MapRenderer {
           x:
             screenCoords.x -
             playerScreen.x +
-            HALF_GAME_WIDTH -
+            this.client.viewportController.getHalfGameWidth() -
             HALF_TILE_WIDTH +
             walkOffset.x,
           y: rect.position.y,
@@ -1098,13 +1109,16 @@ export class MapRenderer {
 
     if (mirrored) {
       ctx.save();
-      ctx.translate(GAME_WIDTH, 0);
+      ctx.translate(this.client.viewportController.getGameWidth(), 0);
       ctx.scale(-1, 1);
     }
 
     const drawX = Math.floor(
       mirrored
-        ? GAME_WIDTH - screenX - frame.w - frame.mirroredXOffset
+        ? this.client.viewportController.getGameWidth() -
+            screenX -
+            frame.w -
+            frame.mirroredXOffset
         : screenX + frame.xOffset,
     );
 
@@ -1201,7 +1215,11 @@ export class MapRenderer {
       this.topLayer.push(() => {
         const rect = getCharacterRectangle(character.playerId);
         const characterTopCenter = {
-          x: screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + walkOffset.x,
+          x:
+            screenCoords.x -
+            playerScreen.x +
+            this.client.viewportController.getHalfGameWidth() +
+            walkOffset.x,
           y: rect!.position.y,
         };
 
@@ -1322,12 +1340,15 @@ export class MapRenderer {
 
     const screenCoords = isoToScreen(coords);
     const screenX = Math.floor(
-      screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + additionalOffset.x,
+      screenCoords.x -
+        playerScreen.x +
+        this.client.viewportController.getHalfGameWidth() +
+        additionalOffset.x,
     );
     const screenY = Math.floor(
       screenCoords.y -
         playerScreen.y +
-        HALF_GAME_HEIGHT +
+        this.client.viewportController.getHalfGameHeight() +
         frame.yOffset +
         additionalOffset.y,
     );
@@ -1354,7 +1375,7 @@ export class MapRenderer {
           x:
             screenCoords.x -
             playerScreen.x +
-            HALF_GAME_WIDTH -
+            this.client.viewportController.getHalfGameWidth() -
             HALF_TILE_WIDTH +
             walkOffset.x,
           y: rect.position.y,
@@ -1369,13 +1390,16 @@ export class MapRenderer {
 
     if (mirrored) {
       ctx.save(); // Save the current context state
-      ctx.translate(GAME_WIDTH, 0); // Move origin to the right edge
+      ctx.translate(this.client.viewportController.getGameWidth(), 0); // Move origin to the right edge
       ctx.scale(-1, 1); // Flip horizontally
     }
 
     const drawX = Math.floor(
       mirrored
-        ? GAME_WIDTH - screenX - frame.w - frame.mirroredXOffset
+        ? this.client.viewportController.getGameWidth() -
+            screenX -
+            frame.w -
+            frame.mirroredXOffset
         : screenX + frame.xOffset,
     );
 
@@ -1432,12 +1456,15 @@ export class MapRenderer {
 
       const npcTopCenter = {
         x: Math.floor(
-          screenCoords.x - playerScreen.x + HALF_GAME_WIDTH + walkOffset.x,
+          screenCoords.x -
+            playerScreen.x +
+            this.client.viewportController.getHalfGameWidth() +
+            walkOffset.x,
         ),
         y: Math.floor(
           screenCoords.y -
             playerScreen.y +
-            HALF_GAME_HEIGHT -
+            this.client.viewportController.getHalfGameHeight() -
             meta.nameLabelOffset +
             walkOffset.y +
             16,
@@ -1490,10 +1517,16 @@ export class MapRenderer {
     const tileScreen = isoToScreen(item.coords);
 
     const screenX = Math.floor(
-      tileScreen.x - playerScreen.x + HALF_GAME_WIDTH + frame.xOffset,
+      tileScreen.x -
+        playerScreen.x +
+        this.client.viewportController.getHalfGameWidth() +
+        frame.xOffset,
     );
     const screenY = Math.floor(
-      tileScreen.y - playerScreen.y + HALF_GAME_HEIGHT + frame.yOffset,
+      tileScreen.y -
+        playerScreen.y +
+        this.client.viewportController.getHalfGameHeight() +
+        frame.yOffset,
     );
 
     ctx.drawImage(
@@ -1586,10 +1619,16 @@ export class MapRenderer {
     const sourceX = entity.typeId * TILE_WIDTH;
 
     const screenX = Math.floor(
-      tileScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+      tileScreen.x -
+        HALF_TILE_WIDTH -
+        playerScreen.x +
+        this.client.viewportController.getHalfGameWidth(),
     );
     const screenY = Math.floor(
-      tileScreen.y - HALF_TILE_HEIGHT - playerScreen.y + HALF_GAME_HEIGHT,
+      tileScreen.y -
+        HALF_TILE_HEIGHT -
+        playerScreen.y +
+        this.client.viewportController.getHalfGameHeight(),
     );
 
     ctx.drawImage(
@@ -1609,13 +1648,16 @@ export class MapRenderer {
       animation.renderedFirstFrame = true;
       const animationScreen = isoToScreen(animation.at);
       const animationX = Math.floor(
-        animationScreen.x - HALF_TILE_WIDTH - playerScreen.x + HALF_GAME_WIDTH,
+        animationScreen.x -
+          HALF_TILE_WIDTH -
+          playerScreen.x +
+          this.client.viewportController.getHalfGameWidth(),
       );
       const animationY = Math.floor(
         animationScreen.y -
           HALF_TILE_HEIGHT -
           playerScreen.y +
-          HALF_GAME_HEIGHT,
+          this.client.viewportController.getHalfGameHeight(),
       );
       const sourceX = Math.floor((3 + animation.animationFrame) * TILE_WIDTH);
       ctx.drawImage(

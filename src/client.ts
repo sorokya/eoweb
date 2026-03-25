@@ -63,10 +63,10 @@ import {
   StatSkillController,
   UsageController,
 } from './controllers';
+import { ViewportController } from './controllers/viewport-controller';
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
 import { type DialogResourceID, type Edf, EOResourceID } from './edf';
 import { Sans11Font } from './fonts/sans-11';
-import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { registerAllHandlers } from './handlers';
 import { MapRenderer } from './map';
 import { MinimapRenderer } from './minimap';
@@ -94,6 +94,12 @@ import type { Vector2 } from './vector';
 
 export class Client {
   private emitter: Emitter<ClientEvents>;
+  container!: HTMLDivElement;
+  canvas!: HTMLCanvasElement;
+  ctx!: CanvasRenderingContext2D;
+  width = 800;
+  height = 600;
+  zoom = 1;
   tickCount = 0;
   bus!: PacketBus;
   config = getDefaultConfig();
@@ -142,6 +148,7 @@ export class Client {
   downloadQueue: { type: FileType; id: number }[] = [];
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
+  viewportController: ViewportController;
   animationController: AnimationController;
   movementController: MovementController;
   keyboardController: KeyboardController;
@@ -204,6 +211,10 @@ export class Client {
   onlinePlayers: OnlinePlayer[] = [];
 
   constructor() {
+    this.container = document.querySelector('#game-container')!;
+    this.canvas = document.querySelector('#game')!;
+    this.ctx = this.canvas.getContext('2d', { alpha: false })!;
+    this.ctx.imageSmoothingEnabled = false;
     this.emitter = mitt<ClientEvents>();
     this.version = new Version();
     this.version.major = 0;
@@ -240,6 +251,7 @@ export class Client {
     this.nearby.items = [];
     this.mapRenderer = new MapRenderer(this);
     this.minimapRenderer = new MinimapRenderer(this);
+    this.viewportController = new ViewportController(this);
     this.animationController = new AnimationController(this);
     this.movementController = new MovementController(this);
     this.keyboardController = new KeyboardController(this);
@@ -455,9 +467,13 @@ export class Client {
     const player = this.getPlayerCoords();
     const playerScreen = isoToScreen(player);
 
-    const mouseWorldX = position.x - HALF_GAME_WIDTH + playerScreen.x;
+    const mouseWorldX =
+      position.x - this.viewportController.getHalfGameWidth() + playerScreen.x;
     const mouseWorldY =
-      position.y - HALF_GAME_HEIGHT + playerScreen.y + HALF_TILE_HEIGHT;
+      position.y -
+      this.viewportController.getHalfGameHeight() +
+      playerScreen.y +
+      HALF_TILE_HEIGHT;
 
     this.mouseCoords = screenToIso({ x: mouseWorldX, y: mouseWorldY });
 
@@ -501,9 +517,9 @@ export class Client {
     }
   }
 
-  render(ctx: CanvasRenderingContext2D, interpolation: number) {
-    this.mapRenderer.render(ctx, interpolation);
-    this.minimapRenderer.render(ctx, interpolation);
+  render(interpolation: number) {
+    this.mapRenderer.render(this.ctx, interpolation);
+    this.minimapRenderer.render(this.ctx, interpolation);
   }
 
   setMap(map: Emf) {

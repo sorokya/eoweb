@@ -1,0 +1,108 @@
+import type { Client } from '../client';
+
+export class ViewportController {
+  private width = 800;
+  private height = 600;
+  private halfWidth = 400;
+  private halfHeight = 300;
+  private zoom = 1;
+  private userOverride = false;
+  private mobile = false;
+
+  constructor(private client: Client) {
+    let resizeRaf = 0;
+    window.addEventListener('resize', () => {
+      cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(() => this.resizeCanvases());
+    });
+
+    this.resizeCanvases();
+  }
+
+  setGameSize(w: number, h: number) {
+    this.width = w;
+    this.height = h;
+    this.halfWidth = w >> 1;
+    this.halfHeight = h >> 1;
+  }
+
+  getGameWidth() {
+    return this.width;
+  }
+
+  getGameHeight() {
+    return this.height;
+  }
+
+  getHalfGameWidth() {
+    return this.halfWidth;
+  }
+
+  getHalfGameHeight() {
+    return this.halfHeight;
+  }
+
+  isMobile() {
+    return this.mobile;
+  }
+
+  setZoom(z: number) {
+    this.zoom = z;
+  }
+
+  zoomIn() {
+    this.userOverride = true;
+    this.setZoom(Math.min(4, this.zoom + 1));
+    this.resizeCanvases();
+  }
+
+  zoomOut() {
+    this.userOverride = true;
+    this.setZoom(Math.max(1, this.zoom - 1));
+    this.resizeCanvases();
+  }
+
+  resizeCanvases() {
+    const container = document.getElementById('container');
+    if (!container) return;
+    const viewportWidth =
+      window.visualViewport?.width ?? container.getBoundingClientRect().width;
+    const viewportHeight =
+      window.visualViewport?.height ?? container.getBoundingClientRect().height;
+    if (!this.userOverride) this.setZoom(viewportWidth >= 1280 ? 2 : 1);
+    const w = Math.floor(viewportWidth / this.zoom);
+    const h = Math.floor(viewportHeight / this.zoom);
+    const snapshot =
+      this.client.canvas.width > 0
+        ? this.client.ctx.getImageData!(
+            0,
+            0,
+            this.client.canvas.width,
+            this.client.canvas.height,
+          )
+        : null;
+    const prevW = this.client.canvas.width;
+    const prevH = this.client.canvas.height;
+    this.client.canvas.width = w;
+    this.client.canvas.height = h;
+    this.client.canvas.style.width = `${w * this.zoom}px`;
+    this.client.canvas.style.height = `${h * this.zoom}px`;
+    this.client.ctx.imageSmoothingEnabled! = false;
+    if (snapshot && prevW > 0) {
+      const temp = document.createElement('canvas');
+      temp.width = prevW;
+      temp.height = prevH;
+      const tempCtx = temp.getContext('2d');
+      if (tempCtx) {
+        tempCtx.putImageData(snapshot, 0, 0);
+        this.client.ctx.drawImage!(temp, 0, 0, w, h);
+      }
+    } else {
+      this.client.ctx.fillStyle! = '#000';
+      this.client.ctx.fillRect!(0, 0, w, h);
+    }
+    this.setGameSize(w, h);
+    this.mobile = viewportWidth < 940;
+    this.client.emit('resize', undefined);
+  }
+}

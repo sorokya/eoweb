@@ -25,6 +25,55 @@ export class MouseController {
 
   constructor(client: Client) {
     this.client = client;
+
+    window.addEventListener(
+      'touchmove',
+      (e) => {
+        const rect = this.client.canvas.getBoundingClientRect();
+        const scaleX = this.client.canvas.width / rect.width;
+        const scaleY = this.client.canvas.height / rect.height;
+        this.client.setMousePosition({
+          x: Math.min(
+            Math.max(
+              Math.floor((e.touches[0].clientX - rect.left) * scaleX),
+              0,
+            ),
+            this.client.canvas.width,
+          ),
+          y: Math.min(
+            Math.max(Math.floor((e.touches[0].clientY - rect.top) * scaleY), 0),
+            this.client.canvas.height,
+          ),
+        });
+        e.preventDefault();
+      },
+      { passive: false },
+    );
+
+    window.addEventListener('mousemove', (e) => {
+      const rect = this.client.canvas.getBoundingClientRect();
+      const scaleX = this.client.canvas.width / rect.width;
+      const scaleY = this.client.canvas.height / rect.height;
+      this.client.setMousePosition({
+        x: Math.min(
+          Math.max(Math.floor((e.clientX - rect.left) * scaleX), 0),
+          this.client.canvas.width,
+        ),
+        y: Math.min(
+          Math.max(Math.floor((e.clientY - rect.top) * scaleY), 0),
+          this.client.canvas.height,
+        ),
+      });
+    });
+
+    window.addEventListener('click', (e) => {
+      this.handleClick(e);
+    });
+
+    window.addEventListener('contextmenu', (e) => {
+      this.handleRightClick(e);
+      e.preventDefault();
+    });
   }
 
   handleClick(e: MouseEvent): void {

@@ -1,7 +1,7 @@
 import type { Client } from '../client';
 import { DialogResourceID, EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon, ChatTab } from '../types';
+import { ChatIcon, ChatTab, GameState } from '../types';
 
 export interface ClientEventDeps {
   client: Client;
@@ -65,9 +65,8 @@ export interface ClientEventDeps {
     refresh(): void;
   };
   partyDialog: { refresh(): void };
+  mobileControls: { show(): void; hide(): void };
   initializeSocket: (next?: 'login' | 'create' | '') => void;
-  resizeCanvases: () => void;
-  isMobile: () => boolean;
 }
 
 let reconnectAttempts = 0;
@@ -172,9 +171,9 @@ export function wireClientEvents(deps: ClientEventDeps): void {
     deps.hud.show();
     deps.hotbar.show();
     deps.inGameMenu.show();
-    deps.resizeCanvases();
+    deps.client.viewportController.resizeCanvases();
     deps.inventory.loadPositions();
-    if (!deps.isMobile()) {
+    if (!client.viewportController.isMobile()) {
       deps.inventory.show();
     }
   });
@@ -265,5 +264,16 @@ export function wireClientEvents(deps: ClientEventDeps): void {
 
   client.on('partyUpdated', () => {
     deps.partyDialog.refresh();
+  });
+
+  client.on('resize', () => {
+    if (
+      client.state === GameState.InGame &&
+      client.viewportController.isMobile()
+    ) {
+      deps.mobileControls.show();
+    } else {
+      deps.mobileControls.hide();
+    }
   });
 }

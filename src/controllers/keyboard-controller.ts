@@ -8,14 +8,6 @@ import {
   WALK_TICKS as WALK_ANIMATION_TICKS,
 } from '../consts';
 import { EOResourceID } from '../edf';
-import {
-  clearUnheldInput,
-  getLastHeldDirection,
-  Input,
-  isInputHeld,
-  isOrWasInputHeld,
-  wasInputHeldLastTick,
-} from '../input';
 import { CharacterAttackAnimation } from '../render/character-attack';
 import { CharacterRangedAttackAnimation } from '../render/character-attack-ranged';
 import { CharacterWalkAnimation } from '../render/character-walk';
@@ -24,6 +16,34 @@ import { GameState } from '../types';
 import { bigCoordsToCoords } from '../utils/big-coords-to-coords';
 import { getNextCoords } from '../utils/get-next-coords';
 import { getTimestamp } from './movement-controller';
+
+enum Input {
+  Up = 0,
+  Down = 1,
+  Left = 2,
+  Right = 3,
+  SitStand = 4,
+  Attack = 5,
+  EmoteHappy = 6,
+  EmoteDepressed = 7,
+  EmoteSad = 8,
+  EmoteAngry = 9,
+  EmoteConfused = 10,
+  EmoteSurprised = 11,
+  EmoteHearts = 12,
+  EmoteMoon = 13,
+  EmoteSuicidal = 14,
+  EmoteEmbarassed = 15,
+  EmotePlayful = 16,
+  Hotbar1 = 17,
+  Hotbar2 = 18,
+  Hotbar3 = 19,
+  Hotbar4 = 20,
+  Hotbar5 = 21,
+  Tab = 22,
+  Refresh = 23,
+  Unknown = -1,
+}
 
 function inputToDirection(input: Input): Direction | null {
   switch (input) {
@@ -41,6 +61,7 @@ function inputToDirection(input: Input): Direction | null {
 }
 
 const WALK_TICKS = WALK_ANIMATION_TICKS - 1;
+const DRAG_THRESHOLD = 30;
 
 export class KeyboardController {
   private client: Client;
@@ -53,8 +74,345 @@ export class KeyboardController {
   private refreshTicks = WALK_TICKS;
   private frozen = false;
 
+  private held: boolean[] = [];
+  private lastInputHeld: Input[] = [];
+
+  private touchStartX: number | null = null;
+  private touchStartY: number | null = null;
+  private touchId: number | null = null;
+  private activeTouchDir: Input | null = null;
+  private inputVector = { x: 0, y: 0 };
+
   constructor(client: Client) {
     this.client = client;
+    this.setupListeners();
+  }
+
+  private setupListeners() {
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && ['=', '+', '-', '_'].includes(e.key)) {
+        e.preventDefault();
+        if (e.key === '=' || e.key === '+')
+          this.client.viewportController.zoomIn();
+        else this.client.viewportController.zoomOut();
+      }
+      switch (e.code) {
+        case 'KeyW':
+        case 'ArrowUp':
+          this.updateInputHeld(Input.Up, true);
+          break;
+        case 'KeyA':
+        case 'ArrowLeft':
+          this.updateInputHeld(Input.Left, true);
+          break;
+        case 'KeyS':
+        case 'ArrowDown':
+          this.updateInputHeld(Input.Down, true);
+          break;
+        case 'KeyD':
+        case 'ArrowRight':
+          this.updateInputHeld(Input.Right, true);
+          break;
+        case 'KeyX':
+          this.updateInputHeld(Input.SitStand, true);
+          break;
+        case 'Space':
+        case 'ControlLeft':
+        case 'ControlRight':
+          this.updateInputHeld(Input.Attack, true);
+          break;
+        case 'NumpadDecimal':
+          this.updateInputHeld(Input.EmoteEmbarassed, true);
+          break;
+        case 'Numpad0':
+          this.updateInputHeld(Input.EmotePlayful, true);
+          break;
+        case 'Numpad1':
+          this.updateInputHeld(Input.EmoteHappy, true);
+          break;
+        case 'Numpad2':
+          this.updateInputHeld(Input.EmoteDepressed, true);
+          break;
+        case 'Numpad3':
+          this.updateInputHeld(Input.EmoteSad, true);
+          break;
+        case 'Numpad4':
+          this.updateInputHeld(Input.EmoteAngry, true);
+          break;
+        case 'Numpad5':
+          this.updateInputHeld(Input.EmoteConfused, true);
+          break;
+        case 'Numpad6':
+          this.updateInputHeld(Input.EmoteSurprised, true);
+          break;
+        case 'Numpad7':
+          this.updateInputHeld(Input.EmoteHearts, true);
+          break;
+        case 'Numpad8':
+          this.updateInputHeld(Input.EmoteMoon, true);
+          break;
+        case 'Numpad9':
+          this.updateInputHeld(Input.EmoteSuicidal, true);
+          break;
+        case 'Digit1':
+          this.updateInputHeld(Input.Hotbar1, true);
+          break;
+        case 'Digit2':
+          this.updateInputHeld(Input.Hotbar2, true);
+          break;
+        case 'Digit3':
+          this.updateInputHeld(Input.Hotbar3, true);
+          break;
+        case 'Digit4':
+          this.updateInputHeld(Input.Hotbar4, true);
+          break;
+        case 'Digit5':
+          this.updateInputHeld(Input.Hotbar5, true);
+          break;
+        case 'Tab':
+          this.updateInputHeld(Input.Tab, true);
+          e.preventDefault();
+          break;
+        case 'KeyR':
+          this.updateInputHeld(Input.Refresh, true);
+          break;
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      switch (e.code) {
+        case 'KeyW':
+        case 'ArrowUp':
+          this.updateInputHeld(Input.Up, false);
+          break;
+        case 'KeyA':
+        case 'ArrowLeft':
+          this.updateInputHeld(Input.Left, false);
+          break;
+        case 'KeyS':
+        case 'ArrowDown':
+          this.updateInputHeld(Input.Down, false);
+          break;
+        case 'KeyD':
+        case 'ArrowRight':
+          this.updateInputHeld(Input.Right, false);
+          break;
+        case 'KeyX':
+          this.updateInputHeld(Input.SitStand, false);
+          break;
+        case 'Space':
+        case 'ControlLeft':
+        case 'ControlRight':
+          this.updateInputHeld(Input.Attack, false);
+          break;
+        case 'NumpadDecimal':
+          this.updateInputHeld(Input.EmoteEmbarassed, false);
+          break;
+        case 'Numpad0':
+          this.updateInputHeld(Input.EmotePlayful, false);
+          break;
+        case 'Numpad1':
+          this.updateInputHeld(Input.EmoteHappy, false);
+          break;
+        case 'Numpad2':
+          this.updateInputHeld(Input.EmoteDepressed, false);
+          break;
+        case 'Numpad3':
+          this.updateInputHeld(Input.EmoteSad, false);
+          break;
+        case 'Numpad4':
+          this.updateInputHeld(Input.EmoteAngry, false);
+          break;
+        case 'Numpad5':
+          this.updateInputHeld(Input.EmoteConfused, false);
+          break;
+        case 'Numpad6':
+          this.updateInputHeld(Input.EmoteSurprised, false);
+          break;
+        case 'Numpad7':
+          this.updateInputHeld(Input.EmoteHearts, false);
+          break;
+        case 'Numpad8':
+          this.updateInputHeld(Input.EmoteMoon, false);
+          break;
+        case 'Numpad9':
+          this.updateInputHeld(Input.EmoteSuicidal, false);
+          break;
+        case 'Digit1':
+          this.updateInputHeld(Input.Hotbar1, false);
+          break;
+        case 'Digit2':
+          this.updateInputHeld(Input.Hotbar2, false);
+          break;
+        case 'Digit3':
+          this.updateInputHeld(Input.Hotbar3, false);
+          break;
+        case 'Digit4':
+          this.updateInputHeld(Input.Hotbar4, false);
+          break;
+        case 'Digit5':
+          this.updateInputHeld(Input.Hotbar5, false);
+          break;
+        case 'Tab':
+          this.updateInputHeld(Input.Tab, false);
+          break;
+        case 'KeyR':
+          this.updateInputHeld(Input.Refresh, false);
+          break;
+      }
+    });
+
+    window.addEventListener(
+      'wheel',
+      (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          if (e.deltaY < 0) this.client.viewportController.zoomIn();
+          else if (e.deltaY > 0) this.client.viewportController.zoomOut();
+        }
+      },
+      { passive: false },
+    );
+
+    const joystickContainer = document.getElementById('joystick-container');
+    const thumb = document.getElementById('joystick-thumb');
+    const maxRadius = 40;
+
+    joystickContainer!.addEventListener('touchstart', (e) => {
+      const t = e.changedTouches[0];
+      this.touchStartX = t.clientX;
+      this.touchStartY = t.clientY;
+      this.touchId = t.identifier;
+      this.activeTouchDir = null;
+      this.handleTouchMove(e, joystickContainer!, thumb!, maxRadius);
+    });
+
+    joystickContainer!.addEventListener('touchmove', (e) => {
+      this.handleTouchMove(e, joystickContainer!, thumb!, maxRadius);
+      e.preventDefault();
+    });
+
+    joystickContainer!.addEventListener('touchend', () => {
+      this.inputVector = { x: 0, y: 0 };
+      thumb!.style.transform = 'translate(0px, 0px)';
+      if (this.activeTouchDir !== null) {
+        this.updateInputHeld(this.activeTouchDir, false);
+      }
+      this.touchStartX = this.touchStartY = null;
+      this.touchId = null;
+      this.activeTouchDir = null;
+    });
+
+    const btnAttack = document.getElementById('btn-attack');
+    btnAttack!.addEventListener('touchstart', () => {
+      this.updateInputHeld(Input.Attack, true);
+    });
+    btnAttack!.addEventListener('touchend', () => {
+      this.updateInputHeld(Input.Attack, false);
+    });
+
+    const btnSit = document.getElementById('btn-toggle-sit');
+    btnSit!.addEventListener('touchstart', () => {
+      this.updateInputHeld(Input.SitStand, true);
+    });
+    btnSit!.addEventListener('touchend', () => {
+      this.updateInputHeld(Input.SitStand, false);
+    });
+  }
+
+  private handleTouchMove(
+    e: TouchEvent,
+    joystickContainer: HTMLElement,
+    thumb: HTMLElement,
+    maxRadius: number,
+  ) {
+    const rect = joystickContainer.getBoundingClientRect();
+    const touch = e.touches[0];
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    let dx = touch.clientX - centerX;
+    let dy = touch.clientY - centerY;
+
+    const distance = Math.min(Math.sqrt(dx * dx + dy * dy), maxRadius);
+
+    const angle = Math.atan2(dy, dx);
+    const clampedX = Math.cos(angle) * distance;
+    const clampedY = Math.sin(angle) * distance;
+
+    this.inputVector.x = clampedX / maxRadius;
+    this.inputVector.y = clampedY / maxRadius;
+
+    thumb.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+
+    if (this.touchId === null) return;
+
+    const t = Array.from(e.changedTouches).find(
+      (c) => c.identifier === this.touchId,
+    );
+    if (!t || this.touchStartX === null || this.touchStartY === null) return;
+
+    dx = t.clientX - this.touchStartX;
+    dy = t.clientY - this.touchStartY;
+    const dist2 = dx * dx + dy * dy;
+
+    if (dist2 < DRAG_THRESHOLD * DRAG_THRESHOLD) {
+      if (this.activeTouchDir !== null) {
+        this.updateInputHeld(this.activeTouchDir, false);
+        this.activeTouchDir = null;
+      }
+      return;
+    }
+
+    const dir = this.swipedDir(dx, dy);
+    if (dir !== this.activeTouchDir) {
+      if (this.activeTouchDir !== null)
+        this.updateInputHeld(this.activeTouchDir, false);
+      this.updateInputHeld(dir, true);
+      this.activeTouchDir = dir;
+    }
+  }
+
+  private swipedDir(dx: number, dy: number): Input {
+    if (Math.abs(dx) > Math.abs(dy)) {
+      return dx < 0 ? Input.Left : Input.Right;
+    }
+    return dy < 0 ? Input.Up : Input.Down;
+  }
+
+  private updateInputHeld(input: Input, down: boolean) {
+    this.held[input] = down;
+    const index = this.lastInputHeld.indexOf(input);
+    if (down) {
+      if (index === -1) this.lastInputHeld.push(input);
+    }
+  }
+
+  private isInputHeld(input: Input): boolean {
+    return this.held[input] || false;
+  }
+
+  private isOrWasInputHeld(input: Input): boolean {
+    return this.held[input] || this.wasInputHeldLastTick(input);
+  }
+
+  private getLastHeldDirection(): Input | null {
+    const directions = this.lastInputHeld.filter((i) =>
+      [Input.Up, Input.Down, Input.Left, Input.Right].includes(i),
+    );
+    return directions[directions.length - 1] ?? null;
+  }
+
+  private wasInputHeldLastTick(input: Input): boolean {
+    return this.lastInputHeld.indexOf(input) > -1;
+  }
+
+  private clearUnheldInput() {
+    for (let i = this.lastInputHeld.length - 1; i >= 0; --i) {
+      if (!this.held[this.lastInputHeld[i]]) {
+        this.lastInputHeld.splice(i, 1);
+      }
+    }
   }
 
   freeze() {
@@ -79,7 +437,7 @@ export class KeyboardController {
       this.client.state !== GameState.InGame ||
       this.client.typing
     ) {
-      clearUnheldInput();
+      this.clearUnheldInput();
       return;
     }
 
@@ -88,30 +446,30 @@ export class KeyboardController {
       return;
     }
 
-    if (isOrWasInputHeld(Input.Hotbar1) && this.hotbarTicks === 0) {
+    if (this.isOrWasInputHeld(Input.Hotbar1) && this.hotbarTicks === 0) {
       this.client.spellController.useHotbarSlot(0);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
-    } else if (isOrWasInputHeld(Input.Hotbar2) && this.hotbarTicks === 0) {
+    } else if (this.isOrWasInputHeld(Input.Hotbar2) && this.hotbarTicks === 0) {
       this.client.spellController.useHotbarSlot(1);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
-    } else if (isOrWasInputHeld(Input.Hotbar3) && this.hotbarTicks === 0) {
+    } else if (this.isOrWasInputHeld(Input.Hotbar3) && this.hotbarTicks === 0) {
       this.client.spellController.useHotbarSlot(2);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
-    } else if (isOrWasInputHeld(Input.Hotbar4) && this.hotbarTicks === 0) {
+    } else if (this.isOrWasInputHeld(Input.Hotbar4) && this.hotbarTicks === 0) {
       this.client.spellController.useHotbarSlot(3);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
-    } else if (isOrWasInputHeld(Input.Hotbar5) && this.hotbarTicks === 0) {
+    } else if (this.isOrWasInputHeld(Input.Hotbar5) && this.hotbarTicks === 0) {
       this.client.spellController.useHotbarSlot(4);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     }
 
-    if (isOrWasInputHeld(Input.Tab) && this.minimapTicks === 0) {
+    if (this.isOrWasInputHeld(Input.Tab) && this.minimapTicks === 0) {
       playSfxById(SfxId.ButtonClick);
       this.client.toggleMinimap();
       this.minimapTicks = WALK_TICKS;
     }
 
-    if (isOrWasInputHeld(Input.Refresh) && this.refreshTicks === 0) {
+    if (this.isOrWasInputHeld(Input.Refresh) && this.refreshTicks === 0) {
       this.client.refresh();
       this.refreshTicks = WALK_TICKS;
     }
@@ -119,10 +477,10 @@ export class KeyboardController {
     const animation = this.client.animationController.characterAnimations.get(
       character.playerId,
     );
-    const lastHeldDirection = getLastHeldDirection();
-    const attackHeld = wasInputHeldLastTick(Input.Attack);
-    const sitStandHeld = wasInputHeldLastTick(Input.SitStand);
-    clearUnheldInput();
+    const lastHeldDirection = this.getLastHeldDirection();
+    const attackHeld = this.wasInputHeldLastTick(Input.Attack);
+    const sitStandHeld = this.wasInputHeldLastTick(Input.SitStand);
+    this.clearUnheldInput();
 
     if (
       lastHeldDirection !== null &&
@@ -207,7 +565,7 @@ export class KeyboardController {
         !this.faceTicks &&
         character.direction !== lastDirectionHeld &&
         !animation &&
-        !isInputHeld(Input.Attack)
+        !this.isInputHeld(Input.Attack)
       ) {
         character.direction = lastDirectionHeld;
         this.client.movementController.face(lastDirectionHeld);
@@ -308,57 +666,57 @@ export class KeyboardController {
       return;
     }
 
-    if (isInputHeld(Input.EmotePlayful)) {
+    if (this.isInputHeld(Input.EmotePlayful)) {
       this.client.socialController.emote(Emote.Playful);
       return;
     }
 
-    if (isInputHeld(Input.EmoteEmbarassed)) {
+    if (this.isInputHeld(Input.EmoteEmbarassed)) {
       this.client.socialController.emote(Emote.Embarrassed);
       return;
     }
 
-    if (isInputHeld(Input.EmoteHappy)) {
+    if (this.isInputHeld(Input.EmoteHappy)) {
       this.client.socialController.emote(Emote.Happy);
       return;
     }
 
-    if (isInputHeld(Input.EmoteDepressed)) {
+    if (this.isInputHeld(Input.EmoteDepressed)) {
       this.client.socialController.emote(Emote.Depressed);
       return;
     }
 
-    if (isInputHeld(Input.EmoteSad)) {
+    if (this.isInputHeld(Input.EmoteSad)) {
       this.client.socialController.emote(Emote.Sad);
       return;
     }
 
-    if (isInputHeld(Input.EmoteAngry)) {
+    if (this.isInputHeld(Input.EmoteAngry)) {
       this.client.socialController.emote(Emote.Angry);
       return;
     }
 
-    if (isInputHeld(Input.EmoteConfused)) {
+    if (this.isInputHeld(Input.EmoteConfused)) {
       this.client.socialController.emote(Emote.Confused);
       return;
     }
 
-    if (isInputHeld(Input.EmoteSurprised)) {
+    if (this.isInputHeld(Input.EmoteSurprised)) {
       this.client.socialController.emote(Emote.Surprised);
       return;
     }
 
-    if (isInputHeld(Input.EmoteHearts)) {
+    if (this.isInputHeld(Input.EmoteHearts)) {
       this.client.socialController.emote(Emote.Hearts);
       return;
     }
 
-    if (isInputHeld(Input.EmoteMoon)) {
+    if (this.isInputHeld(Input.EmoteMoon)) {
       this.client.socialController.emote(Emote.Moon);
       return;
     }
 
-    if (isInputHeld(Input.EmoteSuicidal)) {
+    if (this.isInputHeld(Input.EmoteSuicidal)) {
       this.client.socialController.emote(Emote.Suicidal);
       return;
     }

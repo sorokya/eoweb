@@ -19,13 +19,6 @@ import { PacketBus } from './bus';
 import { Client } from './client';
 import { GAME_FPS, MAX_CHALLENGE } from './consts';
 import { DialogResourceID } from './edf';
-import {
-  GAME_HEIGHT,
-  GAME_WIDTH,
-  setGameSize,
-  setZoom,
-  ZOOM,
-} from './game-state';
 import { GameState } from './types';
 import { BankDialog } from './ui/bank-dialog/bank-dialog';
 import { BoardDialog } from './ui/board-dialog';
@@ -68,94 +61,10 @@ import {
 } from './wiring/client-events';
 import { wireUiEvents } from './wiring/ui-events';
 
-// ── Canvas Setup ──────────────────────────────────────────────────────────
-
-const canvas = document.getElementById('game') as HTMLCanvasElement;
-if (!canvas) throw new Error('Canvas not found!');
-
-const ctx = canvas.getContext('2d', { alpha: false });
-if (!ctx) {
-  throw new Error('Failed to get canvas context!');
-}
-ctx.imageSmoothingEnabled = false;
-
 // ── Client & Mobile ──────────────────────────────────────────────────────
 
 const client = new Client();
 const mobileControls = new MobileControls();
-
-let userOverride = false;
-let _isMobile = false;
-
-export function isMobile(): boolean {
-  return _isMobile;
-}
-
-export function zoomIn() {
-  userOverride = true;
-  setZoom(Math.min(4, ZOOM + 1));
-  resizeCanvases();
-}
-
-export function zoomOut() {
-  userOverride = true;
-  setZoom(Math.max(1, ZOOM - 1));
-  resizeCanvases();
-}
-
-function resizeCanvases() {
-  const container = document.getElementById('container');
-  if (!container) return;
-  const viewportWidth =
-    window.visualViewport?.width ?? container.getBoundingClientRect().width;
-  const viewportHeight =
-    window.visualViewport?.height ?? container.getBoundingClientRect().height;
-  if (!userOverride) setZoom(viewportWidth >= 1280 ? 2 : 1);
-  const w = Math.floor(viewportWidth / ZOOM);
-  const h = Math.floor(viewportHeight / ZOOM);
-  const snapshot =
-    canvas.width > 0
-      ? ctx!.getImageData!(0, 0, canvas.width, canvas.height)
-      : null;
-  const prevW = canvas.width;
-  const prevH = canvas.height;
-  canvas.width = w;
-  canvas.height = h;
-  canvas.style.width = `${w * ZOOM}px`;
-  canvas.style.height = `${h * ZOOM}px`;
-  ctx!.imageSmoothingEnabled! = false;
-  if (snapshot && prevW > 0) {
-    const temp = document.createElement('canvas');
-    temp.width = prevW;
-    temp.height = prevH;
-    const tempCtx = temp.getContext('2d');
-    if (tempCtx) {
-      tempCtx.putImageData(snapshot, 0, 0);
-      ctx!.drawImage!(temp, 0, 0, w, h);
-    }
-  } else {
-    ctx!.fillStyle! = '#000';
-    ctx!.fillRect!(0, 0, w, h);
-  }
-  setGameSize(w, h);
-  _isMobile = viewportWidth < 940;
-  if (_isMobile) {
-    document.body.classList.add('is-mobile');
-    if (client.state === GameState.InGame) {
-      mobileControls.show();
-    }
-  } else {
-    document.body.classList.remove('is-mobile');
-    mobileControls.hide();
-  }
-}
-
-resizeCanvases();
-let resizeRaf = 0;
-window.addEventListener('resize', () => {
-  cancelAnimationFrame(resizeRaf);
-  resizeRaf = requestAnimationFrame(resizeCanvases);
-});
 
 // ── Render Loop ──────────────────────────────────────────────────────────
 
@@ -184,10 +93,7 @@ const render = (now: DOMHighResTimeStamp) => {
   lastTime = now;
 
   const interpolation = accumulator / TICK;
-
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  client.render(ctx, interpolation);
+  client.render(interpolation);
   requestAnimationFrame(render);
 };
 
@@ -346,9 +252,8 @@ wireClientEvents({
   lockerDialog,
   skillMasterDialog,
   partyDialog,
+  mobileControls,
   initializeSocket,
-  resizeCanvases,
-  isMobile,
 });
 
 wireUiEvents({
@@ -380,54 +285,6 @@ wireUiEvents({
   partyDialog,
   hideAllUi,
   initializeSocket,
-});
-
-// ── Input Listeners ──────────────────────────────────────────────────────
-
-window.addEventListener(
-  'touchmove',
-  (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    client.setMousePosition({
-      x: Math.min(
-        Math.max(Math.floor((e.touches[0].clientX - rect.left) * scaleX), 0),
-        canvas.width,
-      ),
-      y: Math.min(
-        Math.max(Math.floor((e.touches[0].clientY - rect.top) * scaleY), 0),
-        canvas.height,
-      ),
-    });
-    e.preventDefault();
-  },
-  { passive: false },
-);
-
-window.addEventListener('mousemove', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  client.setMousePosition({
-    x: Math.min(
-      Math.max(Math.floor((e.clientX - rect.left) * scaleX), 0),
-      canvas.width,
-    ),
-    y: Math.min(
-      Math.max(Math.floor((e.clientY - rect.top) * scaleY), 0),
-      canvas.height,
-    ),
-  });
-});
-
-window.addEventListener('click', (e) => {
-  client.mouseController.handleClick(e);
-});
-
-window.addEventListener('contextmenu', (e) => {
-  client.mouseController.handleRightClick(e);
-  e.preventDefault();
 });
 
 // ── DOM Init ─────────────────────────────────────────────────────────────

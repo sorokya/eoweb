@@ -168,4 +168,5 @@ export type ClientEvents = {
     spawnMaps: number[];
   };
   reconnected: undefined;
+  resize: undefined;
 };
