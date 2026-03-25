@@ -37,7 +37,7 @@ export class CombatController {
     }
 
     if (slot.type === SlotType.Item) {
-      this.client.inventory.useItem(slot.typeId);
+      this.client.inventoryController.useItem(slot.typeId);
     } else {
       if (!this.client.spells.find((s) => s.id === slot.typeId)) {
         return;

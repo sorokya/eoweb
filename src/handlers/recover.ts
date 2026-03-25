@@ -35,7 +35,7 @@ function handleRecoverAgree(client: Client, reader: EoReader) {
   const packet = RecoverAgreeServerPacket.deserialize(reader);
   const character = client.getCharacterById(packet.playerId);
   if (!character) {
-    client.auth.requestCharacterRange([packet.playerId]);
+    client.authController.requestCharacterRange([packet.playerId]);
     return;
   }
 

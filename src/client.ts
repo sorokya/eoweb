@@ -51,7 +51,6 @@ import {
   LockerController,
   MapController,
   MouseController,
-  MovementController as MovementCtrl,
   NpcController,
   ShopController,
   SocialController,
@@ -183,23 +182,22 @@ export class Client {
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
-  audio: AudioController;
-  auth: AuthController;
-  bank: BankController;
-  board: BoardController;
-  chatCtrl: ChatController;
-  chest: ChestController;
-  combat: CombatController;
-  command: CommandController;
-  inventory: InventoryController;
-  locker: LockerController;
-  map_: MapController;
-  mouse: MouseController;
-  movement: MovementCtrl;
-  npc: NpcController;
-  shop: ShopController;
-  social: SocialController;
-  tickCtrl: TickController;
+  audioController: AudioController;
+  authController: AuthController;
+  bankController: BankController;
+  boardController: BoardController;
+  chatController: ChatController;
+  chestController: ChestController;
+  combatController: CombatController;
+  commandController: CommandController;
+  inventoryController: InventoryController;
+  lockerController: LockerController;
+  mapController: MapController;
+  mouseController: MouseController;
+  npcController: NpcController;
+  shopController: ShopController;
+  socialController: SocialController;
+  tickController: TickController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, IWeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
@@ -310,23 +308,22 @@ export class Client {
     this.mapRenderer = new MapRenderer(this);
     this.minimapRenderer = new MinimapRenderer(this);
     this.movementController = new MovementController(this);
-    this.audio = new AudioController(this);
-    this.auth = new AuthController(this);
-    this.bank = new BankController(this);
-    this.board = new BoardController(this);
-    this.chatCtrl = new ChatController(this);
-    this.chest = new ChestController(this);
-    this.combat = new CombatController(this);
-    this.command = new CommandController(this);
-    this.inventory = new InventoryController(this);
-    this.locker = new LockerController(this);
-    this.map_ = new MapController(this);
-    this.mouse = new MouseController(this);
-    this.movement = new MovementCtrl(this);
-    this.npc = new NpcController(this);
-    this.shop = new ShopController(this);
-    this.social = new SocialController(this);
-    this.tickCtrl = new TickController(this);
+    this.audioController = new AudioController(this);
+    this.authController = new AuthController(this);
+    this.bankController = new BankController(this);
+    this.boardController = new BoardController(this);
+    this.chatController = new ChatController(this);
+    this.chestController = new ChestController(this);
+    this.combatController = new CombatController(this);
+    this.commandController = new CommandController(this);
+    this.inventoryController = new InventoryController(this);
+    this.lockerController = new LockerController(this);
+    this.mapController = new MapController(this);
+    this.mouseController = new MouseController(this);
+    this.npcController = new NpcController(this);
+    this.shopController = new ShopController(this);
+    this.socialController = new SocialController(this);
+    this.tickController = new TickController(this);
     loadConfig().then((config) => {
       this.config = config;
       const txtHost =
@@ -539,32 +536,32 @@ export class Client {
       );
       const activeNpcIds = new Set(this.nearby.npcs.map((n) => n.index));
 
-      this.tickCtrl.tickUsage();
-      this.tickCtrl.tickIdle();
-      this.tickCtrl.tickItemProtection();
-      this.tickCtrl.tickDrunk();
-      this.tickCtrl.tickOutOfRange();
-      this.tickCtrl.tickSpellQueue();
-      this.tickCtrl.tickQueuedNpcChats();
+      this.tickController.tickUsage();
+      this.tickController.tickIdle();
+      this.tickController.tickItemProtection();
+      this.tickController.tickDrunk();
+      this.tickController.tickOutOfRange();
+      this.tickController.tickSpellQueue();
+      this.tickController.tickQueuedNpcChats();
 
       const { playerWalking, playerDying } =
-        this.tickCtrl.tickCharacterAnimations(activeCharIds);
+        this.tickController.tickCharacterAnimations(activeCharIds);
 
-      this.tickCtrl.tickCharacterEmotes(activeCharIds);
-      this.tickCtrl.tickNpcAnimations(activeNpcIds);
-      this.tickCtrl.tickCursorClick();
-      this.tickCtrl.tickCharacterChatBubbles(activeCharIds);
-      this.tickCtrl.tickHealthBars(activeCharIds, activeNpcIds);
-      this.tickCtrl.tickNpcChatBubbles(activeNpcIds);
-      this.tickCtrl.tickEffects();
-      this.tickCtrl.tickDoors();
+      this.tickController.tickCharacterEmotes(activeCharIds);
+      this.tickController.tickNpcAnimations(activeNpcIds);
+      this.tickController.tickCursorClick();
+      this.tickController.tickCharacterChatBubbles(activeCharIds);
+      this.tickController.tickHealthBars(activeCharIds, activeNpcIds);
+      this.tickController.tickNpcChatBubbles(activeNpcIds);
+      this.tickController.tickEffects();
+      this.tickController.tickDoors();
 
       if (this.warpQueued && !playerWalking && !playerDying) {
-        this.auth.acceptWarp();
+        this.authController.acceptWarp();
       }
 
-      this.tickCtrl.tickAutoWalk();
-      this.tickCtrl.tickQuake();
+      this.tickController.tickAutoWalk();
+      this.tickController.tickQuake();
     }
   }
 
@@ -583,16 +580,16 @@ export class Client {
     if (this.map) {
       clearRectangles();
       this.mapRenderer.buildCaches();
-      this.map_.loadDoors();
+      this.mapController.loadDoors();
 
       if (this.map.type === MapType.Pk) {
         playSfxById(SfxId.EnterPkMap);
       }
 
-      this.audio.stopAmbientSound();
+      this.audioController.stopAmbientSound();
 
       if (this.map.ambientSoundId) {
-        this.audio.startAmbientSound();
+        this.audioController.startAmbientSound();
       }
 
       if (!this.map.mapAvailable) {

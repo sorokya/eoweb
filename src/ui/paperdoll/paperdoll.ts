@@ -119,105 +119,105 @@ export class Paperdoll extends Base {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Accessory);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Accessory);
     });
 
     this.imgArmlet1.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Armlet1);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Armlet1);
     });
 
     this.imgArmlet2.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Armlet2);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Armlet2);
     });
 
     this.imgArmor.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Armor);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Armor);
     });
 
     this.imgBelt.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Belt);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Belt);
     });
 
     this.imgBoots.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Boots);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Boots);
     });
 
     this.imgBracer1.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Bracer1);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Bracer1);
     });
 
     this.imgBracer2.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Bracer2);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Bracer2);
     });
 
     this.imgGloves.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Gloves);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Gloves);
     });
 
     this.imgHat.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Hat);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Hat);
     });
 
     this.imgNecklace.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Necklace);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Necklace);
     });
 
     this.imgRing1.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Ring1);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Ring1);
     });
 
     this.imgRing2.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Ring2);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Ring2);
     });
 
     this.imgShield.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Shield);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Shield);
     });
 
     this.imgWeapon.addEventListener('contextmenu', () => {
       if (this.details.playerId !== this.client.playerId) {
         return;
       }
-      this.client.inventory.unequipItem(EquipmentSlot.Weapon);
+      this.client.inventoryController.unequipItem(EquipmentSlot.Weapon);
     });
   }
 

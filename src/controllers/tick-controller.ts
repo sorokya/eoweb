@@ -35,7 +35,7 @@ export class TickController {
   tickIdle(): void {
     this.client.idleTicks = Math.max(this.client.idleTicks - 1, 0);
     if (!this.client.idleTicks) {
-      this.client.social.emote(EmoteType.Moon);
+      this.client.socialController.emote(EmoteType.Moon);
       this.client.idleTicks = IDLE_TICKS;
     }
   }
@@ -61,7 +61,7 @@ export class TickController {
 
     this.client.drunkEmoteTicks = Math.max(this.client.drunkEmoteTicks - 1, 0);
     if (!this.client.drunkEmoteTicks) {
-      this.client.social.emote(EmoteType.Drunk);
+      this.client.socialController.emote(EmoteType.Drunk);
       this.client.drunkEmoteTicks = 10 + randomRange(0, 8) * 5;
     }
 
@@ -103,7 +103,7 @@ export class TickController {
 
   tickSpellQueue(): void {
     if (this.client.queuedSpellId) {
-      this.client.combat.beginSpellChant();
+      this.client.combatController.beginSpellChant();
     }
 
     this.client.spellCooldownTicks = Math.max(
@@ -165,7 +165,7 @@ export class TickController {
           id === this.client.playerId &&
           animation instanceof CharacterSpellChantAnimation
         ) {
-          this.client.combat.castSpell(animation.spellId);
+          this.client.combatController.castSpell(animation.spellId);
         } else if (
           id === this.client.playerId &&
           this.client.spellCooldownTicks !== SPELL_COOLDOWN_TICKS
@@ -342,7 +342,7 @@ export class TickController {
     const character = this.client.getPlayerCharacter();
     const next = this.client.autoWalkPath.splice(0, 1)[0];
 
-    if (!this.client.map_.canWalk(next, true)) {
+    if (!this.client.mapController.canWalk(next, true)) {
       this.client.autoWalkPath = [];
       return;
     }
@@ -362,7 +362,7 @@ export class TickController {
     character!.coords.x = next.x;
     character!.coords.y = next.y;
     character!.direction = direction;
-    this.client.movement.walk(direction, next, getTimestamp());
+    this.client.movementController.walk(direction, next, getTimestamp());
   }
 
   tickQuake(): void {

@@ -421,11 +421,11 @@ window.addEventListener('mousemove', (e) => {
 });
 
 window.addEventListener('click', (e) => {
-  client.mouse.handleClick(e);
+  client.mouseController.handleClick(e);
 });
 
 window.addEventListener('contextmenu', (e) => {
-  client.mouse.handleRightClick(e);
+  client.mouseController.handleRightClick(e);
   e.preventDefault();
 });
 

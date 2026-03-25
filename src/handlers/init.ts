@@ -178,9 +178,9 @@ function handleInitFileEcf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.auth.requestFile(download!.type, download!.id);
+    client.authController.requestFile(download!.type, download!.id);
   } else {
-    client.auth.enterGame();
+    client.authController.enterGame();
   }
 }
 
@@ -194,9 +194,9 @@ function handleInitFileEif(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.auth.requestFile(download!.type, download!.id);
+    client.authController.requestFile(download!.type, download!.id);
   } else {
-    client.auth.enterGame();
+    client.authController.enterGame();
   }
 }
 
@@ -210,9 +210,9 @@ function handleInitFileEnf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.auth.requestFile(download!.type, download!.id);
+    client.authController.requestFile(download!.type, download!.id);
   } else {
-    client.auth.enterGame();
+    client.authController.enterGame();
   }
 }
 
@@ -226,9 +226,9 @@ function handleInitFileEsf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.auth.requestFile(download!.type, download!.id);
+    client.authController.requestFile(download!.type, download!.id);
   } else {
-    client.auth.enterGame();
+    client.authController.enterGame();
   }
 }
 
@@ -242,9 +242,9 @@ function handleInitFileEmf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.auth.requestFile(download!.type, download!.id);
+    client.authController.requestFile(download!.type, download!.id);
   } else {
-    client.auth.enterGame();
+    client.authController.enterGame();
   }
 }
 

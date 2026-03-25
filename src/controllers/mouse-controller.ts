@@ -34,10 +34,12 @@ export class MouseController {
         playSfxById(SfxId.ButtonClick);
         switch (hovered) {
           case PlayerMenuItem.Paperdoll:
-            this.client.social.requestPaperdoll(this.client.menuPlayerId);
+            this.client.socialController.requestPaperdoll(
+              this.client.menuPlayerId,
+            );
             break;
           case PlayerMenuItem.Book:
-            this.client.social.requestBook(this.client.menuPlayerId);
+            this.client.socialController.requestBook(this.client.menuPlayerId);
             break;
           case PlayerMenuItem.Whisper: {
             const character = this.client.getCharacterById(
@@ -49,13 +51,17 @@ export class MouseController {
             break;
           }
           case PlayerMenuItem.Join:
-            this.client.social.requestToJoinParty(this.client.menuPlayerId);
+            this.client.socialController.requestToJoinParty(
+              this.client.menuPlayerId,
+            );
             break;
           case PlayerMenuItem.Invite:
-            this.client.social.inviteToParty(this.client.menuPlayerId);
+            this.client.socialController.inviteToParty(
+              this.client.menuPlayerId,
+            );
             break;
           case PlayerMenuItem.Trade:
-            this.client.social.requestTrade(this.client.menuPlayerId);
+            this.client.socialController.requestTrade(this.client.menuPlayerId);
             break;
         }
         this.client.menuPlayerId = 0;
@@ -79,7 +85,7 @@ export class MouseController {
         this.client.getPlayerCharacter()!.sitState,
       )
     ) {
-      this.client.movement.stand();
+      this.client.movementController.stand();
       return;
     }
 
@@ -147,18 +153,18 @@ export class MouseController {
 
       if (tileSpec !== undefined) {
         if (tileSpec === MapTileSpec.Chest) {
-          this.client.chest.openChest(this.client.mouseCoords);
+          this.client.chestController.openChest(this.client.mouseCoords);
           return;
         }
 
         if (
-          this.client.map_.isFacingChairAt(this.client.mouseCoords) &&
-          !this.client.map_.occupied(this.client.mouseCoords)
+          this.client.mapController.isFacingChairAt(this.client.mouseCoords) &&
+          !this.client.mapController.occupied(this.client.mouseCoords)
         ) {
           const coords = new Coords();
           coords.x = this.client.mouseCoords.x;
           coords.y = this.client.mouseCoords.y;
-          this.client.map_.sitChair(coords);
+          this.client.mapController.sitChair(coords);
           return;
         }
       }
@@ -168,7 +174,7 @@ export class MouseController {
     if (npcAt) {
       const npc = this.client.nearby.npcs.find((n) => n.index === npcAt.id);
       if (npc) {
-        this.client.npc.clickNpc(npc);
+        this.client.npcController.clickNpc(npc);
         return;
       }
     }
@@ -177,20 +183,20 @@ export class MouseController {
     if (characterAt) {
       const character = this.client.getCharacterById(characterAt.id);
       if (character) {
-        this.client.npc.clickCharacter(character);
+        this.client.npcController.clickCharacter(character);
         return;
       }
     }
 
     const doorAt = getDoorIntersecting(this.client.mousePosition!);
-    const door = doorAt ? this.client.map_.getDoor(doorAt) : undefined;
+    const door = doorAt ? this.client.mapController.getDoor(doorAt) : undefined;
     if (door && !door.open) {
-      this.client.map_.openDoor(doorAt!);
+      this.client.mapController.openDoor(doorAt!);
     }
 
     const lockerAt = getLockerIntersecting(this.client.mousePosition!);
     if (lockerAt) {
-      this.client.map_.openLocker(lockerAt);
+      this.client.mapController.openLocker(lockerAt);
       return;
     }
 
@@ -205,9 +211,9 @@ export class MouseController {
 
     const boardAt = getBoardIntersecting(this.client.mousePosition!);
     if (boardAt) {
-      const boardSpec = this.client.map_.boardAt(boardAt);
+      const boardSpec = this.client.mapController.boardAt(boardAt);
       if (boardSpec !== undefined) {
-        this.client.board.openBoard(boardSpec - MapTileSpec.Board1);
+        this.client.boardController.openBoard(boardSpec - MapTileSpec.Board1);
       }
       return;
     }
@@ -215,13 +221,15 @@ export class MouseController {
     if (
       !this.client.cursorClickAnimation &&
       this.client.mouseCoords &&
-      this.client.map_.canWalk(this.client.mouseCoords, true)
+      this.client.mapController.canWalk(this.client.mouseCoords, true)
     ) {
       this.client.cursorClickAnimation = new CursorClickAnimation(
         this.client.mouseCoords,
       );
 
-      const path = this.client.map_.findPathTo(this.client.mouseCoords);
+      const path = this.client.mapController.findPathTo(
+        this.client.mouseCoords,
+      );
       if (path.length) {
         this.client.autoWalkPath = path;
       }
@@ -243,7 +251,7 @@ export class MouseController {
       const character = this.client.getCharacterById(characterAt.id);
       if (character) {
         if (characterAt.id === this.client.playerId) {
-          this.client.social.requestPaperdoll(this.client.playerId);
+          this.client.socialController.requestPaperdoll(this.client.playerId);
         } else {
           this.client.menuPlayerId = character.playerId;
         }

@@ -99,7 +99,7 @@ export class BoardDialog extends Base {
 
     this.btnDelete!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
-      this.client.board.deletePost(this.activePostId);
+      this.client.boardController.deletePost(this.activePostId);
       this.changeState(State.List);
     });
 
@@ -136,7 +136,7 @@ export class BoardDialog extends Base {
         return;
       }
 
-      this.client.board.createPost(subject, body);
+      this.client.boardController.createPost(subject, body);
       this.hide();
     });
 
@@ -286,7 +286,7 @@ export class BoardDialog extends Base {
           this.client.admin !== AdminLevel.Player;
         this.btnDelete!.classList.toggle('hidden', !isOwner);
 
-        this.client.board.readPost(post.postId);
+        this.client.boardController.readPost(post.postId);
         this.changeState(State.ViewPost);
       };
 

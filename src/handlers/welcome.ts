@@ -127,9 +127,9 @@ function handleSelectCharacter(
 
     if (client.downloadQueue.length > 0) {
       const download = client.downloadQueue.pop();
-      client.auth.requestFile(download!.type, download!.id);
+      client.authController.requestFile(download!.type, download!.id);
     } else {
-      client.auth.enterGame();
+      client.authController.enterGame();
     }
   });
 }

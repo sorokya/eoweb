@@ -34,7 +34,7 @@ function handleWarpRequest(client: Client, reader: EoReader) {
           map.rid[1] !== data.mapRid[1] ||
           map.byteSize !== data.mapFileSize
         ) {
-          client.auth.requestWarpMap(packet.mapId);
+          client.authController.requestWarpMap(packet.mapId);
           return;
         }
         client.warpQueued = true;

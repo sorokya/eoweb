@@ -37,7 +37,7 @@ export class Hotbar extends Base {
       slot.classList.add('slot');
 
       slot.addEventListener('click', () => {
-        this.client.combat.useHotbarSlot(i);
+        this.client.combatController.useHotbarSlot(i);
       });
 
       this.container.appendChild(slot);

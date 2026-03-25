@@ -21,7 +21,7 @@ function handleCastReply(client: Client, reader: EoReader) {
   const packet = CastReplyServerPacket.deserialize(reader);
   const npc = client.getNpcByIndex(packet.npcIndex);
   if (!npc) {
-    client.auth.requestNpcRange([packet.npcIndex]);
+    client.authController.requestNpcRange([packet.npcIndex]);
     return;
   }
 
@@ -35,7 +35,7 @@ function handleCastReply(client: Client, reader: EoReader) {
     new HealthBar(packet.hpPercentage, packet.damage),
   );
 
-  client.combat.playSpellEffect(
+  client.combatController.playSpellEffect(
     packet.spellId,
     new EffectTargetNpc(packet.npcIndex),
   );
@@ -45,7 +45,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
   const packet = CastSpecServerPacket.deserialize(reader);
   const npc = client.getNpcByIndex(packet.npcKilledData.npcIndex);
   if (!npc) {
-    client.auth.requestNpcRange([packet.npcKilledData.npcIndex]);
+    client.authController.requestNpcRange([packet.npcKilledData.npcIndex]);
     return;
   }
 
@@ -59,7 +59,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
     new HealthBar(0, packet.npcKilledData.damage),
   );
 
-  client.combat.playSpellEffect(
+  client.combatController.playSpellEffect(
     packet.spellId,
     new EffectTargetNpc(packet.npcKilledData.npcIndex),
   );
@@ -107,7 +107,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
   const packet = CastAcceptServerPacket.deserialize(reader);
   const npc = client.getNpcByIndex(packet.npcKilledData.npcIndex);
   if (!npc) {
-    client.auth.requestNpcRange([packet.npcKilledData.npcIndex]);
+    client.authController.requestNpcRange([packet.npcKilledData.npcIndex]);
     return;
   }
 
@@ -121,7 +121,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
     new HealthBar(0, packet.npcKilledData.damage),
   );
 
-  client.combat.playSpellEffect(
+  client.combatController.playSpellEffect(
     packet.spellId,
     new EffectTargetNpc(packet.npcKilledData.npcIndex),
   );

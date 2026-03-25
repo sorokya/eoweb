@@ -19,7 +19,7 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.auth.requestCharacterRange([packet.playerId]);
+    client.authController.requestCharacterRange([packet.playerId]);
     return;
   }
 
@@ -81,7 +81,7 @@ function handleWalkReply(client: Client, reader: EoReader) {
     client.atlas.refresh();
   }
 
-  client.auth.rangeRequest(unknownPlayerIds, unknownNpcIndexes);
+  client.authController.rangeRequest(unknownPlayerIds, unknownNpcIndexes);
 }
 
 export function registerWalkHandlers(client: Client) {

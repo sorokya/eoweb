@@ -233,7 +233,7 @@ function handleItemReply(client: Client, reader: EoReader) {
       client.emit('statsUpdate', undefined);
 
       const cursedEquipmentSlots: EquipmentSlot[] = [];
-      const equipmentArray = client.inventory.getEquipmentArray();
+      const equipmentArray = client.inventoryController.getEquipmentArray();
       equipmentArray.forEach((id, index) => {
         const record = client.getEifRecordById(id);
         if (record && record.special === ItemSpecial.Cursed) {

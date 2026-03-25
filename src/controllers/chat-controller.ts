@@ -30,7 +30,10 @@ export class ChatController {
       this.client.drunk ? makeDrunk(message) : message
     ).substring(0, MAX_CHAT_LENGTH);
 
-    if (trimmed.startsWith('#') && this.client.command.handleCommand(trimmed)) {
+    if (
+      trimmed.startsWith('#') &&
+      this.client.commandController.handleCommand(trimmed)
+    ) {
       return;
     }
 

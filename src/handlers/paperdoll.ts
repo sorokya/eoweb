@@ -30,7 +30,7 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
     return;
   }
 
-  const equipment = client.inventory.getEquipmentArray();
+  const equipment = client.inventoryController.getEquipmentArray();
   let slot = equipment.indexOf(packet.itemId);
   if (slot === -1) {
     return;
@@ -51,12 +51,17 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
     return;
   }
 
-  client.inventory.setEquipmentSlot(slot, 0);
+  client.inventoryController.setEquipmentSlot(slot, 0);
   client.emit('equipmentChanged', undefined);
 
-  const isVisibleChange = client.inventory.isVisibleEquipmentChange(slot);
+  const isVisibleChange =
+    client.inventoryController.isVisibleEquipmentChange(slot);
   if (isVisibleChange && !client.equipmentSwap) {
-    client.inventory.setNearbyCharacterEquipment(client.playerId, slot, 0);
+    client.inventoryController.setNearbyCharacterEquipment(
+      client.playerId,
+      slot,
+      0,
+    );
   }
 
   client.baseStats.str = packet.stats.baseStats.str;
@@ -92,13 +97,17 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
 
   if (client.equipmentSwap) {
     if (
-      !client.inventory.equipItem(
+      !client.inventoryController.equipItem(
         client.equipmentSwap.slot,
         client.equipmentSwap.itemId,
       ) &&
       isVisibleChange
     ) {
-      client.inventory.setNearbyCharacterEquipment(client.playerId, slot, 0);
+      client.inventoryController.setNearbyCharacterEquipment(
+        client.playerId,
+        slot,
+        0,
+      );
     }
     client.equipmentSwap = null;
   }
@@ -111,17 +120,17 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
     return;
   }
 
-  const equipment = client.inventory.getEquipmentArray();
+  const equipment = client.inventoryController.getEquipmentArray();
   const slot = getEquipmentSlotForItemType(record.type, packet.subLoc);
   if (equipment[slot!]) {
     return;
   }
 
-  client.inventory.setEquipmentSlot(slot!, packet.itemId);
+  client.inventoryController.setEquipmentSlot(slot!, packet.itemId);
   client.emit('equipmentChanged', undefined);
 
-  if (client.inventory.isVisibleEquipmentChange(slot!)) {
-    client.inventory.setNearbyCharacterEquipment(
+  if (client.inventoryController.isVisibleEquipmentChange(slot!)) {
+    client.inventoryController.setNearbyCharacterEquipment(
       client.playerId,
       slot!,
       record.spec1,

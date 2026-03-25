@@ -750,7 +750,7 @@ export class MapRenderer {
       PLAYER_MENU_HEIGHT,
     );
 
-    const hovered = this.client.mouse.getHoveredPlayerMenuItem();
+    const hovered = this.client.mouseController.getHoveredPlayerMenuItem();
     if (hovered !== undefined) {
       ctx.drawImage(
         atlas,
@@ -784,7 +784,7 @@ export class MapRenderer {
     let bmpOffset = 0;
 
     if (entity.layer === Layer.DownWall || entity.layer === Layer.RightWall) {
-      const door = this.client.map_.getDoor(coords);
+      const door = this.client.mapController.getDoor(coords);
       if (door?.open) {
         bmpOffset = 1;
       }
@@ -839,7 +839,7 @@ export class MapRenderer {
         tile.yOffset,
     );
 
-    if (this.client.map_.getDoor(coords)) {
+    if (this.client.mapController.getDoor(coords)) {
       setDoorRectangle(
         coords,
         new Rectangle(

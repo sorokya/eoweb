@@ -21,7 +21,7 @@ export class ChestController {
   }
 
   openChest(coords: { x: number; y: number }): void {
-    if (!this.client.map_.isAdjacentToSpec(MapTileSpec.Chest)) {
+    if (!this.client.mapController.isAdjacentToSpec(MapTileSpec.Chest)) {
       return;
     }
 

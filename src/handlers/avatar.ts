@@ -108,7 +108,7 @@ function handleAvatarReply(client: Client, reader: EoReader) {
 
   const victim = client.getCharacterById(packet.victimId);
   if (!victim) {
-    client.auth.requestCharacterRange([packet.victimId]);
+    client.authController.requestCharacterRange([packet.victimId]);
     return;
   }
 
@@ -136,7 +136,7 @@ function handleAvatarAdmin(client: Client, reader: EoReader) {
 
   const victim = client.getCharacterById(packet.victimId);
   if (!victim) {
-    client.auth.requestCharacterRange([packet.victimId]);
+    client.authController.requestCharacterRange([packet.victimId]);
     return;
   }
 

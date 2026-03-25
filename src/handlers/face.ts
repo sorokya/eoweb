@@ -12,7 +12,7 @@ function handleFacePlayer(client: Client, reader: EoReader) {
     (c) => c.playerId === packet.playerId,
   );
   if (!character) {
-    client.auth.requestCharacterRange([packet.playerId]);
+    client.authController.requestCharacterRange([packet.playerId]);
     return;
   }
 
