@@ -23,8 +23,15 @@ import { playSfxById } from '../sfx';
 import { SfxId, SlotType, SpellTarget } from '../types';
 import { getTimestamp } from './movement-controller';
 
+enum SpellState {
+  None = 0,
+  Chanting = 1,
+  Casting = 2,
+}
+
 export class SpellController {
   private client: Client;
+  state = SpellState.None;
   selectedSpellId = 0;
   queuedSpellId = 0;
   spellCastTimestamp = 0;
@@ -105,6 +112,7 @@ export class SpellController {
         this.client.getResourceString(EOResourceID.ATTACK_YOU_ARE_EXHAUSTED_TP),
       );
       this.queuedSpellId = 0;
+      this.spellCooldownTicks = 0;
       return;
     }
 
@@ -113,6 +121,7 @@ export class SpellController {
       this.spellTarget === SpellTarget.Npc
     ) {
       this.queuedSpellId = 0;
+      this.spellCooldownTicks = 0;
       return;
     }
 
@@ -122,6 +131,7 @@ export class SpellController {
       this.client.map!.type !== MapType.Pk
     ) {
       this.queuedSpellId = 0;
+      this.spellCooldownTicks = 0;
       return;
     }
 
@@ -129,6 +139,7 @@ export class SpellController {
       const npc = this.client.getNpcByIndex(this.spellTargetId);
       if (!npc) {
         this.queuedSpellId = 0;
+        this.spellCooldownTicks = 0;
         return;
       }
 
@@ -137,6 +148,7 @@ export class SpellController {
       );
       if (animation instanceof NpcDeathAnimation) {
         this.queuedSpellId = 0;
+        this.spellCooldownTicks = 0;
         return;
       }
     }
@@ -145,6 +157,7 @@ export class SpellController {
       const character = this.client.getCharacterById(this.spellTargetId);
       if (!character) {
         this.queuedSpellId = 0;
+        this.spellCooldownTicks = 0;
         return;
       }
 
@@ -153,11 +166,13 @@ export class SpellController {
       );
       if (animation instanceof CharacterDeathAnimation) {
         this.queuedSpellId = 0;
+        this.spellCooldownTicks = 0;
         return;
       }
     }
 
     this.spellCastTimestamp = getTimestamp();
+    this.state = SpellState.Chanting;
     const packet = new SpellRequestClientPacket();
     packet.spellId = this.queuedSpellId;
     packet.timestamp = this.spellCastTimestamp;
@@ -172,8 +187,6 @@ export class SpellController {
         record.castTime,
       ),
     );
-
-    this.queuedSpellId = 0;
   }
 
   castSpell(spellId: number): void {
@@ -213,6 +226,7 @@ export class SpellController {
 
     this.queuedSpellId = 0;
     this.spellCooldownTicks = SPELL_COOLDOWN_TICKS;
+    this.state = SpellState.Casting;
   }
 
   playSpellEffect(spellId: number, target: EffectTarget): void {
@@ -236,10 +250,12 @@ export class SpellController {
   }
 
   tick(): void {
-    if (this.queuedSpellId) {
-      this.beginSpellChant();
-    }
-
     this.spellCooldownTicks = Math.max(this.spellCooldownTicks - 1, 0);
+
+    if (this.queuedSpellId && this.state === SpellState.None) {
+      this.beginSpellChant();
+    } else if (!this.spellCooldownTicks && this.state === SpellState.Casting) {
+      this.state = SpellState.None;
+    }
   }
 }

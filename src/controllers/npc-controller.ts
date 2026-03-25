@@ -100,7 +100,6 @@ export class NpcController {
         this.client.spellController.spellTargetId = npc.index;
         this.client.spellController.queuedSpellId =
           this.client.spellController.selectedSpellId;
-        this.client.spellController.spellCooldownTicks = 999;
         break;
       }
       default:
@@ -123,7 +122,6 @@ export class NpcController {
     this.client.spellController.spellTargetId = character.playerId;
     this.client.spellController.queuedSpellId =
       this.client.spellController.selectedSpellId;
-    this.client.spellController.spellCooldownTicks = 999;
   }
 
   tick(): void {
