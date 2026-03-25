@@ -255,8 +255,8 @@ export class CharacterSelect extends Base {
           DialogResourceID.CHARACTER_CREATE_TOO_MANY_CHARS,
         );
         this.emitter.emit('error', {
-          title: text![0],
-          message: text![1],
+          title: text[0],
+          message: text[1],
         });
         return;
       }

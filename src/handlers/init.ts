@@ -101,7 +101,7 @@ function handleInitOk(
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_LOST_CONNECTION,
     );
-    client.showError(text![1], text![0]);
+    client.showError(text[1], text[0]);
     client.disconnect();
     return;
   }
@@ -158,14 +158,14 @@ function handleInitBanned(
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_IP_BAN_PERM,
     );
-    client.showError(text![1], text![0]);
+    client.showError(text[1], text[0]);
     return;
   }
 
   const banData =
     data.banTypeData as InitInitServerPacket.ReplyCodeDataBanned.BanTypeData0;
   const text = client.getDialogStrings(DialogResourceID.CONNECTION_IP_BAN_TEMP);
-  client.showError(`${text![0]} ${banData.minutesRemaining} minutes`, text![1]);
+  client.showError(`${text[0]} ${banData.minutesRemaining} minutes`, text[1]);
 }
 
 function handleInitFileEcf(

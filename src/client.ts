@@ -762,10 +762,10 @@ export class Client {
     return line;
   }
 
-  getDialogStrings(id: DialogResourceID): string[] | undefined {
+  getDialogStrings(id: DialogResourceID): string[] {
     const edf = this.edfs.game1;
     if (!edf) {
-      return undefined;
+      return ['', ''];
     }
 
     return [edf.getLine(id) ?? '', edf.getLine(id + 1) ?? ''];

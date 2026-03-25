@@ -95,8 +95,8 @@ export class ChangePasswordForm extends Base {
           DialogResourceID.ACCOUNT_CREATE_FIELDS_STILL_EMPTY,
         );
         this.emitter.emit('error', {
-          title: text![0],
-          message: text![1],
+          title: text[0],
+          message: text[1],
         });
         return false;
       }
@@ -106,8 +106,8 @@ export class ChangePasswordForm extends Base {
           DialogResourceID.CHANGE_PASSWORD_MISMATCH,
         );
         this.emitter.emit('error', {
-          title: text![0],
-          message: text![1],
+          title: text[0],
+          message: text[1],
         });
         return false;
       }

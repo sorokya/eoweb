@@ -18,14 +18,14 @@ function handleCharacterReply(client: Client, reader: EoReader) {
       const text = client.getDialogStrings(
         DialogResourceID.CHARACTER_CREATE_NAME_EXISTS,
       );
-      client.showError(text![1], text![0]);
+      client.showError(text[1], text[0]);
       return;
     }
     case CharacterReply.NotApproved: {
       const text = client.getDialogStrings(
         DialogResourceID.CHARACTER_CREATE_NAME_NOT_APPROVED,
       );
-      client.showError(text![1], text![0]);
+      client.showError(text[1], text[0]);
       return;
     }
     case CharacterReply.Full:
@@ -33,7 +33,7 @@ function handleCharacterReply(client: Client, reader: EoReader) {
         const text = client.getDialogStrings(
           DialogResourceID.CHARACTER_CREATE_TOO_MANY_CHARS,
         );
-        client.showError(text![1], text![0]);
+        client.showError(text[1], text[0]);
       }
       return;
     case CharacterReply.Deleted: {

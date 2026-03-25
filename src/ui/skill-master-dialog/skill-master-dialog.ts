@@ -206,7 +206,7 @@ export class SkillMasterDialog extends Base {
         const strings = this.client.getDialogStrings(
           DialogResourceID.SKILL_NOTHING_MORE_TO_LEARN,
         );
-        this.client.showError(strings![1], strings![0]);
+        this.client.showError(strings[1], strings[0]);
         return;
       }
       this.changeState(State.Learn);
@@ -283,8 +283,8 @@ export class SkillMasterDialog extends Base {
             DialogResourceID.SKILL_LEARN_WRONG_CLASS,
           );
           this.client.showError(
-            `${strings![1]} ${this.getClassName(learn.classRequirement)}`,
-            strings![0],
+            `${strings[1]} ${this.getClassName(learn.classRequirement)}`,
+            strings[0],
           );
           return;
         }
@@ -315,7 +315,7 @@ export class SkillMasterDialog extends Base {
           const strings = this.client.getDialogStrings(
             DialogResourceID.SKILL_LEARN_REQS_NOT_MET,
           );
-          this.client.showError(strings![1], strings![0]);
+          this.client.showError(strings[1], strings[0]);
           return;
         }
 
@@ -323,8 +323,8 @@ export class SkillMasterDialog extends Base {
           DialogResourceID.SKILL_LEARN_CONFIRMATION,
         );
         this.client.showConfirmation(
-          `${strings![1]} ${record.name}`,
-          strings![0],
+          `${strings[1]} ${record.name}`,
+          strings[0],
           () => {
             this.client.learnSkill(skill.id);
           },
@@ -364,7 +364,7 @@ export class SkillMasterDialog extends Base {
         const strings = this.client.getDialogStrings(
           DialogResourceID.SKILL_PROMPT_TO_FORGET,
         );
-        this.client.showConfirmation(strings![1], strings![0], () => {
+        this.client.showConfirmation(strings[1], strings[0], () => {
           this.client.forgetSkill(skill.id);
         });
       };

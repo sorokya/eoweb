@@ -98,8 +98,8 @@ export class CreateAccountForm extends Base {
           DialogResourceID.ACCOUNT_CREATE_FIELDS_STILL_EMPTY,
         );
         this.emitter.emit('error', {
-          title: text![0],
-          message: text![1],
+          title: text[0],
+          message: text[1],
         });
         return false;
       }
@@ -109,8 +109,8 @@ export class CreateAccountForm extends Base {
           DialogResourceID.ACCOUNT_CREATE_PASSWORD_MISMATCH,
         );
         this.emitter.emit('error', {
-          title: text![0],
-          message: text![1],
+          title: text[0],
+          message: text[1],
         });
         return false;
       }
@@ -120,8 +120,8 @@ export class CreateAccountForm extends Base {
           DialogResourceID.ACCOUNT_CREATE_EMAIL_INVALID,
         );
         this.emitter.emit('error', {
-          title: text![0],
-          message: text![1],
+          title: text[0],
+          message: text[1],
         });
         return false;
       }

@@ -80,8 +80,8 @@ function handleLockerSpec(client: Client, reader: EoReader) {
     DialogResourceID.LOCKER_FULL_DIFF_ITEMS_MAX,
   );
   client.showError(
-    strings![1].replace('25', packet.lockerMaxItems.toString()),
-    strings![0],
+    strings[1].replace('25', packet.lockerMaxItems.toString()),
+    strings[0],
   );
 }
 

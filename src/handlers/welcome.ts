@@ -18,7 +18,7 @@ function handleWelcomeReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_SERVER_BUSY,
     );
-    client.showError(text![1], text![0]);
+    client.showError(text[1], text[0]);
     return;
   }
 

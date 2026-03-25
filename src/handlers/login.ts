@@ -16,7 +16,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.LOGIN_BANNED_FROM_SERVER,
     );
-    client.showError(text![1], text![0]);
+    client.showError(text[1], text[0]);
     return;
   }
 
@@ -25,7 +25,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.LOGIN_ACCOUNT_ALREADY_LOGGED_ON,
     );
-    client.showError(text![1], text![0]);
+    client.showError(text[1], text[0]);
     return;
   }
 
@@ -37,7 +37,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.LOGIN_ACCOUNT_NAME_OR_PASSWORD_NOT_FOUND,
     );
-    client.showError(text![1], text![0]);
+    client.showError(text[1], text[0]);
     return;
   }
 
@@ -45,7 +45,7 @@ function handleLoginReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_SERVER_BUSY,
     );
-    client.showError(text![1], text![0]);
+    client.showError(text[1], text[0]);
   }
 
   if (reader.remaining > 0) {

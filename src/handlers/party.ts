@@ -89,8 +89,8 @@ function handlePartyRequest(client: Client, reader: EoReader) {
   );
 
   client.showConfirmation(
-    `${capitalize(packet.playerName)} ${strings![1]}`,
-    strings![0],
+    `${capitalize(packet.playerName)} ${strings[1]}`,
+    strings[0],
     () => {
       client.acceptPartyRequest(packet.inviterPlayerId, packet.requestType);
     },
