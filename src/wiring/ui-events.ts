@@ -178,9 +178,9 @@ export function wireUiEvents(deps: UiEventDeps): void {
   );
 
   deps.createAccountForm.on('create', (data: unknown) => {
-    client.authController.requestAccountCreation(
+    client.authenticationController.requestAccountCreation(
       data as Parameters<
-        typeof client.authController.requestAccountCreation
+        typeof client.authenticationController.requestAccountCreation
       >[0],
     );
   });
@@ -197,7 +197,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
       password: string;
       rememberMe: boolean;
     }) => {
-      client.authController.login(username, password, rememberMe);
+      client.authenticationController.login(username, password, rememberMe);
     },
   );
 
@@ -218,7 +218,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
   });
 
   deps.characterSelect.on('selectCharacter', (id: unknown) => {
-    client.authController.selectCharacter(id as number);
+    client.authenticationController.selectCharacter(id as number);
   });
 
   deps.characterSelect.on(
@@ -232,7 +232,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
         strings[0],
       );
       deps.smallConfirm.setCallback(() => {
-        client.authController.requestCharacterDeletion(id);
+        client.authenticationController.requestCharacterDeletion(id);
         deps.characterSelect.confirmed = true;
       });
       deps.smallConfirm.show();
@@ -250,7 +250,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
         strings[0],
       );
       deps.smallConfirm.setCallback(() => {
-        client.authController.deleteCharacter(id);
+        client.authenticationController.deleteCharacter(id);
       });
       deps.smallConfirm.show();
     },
@@ -270,9 +270,9 @@ export function wireUiEvents(deps: UiEventDeps): void {
 
   // Character creation
   deps.createCharacterForm.on('create', (data: unknown) => {
-    client.authController.requestCharacterCreation(
+    client.authenticationController.requestCharacterCreation(
       data as Parameters<
-        typeof client.authController.requestCharacterCreation
+        typeof client.authenticationController.requestCharacterCreation
       >[0],
     );
   });
@@ -297,7 +297,11 @@ export function wireUiEvents(deps: UiEventDeps): void {
       oldPassword: string;
       newPassword: string;
     }) => {
-      client.authController.changePassword(username, oldPassword, newPassword);
+      client.authenticationController.changePassword(
+        username,
+        oldPassword,
+        newPassword,
+      );
     },
   );
 

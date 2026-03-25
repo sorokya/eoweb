@@ -40,7 +40,7 @@ import { getDefaultConfig, loadConfig } from './config';
 import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS, USAGE_TICKS } from './consts';
 import {
   AudioController,
-  AuthController,
+  AuthenticationController,
   BankController,
   BoardController,
   ChatController,
@@ -188,7 +188,7 @@ export class Client {
   movementController: MovementController;
   keyboardController: KeyboardController;
   audioController: AudioController;
-  authController: AuthController;
+  authenticationController: AuthenticationController;
   bankController: BankController;
   boardController: BoardController;
   chatController: ChatController;
@@ -318,7 +318,7 @@ export class Client {
     this.movementController = new MovementController(this);
     this.keyboardController = new KeyboardController(this);
     this.audioController = new AudioController(this);
-    this.authController = new AuthController(this);
+    this.authenticationController = new AuthenticationController(this);
     this.bankController = new BankController(this);
     this.boardController = new BoardController(this);
     this.chatController = new ChatController(this);

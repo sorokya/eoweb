@@ -1,5 +1,5 @@
 export { AudioController } from './audio-controller';
-export { AuthController } from './auth-controller';
+export { AuthenticationController } from './authentication-controller';
 export { BankController } from './bank-controller';
 export { BoardController } from './board-controller';
 export { ChatController } from './chat-controller';

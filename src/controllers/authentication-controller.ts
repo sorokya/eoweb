@@ -12,7 +12,7 @@ import type { Client } from '../client';
 import { MAX_CHARACTER_NAME_LENGTH } from '../consts';
 import type { AccountCreateData, CharacterCreateData } from '../types';
 
-export class AuthController {
+export class AuthenticationController {
   private client: Client;
 
   constructor(client: Client) {
