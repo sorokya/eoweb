@@ -9,7 +9,6 @@ import {
   Gender,
   InitInitClientPacket,
   ItemMapInfo,
-  ItemSpecial,
   ItemType,
   NpcMapInfo,
   SitState,
@@ -17,16 +16,9 @@ import {
 import './css/style.css';
 import 'notyf/notyf.min.css';
 import { PacketBus } from './bus';
-import { ChatTab, Client, GameState } from './client';
-import {
-  GAME_FPS,
-  LOCKER_MAX_ITEM_AMOUNT,
-  LOCKER_UPGRADE_BASE_COST,
-  LOCKER_UPGRADE_COST_STEP,
-  MAX_CHALLENGE,
-  MAX_LOCKER_UPGRADES,
-} from './consts';
-import { DialogResourceID, EOResourceID } from './edf';
+import { Client, GameState } from './client';
+import { GAME_FPS, MAX_CHALLENGE } from './consts';
+import { DialogResourceID } from './edf';
 import {
   GAME_HEIGHT,
   GAME_WIDTH,
@@ -34,17 +26,16 @@ import {
   setZoom,
   ZOOM,
 } from './game-state';
-import { playSfxById, SfxId } from './sfx';
 import { BankDialog } from './ui/bank-dialog/bank-dialog';
 import { BoardDialog } from './ui/board-dialog';
 import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
-import { Chat, ChatIcon } from './ui/chat/chat';
+import { Chat } from './ui/chat/chat';
 import { ChestDialog } from './ui/chest-dialog';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
-import { Hotbar, SlotType } from './ui/hotbar/hotbar';
+import { Hotbar } from './ui/hotbar/hotbar';
 import { HUD } from './ui/hud/hud';
 import { InGameMenu } from './ui/in-game-menu/in-game-menu';
 import { Inventory } from './ui/inventory';
@@ -67,8 +58,16 @@ import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
 import { SpellBook } from './ui/spell-book';
 import { Stats } from './ui/stats/stats';
-import { capitalize } from './utils/capitalize';
-import { randomRange } from './utils/random-range';
+import { randomRange } from './utils';
+import {
+  getReconnectAttempts,
+  incrementReconnectAttempts,
+  resetReconnectAttempts,
+  wireClientEvents,
+} from './wiring/client-events';
+import { wireUiEvents } from './wiring/ui-events';
+
+// ── Canvas Setup ──────────────────────────────────────────────────────────
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas not found!');
@@ -79,10 +78,17 @@ if (!ctx) {
 }
 ctx.imageSmoothingEnabled = false;
 
+// ── Client & Mobile ──────────────────────────────────────────────────────
+
 const client = new Client();
 const mobileControls = new MobileControls();
 
 let userOverride = false;
+let _isMobile = false;
+
+export function isMobile(): boolean {
+  return _isMobile;
+}
 
 export function zoomIn() {
   userOverride = true;
@@ -97,7 +103,7 @@ export function zoomOut() {
 }
 
 function resizeCanvases() {
-  const container = document.getElementById('container');
+  const container = document.getElementById('container')!;
   if (!container) return;
   const viewportWidth =
     window.visualViewport?.width ?? container.getBoundingClientRect().width;
@@ -106,12 +112,9 @@ function resizeCanvases() {
   if (!userOverride) setZoom(viewportWidth >= 1280 ? 2 : 1);
   const w = Math.floor(viewportWidth / ZOOM);
   const h = Math.floor(viewportHeight / ZOOM);
-  // OK so basically canvas.width = newValue clears the entire canvas
-  // which means we see the background for like 1 frame = flicker
-  // solution: screenshot the canvas before resize, then draw it back
   const snapshot =
     canvas.width > 0
-      ? ctx!.getImageData(0, 0, canvas.width, canvas.height)
+      ? ctx!.getImageData!(0, 0, canvas.width, canvas.height)
       : null;
   const prevW = canvas.width;
   const prevH = canvas.height;
@@ -119,32 +122,41 @@ function resizeCanvases() {
   canvas.height = h;
   canvas.style.width = `${w * ZOOM}px`;
   canvas.style.height = `${h * ZOOM}px`;
-  ctx!.imageSmoothingEnabled = false;
+  ctx!.imageSmoothingEnabled! = false;
   if (snapshot && prevW > 0) {
-    // restore the screenshot but scaled to new size
     const temp = document.createElement('canvas');
     temp.width = prevW;
     temp.height = prevH;
     const tempCtx = temp.getContext('2d');
     if (tempCtx) {
       tempCtx.putImageData(snapshot, 0, 0);
-      ctx!.drawImage(temp, 0, 0, w, h);
+      ctx!.drawImage!(temp, 0, 0, w, h);
     }
   } else {
-    // no previous content, just fill black
-    ctx!.fillStyle = '#000';
-    ctx!.fillRect(0, 0, w, h);
+    ctx!.fillStyle! = '#000';
+    ctx!.fillRect!(0, 0, w, h);
   }
   setGameSize(w, h);
-  if (client.state === GameState.InGame && viewportWidth < 940) {
-    mobileControls.show();
+  _isMobile = viewportWidth < 940;
+  if (_isMobile) {
+    document.body.classList.add('is-mobile');
+    if (client.state === GameState.InGame) {
+      mobileControls.show();
+    }
   } else {
+    document.body.classList.remove('is-mobile');
     mobileControls.hide();
   }
 }
 
 resizeCanvases();
-window.addEventListener('resize', resizeCanvases);
+let resizeRaf = 0;
+window.addEventListener('resize', () => {
+  cancelAnimationFrame(resizeRaf);
+  resizeRaf = requestAnimationFrame(resizeCanvases);
+});
+
+// ── Render Loop ──────────────────────────────────────────────────────────
 
 let lastTime: DOMHighResTimeStamp | undefined;
 let accumulator = 0;
@@ -178,225 +190,7 @@ const render = (now: DOMHighResTimeStamp) => {
   requestAnimationFrame(render);
 };
 
-client.on('error', ({ title, message }) => {
-  smallAlertLargeHeader.setContent(message, title || 'Error');
-  smallAlertLargeHeader.show();
-});
-
-client.on('confirmation', ({ title, message, onConfirm }) => {
-  smallConfirm.setContent(message, title);
-  smallConfirm.setCallback(() => {
-    onConfirm();
-  });
-  smallConfirm.show();
-});
-
-client.on('smallAlert', ({ title, message }) => {
-  smallAlert.setContent(message, title);
-  smallAlert.show();
-});
-
-client.on('debug', (_message) => {});
-
-client.on('accountCreated', () => {
-  const text = client.getDialogStrings(
-    DialogResourceID.ACCOUNT_CREATE_SUCCESS_WELCOME,
-  );
-  smallAlertLargeHeader.setContent(text[1], text[0]);
-  smallAlertLargeHeader.show();
-  createAccountForm.hide();
-  mainMenu.show();
-});
-
-client.on('login', (characters) => {
-  playSfxById(SfxId.Login);
-  loginForm.hide();
-  characterSelect.setCharacters(characters);
-  mainMenu.hide();
-  characterSelect.show();
-});
-
-client.on('serverChat', ({ message, sfxId, icon }) => {
-  client.emit('chat', {
-    tab: ChatTab.Local,
-    name: client.getResourceString(EOResourceID.STRING_SERVER),
-    message,
-    icon: icon || ChatIcon.Exclamation,
-  });
-  playSfxById(sfxId || SfxId.ServerMessage);
-});
-
-client.on('characterCreated', (characters) => {
-  createCharacterForm.hide();
-  const text = client.getDialogStrings(
-    DialogResourceID.CHARACTER_CREATE_SUCCESS,
-  );
-  smallAlertLargeHeader.setContent(text[1], text[0]);
-  smallAlertLargeHeader.show();
-  characterSelect.setCharacters(characters);
-});
-
-client.on('characterDeleted', (characters) => {
-  characterSelect.setCharacters(characters);
-});
-
-client.on('selectCharacter', () => {});
-
-client.on('chat', ({ icon, tab, message, name }) => {
-  chat.addMessage(tab, message, icon || ChatIcon.None, name);
-});
-
-client.on('enterGame', ({ news }) => {
-  mainMenu.hide();
-  chat.clear();
-  for (const line of news) {
-    if (line) {
-      chat.addMessage(ChatTab.Local, line, ChatIcon.None);
-    }
-  }
-
-  characterSelect.hide();
-  exitGame.show();
-  chat.show();
-  hud.setStats(client);
-  hud.show();
-  hotbar.show();
-  //offsetTweaker.show();
-  inGameMenu.show();
-  resizeCanvases();
-  inventory.loadPositions();
-  inventory.show();
-});
-
-client.on('passwordChanged', () => {
-  changePasswordForm.hide();
-  const text = client.getDialogStrings(
-    DialogResourceID.CHANGE_PASSWORD_SUCCESS,
-  );
-  smallAlertLargeHeader.setContent(text[1], text[0]);
-  smallAlertLargeHeader.show();
-});
-
-client.on('statsUpdate', () => {
-  hud.setStats(client);
-  stats.render();
-});
-
-client.on('reconnect', () => {
-  initializeSocket('login');
-});
-
-client.on('openQuestDialog', (data) => {
-  client.typing = true;
-  questDialog.setData(
-    data.questId,
-    data.dialogId,
-    data.name,
-    data.quests,
-    data.dialog,
-  );
-  questDialog.show();
-});
-
-client.on('openPaperdoll', ({ icon, equipment, details }) => {
-  paperdoll.setData(icon, details, equipment);
-  paperdoll.show();
-});
-
-client.on('chestOpened', ({ items }) => {
-  chestDialog.setItems(items);
-  chestDialog.show();
-});
-
-client.on('chestChanged', ({ items }) => {
-  chestDialog.setItems(items);
-});
-
-client.on('shopOpened', (data) => {
-  shopDialog.setData(data.name, data.craftItems, data.tradeItems);
-  shopDialog.show();
-});
-
-client.on('bankOpened', () => {
-  bankDialog.show();
-});
-
-client.on('boardOpened', ({ posts }) => {
-  boardDialog.setData(posts);
-  boardDialog.show();
-});
-
-client.on('lockerOpened', ({ items }) => {
-  lockerDialog.setItems(items);
-  lockerDialog.show();
-});
-
-client.on('lockerChanged', ({ items }) => {
-  lockerDialog.setItems(items);
-});
-
-client.on('skillMasterOpened', ({ name, skills }) => {
-  skillMasterDialog.setData(name, skills);
-  skillMasterDialog.show();
-});
-
-client.on('skillsChanged', () => {
-  skillMasterDialog.refresh();
-});
-
-client.on('spellQueued', () => {
-  hotbar.refresh();
-});
-
-client.on('setChat', (message) => {
-  chat.setMessage(message);
-});
-
-client.on('partyUpdated', () => {
-  partyDialog.refresh();
-});
-
-const initializeSocket = (next: 'login' | 'create' | '' = '') => {
-  const socket = new WebSocket(client.config.host);
-  socket.addEventListener('open', () => {
-    if (next === 'create') {
-      mainMenu.hide();
-      createAccountForm.show();
-    } else if (next === 'login') {
-      if (!client.loginToken) {
-        mainMenu.hide();
-        loginForm.show();
-      }
-    }
-
-    client.setBus(new PacketBus(socket));
-    client.challenge = randomRange(1, MAX_CHALLENGE);
-
-    const init = new InitInitClientPacket();
-    init.challenge = client.challenge;
-    init.hdid = '111111111';
-    init.version = client.version;
-    client.bus!.send(init);
-  });
-
-  socket.addEventListener('close', () => {
-    hideAllUi();
-    mainMenu.show();
-    if (client.state !== GameState.Initial) {
-      client.setState(GameState.Initial);
-      const text = client.getDialogStrings(
-        DialogResourceID.CONNECTION_LOST_CONNECTION,
-      );
-      smallAlertLargeHeader.setContent(text[1], text[0]);
-      smallAlertLargeHeader.show();
-    }
-    client.bus = null;
-  });
-
-  socket.addEventListener('error', (e) => {
-    console.error('Websocket Error', e);
-  });
-};
+// ── UI Component Instantiation ───────────────────────────────────────────
 
 const mainMenu = new MainMenu();
 const loginForm = new LoginForm();
@@ -430,659 +224,164 @@ const hotbar = new Hotbar(client);
 const spellBook = new SpellBook(client);
 const partyDialog = new PartyDialog(client);
 
+// ── Helpers ──────────────────────────────────────────────────────────────
+
 const hideAllUi = () => {
-  const uiElements = document.querySelectorAll('#ui>div');
+  const uiElements = document.querySelectorAll('#ui>div')!;
   for (const el of uiElements) {
     el.classList.add('hidden');
   }
 
-  const dialogs = document.querySelectorAll('#dialogs>div');
+  const dialogs = document.querySelectorAll('#dialogs>div')!;
   for (const el of dialogs) {
     el.classList.add('hidden');
   }
 };
 
-exitGame.on('click', () => {
-  const text = client.getDialogStrings(DialogResourceID.EXIT_GAME_ARE_YOU_SURE);
-  smallConfirm.setContent(text[1], text[0]);
-  smallConfirm.setCallback(() => {
-    client.disconnect();
-    hideAllUi();
-    mainMenu.show();
+// ── Socket / Reconnect ───────────────────────────────────────────────────
+
+const reconnectOverlay = document.getElementById('reconnect-overlay')!;
+const MAX_RECONNECT_ATTEMPTS = 5;
+let _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+const initializeSocket = (next: 'login' | 'create' | '' = '') => {
+  const socket = new WebSocket(client.config.host);
+  socket.addEventListener('open', () => {
+    if (next === 'create') {
+      mainMenu.hide();
+      createAccountForm.show();
+    } else if (next === 'login') {
+      if (!client.loginToken) {
+        mainMenu.hide();
+        loginForm.show();
+      }
+    }
+
+    client.setBus(new PacketBus(socket));
+    client.challenge = randomRange(1, MAX_CHALLENGE);
+
+    const init = new InitInitClientPacket();
+    init.challenge = client.challenge;
+    init.hdid = String(Math.floor(Math.random() * 2147483647));
+    init.version = client.version;
+    client.bus.send(init);
   });
-  smallConfirm.show();
-});
 
-mainMenu.on('play-game', () => {
-  if (client.state === GameState.Initial) {
-    initializeSocket('login');
-  } else {
-    mainMenu.hide();
-    loginForm.show();
-  }
-});
+  socket.addEventListener('close', () => {
+    const wasInGame = client.state === GameState.InGame;
+    const canReconnect =
+      wasInGame &&
+      client.loginToken &&
+      client.lastCharacterId &&
+      getReconnectAttempts() < MAX_RECONNECT_ATTEMPTS;
 
-mainMenu.on('create-account', () => {
-  if (client.state === GameState.Initial) {
-    initializeSocket('create');
-  } else {
-    mainMenu.hide();
-    createAccountForm.show();
-  }
-});
+    client.clearBus();
 
-mainMenu.on('view-credits', () => {
-  window.open(client.config.creditsUrl, '_blank');
-});
+    if (canReconnect) {
+      client.reconnecting = true;
+      const attempts = incrementReconnectAttempts();
+      const delay = Math.min(1000 * 2 ** (attempts - 1), 8000);
 
-mainMenu.on('host-change', (host) => {
-  client.config.host = host;
-  client.disconnect();
-});
+      reconnectOverlay.querySelector('.reconnect-text')!.textContent =
+        `Reconnecting... (${attempts}/${MAX_RECONNECT_ATTEMPTS})`;
+      reconnectOverlay.classList.remove('hidden');
 
-createAccountForm.on('cancel', () => {
-  createAccountForm.hide();
-  mainMenu.show();
-});
+      console.log(
+        `WebSocket closed while in-game. Reconnect attempt ${attempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms`,
+      );
 
-createAccountForm.on('error', ({ title, message }) => {
-  smallAlertLargeHeader.setContent(message, title);
-  smallAlertLargeHeader.show();
-});
+      _reconnectTimer = setTimeout(() => {
+        initializeSocket('login');
+      }, delay);
+    } else {
+      client.reconnecting = false;
+      resetReconnectAttempts();
+      reconnectOverlay.classList.add('hidden');
 
-createAccountForm.on('create', (data) => {
-  client.requestAccountCreation(data);
-});
-
-loginForm.on('login', ({ username, password, rememberMe }) => {
-  client.login(username, password, rememberMe);
-});
-
-loginForm.on('cancel', () => {
-  loginForm.hide();
-  mainMenu.show();
-});
-
-characterSelect.on('cancel', () => {
-  client.disconnect();
-  characterSelect.hide();
-  mainMenu.show();
-});
-
-characterSelect.on('changePassword', () => {
-  changePasswordForm.show();
-});
-
-characterSelect.on('selectCharacter', (id) => {
-  client.selectCharacter(id);
-});
-
-characterSelect.on('requestCharacterDeletion', ({ id, name }) => {
-  const strings = client.getDialogStrings(
-    DialogResourceID.CHARACTER_DELETE_FIRST_CHECK,
-  );
-  smallConfirm.setContent(`${capitalize(name)} ${strings[1]}`, strings[0]);
-  smallConfirm.setCallback(() => {
-    client.requestCharacterDeletion(id);
-    characterSelect.confirmed = true;
-  });
-  smallConfirm.show();
-});
-
-characterSelect.on('deleteCharacter', ({ id, name }) => {
-  const strings = client.getDialogStrings(
-    DialogResourceID.CHARACTER_DELETE_CONFIRM,
-  );
-  smallConfirm.setContent(`${capitalize(name)} ${strings[1]}`, strings[0]);
-  smallConfirm.setCallback(() => {
-    client.deleteCharacter(id);
-  });
-  smallConfirm.show();
-});
-
-characterSelect.on('error', ({ title, message }) => {
-  smallAlertLargeHeader.setContent(message, title);
-  smallAlertLargeHeader.show();
-});
-
-characterSelect.on('create', () => {
-  createCharacterForm.show();
-});
-
-createCharacterForm.on('create', (data) => {
-  client.requestCharacterCreation(data);
-});
-
-changePasswordForm.on('error', ({ title, message }) => {
-  smallAlertLargeHeader.setContent(message, title);
-  smallAlertLargeHeader.show();
-});
-
-changePasswordForm.on(
-  'changePassword',
-  ({ username, oldPassword, newPassword }) => {
-    client.changePassword(username, oldPassword, newPassword);
-  },
-);
-
-chat.on('chat', (message) => {
-  client.chat(message);
-});
-
-chat.on('focus', () => {
-  client.typing = true;
-});
-
-chat.on('blur', () => {
-  client.typing = false;
-});
-
-inGameMenu.on('toggle', (which) => {
-  switch (which) {
-    case 'inventory':
-      inventory.toggle();
-      break;
-    case 'map':
-      client.toggleMinimap();
-      break;
-    case 'stats':
-      stats.toggle();
-      break;
-    case 'spells':
-      spellBook.toggle();
-      break;
-    case 'party':
-      partyDialog.toggle();
-      break;
-    case 'online':
-      onlineList.toggle();
-      break;
-  }
-});
-
-inventory.on('dropItem', ({ at, itemId }) => {
-  const item = client.items.find((i) => i.id === itemId);
-  if (!item) {
-    return;
-  }
-
-  if (at === 'cursor' && !client.cursorInDropRange()) {
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_WARNING,
-      client.getResourceString(
-        EOResourceID.STATUS_LABEL_ITEM_DROP_OUT_OF_RANGE,
-      ),
-    );
-    chat.addMessage(
-      ChatTab.System,
-      client.getResourceString(
-        EOResourceID.STATUS_LABEL_ITEM_DROP_OUT_OF_RANGE,
-      ),
-      ChatIcon.DotDotDotDot,
-    );
-    return;
-  }
-
-  // Prevent dropping same item on stack
-  const playerAt = client.getPlayerCoords();
-  const coords = at === 'cursor' ? client.mouseCoords : playerAt;
-  if (
-    client.nearby.items.some(
-      (i) =>
-        i.coords.x === coords!.x && i.coords.y === coords!.y && i.id === itemId,
-    )
-  ) {
-    return;
-  }
-
-  const record = client.getEifRecordById(itemId);
-  if (!record) {
-    return;
-  }
-
-  if (record.special === ItemSpecial.Lore) {
-    const strings = client.getDialogStrings(DialogResourceID.ITEM_IS_LORE_ITEM);
-    smallAlert.setContent(strings[1], strings[0]);
-    smallAlert.show();
-    return;
-  }
-
-  if (item.amount > 1) {
-    client.typing = true;
-    itemAmountDialog.setMaxAmount(item.amount);
-    itemAmountDialog.setHeader('drop');
-    itemAmountDialog.setLabel(
-      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DROP)}`,
-    );
-    itemAmountDialog.setCallback(
-      (amount) => {
-        client.dropItem(itemId, amount, coords!);
-        client.typing = false;
-      },
-      () => {
-        client.typing = false;
-      },
-    );
-    itemAmountDialog.show();
-  } else {
-    client.dropItem(itemId, 1, coords!);
-  }
-});
-
-inventory.on('junkItem', (itemId) => {
-  const item = client.items.find((i) => i.id === itemId);
-  if (!item) {
-    return;
-  }
-
-  const record = client.getEifRecordById(itemId);
-  if (!record) {
-    return;
-  }
-
-  if (item.amount > 1) {
-    client.typing = true;
-    itemAmountDialog.setMaxAmount(item.amount);
-    itemAmountDialog.setHeader('junk');
-    itemAmountDialog.setLabel(
-      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_JUNK)}`,
-    );
-    itemAmountDialog.setCallback(
-      (amount) => {
-        client.junkItem(itemId, amount);
-        client.typing = false;
-      },
-      () => {
-        client.typing = false;
-      },
-    );
-    itemAmountDialog.show();
-  } else {
-    client.junkItem(itemId, 1);
-  }
-});
-
-inventory.on('addChestItem', (itemId) => {
-  const item = client.items.find((i) => i.id === itemId);
-  if (!item) {
-    return;
-  }
-
-  const record = client.getEifRecordById(itemId);
-  if (!record) {
-    return;
-  }
-
-  if (item.amount > 1) {
-    client.typing = true;
-    itemAmountDialog.setMaxAmount(item.amount);
-    itemAmountDialog.setHeader('drop');
-    itemAmountDialog.setLabel(
-      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DROP)}`,
-    );
-    itemAmountDialog.setCallback(
-      (amount) => {
-        client.addChestItem(itemId, amount);
-        client.typing = false;
-      },
-      () => {
-        client.typing = false;
-      },
-    );
-    itemAmountDialog.show();
-  } else {
-    client.addChestItem(itemId, 1);
-  }
-});
-
-inventory.on('addLockerItem', (itemId) => {
-  const item = client.items.find((i) => i.id === itemId);
-  if (!item) {
-    return;
-  }
-
-  const record = client.getEifRecordById(itemId);
-  if (!record) {
-    return;
-  }
-
-  if (itemId === 1) {
-    const strings = client.getDialogStrings(
-      DialogResourceID.LOCKER_DEPOSIT_GOLD_ERROR,
-    );
-    smallAlert.setContent(strings[1], strings[0]);
-    smallAlert.show();
-    return;
-  }
-
-  const itemAmount = lockerDialog.getItemAmount(itemId);
-  if (itemAmount >= LOCKER_MAX_ITEM_AMOUNT) {
-    const strings = client.getDialogStrings(
-      DialogResourceID.LOCKER_FULL_SINGLE_ITEM_MAX,
-    );
-    smallAlert.setContent(strings[1], strings[0]);
-    smallAlert.show();
-    return;
-  }
-
-  if (item.amount > 1) {
-    client.typing = true;
-    itemAmountDialog.setMaxAmount(
-      Math.min(item.amount, LOCKER_MAX_ITEM_AMOUNT - itemAmount),
-    );
-    itemAmountDialog.setHeader('bank');
-    itemAmountDialog.setLabel(
-      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DEPOSIT)}`,
-    );
-    itemAmountDialog.setCallback(
-      (amount) => {
-        client.addLockerItem(itemId, amount);
-        client.typing = false;
-      },
-      () => {
-        client.typing = false;
-      },
-    );
-    itemAmountDialog.show();
-  } else {
-    client.addLockerItem(itemId, 1);
-  }
-});
-
-inventory.on('useItem', (itemId) => {
-  client.useItem(itemId);
-});
-
-inventory.on('openPaperdoll', () => {
-  client.requestPaperdoll(client.playerId);
-});
-
-inventory.on('equipItem', ({ slot, itemId }) => {
-  client.equipItem(slot, itemId);
-});
-
-inventory.on('assignToSlot', ({ itemId, slotIndex }) => {
-  hotbar.setSlot(slotIndex, SlotType.Item, itemId);
-});
-
-questDialog.on('reply', ({ questId, dialogId, action }) => {
-  client.questReply(questId, dialogId, action);
-  client.typing = false;
-});
-
-questDialog.on('cancel', () => {
-  client.typing = false;
-});
-
-shopDialog.on('buyItem', (item) => {
-  const goldAmount = client.items.find((i) => i.id === 1)!.amount;
-  if (item.price > goldAmount) {
-    const text = client.getDialogStrings(
-      DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
-    );
-    smallAlert.setContent(text[1], text[0]);
-    smallAlert.show();
-    return;
-  }
-
-  itemAmountDialog.setHeader('shop');
-  itemAmountDialog.setMaxAmount(item.max);
-  itemAmountDialog.setLabel(
-    `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${item.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_BUY)}`,
-  );
-  itemAmountDialog.setCallback(
-    (amount) => {
-      const total = amount * item.price;
-      const goldAmount = client.items.find((i) => i.id === 1)!.amount;
-      itemAmountDialog.hide();
-      if (total > goldAmount) {
+      hideAllUi();
+      mainMenu.show();
+      if (wasInGame || client.state !== GameState.Initial) {
+        client.setState(GameState.Initial);
         const text = client.getDialogStrings(
-          DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
+          DialogResourceID.CONNECTION_LOST_CONNECTION,
         );
-        smallAlert.setContent(text[1], text[0]);
-        smallAlert.show();
-      } else {
-        const wordBuy = client.getResourceString(EOResourceID.DIALOG_WORD_BUY);
-        const wordFor = client.getResourceString(EOResourceID.DIALOG_WORD_FOR);
-        const goldRecord = client.getEifRecordById(1);
-        smallConfirm.setContent(
-          `${wordBuy} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord!.name} ?`,
-          client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS),
-        );
-        smallConfirm.setCallback(() => {
-          client.buyShopItem(item.id, amount);
-        }, true);
-        smallConfirm.show();
+        smallAlertLargeHeader.setContent(text[1], text[0]);
+        smallAlertLargeHeader.show();
       }
-    },
-    () => {},
-  );
-  itemAmountDialog.show();
-});
-
-shopDialog.on('sellItem', (item) => {
-  const itemAmount = client.items.find((i) => i.id === item.id)!.amount;
-  const showConfirm = (amount: number, total: number) => {
-    const wordSell = client.getResourceString(EOResourceID.DIALOG_WORD_SELL);
-    const wordFor = client.getResourceString(EOResourceID.DIALOG_WORD_FOR);
-    const goldRecord = client.getEifRecordById(1);
-    smallConfirm.setContent(
-      `${wordSell} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord!.name} ?`,
-      client.getResourceString(EOResourceID.DIALOG_SHOP_SELL_ITEMS),
-    );
-    smallConfirm.setCallback(() => {
-      client.sellShopItem(item.id, amount);
-    });
-    smallConfirm.show();
-  };
-
-  if (itemAmount === 1) {
-    showConfirm(1, item.price);
-    return;
-  }
-
-  itemAmountDialog.setHeader('shop');
-  itemAmountDialog.setMaxAmount(itemAmount);
-  itemAmountDialog.setLabel(
-    `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${item.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_SELL)}`,
-  );
-  itemAmountDialog.setCallback((amount) => {
-    const total = amount * item.price;
-    itemAmountDialog.hide();
-    showConfirm(amount, total);
-  });
-  itemAmountDialog.show();
-});
-
-shopDialog.on('craftItem', (item) => {
-  const missing = item.ingredients.some((ingredient) => {
-    if (!ingredient.amount) {
-      return false;
     }
-
-    const item = client.items.find((i) => i.id === ingredient.id);
-    return !item || item.amount < ingredient.amount;
   });
 
-  const lines = item.ingredients
-    .map((ingredient) => {
-      if (!ingredient.id) {
-        return '';
-      }
-
-      const record = client.getEifRecordById(ingredient.id);
-      if (!record) {
-        return '';
-      }
-
-      return `+ ${ingredient.amount} ${record.name}`;
-    })
-    .filter((l) => !!l);
-
-  if (missing) {
-    largeAlertSmallHeader.setContent(
-      `${client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_MISSING_INGREDIENTS)}\n\n${lines.join('\n')}`,
-      `${client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_INGREDIENTS)} ${item.name}`,
-    );
-    largeAlertSmallHeader.show();
-    return;
-  }
-
-  largeConfirmSmallHeader.setContent(
-    `${client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_PUT_INGREDIENTS_TOGETHER)}\n\n${lines.join('\n')}`,
-    `${client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_INGREDIENTS)} ${item.name}`,
-  );
-  largeConfirmSmallHeader.setCallback(() => {
-    client.craftShopItem(item.id);
-    largeConfirmSmallHeader.hide();
+  socket.addEventListener('error', (e) => {
+    console.error('Websocket Error', e);
   });
-  largeConfirmSmallHeader.show();
+};
+
+// ── Wire Events ──────────────────────────────────────────────────────────
+
+wireClientEvents({
+  client,
+  smallAlertLargeHeader,
+  smallConfirm,
+  smallAlert,
+  createAccountForm,
+  mainMenu,
+  loginForm,
+  characterSelect,
+  createCharacterForm,
+  changePasswordForm,
+  chat,
+  hud,
+  hotbar,
+  inGameMenu,
+  exitGame,
+  inventory,
+  stats,
+  questDialog,
+  paperdoll,
+  chestDialog,
+  shopDialog,
+  bankDialog,
+  boardDialog,
+  lockerDialog,
+  skillMasterDialog,
+  partyDialog,
+  initializeSocket,
+  resizeCanvases,
+  isMobile,
 });
 
-bankDialog.on('deposit', () => {
-  const gold = client.items.find((i) => i.id === 1);
-  if (!gold || gold.amount <= 0) {
-    const strings = client.getDialogStrings(
-      DialogResourceID.BANK_ACCOUNT_UNABLE_TO_DEPOSIT,
-    );
-    if (!strings) {
-      throw new Error('Failed to fetch dialog strings');
-    }
-
-    smallAlert.setContent(strings[1], strings[0]);
-    smallAlert.show();
-
-    return;
-  }
-
-  if (gold.amount > 1) {
-    const record = client.getEifRecordById(1);
-    if (!record) {
-      throw new Error('Failed to fetch gold record');
-    }
-
-    // Use transfer dialog to get qty
-    itemAmountDialog.setHeader('bank');
-    itemAmountDialog.setMaxAmount(gold.amount);
-    itemAmountDialog.setLabel(
-      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_DEPOSIT)}`,
-    );
-    itemAmountDialog.setCallback((amount) => {
-      client.depositGold(amount);
-      itemAmountDialog.hide();
-    });
-    itemAmountDialog.show();
-
-    return;
-  }
-
-  client.depositGold(1);
+wireUiEvents({
+  client,
+  mainMenu,
+  loginForm,
+  createAccountForm,
+  characterSelect,
+  createCharacterForm,
+  changePasswordForm,
+  exitGame,
+  chat,
+  smallConfirm,
+  smallAlertLargeHeader,
+  smallAlert,
+  largeAlertSmallHeader,
+  largeConfirmSmallHeader,
+  inventory,
+  stats,
+  spellBook,
+  onlineList,
+  inGameMenu,
+  questDialog,
+  shopDialog,
+  bankDialog,
+  lockerDialog,
+  hotbar,
+  itemAmountDialog,
+  partyDialog,
+  hideAllUi,
+  initializeSocket,
 });
 
-bankDialog.on('withdraw', () => {
-  if (client.goldBank <= 0) {
-    const strings = client.getDialogStrings(
-      DialogResourceID.BANK_ACCOUNT_UNABLE_TO_WITHDRAW,
-    );
-    if (!strings) {
-      throw new Error('Failed to fetch dialog strings');
-    }
-
-    smallAlert.setContent(strings[1], strings[0]);
-    smallAlert.show();
-
-    return;
-  }
-
-  if (client.goldBank > 1) {
-    const record = client.getEifRecordById(1);
-    if (!record) {
-      throw new Error('Failed to fetch gold record');
-    }
-
-    // Use transfer dialog to get qty
-    itemAmountDialog.setHeader('bank');
-    itemAmountDialog.setMaxAmount(client.goldBank);
-    itemAmountDialog.setLabel(
-      `${client.getResourceString(EOResourceID.DIALOG_TRANSFER_HOW_MUCH)} ${record.name} ${client.getResourceString(EOResourceID.DIALOG_TRANSFER_WITHDRAW)}`,
-    );
-    itemAmountDialog.setCallback((amount) => {
-      client.withdrawGold(amount);
-      itemAmountDialog.hide();
-    });
-    itemAmountDialog.show();
-
-    return;
-  }
-
-  client.withdrawGold(1);
-});
-
-bankDialog.on('upgrade', () => {
-  if (client.lockerUpgrades >= MAX_LOCKER_UPGRADES) {
-    const strings = client.getDialogStrings(
-      DialogResourceID.LOCKER_UPGRADE_IMPOSSIBLE,
-    );
-    smallAlert.setContent(strings[1], strings[0]);
-    smallAlert.show();
-    return;
-  }
-
-  const requiredGold =
-    LOCKER_UPGRADE_BASE_COST + LOCKER_UPGRADE_COST_STEP * client.lockerUpgrades;
-  const gold = client.items.find((i) => i.id === 1)?.amount || 0;
-
-  const record = client.getEifRecordById(1);
-  if (!record) {
-    throw new Error('Failed to fetch gold record');
-  }
-
-  if (gold < requiredGold) {
-    const strings = client.getDialogStrings(
-      DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
-    );
-    smallAlert.setContent(`${strings[1]} ${record.name}`, strings[0]);
-    smallAlert.show();
-    return;
-  }
-
-  const strings = client.getDialogStrings(DialogResourceID.LOCKER_UPGRADE_UNIT);
-  smallConfirm.setContent(
-    `${strings[1]} ${requiredGold} ${record.name}`,
-    strings[0],
-  );
-  smallConfirm.setCallback(() => {
-    client.upgradeLocker();
-  });
-  smallConfirm.show();
-});
-
-stats.on('confirmTraining', () => {
-  smallConfirm.setContent('Do you want to train?', 'Character training');
-  smallConfirm.setCallback(() => {
-    stats.setTrainingConfirmed();
-  });
-  smallConfirm.show();
-});
-
-spellBook.on('assignToSlot', ({ spellId, slotIndex }) => {
-  hotbar.setSlot(slotIndex, SlotType.Skill, spellId);
-});
-
-window.addEventListener('keyup', (e) => {
-  if (client.state === GameState.InGame && e.key === 'Enter') {
-    chat.focus();
-  }
-
-  if (
-    client.state === GameState.LoggedIn &&
-    !changePasswordForm.isOpen() &&
-    !createCharacterForm.isOpen() &&
-    ['1', '2', '3'].includes(e.key)
-  ) {
-    characterSelect.selectCharacter(Number.parseInt(e.key, 10));
-  }
-});
+// ── Input Listeners ──────────────────────────────────────────────────────
 
 window.addEventListener(
   'touchmove',
@@ -1130,6 +429,8 @@ window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
 });
 
+// ── DOM Init ─────────────────────────────────────────────────────────────
+
 function loadInventoryGrid() {
   const img = new Image();
   img.src = '/gfx/gfx002/144.png';
@@ -1138,13 +439,13 @@ function loadInventoryGrid() {
     canvas.width = 23;
     canvas.height = 23;
     const ctx = canvas.getContext('2d');
-    ctx!.fillStyle = '#000';
-    ctx!.fillRect(0, 0, 23, 23);
-    ctx!.drawImage(img, 12, 10, 23, 23, 0, 0, 23, 23);
+    ctx!.fillStyle! = '#000';
+    ctx!.fillRect!(0, 0, 23, 23);
+    ctx!.drawImage!(img, 12, 10, 23, 23, 0, 0, 23, 23);
 
     const dataUrl = canvas.toDataURL();
-    const grid = document.querySelector<HTMLDivElement>('#inventory .grid');
-    grid!.style.background = `url(${dataUrl})`;
+    const grid = document.querySelector<HTMLDivElement>('#inventory .grid')!;
+    grid.style.background = `url(${dataUrl})`;
   };
 }
 
@@ -1189,20 +490,20 @@ function _setDebugData() {
   const numNpcs = 200;
   const numItems = 100;
 
-  const weapons = client
-    .eif!.items.filter((i) => i.type === ItemType.Weapon)
+  const weapons = client.eif.items
+    .filter((i) => i.type === ItemType.Weapon)
     .map((i) => i.spec1);
-  const armors = client
-    .eif!.items.filter((i) => i.type === ItemType.Armor)
+  const armors = client.eif.items
+    .filter((i) => i.type === ItemType.Armor)
     .map((i) => ({ gender: i.spec2, graphic: i.spec1 }));
-  const boots = client
-    .eif!.items.filter((i) => i.type === ItemType.Boots)
+  const boots = client.eif.items
+    .filter((i) => i.type === ItemType.Boots)
     .map((i) => i.spec1);
-  const hats = client
-    .eif!.items.filter((i) => i.type === ItemType.Hat)
+  const hats = client.eif.items
+    .filter((i) => i.type === ItemType.Hat)
     .map((i) => i.spec1);
-  const shields = client
-    .eif!.items.filter((i) => i.type === ItemType.Shield)
+  const shields = client.eif.items
+    .filter((i) => i.type === ItemType.Shield)
     .map((i) => i.spec1);
 
   for (let i = 1; i <= numCharacters; ++i) {
@@ -1237,7 +538,7 @@ function _setDebugData() {
     client.nearby.characters.push(character);
   }
 
-  const npcCount = client.enf!.npcs.length;
+  const npcCount = client.enf.npcs.length;
   for (let i = 1; i <= numNpcs; ++i) {
     const npc = new NpcMapInfo();
     npc.index = i;
@@ -1249,7 +550,7 @@ function _setDebugData() {
     client.nearby.npcs.push(npc);
   }
 
-  const itemCount = client.eif!.totalItemsCount;
+  const itemCount = client.eif.totalItemsCount;
   for (let i = 1; i <= numItems; ++i) {
     const item = new ItemMapInfo();
     item.uid = i;

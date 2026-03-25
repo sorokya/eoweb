@@ -1,0 +1,121 @@
+import type { Client } from '../client';
+import { registerAccountHandlers } from './account';
+import { registerAdminInteractHandlers } from './admin-interact';
+import { registerArenaHandlers } from './arena';
+import { registerAttackHandlers } from './attack';
+import { registerAvatarHandlers } from './avatar';
+import { registerBankHandlers } from './bank';
+import { registerBoardHandlers } from './board';
+import { registerCastHandlers } from './cast';
+import { registerChairHandlers } from './chair';
+import { registerCharacterHandlers } from './character';
+import { registerChestHandlers } from './chest';
+import { registerConnectionHandlers } from './connection';
+import { registerDoorHandlers } from './door';
+import { registerEffectHandlers } from './effect';
+import { registerEmoteHandlers } from './emote';
+import { registerFaceHandlers } from './face';
+import { registerInitHandlers } from './init';
+import { registerItemHandlers } from './item';
+import { registerLockerHandlers } from './locker';
+import { registerLoginHandlers } from './login';
+import { registerMessageHandlers } from './message';
+import { registerMusicHandlers } from './music';
+import { registerNpcHandlers } from './npc';
+import { registerPaperdollHandlers } from './paperdoll';
+import { registerPartyHandlers } from './party';
+import { registerPlayersHandlers } from './players';
+import { registerQuestHandlers } from './quest';
+import { registerRangeHandlers } from './range';
+import { registerRecoverHandlers } from './recover';
+import { registerRefreshHandlers } from './refresh';
+import { registerShopHandlers } from './shop';
+import { registerSitHandlers } from './sit';
+import { registerSpellHandlers } from './spell';
+import { registerStatSkillHandlers } from './stat-skill';
+import { registerTalkHandlers } from './talk';
+import { registerWalkHandlers } from './walk';
+import { registerWarpHandlers } from './warp';
+import { registerWelcomeHandlers } from './welcome';
+
+export {
+  registerAccountHandlers,
+  registerAdminInteractHandlers,
+  registerArenaHandlers,
+  registerAttackHandlers,
+  registerAvatarHandlers,
+  registerBankHandlers,
+  registerBoardHandlers,
+  registerCastHandlers,
+  registerChairHandlers,
+  registerCharacterHandlers,
+  registerChestHandlers,
+  registerConnectionHandlers,
+  registerDoorHandlers,
+  registerEffectHandlers,
+  registerEmoteHandlers,
+  registerFaceHandlers,
+  registerInitHandlers,
+  registerItemHandlers,
+  registerLockerHandlers,
+  registerLoginHandlers,
+  registerMessageHandlers,
+  registerMusicHandlers,
+  registerNpcHandlers,
+  registerPaperdollHandlers,
+  registerPartyHandlers,
+  registerPlayersHandlers,
+  registerQuestHandlers,
+  registerRangeHandlers,
+  registerRecoverHandlers,
+  registerRefreshHandlers,
+  registerShopHandlers,
+  registerSitHandlers,
+  registerSpellHandlers,
+  registerStatSkillHandlers,
+  registerTalkHandlers,
+  registerWalkHandlers,
+  registerWarpHandlers,
+  registerWelcomeHandlers,
+};
+
+export function registerAllHandlers(client: Client): void {
+  registerInitHandlers(client);
+  registerConnectionHandlers(client);
+  registerLoginHandlers(client);
+  registerWelcomeHandlers(client);
+  registerPlayersHandlers(client);
+  registerRecoverHandlers(client);
+  registerMessageHandlers(client);
+  registerAvatarHandlers(client);
+  registerFaceHandlers(client);
+  registerWalkHandlers(client);
+  registerSitHandlers(client);
+  registerChairHandlers(client);
+  registerWarpHandlers(client);
+  registerRefreshHandlers(client);
+  registerNpcHandlers(client);
+  registerRangeHandlers(client);
+  registerTalkHandlers(client);
+  registerAttackHandlers(client);
+  registerArenaHandlers(client);
+  registerAccountHandlers(client);
+  registerCharacterHandlers(client);
+  registerDoorHandlers(client);
+  registerEffectHandlers(client);
+  registerItemHandlers(client);
+  registerAdminInteractHandlers(client);
+  registerQuestHandlers(client);
+  registerMusicHandlers(client);
+  registerEmoteHandlers(client);
+  registerPaperdollHandlers(client);
+  registerChestHandlers(client);
+  registerShopHandlers(client);
+  registerBoardHandlers(client);
+  registerBankHandlers(client);
+  registerLockerHandlers(client);
+  registerStatSkillHandlers(client);
+  registerSpellHandlers(client);
+  registerCastHandlers(client);
+  registerPartyHandlers(client);
+}
