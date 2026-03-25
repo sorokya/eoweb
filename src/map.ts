@@ -13,7 +13,7 @@ import {
   NpcFrame,
   StaticAtlasEntryType,
 } from './atlas';
-import { type Client, GameState } from './client';
+import type { Client } from './client';
 import {
   getCharacterIntersecting,
   getCharacterRectangle,
@@ -63,6 +63,7 @@ import type { HealthBar } from './render/health-bar';
 import { NpcAttackAnimation } from './render/npc-attack';
 import { NpcDeathAnimation } from './render/npc-death';
 import { NpcWalkAnimation } from './render/npc-walk';
+import { GameState } from './types';
 import { capitalize } from './utils/capitalize';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';

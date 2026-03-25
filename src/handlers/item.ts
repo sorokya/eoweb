@@ -16,14 +16,14 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import { ChatTab, type Client, EquipmentSlot } from '../client';
+import type { Client } from '../client';
 import { ITEM_PROTECT_TICKS_PLAYER } from '../consts';
 import { EOResourceID } from '../edf';
 import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon, ChatTab, EquipmentSlot } from '../types';
 
 function handleItemAdd(client: Client, reader: EoReader) {
   const packet = ItemAddServerPacket.deserialize(reader);

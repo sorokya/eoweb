@@ -1,8 +1,7 @@
 import type { Client } from '../client';
-import { ChatTab } from '../client';
 import { DialogResourceID, EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon, ChatTab } from '../types';
 
 export interface ClientEventDeps {
   client: Client;

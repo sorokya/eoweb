@@ -7,12 +7,12 @@ import {
   WarpRequestServerPacket,
   WarpType,
 } from 'eolib';
-import { ChatTab, type Client } from '../client';
+import type { Client } from '../client';
 import { getEmf } from '../db';
 import { EOResourceID } from '../edf';
 import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon, ChatTab } from '../types';
 
 function handleWarpRequest(client: Client, reader: EoReader) {
   const packet = WarpRequestServerPacket.deserialize(reader);

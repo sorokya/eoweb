@@ -16,7 +16,7 @@ import {
 import './css/style.css';
 import 'notyf/notyf.min.css';
 import { PacketBus } from './bus';
-import { Client, GameState } from './client';
+import { Client } from './client';
 import { GAME_FPS, MAX_CHALLENGE } from './consts';
 import { DialogResourceID } from './edf';
 import {
@@ -26,6 +26,7 @@ import {
   setZoom,
   ZOOM,
 } from './game-state';
+import { GameState } from './types';
 import { BankDialog } from './ui/bank-dialog/bank-dialog';
 import { BoardDialog } from './ui/board-dialog';
 import { ChangePasswordForm } from './ui/change-password';

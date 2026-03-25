@@ -1,5 +1,6 @@
 import type { Client } from '../../client';
 import { HOTBAR_SLOTS } from '../../consts';
+import { SlotType } from '../../types/ui';
 import { Base } from '../base-ui';
 import {
   setItemImageFromGfx,
@@ -7,12 +8,6 @@ import {
 } from '../utils/gfx-resource';
 
 import './hotbar.css';
-
-export enum SlotType {
-  Empty = 0,
-  Item = 1,
-  Skill = 2,
-}
 
 export class Slot {
   type: SlotType;

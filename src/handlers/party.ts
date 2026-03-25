@@ -14,11 +14,11 @@ import {
   PartyRequestType,
   PartyTargetGroupServerPacket,
 } from 'eolib';
-import { ChatTab, type Client } from '../client';
+import type { Client } from '../client';
 import { DialogResourceID, EOResourceID } from '../edf';
 import { Emote } from '../render/emote';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon, ChatTab } from '../types';
 import { capitalize } from '../utils/capitalize';
 
 function handlePartyReply(client: Client, reader: EoReader) {

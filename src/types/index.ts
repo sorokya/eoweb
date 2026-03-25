@@ -1,9 +1,6 @@
 // Account & Character
 export type { AccountCreateData, CharacterCreateData } from './account';
 
-// Chat
-export { ChatIcon, ChatTab } from './chat';
-
 // Config
 export type { IConfig } from './config';
 
@@ -46,8 +43,5 @@ export type { IVector2 } from './render';
 // SFX (re-exported from sfx.ts)
 export { SfxId } from './sfx';
 
-// UI (interfaces)
-export type { ISlot } from './ui';
-
-// UI (enums — re-exported from implementation files)
-export { DialogIcon, SlotType } from './ui';
+// UI
+export { ChatIcon, ChatTab, DialogIcon, type ISlot, SlotType } from './ui';

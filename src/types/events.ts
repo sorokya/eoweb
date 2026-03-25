@@ -13,8 +13,8 @@ import type {
   ThreeItem,
   TradeItemData,
 } from 'eolib';
-import type { ChatIcon, ChatTab } from './chat';
 import type { SfxId } from './sfx';
+import type { ChatIcon, ChatTab } from './ui';
 
 export type ClientEvents = {
   error: { title: string; message: string };

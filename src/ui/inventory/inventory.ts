@@ -1,10 +1,6 @@
 import { type Item, ItemSize } from 'eolib';
 import mitt from 'mitt';
-import {
-  type Client,
-  type EquipmentSlot,
-  getEquipmentSlotFromString,
-} from '../../client';
+import type { Client } from '../../client';
 import { playSfxById, SfxId } from '../../sfx';
 import { getItemMeta } from '../../utils/get-item-meta';
 import type { Vector2 } from '../../vector';
@@ -12,6 +8,7 @@ import { Base } from '../base-ui';
 import { setItemGridImageFromGfx } from '../utils/gfx-resource';
 
 import './inventory.css';
+import { type EquipmentSlot, getEquipmentSlotFromString } from '../../types';
 
 type ItemPosition = {
   id: number;

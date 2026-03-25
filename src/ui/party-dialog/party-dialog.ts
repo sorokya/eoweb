@@ -1,8 +1,8 @@
 import type { Client } from '../../client';
 import { playSfxById, SfxId } from '../../sfx';
+import { ChatIcon } from '../../types';
 import { capitalize } from '../../utils/capitalize';
 import { Base } from '../base-ui';
-import { ChatIcon } from '../chat/chat';
 
 import './party-dialog.css';
 

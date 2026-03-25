@@ -1,6 +1,5 @@
 import type { ItemSpecial } from 'eolib';
 import type { Client } from '../client';
-import { ChatTab, GameState } from '../client';
 import {
   LOCKER_MAX_ITEM_AMOUNT,
   LOCKER_UPGRADE_BASE_COST,
@@ -8,8 +7,7 @@ import {
   MAX_LOCKER_UPGRADES,
 } from '../consts';
 import { DialogResourceID, EOResourceID } from '../edf';
-import { ChatIcon } from '../ui/chat/chat';
-import { SlotType } from '../ui/hotbar/hotbar';
+import { ChatIcon, ChatTab, GameState, SlotType } from '../types';
 import { capitalize } from '../utils';
 
 // biome-ignore lint/suspicious/noExplicitAny: Event emitter callbacks require flexible argument types
@@ -357,7 +355,7 @@ export function wireUiEvents(deps: UiEventDeps): void {
     }: {
       questId: number;
       dialogId: number;
-      action: number;
+      action: number | null;
     }) => {
       client.questController.questReply(questId, dialogId, action);
       client.typing = false;

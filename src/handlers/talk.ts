@@ -14,11 +14,11 @@ import {
   TalkTellServerPacket,
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
-import { ChatTab, type Client } from '../client';
+import type { Client } from '../client';
 import { COLORS } from '../consts';
 import { EOResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon, ChatTab } from '../types';
 import { capitalize } from '../utils/capitalize';
 
 function handleTalkPlayer(client: Client, reader: EoReader) {

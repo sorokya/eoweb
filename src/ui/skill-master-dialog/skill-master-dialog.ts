@@ -4,7 +4,6 @@ import type { Client } from '../../client';
 import { DialogResourceID, EOResourceID } from '../../edf';
 import { playSfxById, SfxId } from '../../sfx';
 import { Base } from '../base-ui';
-import { DialogIcon } from '../dialog-icon';
 import {
   createIconMenuItem,
   createSkillMenuItem,
@@ -12,6 +11,7 @@ import {
 } from '../utils/create-menu-item';
 
 import './skill-master-dialog.css';
+import { DialogIcon } from '../../types';
 
 enum State {
   Initial = 0,

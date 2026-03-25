@@ -10,13 +10,13 @@ import type { Client } from '../../client';
 import { EOResourceID } from '../../edf';
 import { playSfxById, SfxId } from '../../sfx';
 import { Base } from '../base-ui';
-import { DialogIcon } from '../dialog-icon';
 import {
   createIconMenuItem,
   createItemMenuItem,
 } from '../utils/create-menu-item';
 
 import './shop-dialog.css';
+import { DialogIcon } from '../../types';
 
 enum State {
   Initial = 0,

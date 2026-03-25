@@ -92,16 +92,6 @@ import {
 } from './utils';
 import type { Vector2 } from './vector';
 
-export type { ClientEvents } from './types';
-// Re-export types that other files import from './client'
-export {
-  ChatTab,
-  EquipmentSlot,
-  GameState,
-  getEquipmentSlotForItemType,
-  getEquipmentSlotFromString,
-} from './types';
-
 export class Client {
   private emitter: Emitter<ClientEvents>;
   tickCount = 0;

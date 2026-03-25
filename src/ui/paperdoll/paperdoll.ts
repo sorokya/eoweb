@@ -1,5 +1,5 @@
 import { CharacterDetails, CharacterIcon, EquipmentPaperdoll } from 'eolib';
-import { type Client, EquipmentSlot } from '../../client';
+import type { Client } from '../../client';
 import { playSfxById, SfxId } from '../../sfx';
 import { capitalize } from '../../utils/capitalize';
 import { getItemMeta } from '../../utils/get-item-meta';
@@ -8,6 +8,7 @@ import { characterIconToChatIcon } from '../utils/character-icon-to-chat-icon';
 import { setItemGridImageFromGfx } from '../utils/gfx-resource';
 
 import './paperdoll.css';
+import { EquipmentSlot } from '../../types';
 
 export class Paperdoll extends Base {
   protected container = document.getElementById('paperdoll')!;

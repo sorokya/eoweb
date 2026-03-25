@@ -15,7 +15,7 @@ import {
   PlayerKilledState,
 } from 'eolib';
 import { ChatBubble } from '../chat-bubble';
-import { ChatTab, type Client } from '../client';
+import type { Client } from '../client';
 import { ITEM_PROTECT_TICKS_NPC } from '../consts';
 import { EOResourceID } from '../edf';
 import { Emote } from '../render/emote';
@@ -23,7 +23,7 @@ import { HealthBar } from '../render/health-bar';
 import { NpcAttackAnimation } from '../render/npc-attack';
 import { NpcWalkAnimation } from '../render/npc-walk';
 import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../ui/chat/chat';
+import { ChatIcon, ChatTab } from '../types';
 import { capitalize } from '../utils/capitalize';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {

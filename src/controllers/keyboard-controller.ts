@@ -1,5 +1,5 @@
 import { Direction, Emote, ItemSubtype, MapTileSpec, SitState } from 'eolib';
-import { type Client, GameState } from '../client';
+import type { Client } from '../client';
 import {
   ATTACK_TICKS,
   FACE_TICKS,
@@ -20,6 +20,7 @@ import { CharacterAttackAnimation } from '../render/character-attack';
 import { CharacterRangedAttackAnimation } from '../render/character-attack-ranged';
 import { CharacterWalkAnimation } from '../render/character-walk';
 import { playSfxById, SfxId } from '../sfx';
+import { GameState } from '../types';
 import { bigCoordsToCoords } from '../utils/big-coords-to-coords';
 import { getNextCoords } from '../utils/get-next-coords';
 import { getTimestamp } from './movement-controller';
