@@ -48,9 +48,11 @@ import {
   CombatController,
   CommandController,
   InventoryController,
+  KeyboardController,
   LockerController,
   MapController,
   MouseController,
+  MovementController,
   NpcController,
   ShopController,
   SocialController,
@@ -64,7 +66,6 @@ import { HALF_GAME_HEIGHT, HALF_GAME_WIDTH } from './game-state';
 import { registerAllHandlers } from './handlers';
 import { MapRenderer } from './map';
 import { MinimapRenderer } from './minimap';
-import { MovementController } from './movement-controller';
 import {
   type CharacterAnimation,
   CharacterDeathAnimation,
@@ -182,6 +183,7 @@ export class Client {
   mousePosition: Vector2 | undefined;
   mouseCoords: Vector2 | undefined;
   movementController: MovementController;
+  keyboardController: KeyboardController;
   audioController: AudioController;
   authController: AuthController;
   bankController: BankController;
@@ -308,6 +310,7 @@ export class Client {
     this.mapRenderer = new MapRenderer(this);
     this.minimapRenderer = new MinimapRenderer(this);
     this.movementController = new MovementController(this);
+    this.keyboardController = new KeyboardController(this);
     this.audioController = new AudioController(this);
     this.authController = new AuthController(this);
     this.bankController = new BankController(this);
@@ -526,7 +529,7 @@ export class Client {
 
   tick() {
     this.tickCount += 1;
-    this.movementController.tick();
+    this.keyboardController.tick();
     this.mapRenderer.tick();
 
     if (this.state === GameState.InGame) {

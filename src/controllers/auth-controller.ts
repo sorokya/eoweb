@@ -124,7 +124,7 @@ export class AuthController {
     packet.mapId = this.client.warpMapId;
     this.client.bus!.send(packet);
     this.client.warpQueued = false;
-    this.client.movementController.freeze = true;
+    this.client.keyboardController.freeze();
   }
 
   requestFile(fileType: FileType, id: number): void {

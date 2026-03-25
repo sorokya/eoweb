@@ -12,7 +12,6 @@ import {
 import type { Client } from '../client';
 import { SPELL_COOLDOWN_TICKS } from '../consts';
 import { EOResourceID } from '../edf';
-import { getTimestamp } from '../movement-controller';
 import {
   CharacterDeathAnimation,
   CharacterSpellChantAnimation,
@@ -22,6 +21,7 @@ import {
 } from '../render';
 import { playSfxById } from '../sfx';
 import { SfxId, SlotType, SpellTarget } from '../types';
+import { getTimestamp } from './movement-controller';
 
 export class CombatController {
   private client: Client;

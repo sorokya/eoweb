@@ -124,3 +124,14 @@ export class MovementController {
     this.client.idleTicks = INITIAL_IDLE_TICKS;
   }
 }
+
+export function getTimestamp(): number {
+  const now = new Date();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  const second = now.getSeconds();
+  const millisecond = now.getMilliseconds();
+  const ms = Math.floor(millisecond);
+
+  return hour * 360000 + minute * 6000 + second * 100 + Math.floor(ms / 10);
+}

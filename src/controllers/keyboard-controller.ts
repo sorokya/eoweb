@@ -1,13 +1,13 @@
 import { Direction, Emote, ItemSubtype, MapTileSpec, SitState } from 'eolib';
-import { type Client, GameState } from './client';
+import { type Client, GameState } from '../client';
 import {
   ATTACK_TICKS,
   FACE_TICKS,
   HOTBAR_COOLDOWN_TICKS,
   SIT_TICKS,
   WALK_TICKS as WALK_ANIMATION_TICKS,
-} from './consts';
-import { EOResourceID } from './edf';
+} from '../consts';
+import { EOResourceID } from '../edf';
 import {
   clearUnheldInput,
   getLastHeldDirection,
@@ -15,13 +15,14 @@ import {
   isInputHeld,
   isOrWasInputHeld,
   wasInputHeldLastTick,
-} from './input';
-import { CharacterAttackAnimation } from './render/character-attack';
-import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
-import { CharacterWalkAnimation } from './render/character-walk';
-import { playSfxById, SfxId } from './sfx';
-import { bigCoordsToCoords } from './utils/big-coords-to-coords';
-import { getNextCoords } from './utils/get-next-coords';
+} from '../input';
+import { CharacterAttackAnimation } from '../render/character-attack';
+import { CharacterRangedAttackAnimation } from '../render/character-attack-ranged';
+import { CharacterWalkAnimation } from '../render/character-walk';
+import { playSfxById, SfxId } from '../sfx';
+import { bigCoordsToCoords } from '../utils/big-coords-to-coords';
+import { getNextCoords } from '../utils/get-next-coords';
+import { getTimestamp } from './movement-controller';
 
 function inputToDirection(input: Input): Direction | null {
   switch (input) {
@@ -40,19 +41,27 @@ function inputToDirection(input: Input): Direction | null {
 
 const WALK_TICKS = WALK_ANIMATION_TICKS - 1;
 
-export class MovementController {
+export class KeyboardController {
   private client: Client;
-  walkTicks = WALK_TICKS;
-  faceTicks = FACE_TICKS;
-  sitTicks = SIT_TICKS;
-  attackTicks = ATTACK_TICKS;
-  hotbarTicks = HOTBAR_COOLDOWN_TICKS;
-  minimapTicks = WALK_TICKS;
-  refreshTicks = WALK_TICKS;
-  freeze = false;
+  private walkTicks = WALK_TICKS;
+  private faceTicks = FACE_TICKS;
+  private sitTicks = SIT_TICKS;
+  private attackTicks = ATTACK_TICKS;
+  private hotbarTicks = HOTBAR_COOLDOWN_TICKS;
+  private minimapTicks = WALK_TICKS;
+  private refreshTicks = WALK_TICKS;
+  private frozen = false;
 
   constructor(client: Client) {
     this.client = client;
+  }
+
+  freeze() {
+    this.frozen = true;
+  }
+
+  unfreeze() {
+    this.frozen = false;
   }
 
   tick() {
@@ -65,7 +74,7 @@ export class MovementController {
     this.refreshTicks = Math.max(this.refreshTicks - 1, 0);
 
     if (
-      this.freeze ||
+      this.frozen ||
       this.client.state !== GameState.InGame ||
       this.client.typing
     ) {
@@ -346,15 +355,4 @@ export class MovementController {
       return;
     }
   }
-}
-
-export function getTimestamp(): number {
-  const now = new Date();
-  const hour = now.getHours();
-  const minute = now.getMinutes();
-  const second = now.getSeconds();
-  const millisecond = now.getMilliseconds();
-  const ms = Math.floor(millisecond);
-
-  return hour * 360000 + minute * 6000 + second * 100 + Math.floor(ms / 10);
 }

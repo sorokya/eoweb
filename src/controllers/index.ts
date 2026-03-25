@@ -7,6 +7,7 @@ export { ChestController } from './chest-controller';
 export { CombatController } from './combat-controller';
 export { CommandController } from './command-controller';
 export { InventoryController } from './inventory-controller';
+export { KeyboardController } from './keyboard-controller';
 export { LockerController } from './locker-controller';
 export { MapController } from './map-controller';
 export { MouseController } from './mouse-controller';

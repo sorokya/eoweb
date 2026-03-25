@@ -77,11 +77,11 @@ function handleWarpAgree(client: Client, reader: EoReader) {
       client.mapId = client.warpMapId;
       client.setMap(map);
       client.atlas.refresh();
-      client.movementController.freeze = false;
+      client.keyboardController.unfreeze();
     });
   } else {
     client.atlas.refresh();
-    client.movementController.freeze = false;
+    client.keyboardController.unfreeze();
   }
 }
 

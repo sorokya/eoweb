@@ -7,7 +7,6 @@ import {
   SPELL_COOLDOWN_TICKS,
   USAGE_TICKS,
 } from '../consts';
-import { getTimestamp } from '../movement-controller';
 import {
   CharacterDeathAnimation,
   CharacterSpellChantAnimation,
@@ -16,6 +15,7 @@ import {
 } from '../render';
 import { playSfxById, SfxId } from '../sfx';
 import { inRange, randomRange } from '../utils';
+import { getTimestamp } from './movement-controller';
 
 export class TickController {
   private client: Client;
