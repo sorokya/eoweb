@@ -258,7 +258,7 @@ const thumb = document.getElementById('joystick-thumb');
 let inputVector = { x: 0, y: 0 };
 const maxRadius = 40;
 
-joystickContainer.addEventListener('touchstart', (e) => {
+joystickContainer!.addEventListener('touchstart', (e) => {
   const t = e.changedTouches[0];
   touchStartX = t.clientX;
   touchStartY = t.clientY;
@@ -267,14 +267,14 @@ joystickContainer.addEventListener('touchstart', (e) => {
   handleTouchMove(e);
 });
 
-joystickContainer.addEventListener('touchmove', (e) => {
+joystickContainer!.addEventListener('touchmove', (e) => {
   handleTouchMove(e);
   e.preventDefault();
 });
 
-joystickContainer.addEventListener('touchend', () => {
+joystickContainer!.addEventListener('touchend', () => {
   inputVector = { x: 0, y: 0 };
-  thumb.style.transform = 'translate(0px, 0px)';
+  thumb!.style.transform = 'translate(0px, 0px)';
   if (activeTouchDir !== null) {
     updateInputHeld(activeTouchDir, false);
   }
@@ -285,7 +285,7 @@ joystickContainer.addEventListener('touchend', () => {
 });
 
 function handleTouchMove(e: TouchEvent) {
-  const rect = joystickContainer.getBoundingClientRect();
+  const rect = joystickContainer!.getBoundingClientRect();
   const touch = e.touches[0];
   const centerX = rect.left + rect.width / 2;
   const centerY = rect.top + rect.height / 2;
@@ -302,7 +302,7 @@ function handleTouchMove(e: TouchEvent) {
   inputVector.x = clampedX / maxRadius;
   inputVector.y = clampedY / maxRadius;
 
-  thumb.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+  thumb!.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
 
   if (touchId === null) return;
 
@@ -330,20 +330,20 @@ function handleTouchMove(e: TouchEvent) {
 }
 
 const btnAttack = document.getElementById('btn-attack');
-btnAttack.addEventListener('touchstart', () => {
+btnAttack!.addEventListener('touchstart', () => {
   updateInputHeld(Input.Attack, true);
 });
 
-btnAttack.addEventListener('touchend', () => {
+btnAttack!.addEventListener('touchend', () => {
   updateInputHeld(Input.Attack, false);
 });
 
 const btnSit = document.getElementById('btn-toggle-sit');
-btnSit.addEventListener('touchstart', () => {
+btnSit!.addEventListener('touchstart', () => {
   updateInputHeld(Input.SitStand, true);
 });
 
-btnSit.addEventListener('touchend', () => {
+btnSit!.addEventListener('touchend', () => {
   updateInputHeld(Input.SitStand, false);
 });
 

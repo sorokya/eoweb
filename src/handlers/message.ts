@@ -32,7 +32,7 @@ function handleMessageClose(client: Client) {
   const message = client.getResourceString(
     EOResourceID.REBOOT_SEQUENCE_STARTED,
   );
-  client.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, message);
+  client.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, message!);
   const chatMessage = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${message}`;
   client.emit('chat', {
     tab: ChatTab.Local,
@@ -52,17 +52,17 @@ function handleMessageClose(client: Client) {
 }
 
 export function registerMessageHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Message,
     PacketAction.Pong,
     (_) => handleMessagePing(client),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Message,
     PacketAction.Open,
     (reader) => handleMessageOpen(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Message,
     PacketAction.Close,
     (_reader) => handleMessageClose(client),

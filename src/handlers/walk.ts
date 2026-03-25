@@ -32,8 +32,8 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
       getPrevCoords(
         packet.coords,
         packet.direction,
-        client.map.width,
-        client.map.height,
+        client!.map!.width,
+        client!.map!.height,
       ),
       packet.coords,
       packet.direction,
@@ -44,8 +44,8 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
     return;
   }
 
-  const spec = client.map.tileSpecRows
-    .find((r) => r.y === packet.coords.y)
+  const spec = client!
+    .map!.tileSpecRows.find((r) => r.y === packet.coords.y)
     ?.tiles.find((t) => t.x === packet.coords.x);
 
   if (spec && spec.tileSpec === MapTileSpec.Water) {
@@ -85,12 +85,12 @@ function handleWalkReply(client: Client, reader: EoReader) {
 }
 
 export function registerWalkHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Walk,
     PacketAction.Player,
     (reader) => handleWalkPlayer(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Walk,
     PacketAction.Reply,
     (reader) => handleWalkReply(client, reader),

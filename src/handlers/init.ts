@@ -101,7 +101,7 @@ function handleInitOk(
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_LOST_CONNECTION,
     );
-    client.showError(text[1], text[0]);
+    client.showError(text![1], text![0]);
     client.disconnect();
     return;
   }
@@ -158,14 +158,14 @@ function handleInitBanned(
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_IP_BAN_PERM,
     );
-    client.showError(text[1], text[0]);
+    client.showError(text![1], text![0]);
     return;
   }
 
   const banData =
     data.banTypeData as InitInitServerPacket.ReplyCodeDataBanned.BanTypeData0;
   const text = client.getDialogStrings(DialogResourceID.CONNECTION_IP_BAN_TEMP);
-  client.showError(`${text[0]} ${banData.minutesRemaining} minutes`, text[1]);
+  client.showError(`${text![0]} ${banData.minutesRemaining} minutes`, text![1]);
 }
 
 function handleInitFileEcf(
@@ -178,7 +178,7 @@ function handleInitFileEcf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.requestFile(download.type, download.id);
+    client.requestFile(download!.type, download!.id);
   } else {
     client.enterGame();
   }
@@ -194,7 +194,7 @@ function handleInitFileEif(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.requestFile(download.type, download.id);
+    client.requestFile(download!.type, download!.id);
   } else {
     client.enterGame();
   }
@@ -210,7 +210,7 @@ function handleInitFileEnf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.requestFile(download.type, download.id);
+    client.requestFile(download!.type, download!.id);
   } else {
     client.enterGame();
   }
@@ -226,7 +226,7 @@ function handleInitFileEsf(
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.requestFile(download.type, download.id);
+    client.requestFile(download!.type, download!.id);
   } else {
     client.enterGame();
   }
@@ -238,11 +238,11 @@ function handleInitFileEmf(
 ) {
   const reader = new EoReader(data.mapFile.content);
   client.setMap(Emf.deserialize(reader));
-  saveEmf(client.mapId, client.map);
+  saveEmf(client.mapId, client.map!);
 
   if (client.downloadQueue.length > 0) {
     const download = client.downloadQueue.pop();
-    client.requestFile(download.type, download.id);
+    client.requestFile(download!.type, download!.id);
   } else {
     client.enterGame();
   }
@@ -284,7 +284,7 @@ function handleInitMapMutation(
 }
 
 export function registerInitHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Init,
     PacketAction.Init,
     (reader) => handleInitInit(client, reader),

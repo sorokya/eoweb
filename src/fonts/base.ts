@@ -20,14 +20,14 @@ export enum TextAlign {
 
 export abstract class Font {
   protected atlas: Atlas;
-  protected characters: FontCharacter[];
+  protected characters!: FontCharacter[];
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
 
   constructor(atlas: Atlas) {
     this.atlas = atlas;
     this.canvas = document.createElement('canvas');
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d')!;
   }
 
   public getCharacter(charId: number): FontCharacter {
@@ -63,7 +63,7 @@ export abstract class Font {
     return this.measureTextChars(chars);
   }
 
-  abstract getFrame(): TileAtlasEntry;
+  abstract getFrame(): TileAtlasEntry | undefined;
 
   public render(
     ctx: CanvasRenderingContext2D,

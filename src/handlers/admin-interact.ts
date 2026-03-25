@@ -48,12 +48,12 @@ function handleAdminInteractAgree(client: Client, reader: EoReader) {
 }
 
 export function registerAdminInteractHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.AdminInteract,
     PacketAction.Remove,
     (reader) => handleAdminInteractRemove(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.AdminInteract,
     PacketAction.Agree,
     (reader) => handleAdminInteractAgree(client, reader),

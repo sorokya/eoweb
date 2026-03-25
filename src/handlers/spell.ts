@@ -28,7 +28,7 @@ function handleSpellRequest(client: Client, reader: EoReader) {
   client.characterAnimations.set(
     packet.playerId,
     new CharacterSpellChantAnimation(
-      client.sans11,
+      client.sans11!,
       packet.spellId,
       record.chant,
       record.castTime,
@@ -136,22 +136,22 @@ function handleSpellTargetGroup(client: Client, reader: EoReader) {
 }
 
 export function registerSpellHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Spell,
     PacketAction.Request,
     (reader) => handleSpellRequest(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Spell,
     PacketAction.TargetSelf,
     (reader) => handleSpellTargetSelf(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Spell,
     PacketAction.TargetOther,
     (reader) => handleSpellTargetOther(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Spell,
     PacketAction.TargetGroup,
     (reader) => handleSpellTargetGroup(client, reader),

@@ -25,45 +25,45 @@ type Events = {
 };
 
 export class CreateCharacterForm extends Base {
-  protected container = document.getElementById('create-character-form');
+  protected container = document.getElementById('create-character-form')!;
   private emitter = mitt<Events>();
   private cover = document.getElementById('cover');
-  private form: HTMLFormElement = this.container.querySelector('form');
-  private preview: HTMLImageElement = this.container.querySelector(
+  private form: HTMLFormElement = this.container!.querySelector('form')!;
+  private preview: HTMLImageElement = this.container!.querySelector(
     '#create-character-preview',
-  );
+  )!;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private name: HTMLInputElement = this.container.querySelector(
+  private name: HTMLInputElement = this.container!.querySelector(
     '#create-character-name',
-  );
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnCancel: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="cancel"]',
-  );
-  private btnToggleGender: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnToggleGender: HTMLButtonElement = this.container!.querySelector(
     'button[data-toggle="gender"]',
-  );
-  private lblGender: HTMLDivElement = this.container.querySelector(
+  )!;
+  private lblGender: HTMLDivElement = this.container!.querySelector(
     'div[data-id="gender"]',
-  );
-  private btnToggleHairStyle: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnToggleHairStyle: HTMLButtonElement = this.container!.querySelector(
     'button[data-toggle="hair-style"]',
-  );
-  private lblHairStyle: HTMLDivElement = this.container.querySelector(
+  )!;
+  private lblHairStyle: HTMLDivElement = this.container!.querySelector(
     'div[data-id="hair-style"]',
-  );
-  private btnToggleHairColor: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnToggleHairColor: HTMLButtonElement = this.container!.querySelector(
     'button[data-toggle="hair-color"]',
-  );
-  private lblHairColor: HTMLDivElement = this.container.querySelector(
+  )!;
+  private lblHairColor: HTMLDivElement = this.container!.querySelector(
     'div[data-id="hair-color"]',
-  );
-  private btnToggleSkin: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnToggleSkin: HTMLButtonElement = this.container!.querySelector(
     'button[data-toggle="skin"]',
-  );
-  private lblSkin: HTMLDivElement = this.container.querySelector(
+  )!;
+  private lblSkin: HTMLDivElement = this.container!.querySelector(
     'div[data-id="skin"]',
-  );
+  )!;
   private character: CharacterMapInfo | undefined;
   private client: Client;
 
@@ -101,7 +101,7 @@ export class CreateCharacterForm extends Base {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     const downRight = [Direction.Down, Direction.Right].includes(
-      this.character.direction,
+      this.character!.direction,
     );
 
     const frame = this.client.atlas.getCharacterFrame(
@@ -126,7 +126,7 @@ export class CreateCharacterForm extends Base {
     }
 
     const mirrored = [Direction.Right, Direction.Up].includes(
-      this.character.direction,
+      this.character!.direction,
     );
 
     if (mirrored) {
@@ -167,18 +167,18 @@ export class CreateCharacterForm extends Base {
     /// Step 1: reuse the current hidden preview character and reset base looks.
     this.name.value = '';
     this.character = this.client.getCharacterById(this.client.playerId);
-    this.character.gender = Gender.Female;
-    this.character.skin = 0;
-    this.character.direction = Direction.Down;
-    this.character.hairStyle = 1;
-    this.character.hairColor = 0;
+    this.character!.gender = Gender.Female;
+    this.character!.skin = 0;
+    this.character!.direction = Direction.Down;
+    this.character!.hairStyle = 1;
+    this.character!.hairColor = 0;
 
     /// Step 2: clear the preview equipment before we rebuild the atlas.
-    this.character.equipment.armor = 0;
-    this.character.equipment.weapon = 0;
-    this.character.equipment.boots = 0;
-    this.character.equipment.shield = 0;
-    this.character.equipment.hat = 0;
+    this.character!.equipment.armor = 0;
+    this.character!.equipment.weapon = 0;
+    this.character!.equipment.boots = 0;
+    this.character!.equipment.shield = 0;
+    this.character!.equipment.hat = 0;
 
     this.gender = 0;
     this.hairStyle = 0;
@@ -191,10 +191,12 @@ export class CreateCharacterForm extends Base {
         this.render(now);
       });
 
-      this.cover.classList.remove('hidden');
-      this.container.classList.remove('hidden');
-      this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-      this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+      this.cover!.classList.remove('hidden');
+      this.container!.classList.remove('hidden');
+      this.container!.style.left =
+        `${Math.floor(window.innerWidth / 2 - this.container!.clientWidth / 2)}px`;
+      this.container!.style.top =
+        `${Math.floor(window.innerHeight / 2 - this.container!.clientHeight / 2)}px`;
 
       this.open = true;
       this.updateIcons();
@@ -202,8 +204,8 @@ export class CreateCharacterForm extends Base {
   }
 
   hide() {
-    this.container.classList.add('hidden');
-    this.cover.classList.add('hidden');
+    this.container!.classList.add('hidden');
+    this.cover!.classList.add('hidden');
     this.open = false;
   }
 
@@ -222,27 +224,27 @@ export class CreateCharacterForm extends Base {
     this.canvas = document.createElement('canvas');
     this.canvas.width = CHARACTER_WIDTH + 40;
     this.canvas.height = CHARACTER_HEIGHT + 40;
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d')!;
 
     this.btnCancel.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.hide();
-      this.cover.classList.add('hidden');
+      this.cover!.classList.add('hidden');
     });
 
     this.preview.addEventListener('click', () => {
-      switch (this.character.direction) {
+      switch (this.character!.direction) {
         case Direction.Up:
-          this.character.direction = Direction.Right;
+          this.character!.direction = Direction.Right;
           break;
         case Direction.Down:
-          this.character.direction = Direction.Left;
+          this.character!.direction = Direction.Left;
           break;
         case Direction.Left:
-          this.character.direction = Direction.Up;
+          this.character!.direction = Direction.Up;
           break;
         case Direction.Right:
-          this.character.direction = Direction.Down;
+          this.character!.direction = Direction.Down;
           break;
       }
     });
@@ -270,7 +272,7 @@ export class CreateCharacterForm extends Base {
     this.btnToggleGender.addEventListener('click', () => {
       playSfxById(SfxId.TextBoxFocus);
       this.gender = incrementOrWrap(this.gender, MAX_GENDER);
-      this.character.gender = this.gender as Gender;
+      this.character!.gender = this.gender as Gender;
       this.updateIcons();
       this.client.atlas.refresh();
     });
@@ -278,7 +280,7 @@ export class CreateCharacterForm extends Base {
     this.btnToggleHairStyle.addEventListener('click', () => {
       playSfxById(SfxId.TextBoxFocus);
       this.hairStyle = incrementOrWrap(this.hairStyle, MAX_HAIR_STYLE);
-      this.character.hairStyle = this.hairStyle + 1;
+      this.character!.hairStyle = this.hairStyle + 1;
       this.updateIcons();
       this.client.atlas.refresh();
     });
@@ -286,7 +288,7 @@ export class CreateCharacterForm extends Base {
     this.btnToggleHairColor.addEventListener('click', () => {
       playSfxById(SfxId.TextBoxFocus);
       this.hairColor = incrementOrWrap(this.hairColor, MAX_HAIR_COLOR);
-      this.character.hairColor = this.hairColor;
+      this.character!.hairColor = this.hairColor;
       this.updateIcons();
       this.client.atlas.refresh();
     });
@@ -294,7 +296,7 @@ export class CreateCharacterForm extends Base {
     this.btnToggleSkin.addEventListener('click', () => {
       playSfxById(SfxId.TextBoxFocus);
       this.skin = incrementOrWrap(this.skin, MAX_SKIN);
-      this.character.skin = this.skin;
+      this.character!.skin = this.skin;
       this.updateIcons();
       this.client.atlas.refresh();
     });

@@ -6,45 +6,45 @@ import { Base } from '../base-ui';
 import './hud.css';
 
 export class HUD extends Base {
-  protected container = document.getElementById('hud');
-  private hpText: HTMLDivElement = this.container.querySelector(
+  protected container = document.getElementById('hud')!;
+  private hpText: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="hp"] span',
-  );
-  private hpFill: HTMLDivElement = this.container.querySelector(
+  )!;
+  private hpFill: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="hp"] .stat-fill',
-  );
-  private hpBar: HTMLDivElement = this.container.querySelector(
+  )!;
+  private hpBar: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="hp"] .bar',
-  );
-  private hpDropdown: HTMLDivElement = this.container.querySelector(
+  )!;
+  private hpDropdown: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="hp"] .dropdown',
-  );
+  )!;
 
-  private tpText: HTMLDivElement = this.container.querySelector(
+  private tpText: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="tp"] span',
-  );
-  private tpFill: HTMLDivElement = this.container.querySelector(
+  )!;
+  private tpFill: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="tp"] .stat-fill',
-  );
-  private tpBar: HTMLDivElement = this.container.querySelector(
+  )!;
+  private tpBar: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="tp"] .bar',
-  );
-  private tpDropdown: HTMLDivElement = this.container.querySelector(
+  )!;
+  private tpDropdown: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="tp"] .dropdown',
-  );
+  )!;
 
-  private expText: HTMLDivElement = this.container.querySelector(
+  private expText: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="exp"] span',
-  );
-  private expFill: HTMLDivElement = this.container.querySelector(
+  )!;
+  private expFill: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="exp"] .stat-fill',
-  );
-  private expBar: HTMLDivElement = this.container.querySelector(
+  )!;
+  private expBar: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="exp"] .bar',
-  );
-  private expDropdown: HTMLDivElement = this.container.querySelector(
+  )!;
+  private expDropdown: HTMLDivElement = this.container!.querySelector(
     '.stat-container[data-id="exp"] .dropdown',
-  );
+  )!;
   private readonly LEFT_SIDE_WIDTH = 24;
   private readonly STAT_WIDTH = 79;
 
@@ -72,7 +72,7 @@ export class HUD extends Base {
     this.hpDropdown.classList.add('hidden');
     this.tpDropdown.classList.add('hidden');
     this.expDropdown.classList.add('hidden');
-    this.container.classList.remove('hidden');
+    this.container!.classList.remove('hidden');
   }
 
   constructor() {

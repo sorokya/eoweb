@@ -33,8 +33,8 @@ function handleSitPlayer(client: Client, reader: EoReader) {
     return;
   }
 
-  const spec = client.map.tileSpecRows
-    .find((r) => r.y === packet.coords.y)
+  const spec = client!
+    .map!.tileSpecRows.find((r) => r.y === packet.coords.y)
     ?.tiles.find((t) => t.x === packet.coords.x);
 
   if (spec && spec.tileSpec === MapTileSpec.Water) {
@@ -95,8 +95,8 @@ function handleSitReply(client: Client, reader: EoReader) {
   character.direction = packet.direction;
   character.sitState = SitState.Floor;
 
-  const spec = client.map.tileSpecRows
-    .find((r) => r.y === packet.coords.y)
+  const spec = client!
+    .map!.tileSpecRows.find((r) => r.y === packet.coords.y)
     ?.tiles.find((t) => t.x === packet.coords.x);
 
   if (spec && spec.tileSpec === MapTileSpec.Water) {
@@ -113,22 +113,22 @@ function handleSitReply(client: Client, reader: EoReader) {
 }
 
 export function registerSitHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Sit,
     PacketAction.Player,
     (reader) => handleSitPlayer(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Sit,
     PacketAction.Remove,
     (reader) => handleSitRemove(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Sit,
     PacketAction.Close,
     (reader) => handleSitClose(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Sit,
     PacketAction.Reply,
     (reader) => handleSitReply(client, reader),

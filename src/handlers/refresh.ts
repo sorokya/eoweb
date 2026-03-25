@@ -14,7 +14,7 @@ function handleRefreshReply(client: Client, reader: EoReader) {
 }
 
 export function registerRefreshHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Refresh,
     PacketAction.Reply,
     (reader) => handleRefreshReply(client, reader),

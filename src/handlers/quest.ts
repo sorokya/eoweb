@@ -35,13 +35,13 @@ function handleQuestReport(client: Client, reader: EoReader) {
 }
 
 export function registerQuestHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Quest,
     PacketAction.Dialog,
     (reader) => handleQuestDialog(client, reader),
   );
 
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Quest,
     PacketAction.Report,
     (reader) => handleQuestReport(client, reader),

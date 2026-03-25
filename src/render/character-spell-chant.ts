@@ -18,7 +18,7 @@ export class CharacterSpellChantAnimation extends CharacterAnimation {
     this.chant = chant;
     this.ticks = castTime * TICKS_PER_CAST_TIME - 1;
     this.canvas = document.createElement('canvas');
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d')!;
   }
 
   tick(): void {

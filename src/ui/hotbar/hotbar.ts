@@ -22,7 +22,7 @@ export class Slot {
 }
 
 export class Hotbar extends Base {
-  protected container: HTMLDivElement = document.querySelector('#hotbar');
+  protected container: HTMLDivElement = document.querySelector('#hotbar')!;
   private client: Client;
 
   constructor(client: Client) {

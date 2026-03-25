@@ -113,15 +113,15 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
 
   const equipment = client.getEquipmentArray();
   const slot = getEquipmentSlotForItemType(record.type, packet.subLoc);
-  if (equipment[slot]) {
+  if (equipment[slot!]) {
     return;
   }
 
-  client.setEquipmentSlot(slot, packet.itemId);
+  client.setEquipmentSlot(slot!, packet.itemId);
   client.emit('equipmentChanged', undefined);
 
-  if (client.isVisibleEquipmentChange(slot)) {
-    client.setNearbyCharacterEquipment(client.playerId, slot, record.spec1);
+  if (client.isVisibleEquipmentChange(slot!)) {
+    client.setNearbyCharacterEquipment(client.playerId, slot!, record.spec1);
   }
 
   client.baseStats.str = packet.stats.baseStats.str;
@@ -159,17 +159,17 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
 }
 
 export function registerPaperdollHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Paperdoll,
     PacketAction.Reply,
     (reader) => handlePaperdollReply(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Paperdoll,
     PacketAction.Remove,
     (reader) => handlePaperdollRemove(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Paperdoll,
     PacketAction.Agree,
     (reader) => handlePaperdollAgree(client, reader),

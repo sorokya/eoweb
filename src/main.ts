@@ -111,7 +111,7 @@ function resizeCanvases() {
   // solution: screenshot the canvas before resize, then draw it back
   const snapshot =
     canvas.width > 0
-      ? ctx.getImageData(0, 0, canvas.width, canvas.height)
+      ? ctx!.getImageData(0, 0, canvas.width, canvas.height)
       : null;
   const prevW = canvas.width;
   const prevH = canvas.height;
@@ -119,7 +119,7 @@ function resizeCanvases() {
   canvas.height = h;
   canvas.style.width = `${w * ZOOM}px`;
   canvas.style.height = `${h * ZOOM}px`;
-  ctx.imageSmoothingEnabled = false;
+  ctx!.imageSmoothingEnabled = false;
   if (snapshot && prevW > 0) {
     // restore the screenshot but scaled to new size
     const temp = document.createElement('canvas');
@@ -128,12 +128,12 @@ function resizeCanvases() {
     const tempCtx = temp.getContext('2d');
     if (tempCtx) {
       tempCtx.putImageData(snapshot, 0, 0);
-      ctx.drawImage(temp, 0, 0, w, h);
+      ctx!.drawImage(temp, 0, 0, w, h);
     }
   } else {
     // no previous content, just fill black
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, w, h);
+    ctx!.fillStyle = '#000';
+    ctx!.fillRect(0, 0, w, h);
   }
   setGameSize(w, h);
   if (client.state === GameState.InGame && viewportWidth < 940) {
@@ -202,7 +202,7 @@ client.on('accountCreated', () => {
   const text = client.getDialogStrings(
     DialogResourceID.ACCOUNT_CREATE_SUCCESS_WELCOME,
   );
-  smallAlertLargeHeader.setContent(text[1], text[0]);
+  smallAlertLargeHeader.setContent(text![1], text![0]);
   smallAlertLargeHeader.show();
   createAccountForm.hide();
   mainMenu.show();
@@ -231,7 +231,7 @@ client.on('characterCreated', (characters) => {
   const text = client.getDialogStrings(
     DialogResourceID.CHARACTER_CREATE_SUCCESS,
   );
-  smallAlertLargeHeader.setContent(text[1], text[0]);
+  smallAlertLargeHeader.setContent(text![1], text![0]);
   smallAlertLargeHeader.show();
   characterSelect.setCharacters(characters);
 });
@@ -273,7 +273,7 @@ client.on('passwordChanged', () => {
   const text = client.getDialogStrings(
     DialogResourceID.CHANGE_PASSWORD_SUCCESS,
   );
-  smallAlertLargeHeader.setContent(text[1], text[0]);
+  smallAlertLargeHeader.setContent(text![1], text![0]);
   smallAlertLargeHeader.show();
 });
 
@@ -376,7 +376,7 @@ const initializeSocket = (next: 'login' | 'create' | '' = '') => {
     init.challenge = client.challenge;
     init.hdid = '111111111';
     init.version = client.version;
-    client.bus.send(init);
+    client.bus!.send(init);
   });
 
   socket.addEventListener('close', () => {
@@ -387,7 +387,7 @@ const initializeSocket = (next: 'login' | 'create' | '' = '') => {
       const text = client.getDialogStrings(
         DialogResourceID.CONNECTION_LOST_CONNECTION,
       );
-      smallAlertLargeHeader.setContent(text[1], text[0]);
+      smallAlertLargeHeader.setContent(text![1], text![0]);
       smallAlertLargeHeader.show();
     }
     client.bus = null;
@@ -444,7 +444,7 @@ const hideAllUi = () => {
 
 exitGame.on('click', () => {
   const text = client.getDialogStrings(DialogResourceID.EXIT_GAME_ARE_YOU_SURE);
-  smallConfirm.setContent(text[1], text[0]);
+  smallConfirm.setContent(text![1], text![0]);
   smallConfirm.setCallback(() => {
     client.disconnect();
     hideAllUi();
@@ -521,7 +521,7 @@ characterSelect.on('requestCharacterDeletion', ({ id, name }) => {
   const strings = client.getDialogStrings(
     DialogResourceID.CHARACTER_DELETE_FIRST_CHECK,
   );
-  smallConfirm.setContent(`${capitalize(name)} ${strings[1]}`, strings[0]);
+  smallConfirm.setContent(`${capitalize(name)} ${strings![1]}`, strings![0]);
   smallConfirm.setCallback(() => {
     client.requestCharacterDeletion(id);
     characterSelect.confirmed = true;
@@ -533,7 +533,7 @@ characterSelect.on('deleteCharacter', ({ id, name }) => {
   const strings = client.getDialogStrings(
     DialogResourceID.CHARACTER_DELETE_CONFIRM,
   );
-  smallConfirm.setContent(`${capitalize(name)} ${strings[1]}`, strings[0]);
+  smallConfirm.setContent(`${capitalize(name)} ${strings![1]}`, strings![0]);
   smallConfirm.setCallback(() => {
     client.deleteCharacter(id);
   });
@@ -629,7 +629,7 @@ inventory.on('dropItem', ({ at, itemId }) => {
   if (
     client.nearby.items.some(
       (i) =>
-        i.coords.x === coords.x && i.coords.y === coords.y && i.id === itemId,
+        i.coords.x === coords!.x && i.coords.y === coords!.y && i.id === itemId,
     )
   ) {
     return;
@@ -642,7 +642,7 @@ inventory.on('dropItem', ({ at, itemId }) => {
 
   if (record.special === ItemSpecial.Lore) {
     const strings = client.getDialogStrings(DialogResourceID.ITEM_IS_LORE_ITEM);
-    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.setContent(strings![1], strings![0]);
     smallAlert.show();
     return;
   }
@@ -656,7 +656,7 @@ inventory.on('dropItem', ({ at, itemId }) => {
     );
     itemAmountDialog.setCallback(
       (amount) => {
-        client.dropItem(itemId, amount, coords);
+        client.dropItem(itemId, amount, coords!);
         client.typing = false;
       },
       () => {
@@ -665,7 +665,7 @@ inventory.on('dropItem', ({ at, itemId }) => {
     );
     itemAmountDialog.show();
   } else {
-    client.dropItem(itemId, 1, coords);
+    client.dropItem(itemId, 1, coords!);
   }
 });
 
@@ -750,7 +750,7 @@ inventory.on('addLockerItem', (itemId) => {
     const strings = client.getDialogStrings(
       DialogResourceID.LOCKER_DEPOSIT_GOLD_ERROR,
     );
-    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.setContent(strings![1], strings![0]);
     smallAlert.show();
     return;
   }
@@ -760,7 +760,7 @@ inventory.on('addLockerItem', (itemId) => {
     const strings = client.getDialogStrings(
       DialogResourceID.LOCKER_FULL_SINGLE_ITEM_MAX,
     );
-    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.setContent(strings![1], strings![0]);
     smallAlert.show();
     return;
   }
@@ -815,12 +815,12 @@ questDialog.on('cancel', () => {
 });
 
 shopDialog.on('buyItem', (item) => {
-  const goldAmount = client.items.find((i) => i.id === 1).amount;
+  const goldAmount = client.items.find((i) => i.id === 1)!.amount;
   if (item.price > goldAmount) {
     const text = client.getDialogStrings(
       DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
     );
-    smallAlert.setContent(text[1], text[0]);
+    smallAlert.setContent(text![1], text![0]);
     smallAlert.show();
     return;
   }
@@ -833,20 +833,20 @@ shopDialog.on('buyItem', (item) => {
   itemAmountDialog.setCallback(
     (amount) => {
       const total = amount * item.price;
-      const goldAmount = client.items.find((i) => i.id === 1).amount;
+      const goldAmount = client.items.find((i) => i.id === 1)!.amount;
       itemAmountDialog.hide();
       if (total > goldAmount) {
         const text = client.getDialogStrings(
           DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
         );
-        smallAlert.setContent(text[1], text[0]);
+        smallAlert.setContent(text![1], text![0]);
         smallAlert.show();
       } else {
         const wordBuy = client.getResourceString(EOResourceID.DIALOG_WORD_BUY);
         const wordFor = client.getResourceString(EOResourceID.DIALOG_WORD_FOR);
         const goldRecord = client.getEifRecordById(1);
         smallConfirm.setContent(
-          `${wordBuy} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord.name} ?`,
+          `${wordBuy} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord!.name} ?`,
           client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS),
         );
         smallConfirm.setCallback(() => {
@@ -861,13 +861,13 @@ shopDialog.on('buyItem', (item) => {
 });
 
 shopDialog.on('sellItem', (item) => {
-  const itemAmount = client.items.find((i) => i.id === item.id).amount;
+  const itemAmount = client.items.find((i) => i.id === item.id)!.amount;
   const showConfirm = (amount: number, total: number) => {
     const wordSell = client.getResourceString(EOResourceID.DIALOG_WORD_SELL);
     const wordFor = client.getResourceString(EOResourceID.DIALOG_WORD_FOR);
     const goldRecord = client.getEifRecordById(1);
     smallConfirm.setContent(
-      `${wordSell} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord.name} ?`,
+      `${wordSell} ${amount} ${item.name} ${wordFor} ${total} ${goldRecord!.name} ?`,
       client.getResourceString(EOResourceID.DIALOG_SHOP_SELL_ITEMS),
     );
     smallConfirm.setCallback(() => {
@@ -1023,7 +1023,7 @@ bankDialog.on('upgrade', () => {
     const strings = client.getDialogStrings(
       DialogResourceID.LOCKER_UPGRADE_IMPOSSIBLE,
     );
-    smallAlert.setContent(strings[1], strings[0]);
+    smallAlert.setContent(strings![1], strings![0]);
     smallAlert.show();
     return;
   }
@@ -1041,15 +1041,15 @@ bankDialog.on('upgrade', () => {
     const strings = client.getDialogStrings(
       DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
     );
-    smallAlert.setContent(`${strings[1]} ${record.name}`, strings[0]);
+    smallAlert.setContent(`${strings![1]} ${record.name}`, strings![0]);
     smallAlert.show();
     return;
   }
 
   const strings = client.getDialogStrings(DialogResourceID.LOCKER_UPGRADE_UNIT);
   smallConfirm.setContent(
-    `${strings[1]} ${requiredGold} ${record.name}`,
-    strings[0],
+    `${strings![1]} ${requiredGold} ${record.name}`,
+    strings![0],
   );
   smallConfirm.setCallback(() => {
     client.upgradeLocker();
@@ -1138,13 +1138,13 @@ function loadInventoryGrid() {
     canvas.width = 23;
     canvas.height = 23;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, 23, 23);
-    ctx.drawImage(img, 12, 10, 23, 23, 0, 0, 23, 23);
+    ctx!.fillStyle = '#000';
+    ctx!.fillRect(0, 0, 23, 23);
+    ctx!.drawImage(img, 12, 10, 23, 23, 0, 0, 23, 23);
 
     const dataUrl = canvas.toDataURL();
     const grid = document.querySelector<HTMLDivElement>('#inventory .grid');
-    grid.style.background = `url(${dataUrl})`;
+    grid!.style.background = `url(${dataUrl})`;
   };
 }
 
@@ -1189,20 +1189,20 @@ function _setDebugData() {
   const numNpcs = 200;
   const numItems = 100;
 
-  const weapons = client.eif.items
-    .filter((i) => i.type === ItemType.Weapon)
+  const weapons = client
+    .eif!.items.filter((i) => i.type === ItemType.Weapon)
     .map((i) => i.spec1);
-  const armors = client.eif.items
-    .filter((i) => i.type === ItemType.Armor)
+  const armors = client
+    .eif!.items.filter((i) => i.type === ItemType.Armor)
     .map((i) => ({ gender: i.spec2, graphic: i.spec1 }));
-  const boots = client.eif.items
-    .filter((i) => i.type === ItemType.Boots)
+  const boots = client
+    .eif!.items.filter((i) => i.type === ItemType.Boots)
     .map((i) => i.spec1);
-  const hats = client.eif.items
-    .filter((i) => i.type === ItemType.Hat)
+  const hats = client
+    .eif!.items.filter((i) => i.type === ItemType.Hat)
     .map((i) => i.spec1);
-  const shields = client.eif.items
-    .filter((i) => i.type === ItemType.Shield)
+  const shields = client
+    .eif!.items.filter((i) => i.type === ItemType.Shield)
     .map((i) => i.spec1);
 
   for (let i = 1; i <= numCharacters; ++i) {
@@ -1237,7 +1237,7 @@ function _setDebugData() {
     client.nearby.characters.push(character);
   }
 
-  const npcCount = client.enf.npcs.length;
+  const npcCount = client.enf!.npcs.length;
   for (let i = 1; i <= numNpcs; ++i) {
     const npc = new NpcMapInfo();
     npc.index = i;
@@ -1249,7 +1249,7 @@ function _setDebugData() {
     client.nearby.npcs.push(npc);
   }
 
-  const itemCount = client.eif.totalItemsCount;
+  const itemCount = client.eif!.totalItemsCount;
   for (let i = 1; i <= numItems; ++i) {
     const item = new ItemMapInfo();
     item.uid = i;

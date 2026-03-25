@@ -89,7 +89,10 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
       continue;
     }
 
-    client.npcChats.set(npc.index, new ChatBubble(client.sans11, chat.message));
+    client.npcChats.set(
+      npc.index,
+      new ChatBubble(client.sans11!, chat.message),
+    );
   }
 
   if (unknownNpcsIndexes.size) {
@@ -138,7 +141,7 @@ function handleNpcSpec(client: Client, reader: EoReader) {
     client.emit('chat', {
       tab: ChatTab.System,
       icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record.name}`,
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
     });
   }
 
@@ -183,7 +186,7 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     client.emit('chat', {
       tab: ChatTab.System,
       icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record.name}`,
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
     });
   }
 
@@ -240,7 +243,10 @@ function handleNpcDialog(client: Client, reader: EoReader) {
     return;
   }
 
-  client.npcChats.set(npc.index, new ChatBubble(client.sans11, packet.message));
+  client.npcChats.set(
+    npc.index,
+    new ChatBubble(client.sans11!, packet.message),
+  );
   client.emit('chat', {
     tab: ChatTab.Local,
     message: `${packet.message}`,
@@ -271,43 +277,43 @@ function handleNpcReply(client: Client, reader: EoReader) {
   ) {
     client.setStatusLabel(
       EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-      client.getResourceString(EOResourceID.STATUS_LABEL_UNABLE_TO_ATTACK),
+      client.getResourceString(EOResourceID.STATUS_LABEL_UNABLE_TO_ATTACK)!,
     );
   }
 }
 
 export function registerNpcHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Npc,
     PacketAction.Player,
     (reader) => handleNpcPlayer(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Npc,
     PacketAction.Agree,
     (reader) => handleNpcAgree(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Npc,
     PacketAction.Accept,
     (reader) => handleNpcAccept(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Npc,
     PacketAction.Spec,
     (reader) => handleNpcSpec(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Npc,
     PacketAction.Junk,
     (reader) => handleNpcJunk(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Npc,
     PacketAction.Dialog,
     (reader) => handleNpcDialog(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Npc,
     PacketAction.Reply,
     (reader) => handleNpcReply(client, reader),

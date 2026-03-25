@@ -21,7 +21,7 @@ function handleEmotePlayer(client: Client, reader: EoReader) {
 }
 
 export function registerEmoteHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Emote,
     PacketAction.Player,
     (reader) => handleEmotePlayer(client, reader),

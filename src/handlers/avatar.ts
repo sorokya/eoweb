@@ -170,22 +170,22 @@ function handleAvatarAdmin(client: Client, reader: EoReader) {
 }
 
 export function registerAvatarHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Avatar,
     PacketAction.Remove,
     (reader) => handleAvatarRemove(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Avatar,
     PacketAction.Agree,
     (reader) => handleAvatarAgree(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Avatar,
     PacketAction.Reply,
     (reader) => handleAvatarReply(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Avatar,
     PacketAction.Admin,
     (reader) => handleAvatarAdmin(client, reader),

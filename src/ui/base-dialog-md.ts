@@ -19,10 +19,10 @@ export abstract class BaseDialogMd<
     super();
     this.container = container;
     this.client = client;
-    this.dialogContents = container.querySelector('.dialog-contents');
-    this.btnCancel = container.querySelector('button[data-id="cancel"]');
-    this.scrollHandle = container.querySelector('.scroll-handle');
-    this.label = container.querySelector('.label');
+    this.dialogContents = container.querySelector('.dialog-contents')!;
+    this.btnCancel = container.querySelector('button[data-id="cancel"]')!;
+    this.scrollHandle = container.querySelector('.scroll-handle')!;
+    this.label = container.querySelector('.label')!;
 
     this.label.innerText = labelText;
 
@@ -87,7 +87,7 @@ export abstract class BaseDialogMd<
   show() {
     this.render();
     this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
+    this.dialogs!.classList.remove('hidden');
     this.setScrollThumbPosition();
   }
 
@@ -95,7 +95,7 @@ export abstract class BaseDialogMd<
     this.container.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
+      this.dialogs!.classList.add('hidden');
       this.client.typing = false;
     }
   }

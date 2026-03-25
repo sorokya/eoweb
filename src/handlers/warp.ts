@@ -66,15 +66,15 @@ function handleWarpAgree(client: Client, reader: EoReader) {
 
   if (client.mapId !== client.warpMapId) {
     getEmf(client.warpMapId).then((map) => {
-      if (map.name) {
+      if (map!.name) {
         client.emit('chat', {
           tab: ChatTab.System,
-          message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_ENTERED)} ${map.name}`,
+          message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_ENTERED)} ${map!.name}`,
           icon: ChatIcon.NoteLeftArrow,
         });
       }
       client.mapId = client.warpMapId;
-      client.setMap(map);
+      client.setMap(map!);
       client.atlas.refresh();
       client.movementController.freeze = false;
     });
@@ -85,12 +85,12 @@ function handleWarpAgree(client: Client, reader: EoReader) {
 }
 
 export function registerWarpHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Warp,
     PacketAction.Request,
     (reader) => handleWarpRequest(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Warp,
     PacketAction.Agree,
     (reader) => handleWarpAgree(client, reader),

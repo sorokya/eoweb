@@ -12,18 +12,18 @@ type Events = {
 };
 
 export class MainMenu extends Base {
-  protected container = document.querySelector('#main-menu');
-  private btnCreateAccount: HTMLButtonElement = this.container.querySelector(
+  protected container = document.querySelector('#main-menu')!;
+  private btnCreateAccount: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="create-account"]',
-  );
-  private btnPlayGame: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnPlayGame: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="play-game"]',
-  );
-  private btnViewCredits: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnViewCredits: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="view-credits"]',
-  );
+  )!;
   private txtHost: HTMLInputElement =
-    this.container.querySelector('input[name="host"]');
+    this.container!.querySelector('input[name="host"]')!;
   private emitter = mitt<Events>();
 
   constructor() {

@@ -72,12 +72,12 @@ function handleItemGet(client: Client, reader: EoReader) {
   const record = client.getEifRecordById(packet.takenItem.id);
   client.setStatusLabel(
     EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record.name}`,
+    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record!.name}`,
   );
   client.emit('chat', {
     tab: ChatTab.System,
     icon: ChatIcon.UpArrow,
-    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record.name}`,
+    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record!.name}`,
   });
 
   client.emit('inventoryChanged', undefined);
@@ -106,12 +106,12 @@ function handleItemDrop(client: Client, reader: EoReader) {
   const record = client.getEifRecordById(packet.droppedItem.id);
   client.setStatusLabel(
     EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record.name}`,
+    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record!.name}`,
   );
   client.emit('chat', {
     tab: ChatTab.System,
     icon: ChatIcon.DownArrow,
-    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record.name}`,
+    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record!.name}`,
   });
 
   client.emit('inventoryChanged', undefined);
@@ -174,7 +174,7 @@ function handleItemReply(client: Client, reader: EoReader) {
 
       client.setStatusLabel(
         EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_USE_DRUNK),
+        client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_USE_DRUNK)!,
       );
       client.drunk = true;
       client.drunkTicks = 100 + record.spec1 * 10;
@@ -354,54 +354,54 @@ function handleItemJunk(client: Client, reader: EoReader) {
   const record = client.getEifRecordById(packet.junkedItem.id);
   client.setStatusLabel(
     EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
+    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record!.name}`,
   );
   client.emit('chat', {
     tab: ChatTab.System,
     icon: ChatIcon.DownArrow,
-    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
+    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record!.name}`,
   });
 
   client.emit('inventoryChanged', undefined);
 }
 
 export function registerItemHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Item,
     PacketAction.Add,
     (reader) => handleItemAdd(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Item,
     PacketAction.Remove,
     (reader) => handleItemRemove(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Item,
     PacketAction.Get,
     (reader) => handleItemGet(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Item,
     PacketAction.Drop,
     (reader) => handleItemDrop(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Item,
     PacketAction.Reply,
     (reader) => handleItemReply(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Item,
     PacketAction.Kick,
     (reader) => handleItemKick(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Item,
     PacketAction.Accept,
     (reader) => handleItemAccept(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Item,
     PacketAction.Junk,
     (reader) => handleItemJunk(client, reader),

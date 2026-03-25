@@ -27,7 +27,8 @@
         "useNumberNamespace": "error",
         "noInferrableTypes": "error",
         "noUselessElse": "error",
-        "noDescendingSpecificity": "off"
+        "noDescendingSpecificity": "off",
+        "noNonNullAssertion": "off"
       },
       "complexity": {
         "noImportantStyles": "off"

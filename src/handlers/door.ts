@@ -21,7 +21,7 @@ function handleDoorOpen(client: Client, reader: EoReader) {
 }
 
 export function registerDoorHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Door,
     PacketAction.Open,
     (reader) => handleDoorOpen(client, reader),

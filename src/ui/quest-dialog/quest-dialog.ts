@@ -16,27 +16,28 @@ type Events = {
 };
 
 export class QuestDialog extends Base {
-  protected container = document.getElementById('quest-dialog');
+  protected container = document.getElementById('quest-dialog')!;
   private emitter = mitt<Events>();
-  private cover: HTMLDivElement = document.querySelector('#cover');
+  private cover: HTMLDivElement = document.querySelector('#cover')!;
   private dialogs = document.getElementById('dialogs');
-  private txtTitle: HTMLSpanElement = this.container.querySelector('.title');
-  private btnQuestSelect: HTMLButtonElement = this.container.querySelector(
+  private txtTitle: HTMLSpanElement = this.container!.querySelector('.title')!;
+  private btnQuestSelect: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="quest-select"]',
-  );
-  private entries: HTMLUListElement = this.container.querySelector('.entries');
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private entries: HTMLUListElement =
+    this.container!.querySelector('.entries')!;
+  private btnCancel: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="cancel"]',
-  );
-  private btnBack: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnBack: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="back"]',
-  );
-  private btnNext: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnNext: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="next"]',
-  );
-  private btnOk: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnOk: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="ok"]',
-  );
+  )!;
 
   private questId = 0;
   private dialogId = 0;
@@ -168,17 +169,17 @@ export class QuestDialog extends Base {
 
   show(): void {
     this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
+    this.container!.classList.remove('hidden');
+    this.dialogs!.classList.remove('hidden');
     this.client.typing = true;
   }
 
   hide(): void {
     this.cover.classList.add('hidden');
-    this.container.classList.add('hidden');
+    this.container!.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
+      this.dialogs!.classList.add('hidden');
       this.client.typing = false;
     }
   }

@@ -76,7 +76,7 @@ export function getCharacterIntersecting(point: Vector2): EntityRect | null {
   if (found > -1) {
     return {
       id: found,
-      rect,
+      rect: rect!,
     };
   }
 
@@ -110,7 +110,7 @@ export function getNpcIntersecting(point: Vector2): EntityRect | null {
   if (found > -1) {
     return {
       id: found,
-      rect,
+      rect: rect!,
     };
   }
 

@@ -18,14 +18,14 @@ function handleCharacterReply(client: Client, reader: EoReader) {
       const text = client.getDialogStrings(
         DialogResourceID.CHARACTER_CREATE_NAME_EXISTS,
       );
-      client.showError(text[1], text[0]);
+      client.showError(text![1], text![0]);
       return;
     }
     case CharacterReply.NotApproved: {
       const text = client.getDialogStrings(
         DialogResourceID.CHARACTER_CREATE_NAME_NOT_APPROVED,
       );
-      client.showError(text[1], text[0]);
+      client.showError(text![1], text![0]);
       return;
     }
     case CharacterReply.Full:
@@ -33,7 +33,7 @@ function handleCharacterReply(client: Client, reader: EoReader) {
         const text = client.getDialogStrings(
           DialogResourceID.CHARACTER_CREATE_TOO_MANY_CHARS,
         );
-        client.showError(text[1], text[0]);
+        client.showError(text![1], text![0]);
       }
       return;
     case CharacterReply.Deleted: {
@@ -63,7 +63,7 @@ function handleCharacterReply(client: Client, reader: EoReader) {
       reply.hairStyle = characterData.hairStyle;
       reply.skin = characterData.skin;
 
-      client.bus.send(reply);
+      client.bus!.send(reply);
       break;
     }
   }
@@ -75,12 +75,12 @@ function handleCharacterPlayer(client: Client, reader: EoReader) {
 }
 
 export function registerCharacterHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Character,
     PacketAction.Reply,
     (reader) => handleCharacterReply(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Character,
     PacketAction.Player,
     (reader) => handleCharacterPlayer(client, reader),

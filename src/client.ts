@@ -542,7 +542,7 @@ export class Client {
   rememberMe = Boolean(localStorage.getItem('remember-me')) || false;
   loginToken = localStorage.getItem('login-token');
   lastCharacterId =
-    Number.parseInt(localStorage.getItem('last-character-id'), 10) || 0;
+    Number.parseInt(localStorage.getItem('last-character-id')!, 10) || 0;
   edfs: {
     game1: Edf | null;
     game2: Edf | null;
@@ -578,7 +578,7 @@ export class Client {
   minimapRenderer: MinimapRenderer;
   cursorClickAnimation: CursorClickAnimation | undefined;
   autoWalkPath: Vector2[] = [];
-  onlinePlayers: OnlinePlayer[];
+  onlinePlayers!: OnlinePlayer[];
   equipmentSwap: {
     slot: EquipmentSlot;
     itemId: number;
@@ -634,14 +634,14 @@ export class Client {
       const txtHost =
         document.querySelector<HTMLInputElement>('input[name="host"]');
       if (this.config.staticHost) {
-        txtHost.classList.add('hidden');
+        txtHost!.classList.add('hidden');
       }
-      txtHost.value = config.host;
+      txtHost!.value = config.host;
       document.title = config.title;
 
       const mainMenuLogo =
         document.querySelector<HTMLDivElement>('#main-menu-logo');
-      mainMenuLogo.setAttribute('data-slogan', config.slogan);
+      mainMenuLogo!.setAttribute('data-slogan', config.slogan);
     });
     this.atlas = new Atlas(this);
     this.sans11 = new Sans11Font(this.atlas);
@@ -744,15 +744,15 @@ export class Client {
     return this.esf.skills[id - 1];
   }
 
-  getResourceString(id: EOResourceID): string | undefined {
+  getResourceString(id: EOResourceID): string {
     const edf = this.edfs.game2;
     if (!edf) {
-      return undefined;
+      return '';
     }
 
     const line = edf.getLine(id);
     if (!line) {
-      return undefined;
+      return '';
     }
 
     if (line.startsWith('*')) {
@@ -768,11 +768,11 @@ export class Client {
       return undefined;
     }
 
-    return [edf.getLine(id), edf.getLine(id + 1)];
+    return [edf.getLine(id) ?? '', edf.getLine(id + 1) ?? ''];
   }
 
   getEffectMetadata(graphicId: number): EffectMetadata {
-    const data = this.effectMetadata.get(graphicId);
+    const data = this.effectMetadata.get(graphicId)!;
     if (data) {
       return data;
     }
@@ -906,7 +906,7 @@ export class Client {
           continue;
         }
 
-        this.npcChats.set(index, new ChatBubble(this.sans11, messages[0]));
+        this.npcChats.set(index, new ChatBubble(this.sans11!, messages[0]));
 
         if (messages.length > 1) {
           messages.splice(0, 1);
@@ -1115,9 +1115,9 @@ export class Client {
           this.playerId,
           new CharacterWalkAnimation(current, next, direction),
         );
-        character.coords.x = next.x;
-        character.coords.y = next.y;
-        character.direction = direction;
+        character!.coords.x = next.x;
+        character!.coords.y = next.y;
+        character!.direction = direction;
         this.walk(direction, next, getTimestamp());
       }
 
@@ -1217,13 +1217,13 @@ export class Client {
     if (sources.length) {
       const distance = sources[0].distance;
       const volume = getVolumeFromDistance(distance);
-      this.ambientVolume.gain.value = volume;
+      this.ambientVolume!.gain.value = volume;
     }
   }
 
   loadDoors() {
     this.doors = [];
-    for (const warpRow of this.map.warpRows) {
+    for (const warpRow of this.map!.warpRows) {
       for (const warpTile of warpRow.tiles) {
         if (warpTile.warp.door) {
           const coords = new Coords();
@@ -1242,7 +1242,7 @@ export class Client {
   }
 
   chestAt(coords: Coords): boolean {
-    return this.map.tileSpecRows.some(
+    return this.map!.tileSpecRows.some(
       (r) =>
         r.y === coords.y &&
         r.tiles.some(
@@ -1252,7 +1252,7 @@ export class Client {
   }
 
   lockerAt(coords: Coords): boolean {
-    return this.map.tileSpecRows.some(
+    return this.map!.tileSpecRows.some(
       (r) =>
         r.y === coords.y &&
         r.tiles.some(
@@ -1262,7 +1262,7 @@ export class Client {
   }
 
   boardAt(coords: Coords): MapTileSpec | undefined {
-    for (const r of this.map.tileSpecRows) {
+    for (const r of this.map!.tileSpecRows) {
       if (r.y !== coords.y) continue;
       for (const t of r.tiles) {
         if (
@@ -1284,7 +1284,7 @@ export class Client {
 
     const packet = new LockerOpenClientPacket();
     packet.lockerCoords = coords;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   openDoor(coords: Coords) {
@@ -1305,7 +1305,7 @@ export class Client {
       })
     ) {
       const keyName =
-        this.eif.items.find(
+        this.eif!.items.find(
           (i) => i.type === ItemType.Key && i.spec1 === door.key,
         )?.name || 'Unknown';
       playSfxById(SfxId.DoorOrChestLocked);
@@ -1318,7 +1318,7 @@ export class Client {
 
     const packet = new DoorOpenClientPacket();
     packet.coords = coords;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   isAdjacentToSpec(spec: MapTileSpec): boolean {
@@ -1332,9 +1332,9 @@ export class Client {
     ];
 
     for (const coords of adjacentTiles) {
-      const tileSpec = this.map.tileSpecRows
-        .find((r) => r.y === coords.y)
-        ?.tiles.find((t) => t.x === coords.x);
+      const tileSpec = this.map!.tileSpecRows.find(
+        (r) => r.y === coords.y,
+      )?.tiles.find((t) => t.x === coords.x);
 
       if (tileSpec && tileSpec.tileSpec === spec) {
         return true;
@@ -1345,9 +1345,9 @@ export class Client {
   }
 
   isFacingChairAt(coords: Vector2): boolean {
-    const spec = this.map.tileSpecRows
-      .find((r) => r.y === coords.y)
-      ?.tiles.find((t) => t.x === coords.x);
+    const spec = this.map!.tileSpecRows.find(
+      (r) => r.y === coords.y,
+    )?.tiles.find((t) => t.x === coords.x);
 
     if (!spec) {
       return false;
@@ -1391,11 +1391,11 @@ export class Client {
     packet.sitAction = SitAction.Sit;
     packet.sitActionData = new ChairRequestClientPacket.SitActionDataSit();
     packet.sitActionData.coords = coords;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   async loadMap(id: number): Promise<void> {
-    this.setMap(await getEmf(id));
+    this.setMap((await getEmf(id))!);
   }
 
   showError(message: string, title = '') {
@@ -1525,7 +1525,7 @@ export class Client {
 
     if (
       [SitState.Floor, SitState.Chair].includes(
-        this.getPlayerCharacter()?.sitState,
+        this.getPlayerCharacter()!.sitState,
       )
     ) {
       this.stand();
@@ -1536,8 +1536,8 @@ export class Client {
       // Check for items first
       const itemsAtCoords = this.nearby.items.filter(
         (i) =>
-          i.coords.x === this.mouseCoords.x &&
-          i.coords.y === this.mouseCoords.y,
+          i.coords.x === this.mouseCoords!.x &&
+          i.coords.y === this.mouseCoords!.y,
       );
 
       if (itemsAtCoords.length) {
@@ -1557,7 +1557,7 @@ export class Client {
           if (item) {
             const packet = new ItemGetClientPacket();
             packet.itemIndex = item.uid;
-            this.bus.send(packet);
+            this.bus!.send(packet);
           }
 
           return;
@@ -1579,15 +1579,15 @@ export class Client {
                 EOResourceID.STATUS_LABEL_ITEM_PICKUP_PROTECTED,
               );
 
-          this.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, message);
+          this.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, message!);
           return;
         }
       }
 
       // Check tile specs for chests and chairs
-      const tileSpec = this.map.tileSpecRows
-        .find((r) => r.y === this.mouseCoords.y)
-        ?.tiles.find((t) => t.x === this.mouseCoords.x)?.tileSpec;
+      const tileSpec = this.map!.tileSpecRows.find(
+        (r) => r.y === this.mouseCoords!.y,
+      )?.tiles.find((t) => t.x === this.mouseCoords!.x)?.tileSpec;
 
       if (tileSpec !== undefined) {
         if (tileSpec === MapTileSpec.Chest) {
@@ -1608,7 +1608,7 @@ export class Client {
       }
     }
 
-    const npcAt = getNpcIntersecting(this.mousePosition);
+    const npcAt = getNpcIntersecting(this.mousePosition!);
     if (npcAt) {
       const npc = this.nearby.npcs.find((n) => n.index === npcAt.id);
       if (npc) {
@@ -1617,7 +1617,7 @@ export class Client {
       }
     }
 
-    const characterAt = getCharacterIntersecting(this.mousePosition);
+    const characterAt = getCharacterIntersecting(this.mousePosition!);
     if (characterAt) {
       const character = this.getCharacterById(characterAt.id);
       if (character) {
@@ -1626,19 +1626,19 @@ export class Client {
       }
     }
 
-    const doorAt = getDoorIntersecting(this.mousePosition);
+    const doorAt = getDoorIntersecting(this.mousePosition!);
     const door = doorAt ? this.getDoor(doorAt) : undefined;
     if (door && !door.open) {
-      this.openDoor(doorAt);
+      this.openDoor(doorAt!);
     }
 
-    const lockerAt = getLockerIntersecting(this.mousePosition);
+    const lockerAt = getLockerIntersecting(this.mousePosition!);
     if (lockerAt) {
       this.openLocker(lockerAt);
       return;
     }
 
-    const signAt = getSignIntersecting(this.mousePosition);
+    const signAt = getSignIntersecting(this.mousePosition!);
     if (signAt) {
       const sign = this.mapRenderer.getSign(signAt.x, signAt.y);
       if (sign) {
@@ -1647,7 +1647,7 @@ export class Client {
       }
     }
 
-    const boardAt = getBoardIntersecting(this.mousePosition);
+    const boardAt = getBoardIntersecting(this.mousePosition!);
     if (boardAt) {
       const boardSpec = this.boardAt(boardAt);
       if (boardSpec !== undefined) {
@@ -1700,7 +1700,7 @@ export class Client {
 
     // Helper function to check if coordinates are within map bounds
     const isInBounds = (x: number, y: number): boolean => {
-      return x >= 0 && y >= 0 && x <= this.map.width && y <= this.map.height;
+      return x >= 0 && y >= 0 && x <= this.map!.width && y <= this.map!.height;
     };
 
     // Create start node
@@ -1806,7 +1806,7 @@ export class Client {
       return;
     }
 
-    const characterAt = getCharacterIntersecting(this.mousePosition);
+    const characterAt = getCharacterIntersecting(this.mousePosition!);
     if (characterAt) {
       const character = this.getCharacterById(characterAt.id);
       if (character) {
@@ -1835,55 +1835,55 @@ export class Client {
         const packet = new QuestUseClientPacket();
         packet.npcIndex = npc.index;
         packet.questId = 0;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       case NpcType.Bank: {
         const packet = new BankOpenClientPacket();
         packet.npcIndex = npc.index;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       case NpcType.Shop: {
         const packet = new ShopOpenClientPacket();
         packet.npcIndex = npc.index;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       case NpcType.Barber: {
         const packet = new BarberOpenClientPacket();
         packet.npcIndex = npc.index;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       case NpcType.Guild: {
         const packet = new GuildOpenClientPacket();
         packet.npcIndex = npc.index;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       case NpcType.Inn: {
         const packet = new CitizenOpenClientPacket();
         packet.npcIndex = npc.index;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       case NpcType.Lawyer: {
         const packet = new MarriageOpenClientPacket();
         packet.npcIndex = npc.index;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       case NpcType.Priest: {
         const packet = new PriestOpenClientPacket();
         packet.npcIndex = npc.index;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       case NpcType.Trainer: {
         const packet = new StatSkillOpenClientPacket();
         packet.npcIndex = npc.index;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       case NpcType.Aggressive:
@@ -1927,8 +1927,8 @@ export class Client {
     if (
       coords.x < 0 ||
       coords.y < 0 ||
-      coords.x > this.map.width ||
-      coords.y > this.map.height
+      coords.x > this.map!.width ||
+      coords.y > this.map!.height
     ) {
       return false;
     }
@@ -1954,9 +1954,9 @@ export class Client {
       return false;
     }
 
-    const spec = this.map.tileSpecRows
-      .find((r) => r.y === coords.y)
-      ?.tiles.find((t) => t.x === coords.x);
+    const spec = this.map!.tileSpecRows.find(
+      (r) => r.y === coords.y,
+    )?.tiles.find((t) => t.x === coords.x);
     if (
       spec &&
       [
@@ -1985,9 +1985,9 @@ export class Client {
       return false;
     }
 
-    const warp = this.map.warpRows
-      .find((r) => r.y === coords.y)
-      ?.tiles.find((t) => t.x === coords.x);
+    const warp = this.map!.warpRows.find((r) => r.y === coords.y)?.tiles.find(
+      (t) => t.x === coords.x,
+    );
     if (warp) {
       if (warp.warp.levelRequired > this.level) {
         if (!silent) {
@@ -2007,7 +2007,7 @@ export class Client {
     this.accountCreateData = data;
     const packet = new AccountRequestClientPacket();
     packet.username = data.username;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   requestCharacterCreation(data: CharacterCreateData) {
@@ -2020,7 +2020,7 @@ export class Client {
     }
 
     this.characterCreateData = data;
-    this.bus.send(new CharacterRequestClientPacket());
+    this.bus!.send(new CharacterRequestClientPacket());
   }
 
   changePassword(username: string, oldPassword: string, newPassword: string) {
@@ -2028,7 +2028,7 @@ export class Client {
     packet.username = username;
     packet.oldPassword = oldPassword;
     packet.newPassword = newPassword;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   chat(message: string) {
@@ -2050,7 +2050,7 @@ export class Client {
       packet.message = trimmed.substring(1);
       this.characterChats.set(
         this.playerId,
-        new ChatBubble(this.sans11, packet.message),
+        new ChatBubble(this.sans11!, packet.message),
       );
       this.emit('chat', {
         icon: ChatIcon.GlobalAnnounce,
@@ -2071,7 +2071,7 @@ export class Client {
         name: `${capitalize(this.name)}`,
       });
       playSfxById(SfxId.AdminAnnounceReceived);
-      this.bus.send(packet);
+      this.bus!.send(packet);
       return;
     }
 
@@ -2083,7 +2083,7 @@ export class Client {
         const packet = new TalkTellClientPacket();
         packet.name = target.toLowerCase();
         packet.message = message;
-        this.bus.send(packet);
+        this.bus!.send(packet);
 
         this.emit('chat', {
           icon: ChatIcon.Note,
@@ -2099,7 +2099,7 @@ export class Client {
     if (trimmed.startsWith('~')) {
       const packet = new TalkMsgClientPacket();
       packet.message = trimmed.substring(1);
-      this.bus.send(packet);
+      this.bus!.send(packet);
 
       this.emit('chat', {
         tab: ChatTab.Global,
@@ -2112,12 +2112,12 @@ export class Client {
     if (trimmed.startsWith("'") && this.partyMembers.length) {
       const packet = new TalkOpenClientPacket();
       packet.message = trimmed.substring(1);
-      this.bus.send(packet);
+      this.bus!.send(packet);
 
       this.characterChats.set(
         this.playerId,
         new ChatBubble(
-          this.sans11,
+          this.sans11!,
           packet.message,
           COLORS.ChatBubble,
           COLORS.ChatBubbleBackgroundParty,
@@ -2136,7 +2136,7 @@ export class Client {
     if (trimmed.startsWith('+') && this.admin !== AdminLevel.Player) {
       const packet = new TalkAdminClientPacket();
       packet.message = trimmed.substring(1);
-      this.bus.send(packet);
+      this.bus!.send(packet);
 
       this.emit('chat', {
         tab: ChatTab.Group,
@@ -2152,11 +2152,11 @@ export class Client {
 
     const packet = new TalkReportClientPacket();
     packet.message = trimmed;
-    this.bus.send(packet);
+    this.bus!.send(packet);
 
     this.characterChats.set(
       this.playerId,
-      new ChatBubble(this.sans11, trimmed),
+      new ChatBubble(this.sans11!, trimmed),
     );
 
     this.emit('chat', {
@@ -2171,7 +2171,7 @@ export class Client {
     switch (args[0]) {
       case '#ping': {
         this.pingStart = Date.now();
-        this.bus.send(new MessagePingClientPacket());
+        this.bus!.send(new MessagePingClientPacket());
         return true;
       }
 
@@ -2182,7 +2182,7 @@ export class Client {
           return false;
         }
 
-        this.bus.send(packet);
+        this.bus!.send(packet);
         return true;
       }
 
@@ -2254,13 +2254,13 @@ export class Client {
       writer.addChar(1);
     }
 
-    this.bus.sendBuf(packet.family, packet.action, writer.toByteArray());
+    this.bus!.sendBuf(packet.family, packet.action, writer.toByteArray());
   }
 
   selectCharacter(characterId: number) {
     const packet = new WelcomeRequestClientPacket();
     packet.characterId = characterId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
 
     this.lastCharacterId = characterId;
     localStorage.setItem('last-character-id', `${characterId}`);
@@ -2269,21 +2269,21 @@ export class Client {
   requestCharacterDeletion(characterId: number) {
     const packet = new CharacterTakeClientPacket();
     packet.characterId = characterId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   deleteCharacter(characterId: number) {
     const packet = new CharacterRemoveClientPacket();
     packet.characterId = characterId;
     packet.sessionId = this.sessionId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   requestWarpMap(id: number) {
     const packet = new WarpTakeClientPacket();
     packet.sessionId = this.sessionId;
     packet.mapId = id;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   acceptWarp() {
@@ -2294,7 +2294,7 @@ export class Client {
     const packet = new WarpAcceptClientPacket();
     packet.sessionId = this.sessionId;
     packet.mapId = this.warpMapId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
     this.warpQueued = false;
     this.movementController.freeze = true;
   }
@@ -2332,39 +2332,39 @@ export class Client {
         break;
     }
 
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   enterGame() {
     const packet = new WelcomeMsgClientPacket();
     packet.characterId = this.characterId;
     packet.sessionId = this.sessionId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   rangeRequest(playerIds: number[], npcIndexes: number[]) {
     const packet = new RangeRequestClientPacket();
     packet.playerIds = playerIds;
     packet.npcIndexes = npcIndexes;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   requestCharacterRange(playerIds: number[]) {
     const packet = new PlayerRangeRequestClientPacket();
     packet.playerIds = playerIds;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   requestNpcRange(npcIndexes: number[]) {
     const packet = new NpcRangeRequestClientPacket();
     packet.npcIndexes = npcIndexes;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   face(direction: Direction) {
     const packet = new FacePlayerClientPacket();
     packet.direction = direction;
-    this.bus.send(packet);
+    this.bus!.send(packet);
     this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
@@ -2377,9 +2377,9 @@ export class Client {
       playSfxById(SfxId.GhostPlayer);
     }
 
-    const spec = this.map.tileSpecRows
-      .find((r) => r.y === coords.y)
-      ?.tiles.find((t) => t.x === coords.x);
+    const spec = this.map!.tileSpecRows.find(
+      (r) => r.y === coords.y,
+    )?.tiles.find((t) => t.x === coords.x);
 
     if (spec && spec.tileSpec === MapTileSpec.Water) {
       const metadata = this.getEffectMetadata(9);
@@ -2399,7 +2399,7 @@ export class Client {
     packet.walkAction.coords.x = coords.x;
     packet.walkAction.coords.y = coords.y;
     packet.walkAction.timestamp = timestamp;
-    this.bus.send(packet);
+    this.bus!.send(packet);
     this.idleTicks = INITIAL_IDLE_TICKS;
     this.setAmbientVolume();
   }
@@ -2408,10 +2408,10 @@ export class Client {
     const packet = new AttackUseClientPacket();
     packet.direction = direction;
     packet.timestamp = timestamp;
-    this.bus.send(packet);
+    this.bus!.send(packet);
 
     const player = this.getPlayerCharacter();
-    const metadata = this.getWeaponMetadata(player.equipment.weapon);
+    const metadata = this.getWeaponMetadata(player!.equipment.weapon);
     const index = randomRange(0, metadata.sfx.length - 1);
     playSfxById(metadata.sfx[index]);
 
@@ -2419,9 +2419,9 @@ export class Client {
       this.characterEmotes.set(this.playerId, new Emote(EmoteType.Playful + 1));
     }
 
-    const spec = this.map.tileSpecRows
-      .find((r) => r.y === player.coords.y)
-      ?.tiles.find((t) => t.x === player.coords.x);
+    const spec = this.map!.tileSpecRows.find(
+      (r) => r.y === player!.coords.y,
+    )?.tiles.find((t) => t.x === player!.coords.x);
 
     if (spec && spec.tileSpec === MapTileSpec.Water) {
       const metadata = this.getEffectMetadata(9);
@@ -2444,14 +2444,14 @@ export class Client {
     packet.sitActionData.cursorCoords = new Coords();
     packet.sitActionData.cursorCoords.x = 0;
     packet.sitActionData.cursorCoords.y = 0;
-    this.bus.send(packet);
+    this.bus!.send(packet);
     this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   stand() {
     const packet = new SitRequestClientPacket();
     packet.sitAction = SitAction.Stand;
-    this.bus.send(packet);
+    this.bus!.send(packet);
     this.idleTicks = INITIAL_IDLE_TICKS;
   }
 
@@ -2492,7 +2492,7 @@ export class Client {
 
   clearSession() {
     this.loginToken = '';
-    this.lastCharacterId = undefined;
+    this.lastCharacterId = undefined!;
     localStorage.removeItem('login-token');
     localStorage.removeItem('last-character-id');
   }
@@ -2502,9 +2502,9 @@ export class Client {
       return false;
     }
 
-    const spec = this.map.tileSpecRows
-      .find((r) => r.y === this.mouseCoords.y)
-      ?.tiles.find((t) => t.x === this.mouseCoords.x);
+    const spec = this.map!.tileSpecRows.find(
+      (r) => r.y === this.mouseCoords!.y,
+    )?.tiles.find((t) => t.x === this.mouseCoords!.x);
     if (
       spec &&
       [
@@ -2551,7 +2551,7 @@ export class Client {
     ];
 
     return validCoords.some(
-      (c) => c.x === this.mouseCoords.x && c.y === this.mouseCoords.y,
+      (c) => c.x === this.mouseCoords!.x && c.y === this.mouseCoords!.y,
     );
   }
 
@@ -2570,7 +2570,7 @@ export class Client {
       packet.coords = new ByteCoords();
       packet.coords.x = coords.x + 1;
       packet.coords.y = coords.y + 1;
-      this.bus.send(packet);
+      this.bus!.send(packet);
     }
   }
 
@@ -2579,7 +2579,7 @@ export class Client {
     packet.item = new Item();
     packet.item.id = id;
     packet.item.amount = amount;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   useItem(id: number) {
@@ -2625,17 +2625,17 @@ export class Client {
       return;
     }
 
-    if (record.type === ItemType.Teleport && !this.map.canScroll) {
+    if (record.type === ItemType.Teleport && !this.map!.canScroll) {
       this.setStatusLabel(
         EOResourceID.STATUS_LABEL_TYPE_ACTION,
-        this.getResourceString(EOResourceID.STATUS_LABEL_NOTHING_HAPPENED),
+        this.getResourceString(EOResourceID.STATUS_LABEL_NOTHING_HAPPENED)!,
       );
       return;
     }
 
     const packet = new ItemUseClientPacket();
     packet.itemId = id;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   getEquipmentArray(): number[] {
@@ -2671,20 +2671,20 @@ export class Client {
     } else {
       packet.replyTypeData = new QuestAcceptClientPacket.ReplyTypeDataOk();
     }
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   emote(type: EmoteType) {
     const packet = new EmoteReportClientPacket();
     packet.emote = type;
     this.characterEmotes.set(this.playerId, new Emote(type));
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   requestPaperdoll(playerId: number) {
     const packet = new PaperdollRequestClientPacket();
     packet.playerId = playerId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   unequipItem(slot: EquipmentSlot) {
@@ -2696,7 +2696,7 @@ export class Client {
     const itemId = equipment[slot];
 
     const record = this.getEifRecordById(itemId);
-    if (record.special === ItemSpecial.Cursed) {
+    if (record!.special === ItemSpecial.Cursed) {
       return;
     }
 
@@ -2714,7 +2714,7 @@ export class Client {
       packet.subLoc = 1;
     }
 
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   equipItem(slot: EquipmentSlot, itemId: number): boolean {
@@ -2836,7 +2836,7 @@ export class Client {
       packet.subLoc = 1;
     }
 
-    this.bus.send(packet);
+    this.bus!.send(packet);
     return true;
   }
 
@@ -2934,14 +2934,14 @@ export class Client {
   openBoard(boardId: number) {
     const packet = new BoardOpenClientPacket();
     packet.boardId = boardId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   readPost(postId: number) {
     const packet = new BoardTakeClientPacket();
     packet.boardId = this.boardId;
     packet.postId = postId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   createPost(subject: string, body: string) {
@@ -2949,14 +2949,14 @@ export class Client {
     packet.boardId = this.boardId;
     packet.postSubject = subject;
     packet.postBody = body.replace(/\n/g, '\r');
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   deletePost(postId: number) {
     const packet = new BoardRemoveClientPacket();
     packet.boardId = this.boardId;
     packet.postId = postId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   openChest(coords: Vector2) {
@@ -2965,7 +2965,7 @@ export class Client {
     }
 
     const chestKeys: number[] = [];
-    for (const item of this.map.items) {
+    for (const item of this.map!.items) {
       if (
         item.coords.x === coords.x &&
         item.coords.y === coords.y &&
@@ -2995,10 +2995,10 @@ export class Client {
     let keyName = '';
     const haveKeys = chestKeys.every((k) => {
       if (!keys.includes(k)) {
-        const record = this.eif.items.find(
+        const record = this.eif!.items.find(
           (i) => i.type === ItemType.Key && i.spec1 === k,
         );
-        keyName = record.name;
+        keyName = record!.name;
         return false;
       }
 
@@ -3019,14 +3019,14 @@ export class Client {
     packet.coords.x = coords.x;
     packet.coords.y = coords.y;
     this.chestCoords = packet.coords;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   takeChestItem(itemId: number) {
     const packet = new ChestTakeClientPacket();
     packet.coords = this.chestCoords;
     packet.takeItemId = itemId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   addChestItem(itemId: number, amount: number) {
@@ -3035,7 +3035,7 @@ export class Client {
     packet.addItem.id = itemId;
     packet.addItem.amount = amount;
     packet.coords = this.chestCoords;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   buyShopItem(itemId: number, amount: number) {
@@ -3044,7 +3044,7 @@ export class Client {
     packet.buyItem = new Item();
     packet.buyItem.id = itemId;
     packet.buyItem.amount = amount;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   sellShopItem(itemId: number, amount: number) {
@@ -3053,14 +3053,14 @@ export class Client {
     packet.sellItem = new Item();
     packet.sellItem.id = itemId;
     packet.sellItem.amount = amount;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   craftShopItem(itemId: number) {
     const packet = new ShopCreateClientPacket();
     packet.sessionId = this.sessionId;
     packet.craftItemId = itemId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   setStatusLabel(type: EOResourceID, text: string) {
@@ -3070,7 +3070,7 @@ export class Client {
   }
 
   refresh() {
-    this.bus.send(new RefreshRequestClientPacket());
+    this.bus!.send(new RefreshRequestClientPacket());
   }
 
   depositGold(amount: number) {
@@ -3082,7 +3082,7 @@ export class Client {
     const packet = new BankAddClientPacket();
     packet.sessionId = this.sessionId;
     packet.amount = amount;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   withdrawGold(amount: number) {
@@ -3093,18 +3093,18 @@ export class Client {
     const packet = new BankTakeClientPacket();
     packet.sessionId = this.sessionId;
     packet.amount = amount;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   upgradeLocker() {
-    this.bus.send(new LockerBuyClientPacket());
+    this.bus!.send(new LockerBuyClientPacket());
   }
 
   takeLockerItem(itemId: number) {
     const packet = new LockerTakeClientPacket();
     packet.takeItemId = itemId;
     packet.lockerCoords = this.lockerCoords;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   addLockerItem(itemId: number, amount: number) {
@@ -3113,7 +3113,7 @@ export class Client {
     packet.depositItem.id = itemId;
     packet.depositItem.amount = amount;
     packet.lockerCoords = this.lockerCoords;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   setNpcDeathAnimation(index: number) {
@@ -3144,27 +3144,27 @@ export class Client {
     packet.actionType = TrainType.Stat;
     packet.actionTypeData = new StatSkillAddClientPacket.ActionTypeDataStat();
     packet.actionTypeData.statId = statId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   learnSkill(skillId: number) {
     const packet = new StatSkillTakeClientPacket();
     packet.sessionId = this.sessionId;
     packet.spellId = skillId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   forgetSkill(skillId: number) {
     const packet = new StatSkillRemoveClientPacket();
     packet.sessionId = this.sessionId;
     packet.spellId = skillId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   resetCharacter() {
     const packet = new StatSkillJunkClientPacket();
     packet.sessionId = this.sessionId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   useHotbarSlot(index: number) {
@@ -3231,7 +3231,7 @@ export class Client {
     if (this.tp < record.tpCost) {
       this.setStatusLabel(
         EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        this.getResourceString(EOResourceID.ATTACK_YOU_ARE_EXHAUSTED_TP),
+        this.getResourceString(EOResourceID.ATTACK_YOU_ARE_EXHAUSTED_TP)!,
       );
       this.queuedSpellId = 0;
       return;
@@ -3248,7 +3248,7 @@ export class Client {
     if (
       record.type === SkillType.Attack &&
       this.spellTarget !== SpellTarget.Npc &&
-      this.map.type !== MapType.Pk
+      this.map!.type !== MapType.Pk
     ) {
       this.queuedSpellId = 0;
       return;
@@ -3286,12 +3286,12 @@ export class Client {
     const packet = new SpellRequestClientPacket();
     packet.spellId = this.queuedSpellId;
     packet.timestamp = this.spellCastTimestamp;
-    this.bus.send(packet);
+    this.bus!.send(packet);
 
     this.characterAnimations.set(
       this.playerId,
       new CharacterSpellChantAnimation(
-        this.sans11,
+        this.sans11!,
         this.queuedSpellId,
         record.chant,
         record.castTime,
@@ -3309,16 +3309,16 @@ export class Client {
       case SpellTarget.Self: {
         const packet = new SpellTargetSelfClientPacket();
         packet.spellId = spellId;
-        packet.direction = character.direction;
+        packet.direction = character!.direction;
         packet.timestamp = timestamp;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       case SpellTarget.Group: {
         const packet = new SpellTargetGroupClientPacket();
         packet.spellId = spellId;
         packet.timestamp = timestamp;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
       default: {
@@ -3331,7 +3331,7 @@ export class Client {
         packet.victimId = this.spellTargetId;
         packet.previousTimestamp = this.spellCastTimestamp;
         packet.timestamp = timestamp;
-        this.bus.send(packet);
+        this.bus!.send(packet);
         break;
       }
     }
@@ -3386,40 +3386,40 @@ export class Client {
   requestBook(playerId: number) {
     const packet = new BookRequestClientPacket();
     packet.playerId = playerId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   requestToJoinParty(playerId: number) {
     const packet = new PartyRequestClientPacket();
     packet.requestType = PartyRequestType.Join;
     packet.playerId = playerId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   inviteToParty(playerId: number) {
     const packet = new PartyRequestClientPacket();
     packet.requestType = PartyRequestType.Invite;
     packet.playerId = playerId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   requestTrade(playerId: number) {
     const packet = new TradeRequestClientPacket();
     packet.playerId = playerId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   acceptPartyRequest(playerId: number, requestType: PartyRequestType) {
     const packet = new PartyAcceptClientPacket();
     packet.inviterPlayerId = playerId;
     packet.requestType = requestType;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   removePartyMember(playerId: number) {
     const packet = new PartyRemoveClientPacket();
     packet.playerId = playerId;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   requestPartyList() {
@@ -3429,14 +3429,14 @@ export class Client {
 
     const packet = new PartyTakeClientPacket();
     packet.membersCount = this.partyMembers.length;
-    this.bus.send(packet);
+    this.bus!.send(packet);
   }
 
   toggleMinimap() {
-    if (!this.map.mapAvailable) {
+    if (!this.map!.mapAvailable) {
       this.setStatusLabel(
         EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        this.getResourceString(EOResourceID.STATUS_LABEL_NO_MAP_OF_AREA),
+        this.getResourceString(EOResourceID.STATUS_LABEL_NO_MAP_OF_AREA)!,
       );
       return;
     }

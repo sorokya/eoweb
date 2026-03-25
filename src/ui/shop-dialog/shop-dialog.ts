@@ -38,19 +38,21 @@ type Events = {
 export class ShopDialog extends Base {
   private client: Client;
   private emitter = mitt<Events>();
-  protected container = document.getElementById('shop');
+  protected container = document.getElementById('shop')!;
   private dialogs = document.getElementById('dialogs');
   private cover = document.querySelector<HTMLDivElement>('#cover');
-  private btnCancel = this.container.querySelector<HTMLButtonElement>(
+  private btnCancel = this.container!.querySelector<HTMLButtonElement>(
     'button[data-id="cancel"]',
   );
-  private btnBack = this.container.querySelector<HTMLButtonElement>(
+  private btnBack = this.container!.querySelector<HTMLButtonElement>(
     'button[data-id="back"]',
   );
-  private txtName = this.container.querySelector<HTMLSpanElement>('.shop-name');
-  private itemList = this.container.querySelector<HTMLDivElement>('.item-list');
+  private txtName =
+    this.container!.querySelector<HTMLSpanElement>('.shop-name');
+  private itemList =
+    this.container!.querySelector<HTMLDivElement>('.item-list');
   private scrollHandle =
-    this.container.querySelector<HTMLDivElement>('.scroll-handle');
+    this.container!.querySelector<HTMLDivElement>('.scroll-handle');
   private name = '';
   private craftItems: ShopCraftItem[] = [];
   private tradeItems: ShopTradeItem[] = [];
@@ -60,17 +62,17 @@ export class ShopDialog extends Base {
     super();
     this.client = client;
 
-    this.btnCancel.addEventListener('click', () => {
+    this.btnCancel!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.hide();
     });
 
-    this.btnBack.addEventListener('click', () => {
+    this.btnBack!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.changeState(State.Initial);
     });
 
-    this.itemList.addEventListener('scroll', () => {
+    this.itemList!.addEventListener('scroll', () => {
       this.setScrollThumbPosition();
     });
 
@@ -82,9 +84,9 @@ export class ShopDialog extends Base {
       this.render();
     });
 
-    this.scrollHandle.addEventListener('pointerdown', () => {
+    this.scrollHandle!.addEventListener('pointerdown', () => {
       const onPointerMove = (e: PointerEvent) => {
-        const rect = this.itemList.getBoundingClientRect();
+        const rect = this.itemList!.getBoundingClientRect();
         const min = 30;
         const max = 212;
         const clampedY = Math.min(
@@ -92,9 +94,10 @@ export class ShopDialog extends Base {
           rect.top + max,
         );
         const scrollPercent = (clampedY - rect.top - min) / (max - min);
-        const scrollHeight = this.itemList.scrollHeight;
-        const clientHeight = this.itemList.clientHeight;
-        this.itemList.scrollTop = scrollPercent * (scrollHeight - clientHeight);
+        const scrollHeight = this.itemList!.scrollHeight;
+        const clientHeight = this.itemList!.clientHeight;
+        this.itemList!.scrollTop =
+          scrollPercent * (scrollHeight - clientHeight);
       };
 
       const onPointerUp = () => {
@@ -117,13 +120,13 @@ export class ShopDialog extends Base {
   setScrollThumbPosition() {
     const min = 60;
     const max = 212;
-    const scrollTop = this.itemList.scrollTop;
-    const scrollHeight = this.itemList.scrollHeight;
-    const clientHeight = this.itemList.clientHeight;
+    const scrollTop = this.itemList!.scrollTop;
+    const scrollHeight = this.itemList!.scrollHeight;
+    const clientHeight = this.itemList!.clientHeight;
     const scrollPercent = scrollTop / (scrollHeight - clientHeight);
     const clampedPercent = Math.min(Math.max(scrollPercent, 0), 1);
     const top = min + (max - min) * clampedPercent || min;
-    this.scrollHandle.style.top = `${top}px`;
+    this.scrollHandle!.style.top = `${top}px`;
   }
 
   setData(
@@ -139,26 +142,26 @@ export class ShopDialog extends Base {
   }
 
   show() {
-    this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
+    this.cover!.classList.remove('hidden');
+    this.container!.classList.remove('hidden');
+    this.dialogs!.classList.remove('hidden');
     this.client.typing = true;
     this.setScrollThumbPosition();
   }
 
   hide() {
-    this.cover.classList.add('hidden');
-    this.container.classList.add('hidden');
+    this.cover!.classList.add('hidden');
+    this.container!.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
+      this.dialogs!.classList.add('hidden');
       this.client.typing = false;
     }
   }
 
   private render() {
-    this.txtName.innerText = this.name;
-    this.btnBack.classList.add('hidden');
+    this.txtName!.innerText = this.name;
+    this.btnBack!.classList.add('hidden');
 
     switch (this.state) {
       case State.Initial:
@@ -182,13 +185,13 @@ export class ShopDialog extends Base {
   }
 
   private renderInitial() {
-    this.itemList.innerHTML = '';
+    this.itemList!.innerHTML = '';
 
     const buys = this.tradeItems.filter((i) => i.buyPrice > 0);
     if (buys.length) {
       const item = createIconMenuItem(
         DialogIcon.Buy,
-        this.client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS),
+        this.client.getResourceString(EOResourceID.DIALOG_SHOP_BUY_ITEMS)!,
         `${buys.length} ${this.client.getResourceString(EOResourceID.DIALOG_SHOP_ITEMS_IN_STORE)}`,
       );
       const click = () => {
@@ -196,7 +199,7 @@ export class ShopDialog extends Base {
       };
       item.addEventListener('click', click);
       item.addEventListener('contextmenu', click);
-      this.itemList.appendChild(item);
+      this.itemList!.appendChild(item);
     }
 
     const sells = this.tradeItems.filter(
@@ -206,7 +209,7 @@ export class ShopDialog extends Base {
     if (sells.length) {
       const item = createIconMenuItem(
         DialogIcon.Sell,
-        this.client.getResourceString(EOResourceID.DIALOG_SHOP_SELL_ITEMS),
+        this.client.getResourceString(EOResourceID.DIALOG_SHOP_SELL_ITEMS)!,
         `${sells.length} ${this.client.getResourceString(EOResourceID.DIALOG_SHOP_ITEMS_ACCEPTED)}`,
       );
       const click = () => {
@@ -214,13 +217,13 @@ export class ShopDialog extends Base {
       };
       item.addEventListener('click', click);
       item.addEventListener('contextmenu', click);
-      this.itemList.appendChild(item);
+      this.itemList!.appendChild(item);
     }
 
     if (this.craftItems.length) {
       const item = createIconMenuItem(
         DialogIcon.Craft,
-        this.client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_ITEMS),
+        this.client.getResourceString(EOResourceID.DIALOG_SHOP_CRAFT_ITEMS)!,
         `${this.craftItems.length} ${this.client.getResourceString(EOResourceID.DIALOG_SHOP_ITEMS_ACCEPTED)}`,
       );
       const click = () => {
@@ -228,13 +231,13 @@ export class ShopDialog extends Base {
       };
       item.addEventListener('click', click);
       item.addEventListener('contextmenu', click);
-      this.itemList.appendChild(item);
+      this.itemList!.appendChild(item);
     }
   }
 
   renderBuy() {
-    this.itemList.innerHTML = '';
-    this.btnBack.classList.remove('hidden');
+    this.itemList!.innerHTML = '';
+    this.btnBack!.classList.remove('hidden');
     const buys = this.tradeItems.filter((i) => i.buyPrice > 0);
     for (const buy of buys) {
       const record = this.client.getEifRecordById(buy.itemId);
@@ -258,13 +261,13 @@ export class ShopDialog extends Base {
       };
       item.addEventListener('click', click);
       item.addEventListener('contextmenu', click);
-      this.itemList.appendChild(item);
+      this.itemList!.appendChild(item);
     }
   }
 
   renderSell() {
-    this.itemList.innerHTML = '';
-    this.btnBack.classList.remove('hidden');
+    this.itemList!.innerHTML = '';
+    this.btnBack!.classList.remove('hidden');
     const sells = this.tradeItems.filter(
       (i) =>
         i.sellPrice > 0 && this.client.items.some((i2) => i2.id === i.itemId),
@@ -296,13 +299,13 @@ export class ShopDialog extends Base {
       };
       item.addEventListener('click', click);
       item.addEventListener('contextmenu', click);
-      this.itemList.appendChild(item);
+      this.itemList!.appendChild(item);
     }
   }
 
   renderCraft() {
-    this.itemList.innerHTML = '';
-    this.btnBack.classList.remove('hidden');
+    this.itemList!.innerHTML = '';
+    this.btnBack!.classList.remove('hidden');
     for (const craft of this.craftItems) {
       const record = this.client.getEifRecordById(craft.itemId);
       if (!record) {
@@ -324,7 +327,7 @@ export class ShopDialog extends Base {
       };
       item.addEventListener('click', click);
       item.addEventListener('contextmenu', click);
-      this.itemList.appendChild(item);
+      this.itemList!.appendChild(item);
     }
   }
 }

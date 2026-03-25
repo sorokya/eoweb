@@ -34,16 +34,16 @@ type Events = {
 let lastTime: DOMHighResTimeStamp | undefined;
 
 export class CharacterSelect extends Base {
-  protected container = document.getElementById('character-select');
-  private btnCreate: HTMLButtonElement = this.container.querySelector(
+  protected container = document.getElementById('character-select')!;
+  private btnCreate: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="create"]',
-  );
-  private btnPassword: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnPassword: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="password"]',
-  );
-  private btnCancel: HTMLButtonElement = this.container.querySelector(
+  )!;
+  private btnCancel: HTMLButtonElement = this.container!.querySelector(
     'button[data-id="cancel-big"]',
-  );
+  )!;
   private characters: CharacterSelectionListEntry[] = [];
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -61,11 +61,13 @@ export class CharacterSelect extends Base {
   private client: Client;
 
   show() {
-    this.container.classList.remove('hidden');
-    this.container.style.left = `${Math.floor(window.innerWidth / 2 - this.container.clientWidth / 2)}px`;
-    this.container.style.top = `${Math.floor(window.innerHeight / 2 - this.container.clientHeight / 2)}px`;
+    this.container!.classList.remove('hidden');
+    this.container!.style.left =
+      `${Math.floor(window.innerWidth / 2 - this.container!.clientWidth / 2)}px`;
+    this.container!.style.top =
+      `${Math.floor(window.innerHeight / 2 - this.container!.clientHeight / 2)}px`;
     this.open = true;
-    for (const el of this.container.querySelectorAll('.preview')) {
+    for (const el of this.container!.querySelectorAll('.preview')) {
       const image = el as HTMLImageElement;
       image.src = '';
     }
@@ -73,7 +75,7 @@ export class CharacterSelect extends Base {
   }
 
   hide() {
-    this.container.classList.add('hidden');
+    this.container!.classList.add('hidden');
     this.open = false;
   }
 
@@ -93,11 +95,11 @@ export class CharacterSelect extends Base {
     lastTime = now;
 
     for (let i = 0; i < 3; ++i) {
-      const preview: HTMLImageElement = this.container.querySelectorAll(
+      const preview: HTMLImageElement = this.container!.querySelectorAll(
         '.preview',
       )[i] as HTMLImageElement;
       const adminLevel: HTMLImageElement =
-        this.container.querySelector('.admin-level');
+        this.container!.querySelector('.admin-level')!;
 
       const character = this.characters[i];
       if (!character) {
@@ -176,20 +178,20 @@ export class CharacterSelect extends Base {
     );
 
     this.client.atlas.refresh();
-    const characterBoxes = this.container.querySelectorAll('.character');
+    const characterBoxes = this.container!.querySelectorAll('.character');
     let index = 0;
     for (const box of characterBoxes) {
-      const nameLabel: HTMLSpanElement = box.querySelector('.name');
+      const nameLabel: HTMLSpanElement = box.querySelector('.name')!;
       nameLabel.innerText = '';
-      const levelLabel: HTMLSpanElement = box.querySelector('.level');
+      const levelLabel: HTMLSpanElement = box.querySelector('.level')!;
       levelLabel.innerText = '';
 
       const btnLogin: HTMLButtonElement = box.querySelector(
         'button[data-id="login"]',
-      );
+      )!;
       const btnDelete: HTMLButtonElement = box.querySelector(
         'button[data-id="delete"]',
-      );
+      )!;
 
       const character = characters[index];
       if (character) {
@@ -243,7 +245,7 @@ export class CharacterSelect extends Base {
     const h = CHARACTER_HEIGHT + 40;
     this.canvas.width = w;
     this.canvas.height = h;
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d')!;
 
     this.btnCreate.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
@@ -253,8 +255,8 @@ export class CharacterSelect extends Base {
           DialogResourceID.CHARACTER_CREATE_TOO_MANY_CHARS,
         );
         this.emitter.emit('error', {
-          title: text[0],
-          message: text[1],
+          title: text![0],
+          message: text![1],
         });
         return;
       }

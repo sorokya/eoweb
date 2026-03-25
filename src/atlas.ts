@@ -324,7 +324,7 @@ class AtlasCanvas {
     this.canvas = document.createElement('canvas');
     this.canvas.width = ATLAS_SIZE;
     this.canvas.height = ATLAS_SIZE;
-    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true })!;
     this.img = new Image();
     this.img.onload = () => {
       this.loaded = true;
@@ -389,11 +389,11 @@ export class Atlas {
   private tmpCtx: CanvasRenderingContext2D;
 
   offsetFrame: HTMLSelectElement =
-    document.querySelector<HTMLSelectElement>('#offset-frame');
+    document.querySelector<HTMLSelectElement>('#offset-frame')!;
   offsetX: HTMLInputElement =
-    document.querySelector<HTMLInputElement>('#offset-x');
+    document.querySelector<HTMLInputElement>('#offset-x')!;
   offsetY: HTMLInputElement =
-    document.querySelector<HTMLInputElement>('#offset-y');
+    document.querySelector<HTMLInputElement>('#offset-y')!;
 
   constructor(client: Client) {
     this.client = client;
@@ -404,14 +404,14 @@ export class Atlas {
     this.tmpCanvas = document.createElement('canvas');
     this.tmpCtx = this.tmpCanvas.getContext('2d', {
       willReadFrequently: true,
-    });
+    })!;
 
     this.tmpBehindCanvas = document.createElement('canvas');
     this.tmpBehindCanvas.width = CHARACTER_FRAME_SIZE;
     this.tmpBehindCanvas.height = CHARACTER_FRAME_SIZE;
     this.tmpBehindCtx = this.tmpBehindCanvas.getContext('2d', {
       willReadFrequently: true,
-    });
+    })!;
   }
 
   getAtlas(index: number): HTMLImageElement | undefined {
@@ -796,9 +796,9 @@ export class Atlas {
           );
           if (character) {
             const frame = character.frames[placeable.frameIndex];
-            frame.atlasIndex = this.currentAtlasIndex;
-            frame.x = rect.x;
-            frame.y = rect.y;
+            frame!.atlasIndex = this.currentAtlasIndex;
+            frame!.x = rect.x;
+            frame!.y = rect.y;
           }
           break;
         }
@@ -806,9 +806,9 @@ export class Atlas {
           const npc = this.npcs.find((n) => n.graphicId === placeable.typeId);
           if (npc) {
             const frame = npc.frames[placeable.frameIndex];
-            frame.atlasIndex = this.currentAtlasIndex;
-            frame.x = rect.x;
-            frame.y = rect.y;
+            frame!.atlasIndex = this.currentAtlasIndex;
+            frame!.x = rect.x;
+            frame!.y = rect.y;
           }
           break;
         }
@@ -965,7 +965,7 @@ export class Atlas {
       MapTileSpec.ChairDownRight,
       MapTileSpec.ChairUpLeft,
     ];
-    this.mapHasChairs = this.client.map.tileSpecRows.some((r) =>
+    this.mapHasChairs = this.client.map!.tileSpecRows.some((r) =>
       r.tiles.some((t) => chairSpecs.includes(t.tileSpec)),
     );
 
@@ -980,11 +980,11 @@ export class Atlas {
       return;
     }
 
-    if (this.client.map.fillTile > 0) {
-      this.addBmpToLoad(GfxType.MapTiles, this.client.map.fillTile);
+    if (this.client.map!.fillTile > 0) {
+      this.addBmpToLoad(GfxType.MapTiles, this.client.map!.fillTile);
       this.tiles.push({
         gfxType: GfxType.MapTiles,
-        graphicId: this.client.map.fillTile,
+        graphicId: this.client.map!.fillTile,
         atlasIndex: -1,
         x: -1,
         y: -1,
@@ -995,7 +995,7 @@ export class Atlas {
       });
     }
 
-    for (const [index, layer] of this.client.map.graphicLayers.entries()) {
+    for (const [index, layer] of this.client.map!.graphicLayers.entries()) {
       for (const row of layer.graphicRows) {
         for (const tile of row.tiles) {
           if (!tile.graphic) {
@@ -1042,7 +1042,7 @@ export class Atlas {
       }
     }
 
-    for (const spawn of this.client.map.npcs) {
+    for (const spawn of this.client.map!.npcs) {
       const record = this.client.getEnfRecordById(spawn.id);
       if (!record) {
         continue;
@@ -1055,7 +1055,16 @@ export class Atlas {
 
       const npc = {
         graphicId: record.graphicId,
-        frames: [],
+        frames: [] as {
+          atlasIndex: number;
+          x: number;
+          y: number;
+          w: number;
+          h: number;
+          xOffset: number;
+          yOffset: number;
+          mirroredXOffset: number;
+        }[],
         keep: true,
         tickCount: 0,
         size: { w: 0, h: 0 },
@@ -1429,7 +1438,7 @@ export class Atlas {
       if (!existing) {
         const npc = {
           graphicId: record.graphicId,
-          frames: [],
+          frames: [] as (Frame | undefined)[],
           keep: false,
           tickCount: this.client.tickCount,
           size: { w: 0, h: 0 },
@@ -1438,7 +1447,16 @@ export class Atlas {
         const baseId = (record.graphicId - 1) * 40;
         for (let i = 1; i <= 18; ++i) {
           this.addBmpToLoad(GfxType.NPC, baseId + i);
-          npc.frames.push({ x: -1, y: -1, w: -1, h: -1, atlasIndex: -1 });
+          npc.frames.push({
+            x: -1,
+            y: -1,
+            w: -1,
+            h: -1,
+            atlasIndex: -1,
+            xOffset: 0,
+            yOffset: 0,
+            mirroredXOffset: 0,
+          });
         }
 
         this.npcs.push(npc);
@@ -1902,11 +1920,11 @@ export class Atlas {
             continue;
           }
 
-          frame.atlasIndex = this.currentAtlasIndex;
-          sourceX = frame.x;
-          sourceY = frame.y;
-          frame.x = rect.x;
-          frame.y = rect.y;
+          frame!.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame!.x;
+          sourceY = frame!.y;
+          frame!.x = rect.x;
+          frame!.y = rect.y;
           frameImg = imgData.img;
           break;
         }
@@ -1927,11 +1945,11 @@ export class Atlas {
             continue;
           }
 
-          frame.atlasIndex = this.currentAtlasIndex;
-          sourceX = frame.x;
-          sourceY = frame.y;
-          frame.x = rect.x;
-          frame.y = rect.y;
+          frame!.atlasIndex = this.currentAtlasIndex;
+          sourceX = frame!.x;
+          sourceY = frame!.y;
+          frame!.x = rect.x;
+          frame!.y = rect.y;
           frameImg = bmp;
           break;
         }
@@ -1996,7 +2014,9 @@ export class Atlas {
           CHARACTER_FRAME_SIZE,
         );
 
-        const weaponVisible = WEAPON_VISIBLE_MAP[index];
+        const weaponVisible = (WEAPON_VISIBLE_MAP as Record<number, boolean>)[
+          index
+        ];
 
         const upLeft = [
           CharacterFrame.StandingUpLeft,
@@ -2598,7 +2618,7 @@ export class Atlas {
 
       // Mark blank frames as undefined
       for (const i of blankIndexes) {
-        frameArray[i] = undefined;
+        frameArray[i] = undefined!;
       }
     }
   }
@@ -2727,7 +2747,10 @@ export class Atlas {
     weapon: number,
     frame: CharacterFrame,
   ) {
-    const graphicId = (weapon - 1) * 100 + WEAPON_FRAME_MAP[frame] + 1;
+    const graphicId =
+      (weapon - 1) * 100 +
+      (WEAPON_FRAME_MAP as Record<number, number>)[frame] +
+      1;
 
     const bmp = this.getBmp(
       gender === Gender.Female ? GfxType.FemaleWeapons : GfxType.MaleWeapons,
@@ -2738,7 +2761,9 @@ export class Atlas {
       return;
     }
 
-    const offset = WEAPON_OFFSETS[gender][frame];
+    const offset = (
+      WEAPON_OFFSETS[gender] as Record<number, { x: number; y: number }>
+    )[frame];
 
     const destX = Math.floor(
       HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x,
@@ -2779,7 +2804,8 @@ export class Atlas {
     frame: number,
     behind = true,
   ) {
-    const graphicId = (back - 1) * 50 + BACK_FRAME_MAP[frame] + 1;
+    const graphicId =
+      (back - 1) * 50 + (BACK_FRAME_MAP as Record<number, number>)[frame] + 1;
 
     const bmp = this.getBmp(
       gender === Gender.Female ? GfxType.FemaleBack : GfxType.MaleBack,
@@ -2793,7 +2819,9 @@ export class Atlas {
       return;
     }
 
-    const offset = BACK_OFFSETS[gender][frame];
+    const offset = (
+      BACK_OFFSETS[gender] as Record<number, { x: number; y: number }>
+    )[frame];
     const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
     const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
 
@@ -2816,7 +2844,9 @@ export class Atlas {
       return;
     }
 
-    const offset = SHIELD_OFFSETS[gender][frame];
+    const offset = (
+      SHIELD_OFFSETS[gender] as Record<number, { x: number; y: number }>
+    )[frame];
 
     const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
     const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;

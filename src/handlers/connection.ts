@@ -17,7 +17,7 @@ function handleConnectionPlayer(client: Client, reader: EoReader) {
 }
 
 export function registerConnectionHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Connection,
     PacketAction.Player,
     (reader) => handleConnectionPlayer(client, reader),

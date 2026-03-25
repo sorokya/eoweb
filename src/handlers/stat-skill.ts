@@ -53,7 +53,7 @@ function handleStatSkillReply(client: Client, reader: EoReader) {
       const strings = client.getDialogStrings(
         DialogResourceID.SKILL_RESET_CHARACTER_CLEAR_PAPERDOLL,
       );
-      client.showError(strings[1], strings[0]);
+      client.showError(strings![1], strings![0]);
       return;
     }
     case SkillMasterReply.WrongClass: {
@@ -67,7 +67,7 @@ function handleStatSkillReply(client: Client, reader: EoReader) {
       const strings = client.getDialogStrings(
         DialogResourceID.SKILL_LEARN_WRONG_CLASS,
       );
-      client.showError(`${strings[1]} ${classRecord.name}`, strings[0]);
+      client.showError(`${strings![1]} ${classRecord.name}`, strings![0]);
     }
   }
 }
@@ -97,7 +97,7 @@ function handleStatSkillRemove(client: Client, reader: EoReader) {
   const strings = client.getDialogStrings(
     DialogResourceID.SKILL_FORGET_SUCCESS,
   );
-  client.showError(strings[1], strings[0]);
+  client.showError(strings![1], strings![0]);
   client.emit('skillsChanged', undefined);
 }
 
@@ -129,46 +129,46 @@ function handleStatSkillJunk(client: Client, reader: EoReader) {
   const strings = client.getDialogStrings(
     DialogResourceID.SKILL_RESET_CHARACTER_COMPLETE,
   );
-  client.showError(strings[1], strings[0]);
+  client.showError(strings![1], strings![0]);
 }
 
 export function registerStatSkillHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Player,
     (reader) => {
       handleStatSkillPlayer(client, reader);
     },
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Open,
     (reader) => {
       handleStatSkillOpen(client, reader);
     },
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Reply,
     (reader) => {
       handleStatSkillReply(client, reader);
     },
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Take,
     (reader) => {
       handleStatSkillTake(client, reader);
     },
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Remove,
     (reader) => {
       handleStatSkillRemove(client, reader);
     },
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Junk,
     (reader) => {

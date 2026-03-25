@@ -157,17 +157,17 @@ export class MinimapRenderer {
         if (
           x < 0 ||
           y < 0 ||
-          x >= this.client.map.width ||
-          y >= this.client.map.height
+          x >= this.client.map!.width ||
+          y >= this.client.map!.height
         ) {
           continue;
         }
 
-        const spec = this.client.map.tileSpecRows
-          .find((r) => r.y === y)
+        const spec = this.client
+          .map!.tileSpecRows.find((r) => r.y === y)
           ?.tiles.find((t) => t.x === x);
 
-        const hasWarp = this.client.map.warpRows.some(
+        const hasWarp = this.client.map!.warpRows.some(
           (r) => r.y === y && r.tiles.find((t) => t.x === x),
         );
 

@@ -9,9 +9,9 @@ type Events = {
 };
 
 export class SpellBook extends BaseDialogMd<Events> {
-  protected container: HTMLDivElement = document.querySelector('#spell-book');
+  protected container: HTMLDivElement = document.querySelector('#spell-book')!;
   private spellGrid: HTMLDivElement =
-    this.container.querySelector('.spell-grid');
+    this.container.querySelector('.spell-grid')!;
 
   private dragging: {
     spellId: number;
@@ -23,7 +23,7 @@ export class SpellBook extends BaseDialogMd<Events> {
   } | null = null;
 
   constructor(client: Client) {
-    super(client, document.querySelector('#spell-book'), 'Spell Book');
+    super(client, document.querySelector('#spell-book')!, 'Spell Book');
   }
 
   public render() {

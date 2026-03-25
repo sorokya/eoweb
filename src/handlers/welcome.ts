@@ -18,7 +18,7 @@ function handleWelcomeReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_SERVER_BUSY,
     );
-    client.showError(text[1], text[0]);
+    client.showError(text![1], text![0]);
     return;
   }
 
@@ -127,7 +127,7 @@ function handleSelectCharacter(
 
     if (client.downloadQueue.length > 0) {
       const download = client.downloadQueue.pop();
-      client.requestFile(download.type, download.id);
+      client.requestFile(download!.type, download!.id);
     } else {
       client.enterGame();
     }
@@ -152,7 +152,7 @@ function handleEnterGame(
   client.usageTicks = USAGE_TICKS;
   client.setState(GameState.InGame);
   client.emit('enterGame', { news: data.news });
-  client.bus.send(new GlobalOpenClientPacket());
+  client.bus!.send(new GlobalOpenClientPacket());
   const diffMap = client.atlas.mapId !== client.mapId;
   client.atlas.reset();
   if (diffMap) {
@@ -162,7 +162,7 @@ function handleEnterGame(
 }
 
 export function registerWelcomeHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Welcome,
     PacketAction.Reply,
     (reader) => handleWelcomeReply(client, reader),

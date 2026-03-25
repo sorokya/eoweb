@@ -9,80 +9,80 @@ import { characterIconToChatIcon } from '../utils/character-icon-to-chat-icon';
 import './paperdoll.css';
 
 export class Paperdoll extends Base {
-  protected container = document.getElementById('paperdoll');
+  protected container = document.getElementById('paperdoll')!;
   private dialogs = document.getElementById('dialogs');
   private client: Client;
   private cover = document.getElementById('cover');
-  private bntOk = this.container.querySelector<HTMLButtonElement>(
+  private bntOk = this.container!.querySelector<HTMLButtonElement>(
     'button[data-id="ok"]',
   );
-  private imgBoots: HTMLDivElement = this.container.querySelector(
+  private imgBoots: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="boots"]',
-  );
-  private imgAccessory: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgAccessory: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="accessory"]',
-  );
-  private imgGloves: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgGloves: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="gloves"]',
-  );
-  private imgBelt: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgBelt: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="belt"]',
-  );
-  private imgArmor: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgArmor: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="armor"]',
-  );
-  private imgNecklace: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgNecklace: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="necklace"]',
-  );
-  private imgHat: HTMLImageElement = this.container.querySelector(
+  )!;
+  private imgHat: HTMLImageElement = this.container!.querySelector(
     '.item[data-id="hat"]',
-  );
-  private imgShield: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgShield: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="shield"]',
-  );
-  private imgWeapon: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgWeapon: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="weapon"]',
-  );
-  private imgRing1: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgRing1: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="ring-1"]',
-  );
-  private imgRing2: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgRing2: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="ring-2"]',
-  );
-  private imgArmlet1: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgArmlet1: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="armlet-1"]',
-  );
-  private imgArmlet2: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgArmlet2: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="armlet-2"]',
-  );
-  private imgBracer1: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgBracer1: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="bracer-1"]',
-  );
-  private imgBracer2: HTMLDivElement = this.container.querySelector(
+  )!;
+  private imgBracer2: HTMLDivElement = this.container!.querySelector(
     '.item[data-id="bracer-2"]',
-  );
-  private spanName: HTMLSpanElement = this.container.querySelector(
+  )!;
+  private spanName: HTMLSpanElement = this.container!.querySelector(
     'span[data-id="name"]',
-  );
-  private spanHome: HTMLSpanElement = this.container.querySelector(
+  )!;
+  private spanHome: HTMLSpanElement = this.container!.querySelector(
     'span[data-id="home"]',
-  );
-  private spanClass: HTMLSpanElement = this.container.querySelector(
+  )!;
+  private spanClass: HTMLSpanElement = this.container!.querySelector(
     'span[data-id="class"]',
-  );
-  private spanPartner: HTMLSpanElement = this.container.querySelector(
+  )!;
+  private spanPartner: HTMLSpanElement = this.container!.querySelector(
     'span[data-id="partner"]',
-  );
-  private spanTitle: HTMLSpanElement = this.container.querySelector(
+  )!;
+  private spanTitle: HTMLSpanElement = this.container!.querySelector(
     'span[data-id="title"]',
-  );
-  private spanGuild: HTMLSpanElement = this.container.querySelector(
+  )!;
+  private spanGuild: HTMLSpanElement = this.container!.querySelector(
     'span[data-id="guild"]',
-  );
-  private spanRank: HTMLSpanElement = this.container.querySelector(
+  )!;
+  private spanRank: HTMLSpanElement = this.container!.querySelector(
     'span[data-id="rank"]',
-  );
-  private divIcon: HTMLDivElement = this.container.querySelector('div.icon');
+  )!;
+  private divIcon: HTMLDivElement = this.container!.querySelector('div.icon')!;
 
   private icon = CharacterIcon.Player;
   private details = new CharacterDetails();
@@ -91,7 +91,7 @@ export class Paperdoll extends Base {
   constructor(client: Client) {
     super();
     this.client = client;
-    this.bntOk.addEventListener('click', () => {
+    this.bntOk!.addEventListener('click', () => {
       playSfxById(SfxId.ButtonClick);
       this.hide();
     });
@@ -231,7 +231,7 @@ export class Paperdoll extends Base {
   }
 
   private render() {
-    this.container.setAttribute('data-gender', this.details.gender.toString());
+    this.container!.setAttribute('data-gender', this.details.gender.toString());
 
     this.spanName.innerText = capitalize(this.details.name);
     this.spanHome.innerText = this.details.home;
@@ -322,9 +322,9 @@ export class Paperdoll extends Base {
     const img = el.querySelector<HTMLImageElement>('img');
     const tooltip = el.querySelector<HTMLDivElement>('.tooltip');
 
-    img.src = '';
-    tooltip.innerText = '';
-    tooltip.classList.add('hidden');
+    img!.src = '';
+    tooltip!.innerText = '';
+    tooltip!.classList.add('hidden');
 
     if (!itemId) {
       return;
@@ -336,25 +336,25 @@ export class Paperdoll extends Base {
     }
 
     const meta = getItemMeta(record);
-    img.src = `/gfx/gfx023/${100 + record.graphicId * 2}.png`;
-    tooltip.innerText = `${record.name}\n${meta.join('\n')}`;
-    tooltip.classList.remove('hidden');
+    img!.src = `/gfx/gfx023/${100 + record.graphicId * 2}.png`;
+    tooltip!.innerText = `${record.name}\n${meta.join('\n')}`;
+    tooltip!.classList.remove('hidden');
   }
 
   show() {
     this.render();
-    this.cover.classList.remove('hidden');
-    this.container.classList.remove('hidden');
-    this.dialogs.classList.remove('hidden');
+    this.cover!.classList.remove('hidden');
+    this.container!.classList.remove('hidden');
+    this.dialogs!.classList.remove('hidden');
     this.client.typing = true;
   }
 
   hide() {
-    this.container.classList.add('hidden');
-    this.cover.classList.add('hidden');
+    this.container!.classList.add('hidden');
+    this.cover!.classList.add('hidden');
 
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
-      this.dialogs.classList.add('hidden');
+      this.dialogs!.classList.add('hidden');
       this.client.typing = false;
     }
   }

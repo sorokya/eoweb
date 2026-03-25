@@ -17,21 +17,21 @@ function handleAccountReply(client: Client, reader: EoReader) {
       const text = client.getDialogStrings(
         DialogResourceID.ACCOUNT_CREATE_NAME_EXISTS,
       );
-      client.showError(text[1], text[0]);
+      client.showError(text![1], text![0]);
       return;
     }
     case AccountReply.NotApproved: {
       const text = client.getDialogStrings(
         DialogResourceID.ACCOUNT_CREATE_NAME_NOT_APPROVED,
       );
-      client.showError(text[1], text[0]);
+      client.showError(text![1], text![0]);
       return;
     }
     case AccountReply.ChangeFailed: {
       const text = client.getDialogStrings(
         DialogResourceID.CHANGE_PASSWORD_MISMATCH,
       );
-      client.showError(text[1], text[0]);
+      client.showError(text![1], text![0]);
       return;
     }
     case AccountReply.Changed:
@@ -51,7 +51,7 @@ function handleAccountReply(client: Client, reader: EoReader) {
 
       const data =
         packet.replyCodeData as AccountReplyServerPacket.ReplyCodeDataDefault;
-      client.bus.setSequence(
+      client.bus!.setSequence(
         AccountReplySequenceStart.fromValue(data.sequenceStart),
       );
       const reply = new AccountCreateClientPacket();
@@ -64,14 +64,14 @@ function handleAccountReply(client: Client, reader: EoReader) {
       reply.email = accountData.email;
       reply.hdid = '1111111111';
       reply.computer = 'eoweb';
-      client.bus.send(reply);
+      client.bus!.send(reply);
       break;
     }
   }
 }
 
 export function registerAccountHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Account,
     PacketAction.Reply,
     (reader) => handleAccountReply(client, reader),

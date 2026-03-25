@@ -69,22 +69,22 @@ function handlePlayersNet242(client: Client, reader: EoReader) {
 }
 
 export function registerPlayersHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Players,
     PacketAction.Agree,
     (reader) => handlePlayersAgree(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Players,
     PacketAction.Ping,
     (reader) => handlePlayersPing(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Players,
     PacketAction.Pong,
     (reader) => handlePlayersPong(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Players,
     PacketAction.Net242,
     (reader) => handlePlayersNet242(client, reader),

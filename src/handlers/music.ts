@@ -3,7 +3,7 @@ import type { Client } from '../client';
 import { playSfxById } from '../sfx';
 
 export function registerMusicHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Music,
     PacketAction.Player,
     (reader) => {

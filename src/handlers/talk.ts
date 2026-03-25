@@ -32,7 +32,7 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
 
   client.characterChats.set(
     character.playerId,
-    new ChatBubble(client.sans11, packet.message),
+    new ChatBubble(client.sans11!, packet.message),
   );
 
   client.emit('chat', {
@@ -85,7 +85,7 @@ function handleTalkAnnounce(client: Client, reader: EoReader) {
   const packet = TalkAnnounceServerPacket.deserialize(reader);
   client.characterChats.set(
     client.playerId,
-    new ChatBubble(client.sans11, packet.message),
+    new ChatBubble(client.sans11!, packet.message),
   );
   client.emit('chat', {
     tab: ChatTab.Local,
@@ -134,7 +134,7 @@ function handleTalkOpen(client: Client, reader: EoReader) {
     client.characterChats.set(
       packet.playerId,
       new ChatBubble(
-        client.sans11,
+        client.sans11!,
         packet.message,
         COLORS.ChatBubble,
         COLORS.ChatBubbleBackgroundParty,
@@ -158,42 +158,42 @@ function handleTalkReply(client: Client, reader: EoReader) {
 }
 
 export function registerTalkHandlers(client: Client) {
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Talk,
     PacketAction.Player,
     (reader) => handleTalkPlayer(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Talk,
     PacketAction.Server,
     (reader) => handleTalkServer(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Talk,
     PacketAction.Announce,
     (reader) => handleTalkAnnounce(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Talk,
     PacketAction.Msg,
     (reader) => handleTalkMsg(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Talk,
     PacketAction.Admin,
     (reader) => handleTalkAdmin(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Talk,
     PacketAction.Tell,
     (reader) => handleTalkTell(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Talk,
     PacketAction.Open,
     (reader) => handleTalkOpen(client, reader),
   );
-  client.bus.registerPacketHandler(
+  client.bus!.registerPacketHandler(
     PacketFamily.Talk,
     PacketAction.Reply,
     (reader) => handleTalkReply(client, reader),
