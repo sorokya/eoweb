@@ -376,6 +376,8 @@ export class Atlas {
   mapId = 0;
   private mapHasChairs = false;
   private bmpsToLoad: Bmp[] = [];
+  private pendingBmpPromises: Promise<void>[] = [];
+  private pendingCharacterFramePromises: Promise<void>[] = [];
   private loading = false;
   private appended = true;
   private staticAtlas: AtlasCanvas;
@@ -832,26 +834,15 @@ export class Atlas {
   }
 
   async refreshAsync(): Promise<void> {
-    return new Promise((resolve) => {
-      this.refresh();
-
-      const checkLoaded = () => {
-        if (this.loading) {
-          setTimeout(checkLoaded, 50);
-        } else {
-          resolve();
-        }
-      };
-
-      checkLoaded();
-    });
+    await (this.refresh() ?? Promise.resolve());
   }
 
-  refresh() {
+  refresh(): Promise<void> | void {
     if (this.loading) return;
     this.loading = true;
 
     this.bmpsToLoad = [];
+    this.pendingBmpPromises = [];
 
     if (this.mapId !== this.client.mapId) {
       this.tiles = [];
@@ -878,29 +869,12 @@ export class Atlas {
     }
 
     if (this.bmpsToLoad.length) {
-      this.waitForBmpsToLoadThenUpdateAtlas();
-    } else {
-      this.loading = false;
-    }
-  }
-
-  private waitForBmpsToLoadThenUpdateAtlas() {
-    if (this.bmpsToLoad.some((bmp) => !bmp.loaded)) {
-      setTimeout(() => this.waitForBmpsToLoadThenUpdateAtlas(), 50);
-    } else {
-      this.updateAtlas();
-    }
-  }
-
-  private waitForCharacterFramesThenFinishUpdatingAtlas() {
-    if (this.temporaryCharacterFrames.some((f) => !f.loaded)) {
-      setTimeout(
-        () => this.waitForCharacterFramesThenFinishUpdatingAtlas(),
-        50,
+      return Promise.all(this.pendingBmpPromises).then(() =>
+        this.updateAtlas(),
       );
-    } else {
-      this.finishUpdatingAtlas();
     }
+
+    this.loading = false;
   }
 
   private addBmpToLoad(gfxType: GfxType, id: number) {
@@ -910,16 +884,18 @@ export class Atlas {
       const bmp: Bmp = { gfxType, id, img: null, loaded: false };
       this.bmpsToLoad.push(bmp);
 
-      this.gfxLoader
-        .loadResource(gfxType, id + 100)
-        .then((imageBitmap) => {
-          bmp.img = imageBitmap;
-          bmp.loaded = true;
-        })
-        .catch((err) => {
-          console.error(`Failed to load gfx ${gfxType}/${id}:`, err);
-          bmp.loaded = true;
-        });
+      this.pendingBmpPromises.push(
+        this.gfxLoader
+          .loadResource(gfxType, id + 100)
+          .then((imageBitmap) => {
+            bmp.img = imageBitmap;
+            bmp.loaded = true;
+          })
+          .catch((err) => {
+            console.error(`Failed to load gfx ${gfxType}/${id}:`, err);
+            bmp.loaded = true;
+          }),
+      );
     }
   }
 
@@ -928,17 +904,19 @@ export class Atlas {
       const bmp: Bmp = { path, img: null, loaded: false };
       this.bmpsToLoad.push(bmp);
 
-      fetch(path)
-        .then((r) => r.blob())
-        .then((blob) => createImageBitmap(blob))
-        .then((imageBitmap) => {
-          bmp.img = imageBitmap;
-          bmp.loaded = true;
-        })
-        .catch((err) => {
-          console.error(`Failed to load ${path}:`, err);
-          bmp.loaded = true;
-        });
+      this.pendingBmpPromises.push(
+        fetch(path)
+          .then((r) => r.blob())
+          .then((blob) => createImageBitmap(blob))
+          .then((imageBitmap) => {
+            bmp.img = imageBitmap;
+            bmp.loaded = true;
+          })
+          .catch((err) => {
+            console.error(`Failed to load ${path}:`, err);
+            bmp.loaded = true;
+          }),
+      );
     }
   }
 
@@ -1523,10 +1501,13 @@ export class Atlas {
   }
 
   private updateAtlas() {
+    this.pendingCharacterFramePromises = [];
     this.defragmentAtlases();
     this.preRenderCharacterFrames();
     this.calculateFrameSizes();
-    this.waitForCharacterFramesThenFinishUpdatingAtlas();
+    Promise.all(this.pendingCharacterFramePromises).then(() =>
+      this.finishUpdatingAtlas(),
+    );
   }
 
   private finishUpdatingAtlas() {
@@ -2221,10 +2202,12 @@ export class Atlas {
           img: null,
           loaded: false,
         };
-        createImageBitmap(this.tmpBehindCtx.canvas).then((bm) => {
-          characterFrameImg.img = bm;
-          characterFrameImg.loaded = true;
-        });
+        this.pendingCharacterFramePromises.push(
+          createImageBitmap(this.tmpBehindCtx.canvas).then((bm) => {
+            characterFrameImg.img = bm;
+            characterFrameImg.loaded = true;
+          }),
+        );
 
         this.temporaryCharacterFrames.push(characterFrameImg);
       }
