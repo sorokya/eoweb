@@ -367,79 +367,50 @@ export class MapRenderer {
     // --- Collect dynamic entities (characters, npcs, items, cursor) ---
     const dynamics: Entity[] = [];
 
-    // Build coordinate lookup maps — O(n) once per frame instead of O(n × tiles)
     const inGame = this.client.state === GameState.InGame;
-    const charByCoord = new Map<string, typeof this.client.nearby.characters>();
-    const npcByCoord = new Map<string, typeof this.client.nearby.npcs>();
-    const itemByCoord = new Map<string, typeof this.client.nearby.items>();
     if (inGame) {
-      for (const c of this.client.nearby.characters) {
-        const key = `${c.coords.x},${c.coords.y}`;
-        const arr = charByCoord.get(key);
-        if (arr) arr.push(c);
-        else charByCoord.set(key, [c]);
+      const minX = Math.max(player.x - rangeX, 0);
+      const maxX = Math.min(player.x + rangeX, this.client.map.width);
+      const minY = Math.max(player.y - rangeY, 0);
+      const maxY = Math.min(player.y + rangeY, this.client.map.height);
+
+      for (const character of this.client.nearby.characters) {
+        const { x, y } = character.coords;
+        if (x < minX || x > maxX || y < minY || y > maxY) continue;
+        dynamics.push({
+          x,
+          y,
+          type: EntityType.Character,
+          typeId: character.playerId,
+          layer: Layer.Character,
+          depth: this.calculateDepth(Layer.Character, x, y),
+        });
       }
-      for (const n of this.client.nearby.npcs) {
-        const key = `${n.coords.x},${n.coords.y}`;
-        const arr = npcByCoord.get(key);
-        if (arr) arr.push(n);
-        else npcByCoord.set(key, [n]);
+
+      for (const npc of this.client.nearby.npcs) {
+        const { x, y } = npc.coords;
+        if (x < minX || x > maxX || y < minY || y > maxY) continue;
+        dynamics.push({
+          x,
+          y,
+          type: EntityType.Npc,
+          typeId: npc.index,
+          layer: Layer.Npc,
+          depth: this.calculateDepth(Layer.Npc, x, y),
+        });
       }
-      for (const i of this.client.nearby.items) {
-        const key = `${i.coords.x},${i.coords.y}`;
-        const arr = itemByCoord.get(key);
-        if (arr) arr.push(i);
-        else itemByCoord.set(key, [i]);
-      }
 
-      for (let y = player.y - rangeY; y <= player.y + rangeY; y++) {
-        if (y < 0 || y > this.client.map.height) continue;
-        for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
-          if (x < 0 || x > this.client.map.width) continue;
-          const key = `${x},${y}`;
-
-          const chars = charByCoord.get(key);
-          if (chars) {
-            for (const c of chars) {
-              dynamics.push({
-                x,
-                y,
-                type: EntityType.Character,
-                typeId: c.playerId,
-                layer: Layer.Character,
-                depth: this.calculateDepth(Layer.Character, x, y),
-              });
-            }
-          }
-
-          const npcs = npcByCoord.get(key);
-          if (npcs) {
-            for (const n of npcs) {
-              dynamics.push({
-                x,
-                y,
-                type: EntityType.Npc,
-                typeId: n.index,
-                layer: Layer.Npc,
-                depth: this.calculateDepth(Layer.Npc, x, y),
-              });
-            }
-          }
-
-          const items = itemByCoord.get(key);
-          if (items) {
-            for (const i of items) {
-              dynamics.push({
-                x,
-                y,
-                type: EntityType.Item,
-                typeId: i.uid,
-                layer: Layer.Item,
-                depth: this.calculateDepth(Layer.Item, x, y),
-              });
-            }
-          }
-        }
+      for (const item of this.client.nearby.items) {
+        const { x, y } = item.coords;
+        if (x < minX || x > maxX || y < minY || y > maxY) continue;
+        dynamics.push({
+          x,
+          y,
+          type: EntityType.Item,
+          typeId: item.uid,
+          layer: Layer.Item,
+          depth: this.calculateDepth(Layer.Item, x, y),
+        });
       }
     }
 
@@ -515,34 +486,35 @@ export class MapRenderer {
     // --- O(n+m) merge of pre-sorted statics with sorted dynamics ---
     dynamics.sort((a, b) => a.depth - b.depth);
 
-    let si = 0;
-    let di = 0;
+    let staticIndex = 0;
+    let dynamicIndex = 0;
     const statics = this.cachedStaticEntities;
-    while (si < statics.length || di < dynamics.length) {
-      let e: Entity;
+    while (staticIndex < statics.length || dynamicIndex < dynamics.length) {
+      let entity: Entity;
       if (
-        di >= dynamics.length ||
-        (si < statics.length && statics[si].depth <= dynamics[di].depth)
+        dynamicIndex >= dynamics.length ||
+        (staticIndex < statics.length &&
+          statics[staticIndex].depth <= dynamics[dynamicIndex].depth)
       ) {
-        e = statics[si++];
+        entity = statics[staticIndex++];
       } else {
-        e = dynamics[di++];
+        entity = dynamics[dynamicIndex++];
       }
-      switch (e.type) {
+      switch (entity.type) {
         case EntityType.Tile:
-          this.renderTile(e, playerScreen, ctx);
+          this.renderTile(entity, playerScreen, ctx);
           break;
         case EntityType.Character:
-          this.renderCharacter(e, playerScreen, ctx);
+          this.renderCharacter(entity, playerScreen, ctx);
           break;
         case EntityType.Npc:
-          this.renderNpc(e, playerScreen, ctx);
+          this.renderNpc(entity, playerScreen, ctx);
           break;
         case EntityType.Item:
-          this.renderItem(e, playerScreen, ctx);
+          this.renderItem(entity, playerScreen, ctx);
           break;
         case EntityType.Cursor:
-          this.renderCursor(e, playerScreen, ctx);
+          this.renderCursor(entity, playerScreen, ctx);
           break;
       }
     }
