@@ -2,6 +2,8 @@ import { BarberBuyClientPacket, type CharacterMapInfo, Direction } from 'eolib';
 import { CharacterFrame } from '../../atlas';
 import type { Client } from '../../client';
 import {
+  BARBER_BASE_COST,
+  BARBER_COST_PER_LEVEL,
   CHARACTER_HEIGHT,
   CHARACTER_WIDTH,
   GAME_FPS,
@@ -12,6 +14,7 @@ import { playSfxById, SfxId } from '../../sfx';
 import { Base } from '../base-ui';
 
 import './barber-dialog.css';
+import { DialogResourceID, EOResourceID } from '../../edf';
 
 export class BarberDialog extends Base {
   private client: Client;
@@ -20,6 +23,9 @@ export class BarberDialog extends Base {
   private cover = document.querySelector<HTMLDivElement>('#cover')!;
   private previewImage = this.container.querySelector<HTMLImageElement>(
     '.barber-preview img',
+  )!;
+  private confirmText = this.container.querySelector<HTMLParagraphElement>(
+    '.barber-confirm-text',
   )!;
 
   private hairStyle = 0;
@@ -174,8 +180,34 @@ export class BarberDialog extends Base {
     this.colorValue.textContent = String(this.hairColor);
   }
 
+  private calculateCost(): number {
+    return (
+      BARBER_BASE_COST +
+      Math.max(this.client.level - 1, 0) * BARBER_COST_PER_LEVEL
+    );
+  }
+
   private showConfirmation() {
     playSfxById(SfxId.ButtonClick);
+
+    const cost = this.calculateCost();
+    const goldRecord = this.client.getEifRecordById(1);
+    const gold = this.client.items.find((i) => i.id === 1);
+    if (!gold || gold.amount < cost) {
+      const strings = this.client.getDialogStrings(
+        DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
+      );
+      this.client.emit('smallAlert', {
+        title: strings[0],
+        message: `${strings[1]} ${goldRecord?.name}`,
+      });
+      return;
+    }
+
+    this.confirmText.textContent = `${this.client.getResourceString(
+      EOResourceID.DIALOG_BARBER_BUY_HAIRSTYLE,
+    )} (${this.calculateCost()} gold)`;
+
     this.controls.classList.add('hidden');
     this.footer.classList.add('hidden');
     this.confirmation.classList.remove('hidden');
