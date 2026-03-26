@@ -24,6 +24,7 @@ export class BarberDialog extends Base {
 
   private hairStyle = 0;
   private hairColor = 0;
+  private direction = Direction.Right;
 
   private originalHairStyle = 0;
   private originalHairColor = 0;
@@ -93,6 +94,14 @@ export class BarberDialog extends Base {
         this.hideConfirmation();
       });
 
+    this.previewImage.addEventListener('click', () => {
+      if (!this.character) return;
+
+      this.direction = (this.direction + 1) % 4;
+      playSfxById(SfxId.ButtonClick);
+      this.applyPreview();
+    });
+
     this.client.on('barberPurchased', () => {
       // Update originals so hide() doesn't revert back
       this.originalHairStyle = this.hairStyle;
@@ -108,6 +117,7 @@ export class BarberDialog extends Base {
       this.originalHairColor = this.character.hairColor;
       this.hairStyle = this.character.hairStyle;
       this.hairColor = this.character.hairColor;
+      this.direction = Direction.Right;
     }
     this._open = true;
     this.updateLabels();
@@ -197,7 +207,7 @@ export class BarberDialog extends Base {
     );
 
     const downRight = [Direction.Down, Direction.Right].includes(
-      this.character?.direction ?? Direction.Down,
+      this.direction ?? Direction.Down,
     );
 
     const frame = this.client.atlas.getCharacterFrame(
@@ -219,7 +229,7 @@ export class BarberDialog extends Base {
     }
 
     const mirrored = [Direction.Right, Direction.Up].includes(
-      this.character?.direction ?? Direction.Down,
+      this.direction ?? Direction.Down,
     );
 
     if (mirrored) {
