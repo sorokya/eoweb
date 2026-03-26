@@ -32,6 +32,9 @@ export class GfxLoader {
   // LRU in-memory cache: key = "fileID:resourceID"
   private bitmapCache: Map<string, ImageBitmap> = new Map();
 
+  private batchPromises: Map<number, PendingPromise<void>> = new Map();
+  private batchTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor() {
     this.worker = new Worker(
       new URL('./gfx-loader.worker.ts', import.meta.url),
@@ -108,6 +111,39 @@ export class GfxLoader {
     return response.arrayBuffer();
   }
 
+  async loadEGFs(fileIDs: number[]): Promise<void> {
+    await Promise.all(fileIDs.map((id) => this.loadEGF(id)));
+  }
+
+  private scheduleBatchEGF(fileID: number): Promise<void> {
+    if (this.egfs.has(fileID)) return Promise.resolve();
+
+    if (this.batchPromises.has(fileID)) {
+      return this.batchPromises.get(fileID)!.promise;
+    }
+
+    const pending = createPendingPromise<void>();
+    this.batchPromises.set(fileID, pending);
+
+    if (this.batchTimer === null) {
+      this.batchTimer = setTimeout(() => {
+        this.batchTimer = null;
+        const entries = [...this.batchPromises.entries()];
+        this.batchPromises.clear();
+        Promise.all(
+          entries.map(([id, p]) =>
+            this.loadEGF(id).then(
+              () => p.resolve(),
+              (err) => p.reject(err),
+            ),
+          ),
+        );
+      }, 100);
+    }
+
+    return pending.promise;
+  }
+
   async loadEGF(fileID: number): Promise<void> {
     if (this.egfs.has(fileID)) return;
     if (this.pendingEGFs.has(fileID)) {
@@ -140,7 +176,9 @@ export class GfxLoader {
       return bm;
     }
 
-    await this.loadEGF(fileID);
+    if (!this.egfs.has(fileID)) {
+      await this.scheduleBatchEGF(fileID);
+    }
 
     if (this.pendingResources.has(cacheKey)) {
       const result = await this.pendingResources.get(cacheKey)!.promise;
@@ -187,6 +225,10 @@ export class GfxLoader {
   }
 
   destroy() {
+    if (this.batchTimer !== null) {
+      clearTimeout(this.batchTimer);
+      this.batchTimer = null;
+    }
     this.worker.terminate();
     for (const bm of this.bitmapCache.values()) {
       bm.close();
