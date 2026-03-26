@@ -83,3 +83,8 @@ export const COLORS = {
   ChatBubble: '#101010',
   ChatBubbleBackgroundParty: '#dcc8aa',
 };
+
+export const MAX_GENDER = 2;
+export const MAX_HAIR_STYLE = 20;
+export const MAX_HAIR_COLOR = 10;
+export const MAX_SKIN = 4;

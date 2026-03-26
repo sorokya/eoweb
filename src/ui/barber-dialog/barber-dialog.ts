@@ -1,7 +1,13 @@
 import { BarberBuyClientPacket, type CharacterMapInfo, Direction } from 'eolib';
 import { CharacterFrame } from '../../atlas';
 import type { Client } from '../../client';
-import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../../consts';
+import {
+  CHARACTER_HEIGHT,
+  CHARACTER_WIDTH,
+  GAME_FPS,
+  MAX_HAIR_COLOR,
+  MAX_HAIR_STYLE,
+} from '../../consts';
 import { playSfxById, SfxId } from '../../sfx';
 import { Base } from '../base-ui';
 
@@ -18,8 +24,6 @@ export class BarberDialog extends Base {
 
   private hairStyle = 0;
   private hairColor = 0;
-  private maxStyle = 50;
-  private maxColor = 9;
 
   private originalHairStyle = 0;
   private originalHairColor = 0;
@@ -135,15 +139,13 @@ export class BarberDialog extends Base {
   }
 
   private changeStyle(delta: number) {
-    this.hairStyle =
-      (this.hairStyle + delta + this.maxStyle + 1) % (this.maxStyle + 1);
+    this.hairStyle = (this.hairStyle + delta + MAX_HAIR_STYLE) % MAX_HAIR_STYLE;
     playSfxById(SfxId.ButtonClick);
     this.applyPreview();
   }
 
   private changeColor(delta: number) {
-    this.hairColor =
-      (this.hairColor + delta + this.maxColor + 1) % (this.maxColor + 1);
+    this.hairColor = (this.hairColor + delta + MAX_HAIR_COLOR) % MAX_HAIR_COLOR;
     playSfxById(SfxId.ButtonClick);
     this.applyPreview();
   }
