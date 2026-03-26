@@ -171,10 +171,12 @@ export class DIBReader {
   paletteColors: PaletteColor[] | null = null;
 
   private initialized = false;
+  transparentColor: number[];
 
-  constructor(buffer: ArrayBuffer) {
+  constructor(buffer: ArrayBuffer, transparentColor: number[]) {
     this.data = buffer;
     this.dataView = new DataView(buffer);
+    this.transparentColor = transparentColor;
   }
 
   readUint8(position: number): number {
@@ -675,7 +677,11 @@ abstract class ReadStrategy {
   abstract read(outBuffer: Uint8ClampedArray): void;
 
   protected getAlpha(r: number, g: number, b: number): number {
-    return r !== 0 || g !== 0 || b !== 0 ? 0xff : 0x00;
+    return r !== this.reader.transparentColor[0] ||
+      g !== this.reader.transparentColor[1] ||
+      b !== this.reader.transparentColor[2]
+      ? 0xff
+      : 0x00;
   }
 }
 
