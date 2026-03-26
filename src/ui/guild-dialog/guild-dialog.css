@@ -1,0 +1,301 @@
+#guild-dialog {
+  width: 340px;
+  background: linear-gradient(
+    180deg,
+    rgba(30, 26, 20, 0.97),
+    rgba(22, 19, 15, 0.98)
+  );
+  border: 1px solid rgba(212, 184, 150, 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 11px;
+  color: #e0daca;
+  position: relative;
+}
+
+.guild-header {
+  background: linear-gradient(
+    90deg,
+    rgba(212, 184, 150, 0.12),
+    rgba(212, 184, 150, 0.04)
+  );
+  padding: 8px 12px;
+  font-weight: bold;
+  color: #d4b896;
+  border-bottom: 1px solid rgba(212, 184, 150, 0.15);
+  font-size: 12px;
+}
+
+.guild-body {
+  padding: 8px;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.guild-footer {
+  padding: 8px;
+  border-top: 1px solid rgba(212, 184, 150, 0.1);
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Menu buttons */
+.guild-menu-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  background: rgba(212, 184, 150, 0.06);
+  border: 1px solid rgba(212, 184, 150, 0.12);
+  border-radius: 4px;
+  color: #e0daca;
+  cursor: pointer;
+  text-align: left;
+  font-size: 11px;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.guild-menu-btn:hover {
+  background: rgba(212, 184, 150, 0.15);
+}
+
+.guild-menu-btn:last-child {
+  margin-bottom: 0;
+}
+
+/* Generic guild button */
+.guild-btn {
+  padding: 5px 12px;
+  background: rgba(212, 184, 150, 0.08);
+  border: 1px solid rgba(212, 184, 150, 0.2);
+  border-radius: 3px;
+  color: #e0daca;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.guild-btn:hover {
+  background: rgba(212, 184, 150, 0.18);
+}
+
+.guild-btn.primary {
+  background: rgba(212, 184, 150, 0.15);
+  border-color: rgba(212, 184, 150, 0.35);
+  color: #d4b896;
+}
+
+.guild-btn.primary:hover {
+  background: rgba(212, 184, 150, 0.28);
+}
+
+.guild-btn.danger {
+  border-color: rgba(244, 67, 54, 0.3);
+  color: #ef9a9a;
+}
+
+.guild-btn.danger:hover {
+  background: rgba(244, 67, 54, 0.15);
+}
+
+/* Info view */
+.guild-info-section {
+  margin-bottom: 8px;
+}
+
+.guild-info-label {
+  color: #a89b8c;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.guild-info-value {
+  color: #e0daca;
+  padding: 2px 0;
+}
+
+.guild-info-value.highlight {
+  color: #d4b896;
+  font-weight: bold;
+}
+
+/* Member list */
+.guild-member-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+
+.guild-member-row:nth-child(even) {
+  background: rgba(212, 184, 150, 0.04);
+}
+
+.guild-member-name {
+  color: #e0daca;
+}
+
+.guild-member-rank {
+  color: #a89b8c;
+  font-size: 10px;
+}
+
+/* Staff list in info view */
+.guild-staff-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 6px;
+  border-radius: 3px;
+}
+
+.guild-staff-row:nth-child(even) {
+  background: rgba(212, 184, 150, 0.04);
+}
+
+.guild-staff-name {
+  color: #d4b896;
+}
+
+.guild-staff-type {
+  color: #a89b8c;
+  font-size: 10px;
+}
+
+/* Input fields */
+.guild-input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid rgba(212, 184, 150, 0.2);
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #e0daca;
+  font-family: inherit;
+  font-size: 11px;
+  box-sizing: border-box;
+}
+
+.guild-input:focus {
+  outline: none;
+  border-color: rgba(212, 184, 150, 0.4);
+}
+
+textarea.guild-input {
+  resize: vertical;
+}
+
+.guild-input-group {
+  margin-bottom: 8px;
+}
+
+.guild-input-group label {
+  display: block;
+  color: #a89b8c;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+/* Message banner */
+.guild-message {
+  text-align: center;
+  padding: 6px 8px;
+  font-size: 11px;
+  border-radius: 3px;
+  margin: 4px 0;
+}
+
+.guild-message.success {
+  background: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  color: #a5d6a7;
+}
+
+.guild-message.error {
+  background: rgba(183, 28, 28, 0.15);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  color: #ef9a9a;
+}
+
+.guild-message.info {
+  background: rgba(33, 150, 243, 0.15);
+  border: 1px solid rgba(33, 150, 243, 0.3);
+  color: #90caf9;
+}
+
+/* Waiting state */
+.guild-waiting {
+  text-align: center;
+  padding: 16px;
+  color: #a89b8c;
+}
+
+.guild-create-list {
+  padding: 8px 0;
+}
+
+.guild-waiting-dot {
+  display: inline-block;
+  animation: guildPulse 1.4s infinite both;
+}
+
+.guild-waiting-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.guild-waiting-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes guildPulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+/* Create invite notification */
+#guild-create-invite {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    rgba(30, 26, 20, 0.97),
+    rgba(22, 19, 15, 0.98)
+  );
+  border: 1px solid rgba(212, 184, 150, 0.25);
+  border-radius: 6px;
+  padding: 10px 16px;
+  color: #e0daca;
+  font-size: 11px;
+  z-index: 200;
+  text-align: center;
+  min-width: 220px;
+}
+
+#guild-create-invite .guild-invite-text {
+  margin-bottom: 8px;
+}
+
+#guild-create-invite .guild-invite-name {
+  color: #d4b896;
+  font-weight: bold;
+}
+
+#guild-create-invite .guild-invite-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
