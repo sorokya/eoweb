@@ -11,10 +11,6 @@ RUN pnpm build
 
 FROM joseluisq/static-web-server:2-alpine AS runtime
 
-COPY --from=builder /app/dist /public
+COPY --from=builder /app/dist /home/sws/public
 
 EXPOSE 80
-
-ENTRYPOINT ["/entrypoint.sh"]
-
-CMD ["static-web-server"]
