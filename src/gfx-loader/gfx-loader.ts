@@ -17,7 +17,6 @@ function createPendingPromise<T>(): PendingPromise<T> {
   return { resolve, reject, promise };
 }
 
-const CACHE_NAME = 'egf-v1';
 const LRU_MAX_SIZE = 500;
 
 export class GfxLoader {
@@ -101,32 +100,9 @@ export class GfxLoader {
   private async fetchEGF(fileID: number): Promise<ArrayBuffer> {
     const url = `/gfx/gfx${String(fileID).padStart(3, '0')}.egf`;
 
-    // Try Cache API first
-    if ('caches' in self) {
-      try {
-        const cache = await caches.open(CACHE_NAME);
-        const cached = await cache.match(url);
-        if (cached) {
-          return cached.arrayBuffer();
-        }
-      } catch {
-        // Cache API unavailable, continue to fetch
-      }
-    }
-
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
-    }
-
-    // Store in cache (clone before consuming)
-    if ('caches' in self) {
-      try {
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(url, response.clone());
-      } catch {
-        // Non-fatal: caching failed
-      }
     }
 
     return response.arrayBuffer();
