@@ -5,6 +5,7 @@ import { registerArenaHandlers } from './arena';
 import { registerAttackHandlers } from './attack';
 import { registerAvatarHandlers } from './avatar';
 import { registerBankHandlers } from './bank';
+import { registerBarberHandlers } from './barber';
 import { registerBoardHandlers } from './board';
 import { registerCastHandlers } from './cast';
 import { registerChairHandlers } from './chair';
@@ -79,4 +80,5 @@ export function registerAllHandlers(client: Client): void {
   registerCastHandlers(client);
   registerPartyHandlers(client);
   registerTradeHandlers(client);
+  registerBarberHandlers(client);
 }
