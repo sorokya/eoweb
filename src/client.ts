@@ -518,6 +518,7 @@ export class Client {
   }
 
   render(interpolation: number) {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.mapRenderer.render(this.ctx, interpolation);
     this.minimapRenderer.render(this.ctx, interpolation);
   }
