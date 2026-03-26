@@ -52,6 +52,7 @@ import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
 import { SpellBook } from './ui/spell-book';
 import { Stats } from './ui/stats/stats';
+import { TradeDialog } from './ui/trade-dialog/trade-dialog';
 import { randomRange } from './utils';
 import {
   getReconnectAttempts,
@@ -130,6 +131,7 @@ const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
 const hotbar = new Hotbar(client);
 const spellBook = new SpellBook(client);
 const partyDialog = new PartyDialog(client);
+const tradeDialog = new TradeDialog(client);
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -251,6 +253,7 @@ wireClientEvents({
   boardDialog,
   lockerDialog,
   skillMasterDialog,
+  tradeDialog,
   partyDialog,
   mobileControls,
   initializeSocket,
@@ -283,6 +286,7 @@ wireUiEvents({
   hotbar,
   itemAmountDialog,
   partyDialog,
+  tradeDialog,
   hideAllUi,
   initializeSocket,
 });

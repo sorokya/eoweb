@@ -89,10 +89,10 @@ export type ClientEvents = {
   tradeOpened: {
     partnerPlayerId: number;
     partnerPlayerName: string;
-    yourPlayerId: number;
-    yourPlayerName: string;
+    localPlayerId: number;
+    localPlayerName: string;
   };
-  tradeUpdated: { tradeData: TradeItemData[]; partnerAgreed: boolean };
+  tradeUpdated: { tradeData: TradeItemData[] };
   tradePartnerAgree: { playerId: number; agree: boolean };
   tradeOwnAgree: { agree: boolean };
   tradeCompleted: undefined;

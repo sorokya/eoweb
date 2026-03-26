@@ -112,6 +112,7 @@ export interface UiEventDeps {
     hide(): void;
   };
   partyDialog: { toggle(): void };
+  tradeDialog: { offerItem(itemId: number): void };
   hideAllUi: () => void;
   initializeSocket: (next?: 'login' | 'create' | '') => void;
 }
@@ -616,6 +617,10 @@ function wireInventoryEvents(deps: UiEventDeps): void {
     } else {
       client.lockerController.addItem(id, 1);
     }
+  });
+
+  deps.inventory.on('addTradeItem', (itemId: unknown) => {
+    deps.tradeDialog.offerItem(itemId as number);
   });
 }
 

@@ -64,6 +64,14 @@ export interface ClientEventDeps {
     show(): void;
     refresh(): void;
   };
+  tradeDialog: {
+    showRequest(playerId: number, playerName: string): void;
+    open(
+      partnerPlayerName: string,
+      localPlayerId: number,
+      localPlayerName: string,
+    ): void;
+  };
   partyDialog: { refresh(): void };
   mobileControls: { show(): void; hide(): void };
   initializeSocket: (next?: 'login' | 'create' | '') => void;
@@ -234,6 +242,18 @@ export function wireClientEvents(deps: ClientEventDeps): void {
   client.on('boardOpened', ({ posts }) => {
     deps.boardDialog.setData(posts);
     deps.boardDialog.show();
+  });
+
+  client.on('tradeRequested', ({ playerId, playerName }) => {
+    deps.tradeDialog.showRequest(playerId, playerName);
+  });
+
+  client.on('tradeOpened', (data) => {
+    deps.tradeDialog.open(
+      data.partnerPlayerName,
+      data.localPlayerId,
+      data.localPlayerName,
+    );
   });
 
   client.on('lockerOpened', ({ items }) => {
