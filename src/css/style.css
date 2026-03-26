@@ -142,7 +142,7 @@ body {
 }
 
 div.icon {
-  background: #555;
+  background: url("/gfx/gfx002/132.png");
   width: 13px;
   height: 13px;
 }
@@ -244,92 +244,392 @@ div.icon[data-id="23"] {
 }
 
 .img-label {
-  display: inline-block;
-  color: #ccc;
-  font-size: 11px;
+  --bg-url: "";
+  --bg-x: 0;
+  --bg-y: 0;
+  --width: 0;
+  --height: 0;
+
+  display: block;
+  background-color: transparent;
+  /* biome-ignore lint/suspicious/noShorthandPropertyOverrides: CSS variables */
+  background: var(--bg-url) var(--bg-x) var(--bg-y);
+  width: var(--width);
+  height: var(--height);
   user-select: none;
-  white-space: nowrap;
 }
 
-.img-label::after {
-  content: attr(data-id);
-  text-transform: capitalize;
+.img-label[data-id="account-name"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --width: 149px;
+  --height: 16px;
+}
+
+.img-label[data-id="password"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: -17px;
+  --width: 149px;
+  --height: 12px;
+}
+
+.img-label[data-id="confirm-password"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: -29px;
+  --width: 149px;
+  --height: 16px;
+}
+
+.img-label[data-id="real-name"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: -44px;
+  --width: 149px;
+  --height: 16px;
+}
+
+.img-label[data-id="location"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: -58px;
+  --width: 149px;
+  --height: 16px;
+}
+
+.img-label[data-id="email"] {
+  --bg-url: url("/gfx/gfx001/112.png");
+  --bg-x: 0;
+  --bg-y: -76px;
+  --width: 149px;
+  --height: 16px;
+}
+
+.img-label[data-id="gender"] {
+  --bg-url: url("/gfx/gfx001/122.png");
+  --bg-x: 0;
+  --bg-y: -38px;
+  --width: 23px;
+  --height: 18px;
+}
+
+.img-label[data-id="hair-color"] {
+  --bg-url: url("/gfx/gfx001/122.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --width: 23px;
+  --height: 18px;
+}
+
+.img-label[data-id="hair-style"] {
+  --bg-url: url("/gfx/gfx001/122.png");
+  --bg-x: 0;
+  --bg-y: -20px;
+  --width: 23px;
+  --height: 18px;
+}
+
+.img-label[data-id="skin"] {
+  --bg-url: url("/gfx/gfx001/122.png");
+  --bg-x: -46px;
+  --bg-y: -38px;
+  --width: 23px;
+  --height: 18px;
 }
 
 .img-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #1e1e1e;
-  border: 1px solid #444;
-  color: #ccc;
-  font-size: 11px;
-  padding: 4px 10px;
+  --bg-url: "";
+  --bg-x: 0;
+  --bg-y: 0;
+  --hover-x: 0;
+  --hover-y: 0;
+  --width: 0;
+  --height: 0;
+
+  background-color: transparent;
+  border: none;
+  outline: none;
+  /* biome-ignore lint/suspicious/noShorthandPropertyOverrides: CSS variables */
+  background: var(--bg-url) var(--bg-x) var(--bg-y);
+  width: var(--width);
+  height: var(--height);
   cursor: pointer;
-  user-select: none;
-  min-width: 60px;
-  min-height: 22px;
-  white-space: nowrap;
 }
 
 .img-btn:hover {
-  background: #2e2e2e;
-  color: #eee;
+  background-position: var(--hover-x) var(--hover-y);
 }
 
-.img-btn::after {
-  content: attr(data-id);
-  text-transform: capitalize;
-  letter-spacing: 0.02em;
+/* Specific buttons */
+.img-btn[data-id="create-account"] {
+  --bg-url: url("/gfx/gfx001/113.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --hover-x: -180px;
+  --hover-y: 0;
+  --width: 180px;
+  --height: 40px;
 }
 
-/* Specific button sizes */
-.img-btn[data-id="create-account"],
-.img-btn[data-id="play-game"],
+.img-btn[data-id="play-game"] {
+  --bg-url: url("/gfx/gfx001/113.png");
+  --bg-x: 0;
+  --bg-y: -40px;
+  --hover-x: -180px;
+  --hover-y: -40px;
+  --width: 180px;
+  --height: 40px;
+}
+
 .img-btn[data-id="view-credits"] {
-  min-width: 140px;
-  min-height: 34px;
-  font-size: 12px;
+  --bg-url: url("/gfx/gfx001/113.png");
+  --bg-x: 0;
+  --bg-y: -80px;
+  --hover-x: -180px;
+  --hover-y: -80px;
+  --width: 180px;
+  --height: 40px;
 }
 
-.img-btn[data-id="create"],
-.img-btn[data-id="cancel-big"],
-.img-btn[data-id="connect-big"],
+.img-btn[data-id="create"] {
+  --bg-url: url("/gfx/gfx001/114.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --hover-x: -120px;
+  --hover-y: 0;
+  --width: 120px;
+  --height: 40px;
+}
+
+.img-btn[data-id="cancel-big"] {
+  --bg-url: url("/gfx/gfx001/114.png");
+  --bg-x: 0;
+  --bg-y: -40px;
+  --hover-x: -120px;
+  --hover-y: -40px;
+  --width: 120px;
+  --height: 40px;
+}
+
+.img-btn[data-id="connect-big"] {
+  --bg-url: url("/gfx/gfx001/114.png");
+  --bg-x: 0;
+  --bg-y: -80px;
+  --hover-x: -120px;
+  --hover-y: -80px;
+  --width: 120px;
+  --height: 40px;
+}
+
 .img-btn[data-id="password"] {
-  min-width: 100px;
-  min-height: 34px;
+  --bg-url: url("/gfx/gfx001/114.png");
+  --bg-x: 0;
+  --bg-y: -120px;
+  --hover-x: -120px;
+  --hover-y: -120px;
+  --width: 120px;
+  --height: 40px;
 }
 
-.img-btn[data-id="toggle-arrow"] {
-  min-width: 16px;
-  min-height: 16px;
-  padding: 2px;
-  font-size: 10px;
+.img-btn[data-id="play-game"] {
+  --bg-url: url("/gfx/gfx001/113.png");
+  --bg-x: 0;
+  --bg-y: -40px;
+  --hover-x: -180px;
+  --hover-y: -40px;
+  --width: 180px;
+  --height: 40px;
+}
+
+.img-btn[data-id="connect"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --hover-x: -91px;
+  --hover-y: -0;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="cancel"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -29px;
+  --hover-x: -91px;
+  --hover-y: -29px;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="login"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -58px;
+  --hover-x: -91px;
+  --hover-y: -58px;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="delete"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -87px;
+  --hover-x: -91px;
+  --hover-y: -87px;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="ok"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -116px;
+  --hover-x: -91px;
+  --hover-y: -116px;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="back"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -145px;
+  --hover-x: -91px;
+  --hover-y: -145px;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="next"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -203px;
+  --hover-x: -91px;
+  --hover-y: -203px;
+  --width: 91px;
+  --height: 29px;
+}
+
+.img-btn[data-id="add"] {
+  --bg-url: url("/gfx/gfx001/115.png");
+  --bg-x: 0;
+  --bg-y: -174px;
+  --hover-x: -91px;
+  --hover-y: -174px;
+  --width: 91px;
+  --height: 29px;
 }
 
 .img-btn[data-id="exit-game"] {
-  min-width: 44px;
-  min-height: 44px;
+  --bg-url: url("/gfx/gfx001/124.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --hover-x: 0;
+  --hover-y: -53px;
+  --width: 51px;
+  --height: 53px;
 }
 
-.img-btn[data-id="inventory"],
-.img-btn[data-id="map"],
-.img-btn[data-id="spells"],
-.img-btn[data-id="stats"],
-.img-btn[data-id="online"],
+.img-btn[data-id="toggle-arrow"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx001/122.png");
+  --bg-x: -184px;
+  --bg-y: -39px;
+  --hover-x: -205px;
+  --hover-y: -39px;
+  --width: 21px;
+  --height: 18px;
+}
+
+.img-btn[data-id="inventory"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: 0;
+  --hover-x: -36px;
+  --hover-y: 0;
+  --width: 36px;
+  --height: 19px;
+}
+
+.img-btn[data-id="map"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: -19px;
+  --hover-x: -36px;
+  --hover-y: -19px;
+  --width: 36px;
+  --height: 19px;
+}
+
+.img-btn[data-id="spells"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: -38px;
+  --hover-x: -36px;
+  --hover-y: -38px;
+  --width: 36px;
+  --height: 19px;
+}
+
+.img-btn[data-id="stats"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: -95px;
+  --hover-x: -36px;
+  --hover-y: -95px;
+  --width: 36px;
+  --height: 19px;
+}
+
+.img-btn[data-id="online"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: -114px;
+  --hover-x: -36px;
+  --hover-y: -114px;
+  --width: 36px;
+  --height: 19px;
+}
+
 .img-btn[data-id="party"] {
-  min-width: 32px;
-  min-height: 16px;
-  padding: 2px 4px;
-  font-size: 10px;
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/125.png");
+  --bg-x: 0;
+  --bg-y: -133px;
+  --hover-x: -36px;
+  --hover-y: -133px;
+  --width: 36px;
+  --height: 19px;
 }
 
-.img-btn[data-id="quest-select"],
+.img-btn[data-id="quest-select"] {
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/127.png");
+  --bg-x: -303px;
+  --bg-y: -242px;
+  --hover-x: -303px;
+  --hover-y: -242px;
+  --width: 16px;
+  --height: 15px;
+}
+
 .img-btn[data-id="upgrade-stat"] {
-  min-width: 14px;
-  min-height: 13px;
-  padding: 1px 3px;
-  font-size: 9px;
+  background-color: #000;
+  --bg-url: url("/gfx/gfx002/127.png");
+  --bg-x: -215px;
+  --bg-y: -386px;
+  --hover-x: -234px;
+  --hover-y: -386px;
+  --width: 19px;
+  --height: 15px;
 }
 
 #offset-tweaker {
@@ -357,13 +657,13 @@ div.icon[data-id="23"] {
   top: 0;
   width: 16px;
   height: 15px;
-  background: #555;
+  background: url("/gfx/gfx002/129.png") 0 -75px;
   touch-action: none;
   user-select: none;
 }
 
 .slider-thumb:hover {
-  background: #777;
+  background-position: 0 -90px;
 }
 
 .hidden {
@@ -419,7 +719,12 @@ div.icon[data-id="23"] {
   box-sizing: border-box;
   width: 284px;
   height: 290px;
-  background-color: #111;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/152.png");
+}
+
+#shop .shop-name {
+  position: absolute;
   color: #fff;
   font-size: 12px;
   left: 24px;
@@ -441,7 +746,7 @@ div.icon[data-id="23"] {
   right: 16px;
   width: 16px;
   height: 15px;
-  background: #555;
+  background: url("/gfx/gfx002/129.png") 0 -75px;
   touch-action: none;
   user-select: none;
 }
@@ -517,7 +822,11 @@ div.icon[data-id="23"] {
   padding: 0 0.5rem;
   cursor: pointer;
   height: 38px;
-  background: #1a1a1a;
+  background-image: url("/gfx/gfx003/100.png");
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: auto;
+  image-rendering: pixelated;
   width: 210px;
 }
 
@@ -555,20 +864,49 @@ div.icon[data-id="23"] {
 }
 
 .menu-item-icon {
-  background-color: #333;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/127.png");
   width: 31px;
   height: 31px;
 }
 
-.menu-item-icon[data-id="0"],
-.menu-item-icon[data-id="1"],
-.menu-item-icon[data-id="2"],
-.menu-item-icon[data-id="3"],
-.menu-item-icon[data-id="4"],
-.menu-item-icon[data-id="5"],
-.menu-item-icon[data-id="20"],
+.menu-item-icon[data-id="0"] {
+  background-position-y: -291px;
+}
+
+.menu-item-icon[data-id="1"] {
+  background-position-y: -291px;
+  background-position-x: -31px;
+}
+
+.menu-item-icon[data-id="2"] {
+  background-position-y: -291px;
+  background-position-x: -63px;
+}
+
+.menu-item-icon[data-id="3"] {
+  background-position-y: -291px;
+  background-position-x: -94px;
+}
+
+.menu-item-icon[data-id="4"] {
+  background-position-y: -291px;
+  background-position-x: -124px;
+}
+
+.menu-item-icon[data-id="5"] {
+  background-position-y: -291px;
+  background-position-x: -155px;
+}
+
+.menu-item-icon[data-id="20"] {
+  background-position-y: -353px;
+  background-position-x: -63px;
+}
+
 .menu-item-icon[data-id="21"] {
-  background-color: #333;
+  background-position-y: -353px;
+  background-position-x: -94px;
 }
 
 .notyf__wrapper {
@@ -590,7 +928,8 @@ div.icon[data-id="23"] {
 
 .dialog-md {
   position: relative;
-  background-color: #111;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/152.png");
   color: #ddd;
   width: 284px;
   height: 290px;
@@ -700,7 +1039,7 @@ div.icon[data-id="23"] {
   right: 16px;
   width: 16px;
   height: 15px;
-  background: #555;
+  background: url("/gfx/gfx002/129.png") 0 -75px;
   touch-action: none;
   user-select: none;
 }
