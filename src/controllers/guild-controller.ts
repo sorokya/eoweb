@@ -9,6 +9,7 @@ import {
   GuildPlayerClientPacket,
   GuildRankClientPacket,
   GuildRemoveClientPacket,
+  GuildReply,
   GuildReportClientPacket,
   GuildRequestClientPacket,
   GuildTakeClientPacket,
@@ -19,6 +20,31 @@ import type { Client } from '../client';
 import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { GuildDialogState } from '../types';
+import { capitalize } from '../utils';
+
+const REPLY_DIALOG_IDS: Partial<Record<GuildReply, DialogResourceID>> = {
+  [GuildReply.Busy]: DialogResourceID.GUILD_MASTER_IS_BUSY,
+  [GuildReply.NotApproved]: DialogResourceID.GUILD_CREATE_NAME_NOT_APPROVED,
+  [GuildReply.AlreadyMember]: DialogResourceID.GUILD_ALREADY_A_MEMBER,
+  [GuildReply.NoCandidates]: DialogResourceID.GUILD_CREATE_NO_CANDIDATES,
+  [GuildReply.Exists]: DialogResourceID.GUILD_TAG_OR_NAME_ALREADY_EXISTS,
+  [GuildReply.RecruiterOffline]: DialogResourceID.GUILD_RECRUITER_NOT_FOUND,
+  [GuildReply.RecruiterNotHere]: DialogResourceID.GUILD_RECRUITER_NOT_HERE,
+  [GuildReply.RecruiterWrongGuild]: DialogResourceID.GUILD_RECRUITER_NOT_MEMBER,
+  [GuildReply.NotRecruiter]: DialogResourceID.GUILD_RECRUITER_RANK_TOO_LOW,
+  [GuildReply.NotPresent]: DialogResourceID.GUILD_RECRUITER_INPUT_MISSING,
+  [GuildReply.AccountLow]: DialogResourceID.GUILD_BANK_ACCOUNT_LOW,
+  [GuildReply.Accepted]: DialogResourceID.GUILD_MEMBER_HAS_BEEN_ACCEPTED,
+  [GuildReply.NotFound]: DialogResourceID.GUILD_DOES_NOT_EXIST,
+  [GuildReply.Updated]: DialogResourceID.GUILD_DETAILS_UPDATED,
+  [GuildReply.RanksUpdated]: DialogResourceID.GUILD_DETAILS_UPDATED,
+  [GuildReply.RemoveLeader]: DialogResourceID.GUILD_REMOVE_PLAYER_IS_LEADER,
+  [GuildReply.RemoveNotMember]: DialogResourceID.GUILD_REMOVE_PLAYER_NOT_MEMBER,
+  [GuildReply.Removed]: DialogResourceID.GUILD_REMOVE_SUCCESS,
+  [GuildReply.RankingLeader]: DialogResourceID.GUILD_RANK_TOO_LOW,
+  [GuildReply.RankingNotMember]:
+    DialogResourceID.GUILD_REMOVE_PLAYER_NOT_MEMBER,
+};
 
 export type GuildInfoData = {
   name: string;
@@ -37,6 +63,7 @@ export class GuildController {
   createMembers: string[] = [];
   createTag = '';
   createName = '';
+  createDescription = '';
 
   // Cached data from server responses
   cachedInfo: GuildInfoData | null = null;
@@ -55,6 +82,17 @@ export class GuildController {
   }
 
   // ── State updates (called by handlers) ───────────────────────────────
+
+  notifyReply(code: GuildReply) {
+    const dialogId = REPLY_DIALOG_IDS[code];
+    const strings = dialogId
+      ? this.client.getDialogStrings(dialogId)
+      : ['Guild reply', `Code: ${GuildReply[code]}`];
+    this.client.emit('smallAlert', {
+      title: strings[0],
+      message: strings[1],
+    });
+  }
 
   notifyCreated(
     guildTag: string,
@@ -101,20 +139,29 @@ export class GuildController {
   }
 
   notifyCreateBegin() {
-    this.createMembers = [];
     this.state = GuildDialogState.CreateWaiting;
     this.client.emit('guildUpdated', undefined);
   }
 
   notifyCreateAdd(name: string) {
-    this.createMembers.push(name);
+    this.createMembers.push(capitalize(name));
     this.client.emit('guildUpdated', undefined);
   }
 
   notifyCreateAddConfirm(name: string) {
-    if (name) this.createMembers.push(name);
-    this.state = GuildDialogState.CreateFinalize;
+    if (name) this.createMembers.push(capitalize(name));
+    this.state = GuildDialogState.None;
     this.client.emit('guildUpdated', undefined);
+
+    playSfxById(SfxId.ServerMessage);
+    const strings = this.client.getDialogStrings(
+      DialogResourceID.GUILD_WILL_BE_CREATED,
+    );
+    this.client.emit('confirmation', {
+      title: strings[0],
+      message: strings[1],
+      onConfirm: () => this.finalizeCreate(),
+    });
   }
 
   notifyInfoReceived(data: GuildInfoData) {
@@ -179,9 +226,11 @@ export class GuildController {
 
   // ── Outgoing actions ──────────────────────────────────────────────────
 
-  beginCreate(tag: string, name: string) {
+  beginCreate(tag: string, name: string, description: string) {
     this.createTag = tag;
     this.createName = name;
+    this.createDescription = description;
+    this.createMembers = [capitalize(this.client.name)];
     const packet = new GuildRequestClientPacket();
     packet.sessionId = this.client.sessionId;
     packet.guildTag = tag;
@@ -189,12 +238,12 @@ export class GuildController {
     this.client.bus.send(packet);
   }
 
-  finalizeCreate(description: string) {
+  finalizeCreate() {
     const packet = new GuildCreateClientPacket();
     packet.sessionId = this.client.sessionId;
     packet.guildTag = this.createTag;
     packet.guildName = this.createName;
-    packet.description = description;
+    packet.description = this.createDescription;
     this.client.bus.send(packet);
   }
 

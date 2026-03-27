@@ -202,33 +202,6 @@ textarea.guild-input {
   margin-bottom: 3px;
 }
 
-/* Message banner */
-.guild-message {
-  text-align: center;
-  padding: 6px 8px;
-  font-size: 11px;
-  border-radius: 3px;
-  margin: 4px 0;
-}
-
-.guild-message.success {
-  background: rgba(76, 175, 80, 0.15);
-  border: 1px solid rgba(76, 175, 80, 0.3);
-  color: #a5d6a7;
-}
-
-.guild-message.error {
-  background: rgba(183, 28, 28, 0.15);
-  border: 1px solid rgba(244, 67, 54, 0.3);
-  color: #ef9a9a;
-}
-
-.guild-message.info {
-  background: rgba(33, 150, 243, 0.15);
-  border: 1px solid rgba(33, 150, 243, 0.3);
-  color: #90caf9;
-}
-
 /* Waiting state */
 .guild-waiting {
   text-align: center;

@@ -1,36 +1,10 @@
-import { GuildReply } from 'eolib';
 import type { Client } from '../../client';
-import { DialogResourceID } from '../../edf';
 import { playSfxById, SfxId } from '../../sfx';
 import { GuildDialogState } from '../../types';
 import { Base } from '../base-ui';
 
 import './guild-dialog.css';
 import { GUILD_MIN_DEPOSIT } from '../../consts';
-
-const REPLY_DIALOG_IDS: Partial<Record<GuildReply, DialogResourceID>> = {
-  [GuildReply.Busy]: DialogResourceID.GUILD_MASTER_IS_BUSY,
-  [GuildReply.NotApproved]: DialogResourceID.GUILD_CREATE_NAME_NOT_APPROVED,
-  [GuildReply.AlreadyMember]: DialogResourceID.GUILD_ALREADY_A_MEMBER,
-  [GuildReply.NoCandidates]: DialogResourceID.GUILD_CREATE_NO_CANDIDATES,
-  [GuildReply.Exists]: DialogResourceID.GUILD_TAG_OR_NAME_ALREADY_EXISTS,
-  [GuildReply.RecruiterOffline]: DialogResourceID.GUILD_RECRUITER_NOT_FOUND,
-  [GuildReply.RecruiterNotHere]: DialogResourceID.GUILD_RECRUITER_NOT_HERE,
-  [GuildReply.RecruiterWrongGuild]: DialogResourceID.GUILD_RECRUITER_NOT_MEMBER,
-  [GuildReply.NotRecruiter]: DialogResourceID.GUILD_RECRUITER_RANK_TOO_LOW,
-  [GuildReply.NotPresent]: DialogResourceID.GUILD_RECRUITER_INPUT_MISSING,
-  [GuildReply.AccountLow]: DialogResourceID.GUILD_BANK_ACCOUNT_LOW,
-  [GuildReply.Accepted]: DialogResourceID.GUILD_MEMBER_HAS_BEEN_ACCEPTED,
-  [GuildReply.NotFound]: DialogResourceID.GUILD_DOES_NOT_EXIST,
-  [GuildReply.Updated]: DialogResourceID.GUILD_DETAILS_UPDATED,
-  [GuildReply.RanksUpdated]: DialogResourceID.GUILD_DETAILS_UPDATED,
-  [GuildReply.RemoveLeader]: DialogResourceID.GUILD_REMOVE_PLAYER_IS_LEADER,
-  [GuildReply.RemoveNotMember]: DialogResourceID.GUILD_REMOVE_PLAYER_NOT_MEMBER,
-  [GuildReply.Removed]: DialogResourceID.GUILD_REMOVE_SUCCESS,
-  [GuildReply.RankingLeader]: DialogResourceID.GUILD_RANK_TOO_LOW,
-  [GuildReply.RankingNotMember]:
-    DialogResourceID.GUILD_REMOVE_PLAYER_NOT_MEMBER,
-};
 
 export class GuildDialog extends Base {
   private client: Client;
@@ -44,15 +18,6 @@ export class GuildDialog extends Base {
 
     // Guild NPC opened
     this.client.on('guildOpened', () => this.show());
-
-    // Reply messages (errors, confirmations)
-    this.client.on('guildReply', ({ code }) => {
-      const dialogId = REPLY_DIALOG_IDS[code];
-      const message = dialogId
-        ? this.client.getDialogStrings(dialogId)[1]
-        : `Guild reply: ${code}`;
-      this.showMessage(message, 'info');
-    });
 
     // All guild state changes
     this.client.on('guildUpdated', () => this.render());
@@ -104,10 +69,6 @@ export class GuildDialog extends Base {
       case GuildDialogState.CreateWaiting:
         header.textContent = 'Creating Guild...';
         this.renderCreateWaiting(body, footer);
-        break;
-      case GuildDialogState.CreateFinalize:
-        header.textContent = 'Finalize Guild';
-        this.renderFinalize(body, footer);
         break;
       case GuildDialogState.Join:
         header.textContent = 'Join Guild';
@@ -211,6 +172,14 @@ export class GuildDialog extends Base {
     const nameGroup = this.createInputGroup('Guild Name', 'name', 24);
     body.appendChild(nameGroup);
 
+    const descriptionGroup = this.createInputGroup(
+      'Guild Description',
+      'description',
+      240,
+      true,
+    );
+    body.appendChild(descriptionGroup);
+
     this.addFooterButton(footer, 'Back', () => {
       this.client.guildController.state = GuildDialogState.MainMenu;
       this.render();
@@ -225,8 +194,13 @@ export class GuildDialog extends Base {
         const name = (
           body.querySelector('input[name="name"]') as HTMLInputElement
         ).value.trim();
+        const description = (
+          body.querySelector(
+            'textarea[name="description"]',
+          ) as HTMLTextAreaElement
+        ).value.trim();
         if (!tag || !name) return;
-        this.client.guildController.beginCreate(tag, name);
+        this.client.guildController.beginCreate(tag, name, description);
       },
       'primary',
     );
@@ -262,35 +236,6 @@ export class GuildDialog extends Base {
       this.client.guildController.state = GuildDialogState.MainMenu;
       this.render();
     });
-  }
-
-  private renderFinalize(body: Element, footer: Element) {
-    const message = document.createElement('div');
-    message.className = 'guild-message success';
-    message.textContent = 'Enough members have joined! Enter a description.';
-    body.appendChild(message);
-
-    const descriptionGroup = this.createInputGroup(
-      'Guild Description',
-      'description',
-      240,
-      true,
-    );
-    body.appendChild(descriptionGroup);
-
-    this.addFooterButton(
-      footer,
-      'Create Guild',
-      () => {
-        const description = (
-          body.querySelector(
-            'textarea[name="description"]',
-          ) as HTMLTextAreaElement
-        ).value.trim();
-        this.client.guildController.finalizeCreate(description);
-      },
-      'primary',
-    );
   }
 
   // ── Join ──────────────────────────────────────────────────────────────
@@ -718,18 +663,5 @@ export class GuildDialog extends Base {
     row.appendChild(rankSpan);
 
     return row;
-  }
-
-  private showMessage(text: string, type: 'success' | 'error' | 'info') {
-    const existing = this.container.querySelector('.guild-message');
-    if (existing) existing.remove();
-
-    const message = document.createElement('div');
-    message.className = `guild-message ${type}`;
-    message.textContent = text;
-
-    const body = this.container.querySelector('.guild-body')!;
-    body.insertBefore(message, body.firstChild);
-    setTimeout(() => message.remove(), 4000);
   }
 }

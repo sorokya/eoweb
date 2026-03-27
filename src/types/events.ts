@@ -6,7 +6,6 @@ import type {
   DialogEntry,
   DialogQuestEntry,
   EquipmentPaperdoll,
-  GuildReply,
   OnlinePlayer,
   ShopCraftItem,
   ShopTradeItem,
@@ -87,7 +86,6 @@ export type ClientEvents = {
   citizenUnsubscribeResult: { success: boolean };
   tradeUpdated: undefined;
   guildOpened: undefined;
-  guildReply: { code: GuildReply };
   guildUpdated: undefined;
   scrollMessage: { title: string; body: string };
   statusMessage: { message: string };

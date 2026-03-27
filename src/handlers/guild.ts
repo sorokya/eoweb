@@ -55,7 +55,7 @@ function handleGuildReply(client: Client, reader: EoReader) {
       return;
     }
     default: {
-      client.emit('guildReply', { code });
+      client.guildController.notifyReply(code);
     }
   }
 }
