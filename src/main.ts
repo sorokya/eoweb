@@ -21,6 +21,7 @@ import { GAME_FPS, MAX_CHALLENGE } from './consts';
 import { DialogResourceID } from './edf';
 import { GameState } from './types';
 import { BankDialog } from './ui/bank-dialog/bank-dialog';
+import { BarberDialog } from './ui/barber-dialog/barber-dialog';
 import { BoardDialog } from './ui/board-dialog';
 import { ChangePasswordForm } from './ui/change-password';
 import { CharacterSelect } from './ui/character-select';
@@ -123,6 +124,7 @@ const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
 const boardDialog = new BoardDialog(client);
 const bankDialog = new BankDialog(client);
+const barberDialog = new BarberDialog(client);
 const lockerDialog = new LockerDialog(client);
 const skillMasterDialog = new SkillMasterDialog(client);
 const smallAlert = new SmallAlertSmallHeader();
@@ -250,6 +252,7 @@ wireClientEvents({
   chestDialog,
   shopDialog,
   bankDialog,
+  barberDialog,
   boardDialog,
   lockerDialog,
   skillMasterDialog,

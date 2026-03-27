@@ -57,6 +57,7 @@ export interface ClientEventDeps {
     show(): void;
   };
   bankDialog: { show(): void };
+  barberDialog: { show(): void };
   boardDialog: { setData(posts: unknown): void; show(): void };
   lockerDialog: { setItems(items: unknown): void; show(): void };
   skillMasterDialog: {
@@ -229,6 +230,10 @@ export function wireClientEvents(deps: ClientEventDeps): void {
 
   client.on('bankOpened', () => {
     deps.bankDialog.show();
+  });
+
+  client.on('barberOpened', () => {
+    deps.barberDialog.show();
   });
 
   client.on('boardOpened', ({ posts }) => {

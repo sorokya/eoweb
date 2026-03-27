@@ -515,6 +515,42 @@
             <button class="trade-btn" data-id="cancel">Cancel</button>
           </div>
         </div>
+
+        <div id="barber-dialog" class="hidden">
+          <div class="barber-header">Barber</div>
+          <div class="barber-preview">
+            <img src="" alt="Preview" />
+          </div>
+          <div class="barber-controls">
+            <div class="barber-row">
+              <span class="barber-row-label">Hair Style</span>
+              <div class="barber-row-controls">
+                <button type="button" class="barber-arrow" data-id="style-prev">◀</button>
+                <span data-id="style-val">0</span>
+                <button type="button" class="barber-arrow" data-id="style-next">▶</button>
+              </div>
+            </div>
+            <div class="barber-row">
+              <span class="barber-row-label">Hair Color</span>
+              <div class="barber-row-controls">
+                <button type="button" class="barber-arrow" data-id="color-prev">◀</button>
+                <span data-id="color-val">0</span>
+                <button type="button" class="barber-arrow" data-id="color-next">▶</button>
+              </div>
+            </div>
+          </div>
+          <div class="barber-confirm hidden">
+            <p class="barber-confirm-text">Change your hairstyle?</p>
+            <div class="barber-confirm-buttons">
+              <button type="button" class="barber-btn" data-id="confirm-no">No</button>
+              <button type="button" class="barber-btn primary" data-id="confirm-yes">Yes</button>
+            </div>
+          </div>
+          <div class="barber-footer">
+            <button type="button" class="barber-btn" data-id="cancel">Cancel</button>
+            <button type="button" class="barber-btn primary" data-id="buy">Buy</button>
+          </div>
+        </div>
       </div>
 
       <div id="trade-request-notification" class="hidden">

@@ -2,16 +2,19 @@ import { type CharacterMapInfo, Direction, Gender } from 'eolib';
 import mitt from 'mitt';
 import { CharacterFrame } from '../../atlas';
 import type { Client } from '../../client';
-import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../../consts';
+import {
+  CHARACTER_HEIGHT,
+  CHARACTER_WIDTH,
+  GAME_FPS,
+  MAX_GENDER,
+  MAX_HAIR_COLOR,
+  MAX_HAIR_STYLE,
+  MAX_SKIN,
+} from '../../consts';
 import { playSfxById, SfxId } from '../../sfx';
 import { Base } from '../base-ui';
 
 import './create-character.css';
-
-const MAX_GENDER = 2;
-const MAX_HAIR_STYLE = 20;
-const MAX_HAIR_COLOR = 10;
-const MAX_SKIN = 4;
 let lastTime: DOMHighResTimeStamp | undefined;
 
 type Events = {
