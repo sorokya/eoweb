@@ -285,7 +285,6 @@ wireUiEvents({
   hotbar,
   itemAmountDialog,
   partyDialog,
-  tradeDialog,
   hideAllUi,
   initializeSocket,
 });

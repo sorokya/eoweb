@@ -112,7 +112,6 @@ export interface UiEventDeps {
     hide(): void;
   };
   partyDialog: { toggle(): void };
-  tradeDialog: { offerItem(itemId: number): void };
   hideAllUi: () => void;
   initializeSocket: (next?: 'login' | 'create' | '') => void;
 }
