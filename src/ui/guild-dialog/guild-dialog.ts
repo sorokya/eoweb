@@ -1,25 +1,35 @@
-import {
-  GuildAcceptClientPacket,
-  GuildAgreeClientPacket,
-  GuildBuyClientPacket,
-  GuildCreateClientPacket,
-  GuildInfoType,
-  GuildJunkClientPacket,
-  GuildKickClientPacket,
-  GuildPlayerClientPacket,
-  GuildRankClientPacket,
-  GuildRemoveClientPacket,
-  GuildReportClientPacket,
-  GuildRequestClientPacket,
-  GuildTakeClientPacket,
-  GuildTellClientPacket,
-  GuildUseClientPacket,
-} from 'eolib';
+import { GuildReply } from 'eolib';
 import type { Client } from '../../client';
+import { DialogResourceID } from '../../edf';
 import { playSfxById, SfxId } from '../../sfx';
 import { Base } from '../base-ui';
 
 import './guild-dialog.css';
+import { GUILD_MIN_DEPOSIT } from '../../consts';
+
+const REPLY_DIALOG_IDS: Partial<Record<GuildReply, DialogResourceID>> = {
+  [GuildReply.Busy]: DialogResourceID.GUILD_MASTER_IS_BUSY,
+  [GuildReply.NotApproved]: DialogResourceID.GUILD_CREATE_NAME_NOT_APPROVED,
+  [GuildReply.AlreadyMember]: DialogResourceID.GUILD_ALREADY_A_MEMBER,
+  [GuildReply.NoCandidates]: DialogResourceID.GUILD_CREATE_NO_CANDIDATES,
+  [GuildReply.Exists]: DialogResourceID.GUILD_TAG_OR_NAME_ALREADY_EXISTS,
+  [GuildReply.RecruiterOffline]: DialogResourceID.GUILD_RECRUITER_NOT_FOUND,
+  [GuildReply.RecruiterNotHere]: DialogResourceID.GUILD_RECRUITER_NOT_HERE,
+  [GuildReply.RecruiterWrongGuild]: DialogResourceID.GUILD_RECRUITER_NOT_MEMBER,
+  [GuildReply.NotRecruiter]: DialogResourceID.GUILD_RECRUITER_RANK_TOO_LOW,
+  [GuildReply.NotPresent]: DialogResourceID.GUILD_RECRUITER_INPUT_MISSING,
+  [GuildReply.AccountLow]: DialogResourceID.GUILD_BANK_ACCOUNT_LOW,
+  [GuildReply.Accepted]: DialogResourceID.GUILD_MEMBER_HAS_BEEN_ACCEPTED,
+  [GuildReply.NotFound]: DialogResourceID.GUILD_DOES_NOT_EXIST,
+  [GuildReply.Updated]: DialogResourceID.GUILD_DETAILS_UPDATED,
+  [GuildReply.RanksUpdated]: DialogResourceID.GUILD_DETAILS_UPDATED,
+  [GuildReply.RemoveLeader]: DialogResourceID.GUILD_REMOVE_PLAYER_IS_LEADER,
+  [GuildReply.RemoveNotMember]: DialogResourceID.GUILD_REMOVE_PLAYER_NOT_MEMBER,
+  [GuildReply.Removed]: DialogResourceID.GUILD_REMOVE_SUCCESS,
+  [GuildReply.RankingLeader]: DialogResourceID.GUILD_RANK_TOO_LOW,
+  [GuildReply.RankingNotMember]:
+    DialogResourceID.GUILD_REMOVE_PLAYER_NOT_MEMBER,
+};
 
 type GuildView =
   | 'menu'
@@ -42,17 +52,6 @@ export class GuildDialog extends Base {
   private cover = document.querySelector<HTMLDivElement>('#cover')!;
   private invite = document.getElementById('guild-create-invite')!;
   private currentView: GuildView = 'menu';
-  private sessionId = 0;
-
-  // Create flow state
-  private createMembers: string[] = [];
-  private createTag = '';
-  private createName = '';
-
-  // Data caches
-  private cachedDescription = '';
-  private cachedRanks: string[] = [];
-  private cachedBankGold = 0;
 
   constructor(client: Client) {
     super();
@@ -77,24 +76,25 @@ export class GuildDialog extends Base {
     this.client.on('guildOpened', () => this.show());
 
     // Reply messages (errors, confirmations)
-    this.client.on('guildReply', ({ message }) => {
+    this.client.on('guildReply', ({ code }) => {
+      const dialogId = REPLY_DIALOG_IDS[code];
+      const message = dialogId
+        ? this.client.getDialogStrings(dialogId)[1]
+        : `Guild reply: ${code}`;
       this.showMessage(message, 'info');
     });
 
     // Create flow
     this.client.on('guildCreateBegin', () => {
-      this.createMembers = [];
       this.currentView = 'create-waiting';
       this.render();
     });
 
-    this.client.on('guildCreateAdd', ({ name }) => {
-      this.createMembers.push(name);
+    this.client.on('guildCreateAdd', () => {
       this.render();
     });
 
-    this.client.on('guildCreateAddConfirm', ({ name }) => {
-      if (name) this.createMembers.push(name);
+    this.client.on('guildCreateAddConfirm', () => {
       this.showCreateFinalize();
     });
 
@@ -104,18 +104,23 @@ export class GuildDialog extends Base {
     });
 
     // Create invite (for other players)
-    this.client.on('guildCreateInvite', ({ playerId, guildIdentity }) => {
-      this.showCreateInvite(playerId, guildIdentity);
+    this.client.on('guildCreateInvite', () => {
+      this.showCreateInvite();
     });
 
     // Join request (for recruiter)
-    this.client.on('guildJoinRequest', ({ playerId, playerName }) => {
-      this.showJoinRequest(playerId, playerName);
+    this.client.on('guildJoinRequest', () => {
+      this.showJoinRequest();
     });
 
     // Joined a guild
     this.client.on('guildJoined', () => {
-      this.showMessage('You have joined the guild!', 'success');
+      this.showMessage(
+        this.client.getDialogStrings(
+          DialogResourceID.GUILD_YOU_HAVE_BEEN_ACCEPTED,
+        )[0],
+        'success',
+      );
       this.currentView = 'menu';
       this.render();
     });
@@ -130,36 +135,22 @@ export class GuildDialog extends Base {
     });
 
     // Management responses
-    this.client.on('guildDescription', ({ description }) => {
-      this.cachedDescription = description;
+    this.client.on('guildDescription', () => {
       this.currentView = 'edit-description';
       this.render();
     });
 
-    this.client.on('guildRanks', ({ ranks }) => {
-      this.cachedRanks = [...ranks];
+    this.client.on('guildRanks', () => {
       this.currentView = 'edit-ranks';
       this.render();
     });
 
-    this.client.on('guildBank', ({ gold }) => {
-      this.cachedBankGold = gold;
+    this.client.on('guildBank', () => {
       this.currentView = 'bank';
       this.render();
     });
 
     this.client.on('guildBankUpdated', () => {
-      // Refresh bank view
-      const packet = new GuildTakeClientPacket();
-      packet.sessionId = this.sessionId;
-      packet.infoType = GuildInfoType.Bank;
-      packet.guildTag = this.client.guildTag.padEnd(3).slice(0, 3);
-      this.client.bus.send(packet);
-    });
-
-    this.client.on('guildLeft', () => {
-      this.showMessage('You have left the guild.', 'info');
-      this.currentView = 'menu';
       this.render();
     });
   }
@@ -240,7 +231,7 @@ export class GuildDialog extends Base {
   // ── Menu ──────────────────────────────────────────────────────────────
 
   private renderMenu(body: Element, footer: Element) {
-    const inGuild = !!this.client.guildTag;
+    const inGuild = this.client.guildTag.trim().length > 0;
     const rank = this.client.guildRank;
 
     if (!inGuild) {
@@ -254,18 +245,14 @@ export class GuildDialog extends Base {
       });
     } else {
       this.addMenuButton(body, 'Guild Information', () => {
-        this.requestGuildInfo(this.client.guildTag);
+        this.client.guildController.requestGuildInfo(this.client.guildTag);
       });
       this.addMenuButton(body, 'Member List', () => {
-        this.requestMemberList(this.client.guildTag);
+        this.client.guildController.requestMemberList(this.client.guildTag);
       });
       // Guild bank is accessible to all members
       this.addMenuButton(body, 'Guild Bank', () => {
-        const packet = new GuildTakeClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.infoType = GuildInfoType.Bank;
-        packet.guildTag = this.client.guildTag.padEnd(3).slice(0, 3);
-        this.client.bus.send(packet);
+        this.client.guildController.requestBankInfo();
       });
       // Management options only for leaders/recruiters (rank <= 2)
       if (rank <= 2) {
@@ -275,7 +262,7 @@ export class GuildDialog extends Base {
         });
       }
       this.addMenuButton(body, 'Leave Guild', () => {
-        this.leaveGuild();
+        this.client.guildController.leaveGuild();
       });
     }
 
@@ -310,13 +297,7 @@ export class GuildDialog extends Base {
           body.querySelector('input[name="name"]') as HTMLInputElement
         ).value.trim();
         if (!tag || !name) return;
-        this.createTag = tag;
-        this.createName = name;
-        const packet = new GuildRequestClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.guildTag = tag;
-        packet.guildName = name;
-        this.client.bus.send(packet);
+        this.client.guildController.beginCreate(tag, name);
       },
       'primary',
     );
@@ -338,10 +319,10 @@ export class GuildDialog extends Base {
 
     body.appendChild(waiting);
 
-    if (this.createMembers.length > 0) {
+    if (this.client.guildController.createMembers.length > 0) {
       const list = document.createElement('div');
       list.className = 'guild-create-list';
-      for (const name of this.createMembers) {
+      for (const name of this.client.guildController.createMembers) {
         const row = this.createMemberRow(name, 'Joined', '#a5d6a7');
         list.appendChild(row);
       }
@@ -384,12 +365,7 @@ export class GuildDialog extends Base {
             'textarea[name="description"]',
           ) as HTMLTextAreaElement
         ).value.trim();
-        const packet = new GuildCreateClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.guildTag = this.createTag;
-        packet.guildName = this.createName;
-        packet.description = description;
-        this.client.bus.send(packet);
+        this.client.guildController.finalizeCreate(description);
       },
       'primary',
     );
@@ -423,11 +399,7 @@ export class GuildDialog extends Base {
           body.querySelector('input[name="recruiter"]') as HTMLInputElement
         ).value.trim();
         if (!tag || !recruiter) return;
-        const packet = new GuildPlayerClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.guildTag = tag;
-        packet.recruiterName = recruiter;
-        this.client.bus.send(packet);
+        this.client.guildController.requestToJoin(tag, recruiter);
       },
       'primary',
     );
@@ -456,7 +428,7 @@ export class GuildDialog extends Base {
       ['Name', data.name, true],
       ['Tag', data.tag],
       ['Created', data.createDate],
-      ['Wealth', `${data.wealth} gold`],
+      ['Wealth', data.wealth],
     ];
 
     for (const [label, value, highlight] of fields) {
@@ -500,7 +472,7 @@ export class GuildDialog extends Base {
     }
 
     this.addFooterButton(footer, 'Member List', () => {
-      this.requestMemberList(data.tag);
+      this.client.guildController.requestMemberList(data.tag);
     });
     this.addFooterButton(footer, 'Back', () => {
       this.currentView = 'menu';
@@ -540,18 +512,10 @@ export class GuildDialog extends Base {
     // Edit description/ranks: rank <= 2 (leaders)
     if (rank <= 2) {
       this.addMenuButton(body, 'Edit Description', () => {
-        const packet = new GuildTakeClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.infoType = GuildInfoType.Description;
-        packet.guildTag = this.client.guildTag.padEnd(3).slice(0, 3);
-        this.client.bus.send(packet);
+        this.client.guildController.requestDescriptionInfo();
       });
       this.addMenuButton(body, 'Edit Ranks', () => {
-        const packet = new GuildTakeClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.infoType = GuildInfoType.Ranks;
-        packet.guildTag = this.client.guildTag.padEnd(3).slice(0, 3);
-        this.client.bus.send(packet);
+        this.client.guildController.requestRanksInfo();
       });
     }
     // Kick/rank changes: rank <= 2
@@ -568,7 +532,7 @@ export class GuildDialog extends Base {
     // Disband: founder only (rank 0)
     if (rank === 0) {
       this.addMenuButton(body, 'Disband Guild', () => {
-        this.disbandGuild();
+        this.client.guildController.disbandGuild();
       });
     }
 
@@ -588,7 +552,7 @@ export class GuildDialog extends Base {
       true,
     );
     const textarea = group.querySelector('textarea') as HTMLTextAreaElement;
-    textarea.value = this.cachedDescription;
+    textarea.value = this.client.guildController.cachedDescription;
     body.appendChild(group);
 
     this.addFooterButton(footer, 'Back', () => {
@@ -599,15 +563,7 @@ export class GuildDialog extends Base {
       footer,
       'Save',
       () => {
-        const packet = new GuildAgreeClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.infoType = GuildInfoType.Description;
-        packet.infoTypeData =
-          new GuildAgreeClientPacket.InfoTypeDataDescription();
-        (
-          packet.infoTypeData as GuildAgreeClientPacket.InfoTypeDataDescription
-        ).description = textarea.value;
-        this.client.bus.send(packet);
+        this.client.guildController.saveDescription(textarea.value);
       },
       'primary',
     );
@@ -616,10 +572,10 @@ export class GuildDialog extends Base {
   // ── Edit Ranks ────────────────────────────────────────────────────────
 
   private renderEditRanks(body: Element, footer: Element) {
-    for (let i = 0; i < this.cachedRanks.length; i++) {
+    for (let i = 0; i < this.client.guildController.cachedRanks.length; i++) {
       const group = this.createInputGroup(`Rank ${i + 1}`, `rank-${i}`, 16);
       const input = group.querySelector('input') as HTMLInputElement;
-      input.value = this.cachedRanks[i].trim();
+      input.value = this.client.guildController.cachedRanks[i].trim();
       body.appendChild(group);
     }
 
@@ -632,20 +588,19 @@ export class GuildDialog extends Base {
       'Save',
       () => {
         const ranks: string[] = [];
-        for (let i = 0; i < this.cachedRanks.length; i++) {
+        for (
+          let i = 0;
+          i < this.client.guildController.cachedRanks.length;
+          i++
+        ) {
           const input = body.querySelector(
             `input[name="rank-${i}"]`,
           ) as HTMLInputElement;
-          ranks.push(input.value.trim() || this.cachedRanks[i]);
+          ranks.push(
+            input.value.trim() || this.client.guildController.cachedRanks[i],
+          );
         }
-        const packet = new GuildAgreeClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.infoType = GuildInfoType.Ranks;
-        packet.infoTypeData = new GuildAgreeClientPacket.InfoTypeDataRanks();
-        (
-          packet.infoTypeData as GuildAgreeClientPacket.InfoTypeDataRanks
-        ).ranks = ranks;
-        this.client.bus.send(packet);
+        this.client.guildController.saveRanks(ranks);
       },
       'primary',
     );
@@ -656,7 +611,7 @@ export class GuildDialog extends Base {
   private renderBank(body: Element, footer: Element) {
     const section = this.createInfoSection(
       'Guild Bank Balance',
-      `${this.cachedBankGold} gold`,
+      this.client.guildController.cachedBankGold.toString(),
       true,
     );
     body.appendChild(section);
@@ -664,7 +619,8 @@ export class GuildDialog extends Base {
     const group = this.createInputGroup('Deposit Amount', 'deposit', 10);
     const input = group.querySelector('input') as HTMLInputElement;
     input.type = 'number';
-    input.min = '1';
+    input.min = `${GUILD_MIN_DEPOSIT}`;
+    input.value = input.min;
     body.appendChild(group);
 
     this.addFooterButton(footer, 'Back', () => {
@@ -676,11 +632,8 @@ export class GuildDialog extends Base {
       'Deposit',
       () => {
         const amount = Number.parseInt(input.value, 10);
-        if (Number.isNaN(amount) || amount < 1) return;
-        const packet = new GuildBuyClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.goldAmount = amount;
-        this.client.bus.send(packet);
+        if (Number.isNaN(amount) || amount < GUILD_MIN_DEPOSIT) return;
+        this.client.guildController.depositToBank(amount);
       },
       'primary',
     );
@@ -704,10 +657,7 @@ export class GuildDialog extends Base {
           body.querySelector('input[name="kick-name"]') as HTMLInputElement
         ).value.trim();
         if (!name) return;
-        const packet = new GuildKickClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.memberName = name;
-        this.client.bus.send(packet);
+        this.client.guildController.kickMember(name);
       },
       'danger',
     );
@@ -739,11 +689,7 @@ export class GuildDialog extends Base {
         ).value.trim();
         const rank = Number.parseInt(rankInput.value, 10);
         if (!name || Number.isNaN(rank)) return;
-        const packet = new GuildRankClientPacket();
-        packet.sessionId = this.sessionId;
-        packet.rank = rank;
-        packet.memberName = name;
-        this.client.bus.send(packet);
+        this.client.guildController.changeMemberRank(name, rank);
       },
       'primary',
     );
@@ -751,27 +697,22 @@ export class GuildDialog extends Base {
 
   // ── Invite notifications ──────────────────────────────────────────────
 
-  private pendingInvitePlayerId = 0;
-  private pendingInviteType: 'create' | 'join' = 'create';
-
-  private showCreateInvite(playerId: number, guildIdentity: string) {
-    this.pendingInvitePlayerId = playerId;
-    this.pendingInviteType = 'create';
+  private showCreateInvite() {
+    const { pendingInviteName } = this.client.guildController;
 
     const nameSpan = this.invite.querySelector('.guild-invite-name')!;
-    nameSpan.textContent = guildIdentity;
+    nameSpan.textContent = pendingInviteName;
     const textSuffix = this.invite.querySelector('.guild-invite-suffix')!;
     textSuffix.textContent = ' is being created. Join?';
 
     this.invite.classList.remove('hidden');
   }
 
-  private showJoinRequest(playerId: number, playerName: string) {
-    this.pendingInvitePlayerId = playerId;
-    this.pendingInviteType = 'join';
+  private showJoinRequest() {
+    const { pendingInviteName } = this.client.guildController;
 
     const nameSpan = this.invite.querySelector('.guild-invite-name')!;
-    nameSpan.textContent = playerName;
+    nameSpan.textContent = pendingInviteName;
     const textSuffix = this.invite.querySelector('.guild-invite-suffix')!;
     textSuffix.textContent = ' wants to join your guild.';
 
@@ -779,18 +720,14 @@ export class GuildDialog extends Base {
   }
 
   private handleInviteAccept() {
-    if (this.pendingInviteType === 'create') {
-      const packet = new GuildAcceptClientPacket();
-      packet.inviterPlayerId = this.pendingInvitePlayerId;
-      this.client.bus.send(packet);
+    const { pendingInvitePlayerId, pendingInviteType } =
+      this.client.guildController;
+    if (pendingInviteType === 'create') {
+      this.client.guildController.acceptCreateInvite(pendingInvitePlayerId);
     } else {
-      const packet = new GuildUseClientPacket();
-      packet.playerId = this.pendingInvitePlayerId;
-      this.client.bus.send(packet);
+      this.client.guildController.acceptJoinRequest(pendingInvitePlayerId);
     }
   }
-
-  // ── Helpers ───────────────────────────────────────────────────────────
 
   private showLookupPrompt() {
     const body = this.container.querySelector('.guild-body')!;
@@ -815,36 +752,10 @@ export class GuildDialog extends Base {
           body.querySelector('input[name="lookup"]') as HTMLInputElement
         ).value.trim();
         if (!query) return;
-        this.requestGuildInfo(query);
+        this.client.guildController.requestGuildInfo(query);
       },
       'primary',
     );
-  }
-
-  private requestGuildInfo(tag: string) {
-    const packet = new GuildReportClientPacket();
-    packet.sessionId = this.sessionId;
-    packet.guildIdentity = tag;
-    this.client.bus.send(packet);
-  }
-
-  private requestMemberList(tag: string) {
-    const packet = new GuildTellClientPacket();
-    packet.sessionId = this.sessionId;
-    packet.guildIdentity = tag;
-    this.client.bus.send(packet);
-  }
-
-  private leaveGuild() {
-    const packet = new GuildRemoveClientPacket();
-    packet.sessionId = this.sessionId;
-    this.client.bus.send(packet);
-  }
-
-  private disbandGuild() {
-    const packet = new GuildJunkClientPacket();
-    packet.sessionId = this.sessionId;
-    this.client.bus.send(packet);
   }
 
   private addMenuButton(parent: Element, text: string, onClick: () => void) {

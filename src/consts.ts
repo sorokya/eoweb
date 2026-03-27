@@ -91,3 +91,5 @@ export const MAX_SKIN = 4;
 
 export const BARBER_BASE_COST = 200;
 export const BARBER_COST_PER_LEVEL = 200;
+
+export const GUILD_MIN_DEPOSIT = 1000;

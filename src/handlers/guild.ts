@@ -4,6 +4,7 @@ import {
   GuildAgreeServerPacket,
   GuildBuyServerPacket,
   GuildCreateServerPacket,
+  GuildOpenServerPacket,
   GuildRankServerPacket,
   GuildReply,
   GuildReplyServerPacket,
@@ -17,30 +18,9 @@ import {
 } from 'eolib';
 import type { Client } from '../client';
 
-const REPLY_MESSAGES: Partial<Record<GuildReply, string>> = {
-  [GuildReply.Busy]: 'The guild master is busy.',
-  [GuildReply.NotApproved]: 'Guild name or tag not approved.',
-  [GuildReply.AlreadyMember]: 'You are already in a guild.',
-  [GuildReply.NoCandidates]: 'No candidates available.',
-  [GuildReply.Exists]: 'A guild with that name or tag already exists.',
-  [GuildReply.RecruiterOffline]: 'That recruiter is offline.',
-  [GuildReply.RecruiterNotHere]: 'That recruiter is not on this map.',
-  [GuildReply.RecruiterWrongGuild]: 'That player is not in that guild.',
-  [GuildReply.NotRecruiter]: 'That player does not have recruiter permissions.',
-  [GuildReply.NotPresent]: 'Player not found.',
-  [GuildReply.AccountLow]: 'The guild bank does not have enough gold.',
-  [GuildReply.Accepted]: 'Player accepted into the guild!',
-  [GuildReply.NotFound]: 'Guild not found.',
-  [GuildReply.Updated]: 'Guild updated.',
-  [GuildReply.RanksUpdated]: 'Guild ranks updated.',
-  [GuildReply.RemoveLeader]: 'You cannot kick a leader.',
-  [GuildReply.RemoveNotMember]: 'That player is not a member of the guild.',
-  [GuildReply.Removed]: 'Member has been removed.',
-  [GuildReply.RankingLeader]: 'You cannot change a leader rank.',
-  [GuildReply.RankingNotMember]: 'That player is not a member of the guild.',
-};
-
-function handleGuildOpen(client: Client, _reader: EoReader) {
+function handleGuildOpen(client: Client, reader: EoReader) {
+  const packet = GuildOpenServerPacket.deserialize(reader);
+  client.sessionId = packet.sessionId;
   client.emit('guildOpened', undefined);
 }
 
@@ -50,72 +30,65 @@ function handleGuildReply(client: Client, reader: EoReader) {
 
   switch (code) {
     case GuildReply.CreateBegin:
-      client.emit('guildCreateBegin', undefined);
+      client.guildController.setCreateBegin();
       return;
     case GuildReply.CreateAdd: {
       const data =
         packet.replyCodeData as GuildReplyServerPacket.ReplyCodeDataCreateAdd;
-      client.emit('guildCreateAdd', { name: data.name });
+      client.guildController.setCreateAdd(data.name);
       return;
     }
     case GuildReply.CreateAddConfirm: {
       const data =
         packet.replyCodeData as GuildReplyServerPacket.ReplyCodeDataCreateAddConfirm;
-      client.emit('guildCreateAddConfirm', { name: data.name });
+      client.guildController.setCreateAddConfirm(data.name);
       return;
     }
     case GuildReply.JoinRequest: {
       const data =
         packet.replyCodeData as GuildReplyServerPacket.ReplyCodeDataJoinRequest;
-      client.emit('guildJoinRequest', {
-        playerId: data.playerId,
-        playerName: data.name,
-      });
+      client.guildController.setPendingInvite(data.playerId, 'join', data.name);
       return;
     }
     default: {
-      const message = REPLY_MESSAGES[code] ?? `Guild reply: ${code}`;
-      client.emit('guildReply', { code, message });
+      client.emit('guildReply', { code });
     }
   }
 }
 
 function handleGuildCreate(client: Client, reader: EoReader) {
   const packet = GuildCreateServerPacket.deserialize(reader);
-  client.guildTag = packet.guildTag;
-  client.guildName = packet.guildName;
-  client.guildRankName = packet.rankName;
-  client.guildRank = 0; // founder
-  client.emit('guildCreated', {
-    guildTag: packet.guildTag,
-    guildName: packet.guildName,
-    rankName: packet.rankName,
-    goldAmount: packet.goldAmount,
-  });
+  client.guildController.setCreated(
+    packet.guildTag,
+    packet.guildName,
+    packet.rankName,
+    packet.goldAmount,
+  );
 }
 
 function handleGuildRequest(client: Client, reader: EoReader) {
   const packet = GuildRequestServerPacket.deserialize(reader);
-  client.emit('guildCreateInvite', {
-    playerId: packet.playerId,
-    guildIdentity: packet.guildIdentity,
-  });
+  client.guildController.setPendingInvite(
+    packet.playerId,
+    'create',
+    packet.guildIdentity,
+  );
 }
 
 function handleGuildTell(client: Client, reader: EoReader) {
   const packet = GuildTellServerPacket.deserialize(reader);
-  client.emit('guildMemberList', {
-    members: packet.members.map((m) => ({
+  client.guildController.setMemberListReceived(
+    packet.members.map((m) => ({
       rank: m.rank,
       name: m.name,
       rankName: m.rankName,
     })),
-  });
+  );
 }
 
 function handleGuildReport(client: Client, reader: EoReader) {
   const packet = GuildReportServerPacket.deserialize(reader);
-  client.emit('guildInfo', {
+  client.guildController.setInfoReceived({
     name: packet.name,
     tag: packet.tag,
     createDate: packet.createDate,
@@ -128,56 +101,40 @@ function handleGuildReport(client: Client, reader: EoReader) {
 
 function handleGuildTake(client: Client, reader: EoReader) {
   const packet = GuildTakeServerPacket.deserialize(reader);
-  client.emit('guildDescription', { description: packet.description });
+  client.guildController.setDescriptionReceived(packet.description);
 }
 
 function handleGuildRank(client: Client, reader: EoReader) {
   const packet = GuildRankServerPacket.deserialize(reader);
-  client.emit('guildRanks', { ranks: packet.ranks });
+  client.guildController.setRanksReceived(packet.ranks);
 }
 
 function handleGuildSell(client: Client, reader: EoReader) {
   const packet = GuildSellServerPacket.deserialize(reader);
-  client.emit('guildBank', { gold: packet.goldAmount });
+  client.guildController.setBankReceived(packet.goldAmount);
 }
 
 function handleGuildBuy(client: Client, reader: EoReader) {
   const packet = GuildBuyServerPacket.deserialize(reader);
-  // Update gold in inventory
-  const gold = client.items.find((i) => i.id === 1);
-  if (gold) {
-    gold.amount = packet.goldAmount;
-    client.emit('inventoryChanged', undefined);
-  }
-  client.emit('guildBankUpdated', { goldAmount: packet.goldAmount });
+  client.guildController.setBankUpdated(packet.goldAmount);
 }
 
 function handleGuildKick(client: Client, _reader: EoReader) {
-  // Player was kicked or left the guild
-  client.guildTag = '';
-  client.guildName = '';
-  client.guildRank = 0;
-  client.guildRankName = '';
-  client.emit('guildLeft', undefined);
+  client.guildController.kick();
 }
 
 function handleGuildAccept(client: Client, reader: EoReader) {
   const packet = GuildAcceptServerPacket.deserialize(reader);
-  client.guildRank = packet.rank;
-  client.emit('guildRankUpdated', { rank: packet.rank });
+  client.guildController.setRankUpdated(packet.rank);
 }
 
 function handleGuildAgree(client: Client, reader: EoReader) {
   const packet = GuildAgreeServerPacket.deserialize(reader);
-  // Player has been added to a guild
-  client.guildTag = packet.guildTag;
-  client.guildName = packet.guildName;
-  client.guildRankName = packet.rankName;
-  client.emit('guildJoined', {
-    guildTag: packet.guildTag,
-    guildName: packet.guildName,
-    rankName: packet.rankName,
-  });
+  client.guildController.setJoined(
+    packet.guildTag,
+    packet.guildName,
+    packet.rankName,
+  );
 }
 
 export function registerGuildHandlers(client: Client) {
@@ -218,7 +175,7 @@ export function registerGuildHandlers(client: Client) {
   );
   client.bus.registerPacketHandler(
     PacketFamily.Guild,
-    PacketAction.Admin,
+    PacketAction.Rank,
     (reader) => handleGuildRank(client, reader),
   );
   client.bus.registerPacketHandler(

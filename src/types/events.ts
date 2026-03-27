@@ -6,6 +6,7 @@ import type {
   DialogEntry,
   DialogQuestEntry,
   EquipmentPaperdoll,
+  GuildReply,
   OnlinePlayer,
   ShopCraftItem,
   ShopTradeItem,
@@ -86,18 +87,18 @@ export type ClientEvents = {
   citizenUnsubscribeResult: { success: boolean };
   tradeUpdated: undefined;
   guildOpened: undefined;
-  guildReply: { code: number; message: string };
+  guildReply: { code: GuildReply };
   guildCreateBegin: undefined;
   guildCreateAdd: { name: string };
   guildCreateAddConfirm: { name: string };
-  guildCreateInvite: { playerId: number; guildIdentity: string };
+  guildCreateInvite: undefined;
   guildCreated: {
     guildTag: string;
     guildName: string;
     rankName: string;
     goldAmount: number;
   };
-  guildJoinRequest: { playerId: number; playerName: string };
+  guildJoinRequest: undefined;
   guildJoined: {
     guildTag: string;
     guildName: string;
@@ -118,8 +119,7 @@ export type ClientEvents = {
   guildDescription: { description: string };
   guildRanks: { ranks: string[] };
   guildBank: { gold: number };
-  guildBankUpdated: { goldAmount: number };
-  guildLeft: undefined;
+  guildBankUpdated: undefined;
   guildRankUpdated: { rank: number };
   scrollMessage: { title: string; body: string };
   statusMessage: { message: string };
