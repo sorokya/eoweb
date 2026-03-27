@@ -120,6 +120,9 @@ export class GuildController {
     this.client.guildRankName = rankName;
     playSfxById(SfxId.JoinGuild);
 
+    this.state = GuildDialogState.None;
+    this.client.emit('guildUpdated', undefined);
+
     const strings = this.client.getDialogStrings(
       DialogResourceID.GUILD_YOU_HAVE_BEEN_ACCEPTED,
     );
@@ -210,15 +213,21 @@ export class GuildController {
     playSfxById(SfxId.ServerMessage);
 
     if (type === 'join') {
+      const strings = this.client.getDialogStrings(
+        DialogResourceID.GUILD_PLAYER_WANTS_TO_JOIN,
+      );
       this.client.emit('confirmation', {
-        title: name,
-        message: 'wants to join your guild. Accept?',
+        title: strings[0],
+        message: `${name} ${strings[1]}`,
         onConfirm: () => this.acceptJoinRequest(playerId),
       });
     } else {
+      const strings = this.client.getDialogStrings(
+        DialogResourceID.GUILD_INVITATION_INVITES_YOU,
+      );
       this.client.emit('confirmation', {
-        title: name,
-        message: 'is being created. Would you like to join?',
+        title: strings[0],
+        message: `${name} ${strings[1]}`,
         onConfirm: () => this.acceptCreateInvite(playerId),
       });
     }
