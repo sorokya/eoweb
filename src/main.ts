@@ -131,7 +131,7 @@ const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
 const hotbar = new Hotbar(client);
 const spellBook = new SpellBook(client);
 const partyDialog = new PartyDialog(client);
-const tradeDialog = new TradeDialog(client);
+new TradeDialog(client);
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
