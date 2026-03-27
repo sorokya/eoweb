@@ -115,6 +115,9 @@ export class GuildDialog extends Base {
         this.renderChangeRank(body, footer);
         break;
     }
+
+    const firstInput = body.querySelector<HTMLElement>('input, textarea');
+    firstInput?.focus();
   }
 
   // ── Menu ──────────────────────────────────────────────────────────────
@@ -594,16 +597,19 @@ export class GuildDialog extends Base {
     maxLength: number,
     isTextarea?: boolean,
   ): HTMLDivElement {
+    const id = `guild-input-${name}`;
     const group = document.createElement('div');
     group.className = 'guild-input-group';
 
     const labelElement = document.createElement('label');
+    labelElement.htmlFor = id;
     labelElement.textContent = label;
     group.appendChild(labelElement);
 
     if (isTextarea) {
       const textarea = document.createElement('textarea');
       textarea.className = 'guild-input';
+      textarea.id = id;
       textarea.name = name;
       textarea.maxLength = maxLength;
       textarea.rows = 4;
@@ -611,6 +617,7 @@ export class GuildDialog extends Base {
     } else {
       const input = document.createElement('input');
       input.className = 'guild-input';
+      input.id = id;
       input.type = 'text';
       input.name = name;
       input.maxLength = maxLength;
