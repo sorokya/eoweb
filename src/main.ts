@@ -253,7 +253,6 @@ wireClientEvents({
   boardDialog,
   lockerDialog,
   skillMasterDialog,
-  tradeDialog,
   partyDialog,
   mobileControls,
   initializeSocket,

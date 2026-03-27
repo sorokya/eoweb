@@ -15,7 +15,7 @@ export {
 export type { ClientEvents } from './events';
 
 // Game State
-export { GameState, PlayerMenuItem, SpellTarget } from './game';
+export { GameState, PlayerMenuItem, SpellTarget, TradeState } from './game';
 
 // Graphics
 export { GfxType } from './gfx';

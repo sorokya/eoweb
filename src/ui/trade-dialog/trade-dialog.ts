@@ -1,17 +1,12 @@
-import type { TradeItemData } from 'eolib';
-import {
-  Item,
-  TradeAcceptClientPacket,
-  TradeAddClientPacket,
-  TradeAgreeClientPacket,
-  TradeCloseClientPacket,
-  TradeRemoveClientPacket,
-} from 'eolib';
+import { type Item, ItemSpecial } from 'eolib';
 import type { Client } from '../../client';
 import { playSfxById, SfxId } from '../../sfx';
 import { Base } from '../base-ui';
 
 import './trade-dialog.css';
+import { DialogResourceID } from '../../edf';
+import { TradeState } from '../../types';
+import { capitalize } from '../../utils';
 
 export class TradeDialog extends Base {
   private client: Client;
@@ -19,20 +14,13 @@ export class TradeDialog extends Base {
   private dialogs = document.getElementById('dialogs')!;
   private cover = document.querySelector<HTMLDivElement>('#cover')!;
   private notification = document.getElementById('trade-request-notification')!;
+  private tradeRequestText =
+    this.notification.querySelector('.trade-req-text')!;
   private columns = this.container.querySelector('.trade-columns')!;
   private btnAgree = this.container.querySelector<HTMLButtonElement>(
     'button[data-id="agree"]',
   )!;
 
-  private partnerPlayerName = '';
-  private localPlayerId = 0;
-  private localPlayerName = '';
-  private pendingRequestPlayerId = 0;
-
-  private localItems: Item[] = [];
-  private partnerItems: Item[] = [];
-  private localAgreed = false;
-  private partnerAgreed = false;
   private _open = false;
 
   get isOpen() {
@@ -52,31 +40,31 @@ export class TradeDialog extends Base {
       });
 
     this.btnAgree.addEventListener('click', () => {
-      playSfxById(SfxId.ButtonClick);
-      if (!this.localAgreed) {
-        if (this.localItems.length === 0) {
+      if (!this.client.tradeController.playerAgreed) {
+        if (this.client.tradeController.playerItems.length === 0) {
           this.showTradeMessage('You must offer at least one item.');
           return;
         }
-        if (this.partnerItems.length === 0) {
+        if (this.client.tradeController.partnerItems.length === 0) {
           this.showTradeMessage(
             'Your trade partner has not offered any items.',
           );
           return;
         }
       }
-      const packet = new TradeAgreeClientPacket();
-      packet.agree = !this.localAgreed;
-      this.client.bus.send(packet);
+
+      this.client.tradeController.agreeTrade(true);
     });
 
     this.container
       .querySelector('button[data-id="cancel"]')!
       .addEventListener('click', () => {
-        playSfxById(SfxId.ButtonClick);
-        const packet = new TradeCloseClientPacket();
-        this.client.bus.send(packet);
-        this.close();
+        if (this.client.tradeController.playerAgreed) {
+          this.client.tradeController.agreeTrade(false);
+        } else {
+          this.client.tradeController.cancel();
+          this.close();
+        }
       });
 
     // Static notification button wiring
@@ -85,6 +73,7 @@ export class TradeDialog extends Base {
       .addEventListener('click', () => {
         playSfxById(SfxId.ButtonClick);
         this.notification.classList.add('hidden');
+        this.client.tradeController.reset();
       });
 
     this.notification
@@ -92,62 +81,55 @@ export class TradeDialog extends Base {
       .addEventListener('click', () => {
         playSfxById(SfxId.ButtonClick);
         this.notification.classList.add('hidden');
-        const packet = new TradeAcceptClientPacket();
-        packet.playerId = this.pendingRequestPlayerId;
-        this.client.bus.send(packet);
+        this.client.tradeController.acceptTradeRequest();
       });
 
-    // Client event listeners
-    this.client.on('tradeUpdated', ({ tradeData }) => {
-      this.applyTradeData(tradeData);
-      this.localAgreed = false;
-      this.partnerAgreed = false;
+    // Client event listener
+    this.client.on('tradeUpdated', () => {
+      if (this.client.tradeController.state === TradeState.Pending) {
+        this.showRequest();
+        return;
+      }
+
+      if (
+        this.client.tradeController.state === TradeState.Open &&
+        !this._open
+      ) {
+        this.open();
+        return;
+      }
+
+      if (this.client.tradeController.state === TradeState.None && this._open) {
+        this.close();
+        return;
+      }
+
+      if (this.client.tradeController.scam) {
+        const strings = this.client.getDialogStrings(
+          DialogResourceID.TRADE_OTHER_PLAYER_TRICK_YOU,
+        );
+        this.showTradeMessage(strings[1]);
+        this.client.tradeController.scam = false;
+      }
+
       this.renderColumns();
       this.updateAgreeButton();
-    });
-
-    this.client.on('tradePartnerAgree', ({ agree }) => {
-      this.partnerAgreed = agree;
-      this.renderColumns();
-    });
-
-    this.client.on('tradeOwnAgree', ({ agree }) => {
-      this.localAgreed = agree;
-      this.updateAgreeButton();
-    });
-
-    this.client.on('tradeCompleted', () => {
-      this.close();
-    });
-
-    this.client.on('tradeCancelled', () => {
-      this.close();
     });
   }
 
-  showRequest(playerId: number, playerName: string) {
-    this.pendingRequestPlayerId = playerId;
-    this.notification.querySelector('.trade-req-name')!.textContent =
-      playerName;
+  private showRequest() {
+    const strings = this.client.getDialogStrings(
+      DialogResourceID.TRADE_REQUEST,
+    );
+    this.tradeRequestText.textContent = `${capitalize(this.client.tradeController.partnerName)} ${strings[1]}`;
     this.notification.classList.remove('hidden');
   }
 
-  open(
-    partnerPlayerName: string,
-    localPlayerId: number,
-    localPlayerName: string,
-  ) {
-    this.partnerPlayerName = partnerPlayerName;
-    this.localPlayerId = localPlayerId;
-    this.localPlayerName = localPlayerName;
-    this.localItems = [];
-    this.partnerItems = [];
-    this.localAgreed = false;
-    this.partnerAgreed = false;
+  private open() {
     this._open = true;
 
     this.container.querySelector('.trade-header')!.textContent =
-      `Trade with ${partnerPlayerName}`;
+      `Trade with ${capitalize(this.client.tradeController.partnerName)}`;
 
     this.renderColumns();
     this.updateAgreeButton();
@@ -157,7 +139,7 @@ export class TradeDialog extends Base {
     this.client.typing = true;
   }
 
-  close() {
+  private close() {
     this._open = false;
     this.cover.classList.add('hidden');
     this.container.classList.add('hidden');
@@ -173,22 +155,12 @@ export class TradeDialog extends Base {
     if (!item) return;
     const record = this.client.getEifRecordById(itemId);
     if (!record) return;
-    if (record.special === 1) return;
+    if (record.special === ItemSpecial.Lore) return;
     this.promptAmount(itemId, item.amount);
   }
 
-  private applyTradeData(tradeData: TradeItemData[]) {
-    for (const data of tradeData) {
-      if (data.playerId === this.localPlayerId) {
-        this.localItems = [...data.items];
-      } else {
-        this.partnerItems = [...data.items];
-      }
-    }
-  }
-
   private updateAgreeButton() {
-    if (this.localAgreed) {
+    if (this.client.tradeController.playerAgreed) {
       this.btnAgree.textContent = 'Agreed ✓';
       this.btnAgree.classList.add('active');
     } else {
@@ -203,17 +175,17 @@ export class TradeDialog extends Base {
 
     this.columns.appendChild(
       this.createColumn(
-        this.localPlayerName,
-        this.localItems,
-        this.localAgreed,
+        this.client.name,
+        this.client.tradeController.playerItems,
+        this.client.tradeController.playerAgreed,
         true,
       ),
     );
     this.columns.appendChild(
       this.createColumn(
-        this.partnerPlayerName,
-        this.partnerItems,
-        this.partnerAgreed,
+        this.client.tradeController.partnerName,
+        this.client.tradeController.partnerItems,
+        this.client.tradeController.partnerAgreed,
         false,
       ),
     );
@@ -270,10 +242,7 @@ export class TradeDialog extends Base {
         if (isLocal) {
           row.title = 'Click to remove';
           row.addEventListener('click', () => {
-            playSfxById(SfxId.ButtonClick);
-            const packet = new TradeRemoveClientPacket();
-            packet.itemId = item.id;
-            this.client.bus.send(packet);
+            this.client.tradeController.removeItem(item.id);
           });
         }
 
@@ -339,7 +308,7 @@ export class TradeDialog extends Base {
 
   private promptAmount(itemId: number, maxAmount: number) {
     if (maxAmount === 1) {
-      this.addItem(itemId, 1);
+      this.client.tradeController.addItem(itemId, 1);
       return;
     }
 
@@ -381,7 +350,7 @@ export class TradeDialog extends Base {
       if (Number.isNaN(amount) || amount < 1) amount = 1;
       if (amount > maxAmount) amount = maxAmount;
       overlay.remove();
-      this.addItem(itemId, amount);
+      this.client.tradeController.addItem(itemId, amount);
     });
     buttons.appendChild(btnOk);
     overlay.appendChild(buttons);
@@ -389,15 +358,6 @@ export class TradeDialog extends Base {
     this.container.appendChild(overlay);
     input.focus();
     input.select();
-  }
-
-  private addItem(itemId: number, amount: number) {
-    const addItem = new Item();
-    addItem.id = itemId;
-    addItem.amount = amount;
-    const packet = new TradeAddClientPacket();
-    packet.addItem = addItem;
-    this.client.bus.send(packet);
   }
 
   private showTradeMessage(message: string) {
