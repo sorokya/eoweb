@@ -618,10 +618,6 @@ function wireInventoryEvents(deps: UiEventDeps): void {
       client.lockerController.addItem(id, 1);
     }
   });
-
-  deps.inventory.on('addTradeItem', (itemId: unknown) => {
-    deps.tradeDialog.offerItem(itemId as number);
-  });
 }
 
 function wireShopEvents(deps: UiEventDeps): void {
