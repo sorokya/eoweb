@@ -52,6 +52,7 @@ import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
 import { SmallConfirm } from './ui/small-confirm';
 import { SpellBook } from './ui/spell-book';
 import { Stats } from './ui/stats/stats';
+import { TradeDialog } from './ui/trade-dialog/trade-dialog';
 import { randomRange } from './utils';
 import {
   getReconnectAttempts,
@@ -130,6 +131,7 @@ const largeConfirmSmallHeader = new LargeConfirmSmallHeader();
 const hotbar = new Hotbar(client);
 const spellBook = new SpellBook(client);
 const partyDialog = new PartyDialog(client);
+new TradeDialog(client);
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

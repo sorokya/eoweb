@@ -34,6 +34,7 @@ import { registerSitHandlers } from './sit';
 import { registerSpellHandlers } from './spell';
 import { registerStatSkillHandlers } from './stat-skill';
 import { registerTalkHandlers } from './talk';
+import { registerTradeHandlers } from './trade';
 import { registerWalkHandlers } from './walk';
 import { registerWarpHandlers } from './warp';
 import { registerWelcomeHandlers } from './welcome';
@@ -77,4 +78,5 @@ export function registerAllHandlers(client: Client): void {
   registerSpellHandlers(client);
   registerCastHandlers(client);
   registerPartyHandlers(client);
+  registerTradeHandlers(client);
 }

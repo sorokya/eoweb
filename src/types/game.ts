@@ -23,3 +23,9 @@ export enum PlayerMenuItem {
   Friend = 6,
   Ignore = 7,
 }
+
+export enum TradeState {
+  None = 0,
+  Pending = 1,
+  Open = 2,
+}

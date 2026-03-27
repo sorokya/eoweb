@@ -11,7 +11,6 @@ import type {
   ShopTradeItem,
   SkillLearn,
   ThreeItem,
-  TradeItemData,
 } from 'eolib';
 import type { SfxId } from './sfx';
 import type { ChatIcon, ChatTab } from './ui';
@@ -85,18 +84,7 @@ export type ClientEvents = {
   citizenSlept: undefined;
   citizenSubscribeResult: { questionsWrong: number };
   citizenUnsubscribeResult: { success: boolean };
-  tradeRequested: { playerId: number; playerName: string };
-  tradeOpened: {
-    partnerPlayerId: number;
-    partnerPlayerName: string;
-    yourPlayerId: number;
-    yourPlayerName: string;
-  };
-  tradeUpdated: { tradeData: TradeItemData[]; partnerAgreed: boolean };
-  tradePartnerAgree: { playerId: number; agree: boolean };
-  tradeOwnAgree: { agree: boolean };
-  tradeCompleted: undefined;
-  tradeCancelled: { playerId: number };
+  tradeUpdated: undefined;
   guildOpened: undefined;
   guildReply: { code: number; message: string };
   guildCreateBegin: undefined;

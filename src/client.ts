@@ -63,6 +63,7 @@ import {
   StatSkillController,
   UsageController,
 } from './controllers';
+import { TradeController } from './controllers/trade-controller';
 import { ViewportController } from './controllers/viewport-controller';
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
 import { type DialogResourceID, type Edf, EOResourceID } from './edf';
@@ -175,6 +176,7 @@ export class Client {
   quakeController: QuakeController;
   spellController: SpellController;
   usageController: UsageController;
+  tradeController: TradeController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, IWeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
@@ -278,6 +280,7 @@ export class Client {
     this.spellController = new SpellController(this);
     this.statSkillController = new StatSkillController(this);
     this.usageController = new UsageController(this);
+    this.tradeController = new TradeController(this);
     loadConfig().then((config) => {
       this.config = config;
       const txtHost =
