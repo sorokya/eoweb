@@ -2,6 +2,7 @@ import { GuildReply } from 'eolib';
 import type { Client } from '../../client';
 import { DialogResourceID } from '../../edf';
 import { playSfxById, SfxId } from '../../sfx';
+import { GuildDialogState } from '../../types';
 import { Base } from '../base-ui';
 
 import './guild-dialog.css';
@@ -31,27 +32,12 @@ const REPLY_DIALOG_IDS: Partial<Record<GuildReply, DialogResourceID>> = {
     DialogResourceID.GUILD_REMOVE_PLAYER_NOT_MEMBER,
 };
 
-type GuildView =
-  | 'menu'
-  | 'info'
-  | 'members'
-  | 'create'
-  | 'create-waiting'
-  | 'join'
-  | 'manage'
-  | 'edit-description'
-  | 'edit-ranks'
-  | 'bank'
-  | 'kick'
-  | 'rank';
-
 export class GuildDialog extends Base {
   private client: Client;
   protected container = document.getElementById('guild-dialog')!;
   private dialogs = document.getElementById('dialogs')!;
   private cover = document.querySelector<HTMLDivElement>('#cover')!;
   private invite = document.getElementById('guild-create-invite')!;
-  private currentView: GuildView = 'menu';
 
   constructor(client: Client) {
     super();
@@ -84,79 +70,23 @@ export class GuildDialog extends Base {
       this.showMessage(message, 'info');
     });
 
-    // Create flow
-    this.client.on('guildCreateBegin', () => {
-      this.currentView = 'create-waiting';
-      this.render();
-    });
+    // Invite / join-request overlays
+    this.client.on('guildCreateInvite', () => this.showCreateInvite());
+    this.client.on('guildJoinRequest', () => this.showJoinRequest());
 
-    this.client.on('guildCreateAdd', () => {
-      this.render();
-    });
-
-    this.client.on('guildCreateAddConfirm', () => {
-      this.showCreateFinalize();
-    });
-
-    // Guild created
-    this.client.on('guildCreated', () => {
-      this.close();
-    });
-
-    // Create invite (for other players)
-    this.client.on('guildCreateInvite', () => {
-      this.showCreateInvite();
-    });
-
-    // Join request (for recruiter)
-    this.client.on('guildJoinRequest', () => {
-      this.showJoinRequest();
-    });
-
-    // Joined a guild
-    this.client.on('guildJoined', () => {
-      this.showMessage(
-        this.client.getDialogStrings(
-          DialogResourceID.GUILD_YOU_HAVE_BEEN_ACCEPTED,
-        )[0],
-        'success',
-      );
-      this.currentView = 'menu';
-      this.render();
-    });
-
-    // Info / Members
-    this.client.on('guildInfo', (data) => {
-      this.showInfoView(data);
-    });
-
-    this.client.on('guildMemberList', ({ members }) => {
-      this.showMemberListView(members);
-    });
-
-    // Management responses
-    this.client.on('guildDescription', () => {
-      this.currentView = 'edit-description';
-      this.render();
-    });
-
-    this.client.on('guildRanks', () => {
-      this.currentView = 'edit-ranks';
-      this.render();
-    });
-
-    this.client.on('guildBank', () => {
-      this.currentView = 'bank';
-      this.render();
-    });
-
-    this.client.on('guildBankUpdated', () => {
+    // All other guild state changes
+    this.client.on('guildUpdated', () => {
+      const { statusMessage } = this.client.guildController;
+      if (statusMessage) {
+        this.showMessage(statusMessage.text, statusMessage.type);
+        this.client.guildController.statusMessage = null;
+      }
       this.render();
     });
   }
 
   show() {
-    this.currentView = 'menu';
+    this.client.guildController.state = GuildDialogState.Menu;
     this.render();
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
@@ -175,55 +105,80 @@ export class GuildDialog extends Base {
   }
 
   private render() {
+    const view = this.client.guildController.state;
+
+    if (view === GuildDialogState.Closed) {
+      this.close();
+      this.client.guildController.state = GuildDialogState.Menu;
+      return;
+    }
+
     const body = this.container.querySelector('.guild-body')!;
     const footer = this.container.querySelector('.guild-footer')!;
     const header = this.container.querySelector('.guild-header')!;
     body.innerHTML = '';
     footer.innerHTML = '';
 
-    switch (this.currentView) {
-      case 'menu':
+    switch (view) {
+      case GuildDialogState.Menu:
         header.textContent = 'Guild';
         this.renderMenu(body, footer);
         break;
-      case 'create':
+      case GuildDialogState.Create:
         header.textContent = 'Create Guild';
         this.renderCreate(body, footer);
         break;
-      case 'create-waiting':
+      case GuildDialogState.CreateWaiting:
         header.textContent = 'Creating Guild...';
         this.renderCreateWaiting(body, footer);
         break;
-      case 'join':
+      case GuildDialogState.Finalize:
+        header.textContent = 'Finalize Guild';
+        this.renderFinalize(body, footer);
+        break;
+      case GuildDialogState.Join:
         header.textContent = 'Join Guild';
         this.renderJoin(body, footer);
         break;
-      case 'manage':
+      case GuildDialogState.Lookup:
+        header.textContent = 'Look Up Guild';
+        this.renderLookup(body, footer);
+        break;
+      case GuildDialogState.Info: {
+        const info = this.client.guildController.cachedInfo;
+        header.textContent = info ? `${info.name} [${info.tag}]` : 'Guild Info';
+        this.renderInfo(body, footer);
+        break;
+      }
+      case GuildDialogState.Members: {
+        const members = this.client.guildController.cachedMembers;
+        header.textContent = `Members (${members.length})`;
+        this.renderMembers(body, footer);
+        break;
+      }
+      case GuildDialogState.Manage:
         header.textContent = 'Manage Guild';
         this.renderManage(body, footer);
         break;
-      case 'edit-description':
+      case GuildDialogState.EditDescription:
         header.textContent = 'Edit Description';
         this.renderEditDescription(body, footer);
         break;
-      case 'edit-ranks':
+      case GuildDialogState.EditRanks:
         header.textContent = 'Edit Ranks';
         this.renderEditRanks(body, footer);
         break;
-      case 'bank':
+      case GuildDialogState.Bank:
         header.textContent = 'Guild Bank';
         this.renderBank(body, footer);
         break;
-      case 'kick':
+      case GuildDialogState.Kick:
         header.textContent = 'Kick Member';
         this.renderKick(body, footer);
         break;
-      case 'rank':
+      case GuildDialogState.Rank:
         header.textContent = 'Change Rank';
         this.renderChangeRank(body, footer);
-        break;
-      // info and members are rendered directly when data arrives
-      default:
         break;
     }
   }
@@ -236,11 +191,11 @@ export class GuildDialog extends Base {
 
     if (!inGuild) {
       this.addMenuButton(body, 'Create Guild', () => {
-        this.currentView = 'create';
+        this.client.guildController.state = GuildDialogState.Create;
         this.render();
       });
       this.addMenuButton(body, 'Join Guild', () => {
-        this.currentView = 'join';
+        this.client.guildController.state = GuildDialogState.Join;
         this.render();
       });
     } else {
@@ -257,7 +212,7 @@ export class GuildDialog extends Base {
       // Management options only for leaders/recruiters (rank <= 2)
       if (rank <= 2) {
         this.addMenuButton(body, 'Manage Guild', () => {
-          this.currentView = 'manage';
+          this.client.guildController.state = GuildDialogState.Manage;
           this.render();
         });
       }
@@ -267,7 +222,8 @@ export class GuildDialog extends Base {
     }
 
     this.addMenuButton(body, 'Look Up Guild', () => {
-      this.showLookupPrompt();
+      this.client.guildController.state = GuildDialogState.Lookup;
+      this.render();
     });
 
     this.addFooterButton(footer, 'Close', () => this.close());
@@ -283,7 +239,7 @@ export class GuildDialog extends Base {
     body.appendChild(nameGroup);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'menu';
+      this.client.guildController.state = GuildDialogState.Menu;
       this.render();
     });
     this.addFooterButton(
@@ -330,19 +286,12 @@ export class GuildDialog extends Base {
     }
 
     this.addFooterButton(footer, 'Cancel', () => {
-      this.currentView = 'menu';
+      this.client.guildController.state = GuildDialogState.Menu;
       this.render();
     });
   }
 
-  private showCreateFinalize() {
-    const body = this.container.querySelector('.guild-body')!;
-    const footer = this.container.querySelector('.guild-footer')!;
-    const header = this.container.querySelector('.guild-header')!;
-    header.textContent = 'Finalize Guild';
-    body.innerHTML = '';
-    footer.innerHTML = '';
-
+  private renderFinalize(body: Element, footer: Element) {
     const message = document.createElement('div');
     message.className = 'guild-message success';
     message.textContent = 'Enough members have joined! Enter a description.';
@@ -385,7 +334,7 @@ export class GuildDialog extends Base {
     body.appendChild(recruiterGroup);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'menu';
+      this.client.guildController.state = GuildDialogState.Menu;
       this.render();
     });
     this.addFooterButton(
@@ -407,22 +356,9 @@ export class GuildDialog extends Base {
 
   // ── Info View ─────────────────────────────────────────────────────────
 
-  private showInfoView(data: {
-    name: string;
-    tag: string;
-    createDate: string;
-    description: string;
-    wealth: string;
-    ranks: string[];
-    staff: { rank: number; name: string }[];
-  }) {
-    this.currentView = 'info';
-    const body = this.container.querySelector('.guild-body')!;
-    const footer = this.container.querySelector('.guild-footer')!;
-    const header = this.container.querySelector('.guild-header')!;
-    header.textContent = `${data.name} [${data.tag}]`;
-    body.innerHTML = '';
-    footer.innerHTML = '';
+  private renderInfo(body: Element, footer: Element) {
+    const data = this.client.guildController.cachedInfo;
+    if (!data) return;
 
     const fields: [string, string, boolean?][] = [
       ['Name', data.name, true],
@@ -475,31 +411,21 @@ export class GuildDialog extends Base {
       this.client.guildController.requestMemberList(data.tag);
     });
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'menu';
+      this.client.guildController.state = GuildDialogState.Menu;
       this.render();
     });
   }
 
   // ── Member List ───────────────────────────────────────────────────────
 
-  private showMemberListView(
-    members: { rank: number; name: string; rankName: string }[],
-  ) {
-    this.currentView = 'members';
-    const body = this.container.querySelector('.guild-body')!;
-    const footer = this.container.querySelector('.guild-footer')!;
-    const header = this.container.querySelector('.guild-header')!;
-    header.textContent = `Members (${members.length})`;
-    body.innerHTML = '';
-    footer.innerHTML = '';
-
-    for (const member of members) {
+  private renderMembers(body: Element, footer: Element) {
+    for (const member of this.client.guildController.cachedMembers) {
       const row = this.createMemberRow(member.name, member.rankName);
       body.appendChild(row);
     }
 
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'menu';
+      this.client.guildController.state = GuildDialogState.Menu;
       this.render();
     });
   }
@@ -521,11 +447,11 @@ export class GuildDialog extends Base {
     // Kick/rank changes: rank <= 2
     if (rank <= 2) {
       this.addMenuButton(body, 'Kick Member', () => {
-        this.currentView = 'kick';
+        this.client.guildController.state = GuildDialogState.Kick;
         this.render();
       });
       this.addMenuButton(body, 'Change Member Rank', () => {
-        this.currentView = 'rank';
+        this.client.guildController.state = GuildDialogState.Rank;
         this.render();
       });
     }
@@ -537,7 +463,7 @@ export class GuildDialog extends Base {
     }
 
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'menu';
+      this.client.guildController.state = GuildDialogState.Menu;
       this.render();
     });
   }
@@ -556,7 +482,7 @@ export class GuildDialog extends Base {
     body.appendChild(group);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'manage';
+      this.client.guildController.state = GuildDialogState.Manage;
       this.render();
     });
     this.addFooterButton(
@@ -580,7 +506,7 @@ export class GuildDialog extends Base {
     }
 
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'manage';
+      this.client.guildController.state = GuildDialogState.Manage;
       this.render();
     });
     this.addFooterButton(
@@ -624,7 +550,7 @@ export class GuildDialog extends Base {
     body.appendChild(group);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'menu';
+      this.client.guildController.state = GuildDialogState.Menu;
       this.render();
     });
     this.addFooterButton(
@@ -646,7 +572,7 @@ export class GuildDialog extends Base {
     body.appendChild(group);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'manage';
+      this.client.guildController.state = GuildDialogState.Manage;
       this.render();
     });
     this.addFooterButton(
@@ -677,7 +603,7 @@ export class GuildDialog extends Base {
     body.appendChild(rankGroup);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'manage';
+      this.client.guildController.state = GuildDialogState.Manage;
       this.render();
     });
     this.addFooterButton(
@@ -729,19 +655,12 @@ export class GuildDialog extends Base {
     }
   }
 
-  private showLookupPrompt() {
-    const body = this.container.querySelector('.guild-body')!;
-    const footer = this.container.querySelector('.guild-footer')!;
-    const header = this.container.querySelector('.guild-header')!;
-    header.textContent = 'Look Up Guild';
-    body.innerHTML = '';
-    footer.innerHTML = '';
-
+  private renderLookup(body: Element, footer: Element) {
     const group = this.createInputGroup('Guild Tag or Name', 'lookup', 24);
     body.appendChild(group);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.currentView = 'menu';
+      this.client.guildController.state = GuildDialogState.Menu;
       this.render();
     });
     this.addFooterButton(

@@ -30,24 +30,28 @@ function handleGuildReply(client: Client, reader: EoReader) {
 
   switch (code) {
     case GuildReply.CreateBegin:
-      client.guildController.setCreateBegin();
+      client.guildController.notifyCreateBegin();
       return;
     case GuildReply.CreateAdd: {
       const data =
         packet.replyCodeData as GuildReplyServerPacket.ReplyCodeDataCreateAdd;
-      client.guildController.setCreateAdd(data.name);
+      client.guildController.notifyCreateAdd(data.name);
       return;
     }
     case GuildReply.CreateAddConfirm: {
       const data =
         packet.replyCodeData as GuildReplyServerPacket.ReplyCodeDataCreateAddConfirm;
-      client.guildController.setCreateAddConfirm(data.name);
+      client.guildController.notifyCreateAddConfirm(data.name);
       return;
     }
     case GuildReply.JoinRequest: {
       const data =
         packet.replyCodeData as GuildReplyServerPacket.ReplyCodeDataJoinRequest;
-      client.guildController.setPendingInvite(data.playerId, 'join', data.name);
+      client.guildController.notifyPendingInvite(
+        data.playerId,
+        'join',
+        data.name,
+      );
       return;
     }
     default: {
@@ -58,7 +62,7 @@ function handleGuildReply(client: Client, reader: EoReader) {
 
 function handleGuildCreate(client: Client, reader: EoReader) {
   const packet = GuildCreateServerPacket.deserialize(reader);
-  client.guildController.setCreated(
+  client.guildController.notifyCreated(
     packet.guildTag,
     packet.guildName,
     packet.rankName,
@@ -68,7 +72,7 @@ function handleGuildCreate(client: Client, reader: EoReader) {
 
 function handleGuildRequest(client: Client, reader: EoReader) {
   const packet = GuildRequestServerPacket.deserialize(reader);
-  client.guildController.setPendingInvite(
+  client.guildController.notifyPendingInvite(
     packet.playerId,
     'create',
     packet.guildIdentity,
@@ -77,7 +81,7 @@ function handleGuildRequest(client: Client, reader: EoReader) {
 
 function handleGuildTell(client: Client, reader: EoReader) {
   const packet = GuildTellServerPacket.deserialize(reader);
-  client.guildController.setMemberListReceived(
+  client.guildController.notifyMemberListReceived(
     packet.members.map((m) => ({
       rank: m.rank,
       name: m.name,
@@ -88,7 +92,7 @@ function handleGuildTell(client: Client, reader: EoReader) {
 
 function handleGuildReport(client: Client, reader: EoReader) {
   const packet = GuildReportServerPacket.deserialize(reader);
-  client.guildController.setInfoReceived({
+  client.guildController.notifyInfoReceived({
     name: packet.name,
     tag: packet.tag,
     createDate: packet.createDate,
@@ -101,36 +105,36 @@ function handleGuildReport(client: Client, reader: EoReader) {
 
 function handleGuildTake(client: Client, reader: EoReader) {
   const packet = GuildTakeServerPacket.deserialize(reader);
-  client.guildController.setDescriptionReceived(packet.description);
+  client.guildController.notifyDescriptionReceived(packet.description);
 }
 
 function handleGuildRank(client: Client, reader: EoReader) {
   const packet = GuildRankServerPacket.deserialize(reader);
-  client.guildController.setRanksReceived(packet.ranks);
+  client.guildController.notifyRanksReceived(packet.ranks);
 }
 
 function handleGuildSell(client: Client, reader: EoReader) {
   const packet = GuildSellServerPacket.deserialize(reader);
-  client.guildController.setBankReceived(packet.goldAmount);
+  client.guildController.notifyBankReceived(packet.goldAmount);
 }
 
 function handleGuildBuy(client: Client, reader: EoReader) {
   const packet = GuildBuyServerPacket.deserialize(reader);
-  client.guildController.setBankUpdated(packet.goldAmount);
+  client.guildController.notifyBankUpdated(packet.goldAmount);
 }
 
 function handleGuildKick(client: Client, _reader: EoReader) {
-  client.guildController.kick();
+  client.guildController.notifyKicked();
 }
 
 function handleGuildAccept(client: Client, reader: EoReader) {
   const packet = GuildAcceptServerPacket.deserialize(reader);
-  client.guildController.setRankUpdated(packet.rank);
+  client.guildController.notifyRankUpdated(packet.rank);
 }
 
 function handleGuildAgree(client: Client, reader: EoReader) {
   const packet = GuildAgreeServerPacket.deserialize(reader);
-  client.guildController.setJoined(
+  client.guildController.notifyJoined(
     packet.guildTag,
     packet.guildName,
     packet.rankName,

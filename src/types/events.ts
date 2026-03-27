@@ -88,39 +88,9 @@ export type ClientEvents = {
   tradeUpdated: undefined;
   guildOpened: undefined;
   guildReply: { code: GuildReply };
-  guildCreateBegin: undefined;
-  guildCreateAdd: { name: string };
-  guildCreateAddConfirm: { name: string };
+  guildUpdated: undefined;
   guildCreateInvite: undefined;
-  guildCreated: {
-    guildTag: string;
-    guildName: string;
-    rankName: string;
-    goldAmount: number;
-  };
   guildJoinRequest: undefined;
-  guildJoined: {
-    guildTag: string;
-    guildName: string;
-    rankName: string;
-  };
-  guildInfo: {
-    name: string;
-    tag: string;
-    createDate: string;
-    description: string;
-    wealth: string;
-    ranks: string[];
-    staff: { rank: number; name: string }[];
-  };
-  guildMemberList: {
-    members: { rank: number; name: string; rankName: string }[];
-  };
-  guildDescription: { description: string };
-  guildRanks: { ranks: string[] };
-  guildBank: { gold: number };
-  guildBankUpdated: undefined;
-  guildRankUpdated: { rank: number };
   scrollMessage: { title: string; body: string };
   statusMessage: { message: string };
   bankOpened: undefined;

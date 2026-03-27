@@ -16,15 +16,32 @@ import {
   GuildUseClientPacket,
 } from 'eolib';
 import type { Client } from '../client';
+import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
+import { GuildDialogState } from '../types';
+
+export type GuildInfoData = {
+  name: string;
+  tag: string;
+  createDate: string;
+  description: string;
+  wealth: string;
+  ranks: string[];
+  staff: { rank: number; name: string }[];
+};
 
 export class GuildController {
+  state = GuildDialogState.Menu;
+  statusMessage: { text: string; type: 'success' | 'info' } | null = null;
+
   // Create-flow state
   createMembers: string[] = [];
   createTag = '';
   createName = '';
 
   // Cached data from server responses
+  cachedInfo: GuildInfoData | null = null;
+  cachedMembers: { rank: number; name: string; rankName: string }[] = [];
   cachedDescription = '';
   cachedRanks: string[] = [];
   cachedBankGold = 0;
@@ -45,7 +62,7 @@ export class GuildController {
 
   // ── State updates (called by handlers) ───────────────────────────────
 
-  setCreated(
+  notifyCreated(
     guildTag: string,
     guildName: string,
     rankName: string,
@@ -55,91 +72,103 @@ export class GuildController {
     this.client.guildName = guildName;
     this.client.guildRankName = rankName;
     this.client.guildRank = 0; // founder
-    this.client.emit('guildCreated', {
-      guildTag,
-      guildName,
-      rankName,
-      goldAmount,
-    });
+    this.state = GuildDialogState.Closed;
+
+    const gold = this.client.items.find((i) => i.id === 1);
+    if (gold) {
+      gold.amount = goldAmount;
+      this.client.emit('inventoryChanged', undefined);
+    }
+
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setJoined(guildTag: string, guildName: string, rankName: string) {
+  notifyJoined(guildTag: string, guildName: string, rankName: string) {
     this.client.guildTag = guildTag;
     this.client.guildName = guildName;
     this.client.guildRankName = rankName;
+    this.state = GuildDialogState.Menu;
+    this.statusMessage = {
+      text: this.client.getDialogStrings(
+        DialogResourceID.GUILD_YOU_HAVE_BEEN_ACCEPTED,
+      )[0],
+      type: 'success',
+    };
     playSfxById(SfxId.JoinGuild);
-    this.client.emit('guildJoined', { guildTag, guildName, rankName });
+    this.client.emit('guildUpdated', undefined);
   }
 
-  kick() {
+  notifyKicked() {
     this.clearGuild();
+    this.state = GuildDialogState.Menu;
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setRankUpdated(rank: number) {
+  notifyRankUpdated(rank: number) {
     this.client.guildRank = rank;
-    this.client.emit('guildRankUpdated', { rank });
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setCreateBegin() {
+  notifyCreateBegin() {
     this.createMembers = [];
-    this.client.emit('guildCreateBegin', undefined);
+    this.state = GuildDialogState.CreateWaiting;
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setCreateAdd(name: string) {
+  notifyCreateAdd(name: string) {
     this.createMembers.push(name);
-    this.client.emit('guildCreateAdd', { name });
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setCreateAddConfirm(name: string) {
+  notifyCreateAddConfirm(name: string) {
     if (name) this.createMembers.push(name);
-    this.client.emit('guildCreateAddConfirm', { name });
+    this.state = GuildDialogState.Finalize;
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setInfoReceived(data: {
-    name: string;
-    tag: string;
-    createDate: string;
-    description: string;
-    wealth: string;
-    ranks: string[];
-    staff: { rank: number; name: string }[];
-  }) {
-    this.client.emit('guildInfo', data);
+  notifyInfoReceived(data: GuildInfoData) {
+    this.cachedInfo = data;
+    this.state = GuildDialogState.Info;
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setMemberListReceived(
+  notifyMemberListReceived(
     members: { rank: number; name: string; rankName: string }[],
   ) {
-    this.client.emit('guildMemberList', { members });
+    this.cachedMembers = members;
+    this.state = GuildDialogState.Members;
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setDescriptionReceived(description: string) {
+  notifyDescriptionReceived(description: string) {
     this.cachedDescription = description;
-    this.client.emit('guildDescription', { description });
+    this.state = GuildDialogState.EditDescription;
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setRanksReceived(ranks: string[]) {
+  notifyRanksReceived(ranks: string[]) {
     this.cachedRanks = [...ranks];
-    this.client.emit('guildRanks', { ranks });
+    this.state = GuildDialogState.EditRanks;
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setBankReceived(gold: number) {
+  notifyBankReceived(gold: number) {
     this.cachedBankGold = gold;
-    this.client.emit('guildBank', { gold });
+    this.state = GuildDialogState.Bank;
+    this.client.emit('guildUpdated', undefined);
   }
 
-  setBankUpdated(goldAmount: number) {
-    // Update gold in inventory
+  notifyBankUpdated(goldAmount: number) {
     const gold = this.client.items.find((i) => i.id === 1);
     if (gold) {
       this.cachedBankGold += gold.amount - goldAmount;
       gold.amount = goldAmount;
       this.client.emit('inventoryChanged', undefined);
     }
-    this.client.emit('guildBankUpdated', undefined);
+    this.requestBankInfo();
   }
 
-  setPendingInvite(playerId: number, type: 'create' | 'join', name: string) {
+  notifyPendingInvite(playerId: number, type: 'create' | 'join', name: string) {
     this.pendingInvitePlayerId = playerId;
     this.pendingInviteType = type;
     this.pendingInviteName = name;
