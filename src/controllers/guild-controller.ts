@@ -17,6 +17,7 @@ import {
   GuildUseClientPacket,
 } from 'eolib';
 import type { Client } from '../client';
+import { GUILD_MIN_DEPOSIT } from '../consts';
 import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { GuildDialogState } from '../types';
@@ -336,6 +337,11 @@ export class GuildController {
   }
 
   depositToBank(amount: number) {
+    const gold = this.client.items.find((i) => i.id === 1);
+    if (!gold || gold.amount < amount || amount < GUILD_MIN_DEPOSIT) {
+      return;
+    }
+
     const packet = new GuildBuyClientPacket();
     packet.sessionId = this.client.sessionId;
     packet.goldAmount = amount;
