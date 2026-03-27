@@ -37,26 +37,10 @@ export class GuildDialog extends Base {
   protected container = document.getElementById('guild-dialog')!;
   private dialogs = document.getElementById('dialogs')!;
   private cover = document.querySelector<HTMLDivElement>('#cover')!;
-  private invite = document.getElementById('guild-create-invite')!;
 
   constructor(client: Client) {
     super();
     this.client = client;
-
-    // Wire static invite notification buttons
-    this.invite
-      .querySelector('[data-id="invite-accept"]')!
-      .addEventListener('click', () => {
-        playSfxById(SfxId.ButtonClick);
-        this.invite.classList.add('hidden');
-        this.handleInviteAccept();
-      });
-    this.invite
-      .querySelector('[data-id="invite-decline"]')!
-      .addEventListener('click', () => {
-        playSfxById(SfxId.ButtonClick);
-        this.invite.classList.add('hidden');
-      });
 
     // Guild NPC opened
     this.client.on('guildOpened', () => this.show());
@@ -70,23 +54,12 @@ export class GuildDialog extends Base {
       this.showMessage(message, 'info');
     });
 
-    // Invite / join-request overlays
-    this.client.on('guildCreateInvite', () => this.showCreateInvite());
-    this.client.on('guildJoinRequest', () => this.showJoinRequest());
-
-    // All other guild state changes
-    this.client.on('guildUpdated', () => {
-      const { statusMessage } = this.client.guildController;
-      if (statusMessage) {
-        this.showMessage(statusMessage.text, statusMessage.type);
-        this.client.guildController.statusMessage = null;
-      }
-      this.render();
-    });
+    // All guild state changes
+    this.client.on('guildUpdated', () => this.render());
   }
 
   show() {
-    this.client.guildController.state = GuildDialogState.Menu;
+    this.client.guildController.state = GuildDialogState.MainMenu;
     this.render();
     this.cover.classList.remove('hidden');
     this.container.classList.remove('hidden');
@@ -96,6 +69,7 @@ export class GuildDialog extends Base {
   }
 
   close() {
+    this.client.guildController.state = GuildDialogState.None;
     this.cover.classList.add('hidden');
     this.container.classList.add('hidden');
     if (!document.querySelector('#dialogs > div:not(.hidden)')) {
@@ -107,9 +81,8 @@ export class GuildDialog extends Base {
   private render() {
     const view = this.client.guildController.state;
 
-    if (view === GuildDialogState.Closed) {
+    if (view === GuildDialogState.None) {
       this.close();
-      this.client.guildController.state = GuildDialogState.Menu;
       return;
     }
 
@@ -120,7 +93,7 @@ export class GuildDialog extends Base {
     footer.innerHTML = '';
 
     switch (view) {
-      case GuildDialogState.Menu:
+      case GuildDialogState.MainMenu:
         header.textContent = 'Guild';
         this.renderMenu(body, footer);
         break;
@@ -132,7 +105,7 @@ export class GuildDialog extends Base {
         header.textContent = 'Creating Guild...';
         this.renderCreateWaiting(body, footer);
         break;
-      case GuildDialogState.Finalize:
+      case GuildDialogState.CreateFinalize:
         header.textContent = 'Finalize Guild';
         this.renderFinalize(body, footer);
         break;
@@ -144,13 +117,13 @@ export class GuildDialog extends Base {
         header.textContent = 'Look Up Guild';
         this.renderLookup(body, footer);
         break;
-      case GuildDialogState.Info: {
+      case GuildDialogState.GuildInfo: {
         const info = this.client.guildController.cachedInfo;
         header.textContent = info ? `${info.name} [${info.tag}]` : 'Guild Info';
         this.renderInfo(body, footer);
         break;
       }
-      case GuildDialogState.Members: {
+      case GuildDialogState.GuildMembers: {
         const members = this.client.guildController.cachedMembers;
         header.textContent = `Members (${members.length})`;
         this.renderMembers(body, footer);
@@ -172,11 +145,11 @@ export class GuildDialog extends Base {
         header.textContent = 'Guild Bank';
         this.renderBank(body, footer);
         break;
-      case GuildDialogState.Kick:
+      case GuildDialogState.KickMember:
         header.textContent = 'Kick Member';
         this.renderKick(body, footer);
         break;
-      case GuildDialogState.Rank:
+      case GuildDialogState.AssignRank:
         header.textContent = 'Change Rank';
         this.renderChangeRank(body, footer);
         break;
@@ -239,7 +212,7 @@ export class GuildDialog extends Base {
     body.appendChild(nameGroup);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.client.guildController.state = GuildDialogState.Menu;
+      this.client.guildController.state = GuildDialogState.MainMenu;
       this.render();
     });
     this.addFooterButton(
@@ -286,7 +259,7 @@ export class GuildDialog extends Base {
     }
 
     this.addFooterButton(footer, 'Cancel', () => {
-      this.client.guildController.state = GuildDialogState.Menu;
+      this.client.guildController.state = GuildDialogState.MainMenu;
       this.render();
     });
   }
@@ -334,7 +307,7 @@ export class GuildDialog extends Base {
     body.appendChild(recruiterGroup);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.client.guildController.state = GuildDialogState.Menu;
+      this.client.guildController.state = GuildDialogState.MainMenu;
       this.render();
     });
     this.addFooterButton(
@@ -411,7 +384,7 @@ export class GuildDialog extends Base {
       this.client.guildController.requestMemberList(data.tag);
     });
     this.addFooterButton(footer, 'Back', () => {
-      this.client.guildController.state = GuildDialogState.Menu;
+      this.client.guildController.state = GuildDialogState.MainMenu;
       this.render();
     });
   }
@@ -425,7 +398,7 @@ export class GuildDialog extends Base {
     }
 
     this.addFooterButton(footer, 'Back', () => {
-      this.client.guildController.state = GuildDialogState.Menu;
+      this.client.guildController.state = GuildDialogState.MainMenu;
       this.render();
     });
   }
@@ -447,11 +420,11 @@ export class GuildDialog extends Base {
     // Kick/rank changes: rank <= 2
     if (rank <= 2) {
       this.addMenuButton(body, 'Kick Member', () => {
-        this.client.guildController.state = GuildDialogState.Kick;
+        this.client.guildController.state = GuildDialogState.KickMember;
         this.render();
       });
       this.addMenuButton(body, 'Change Member Rank', () => {
-        this.client.guildController.state = GuildDialogState.Rank;
+        this.client.guildController.state = GuildDialogState.AssignRank;
         this.render();
       });
     }
@@ -463,7 +436,7 @@ export class GuildDialog extends Base {
     }
 
     this.addFooterButton(footer, 'Back', () => {
-      this.client.guildController.state = GuildDialogState.Menu;
+      this.client.guildController.state = GuildDialogState.MainMenu;
       this.render();
     });
   }
@@ -550,7 +523,7 @@ export class GuildDialog extends Base {
     body.appendChild(group);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.client.guildController.state = GuildDialogState.Menu;
+      this.client.guildController.state = GuildDialogState.MainMenu;
       this.render();
     });
     this.addFooterButton(
@@ -621,46 +594,12 @@ export class GuildDialog extends Base {
     );
   }
 
-  // ── Invite notifications ──────────────────────────────────────────────
-
-  private showCreateInvite() {
-    const { pendingInviteName } = this.client.guildController;
-
-    const nameSpan = this.invite.querySelector('.guild-invite-name')!;
-    nameSpan.textContent = pendingInviteName;
-    const textSuffix = this.invite.querySelector('.guild-invite-suffix')!;
-    textSuffix.textContent = ' is being created. Join?';
-
-    this.invite.classList.remove('hidden');
-  }
-
-  private showJoinRequest() {
-    const { pendingInviteName } = this.client.guildController;
-
-    const nameSpan = this.invite.querySelector('.guild-invite-name')!;
-    nameSpan.textContent = pendingInviteName;
-    const textSuffix = this.invite.querySelector('.guild-invite-suffix')!;
-    textSuffix.textContent = ' wants to join your guild.';
-
-    this.invite.classList.remove('hidden');
-  }
-
-  private handleInviteAccept() {
-    const { pendingInvitePlayerId, pendingInviteType } =
-      this.client.guildController;
-    if (pendingInviteType === 'create') {
-      this.client.guildController.acceptCreateInvite(pendingInvitePlayerId);
-    } else {
-      this.client.guildController.acceptJoinRequest(pendingInvitePlayerId);
-    }
-  }
-
   private renderLookup(body: Element, footer: Element) {
     const group = this.createInputGroup('Guild Tag or Name', 'lookup', 24);
     body.appendChild(group);
 
     this.addFooterButton(footer, 'Back', () => {
-      this.client.guildController.state = GuildDialogState.Menu;
+      this.client.guildController.state = GuildDialogState.MainMenu;
       this.render();
     });
     this.addFooterButton(

@@ -263,39 +263,3 @@ textarea.guild-input {
     opacity: 1;
   }
 }
-
-/* Create invite notification */
-#guild-create-invite {
-  position: fixed;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(
-    180deg,
-    rgba(30, 26, 20, 0.97),
-    rgba(22, 19, 15, 0.98)
-  );
-  border: 1px solid rgba(212, 184, 150, 0.25);
-  border-radius: 6px;
-  padding: 10px 16px;
-  color: #e0daca;
-  font-size: 11px;
-  z-index: 200;
-  text-align: center;
-  min-width: 220px;
-}
-
-#guild-create-invite .guild-invite-text {
-  margin-bottom: 8px;
-}
-
-#guild-create-invite .guild-invite-name {
-  color: #d4b896;
-  font-weight: bold;
-}
-
-#guild-create-invite .guild-invite-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}

@@ -31,8 +31,7 @@ export type GuildInfoData = {
 };
 
 export class GuildController {
-  state = GuildDialogState.Menu;
-  statusMessage: { text: string; type: 'success' | 'info' } | null = null;
+  state = GuildDialogState.None;
 
   // Create-flow state
   createMembers: string[] = [];
@@ -45,11 +44,6 @@ export class GuildController {
   cachedDescription = '';
   cachedRanks: string[] = [];
   cachedBankGold = 0;
-
-  // Pending invite/join-request state
-  pendingInvitePlayerId = 0;
-  pendingInviteType: 'create' | 'join' = 'create';
-  pendingInviteName = '';
 
   constructor(private client: Client) {}
 
@@ -72,7 +66,6 @@ export class GuildController {
     this.client.guildName = guildName;
     this.client.guildRankName = rankName;
     this.client.guildRank = 0; // founder
-    this.state = GuildDialogState.Closed;
 
     const gold = this.client.items.find((i) => i.id === 1);
     if (gold) {
@@ -87,21 +80,19 @@ export class GuildController {
     this.client.guildTag = guildTag;
     this.client.guildName = guildName;
     this.client.guildRankName = rankName;
-    this.state = GuildDialogState.Menu;
-    this.statusMessage = {
-      text: this.client.getDialogStrings(
-        DialogResourceID.GUILD_YOU_HAVE_BEEN_ACCEPTED,
-      )[0],
-      type: 'success',
-    };
     playSfxById(SfxId.JoinGuild);
-    this.client.emit('guildUpdated', undefined);
+
+    const strings = this.client.getDialogStrings(
+      DialogResourceID.GUILD_YOU_HAVE_BEEN_ACCEPTED,
+    );
+    this.client.emit('smallAlert', {
+      title: strings[0],
+      message: strings[1],
+    });
   }
 
   notifyKicked() {
     this.clearGuild();
-    this.state = GuildDialogState.Menu;
-    this.client.emit('guildUpdated', undefined);
   }
 
   notifyRankUpdated(rank: number) {
@@ -122,13 +113,13 @@ export class GuildController {
 
   notifyCreateAddConfirm(name: string) {
     if (name) this.createMembers.push(name);
-    this.state = GuildDialogState.Finalize;
+    this.state = GuildDialogState.CreateFinalize;
     this.client.emit('guildUpdated', undefined);
   }
 
   notifyInfoReceived(data: GuildInfoData) {
     this.cachedInfo = data;
-    this.state = GuildDialogState.Info;
+    this.state = GuildDialogState.GuildInfo;
     this.client.emit('guildUpdated', undefined);
   }
 
@@ -136,7 +127,7 @@ export class GuildController {
     members: { rank: number; name: string; rankName: string }[],
   ) {
     this.cachedMembers = members;
-    this.state = GuildDialogState.Members;
+    this.state = GuildDialogState.GuildMembers;
     this.client.emit('guildUpdated', undefined);
   }
 
@@ -169,15 +160,21 @@ export class GuildController {
   }
 
   notifyPendingInvite(playerId: number, type: 'create' | 'join', name: string) {
-    this.pendingInvitePlayerId = playerId;
-    this.pendingInviteType = type;
-    this.pendingInviteName = name;
-
     playSfxById(SfxId.ServerMessage);
-    this.client.emit(
-      type === 'join' ? 'guildJoinRequest' : 'guildCreateInvite',
-      undefined,
-    );
+
+    if (type === 'join') {
+      this.client.emit('confirmation', {
+        title: name,
+        message: 'wants to join your guild. Accept?',
+        onConfirm: () => this.acceptJoinRequest(playerId),
+      });
+    } else {
+      this.client.emit('confirmation', {
+        title: name,
+        message: 'is being created. Would you like to join?',
+        onConfirm: () => this.acceptCreateInvite(playerId),
+      });
+    }
   }
 
   // ── Outgoing actions ──────────────────────────────────────────────────

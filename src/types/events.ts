@@ -89,8 +89,6 @@ export type ClientEvents = {
   guildOpened: undefined;
   guildReply: { code: GuildReply };
   guildUpdated: undefined;
-  guildCreateInvite: undefined;
-  guildJoinRequest: undefined;
   scrollMessage: { title: string; body: string };
   statusMessage: { message: string };
   bankOpened: undefined;
