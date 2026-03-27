@@ -29,3 +29,21 @@ export enum TradeState {
   Pending = 1,
   Open = 2,
 }
+
+export enum GuildDialogState {
+  None = 0,
+  MainMenu = 1,
+  Create = 2,
+  CreateWaiting = 3,
+  CreateFinalize = 4,
+  Join = 5,
+  Lookup = 6,
+  GuildInfo = 7,
+  GuildMembers = 8,
+  Manage = 9,
+  EditDescription = 10,
+  EditRanks = 11,
+  Bank = 12,
+  KickMember = 13,
+  AssignRank = 14,
+}
