@@ -17,7 +17,11 @@ import {
   GuildUseClientPacket,
 } from 'eolib';
 import type { Client } from '../client';
-import { GUILD_MIN_DEPOSIT } from '../consts';
+import {
+  GUILD_MIN_DEPOSIT,
+  GUILD_RANK_LEADER,
+  GUILD_RANK_NEW_MEMBER,
+} from '../consts';
 import { DialogResourceID } from '../edf';
 import { playSfxById, SfxId } from '../sfx';
 import { GuildDialogState } from '../types';
@@ -104,7 +108,7 @@ export class GuildController {
     this.client.guildTag = guildTag;
     this.client.guildName = guildName;
     this.client.guildRankName = rankName;
-    this.client.guildRank = 0; // founder
+    this.client.guildRank = GUILD_RANK_LEADER;
 
     const gold = this.client.items.find((i) => i.id === 1);
     if (gold) {
@@ -119,6 +123,7 @@ export class GuildController {
     this.client.guildTag = guildTag;
     this.client.guildName = guildName;
     this.client.guildRankName = rankName;
+    this.client.guildRank = GUILD_RANK_NEW_MEMBER;
     playSfxById(SfxId.JoinGuild);
 
     this.state = GuildDialogState.None;
