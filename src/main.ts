@@ -30,6 +30,7 @@ import { ChestDialog } from './ui/chest-dialog';
 import { CreateAccountForm } from './ui/create-account';
 import { CreateCharacterForm } from './ui/create-character';
 import { ExitGame } from './ui/exit-game';
+import { GuildDialog } from './ui/guild-dialog/guild-dialog';
 import { Hotbar } from './ui/hotbar/hotbar';
 import { HUD } from './ui/hud/hud';
 import { InGameMenu } from './ui/in-game-menu/in-game-menu';
@@ -134,6 +135,7 @@ const hotbar = new Hotbar(client);
 const spellBook = new SpellBook(client);
 const partyDialog = new PartyDialog(client);
 new TradeDialog(client);
+new GuildDialog(client);
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
