@@ -80,7 +80,7 @@ export class GuildController {
   constructor(private client: Client) {}
 
   private clearGuild() {
-    this.client.guildTag = '';
+    this.client.guildTag = '   ';
     this.client.guildName = '';
     this.client.guildRank = 0;
     this.client.guildRankName = '';
@@ -140,6 +140,10 @@ export class GuildController {
 
   notifyKicked() {
     this.clearGuild();
+    if (this.state !== GuildDialogState.None) {
+      this.state = GuildDialogState.MainMenu;
+      this.client.emit('guildUpdated', undefined);
+    }
   }
 
   notifyRankUpdated(rank: number) {
