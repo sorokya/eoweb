@@ -18,6 +18,7 @@ import {
 } from 'eolib';
 import type { Client } from '../client';
 import {
+  GUILD_MAX_RANK,
   GUILD_MIN_DEPOSIT,
   GUILD_RANK_LEADER,
   GUILD_RANK_NEW_MEMBER,
@@ -368,7 +369,7 @@ export class GuildController {
   changeMemberRank(name: string, rank: number) {
     const packet = new GuildRankClientPacket();
     packet.sessionId = this.client.sessionId;
-    packet.rank = rank;
+    packet.rank = Math.max(0, Math.min(GUILD_MAX_RANK, rank));
     packet.memberName = name;
     this.client.bus.send(packet);
   }

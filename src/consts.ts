@@ -95,3 +95,4 @@ export const BARBER_COST_PER_LEVEL = 200;
 export const GUILD_MIN_DEPOSIT = 1000;
 export const GUILD_RANK_LEADER = 0;
 export const GUILD_RANK_NEW_MEMBER = 9;
+export const GUILD_MAX_RANK = 9;

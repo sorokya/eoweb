@@ -4,7 +4,7 @@ import { GuildDialogState } from '../../types';
 import { Base } from '../base-ui';
 
 import './guild-dialog.css';
-import { GUILD_MIN_DEPOSIT } from '../../consts';
+import { GUILD_MAX_RANK, GUILD_MIN_DEPOSIT } from '../../consts';
 
 export class GuildDialog extends Base {
   private client: Client;
@@ -516,11 +516,15 @@ export class GuildDialog extends Base {
     const nameGroup = this.createInputGroup('Member Name', 'rank-name', 12);
     body.appendChild(nameGroup);
 
-    const rankGroup = this.createInputGroup('New Rank (0-9)', 'new-rank', 2);
+    const rankGroup = this.createInputGroup(
+      `New Rank (0-${GUILD_MAX_RANK})`,
+      'new-rank',
+      2,
+    );
     const rankInput = rankGroup.querySelector('input') as HTMLInputElement;
     rankInput.type = 'number';
     rankInput.min = '0';
-    rankInput.max = '9';
+    rankInput.max = `${GUILD_MAX_RANK}`;
     body.appendChild(rankGroup);
 
     this.addFooterButton(footer, 'Back', () => {
