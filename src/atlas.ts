@@ -789,6 +789,16 @@ export class Atlas {
       return;
     }
 
+    // Snapshot every atlas canvas BEFORE clearing so we can copy from the
+    // original positions even after the destination canvases are wiped.
+    const snapshots: HTMLCanvasElement[] = this.atlases.map((atlas) => {
+      const snap = document.createElement('canvas');
+      snap.width = ATLAS_SIZE;
+      snap.height = ATLAS_SIZE;
+      snap.getContext('2d')!.drawImage(atlas.getCanvas(), 0, 0);
+      return snap;
+    });
+
     for (const atlas of this.atlases) {
       const ctx = atlas.getContext();
       ctx.clearRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
@@ -806,10 +816,10 @@ export class Atlas {
         continue;
       }
 
-      const img = atlas.getCanvas();
+      const img = snapshots[placeable.atlasIndex];
       if (!img) {
         console.error(
-          'Atlas canvas not found for defragmentation',
+          'Atlas snapshot not found for defragmentation',
           placeable.atlasIndex,
         );
         continue;
