@@ -1048,23 +1048,6 @@ export class MapRenderer {
     this.addPlayerMenuSprites();
   }
 
-  private addGroundSprite(
-    texture: Texture,
-    srcX: number,
-    srcY: number,
-    dw: number,
-    dh: number,
-  ) {
-    const subTexture = new Texture({
-      source: texture.source,
-      frame: new PixiRect(srcX, srcY, dw, dh),
-    });
-    const sprite = this._spritePool.acquire();
-    sprite.texture = subTexture;
-    sprite.position.set(0, 0);
-    this.client.worldContainer.addChild(sprite);
-  }
-
   private addTileSprite(entity: Entity, playerScreen: Vector2) {
     if (entity.layer === Layer.Ground && entity.typeId === 0) {
       return;
