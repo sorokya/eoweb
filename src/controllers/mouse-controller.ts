@@ -29,6 +29,7 @@ export class MouseController {
     window.addEventListener(
       'touchmove',
       (e) => {
+        if (!this.client.app) return;
         const canvas = this.client.app.renderer.canvas;
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
@@ -52,6 +53,7 @@ export class MouseController {
     );
 
     window.addEventListener('mousemove', (e) => {
+      if (!this.client.app) return;
       const canvas = this.client.app.renderer.canvas;
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
