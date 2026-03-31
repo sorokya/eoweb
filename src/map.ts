@@ -7,7 +7,7 @@ import {
   NpcType,
   SitState,
 } from 'eolib';
-import { CanvasSource, Rectangle as PixiRect, Sprite, Texture } from 'pixi.js';
+import { CanvasSource, Sprite, Texture } from 'pixi.js';
 import {
   CHARACTER_FRAME_OFFSETS,
   CharacterFrame,
