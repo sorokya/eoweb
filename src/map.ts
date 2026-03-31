@@ -1379,12 +1379,6 @@ export class MapRenderer {
       this.addEffectBehindSprite(effect);
     }
 
-    const drawX = Math.floor(
-      mirrored
-        ? this._gameWidth - screenX - frame.w - frame.mirroredXOffset
-        : screenX + frame.xOffset,
-    );
-
     let alpha = alphaOverride ?? 1;
     if (dying) alpha = (dyingTicks / DEATH_TICKS) * (alphaOverride ?? 1);
     if (character.invisible && this.client.admin !== AdminLevel.Player) {
@@ -1401,10 +1395,12 @@ export class MapRenderer {
       const sprite = this._spritePool.acquire();
       sprite.texture = texture;
       if (mirrored) {
+        // scale.x = -1 draws leftward from sprite.x, so place the right edge
+        // at screenX + mirroredXOffset + frame.w to get left edge at screenX + mirroredXOffset
         sprite.scale.x = -1;
-        sprite.x = drawX + frame.w;
+        sprite.x = Math.floor(screenX + frame.mirroredXOffset + frame.w);
       } else {
-        sprite.x = drawX;
+        sprite.x = Math.floor(screenX + frame.xOffset);
       }
       sprite.y = screenY;
       sprite.alpha = alpha;
@@ -1594,12 +1590,6 @@ export class MapRenderer {
       this.addEffectBehindSprite(effect);
     }
 
-    const drawX = Math.floor(
-      mirrored
-        ? this._gameWidth - screenX - frame.w - frame.mirroredXOffset
-        : screenX + frame.xOffset,
-    );
-
     let alpha = 1;
     if (meta.transparent && !dying) alpha = 0.4;
     else if (meta.transparent && dying)
@@ -1609,10 +1599,12 @@ export class MapRenderer {
     const sprite = this._spritePool.acquire();
     sprite.texture = texture;
     if (mirrored) {
+      // scale.x = -1 draws leftward from sprite.x, so place the right edge
+      // at screenX + mirroredXOffset + frame.w to get left edge at screenX + mirroredXOffset
       sprite.scale.x = -1;
-      sprite.x = drawX + frame.w;
+      sprite.x = Math.floor(screenX + frame.mirroredXOffset + frame.w);
     } else {
-      sprite.x = drawX;
+      sprite.x = Math.floor(screenX + frame.xOffset);
     }
     sprite.y = screenY;
     sprite.alpha = alpha;
