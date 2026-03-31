@@ -778,7 +778,7 @@ export class MapRenderer {
       }
     }
 
-    if (animation) {
+    if (animation && !(animation instanceof CharacterSpellChantAnimation)) {
       animation.renderedFirstFrame = true;
     }
 

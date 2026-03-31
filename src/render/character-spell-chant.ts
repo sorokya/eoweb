@@ -22,12 +22,9 @@ export class CharacterSpellChantAnimation extends Animation {
     this.ticks = castTime * TICKS_PER_CAST_TIME - 1;
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d')!;
-
-    console.log('New Chant', this);
   }
 
   tick(): void {
-    console.log('Chant tick', this);
     if (this.ticks === 0 || !this.renderedFirstFrame) {
       return;
     }
