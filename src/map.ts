@@ -1538,6 +1538,7 @@ export class MapRenderer {
         !bubble &&
         !bar &&
         !(animation instanceof CharacterDeathAnimation) &&
+        !(animation instanceof CharacterSpellChantAnimation) &&
         character &&
         (!character.invisible || this.client.admin !== AdminLevel.Player)
       ) {
