@@ -128,7 +128,7 @@ export class MouseController {
     if (
       this.client.state !== GameState.InGame ||
       this.client.typing ||
-      e.target !== ui
+      (e.target !== ui && ui.contains(e.target as Node))
     ) {
       return;
     }
@@ -300,7 +300,7 @@ export class MouseController {
     if (
       this.client.state !== GameState.InGame ||
       this.client.typing ||
-      e.target !== ui
+      (e.target !== ui && ui.contains(e.target as Node))
     ) {
       return;
     }
