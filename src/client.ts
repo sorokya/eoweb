@@ -305,8 +305,8 @@ export class Client {
   async initPixi() {
     this.app = new Application();
     await this.app.init({
-      width: this.width,
-      height: this.height,
+      width: this.viewportController.getGameWidth(),
+      height: this.viewportController.getGameHeight(),
       background: '#000000',
       antialias: false,
     });
@@ -330,6 +330,9 @@ export class Client {
     this.app.stage.addChild(this.worldContainer);
     this.app.stage.addChild(this.uiContainer);
     this.app.stage.addChild(this.minimapContainer);
+
+    // Sync CSS size now that the canvas is in the DOM
+    this.viewportController.resizeCanvases();
   }
 
   getCharacterById(id: number): CharacterMapInfo | undefined {

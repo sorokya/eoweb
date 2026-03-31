@@ -823,8 +823,6 @@ export class MapRenderer {
     const viewportKey = `${player.x},${player.y},${rangeX},${rangeY}`;
     if (viewportKey !== this.cachedViewportKey) {
       this.cachedStaticEntities.length = 0;
-      const groundReady =
-        this.groundTextures.length > 0 && this.groundTextures[0] !== null;
       for (let y = player.y - rangeY; y <= player.y + rangeY; y++) {
         if (y < 0 || y > this.client.map.height) continue;
         for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
@@ -839,13 +837,7 @@ export class MapRenderer {
               layer: t.layer,
               depth: t.depth,
             };
-            if (t.layer === Layer.Ground || t.layer === Layer.Shadow) {
-              if (!groundReady) {
-                this.cachedStaticEntities.push(entity);
-              }
-            } else {
-              this.cachedStaticEntities.push(entity);
-            }
+            this.cachedStaticEntities.push(entity);
           }
         }
       }
@@ -970,44 +962,10 @@ export class MapRenderer {
       }
     }
 
-    if (this.groundDirty) {
-      this.renderGround();
-    }
-
     // Clear scene graph containers and reset sprite pool
     this.client.worldContainer.removeChildren();
     this.client.uiContainer.removeChildren();
     this._spritePool.reset();
-
-    // Blit ground textures via sprites
-    if (this.groundTextures.length > 0 && this.groundTextures[0] !== null) {
-      const srcX = Math.round(
-        playerScreen.x - this._halfGameWidth + this.groundOriginX,
-      );
-      const srcY = Math.round(
-        playerScreen.y - this._halfGameHeight + this.groundOriginY,
-      );
-
-      this.addGroundSprite(
-        this.groundTextures[0]!,
-        srcX,
-        srcY,
-        gameWidth,
-        gameHeight,
-      );
-      if (
-        this.groundFrameCount > 1 &&
-        this.groundTextures[1 + this.animationFrame]
-      ) {
-        this.addGroundSprite(
-          this.groundTextures[1 + this.animationFrame]!,
-          srcX,
-          srcY,
-          gameWidth,
-          gameHeight,
-        );
-      }
-    }
 
     // Merge-sort static + dynamic entities
     dynamics.sort((a, b) => a.depth - b.depth);
@@ -1213,20 +1171,24 @@ export class MapRenderer {
   private tileScreenPosition(
     entity: Entity,
     playerScreen: Vector2,
-    tile: { w: number; h: number },
+    tile: { w: number; h: number; xOffset: number; yOffset: number },
   ) {
     const offset = this.getOffset(entity.layer, tile.w, tile.h);
     const screenX = Math.floor(
       (entity.x - entity.y) * HALF_TILE_WIDTH -
+        HALF_TILE_WIDTH -
         playerScreen.x +
         this._halfGameWidth +
-        offset.x,
+        offset.x +
+        tile.xOffset,
     );
     const screenY = Math.floor(
       (entity.x + entity.y) * HALF_TILE_HEIGHT -
+        HALF_TILE_HEIGHT -
         playerScreen.y +
         this._halfGameHeight +
-        offset.y,
+        offset.y +
+        tile.yOffset,
     );
     return { screenX, screenY };
   }
