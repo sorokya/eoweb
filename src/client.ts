@@ -30,6 +30,7 @@ import {
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
 import { Notyf } from 'notyf';
+import { Application, Container } from 'pixi.js';
 import { Atlas } from './atlas';
 import type { PacketBus } from './bus';
 import { clearRectangles } from './collision';
@@ -97,8 +98,10 @@ import type { Vector2 } from './vector';
 export class Client {
   private emitter: Emitter<ClientEvents>;
   container!: HTMLDivElement;
-  canvas!: HTMLCanvasElement;
-  ctx!: CanvasRenderingContext2D;
+  app!: Application;
+  worldContainer!: Container;
+  uiContainer!: Container;
+  minimapContainer!: Container;
   width = 800;
   height = 600;
   zoom = 1;
@@ -216,9 +219,6 @@ export class Client {
 
   constructor() {
     this.container = document.querySelector('#game-container')!;
-    this.canvas = document.querySelector('#game')!;
-    this.ctx = this.canvas.getContext('2d', { alpha: false })!;
-    this.ctx.imageSmoothingEnabled = false;
     this.emitter = mitt<ClientEvents>();
     this.version = new Version();
     this.version.major = 0;
@@ -300,6 +300,36 @@ export class Client {
     });
     this.atlas = new Atlas(this);
     this.sans11 = new Sans11Font(this.atlas);
+  }
+
+  async initPixi() {
+    this.app = new Application();
+    await this.app.init({
+      width: this.width,
+      height: this.height,
+      background: '#000000',
+      antialias: false,
+    });
+
+    this.app.renderer.canvas.id = 'game';
+    this.app.renderer.canvas.style.imageRendering = 'pixelated';
+
+    const gameEl = document.querySelector('#game');
+    if (gameEl) {
+      gameEl.replaceWith(this.app.renderer.canvas);
+    } else {
+      document
+        .querySelector('#game-container')!
+        .appendChild(this.app.renderer.canvas);
+    }
+
+    this.worldContainer = new Container();
+    this.uiContainer = new Container();
+    this.minimapContainer = new Container();
+
+    this.app.stage.addChild(this.worldContainer);
+    this.app.stage.addChild(this.uiContainer);
+    this.app.stage.addChild(this.minimapContainer);
   }
 
   getCharacterById(id: number): CharacterMapInfo | undefined {
@@ -524,10 +554,8 @@ export class Client {
   }
 
   render(interpolation: number) {
-    this.ctx.fillStyle = '#000';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    this.mapRenderer.render(this.ctx, interpolation);
-    this.minimapRenderer.render(this.ctx, interpolation);
+    this.mapRenderer.update(interpolation);
+    this.minimapRenderer.update(interpolation);
   }
 
   setMap(map: Emf) {

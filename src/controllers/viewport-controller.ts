@@ -72,35 +72,15 @@ export class ViewportController {
     if (!this.userOverride) this.setZoom(viewportWidth >= 1280 ? 2 : 1);
     const w = Math.floor(viewportWidth / this.zoom);
     const h = Math.floor(viewportHeight / this.zoom);
-    const snapshot =
-      this.client.canvas.width > 0
-        ? this.client.ctx.getImageData!(
-            0,
-            0,
-            this.client.canvas.width,
-            this.client.canvas.height,
-          )
-        : null;
-    const prevW = this.client.canvas.width;
-    const prevH = this.client.canvas.height;
-    this.client.canvas.width = w;
-    this.client.canvas.height = h;
-    this.client.canvas.style.width = `${w * this.zoom}px`;
-    this.client.canvas.style.height = `${h * this.zoom}px`;
-    this.client.ctx.imageSmoothingEnabled! = false;
-    if (snapshot && prevW > 0) {
-      const temp = document.createElement('canvas');
-      temp.width = prevW;
-      temp.height = prevH;
-      const tempCtx = temp.getContext('2d');
-      if (tempCtx) {
-        tempCtx.putImageData(snapshot, 0, 0);
-        this.client.ctx.drawImage!(temp, 0, 0, w, h);
-      }
-    } else {
-      this.client.ctx.fillStyle! = '#000';
-      this.client.ctx.fillRect!(0, 0, w, h);
+
+    // Resize the PixiJS renderer canvas if it's been initialised
+    if (this.client.app) {
+      const canvas = this.client.app.renderer.canvas;
+      canvas.style.width = `${w * this.zoom}px`;
+      canvas.style.height = `${h * this.zoom}px`;
+      this.client.app.renderer.resize(w, h);
     }
+
     this.setGameSize(w, h);
     this.mobile = viewportWidth < 940;
     this.client.emit('resize', undefined);

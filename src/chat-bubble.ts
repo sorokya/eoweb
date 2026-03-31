@@ -1,3 +1,4 @@
+import { CanvasSource, Sprite, Texture } from 'pixi.js';
 import { COLORS } from './consts';
 import { type Font, TextAlign } from './fonts/base';
 import type { Vector2 } from './vector';
@@ -19,6 +20,8 @@ export class ChatBubble {
   private font: Font;
   private foreground: string;
   private background: string;
+  private source: CanvasSource | null = null;
+  private texture: Texture | null = null;
 
   constructor(
     font: Font,
@@ -99,6 +102,20 @@ export class ChatBubble {
       Math.floor(position.x - (this.canvas.width >> 1)),
       Math.floor(position.y - this.canvas.height),
     );
+  }
+
+  getSprite(position: Vector2): Sprite | null {
+    if (!this.rendered) {
+      this.render(position, document.createElement('canvas').getContext('2d')!);
+    }
+    if (!this.source) {
+      this.source = new CanvasSource({ resource: this.canvas });
+      this.texture = new Texture({ source: this.source });
+    }
+    const sprite = new Sprite(this.texture!);
+    sprite.x = Math.floor(position.x - (this.canvas.width >> 1));
+    sprite.y = Math.floor(position.y - this.canvas.height);
+    return sprite;
   }
 
   private wrapText(text: string) {
