@@ -1,7 +1,7 @@
 import { RANGED_ATTACK_TICKS } from '../consts';
-import { CharacterAnimation } from './character-base-animation';
+import { Animation } from './animation';
 
-export class CharacterRangedAttackAnimation extends CharacterAnimation {
+export class CharacterRangedAttackAnimation extends Animation {
   constructor() {
     super();
     this.ticks = RANGED_ATTACK_TICKS - 1;

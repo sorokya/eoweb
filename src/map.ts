@@ -975,22 +975,10 @@ export class MapRenderer {
       if (emote) {
         this.addEmoteSprite(emote, topCenter);
       }
-      if (
-        animation instanceof CharacterSpellChantAnimation &&
-        !animation.animationFrame
-      ) {
-        // spell chant visual is canvas-based — render to a sprite and add to uiContainer
-        const tmpCanvas = document.createElement('canvas');
-        const tmpCtx = tmpCanvas.getContext('2d')!;
-        animation.render(topCenter, tmpCtx);
-        if (tmpCanvas.width > 0 && tmpCanvas.height > 0) {
-          const source = new CanvasSource({ resource: tmpCanvas });
-          const tex = new Texture({ source });
-          const sp = new Sprite(tex);
-          sp.x = 0;
-          sp.y = 0;
-          this.client.uiContainer.addChild(sp);
-        }
+      if (animation instanceof CharacterSpellChantAnimation) {
+        const bs = animation.getSprite(topCenter);
+        console.log('Chant bs', bs);
+        if (bs) this.client.uiContainer.addChild(bs);
       }
     }
   }

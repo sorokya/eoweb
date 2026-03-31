@@ -1,7 +1,7 @@
 import { ATTACK_TICKS } from '../consts';
-import { NpcAnimation } from './npc-base-animation';
+import { Animation } from './animation';
 
-export class NpcAttackAnimation extends NpcAnimation {
+export class NpcAttackAnimation extends Animation {
   constructor() {
     super();
     this.ticks = ATTACK_TICKS - 1;

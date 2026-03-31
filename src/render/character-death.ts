@@ -1,9 +1,9 @@
 import { DEATH_TICKS } from '../consts';
-import { CharacterAnimation } from './character-base-animation';
+import { Animation } from './animation';
 
-export class CharacterDeathAnimation extends CharacterAnimation {
-  base: CharacterAnimation | undefined;
-  constructor(base?: CharacterAnimation) {
+export class CharacterDeathAnimation extends Animation {
+  base: Animation | undefined;
+  constructor(base?: Animation) {
     super();
     this.ticks = DEATH_TICKS - 1;
     this.base = base;

@@ -1,15 +1,18 @@
+import { CanvasSource, Sprite, Texture } from 'pixi.js';
 import { TICKS_PER_CAST_TIME } from '../consts';
 import { type Font, TextAlign } from '../fonts/base';
 import type { Vector2 } from '../vector';
-import { CharacterAnimation } from './character-base-animation';
+import { Animation } from './animation';
 
-export class CharacterSpellChantAnimation extends CharacterAnimation {
+export class CharacterSpellChantAnimation extends Animation {
   spellId: number;
   chant: string;
-  private rendered = false;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private font: Font;
+
+  private source: CanvasSource | null = null;
+  private texture: Texture | null = null;
 
   constructor(font: Font, spellId: number, chant: string, castTime: number) {
     super();
@@ -19,9 +22,12 @@ export class CharacterSpellChantAnimation extends CharacterAnimation {
     this.ticks = castTime * TICKS_PER_CAST_TIME - 1;
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d')!;
+
+    console.log('New Chant', this);
   }
 
   tick(): void {
+    console.log('Chant tick', this);
     if (this.ticks === 0 || !this.renderedFirstFrame) {
       return;
     }
@@ -32,8 +38,8 @@ export class CharacterSpellChantAnimation extends CharacterAnimation {
     this.animationFrame = Math.floor((this.ticks % 4) / 2);
   }
 
-  render(position: Vector2, ctx: CanvasRenderingContext2D) {
-    if (!this.rendered) {
+  render() {
+    if (!this.renderedFirstFrame) {
       const { width, height } = this.font.measureText(this.chant);
       this.canvas.width = width + 1;
       this.canvas.height = height + 1;
@@ -54,13 +60,21 @@ export class CharacterSpellChantAnimation extends CharacterAnimation {
         TextAlign.None,
       );
 
-      this.rendered = true;
+      this.renderedFirstFrame = true;
     }
+  }
 
-    ctx.drawImage(
-      this.canvas,
-      Math.floor(position.x - this.canvas.width / 2),
-      Math.floor(position.y - this.canvas.height - 4),
-    );
+  getSprite(position: Vector2): Sprite | null {
+    if (!this.renderedFirstFrame) {
+      this.render();
+    }
+    if (!this.source) {
+      this.source = new CanvasSource({ resource: this.canvas });
+      this.texture = new Texture({ source: this.source });
+    }
+    const sprite = new Sprite(this.texture!);
+    sprite.x = Math.floor(position.x - (this.canvas.width >> 1));
+    sprite.y = Math.floor(position.y - this.canvas.height - 4);
+    return sprite;
   }
 }

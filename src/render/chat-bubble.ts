@@ -1,7 +1,8 @@
 import { CanvasSource, Sprite, Texture } from 'pixi.js';
-import { COLORS } from './consts';
-import { type Font, TextAlign } from './fonts/base';
-import type { Vector2 } from './vector';
+import { COLORS } from '../consts';
+import { type Font, TextAlign } from '../fonts/base';
+import type { Vector2 } from '../vector';
+import { Animation } from './animation';
 
 const softLimit = 100;
 const hardLimit = 150;
@@ -11,13 +12,12 @@ const radius = 6;
 const triangleHeight = 6;
 const triangleWidth = 3;
 
-export class ChatBubble {
-  ticks: number;
+export class ChatBubble extends Animation {
   private message: string;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private rendered = false;
   private font: Font;
+
   private foreground: string;
   private background: string;
   private source: CanvasSource | null = null;
@@ -29,6 +29,7 @@ export class ChatBubble {
     foreground = COLORS.ChatBubble,
     background = COLORS.ChatBubbleBackground,
   ) {
+    super();
     this.font = font;
     this.message = message;
     this.foreground = foreground;
@@ -40,11 +41,15 @@ export class ChatBubble {
   }
 
   tick() {
+    if (this.ticks === 0 || !this.renderedFirstFrame) {
+      return;
+    }
+
     this.ticks = Math.max(this.ticks - 1, 0);
   }
 
-  render(position: Vector2, ctx: CanvasRenderingContext2D) {
-    if (!this.rendered) {
+  render() {
+    if (!this.renderedFirstFrame) {
       const lines = this.wrapText(this.message);
       const width =
         Math.min(
@@ -94,19 +99,13 @@ export class ChatBubble {
         );
       }
 
-      this.rendered = true;
+      this.renderedFirstFrame = true;
     }
-
-    ctx.drawImage(
-      this.canvas,
-      Math.floor(position.x - (this.canvas.width >> 1)),
-      Math.floor(position.y - this.canvas.height),
-    );
   }
 
   getSprite(position: Vector2): Sprite | null {
-    if (!this.rendered) {
-      this.render(position, document.createElement('canvas').getContext('2d')!);
+    if (!this.renderedFirstFrame) {
+      this.render();
     }
     if (!this.source) {
       this.source = new CanvasSource({ resource: this.canvas });

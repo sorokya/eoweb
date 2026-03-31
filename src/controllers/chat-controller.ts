@@ -7,9 +7,9 @@ import {
   TalkReportClientPacket,
   TalkTellClientPacket,
 } from 'eolib';
-import { ChatBubble } from '../chat-bubble';
 import type { Client } from '../client';
 import { COLORS, MAX_CHAT_LENGTH } from '../consts';
+import { ChatBubble } from '../render/chat-bubble';
 import { playSfxById } from '../sfx';
 import { ChatIcon, ChatTab, SfxId } from '../types';
 import { capitalize, makeDrunk } from '../utils';

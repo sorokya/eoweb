@@ -1,7 +1,7 @@
 import { ATTACK_TICKS } from '../consts';
-import { CharacterAnimation } from './character-base-animation';
+import { Animation } from './animation';
 
-export class CharacterAttackAnimation extends CharacterAnimation {
+export class CharacterAttackAnimation extends Animation {
   constructor() {
     super();
     this.ticks = ATTACK_TICKS - 1;

@@ -1,9 +1,9 @@
 import type { Direction } from 'eolib';
 import { WALK_TICKS } from '../consts';
 import type { Vector2 } from '../vector';
-import { CharacterAnimation } from './character-base-animation';
+import { Animation } from './animation';
 
-export class CharacterWalkAnimation extends CharacterAnimation {
+export class CharacterWalkAnimation extends Animation {
   from: Vector2;
   to: Vector2;
   direction: Direction;

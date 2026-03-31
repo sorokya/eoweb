@@ -1,9 +1,9 @@
 import type { Direction } from 'eolib';
 import { WALK_TICKS } from '../consts';
 import type { Vector2 } from '../vector';
-import { NpcAnimation } from './npc-base-animation';
+import { Animation } from './animation';
 
-export class NpcWalkAnimation extends NpcAnimation {
+export class NpcWalkAnimation extends Animation {
   from: Vector2;
   to: Vector2;
   direction: Direction;
