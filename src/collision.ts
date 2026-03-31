@@ -1,4 +1,3 @@
-import type { Coords } from 'eolib';
 import type { Vector2 } from './vector';
 
 export class Rectangle {
@@ -16,7 +15,7 @@ type EntityRect = {
 };
 
 type CoordsRect = {
-  coords: Coords;
+  coords: Vector2;
   rectangle: Rectangle;
 };
 
@@ -117,7 +116,7 @@ export function getNpcIntersecting(point: Vector2): EntityRect | null {
   return null;
 }
 
-export function setDoorRectangle(coords: Coords, rectangle: Rectangle) {
+export function setDoorRectangle(coords: Vector2, rectangle: Rectangle) {
   const existing = doorRectangles.find(
     (r) => r.coords.x === coords.x && r.coords.y === coords.y,
   );
@@ -127,12 +126,12 @@ export function setDoorRectangle(coords: Coords, rectangle: Rectangle) {
   }
 
   doorRectangles.push({
-    coords,
+    coords: { x: coords.x, y: coords.y },
     rectangle,
   });
 }
 
-export function getDoorIntersecting(point: Vector2): Coords | null {
+export function getDoorIntersecting(point: Vector2): Vector2 | null {
   for (const { coords, rectangle } of doorRectangles) {
     if (pointIntersectRect(point, rectangle)) {
       return coords;
@@ -142,7 +141,7 @@ export function getDoorIntersecting(point: Vector2): Coords | null {
   return null;
 }
 
-export function setSignRectangle(coords: Coords, rectangle: Rectangle) {
+export function setSignRectangle(coords: Vector2, rectangle: Rectangle) {
   const existing = signRectangles.find(
     (r) => r.coords.x === coords.x && r.coords.y === coords.y,
   );
@@ -152,12 +151,12 @@ export function setSignRectangle(coords: Coords, rectangle: Rectangle) {
   }
 
   signRectangles.push({
-    coords,
+    coords: { x: coords.x, y: coords.y },
     rectangle,
   });
 }
 
-export function getSignIntersecting(point: Vector2): Coords | null {
+export function getSignIntersecting(point: Vector2): Vector2 | null {
   for (const { coords, rectangle } of signRectangles) {
     if (pointIntersectRect(point, rectangle)) {
       return coords;
@@ -167,7 +166,7 @@ export function getSignIntersecting(point: Vector2): Coords | null {
   return null;
 }
 
-export function setLockerRectangle(coords: Coords, rectangle: Rectangle) {
+export function setLockerRectangle(coords: Vector2, rectangle: Rectangle) {
   const existing = lockerRectangles.find(
     (r) => r.coords.x === coords.x && r.coords.y === coords.y,
   );
@@ -177,12 +176,12 @@ export function setLockerRectangle(coords: Coords, rectangle: Rectangle) {
   }
 
   lockerRectangles.push({
-    coords,
+    coords: { x: coords.x, y: coords.y },
     rectangle,
   });
 }
 
-export function getLockerIntersecting(point: Vector2): Coords | null {
+export function getLockerIntersecting(point: Vector2): Vector2 | null {
   for (const { coords, rectangle } of lockerRectangles) {
     if (pointIntersectRect(point, rectangle)) {
       return coords;
@@ -192,7 +191,7 @@ export function getLockerIntersecting(point: Vector2): Coords | null {
   return null;
 }
 
-export function setBoardRectangle(coords: Coords, rectangle: Rectangle) {
+export function setBoardRectangle(coords: Vector2, rectangle: Rectangle) {
   const existing = boardRectangles.find(
     (r) => r.coords.x === coords.x && r.coords.y === coords.y,
   );
@@ -202,12 +201,12 @@ export function setBoardRectangle(coords: Coords, rectangle: Rectangle) {
   }
 
   boardRectangles.push({
-    coords,
+    coords: { x: coords.x, y: coords.y },
     rectangle,
   });
 }
 
-export function getBoardIntersecting(point: Vector2): Coords | null {
+export function getBoardIntersecting(point: Vector2): Vector2 | null {
   for (const { coords, rectangle } of boardRectangles) {
     if (pointIntersectRect(point, rectangle)) {
       return coords;

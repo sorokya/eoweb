@@ -41,7 +41,7 @@ export class MapController {
     );
   }
 
-  chestAt(coords: Coords): boolean {
+  chestAt(coords: Vector2): boolean {
     return this.client.map!.tileSpecRows.some(
       (r) =>
         r.y === coords.y &&
@@ -51,7 +51,7 @@ export class MapController {
     );
   }
 
-  lockerAt(coords: Coords): boolean {
+  lockerAt(coords: Vector2): boolean {
     return this.client.map!.tileSpecRows.some(
       (r) =>
         r.y === coords.y &&
@@ -61,7 +61,7 @@ export class MapController {
     );
   }
 
-  boardAt(coords: Coords): MapTileSpec | undefined {
+  boardAt(coords: Vector2): MapTileSpec | undefined {
     for (const r of this.client.map!.tileSpecRows) {
       if (r.y !== coords.y) continue;
       for (const t of r.tiles) {
@@ -142,17 +142,19 @@ export class MapController {
     return false;
   }
 
-  openLocker(coords: Coords): void {
+  openLocker(coords: Vector2): void {
     if (!this.isAdjacentToSpec(MapTileSpec.BankVault)) {
       return;
     }
 
     const packet = new LockerOpenClientPacket();
-    packet.lockerCoords = coords;
+    packet.lockerCoords = new Coords();
+    packet.lockerCoords.x = coords.x;
+    packet.lockerCoords.y = coords.y;
     this.client.bus!.send(packet);
   }
 
-  openDoor(coords: Coords): void {
+  openDoor(coords: Vector2): void {
     const door = this.getDoor(coords);
     if (!door || door.open) {
       return;
@@ -182,15 +184,19 @@ export class MapController {
     }
 
     const packet = new DoorOpenClientPacket();
-    packet.coords = coords;
+    packet.coords = new Coords();
+    packet.coords.x = coords.x;
+    packet.coords.y = coords.y;
     this.client.bus!.send(packet);
   }
 
-  sitChair(coords: Coords): void {
+  sitChair(coords: Vector2): void {
     const packet = new ChairRequestClientPacket();
     packet.sitAction = SitAction.Sit;
     packet.sitActionData = new ChairRequestClientPacket.SitActionDataSit();
-    packet.sitActionData.coords = coords;
+    packet.sitActionData.coords = new Coords();
+    packet.sitActionData.coords.x = coords.x;
+    packet.sitActionData.coords.y = coords.y;
     this.client.bus!.send(packet);
   }
 
