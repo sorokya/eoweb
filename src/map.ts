@@ -66,6 +66,7 @@ import { GameState } from './types';
 import { capitalize } from './utils/capitalize';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';
+import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 
 enum EntityType {
@@ -165,56 +166,6 @@ const WALK_OFFSETS = [
   },
 ];
 
-class SpritePool {
-  private pool: Sprite[] = [];
-  private head = 0;
-
-  reset() {
-    this.head = 0;
-  }
-
-  acquire(): Sprite {
-    if (this.head < this.pool.length) {
-      const s = this.pool[this.head++];
-      s.alpha = 1;
-      s.tint = 0xffffff;
-      s.scale.set(1);
-      s.visible = true;
-      return s;
-    }
-    const s = new Sprite();
-    s.eventMode = 'none';
-    this.pool.push(s);
-    this.head++;
-    return s;
-  }
-}
-
-class GraphicsPool {
-  private pool: Graphics[] = [];
-  private head = 0;
-
-  reset() {
-    this.head = 0;
-  }
-
-  acquire(): Graphics {
-    if (this.head < this.pool.length) {
-      const g = this.pool[this.head++];
-      g.clear();
-      g.alpha = 1;
-      g.scale.set(1);
-      g.visible = true;
-      return g;
-    }
-    const g = new Graphics();
-    g.eventMode = 'none';
-    this.pool.push(g);
-    this.head++;
-    return g;
-  }
-}
-
 export class MapRenderer {
   client: Client;
   animationFrame = 0;
@@ -240,9 +191,173 @@ export class MapRenderer {
   private readonly _tileEffects: EffectAnimation[] = [];
   private readonly _charEffects = new Map<number, EffectAnimation[]>();
   private readonly _npcEffects = new Map<number, EffectAnimation[]>();
-  // Sprite pool for PixiJS scene-graph rendering
-  private readonly _spritePool = new SpritePool();
-  private readonly _graphicsPool = new GraphicsPool();
+  private readonly _worldSprites = new Map<string, Sprite>();
+  private readonly _uiSprites = new Map<string, Sprite>();
+  private readonly _uiGraphics = new Map<string, Graphics>();
+  private readonly _seenWorldSprites = new Set<string>();
+  private readonly _seenUiSprites = new Set<string>();
+  private readonly _seenUiGraphics = new Set<string>();
+  private _worldOrder = 0;
+  private _uiOrder = 0;
+
+  private labelSprite(sprite: Sprite, label: string) {
+    sprite.label = label;
+    if (sprite.texture) {
+      sprite.texture.label = `${label}:texture`;
+    }
+  }
+
+  private labelGraphics(graphics: Graphics, label: string) {
+    graphics.label = label;
+  }
+
+  private beginFrame() {
+    this.client.worldContainer.sortableChildren = true;
+    this.client.uiContainer.sortableChildren = true;
+    this._seenWorldSprites.clear();
+    this._seenUiSprites.clear();
+    this._seenUiGraphics.clear();
+    this._worldOrder = 0;
+    this._uiOrder = 0;
+  }
+
+  private endFrame() {
+    this.sweepSprites(
+      this._worldSprites,
+      this._seenWorldSprites,
+      this.client.worldContainer,
+    );
+    this.sweepSprites(
+      this._uiSprites,
+      this._seenUiSprites,
+      this.client.uiContainer,
+    );
+    this.sweepGraphics(
+      this._uiGraphics,
+      this._seenUiGraphics,
+      this.client.uiContainer,
+    );
+  }
+
+  private clearSceneNodes() {
+    for (const sprite of this._worldSprites.values()) {
+      this.client.worldContainer.removeChild(sprite);
+      sprite.destroy({ texture: false });
+    }
+    for (const sprite of this._uiSprites.values()) {
+      this.client.uiContainer.removeChild(sprite);
+      sprite.destroy({ texture: false });
+    }
+    for (const graphics of this._uiGraphics.values()) {
+      this.client.uiContainer.removeChild(graphics);
+      graphics.destroy();
+    }
+    this._worldSprites.clear();
+    this._uiSprites.clear();
+    this._uiGraphics.clear();
+    this._seenWorldSprites.clear();
+    this._seenUiSprites.clear();
+    this._seenUiGraphics.clear();
+  }
+
+  private markPersistentWorldNodes() {
+    this._seenWorldSprites.add('cursor:base');
+  }
+
+  private sweepSprites(
+    registry: Map<string, Sprite>,
+    seen: Set<string>,
+    container: { removeChild: (child: Sprite) => void },
+    destroy = false,
+  ) {
+    for (const [key, sprite] of registry) {
+      if (!seen.has(key)) {
+        container.removeChild(sprite);
+        if (destroy) {
+          sprite.destroy({ texture: false });
+        }
+        registry.delete(key);
+      }
+    }
+  }
+
+  private sweepGraphics(
+    registry: Map<string, Graphics>,
+    seen: Set<string>,
+    container: { removeChild: (child: Graphics) => void },
+    destroy = false,
+  ) {
+    for (const [key, graphics] of registry) {
+      if (!seen.has(key)) {
+        container.removeChild(graphics);
+        if (destroy) {
+          graphics.destroy();
+        }
+        registry.delete(key);
+      }
+    }
+  }
+
+  private ensureWorldSprite(key: string, label: string): Sprite {
+    this._seenWorldSprites.add(key);
+    let sprite = this._worldSprites.get(key);
+    if (!sprite) {
+      sprite = new Sprite();
+      sprite.eventMode = 'none';
+      sprite.tint = 0xffffff;
+      this._worldSprites.set(key, sprite);
+      this.client.worldContainer.addChild(sprite);
+    }
+    sprite.alpha = 1;
+    sprite.scale.set(1);
+    sprite.visible = true;
+    sprite.zIndex = this._worldOrder++;
+    this.labelSprite(sprite, label);
+    return sprite;
+  }
+
+  private ensureUiSprite(key: string, label: string): Sprite {
+    this._seenUiSprites.add(key);
+    let sprite = this._uiSprites.get(key);
+    if (!sprite) {
+      sprite = new Sprite();
+      sprite.eventMode = 'none';
+      this._uiSprites.set(key, sprite);
+      this.client.uiContainer.addChild(sprite);
+    }
+    sprite.alpha = 1;
+    sprite.tint = 0xffffff;
+    sprite.scale.set(1);
+    sprite.visible = true;
+    sprite.zIndex = this._uiOrder++;
+    this.labelSprite(sprite, label);
+    return sprite;
+  }
+
+  private ensureUiGraphics(key: string, label: string): Graphics {
+    this._seenUiGraphics.add(key);
+    let graphics = this._uiGraphics.get(key);
+    if (!graphics) {
+      graphics = new Graphics();
+      graphics.eventMode = 'none';
+      this._uiGraphics.set(key, graphics);
+      this.client.uiContainer.addChild(graphics);
+    }
+    graphics.clear();
+    graphics.alpha = 1;
+    graphics.scale.set(1);
+    graphics.visible = true;
+    graphics.zIndex = this._uiOrder++;
+    this.labelGraphics(graphics, label);
+    return graphics;
+  }
+
+  private getEffectNodeKey(
+    effectKeyBase: string,
+    layer: 'behind' | 'transparent' | 'front',
+  ): string {
+    return `${effectKeyBase}:${layer}`;
+  }
 
   constructor(client: Client) {
     this.client = client;
@@ -295,6 +410,7 @@ export class MapRenderer {
 
     this.buildingCache = false;
     this.cachedViewportKey = ''; // Invalidate viewport cache on map change
+    this.clearSceneNodes();
   }
 
   getRequiredTileIds(): { gfxType: GfxType; graphicId: number }[] {
@@ -500,11 +616,28 @@ export class MapRenderer {
       }
     }
 
-    if (this.client.mouseCoords && inGame) {
-      const spec = this.getTileSpec(
-        this.client.mouseCoords.x,
-        this.client.mouseCoords.y,
-      );
+    let renderMouseCoords: Vector2 | undefined;
+    if (this.client.mousePosition) {
+      const mouseWorldX =
+        this.client.mousePosition.x - this._halfGameWidth + playerScreen.x;
+      const mouseWorldY =
+        this.client.mousePosition.y -
+        this._halfGameHeight +
+        playerScreen.y +
+        HALF_TILE_HEIGHT;
+      const coords = screenToIso({ x: mouseWorldX, y: mouseWorldY });
+      if (
+        coords.x >= 0 &&
+        coords.y >= 0 &&
+        coords.x <= this.client.map.width &&
+        coords.y <= this.client.map.height
+      ) {
+        renderMouseCoords = coords;
+      }
+    }
+
+    if (renderMouseCoords && inGame) {
+      const spec = this.getTileSpec(renderMouseCoords.x, renderMouseCoords.y);
       if (
         spec === null ||
         ![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)
@@ -533,46 +666,42 @@ export class MapRenderer {
           ].includes(spec!) ||
           this.client.nearby.characters.some(
             (c) =>
-              c.coords.x === this.client.mouseCoords!.x &&
-              c.coords.y === this.client.mouseCoords!.y,
+              c.coords.x === renderMouseCoords!.x &&
+              c.coords.y === renderMouseCoords!.y,
           ) ||
           this.client.nearby.npcs.some(
             (n) =>
-              n.coords.x === this.client.mouseCoords!.x &&
-              n.coords.y === this.client.mouseCoords!.y,
+              n.coords.x === renderMouseCoords!.x &&
+              n.coords.y === renderMouseCoords!.y,
           )
         ) {
           typeId = 1;
         } else if (
           this.client.nearby.items.some(
             (i) =>
-              i.coords.x === this.client.mouseCoords!.x &&
-              i.coords.y === this.client.mouseCoords!.y,
+              i.coords.x === renderMouseCoords!.x &&
+              i.coords.y === renderMouseCoords!.y,
           )
         ) {
           typeId = 2;
         }
 
         dynamics.push({
-          x: this.client.mouseCoords.x,
-          y: this.client.mouseCoords.y,
+          x: renderMouseCoords.x,
+          y: renderMouseCoords.y,
           type: EntityType.Cursor,
           typeId,
           layer: Layer.Cursor,
           depth: this.calculateDepth(
             Layer.Cursor,
-            this.client.mouseCoords.x,
-            this.client.mouseCoords.y,
+            renderMouseCoords.x,
+            renderMouseCoords.y,
           ),
         });
       }
     }
 
-    // Clear scene graph containers and reset sprite pool
-    this.client.worldContainer.removeChildren();
-    this.client.uiContainer.removeChildren();
-    this._spritePool.reset();
-    this._graphicsPool.reset();
+    this.beginFrame();
 
     // Merge-sort static + dynamic entities
     dynamics.sort((a, b) => a.depth - b.depth);
@@ -610,10 +739,13 @@ export class MapRenderer {
     }
 
     if (!inGame) {
+      this.markPersistentWorldNodes();
+      this.endFrame();
       return;
     }
 
     for (const effect of this._tileEffects) {
+      const effectKeyBase = `tile-effect:${effect.instanceId}`;
       const target = effect.target as EffectTargetTile;
       const tileScreenX = (target.coords.x - target.coords.y) * HALF_TILE_WIDTH;
       const tileScreenY =
@@ -637,9 +769,9 @@ export class MapRenderer {
         TILE_HEIGHT,
       );
       effect.renderedFirstFrame = true;
-      this.addEffectBehindSprite(effect);
-      this.addEffectTransparentSprite(effect);
-      this.addEffectFrontSprite(effect);
+      this.addEffectBehindSprite(effect, effectKeyBase);
+      this.addEffectTransparentSprite(effect, effectKeyBase);
+      this.addEffectFrontSprite(effect, effectKeyBase);
     }
 
     // Player body at 40% alpha (ghost trail effect)
@@ -653,6 +785,8 @@ export class MapRenderer {
 
     this.addNameplateSprites(playerScreen);
     this.addPlayerMenuSprites();
+    this.markPersistentWorldNodes();
+    this.endFrame();
   }
 
   private addTileSprite(entity: Entity, playerScreen: Vector2) {
@@ -725,13 +859,16 @@ export class MapRenderer {
 
     if (!texture) return;
 
-    const sprite = this._spritePool.acquire();
+    const tileKey = `tile:${entity.layer}:${entity.x}:${entity.y}`;
+    const sprite = this.ensureWorldSprite(
+      tileKey,
+      `map:tile layer=${entity.layer} id=${entity.typeId + bmpOffset}`,
+    );
     sprite.texture = texture;
     sprite.position.set(screenX, screenY);
     if (entity.layer === Layer.Shadow) {
       sprite.alpha = 0.2;
     }
-    this.client.worldContainer.addChild(sprite);
 
     if (this.client.mapController.getDoor(this._coordsBuffer)) {
       setDoorRectangle(
@@ -919,6 +1056,7 @@ export class MapRenderer {
       : (this._charEffects.get(character.playerId) ?? []);
 
     for (const effect of effects) {
+      const effectKeyBase = `char-effect:${character.playerId}:${effect.instanceId}`;
       effect.target.rect = {
         position: {
           x:
@@ -934,7 +1072,7 @@ export class MapRenderer {
         depth: 0,
       };
       effect.renderedFirstFrame = true;
-      this.addEffectBehindSprite(effect);
+      this.addEffectBehindSprite(effect, effectKeyBase);
     }
 
     let alpha = alphaOverride ?? 1;
@@ -950,7 +1088,10 @@ export class MapRenderer {
       this.client.admin !== AdminLevel.Player;
 
     if (visible) {
-      const sprite = this._spritePool.acquire();
+      const sprite = this.ensureWorldSprite(
+        `character:${character.playerId}:${justCharacter ? 'ghost' : 'main'}`,
+        `map:character${justCharacter ? '-ghost' : ''} id=${character.playerId}`,
+      );
       sprite.texture = texture;
       if (mirrored) {
         // scale.x = -1 draws leftward from sprite.x, so place the right edge
@@ -962,12 +1103,12 @@ export class MapRenderer {
       }
       sprite.y = screenY;
       sprite.alpha = alpha;
-      this.client.worldContainer.addChild(sprite);
     }
 
     for (const effect of effects) {
-      this.addEffectTransparentSprite(effect);
-      this.addEffectFrontSprite(effect);
+      const effectKeyBase = `char-effect:${character.playerId}:${effect.instanceId}`;
+      this.addEffectTransparentSprite(effect, effectKeyBase);
+      this.addEffectFrontSprite(effect, effectKeyBase);
     }
 
     if (
@@ -1001,14 +1142,30 @@ export class MapRenderer {
       };
 
       if (bubble) {
-        this.addChatBubbleSprites(bubble, topCenter);
+        this.addChatBubbleSprites(
+          `ui:char-bubble:${character.playerId}`,
+          bubble,
+          topCenter,
+        );
       }
-      this.addHealthBarSprites(healthBar!, topCenter);
+      this.addHealthBarSprites(
+        `ui:char-health:${character.playerId}`,
+        healthBar!,
+        topCenter,
+      );
       if (emote) {
-        this.addEmoteSprite(emote, topCenter);
+        this.addEmoteSprite(
+          `ui:char-emote:${character.playerId}`,
+          emote,
+          topCenter,
+        );
       }
       if (animation instanceof CharacterSpellChantAnimation) {
-        this.addSpellChantSprites(animation, topCenter);
+        this.addSpellChantSprites(
+          `ui:char-chant:${character.playerId}`,
+          animation,
+          topCenter,
+        );
       }
     }
   }
@@ -1115,6 +1272,7 @@ export class MapRenderer {
 
     const effects = this._npcEffects.get(npc.index) ?? [];
     for (const effect of effects) {
+      const effectKeyBase = `npc-effect:${npc.index}:${effect.instanceId}`;
       effect.target.rect = {
         position: {
           x:
@@ -1130,7 +1288,7 @@ export class MapRenderer {
         depth: 0,
       };
       effect.renderedFirstFrame = true;
-      this.addEffectBehindSprite(effect);
+      this.addEffectBehindSprite(effect, effectKeyBase);
     }
 
     let alpha = 1;
@@ -1139,7 +1297,10 @@ export class MapRenderer {
       alpha = 0.4 * (dyingTicks / DEATH_TICKS);
     else if (dying) alpha = dyingTicks / DEATH_TICKS;
 
-    const sprite = this._spritePool.acquire();
+    const sprite = this.ensureWorldSprite(
+      `npc:${npc.index}`,
+      `map:npc index=${npc.index} id=${npc.id}`,
+    );
     sprite.texture = texture;
     if (mirrored) {
       // scale.x = -1 draws leftward from sprite.x, so place the right edge
@@ -1151,11 +1312,11 @@ export class MapRenderer {
     }
     sprite.y = screenY;
     sprite.alpha = alpha;
-    this.client.worldContainer.addChild(sprite);
 
     for (const effect of effects) {
-      this.addEffectTransparentSprite(effect);
-      this.addEffectFrontSprite(effect);
+      const effectKeyBase = `npc-effect:${npc.index}:${effect.instanceId}`;
+      this.addEffectTransparentSprite(effect, effectKeyBase);
+      this.addEffectFrontSprite(effect, effectKeyBase);
     }
 
     const bubble = this.client.animationController.npcChats.get(npc.index);
@@ -1183,10 +1344,18 @@ export class MapRenderer {
     };
 
     if (bubble) {
-      this.addChatBubbleSprites(bubble, npcTopCenter);
+      this.addChatBubbleSprites(
+        `ui:npc-bubble:${npc.index}`,
+        bubble,
+        npcTopCenter,
+      );
     }
     if (healthBar) {
-      this.addHealthBarSprites(healthBar, npcTopCenter);
+      this.addHealthBarSprites(
+        `ui:npc-health:${npc.index}`,
+        healthBar,
+        npcTopCenter,
+      );
     }
   }
 
@@ -1213,18 +1382,22 @@ export class MapRenderer {
       tileScreenY - playerScreen.y + this._halfGameHeight + frame.yOffset,
     );
 
-    const sprite = this._spritePool.acquire();
+    const sprite = this.ensureWorldSprite(
+      `item:${item.uid}`,
+      `map:item id=${item.id} uid=${item.uid}`,
+    );
     sprite.texture = texture;
     sprite.position.set(screenX, screenY);
-    this.client.worldContainer.addChild(sprite);
   }
 
   private addCursorSprites(entity: Entity, playerScreen: Vector2) {
+    const mx = entity.x;
+    const my = entity.y;
     if (
-      this.client.mouseCoords!.x < 0 ||
-      this.client.mouseCoords!.x > this.client.map!.width ||
-      this.client.mouseCoords!.y < 0 ||
-      this.client.mouseCoords!.y > this.client.map!.height
+      mx < 0 ||
+      mx > this.client.map!.width ||
+      my < 0 ||
+      my > this.client.map!.height
     ) {
       return;
     }
@@ -1232,8 +1405,6 @@ export class MapRenderer {
     const frame = this.client.atlas.getStaticEntry(StaticAtlasEntryType.Cursor);
     if (!frame) return;
 
-    const mx = this.client.mouseCoords!.x;
-    const my = this.client.mouseCoords!.y;
     const tileScreenX = (mx - my) * HALF_TILE_WIDTH;
     const tileScreenY = (mx + my) * HALF_TILE_HEIGHT;
     const sourceX = entity.typeId * TILE_WIDTH;
@@ -1253,10 +1424,12 @@ export class MapRenderer {
       h: TILE_HEIGHT,
     });
     if (cursorTexture) {
-      const sprite = this._spritePool.acquire();
+      const sprite = this.ensureWorldSprite(
+        'cursor:base',
+        `map:cursor type=${entity.typeId}`,
+      );
       sprite.texture = cursorTexture;
       sprite.position.set(screenX, screenY);
-      this.client.worldContainer.addChild(sprite);
     }
 
     const animation = this.client.animationController.cursorClickAnimation;
@@ -1285,15 +1458,21 @@ export class MapRenderer {
         h: TILE_HEIGHT,
       });
       if (animTexture) {
-        const sprite = this._spritePool.acquire();
+        const sprite = this.ensureWorldSprite(
+          'cursor:click',
+          'map:cursor-click',
+        );
         sprite.texture = animTexture;
         sprite.position.set(animX, animY);
-        this.client.worldContainer.addChild(sprite);
       }
     }
   }
 
-  private addHealthBarSprites(healthBar: HealthBar | null, position: Vector2) {
+  private addHealthBarSprites(
+    nodeKey: string,
+    healthBar: HealthBar | null,
+    position: Vector2,
+  ) {
     if (!healthBar) return;
     healthBar.renderedFirstFrame = true;
 
@@ -1312,10 +1491,9 @@ export class MapRenderer {
       h: 7,
     });
     if (bgTexture) {
-      const bgSprite = this._spritePool.acquire();
+      const bgSprite = this.ensureUiSprite(`${nodeKey}:bg`, 'ui:healthbar-bg');
       bgSprite.texture = bgTexture;
       bgSprite.position.set(position.x - 20, position.y - 7 + offsetY);
-      this.client.uiContainer.addChild(bgSprite);
     }
 
     let barOffsetY: number;
@@ -1337,10 +1515,12 @@ export class MapRenderer {
         h: 3,
       });
       if (fillTexture) {
-        const fillSprite = this._spritePool.acquire();
+        const fillSprite = this.ensureUiSprite(
+          `${nodeKey}:fill`,
+          'ui:healthbar-fill',
+        );
         fillSprite.texture = fillTexture;
         fillSprite.position.set(position.x - 18, position.y - 5 + offsetY);
-        this.client.uiContainer.addChild(fillSprite);
       }
     }
 
@@ -1352,13 +1532,15 @@ export class MapRenderer {
       if (!missFrame) return;
       const missTexture = this.client.atlas.getFrameTexture(missFrame);
       if (missTexture) {
-        const missSprite = this._spritePool.acquire();
+        const missSprite = this.ensureUiSprite(
+          `${nodeKey}:miss`,
+          'ui:healthbar-miss',
+        );
         missSprite.texture = missTexture;
         missSprite.position.set(
           position.x - (missFrame.w >> 1),
           position.y - 35 + healthBar.ticks,
         );
-        this.client.uiContainer.addChild(missSprite);
       }
       return;
     }
@@ -1389,15 +1571,21 @@ export class MapRenderer {
         x += digitWidth;
         continue;
       }
-      const dnSprite = this._spritePool.acquire();
+      const dnSprite = this.ensureUiSprite(
+        `${nodeKey}:digit:${x}:${char}`,
+        `ui:healthbar-digit value=${char}`,
+      );
       dnSprite.texture = digitTexture;
       dnSprite.position.set(x, y);
-      this.client.uiContainer.addChild(dnSprite);
       x += digitWidth;
     }
   }
 
-  private addEmoteSprite(emote: Emote, position: { x: number; y: number }) {
+  private addEmoteSprite(
+    nodeKey: string,
+    emote: Emote,
+    position: { x: number; y: number },
+  ) {
     emote.renderedFirstFrame = true;
 
     const frame = this.client.atlas.getEmoteFrame(
@@ -1409,17 +1597,19 @@ export class MapRenderer {
     const texture = this.client.atlas.getFrameTexture(frame);
     if (!texture) return;
 
-    const sprite = this._spritePool.acquire();
+    const sprite = this.ensureUiSprite(nodeKey, `ui:emote type=${emote.type}`);
     sprite.texture = texture;
     sprite.position.set(
       position.x + frame.xOffset,
       position.y + frame.yOffset - 25,
     );
     sprite.alpha = emote.ticks / EMOTE_ANIMATION_TICKS;
-    this.client.uiContainer.addChild(sprite);
   }
 
-  private addEffectBehindSprite(effect: EffectAnimation) {
+  private addEffectBehindSprite(
+    effect: EffectAnimation,
+    effectKeyBase: string,
+  ) {
     const frame = this.client.atlas.getEffectBehindFrame(
       effect.id,
       effect.animationFrame,
@@ -1429,7 +1619,10 @@ export class MapRenderer {
     const texture = this.client.atlas.getFrameTexture(frame);
     if (!texture) return;
 
-    const sprite = this._spritePool.acquire();
+    const sprite = this.ensureWorldSprite(
+      this.getEffectNodeKey(effectKeyBase, 'behind'),
+      `effect:behind id=${effect.id}`,
+    );
     sprite.texture = texture;
     sprite.position.set(
       Math.floor(
@@ -1445,10 +1638,12 @@ export class MapRenderer {
           frame.yOffset,
       ),
     );
-    this.client.worldContainer.addChild(sprite);
   }
 
-  private addEffectTransparentSprite(effect: EffectAnimation) {
+  private addEffectTransparentSprite(
+    effect: EffectAnimation,
+    effectKeyBase: string,
+  ) {
     const frame = this.client.atlas.getEffectTransparentFrame(
       effect.id,
       effect.animationFrame,
@@ -1458,7 +1653,10 @@ export class MapRenderer {
     const texture = this.client.atlas.getFrameTexture(frame);
     if (!texture) return;
 
-    const sprite = this._spritePool.acquire();
+    const sprite = this.ensureWorldSprite(
+      this.getEffectNodeKey(effectKeyBase, 'transparent'),
+      `effect:transparent id=${effect.id}`,
+    );
     sprite.texture = texture;
     sprite.alpha = 0.4;
     sprite.position.set(
@@ -1475,10 +1673,9 @@ export class MapRenderer {
           frame.yOffset,
       ),
     );
-    this.client.worldContainer.addChild(sprite);
   }
 
-  private addEffectFrontSprite(effect: EffectAnimation) {
+  private addEffectFrontSprite(effect: EffectAnimation, effectKeyBase: string) {
     const frame = this.client.atlas.getEffectFrontFrame(
       effect.id,
       effect.animationFrame,
@@ -1488,7 +1685,10 @@ export class MapRenderer {
     const texture = this.client.atlas.getFrameTexture(frame);
     if (!texture) return;
 
-    const sprite = this._spritePool.acquire();
+    const sprite = this.ensureWorldSprite(
+      this.getEffectNodeKey(effectKeyBase, 'front'),
+      `effect:front id=${effect.id}`,
+    );
     sprite.texture = texture;
     sprite.position.set(
       Math.floor(
@@ -1504,7 +1704,6 @@ export class MapRenderer {
           frame.yOffset,
       ),
     );
-    this.client.worldContainer.addChild(sprite);
   }
 
   private addNameplateSprites(playerScreen: Vector2) {
@@ -1686,11 +1885,25 @@ export class MapRenderer {
       positionY - playerScreen.y + this._halfGameHeight + offset.y,
     );
 
-    this.addAtlasTextSprites(name, { x: drawX + 1, y: drawY + 1 }, '#000');
-    this.addAtlasTextSprites(name, { x: drawX, y: drawY }, color);
+    this.addAtlasTextSprites(
+      'ui:nameplate:shadow',
+      name,
+      { x: drawX + 1, y: drawY + 1 },
+      '#000',
+    );
+    this.addAtlasTextSprites(
+      'ui:nameplate:text',
+      name,
+      { x: drawX, y: drawY },
+      color,
+    );
   }
 
-  private addChatBubbleSprites(bubble: ChatBubble, position: Vector2) {
+  private addChatBubbleSprites(
+    nodeKey: string,
+    bubble: ChatBubble,
+    position: Vector2,
+  ) {
     bubble.renderedFirstFrame = true;
     const layout = bubble.getLayout();
     const left = Math.floor(position.x - (layout.width >> 1));
@@ -1699,7 +1912,7 @@ export class MapRenderer {
     const midX = left + (layout.width >> 1);
     const triHalf = CHAT_BUBBLE_TRIANGLE_WIDTH >> 1;
 
-    const graphics = this._graphicsPool.acquire();
+    const graphics = this.ensureUiGraphics(nodeKey, 'ui:chat-bubble-shape');
     graphics.roundRect(left, top, layout.width, bodyHeight, CHAT_BUBBLE_RADIUS);
     graphics.poly(
       [
@@ -1720,10 +1933,9 @@ export class MapRenderer {
       color: this.parseCssHexColor(layout.background),
       alpha: 0.65,
     });
-    this.client.uiContainer.addChild(graphics);
-
     for (const [index, line] of layout.lines.entries()) {
       this.addAtlasTextSprites(
+        `${nodeKey}:line:${index}`,
         line,
         { x: left + 6, y: top + 3 + index * CHAT_BUBBLE_LINE_HEIGHT },
         layout.foreground,
@@ -1734,6 +1946,7 @@ export class MapRenderer {
   }
 
   private addSpellChantSprites(
+    nodeKey: string,
     animation: CharacterSpellChantAnimation,
     position: Vector2,
   ) {
@@ -1742,6 +1955,7 @@ export class MapRenderer {
     const drawY = Math.floor(position.y - layout.height - 4);
 
     this.addAtlasTextSprites(
+      `${nodeKey}:shadow`,
       animation.chant,
       { x: drawX + 1, y: drawY + 1 },
       '#000',
@@ -1749,6 +1963,7 @@ export class MapRenderer {
       false,
     );
     this.addAtlasTextSprites(
+      `${nodeKey}:text`,
       animation.chant,
       { x: drawX, y: drawY },
       '#fff',
@@ -1758,6 +1973,7 @@ export class MapRenderer {
   }
 
   private addAtlasTextSprites(
+    nodeKey: string,
     text: string,
     position: Vector2,
     color: string,
@@ -1787,11 +2003,13 @@ export class MapRenderer {
         x += char.width;
         continue;
       }
-      const sprite = this._spritePool.acquire();
+      const sprite = this.ensureUiSprite(
+        `${nodeKey}:char:${x}:${char.id}`,
+        `ui:text-glyph char=${char.id}`,
+      );
       sprite.texture = texture;
       sprite.tint = tint;
       sprite.position.set(Math.floor(x), Math.floor(y));
-      this.client.uiContainer.addChild(sprite);
       x += char.width;
     }
   }
@@ -1829,10 +2047,12 @@ export class MapRenderer {
       h: PLAYER_MENU_HEIGHT,
     });
     if (menuTexture) {
-      const sprite = this._spritePool.acquire();
+      const sprite = this.ensureUiSprite(
+        'ui:player-menu:base',
+        'ui:player-menu',
+      );
       sprite.texture = menuTexture;
       sprite.position.set(rect.position.x + rect.width + 10, rect.position.y);
-      this.client.uiContainer.addChild(sprite);
     }
 
     const hovered = this.client.mouseController.getHoveredPlayerMenuItem();
@@ -1845,7 +2065,10 @@ export class MapRenderer {
         h: PLAYER_MENU_ITEM_HEIGHT,
       });
       if (hoverTexture) {
-        const hoverSprite = this._spritePool.acquire();
+        const hoverSprite = this.ensureUiSprite(
+          `ui:player-menu:hover:${hovered}`,
+          `ui:player-menu-hover index=${hovered}`,
+        );
         hoverSprite.texture = hoverTexture;
         hoverSprite.position.set(
           rect.position.x + rect.width + 10,
@@ -1853,7 +2076,6 @@ export class MapRenderer {
             PLAYER_MENU_OFFSET_Y +
             hovered * PLAYER_MENU_ITEM_HEIGHT,
         );
-        this.client.uiContainer.addChild(hoverSprite);
       }
     }
   }

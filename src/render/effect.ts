@@ -26,6 +26,8 @@ export class EffectTargetCharacter extends EffectTarget {
 }
 
 export class EffectAnimation {
+  private static nextInstanceId = 1;
+  readonly instanceId: number;
   id: number;
   target: EffectTarget;
   ticks: number;
@@ -35,6 +37,7 @@ export class EffectAnimation {
   renderedFirstFrame = false;
 
   constructor(id: number, target: EffectTarget, metadata: EffectMetadata) {
+    this.instanceId = EffectAnimation.nextInstanceId++;
     this.id = id;
     this.target = target;
     this.metadata = metadata;

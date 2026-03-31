@@ -319,20 +319,27 @@ class AtlasCanvas {
   private ctx: CanvasRenderingContext2D;
   private source: CanvasSource;
   private texture: Texture;
+  private labelPrefix: string;
   private committed = false;
   private subTextureCache = new Map<string, Texture>();
   skyline = [{ x: 0, y: 0, w: ATLAS_SIZE }];
 
-  constructor() {
+  constructor(labelPrefix: string) {
+    this.labelPrefix = labelPrefix;
     this.canvas = document.createElement('canvas');
     this.canvas.width = ATLAS_SIZE;
     this.canvas.height = ATLAS_SIZE;
+    this.canvas.id = `${labelPrefix}-canvas`;
     this.ctx = this.canvas.getContext('2d', { willReadFrequently: true })!;
     this.source = new CanvasSource({
       resource: this.canvas,
       scaleMode: 'nearest',
+      label: `${labelPrefix}-source`,
     });
-    this.texture = new Texture({ source: this.source });
+    this.texture = new Texture({
+      source: this.source,
+      label: `${labelPrefix}-texture`,
+    });
   }
 
   commit() {
@@ -353,6 +360,7 @@ class AtlasCanvas {
       t = new Texture({
         source: this.source,
         frame: new Rectangle(x, y, w, h),
+        label: `${this.labelPrefix}-subtex(${x},${y},${w},${h})`,
       });
       this.subTextureCache.set(key, t);
     }
@@ -416,9 +424,9 @@ export class Atlas {
 
   constructor(client: Client) {
     this.client = client;
-    this.staticAtlas = new AtlasCanvas();
-    this.mapAtlas = new AtlasCanvas();
-    this.atlases = [new AtlasCanvas()];
+    this.staticAtlas = new AtlasCanvas('atlas-static');
+    this.mapAtlas = new AtlasCanvas('atlas-map');
+    this.atlases = [new AtlasCanvas('atlas-dynamic-0')];
     this.ctx = this.atlases[0].getContext();
     this.tmpCanvas = document.createElement('canvas');
     this.tmpCtx = this.tmpCanvas.getContext('2d', {
@@ -646,7 +654,7 @@ export class Atlas {
 
     // No fit found → create new atlas
     if (bestAtlasIndex === -1) {
-      const newAtlas = new AtlasCanvas();
+      const newAtlas = new AtlasCanvas(`atlas-dynamic-${this.atlases.length}`);
       newAtlas.skyline = [{ x: 0, y: 0, w: ATLAS_SIZE }];
       this.atlases.push(newAtlas);
       this.currentAtlasIndex = this.atlases.length - 1;
