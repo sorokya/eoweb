@@ -179,11 +179,25 @@ export class MapRenderer {
   // Viewport-cached sorted static entities — only rebuilt when player moves
   private cachedStaticEntities: Entity[] = [];
   private cachedViewportKey = '';
+  // Pre-rendered ground+shadow offscreen images — one per animation frame (1 or 4)
+  // Rendered once per map change; stored as HTMLImageElement for GPU-friendly blitting
+  private groundCanvas: HTMLCanvasElement; // temp rendering surface
+  private groundCtx: CanvasRenderingContext2D;
+  private groundDirty = true;
+  private groundImages: (HTMLImageElement | null)[] = [];
+  private groundImagesLoaded = 0;
+  private groundFrameCount = 1;
+  private allGroundEntities: Entity[] = [];
+  private allShadowEntities: Entity[] = [];
+  private groundOriginX = 0;
+  private groundOriginY = 0;
 
   constructor(client: Client) {
     this.client = client;
     this.damageNumberCanvas = document.createElement('canvas');
     this.damageNumberCtx = this.damageNumberCanvas.getContext('2d')!;
+    this.groundCanvas = document.createElement('canvas');
+    this.groundCtx = this.groundCanvas.getContext('2d')!;
   }
 
   buildCaches() {
@@ -231,8 +245,49 @@ export class MapRenderer {
       this.signCache[sign.coords.y][sign.coords.x] = { title, message };
     }
 
+    // Build full-map ground and shadow entity lists for pre-rendering
+    this.allGroundEntities = [];
+    this.allShadowEntities = [];
+    for (let y = 0; y <= h; y++) {
+      for (let x = 0; x <= w; x++) {
+        for (const t of this.staticTileGrid[y][x]) {
+          if (t.layer === Layer.Ground || t.layer === Layer.Shadow) {
+            const list =
+              t.layer === Layer.Ground
+                ? this.allGroundEntities
+                : this.allShadowEntities;
+            list.push({
+              x,
+              y,
+              type: EntityType.Tile,
+              typeId: t.bmpId,
+              layer: t.layer,
+              depth: t.depth,
+            });
+          }
+        }
+      }
+    }
+
+    // Compute offscreen canvas dimensions to cover the full isometric map extents.
+    // isoToScreen(x,y) = { x: (x-y)*HW, y: (x+y)*HH }
+    // bigX = tileScreen.x - HW + originX  →  originX = (h+1)*HW makes min ground bigX = 0
+    // Shadow offset is {x:-24, y:-12} so we pad by TILE_WIDTH/TILE_HEIGHT on each side.
+    const PAD_X = TILE_WIDTH;
+    const PAD_Y = TILE_HEIGHT;
+    this.groundOriginX = (h + 1) * HALF_TILE_WIDTH + PAD_X;
+    this.groundOriginY = HALF_TILE_HEIGHT + PAD_Y;
+    this.groundCanvas.width = (w + h + 2) * HALF_TILE_WIDTH + PAD_X * 2;
+    this.groundCanvas.height =
+      (w + h) * HALF_TILE_HEIGHT + TILE_HEIGHT + PAD_Y * 2;
+
+    this.groundImages = [];
+    this.groundImagesLoaded = 0;
+    this.groundFrameCount = 1;
+
     this.buildingCache = false;
     this.cachedViewportKey = ''; // Invalidate viewport cache on map change
+    this.groundDirty = true;
   }
 
   getRequiredTileIds(): { gfxType: GfxType; graphicId: number }[] {
@@ -330,33 +385,46 @@ export class MapRenderer {
 
     playerScreen.x += this.client.quakeController.quakeOffset;
 
-    const diag = Math.hypot(ctx.canvas.width, ctx.canvas.height);
-    const rangeX = Math.min(
-      this.client.map.width,
-      Math.ceil(diag / HALF_TILE_WIDTH) + 2,
-    );
-    const rangeY = Math.min(
-      this.client.map.height,
-      Math.ceil(diag / HALF_TILE_HEIGHT) + 2,
-    );
+    // Compute visible tile range by inverting the iso→screen transform at screen corners.
+    // A tile at (px+dx, py+dy) renders at screen ((dx-dy)*HW, (dx+dy)*HH).
+    // Inverting: dx = (sx/HW + sy/HH)/2, dy = (-sx/HW + sy/HH)/2.
+    // Both dx and dy have the same symmetric max at the screen corners: (W/TW + H/TH)/2.
+    const range =
+      Math.ceil(
+        (ctx.canvas.width / TILE_WIDTH + ctx.canvas.height / TILE_HEIGHT) / 2,
+      ) + 2;
+    const rangeX = Math.min(this.client.map.width, range);
+    const rangeY = Math.min(this.client.map.height, range);
     // --- Static entity caching: only rebuild when viewport changes ---
     const viewportKey = `${player.x},${player.y},${rangeX},${rangeY}`;
     if (viewportKey !== this.cachedViewportKey) {
       this.cachedStaticEntities.length = 0;
+      const groundReady =
+        this.groundImagesLoaded >= this.groundFrameCount &&
+        this.groundFrameCount > 0;
       for (let y = player.y - rangeY; y <= player.y + rangeY; y++) {
         if (y < 0 || y > this.client.map.height) continue;
         for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
           if (x < 0 || x > this.client.map.width) continue;
           if (!this.staticTileGrid[y]?.[x]) return;
           for (const t of this.staticTileGrid[y][x]) {
-            this.cachedStaticEntities.push({
+            const entity: Entity = {
               x,
               y,
               type: EntityType.Tile,
               typeId: t.bmpId,
               layer: t.layer,
               depth: t.depth,
-            });
+            };
+            if (t.layer === Layer.Ground || t.layer === Layer.Shadow) {
+              // Ground and shadow are pre-rendered into groundImages.
+              // Fall back to the merge loop while images are not yet ready.
+              if (!groundReady) {
+                this.cachedStaticEntities.push(entity);
+              }
+            } else {
+              this.cachedStaticEntities.push(entity);
+            }
           }
         }
       }
@@ -480,6 +548,43 @@ export class MapRenderer {
             this.client.mouseCoords.y,
           ),
         });
+      }
+    }
+
+    // --- Blit visible section of the pre-rendered full-map ground image ---
+    if (this.groundDirty) {
+      this.renderGround();
+    }
+    const halfGameWidth = this.client.viewportController.getHalfGameWidth();
+    const halfGameHeight = this.client.viewportController.getHalfGameHeight();
+    if (
+      this.groundImagesLoaded >= this.groundFrameCount &&
+      this.groundFrameCount > 0
+    ) {
+      const srcX = Math.round(
+        playerScreen.x - halfGameWidth + this.groundOriginX,
+      );
+      const srcY = Math.round(
+        playerScreen.y - halfGameHeight + this.groundOriginY,
+      );
+      const dw = ctx.canvas.width;
+      const dh = ctx.canvas.height;
+      // Frame 0: static ground base (non-animated maps: also includes shadows).
+      ctx.drawImage(this.groundImages[0]!, srcX, srcY, dw, dh, 0, 0, dw, dh);
+      // Animated maps: overlay frame [1 + animationFrame] which contains the animated
+      // tiles at the current frame plus all shadows.
+      if (this.groundFrameCount > 1) {
+        ctx.drawImage(
+          this.groundImages[1 + this.animationFrame]!,
+          srcX,
+          srcY,
+          dw,
+          dh,
+          0,
+          0,
+          dw,
+          dh,
+        );
       }
     }
 
@@ -846,6 +951,105 @@ export class MapRenderer {
         PLAYER_MENU_ITEM_HEIGHT,
       );
     }
+  }
+
+  renderGround() {
+    // Check atlas readiness for every ground and shadow entity before committing.
+    // Skip typeId=0 ground tiles — they have no atlas entry and renderTile ignores them.
+    for (const entity of this.allGroundEntities) {
+      if (entity.typeId === 0) continue;
+      const tile = this.client.atlas.getTile(GfxType.MapTiles, entity.typeId);
+      if (!tile || !this.client.atlas.getAtlas(tile.atlasIndex)) return; // retry next frame
+    }
+    for (const entity of this.allShadowEntities) {
+      const tile = this.client.atlas.getTile(
+        LAYER_GFX_MAP[entity.layer],
+        entity.typeId,
+      );
+      if (!tile || !this.client.atlas.getAtlas(tile.atlasIndex)) return; // retry next frame
+    }
+
+    // Separate animated ground tiles from static ones.
+    const animatedGround = this.allGroundEntities.filter((e) => {
+      const tile = this.client.atlas.getTile(GfxType.MapTiles, e.typeId);
+      return tile && tile.w > TILE_WIDTH;
+    });
+    const staticGround = this.allGroundEntities.filter((e) => {
+      const tile = this.client.atlas.getTile(GfxType.MapTiles, e.typeId);
+      return tile && tile.w <= TILE_WIDTH;
+    });
+
+    // Non-animated maps: 1 frame (static ground + shadows).
+    // Animated maps: 5 frames —
+    //   [0]  : static ground only (no shadows — shadows belong to the animated overlay)
+    //   [1-4]: animated tiles at animation frame 0-3 + all shadows (sparse overlay)
+    // Render loop blits [0] always, then [1 + animationFrame] on top for animated maps.
+    this.groundFrameCount = animatedGround.length > 0 ? 5 : 1;
+
+    // Use a fake playerScreen so tiles land at their correct positions in the big canvas.
+    // Derivation: bigX = tileScreen.x - HW + originX
+    //   = tileScreen.x - HW - fakePS.x + halfGameWidth
+    //   → fakePS.x = halfGameWidth - originX
+    const halfGameWidth = this.client.viewportController.getHalfGameWidth();
+    const halfGameHeight = this.client.viewportController.getHalfGameHeight();
+    const fakePlayerScreen = {
+      x: halfGameWidth - this.groundOriginX,
+      y: halfGameHeight - this.groundOriginY,
+    };
+
+    const savedFrame = this.animationFrame;
+    this.groundImages = new Array(this.groundFrameCount).fill(null);
+    this.groundImagesLoaded = 0;
+
+    for (let f = 0; f < this.groundFrameCount; f++) {
+      this.groundCtx.clearRect(
+        0,
+        0,
+        this.groundCanvas.width,
+        this.groundCanvas.height,
+      );
+
+      if (this.groundFrameCount === 1) {
+        // Non-animated map: single frame with everything.
+        for (const entity of this.allGroundEntities) {
+          this.renderTile(entity, fakePlayerScreen, this.groundCtx);
+        }
+        for (const entity of this.allShadowEntities) {
+          this.renderTile(entity, fakePlayerScreen, this.groundCtx);
+        }
+      } else if (f === 0) {
+        // Animated map base: static ground only — no shadows, no animated tiles.
+        for (const entity of staticGround) {
+          this.renderTile(entity, fakePlayerScreen, this.groundCtx);
+        }
+      } else {
+        // Animated map overlay frames 1-4: animated tiles at anim frame (f-1) + shadows.
+        // Shadows are here (not in frame 0) so they never double up.
+        this.animationFrame = f - 1;
+        for (const entity of animatedGround) {
+          this.renderTile(entity, fakePlayerScreen, this.groundCtx);
+        }
+        for (const entity of this.allShadowEntities) {
+          this.renderTile(entity, fakePlayerScreen, this.groundCtx);
+        }
+      }
+
+      const dataUrl = this.groundCanvas.toDataURL();
+      const img = new Image();
+      img.onload = () => {
+        this.groundImagesLoaded++;
+        if (this.groundImagesLoaded >= this.groundFrameCount) {
+          // All frames decoded — force viewport rebuild to drop ground/shadow fallbacks
+          this.cachedViewportKey = '';
+        }
+      };
+      img.src = dataUrl;
+      this.groundImages[f] = img;
+    }
+
+    this.animationFrame = savedFrame;
+    // Mark clean so we don't re-render while images are decoding asynchronously
+    this.groundDirty = false;
   }
 
   renderTile(
