@@ -1008,8 +1008,7 @@ export class MapRenderer {
         this.addEmoteSprite(emote, topCenter);
       }
       if (animation instanceof CharacterSpellChantAnimation) {
-        const bs = animation.getSprite(topCenter);
-        if (bs) this.client.uiContainer.addChild(bs);
+        this.addSpellChantSprites(animation, topCenter);
       }
     }
   }
@@ -1734,6 +1733,30 @@ export class MapRenderer {
     }
   }
 
+  private addSpellChantSprites(
+    animation: CharacterSpellChantAnimation,
+    position: Vector2,
+  ) {
+    const layout = animation.getLayout();
+    const drawX = Math.floor(position.x - (layout.width >> 1));
+    const drawY = Math.floor(position.y - layout.height - 4);
+
+    this.addAtlasTextSprites(
+      animation.chant,
+      { x: drawX + 1, y: drawY + 1 },
+      '#000',
+      false,
+      false,
+    );
+    this.addAtlasTextSprites(
+      animation.chant,
+      { x: drawX, y: drawY },
+      '#fff',
+      false,
+      false,
+    );
+  }
+
   private addAtlasTextSprites(
     text: string,
     position: Vector2,
@@ -1878,42 +1901,5 @@ export class MapRenderer {
     }
 
     return { x: 0, y: 0 };
-  }
-
-  renderEmote(
-    emote: Emote,
-    position: { x: number; y: number },
-    ctx: CanvasRenderingContext2D,
-  ) {
-    emote.renderedFirstFrame = true;
-
-    const frame = this.client.atlas.getEmoteFrame(
-      emote.type,
-      emote.animationFrame,
-    );
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    ctx.globalAlpha = emote.ticks / EMOTE_ANIMATION_TICKS;
-
-    ctx.drawImage(
-      atlas,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
-      position.x + frame.xOffset,
-      position.y + frame.yOffset - 25,
-      frame.w,
-      frame.h,
-    );
-
-    ctx.globalAlpha = 1;
   }
 }
