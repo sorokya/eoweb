@@ -477,7 +477,7 @@ export class MapRenderer {
         if (y < 0 || y > this.client.map.height) continue;
         for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
           if (x < 0 || x > this.client.map.width) continue;
-          if (!this.staticTileGrid[y]?.[x]) return;
+          if (!this.staticTileGrid[y]?.[x]) continue;
           for (const t of this.staticTileGrid[y][x]) {
             const entity: Entity = {
               x,
@@ -827,7 +827,7 @@ export class MapRenderer {
         if (y < 0 || y > this.client.map.height) continue;
         for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
           if (x < 0 || x > this.client.map.width) continue;
-          if (!this.staticTileGrid[y]?.[x]) return;
+          if (!this.staticTileGrid[y]?.[x]) continue;
           for (const t of this.staticTileGrid[y][x]) {
             const entity: Entity = {
               x,
