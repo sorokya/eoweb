@@ -653,7 +653,7 @@ export class MapRenderer {
       if (
         spec === MapTileSpec.HiddenSpikes &&
         !this.client.nearby.characters.some(
-          (c) => c.coords.x === entity.x && c.coords.y === entity.y,
+          (c) => c.coords?.x === entity.x && c.coords?.y === entity.y,
         )
       ) {
         return;
@@ -983,7 +983,6 @@ export class MapRenderer {
       }
       if (animation instanceof CharacterSpellChantAnimation) {
         const bs = animation.getSprite(topCenter);
-        console.log('Chant bs', bs);
         if (bs) this.client.uiContainer.addChild(bs);
       }
     }
