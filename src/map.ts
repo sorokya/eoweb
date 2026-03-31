@@ -6,7 +6,7 @@ import {
   MapTileSpec,
   SitState,
 } from 'eolib';
-import { CanvasSource, Sprite, Texture } from 'pixi.js';
+import { Graphics, Sprite, type Texture } from 'pixi.js';
 import {
   CHARACTER_FRAME_OFFSETS,
   CharacterFrame,
@@ -50,6 +50,7 @@ import { CharacterRangedAttackAnimation } from './render/character-attack-ranged
 import { CharacterDeathAnimation } from './render/character-death';
 import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
+import type { ChatBubble } from './render/chat-bubble';
 import {
   type EffectAnimation,
   EffectTargetCharacter,
@@ -102,6 +103,10 @@ enum Layer {
 
 const TDG = 0.00000001; // gap between depth of each tile on a layer
 const RDG = 0.001; // gap between depth of each row of tiles
+const CHAT_BUBBLE_LINE_HEIGHT = 12;
+const CHAT_BUBBLE_RADIUS = 6;
+const CHAT_BUBBLE_TRIANGLE_HEIGHT = 6;
+const CHAT_BUBBLE_TRIANGLE_WIDTH = 3;
 
 const layerDepth = [
   -3.0 + TDG * 1, // Ground
@@ -172,6 +177,7 @@ class SpritePool {
     if (this.head < this.pool.length) {
       const s = this.pool[this.head++];
       s.alpha = 1;
+      s.tint = 0xffffff;
       s.scale.set(1);
       s.visible = true;
       return s;
@@ -181,6 +187,31 @@ class SpritePool {
     this.pool.push(s);
     this.head++;
     return s;
+  }
+}
+
+class GraphicsPool {
+  private pool: Graphics[] = [];
+  private head = 0;
+
+  reset() {
+    this.head = 0;
+  }
+
+  acquire(): Graphics {
+    if (this.head < this.pool.length) {
+      const g = this.pool[this.head++];
+      g.clear();
+      g.alpha = 1;
+      g.scale.set(1);
+      g.visible = true;
+      return g;
+    }
+    const g = new Graphics();
+    g.eventMode = 'none';
+    this.pool.push(g);
+    this.head++;
+    return g;
   }
 }
 
@@ -195,10 +226,6 @@ export class MapRenderer {
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
   private signCache: ({ title: string; message: string } | null)[][] = [];
-  private damageNumberCanvas: HTMLCanvasElement;
-  private damageNumberCtx: CanvasRenderingContext2D;
-  private damageNumberSource: CanvasSource | null = null;
-  private damageNumberTexture: Texture | null = null;
   private interpolation = 0;
   // Viewport-cached sorted static entities — only rebuilt when player moves
   private cachedStaticEntities: Entity[] = [];
@@ -215,11 +242,10 @@ export class MapRenderer {
   private readonly _npcEffects = new Map<number, EffectAnimation[]>();
   // Sprite pool for PixiJS scene-graph rendering
   private readonly _spritePool = new SpritePool();
+  private readonly _graphicsPool = new GraphicsPool();
 
   constructor(client: Client) {
     this.client = client;
-    this.damageNumberCanvas = document.createElement('canvas');
-    this.damageNumberCtx = this.damageNumberCanvas.getContext('2d')!;
   }
 
   buildCaches() {
@@ -546,6 +572,7 @@ export class MapRenderer {
     this.client.worldContainer.removeChildren();
     this.client.uiContainer.removeChildren();
     this._spritePool.reset();
+    this._graphicsPool.reset();
 
     // Merge-sort static + dynamic entities
     dynamics.sort((a, b) => a.depth - b.depth);
@@ -974,8 +1001,7 @@ export class MapRenderer {
       };
 
       if (bubble) {
-        const bs = bubble.getSprite(topCenter);
-        if (bs) this.client.uiContainer.addChild(bs);
+        this.addChatBubbleSprites(bubble, topCenter);
       }
       this.addHealthBarSprites(healthBar!, topCenter);
       if (emote) {
@@ -1158,8 +1184,7 @@ export class MapRenderer {
     };
 
     if (bubble) {
-      const bs = bubble.getSprite(npcTopCenter);
-      if (bs) this.client.uiContainer.addChild(bs);
+      this.addChatBubbleSprites(bubble, npcTopCenter);
     }
     if (healthBar) {
       this.addHealthBarSprites(healthBar, npcTopCenter);
@@ -1339,62 +1364,38 @@ export class MapRenderer {
       return;
     }
 
-    const amountAsText = amount.toString();
-    const chars = amountAsText.split('');
-    this.damageNumberCanvas.width = chars.length * 9;
-    this.damageNumberCanvas.height = 12;
-    this.damageNumberCtx.clearRect(
-      0,
-      0,
-      this.damageNumberCanvas.width,
-      this.damageNumberCanvas.height,
-    );
-
     const numbersFrame = this.client.atlas.getStaticEntry(
       healthBar.heal
         ? StaticAtlasEntryType.HealNumbers
         : StaticAtlasEntryType.DamageNumbers,
     );
     if (!numbersFrame) return;
+    const amountAsText = amount.toString();
+    const chars = amountAsText.split('');
+    const digitWidth = 9;
+    const totalWidth = chars.length * digitWidth;
+    const y = position.y - 35 + healthBar.ticks;
+    let x = position.x - totalWidth / 2;
 
-    const numbersAtlas = this.client.atlas.getAtlas(numbersFrame.atlasIndex);
-    if (!numbersAtlas) return;
-
-    let index = 0;
     for (const char of chars) {
       const number = Number.parseInt(char, 10);
-      this.damageNumberCtx.drawImage(
-        numbersAtlas,
-        numbersFrame.x + number * 9,
-        numbersFrame.y,
-        9,
-        12,
-        index * 9,
-        0,
-        9,
-        12,
-      );
-      index++;
-    }
-
-    if (!this.damageNumberSource) {
-      this.damageNumberSource = new CanvasSource({
-        resource: this.damageNumberCanvas,
+      const digitTexture = this.client.atlas.getFrameTexture({
+        atlasIndex: numbersFrame.atlasIndex,
+        x: numbersFrame.x + number * digitWidth,
+        y: numbersFrame.y,
+        w: digitWidth,
+        h: numbersFrame.h,
       });
-      this.damageNumberTexture = new Texture({
-        source: this.damageNumberSource,
-      });
-    } else {
-      this.damageNumberSource.update();
+      if (!digitTexture) {
+        x += digitWidth;
+        continue;
+      }
+      const dnSprite = this._spritePool.acquire();
+      dnSprite.texture = digitTexture;
+      dnSprite.position.set(x, y);
+      this.client.uiContainer.addChild(dnSprite);
+      x += digitWidth;
     }
-
-    const dnSprite = this._spritePool.acquire();
-    dnSprite.texture = this.damageNumberTexture!;
-    dnSprite.position.set(
-      position.x - this.damageNumberCanvas.width / 2,
-      position.y - 35 + healthBar.ticks,
-    );
-    this.client.uiContainer.addChild(dnSprite);
   }
 
   private addEmoteSprite(emote: Emote, position: { x: number; y: number }) {
@@ -1686,19 +1687,101 @@ export class MapRenderer {
       positionY - playerScreen.y + this._halfGameHeight + offset.y,
     );
 
-    const shadowSprite = this.client.sans11.getSprite(
-      name,
-      { x: drawX + 1, y: drawY + 1 },
-      '#000',
-    );
-    if (shadowSprite) this.client.uiContainer.addChild(shadowSprite);
+    this.addAtlasTextSprites(name, { x: drawX + 1, y: drawY + 1 }, '#000');
+    this.addAtlasTextSprites(name, { x: drawX, y: drawY }, color);
+  }
 
-    const nameSprite = this.client.sans11.getSprite(
-      name,
-      { x: drawX, y: drawY },
-      color,
+  private addChatBubbleSprites(bubble: ChatBubble, position: Vector2) {
+    bubble.renderedFirstFrame = true;
+    const layout = bubble.getLayout();
+    const left = Math.floor(position.x - (layout.width >> 1));
+    const top = Math.floor(position.y - layout.height);
+    const bodyHeight = layout.height - CHAT_BUBBLE_TRIANGLE_HEIGHT;
+    const midX = left + (layout.width >> 1);
+    const triHalf = CHAT_BUBBLE_TRIANGLE_WIDTH >> 1;
+
+    const graphics = this._graphicsPool.acquire();
+    graphics.roundRect(left, top, layout.width, bodyHeight, CHAT_BUBBLE_RADIUS);
+    graphics.poly(
+      [
+        midX + triHalf,
+        top + bodyHeight,
+        midX,
+        top + bodyHeight + CHAT_BUBBLE_TRIANGLE_HEIGHT,
+        midX - triHalf,
+        top + bodyHeight,
+      ],
+      true,
     );
-    if (nameSprite) this.client.uiContainer.addChild(nameSprite);
+    graphics.stroke({
+      color: this.parseCssHexColor(layout.foreground),
+      width: 1,
+    });
+    graphics.fill({
+      color: this.parseCssHexColor(layout.background),
+      alpha: 0.65,
+    });
+    this.client.uiContainer.addChild(graphics);
+
+    for (const [index, line] of layout.lines.entries()) {
+      this.addAtlasTextSprites(
+        line,
+        { x: left + 6, y: top + 3 + index * CHAT_BUBBLE_LINE_HEIGHT },
+        layout.foreground,
+        false,
+        false,
+      );
+    }
+  }
+
+  private addAtlasTextSprites(
+    text: string,
+    position: Vector2,
+    color: string,
+    alignHorizontal = true,
+    alignVertical = true,
+  ) {
+    const chars = text
+      .split('')
+      .map((char) => this.client.sans11.getCharacter(char.charCodeAt(0)));
+    if (!chars.length) return;
+
+    const { width, height } = this.client.sans11.measureTextChars(chars);
+    let x = position.x;
+    let y = position.y;
+
+    if (alignHorizontal) {
+      x -= width >> 1;
+    }
+    if (alignVertical) {
+      y -= height;
+    }
+
+    const tint = this.parseCssHexColor(color);
+    for (const char of chars) {
+      const texture = this.client.sans11.getCharacterTexture(char.id);
+      if (!texture) {
+        x += char.width;
+        continue;
+      }
+      const sprite = this._spritePool.acquire();
+      sprite.texture = texture;
+      sprite.tint = tint;
+      sprite.position.set(Math.floor(x), Math.floor(y));
+      this.client.uiContainer.addChild(sprite);
+      x += char.width;
+    }
+  }
+
+  private parseCssHexColor(value: string): number {
+    const hex = value.startsWith('#') ? value.slice(1) : value;
+    if (hex.length === 3) {
+      return Number.parseInt(
+        `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`,
+        16,
+      );
+    }
+    return Number.parseInt(hex, 16);
   }
 
   private addPlayerMenuSprites() {

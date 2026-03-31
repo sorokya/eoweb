@@ -1,3 +1,4 @@
+import { initDevtools } from '@pixi/devtools';
 import {
   AdminLevel,
   CharacterBaseStats,
@@ -333,6 +334,8 @@ export class Client {
 
     // Sync CSS size now that the canvas is in the DOM
     this.viewportController.resizeCanvases();
+
+    initDevtools({ app: this.app });
   }
 
   getCharacterById(id: number): CharacterMapInfo | undefined {

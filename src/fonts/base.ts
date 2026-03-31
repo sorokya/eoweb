@@ -1,4 +1,4 @@
-import { CanvasSource, Sprite, Texture } from 'pixi.js';
+import type { Texture } from 'pixi.js';
 import type { Atlas, TileAtlasEntry } from '../atlas';
 import type { Vector2 } from '../vector';
 
@@ -62,6 +62,21 @@ export abstract class Font {
   public measureText(text: string): { width: number; height: number } {
     const chars = this.stringToCharacters(text);
     return this.measureTextChars(chars);
+  }
+
+  public getCharacterTexture(charId: number): Texture | null {
+    const frame = this.getFrame();
+    if (!frame) return null;
+
+    const char = this.getCharacter(charId);
+    const texture = this.atlas.getFrameTexture({
+      atlasIndex: frame.atlasIndex,
+      x: frame.x + char.x,
+      y: frame.y + char.y,
+      w: char.width,
+      h: char.height,
+    });
+    return texture ?? null;
   }
 
   abstract getFrame(): TileAtlasEntry | undefined;
@@ -142,74 +157,5 @@ export abstract class Font {
       this.canvas.width,
       this.canvas.height,
     );
-  }
-
-  public getSprite(
-    text: string,
-    position: Vector2,
-    color = '#fff',
-    align: TextAlign = TextAlign.Both,
-  ): Sprite | null {
-    const frame = this.getFrame();
-    if (!frame) return null;
-
-    const img = this.atlas.getAtlas(frame.atlasIndex);
-    if (!img) return null;
-
-    const chars = this.stringToCharacters(text);
-    const { width, height } = this.measureTextChars(chars);
-
-    this.canvas.width = width;
-    this.canvas.height = height;
-    this.ctx.clearRect(0, 0, width, height);
-
-    let x = 0;
-    for (const char of chars) {
-      this.ctx.drawImage(
-        img,
-        frame.x + char.x,
-        frame.y + char.y,
-        char.width,
-        char.height,
-        x,
-        0,
-        char.width,
-        char.height,
-      );
-      x += char.width;
-    }
-
-    if (color !== '#fff') {
-      this.ctx.globalCompositeOperation = 'source-in';
-      this.ctx.fillStyle = color;
-      this.ctx.fillRect(0, 0, width, height);
-      this.ctx.globalCompositeOperation = 'source-over';
-    }
-
-    let drawX = position.x;
-    let drawY = position.y;
-    switch (align) {
-      case TextAlign.CenterHorizontal:
-        drawX -= width >> 1;
-        break;
-      case TextAlign.CenterVertical:
-        drawY -= height;
-        break;
-      case TextAlign.Both:
-        drawX -= width >> 1;
-        drawY -= height;
-        break;
-    }
-
-    const offscreen = document.createElement('canvas');
-    offscreen.width = width;
-    offscreen.height = height;
-    offscreen.getContext('2d')!.drawImage(this.canvas, 0, 0);
-    const source = new CanvasSource({ resource: offscreen });
-    const texture = new Texture({ source });
-    const sprite = new Sprite(texture);
-    sprite.x = Math.floor(drawX);
-    sprite.y = Math.floor(drawY);
-    return sprite;
   }
 }
