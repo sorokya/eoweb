@@ -1,4 +1,4 @@
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 export class ViewportController {
   private width = 800;

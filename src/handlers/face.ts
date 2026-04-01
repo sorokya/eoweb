@@ -4,7 +4,7 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 function handleFacePlayer(client: Client, reader: EoReader) {
   const packet = FacePlayerServerPacket.deserialize(reader);

@@ -6,9 +6,9 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
-import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon } from '../types';
+import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon } from '@/ui/ui-types';
 
 function handleArenaUse(client: Client, reader: EoReader) {
   const packet = ArenaUseServerPacket.deserialize(reader);

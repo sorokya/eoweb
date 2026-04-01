@@ -1,7 +1,7 @@
 import { type CharacterMapInfo, Direction, Gender } from 'eolib';
 import mitt from 'mitt';
-import { CharacterFrame } from '../../atlas';
-import type { Client } from '../../client';
+import { CharacterFrame } from '@/atlas';
+import type { Client } from '@/client';
 import {
   CHARACTER_HEIGHT,
   CHARACTER_WIDTH,
@@ -10,9 +10,9 @@ import {
   MAX_HAIR_COLOR,
   MAX_HAIR_STYLE,
   MAX_SKIN,
-} from '../../consts';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
+} from '@/consts';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
 
 import './create-character.css';
 let lastTime: DOMHighResTimeStamp | undefined;

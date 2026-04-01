@@ -1,6 +1,6 @@
 import { BarberBuyClientPacket, type CharacterMapInfo, Direction } from 'eolib';
-import { CharacterFrame } from '../../atlas';
-import type { Client } from '../../client';
+import { CharacterFrame } from '@/atlas';
+import type { Client } from '@/client';
 import {
   BARBER_BASE_COST,
   BARBER_COST_PER_LEVEL,
@@ -9,12 +9,12 @@ import {
   GAME_FPS,
   MAX_HAIR_COLOR,
   MAX_HAIR_STYLE,
-} from '../../consts';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
+} from '@/consts';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
 
 import './barber-dialog.css';
-import { DialogResourceID, EOResourceID } from '../../edf';
+import { DialogResourceID, EOResourceID } from '@/edf';
 
 export class BarberDialog extends Base {
   private client: Client;

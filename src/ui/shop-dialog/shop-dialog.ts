@@ -6,17 +6,14 @@ import {
   type ShopTradeItem,
 } from 'eolib';
 import mitt from 'mitt';
-import type { Client } from '../../client';
-import { EOResourceID } from '../../edf';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
-import {
-  createIconMenuItem,
-  createItemMenuItem,
-} from '../utils/create-menu-item';
+import type { Client } from '@/client';
+import { EOResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
+import { createIconMenuItem, createItemMenuItem } from '@/ui/utils';
 
 import './shop-dialog.css';
-import { DialogIcon } from '../../types';
+import { DialogIcon } from '@/ui/ui-types';
 
 enum State {
   Initial = 0,

@@ -7,9 +7,9 @@ import {
   PaperdollRemoveServerPacket,
   PaperdollReplyServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { playSfxById, SfxId } from '../sfx';
-import { EquipmentSlot, getEquipmentSlotForItemType } from '../types';
+import type { Client } from '@/client';
+import { EquipmentSlot, getEquipmentSlotForItemType } from '@/equipment';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handlePaperdollReply(client: Client, reader: EoReader) {
   const packet = PaperdollReplyServerPacket.deserialize(reader);

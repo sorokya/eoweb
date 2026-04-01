@@ -1,7 +1,7 @@
-import type { Client } from '../../client';
-import { playSfxById, SfxId } from '../../sfx';
-import { BaseDialogMd } from '../base-dialog-md';
-import { setSkillBackgroundFromGfx } from '../utils/gfx-resource';
+import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
+import { BaseDialogMd } from '@/ui/base-dialog-md';
+import { setSkillBackgroundFromGfx } from '@/ui/utils';
 
 import './spell-book.css';
 

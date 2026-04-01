@@ -1,4 +1,4 @@
-import { randomRange } from '../utils';
+import { randomRange } from '@/utils';
 
 export class QuakeController {
   quakeTicks = 0;

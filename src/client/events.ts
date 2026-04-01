@@ -12,8 +12,8 @@ import type {
   SkillLearn,
   ThreeItem,
 } from 'eolib';
-import type { SfxId } from './sfx';
-import type { ChatIcon, ChatTab } from './ui';
+import type { SfxId } from '@/sfx';
+import type { ChatIcon, ChatTab } from '@/ui/ui-types';
 
 export type ClientEvents = {
   error: { title: string; message: string };

@@ -1,4 +1,4 @@
-import { ATTACK_TICKS } from '../consts';
+import { ATTACK_TICKS } from '@/consts';
 import { Animation } from './animation';
 
 export class NpcAttackAnimation extends Animation {

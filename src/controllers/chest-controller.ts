@@ -8,10 +8,9 @@ import {
   ThreeItem,
 } from 'eolib';
 
-import type { Client } from '../client';
-import { EOResourceID } from '../edf';
-import { playSfxById } from '../sfx';
-import { SfxId } from '../types';
+import type { Client } from '@/client';
+import { EOResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
 
 export class ChestController {
   private client: Client;

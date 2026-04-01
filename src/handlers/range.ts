@@ -4,7 +4,7 @@ import {
   PacketFamily,
   RangeReplyServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 function handleRangeReply(client: Client, reader: EoReader) {
   const packet = RangeReplyServerPacket.deserialize(reader);

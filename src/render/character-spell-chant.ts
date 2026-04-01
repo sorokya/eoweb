@@ -1,5 +1,5 @@
-import { TICKS_PER_CAST_TIME } from '../consts';
-import type { Font } from '../fonts/base';
+import { TICKS_PER_CAST_TIME } from '@/consts';
+import type { Font } from '@/fonts';
 import { Animation } from './animation';
 
 export class CharacterSpellChantAnimation extends Animation {

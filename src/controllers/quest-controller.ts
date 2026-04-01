@@ -1,6 +1,6 @@
 import { DialogReply, QuestAcceptClientPacket } from 'eolib';
 
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 export class QuestController {
   private client: Client;

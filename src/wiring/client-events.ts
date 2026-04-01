@@ -1,7 +1,8 @@
-import type { Client } from '../client';
-import { DialogResourceID, EOResourceID } from '../edf';
-import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon, ChatTab, GameState } from '../types';
+import type { Client } from '@/client';
+import { DialogResourceID, EOResourceID } from '@/edf';
+import { GameState } from '@/game-state';
+import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon, ChatTab } from '@/ui/ui-types';
 
 export interface ClientEventDeps {
   client: Client;

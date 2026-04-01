@@ -1,5 +1,6 @@
-import type { Client } from '../client';
-import { SPELL_COOLDOWN_TICKS } from '../consts';
+import type { Client } from '@/client';
+import { SPELL_COOLDOWN_TICKS } from '@/consts';
+import type { ChatBubble } from '@/render';
 import {
   type Animation,
   CharacterDeathAnimation,
@@ -10,8 +11,7 @@ import {
   type Emote,
   type HealthBar,
   NpcDeathAnimation,
-} from '../render';
-import type { ChatBubble } from '../render/chat-bubble';
+} from '@/render';
 
 export class AnimationController {
   private client: Client;

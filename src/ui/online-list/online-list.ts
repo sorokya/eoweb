@@ -1,7 +1,7 @@
 import { PlayersRequestClientPacket } from 'eolib';
-import type { Client } from '../../client';
-import { BaseDialogMd } from '../base-dialog-md';
-import { characterIconToChatIcon } from '../utils/character-icon-to-chat-icon';
+import type { Client } from '@/client';
+import { BaseDialogMd } from '@/ui/base-dialog-md';
+import { characterIconToChatIcon } from '@/ui/utils';
 
 import './online-list.css';
 

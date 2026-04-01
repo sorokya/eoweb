@@ -1,5 +1,5 @@
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
 
 import './item-amount-dialog.css';
 

@@ -1,10 +1,9 @@
 import { StatId } from 'eolib';
 import mitt from 'mitt';
-import type { Client } from '../../client';
-import { playSfxById, SfxId } from '../../sfx';
-import { calculateTnl } from '../../utils/calculate-tnl';
-import { capitalize } from '../../utils/capitalize';
-import { Base } from '../base-ui';
+import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
+import { calculateTnl, capitalize } from '@/utils';
 
 import './stats.css';
 

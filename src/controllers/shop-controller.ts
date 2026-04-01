@@ -5,7 +5,7 @@ import {
   ShopSellClientPacket,
 } from 'eolib';
 
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 export class ShopController {
   private client: Client;

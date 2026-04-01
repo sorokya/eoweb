@@ -15,11 +15,12 @@ import {
   PacketFamily,
   serverVerificationHash,
 } from 'eolib';
-import type { Client } from '../client';
-import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '../db';
-import { DialogResourceID, EOResourceID } from '../edf';
-import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon, ChatTab, GameState } from '../types';
+import type { Client } from '@/client';
+import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '@/db';
+import { DialogResourceID, EOResourceID } from '@/edf';
+import { GameState } from '@/game-state';
+import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon, ChatTab } from '@/ui/ui-types';
 
 function handleInitInit(client: Client, reader: EoReader) {
   const packet = InitInitServerPacket.deserialize(reader);

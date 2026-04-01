@@ -14,17 +14,19 @@ import {
   PacketFamily,
   PlayerKilledState,
 } from 'eolib';
-import type { Client } from '../client';
-import { ITEM_PROTECT_TICKS_NPC } from '../consts';
-import { EOResourceID } from '../edf';
-import { ChatBubble } from '../render/chat-bubble';
-import { Emote } from '../render/emote';
-import { HealthBar } from '../render/health-bar';
-import { NpcAttackAnimation } from '../render/npc-attack';
-import { NpcWalkAnimation } from '../render/npc-walk';
-import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon, ChatTab } from '../types';
-import { capitalize } from '../utils/capitalize';
+import type { Client } from '@/client';
+import { ITEM_PROTECT_TICKS_NPC } from '@/consts';
+import { EOResourceID } from '@/edf';
+import {
+  ChatBubble,
+  Emote,
+  HealthBar,
+  NpcAttackAnimation,
+  NpcWalkAnimation,
+} from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { capitalize } from '@/utils';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
   const packet = NpcPlayerServerPacket.deserialize(reader);

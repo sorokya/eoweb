@@ -10,9 +10,9 @@ import {
   SitReplyServerPacket,
   SitState,
 } from 'eolib';
-import type { Client } from '../client';
-import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
-import { playSfxById } from '../sfx';
+import type { Client } from '@/client';
+import { EffectAnimation, EffectTargetCharacter } from '@/render';
+import { playSfxById } from '@/sfx';
 
 function handleSitPlayer(client: Client, reader: EoReader) {
   const packet = SitPlayerServerPacket.deserialize(reader);

@@ -1,5 +1,5 @@
 import { Direction } from 'eolib';
-import type { Vector2 } from '../vector';
+import type { Vector2 } from '@/vector';
 
 export function getPrevCoords(
   coords: Vector2,

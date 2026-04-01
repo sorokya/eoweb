@@ -1,6 +1,6 @@
 import { MusicPlayerServerPacket, PacketAction, PacketFamily } from 'eolib';
-import type { Client } from '../client';
-import { playSfxById } from '../sfx';
+import type { Client } from '@/client';
+import { playSfxById } from '@/sfx';
 
 export function registerMusicHandlers(client: Client) {
   client.bus!.registerPacketHandler(

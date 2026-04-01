@@ -8,7 +8,7 @@ import {
   PacketFamily,
   SitState,
 } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 function handleChairPlayer(client: Client, reader: EoReader) {
   const packet = ChairPlayerServerPacket.deserialize(reader);

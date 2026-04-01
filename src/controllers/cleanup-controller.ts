@@ -1,6 +1,6 @@
-import type { Client } from '../client';
-import { CLEAR_OUT_OF_RANGE_TICKS } from '../consts';
-import { inRange } from '../utils';
+import type { Client } from '@/client';
+import { CLEAR_OUT_OF_RANGE_TICKS } from '@/consts';
+import { inRange } from '@/utils';
 
 export class CleanupController {
   private client: Client;

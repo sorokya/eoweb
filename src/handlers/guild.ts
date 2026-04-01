@@ -16,7 +16,7 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 function handleGuildOpen(client: Client, reader: EoReader) {
   const packet = GuildOpenServerPacket.deserialize(reader);

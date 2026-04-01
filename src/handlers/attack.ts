@@ -6,13 +6,16 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
-import { CharacterAttackAnimation } from '../render/character-attack';
-import { CharacterRangedAttackAnimation } from '../render/character-attack-ranged';
-import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
-import { Emote } from '../render/emote';
-import { playSfxById, SfxId } from '../sfx';
-import { randomRange } from '../utils/random-range';
+import type { Client } from '@/client';
+import {
+  CharacterAttackAnimation,
+  CharacterRangedAttackAnimation,
+  EffectAnimation,
+  EffectTargetCharacter,
+  Emote,
+} from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import { randomRange } from '@/utils';
 
 function handleAttackPlayer(client: Client, reader: EoReader) {
   const packet = AttackPlayerServerPacket.deserialize(reader);

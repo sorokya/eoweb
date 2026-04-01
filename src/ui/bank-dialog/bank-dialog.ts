@@ -1,12 +1,12 @@
 import mitt from 'mitt';
-import type { Client } from '../../client';
-import { EOResourceID } from '../../edf';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
-import { createIconMenuItem } from '../utils/create-menu-item';
+import type { Client } from '@/client';
+import { EOResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
+import { createIconMenuItem } from '@/ui/utils';
 
 import './bank-dialog.css';
-import { DialogIcon } from '../../types';
+import { DialogIcon } from '@/ui/ui-types';
 
 type Events = {
   deposit: undefined;

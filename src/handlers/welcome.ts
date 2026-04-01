@@ -8,10 +8,10 @@ import {
   WelcomeCode,
   WelcomeReplyServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { USAGE_TICKS } from '../consts';
-import { DialogResourceID } from '../edf';
-import { GameState } from '../types';
+import type { Client } from '@/client';
+import { USAGE_TICKS } from '@/consts';
+import { DialogResourceID } from '@/edf';
+import { GameState } from '@/game-state';
 
 function handleWelcomeReply(client: Client, reader: EoReader) {
   const packet = WelcomeReplyServerPacket.deserialize(reader);

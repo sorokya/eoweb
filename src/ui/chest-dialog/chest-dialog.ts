@@ -1,10 +1,10 @@
 import type { ThreeItem } from 'eolib';
 import { Gender, ItemType } from 'eolib';
-import type { Client } from '../../client';
-import { EOResourceID } from '../../edf';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
-import { setItemImageFromGfx } from '../utils/gfx-resource';
+import type { Client } from '@/client';
+import { EOResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
+import { setItemImageFromGfx } from '@/ui/utils';
 
 import './chest-dialog.css';
 

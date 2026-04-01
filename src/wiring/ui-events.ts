@@ -1,14 +1,15 @@
 import type { ItemSpecial } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 import {
   LOCKER_MAX_ITEM_AMOUNT,
   LOCKER_UPGRADE_BASE_COST,
   LOCKER_UPGRADE_COST_STEP,
   MAX_LOCKER_UPGRADES,
-} from '../consts';
-import { DialogResourceID, EOResourceID } from '../edf';
-import { ChatIcon, ChatTab, GameState, SlotType } from '../types';
-import { capitalize } from '../utils';
+} from '@/consts';
+import { DialogResourceID, EOResourceID } from '@/edf';
+import { GameState } from '@/game-state';
+import { ChatIcon, ChatTab, SlotType } from '@/ui/ui-types';
+import { capitalize } from '@/utils';
 
 // biome-ignore lint/suspicious/noExplicitAny: Event emitter callbacks require flexible argument types
 type EventCallback = (...args: any[]) => void;

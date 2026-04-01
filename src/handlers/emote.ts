@@ -4,8 +4,8 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
-import { Emote } from '../render/emote';
+import type { Client } from '@/client';
+import { Emote } from '@/render';
 
 function handleEmotePlayer(client: Client, reader: EoReader) {
   const packet = EmotePlayerServerPacket.deserialize(reader);

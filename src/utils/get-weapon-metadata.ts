@@ -1,4 +1,4 @@
-import { SfxId } from '../sfx';
+import { SfxId } from '@/sfx';
 
 export class WeaponMetadata {
   constructor(

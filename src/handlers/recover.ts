@@ -9,10 +9,9 @@ import {
   RecoverReplyServerPacket,
   RecoverTargetGroupServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { Emote } from '../render/emote';
-import { HealthBar } from '../render/health-bar';
-import { playSfxById, SfxId } from '../sfx';
+import type { Client } from '@/client';
+import { Emote, HealthBar } from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handleRecoverPlayer(client: Client, reader: EoReader) {
   const packet = RecoverPlayerServerPacket.deserialize(reader);

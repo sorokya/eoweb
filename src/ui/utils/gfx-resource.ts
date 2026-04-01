@@ -1,5 +1,5 @@
-import { GfxLoader } from '../../gfx-loader/gfx-loader';
-import { getItemGraphicId } from '../../utils/get-item-graphic-id';
+import { GfxLoader } from '@/gfx';
+import { getItemGraphicId } from '@/utils';
 
 const ITEM_FILE_ID = 23;
 const SKILL_FILE_ID = 25;

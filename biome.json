@@ -17,6 +17,49 @@
     "rules": {
       "recommended": true,
       "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": ["../**"],
+                "message": "Use @/ path alias instead of relative parent imports (e.g. '@/client' instead of '../client')"
+              },
+              {
+                "group": ["@/utils/**"],
+                "message": "Import from '@/utils' barrel instead of a deep path"
+              },
+              {
+                "group": ["@/render/**"],
+                "message": "Import from '@/render' barrel instead of a deep path"
+              },
+              {
+                "group": ["@/controllers/**"],
+                "message": "Import from '@/controllers' barrel instead of a deep path"
+              },
+              {
+                "group": ["@/handlers/**"],
+                "message": "Import from '@/handlers' barrel instead of a deep path"
+              },
+              {
+                "group": ["@/gfx/**"],
+                "message": "Import from '@/gfx' barrel instead of a deep path"
+              },
+              {
+                "group": ["@/fonts/**"],
+                "message": "Import from '@/fonts' barrel instead of a deep path"
+              },
+              {
+                "group": ["@/wiring/**"],
+                "message": "Import from '@/wiring' barrel instead of a deep path"
+              },
+              {
+                "group": ["@/ui/*/**"],
+                "message": "Import from the UI module's barrel (e.g. '@/ui/chat' instead of '@/ui/chat/chat')"
+              }
+            ]
+          }
+        },
         "noParameterAssign": "error",
         "useAsConstAssertion": "error",
         "useDefaultParameterLast": "error",

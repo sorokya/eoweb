@@ -1,4 +1,4 @@
-import { RANGED_ATTACK_TICKS } from '../consts';
+import { RANGED_ATTACK_TICKS } from '@/consts';
 import { Animation } from './animation';
 
 export class CharacterRangedAttackAnimation extends Animation {

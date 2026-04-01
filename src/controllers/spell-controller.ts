@@ -9,18 +9,19 @@ import {
   SpellTargetType,
 } from 'eolib';
 
-import type { Client } from '../client';
-import { SPELL_COOLDOWN_TICKS } from '../consts';
-import { EOResourceID } from '../edf';
+import type { Client } from '@/client';
+import { SPELL_COOLDOWN_TICKS } from '@/consts';
+import { EOResourceID } from '@/edf';
+import { SpellTarget } from '@/game-state';
 import {
   CharacterDeathAnimation,
   CharacterSpellChantAnimation,
   EffectAnimation,
   type EffectTarget,
   NpcDeathAnimation,
-} from '../render';
-import { playSfxById } from '../sfx';
-import { SfxId, SlotType, SpellTarget } from '../types';
+} from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import { SlotType } from '@/ui/ui-types';
 import { getTimestamp } from './movement-controller';
 
 enum SpellState {

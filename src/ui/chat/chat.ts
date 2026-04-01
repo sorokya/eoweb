@@ -1,9 +1,9 @@
 import mitt from 'mitt';
-import type { Client } from '../../client';
-import { Base } from '../base-ui';
+import type { Client } from '@/client';
+import { Base } from '@/ui/base-ui';
 
 import './chat.css';
-import { ChatIcon, ChatTab } from '../../types';
+import { ChatIcon, ChatTab } from '@/ui/ui-types';
 
 type Events = {
   click: undefined;

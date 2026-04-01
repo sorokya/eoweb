@@ -7,12 +7,12 @@ import {
   TalkReportClientPacket,
   TalkTellClientPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { COLORS, MAX_CHAT_LENGTH } from '../consts';
-import { ChatBubble } from '../render/chat-bubble';
-import { playSfxById } from '../sfx';
-import { ChatIcon, ChatTab, SfxId } from '../types';
-import { capitalize, makeDrunk } from '../utils';
+import type { Client } from '@/client';
+import { COLORS, MAX_CHAT_LENGTH } from '@/consts';
+import { ChatBubble } from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { capitalize, makeDrunk } from '@/utils';
 
 export class ChatController {
   private client: Client;

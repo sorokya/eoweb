@@ -1,13 +1,15 @@
 import { Direction, MapTileSpec, NpcType } from 'eolib';
 import { Sprite } from 'pixi.js';
-import { StaticAtlasEntryType } from './atlas';
-import type { Client } from './client';
-import { DEATH_TICKS } from './consts';
-import { CharacterDeathAnimation } from './render/character-death';
-import { CharacterWalkAnimation } from './render/character-walk';
-import { NpcDeathAnimation } from './render/npc-death';
-import { NpcWalkAnimation } from './render/npc-walk';
-import type { Vector2 } from './vector';
+import { StaticAtlasEntryType } from '@/atlas';
+import type { Client } from '@/client';
+import { DEATH_TICKS } from '@/consts';
+import {
+  CharacterDeathAnimation,
+  CharacterWalkAnimation,
+  NpcDeathAnimation,
+  NpcWalkAnimation,
+} from '@/render';
+import type { Vector2 } from '@/vector';
 
 const TILE_WIDTH = 26;
 const HALF_TILE_WIDTH = TILE_WIDTH >> 1;

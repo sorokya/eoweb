@@ -1,5 +1,5 @@
-import { COLORS } from '../consts';
-import type { Font } from '../fonts/base';
+import { COLORS } from '@/consts';
+import type { Font } from '@/fonts';
 import { Animation } from './animation';
 
 const hardLimit = 150;

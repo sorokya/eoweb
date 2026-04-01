@@ -7,8 +7,8 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
-import { DialogResourceID } from '../edf';
+import type { Client } from '@/client';
+import { DialogResourceID } from '@/edf';
 
 function handleAccountReply(client: Client, reader: EoReader) {
   const packet = AccountReplyServerPacket.deserialize(reader);

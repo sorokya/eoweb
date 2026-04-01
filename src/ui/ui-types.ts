@@ -59,7 +59,6 @@ export enum ChatIcon {
   QuestMessage = 23,
 }
 
-// ChatTab has no implementation file counterpart, keep it here
 export enum ChatTab {
   Local = 0,
   Global = 1,

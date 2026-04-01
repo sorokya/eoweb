@@ -7,9 +7,9 @@ import {
   type TradeItemData,
   TradeRemoveClientPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { playSfxById, SfxId } from '../sfx';
-import { TradeState } from '../types';
+import type { Client } from '@/client';
+import { TradeState } from '@/game-state';
+import { playSfxById, SfxId } from '@/sfx';
 
 export class TradeController {
   state = TradeState.None;

@@ -10,7 +10,7 @@ import {
   TradeSpecServerPacket,
   TradeUseServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 function handleTradeRequest(client: Client, reader: EoReader) {
   const packet = TradeRequestServerPacket.deserialize(reader);

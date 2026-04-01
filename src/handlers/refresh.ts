@@ -4,7 +4,7 @@ import {
   PacketFamily,
   RefreshReplyServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 function handleRefreshReply(client: Client, reader: EoReader) {
   const packet = RefreshReplyServerPacket.deserialize(reader);

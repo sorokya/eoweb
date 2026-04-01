@@ -1,11 +1,11 @@
-// Character animations
-
 export { Animation } from './animation';
 export { CharacterAttackAnimation } from './character-attack';
 export { CharacterRangedAttackAnimation } from './character-attack-ranged';
 export { CharacterDeathAnimation } from './character-death';
 export { CharacterSpellChantAnimation } from './character-spell-chant';
 export { CharacterWalkAnimation } from './character-walk';
+export type { ChatBubbleLayout } from './chat-bubble';
+export { ChatBubble } from './chat-bubble';
 // Effects & UI
 export { CursorClickAnimation } from './cursor-click';
 export {

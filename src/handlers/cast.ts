@@ -8,14 +8,12 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
-import { ITEM_PROTECT_TICKS_NPC } from '../consts';
-import { EOResourceID } from '../edf';
-import { EffectTargetNpc } from '../render/effect';
-import { Emote } from '../render/emote';
-import { HealthBar } from '../render/health-bar';
-import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon, ChatTab } from '../types';
+import type { Client } from '@/client';
+import { ITEM_PROTECT_TICKS_NPC } from '@/consts';
+import { EOResourceID } from '@/edf';
+import { EffectTargetNpc, Emote, HealthBar } from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon, ChatTab } from '@/ui/ui-types';
 
 function handleCastReply(client: Client, reader: EoReader) {
   const packet = CastReplyServerPacket.deserialize(reader);

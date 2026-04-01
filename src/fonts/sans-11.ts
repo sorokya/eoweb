@@ -1,8 +1,4 @@
-import {
-  type Atlas,
-  StaticAtlasEntryType,
-  type TileAtlasEntry,
-} from '../atlas';
+import { type Atlas, StaticAtlasEntryType, type TileAtlasEntry } from '@/atlas';
 import { Font, FontCharacter } from './base';
 
 export class Sans11Font extends Font {

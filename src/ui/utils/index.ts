@@ -5,3 +5,10 @@ export {
   createSkillMenuItem,
   createTextMenuItem,
 } from './create-menu-item';
+export {
+  setBackgroundImageFromGfx,
+  setImageFromGfx,
+  setItemGridImageFromGfx,
+  setItemImageFromGfx,
+  setSkillBackgroundFromGfx,
+} from './gfx-resource';

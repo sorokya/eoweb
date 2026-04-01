@@ -7,8 +7,8 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
-import { playSfxById, SfxId } from '../sfx';
+import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handleBarberOpen(client: Client, reader: EoReader) {
   const packet = BarberOpenServerPacket.deserialize(reader);

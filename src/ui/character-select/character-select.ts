@@ -5,13 +5,13 @@ import {
   EquipmentMapInfo,
 } from 'eolib';
 import mitt from 'mitt';
-import { CharacterFrame } from '../../atlas';
-import type { Client } from '../../client';
-import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '../../consts';
-import { DialogResourceID } from '../../edf';
-import { playSfxById, SfxId } from '../../sfx';
-import { capitalize } from '../../utils/capitalize';
-import { Base } from '../base-ui';
+import { CharacterFrame } from '@/atlas';
+import type { Client } from '@/client';
+import { CHARACTER_HEIGHT, CHARACTER_WIDTH, GAME_FPS } from '@/consts';
+import { DialogResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
+import { capitalize } from '@/utils';
 
 import './character-select.css';
 

@@ -6,7 +6,7 @@ import {
   PacketFamily,
   PingSequenceStart,
 } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 function handleConnectionPlayer(client: Client, reader: EoReader) {
   const packet = ConnectionPlayerServerPacket.deserialize(reader);

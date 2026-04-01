@@ -1,5 +1,5 @@
 import type { Texture } from 'pixi.js';
-import type { Atlas, TileAtlasEntry } from '../atlas';
+import type { Atlas, TileAtlasEntry } from '@/atlas';
 
 export class FontCharacter {
   constructor(

@@ -1,4 +1,4 @@
-import { SfxId } from '../sfx';
+import { SfxId } from '@/sfx';
 
 export enum EffectAnimationType {
   Static = 0,
