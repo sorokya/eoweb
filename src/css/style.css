@@ -632,17 +632,6 @@ div.icon[data-id="23"] {
   --height: 15px;
 }
 
-#offset-tweaker {
-  color: #fff;
-  position: absolute;
-  top: 20px;
-  right: 100px;
-}
-
-#offset-tweaker input {
-  width: 40px;
-}
-
 .slider-container {
   position: absolute;
   width: 123px;
