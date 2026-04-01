@@ -1,9 +1,9 @@
 import mitt from 'mitt';
-import type { Client } from '../../client';
-import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH } from '../../consts';
-import { DialogResourceID } from '../../edf';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
+import type { Client } from '@/client';
+import { MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH } from '@/consts';
+import { DialogResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
 
 import './create-account.css';
 

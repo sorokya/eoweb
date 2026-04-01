@@ -7,9 +7,9 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
-import { DialogResourceID } from '../edf';
-import { playSfxById, SfxId } from '../sfx';
+import type { Client } from '@/client';
+import { DialogResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handleCharacterReply(client: Client, reader: EoReader) {
   const packet = CharacterReplyServerPacket.deserialize(reader);

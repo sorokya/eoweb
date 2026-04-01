@@ -1,4 +1,4 @@
-import { HOST } from './consts';
+import { HOST } from '@/consts';
 
 type Config = {
   host: string;

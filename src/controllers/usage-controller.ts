@@ -1,6 +1,6 @@
 import { Emote as EmoteType } from 'eolib';
-import type { Client } from '../client';
-import { IDLE_TICKS, INITIAL_IDLE_TICKS, USAGE_TICKS } from '../consts';
+import type { Client } from '@/client';
+import { IDLE_TICKS, INITIAL_IDLE_TICKS, USAGE_TICKS } from '@/consts';
 
 export class UsageController {
   private client: Client;

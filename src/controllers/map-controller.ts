@@ -7,11 +7,11 @@ import {
   MapTileSpec,
   SitAction,
 } from 'eolib';
-import type { Client } from '../client';
-import { Door } from '../door';
-import { EOResourceID } from '../edf';
-import { playSfxById, SfxId } from '../sfx';
-import type { Vector2 } from '../vector';
+import type { Client } from '@/client';
+import { Door } from '@/door';
+import { EOResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import type { Vector2 } from '@/vector';
 
 export class MapController {
   private client: Client;

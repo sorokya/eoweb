@@ -11,10 +11,10 @@ import {
   ThreeItem,
 } from 'eolib';
 
-import type { Client } from '../client';
-import { EOResourceID } from '../edf';
-import { EquipmentSlot, getEquipmentSlotForItemType } from '../types';
-import type { Vector2 } from '../vector';
+import type { Client } from '@/client';
+import { EOResourceID } from '@/edf';
+import { EquipmentSlot, getEquipmentSlotForItemType } from '@/equipment';
+import type { Vector2 } from '@/vector';
 
 export class InventoryController {
   private client: Client;

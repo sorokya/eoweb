@@ -12,8 +12,8 @@ import {
   CharacterFrame,
   NpcFrame,
   StaticAtlasEntryType,
-} from './atlas';
-import type { Client } from './client';
+} from '@/atlas';
+import type { Client } from '@/client';
 import {
   getCharacterIntersecting,
   getCharacterRectangle,
@@ -25,7 +25,7 @@ import {
   setLockerRectangle,
   setNpcRectangle,
   setSignRectangle,
-} from './collision';
+} from '@/collision';
 import {
   ANIMATION_TICKS,
   COLORS,
@@ -43,31 +43,31 @@ import {
   TILE_WIDTH,
   WALK_HEIGHT_FACTOR,
   WALK_WIDTH_FACTOR,
-} from './consts';
-import { GfxType } from './gfx';
-import { CharacterAttackAnimation } from './render/character-attack';
-import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
-import { CharacterDeathAnimation } from './render/character-death';
-import { CharacterSpellChantAnimation } from './render/character-spell-chant';
-import { CharacterWalkAnimation } from './render/character-walk';
-import type { ChatBubble } from './render/chat-bubble';
+} from '@/consts';
+import { GameState } from '@/game-state';
+import { GfxType } from '@/gfx';
+import type { ChatBubble, Emote, HealthBar } from '@/render';
 import {
+  CharacterAttackAnimation,
+  CharacterDeathAnimation,
+  CharacterRangedAttackAnimation,
+  CharacterSpellChantAnimation,
+  CharacterWalkAnimation,
   type EffectAnimation,
   EffectTargetCharacter,
   EffectTargetNpc,
   EffectTargetTile,
-} from './render/effect';
-import type { Emote } from './render/emote';
-import type { HealthBar } from './render/health-bar';
-import { NpcAttackAnimation } from './render/npc-attack';
-import { NpcDeathAnimation } from './render/npc-death';
-import { NpcWalkAnimation } from './render/npc-walk';
-import { GameState } from './types';
-import { capitalize } from './utils/capitalize';
-import { getItemGraphicId } from './utils/get-item-graphic-id';
-import { isoToScreen } from './utils/iso-to-screen';
-import { screenToIso } from './utils/screen-to-iso';
-import type { Vector2 } from './vector';
+  NpcAttackAnimation,
+  NpcDeathAnimation,
+  NpcWalkAnimation,
+} from '@/render';
+import {
+  capitalize,
+  getItemGraphicId,
+  isoToScreen,
+  screenToIso,
+} from '@/utils';
+import type { Vector2 } from '@/vector';
 
 enum EntityType {
   Tile = 0,

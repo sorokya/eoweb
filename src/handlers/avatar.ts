@@ -10,15 +10,15 @@ import {
   PacketFamily,
   WarpEffect,
 } from 'eolib';
-import type { Client } from '../client';
-import { CharacterDeathAnimation } from '../render/character-death';
+import type { Client } from '@/client';
 import {
+  CharacterDeathAnimation,
   EffectAnimation,
   EffectTargetCharacter,
   EffectTargetTile,
-} from '../render/effect';
-import { HealthBar } from '../render/health-bar';
-import { playSfxById, SfxId } from '../sfx';
+  HealthBar,
+} from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handleAvatarRemove(client: Client, reader: EoReader) {
   const packet = AvatarRemoveServerPacket.deserialize(reader);

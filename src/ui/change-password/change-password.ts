@@ -1,8 +1,8 @@
 import mitt from 'mitt';
-import type { Client } from '../../client';
-import { DialogResourceID } from '../../edf';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
+import type { Client } from '@/client';
+import { DialogResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
 
 import './change-password.css';
 

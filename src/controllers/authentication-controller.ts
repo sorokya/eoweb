@@ -1,3 +1,4 @@
+import type { Gender } from 'eolib';
 import {
   AccountAgreeClientPacket,
   AccountRequestClientPacket,
@@ -8,9 +9,24 @@ import {
   LoginRequestClientPacket,
   WelcomeRequestClientPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { MAX_CHARACTER_NAME_LENGTH } from '../consts';
-import type { AccountCreateData, CharacterCreateData } from '../types';
+import type { Client } from '@/client';
+import { MAX_CHARACTER_NAME_LENGTH } from '@/consts';
+
+type AccountCreateData = {
+  username: string;
+  password: string;
+  name: string;
+  location: string;
+  email: string;
+};
+
+type CharacterCreateData = {
+  name: string;
+  gender: Gender;
+  hairStyle: number;
+  hairColor: number;
+  skin: number;
+};
 
 export class AuthenticationController {
   private client: Client;

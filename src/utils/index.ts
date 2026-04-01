@@ -8,7 +8,7 @@ export {
   getEffectMetaData,
 } from './get-effect-metadata';
 export { getHatMetadata, HatMaskType } from './get-hat-metadata';
-export { getItemGraphicId, getItemGraphicPath } from './get-item-graphic-id';
+export { getItemGraphicId } from './get-item-graphic-id';
 export { getItemMeta } from './get-item-meta';
 export { getNextCoords } from './get-next-coords';
 export { getNpcMetaData, NPCMetadata } from './get-npc-metadata';

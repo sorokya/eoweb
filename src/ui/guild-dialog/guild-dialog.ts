@@ -1,10 +1,10 @@
-import type { Client } from '../../client';
-import { playSfxById, SfxId } from '../../sfx';
-import { GuildDialogState } from '../../types';
-import { Base } from '../base-ui';
+import type { Client } from '@/client';
+import { GuildDialogState } from '@/game-state';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
 
 import './guild-dialog.css';
-import { GUILD_MAX_RANK, GUILD_MIN_DEPOSIT } from '../../consts';
+import { GUILD_MAX_RANK, GUILD_MIN_DEPOSIT } from '@/consts';
 
 export class GuildDialog extends Base {
   private client: Client;

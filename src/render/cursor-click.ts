@@ -1,4 +1,4 @@
-import type { Vector2 } from '../vector';
+import type { Vector2 } from '@/vector';
 
 const CURSOR_TICKS_PER_FRAME = 2;
 const CURSOR_CLICK_FRAMES = 2;

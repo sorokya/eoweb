@@ -1,4 +1,4 @@
-import type { Vector2 } from './vector';
+import type { Vector2 } from '@/vector';
 
 export class Rectangle {
   depth = 0;

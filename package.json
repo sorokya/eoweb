@@ -9,18 +9,13 @@
     "preview": "vite preview",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "find-dead-code": "ts-prune"
-  },
-  "postcss": {
-    "plugins": {
-      "postcss-nesting": {}
-    }
+    "knip": "knip"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.10",
+    "@types/node": "^25.5.0",
+    "knip": "^6.2.0",
     "lefthook": "^2.1.4",
-    "postcss-nesting": "^14.0.0",
-    "ts-prune": "^0.10.3",
     "typescript": "~6.0.2",
     "vite": "^8.0.3"
   },

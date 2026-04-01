@@ -4,9 +4,9 @@ import {
   type DialogQuestEntry,
 } from 'eolib';
 import mitt from 'mitt';
-import type { Client } from '../../client';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
+import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
 
 import './quest-dialog.css';
 

@@ -1,4 +1,4 @@
-import type { Vector2 } from '../vector';
+import type { Vector2 } from '@/vector';
 
 export function getDistance(a: Vector2, b: Vector2): number {
   const dx = Math.abs(a.x - b.x);

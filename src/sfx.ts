@@ -1,4 +1,4 @@
-import { padWithZeros } from './utils/pad-with-zeros';
+import { padWithZeros } from '@/utils';
 
 export enum SfxId {
   LayeredTechIntro = 1,

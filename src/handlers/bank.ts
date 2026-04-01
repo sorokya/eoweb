@@ -5,8 +5,8 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
-import { playSfxById, SfxId } from '../sfx';
+import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handleBankOpen(client: Client, reader: EoReader) {
   const packet = BankOpenServerPacket.deserialize(reader);

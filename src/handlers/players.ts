@@ -7,10 +7,10 @@ import {
   PlayersPongServerPacket,
   WarpEffect,
 } from 'eolib';
-import type { Client } from '../client';
-import { EOResourceID } from '../edf';
-import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
-import { playSfxById, SfxId } from '../sfx';
+import type { Client } from '@/client';
+import { EOResourceID } from '@/edf';
+import { EffectAnimation, EffectTargetCharacter } from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handlePlayersAgree(client: Client, reader: EoReader) {
   const packet = PlayersAgreeServerPacket.deserialize(reader);

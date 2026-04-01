@@ -1,15 +1,12 @@
-import type { Client } from '../../client';
-import { HOTBAR_SLOTS } from '../../consts';
-import { SlotType } from '../../types/ui';
-import { Base } from '../base-ui';
-import {
-  setItemImageFromGfx,
-  setSkillBackgroundFromGfx,
-} from '../utils/gfx-resource';
+import type { Client } from '@/client';
+import { HOTBAR_SLOTS } from '@/consts';
+import { Base } from '@/ui/base-ui';
+import { SlotType } from '@/ui/ui-types';
+import { setItemImageFromGfx, setSkillBackgroundFromGfx } from '@/ui/utils';
 
 import './hotbar.css';
 
-export class Slot {
+class Slot {
   type: SlotType;
   typeId: number;
 

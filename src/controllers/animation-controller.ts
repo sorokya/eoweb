@@ -1,5 +1,6 @@
-import type { Client } from '../client';
-import { SPELL_COOLDOWN_TICKS } from '../consts';
+import type { Client } from '@/client';
+import { SPELL_COOLDOWN_TICKS } from '@/consts';
+import type { ChatBubble } from '@/render';
 import {
   type Animation,
   CharacterDeathAnimation,
@@ -10,13 +11,15 @@ import {
   type Emote,
   type HealthBar,
   NpcDeathAnimation,
-} from '../render';
-import type { ChatBubble } from '../render/chat-bubble';
+  NpcWalkAnimation,
+} from '@/render';
 
 export class AnimationController {
   private client: Client;
   characterAnimations: Map<number, Animation> = new Map();
+  pendingCharacterAnimations: Map<number, Animation> = new Map();
   npcAnimations: Map<number, Animation> = new Map();
+  pendingNpcAnimations: Map<number, Animation> = new Map();
   characterChats: Map<number, ChatBubble> = new Map();
   npcChats: Map<number, ChatBubble> = new Map();
   npcHealthBars: Map<number, HealthBar> = new Map();
@@ -33,6 +36,34 @@ export class AnimationController {
     activeCharIds: Set<number>,
     activeNpcIds: Set<number>,
   ): { playerWalking: boolean; playerDying: boolean } {
+    // Drain pending animations so they're created inside the tick loop,
+    // allowing the renderedFirstFrame no-op to happen in this same tick.
+    for (const [id, animation] of this.pendingCharacterAnimations) {
+      if (animation instanceof CharacterWalkAnimation) {
+        const character = this.client.getCharacterById(id);
+        if (character) {
+          character.direction = animation.direction;
+          character.coords.x = animation.to.x;
+          character.coords.y = animation.to.y;
+        }
+      }
+      this.characterAnimations.set(id, animation);
+    }
+    this.pendingCharacterAnimations.clear();
+
+    for (const [id, animation] of this.pendingNpcAnimations) {
+      if (animation instanceof NpcWalkAnimation) {
+        const npc = this.client.nearby.npcs.find((n) => n.index === id);
+        if (npc) {
+          npc.direction = animation.direction;
+          npc.coords.x = animation.to.x;
+          npc.coords.y = animation.to.y;
+        }
+      }
+      this.npcAnimations.set(id, animation);
+    }
+    this.pendingNpcAnimations.clear();
+
     const result = this.tickCharacterAnimations(activeCharIds);
     this.tickCharacterEmotes(activeCharIds);
     this.tickNpcAnimations(activeNpcIds);

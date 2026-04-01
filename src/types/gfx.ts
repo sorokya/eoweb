@@ -1,1 +1,0 @@
-export { GfxType } from '../gfx';

@@ -1,20 +1,21 @@
 import { Direction, Emote, ItemSubtype, MapTileSpec, SitState } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 import {
   ATTACK_TICKS,
   FACE_TICKS,
   HOTBAR_COOLDOWN_TICKS,
   SIT_TICKS,
   WALK_TICKS as WALK_ANIMATION_TICKS,
-} from '../consts';
-import { EOResourceID } from '../edf';
-import { CharacterAttackAnimation } from '../render/character-attack';
-import { CharacterRangedAttackAnimation } from '../render/character-attack-ranged';
-import { CharacterWalkAnimation } from '../render/character-walk';
-import { playSfxById, SfxId } from '../sfx';
-import { GameState } from '../types';
-import { bigCoordsToCoords } from '../utils/big-coords-to-coords';
-import { getNextCoords } from '../utils/get-next-coords';
+} from '@/consts';
+import { EOResourceID } from '@/edf';
+import { GameState } from '@/game-state';
+import {
+  CharacterAttackAnimation,
+  CharacterRangedAttackAnimation,
+  CharacterWalkAnimation,
+} from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import { bigCoordsToCoords, getNextCoords } from '@/utils';
 import { getTimestamp } from './movement-controller';
 
 enum Input {

@@ -1,17 +1,17 @@
 import type { SkillLearn } from 'eolib';
 import mitt from 'mitt';
-import type { Client } from '../../client';
-import { DialogResourceID, EOResourceID } from '../../edf';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
+import type { Client } from '@/client';
+import { DialogResourceID, EOResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
 import {
   createIconMenuItem,
   createSkillMenuItem,
   createTextMenuItem,
-} from '../utils/create-menu-item';
+} from '@/ui/utils';
 
 import './skill-master-dialog.css';
-import { DialogIcon } from '../../types';
+import { DialogIcon } from '@/ui/ui-types';
 
 enum State {
   Initial = 0,

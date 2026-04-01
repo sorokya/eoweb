@@ -1,7 +1,7 @@
-import type { Client } from '../../client';
-import { playSfxById, SfxId } from '../../sfx';
-import { calculateTnl, getExpForLevel } from '../../utils/calculate-tnl';
-import { Base } from '../base-ui';
+import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
+import { calculateTnl, getExpForLevel } from '@/utils';
 
 import './hud.css';
 

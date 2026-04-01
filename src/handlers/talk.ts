@@ -13,13 +13,13 @@ import {
   TalkServerServerPacket,
   TalkTellServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { COLORS } from '../consts';
-import { EOResourceID } from '../edf';
-import { ChatBubble } from '../render/chat-bubble';
-import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon, ChatTab } from '../types';
-import { capitalize } from '../utils/capitalize';
+import type { Client } from '@/client';
+import { COLORS } from '@/consts';
+import { EOResourceID } from '@/edf';
+import { ChatBubble } from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { capitalize } from '@/utils';
 
 function handleTalkPlayer(client: Client, reader: EoReader) {
   const packet = TalkPlayerServerPacket.deserialize(reader);

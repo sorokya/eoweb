@@ -1,5 +1,5 @@
 import type { Texture } from 'pixi.js';
-import type { Atlas, TileAtlasEntry } from '../atlas';
+import type { Atlas, TileAtlasEntry } from '@/atlas';
 
 export class FontCharacter {
   constructor(
@@ -9,13 +9,6 @@ export class FontCharacter {
     public width: number,
     public height: number,
   ) {}
-}
-
-export enum TextAlign {
-  CenterHorizontal = 0,
-  CenterVertical = 1,
-  Both = 2,
-  None = 3,
 }
 
 export abstract class Font {

@@ -31,11 +31,11 @@ import {
 import mitt, { type Emitter } from 'mitt';
 import { Notyf } from 'notyf';
 import { Application, Container } from 'pixi.js';
-import { Atlas } from './atlas';
-import type { PacketBus } from './bus';
-import { clearRectangles } from './collision';
-import { getDefaultConfig, loadConfig } from './config';
-import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS } from './consts';
+import { Atlas } from '@/atlas';
+import type { PacketBus } from '@/bus';
+import { clearRectangles } from '@/collision';
+import { getDefaultConfig, loadConfig } from '@/config';
+import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS } from '@/consts';
 import {
   AnimationController,
   AudioController,
@@ -47,6 +47,7 @@ import {
   CleanupController,
   CommandController,
   DrunkController,
+  GuildController,
   InventoryController,
   ItemProtectionController,
   KeyboardController,
@@ -62,38 +63,39 @@ import {
   SocialController,
   SpellController,
   StatSkillController,
+  TradeController,
   UsageController,
-} from './controllers';
-import { GuildController } from './controllers/guild-controller';
-import { TradeController } from './controllers/trade-controller';
-import { ViewportController } from './controllers/viewport-controller';
-import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from './db';
-import { type DialogResourceID, type Edf, EOResourceID } from './edf';
-import { Sans11Font } from './fonts/sans-11';
-import { registerAllHandlers } from './handlers';
-import { MapRenderer } from './map';
-import { MinimapRenderer } from './minimap';
-import { CharacterDeathAnimation, NpcDeathAnimation } from './render';
-import { playSfxById } from './sfx';
+  ViewportController,
+} from '@/controllers';
+import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from '@/db';
+import { type DialogResourceID, type Edf, EOResourceID } from '@/edf';
+import { Sans11Font } from '@/fonts';
+import { GameState } from '@/game-state';
+import { registerAllHandlers } from '@/handlers';
+import { MapRenderer } from '@/map';
+import { MinimapRenderer } from '@/minimap';
+import { CharacterDeathAnimation, NpcDeathAnimation } from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import type { ISlot } from '@/ui/ui-types';
 import type {
-  ClientEvents,
-  IEffectMetadata,
-  INPCMetadata,
-  IShieldMetadata,
-  ISlot,
-  IWeaponMetadata,
-} from './types';
-import { EffectAnimationType, GameState, HatMaskType, SfxId } from './types';
+  EffectMetadata,
+  NPCMetadata,
+  ShieldMetadata,
+  WeaponMetadata,
+} from '@/utils';
 import {
+  EffectAnimationType,
   getEffectMetaData,
   getHatMetadata,
   getNpcMetaData,
   getShieldMetaData,
   getWeaponMetaData,
+  HatMaskType,
   isoToScreen,
   screenToIso,
-} from './utils';
-import type { Vector2 } from './vector';
+} from '@/utils';
+import type { Vector2 } from '@/vector';
+import type { ClientEvents } from './events';
 
 export class Client {
   private emitter: Emitter<ClientEvents>;
@@ -183,7 +185,7 @@ export class Client {
   tradeController: TradeController;
   guildController: GuildController;
   npcMetadata = getNpcMetaData();
-  weaponMetadata: Map<number, IWeaponMetadata> = new Map();
+  weaponMetadata: Map<number, WeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
   effectMetadata = getEffectMetaData();
   hatMetadata = getHatMetadata();
@@ -351,7 +353,7 @@ export class Client {
     return this.nearby.items.find((i) => i.uid === index);
   }
 
-  getNpcMetadata(graphicId: number): INPCMetadata {
+  getNpcMetadata(graphicId: number): NPCMetadata {
     const data = this.npcMetadata.get(graphicId);
     if (data) {
       return data;
@@ -364,6 +366,7 @@ export class Client {
       yOffsetAttack: 0,
       animatedStanding: false,
       nameLabelOffset: 0,
+      transparent: false,
     };
   }
 
@@ -388,7 +391,7 @@ export class Client {
     );
   }
 
-  getWeaponMetadata(graphicId: number): IWeaponMetadata {
+  getWeaponMetadata(graphicId: number): WeaponMetadata {
     // Check the live module-level map (populated by async load)
     // rather than only the snapshot, to avoid timing issues
     const live = getWeaponMetaData();
@@ -400,7 +403,7 @@ export class Client {
     return { slash: 0, sfx: [SfxId.MeleeWeaponAttack], ranged: false };
   }
 
-  getShieldMetadata(graphicId: number): IShieldMetadata {
+  getShieldMetadata(graphicId: number): ShieldMetadata {
     const data = this.shieldMetadata.get(graphicId);
     if (data) {
       return data;
@@ -469,7 +472,7 @@ export class Client {
     return [edf.getLine(id) ?? '', edf.getLine(id + 1) ?? ''];
   }
 
-  getEffectMetadata(graphicId: number): IEffectMetadata {
+  getEffectMetadata(graphicId: number): EffectMetadata {
     const data = this.effectMetadata.get(graphicId);
     if (data) {
       return data;
@@ -636,7 +639,9 @@ export class Client {
     }
     this.minimapEnabled = false;
     this.animationController.characterAnimations.clear();
+    this.animationController.pendingCharacterAnimations.clear();
     this.animationController.npcAnimations.clear();
+    this.animationController.pendingNpcAnimations.clear();
     this.animationController.characterChats.clear();
     this.animationController.npcChats.clear();
     this.npcController.queuedNpcChats.clear();
@@ -691,7 +696,7 @@ export class Client {
     }
 
     const current = this.animationController.npcAnimations.get(index);
-    this.animationController.npcAnimations.set(
+    this.animationController.pendingNpcAnimations.set(
       index,
       new NpcDeathAnimation(current),
     );
@@ -704,7 +709,7 @@ export class Client {
     }
 
     const current = this.animationController.characterAnimations.get(playerId);
-    this.animationController.characterAnimations.set(
+    this.animationController.pendingCharacterAnimations.set(
       playerId,
       new CharacterDeathAnimation(current),
     );

@@ -9,9 +9,9 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
-import { DialogResourceID } from '../edf';
-import { playSfxById, SfxId } from '../sfx';
+import type { Client } from '@/client';
+import { DialogResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handleLockerBuy(client: Client, reader: EoReader) {
   const packet = LockerBuyServerPacket.deserialize(reader);

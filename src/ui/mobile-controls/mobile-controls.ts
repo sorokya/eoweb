@@ -1,4 +1,4 @@
-import { Base } from '../base-ui';
+import { Base } from '@/ui/base-ui';
 
 import './mobile-controls.css';
 

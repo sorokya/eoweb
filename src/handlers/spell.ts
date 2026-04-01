@@ -7,10 +7,12 @@ import {
   SpellTargetOtherServerPacket,
   SpellTargetSelfServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { CharacterSpellChantAnimation } from '../render/character-spell-chant';
-import { EffectTargetCharacter } from '../render/effect';
-import { HealthBar } from '../render/health-bar';
+import type { Client } from '@/client';
+import {
+  CharacterSpellChantAnimation,
+  EffectTargetCharacter,
+  HealthBar,
+} from '@/render';
 
 function handleSpellRequest(client: Client, reader: EoReader) {
   const packet = SpellRequestServerPacket.deserialize(reader);
@@ -25,7 +27,7 @@ function handleSpellRequest(client: Client, reader: EoReader) {
     return;
   }
 
-  client.animationController.characterAnimations.set(
+  client.animationController.pendingCharacterAnimations.set(
     packet.playerId,
     new CharacterSpellChantAnimation(
       client.sans11!,

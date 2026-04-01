@@ -1,10 +1,10 @@
 import type { ThreeItem } from 'eolib';
-import type { Client } from '../../client';
-import { EOResourceID } from '../../edf';
-import { playSfxById, SfxId } from '../../sfx';
-import { capitalize } from '../../utils/capitalize';
-import { Base } from '../base-ui';
-import { createItemMenuItem } from '../utils/create-menu-item';
+import type { Client } from '@/client';
+import { EOResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
+import { createItemMenuItem } from '@/ui/utils';
+import { capitalize } from '@/utils';
 
 import './locker-dialog.css';
 

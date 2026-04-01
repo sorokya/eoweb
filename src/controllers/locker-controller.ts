@@ -6,7 +6,7 @@ import {
   ThreeItem,
 } from 'eolib';
 
-import type { Client } from '../client';
+import type { Client } from '@/client';
 
 export class LockerController {
   private client: Client;

@@ -11,8 +11,8 @@ import {
   TradeRequestClientPacket,
 } from 'eolib';
 
-import type { Client } from '../client';
-import { Emote } from '../render';
+import type { Client } from '@/client';
+import { Emote } from '@/render';
 
 export class SocialController {
   private client: Client;

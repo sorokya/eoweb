@@ -1,10 +1,10 @@
 import { AdminLevel, type BoardPostListing } from 'eolib';
-import type { Client } from '../../client';
-import { MAX_PLAYER_POSTS } from '../../consts';
-import { DialogResourceID, EOResourceID } from '../../edf';
-import { playSfxById, SfxId } from '../../sfx';
-import { capitalize } from '../../utils/capitalize';
-import { Base } from '../base-ui';
+import type { Client } from '@/client';
+import { MAX_PLAYER_POSTS } from '@/consts';
+import { DialogResourceID, EOResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
+import { capitalize } from '@/utils';
 
 import './board-dialog.css';
 

@@ -1,5 +1,5 @@
 import { CharacterIcon } from 'eolib';
-import { ChatIcon } from '../../types';
+import { ChatIcon } from '@/ui/ui-types';
 
 export function characterIconToChatIcon(icon: CharacterIcon): ChatIcon {
   switch (icon) {

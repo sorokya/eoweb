@@ -12,18 +12,17 @@ import {
   WalkPlayerClientPacket,
 } from 'eolib';
 
-import type { Client } from '../client';
-import { INITIAL_IDLE_TICKS } from '../consts';
+import type { Client } from '@/client';
+import { INITIAL_IDLE_TICKS } from '@/consts';
 import {
   CharacterWalkAnimation,
   EffectAnimation,
   EffectTargetCharacter,
   Emote,
-} from '../render';
-import { playSfxById } from '../sfx';
-import { SfxId } from '../types';
-import { randomRange } from '../utils';
-import type { Vector2 } from '../vector';
+} from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import { randomRange } from '@/utils';
+import type { Vector2 } from '@/vector';
 
 export class MovementController {
   private client: Client;

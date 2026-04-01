@@ -11,9 +11,9 @@ import {
   StatSkillReplyServerPacket,
   StatSkillTakeServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { DialogResourceID } from '../edf';
-import { playSfxById, SfxId } from '../sfx';
+import type { Client } from '@/client';
+import { DialogResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handleStatSkillPlayer(client: Client, reader: EoReader) {
   const packet = StatSkillPlayerServerPacket.deserialize(reader);

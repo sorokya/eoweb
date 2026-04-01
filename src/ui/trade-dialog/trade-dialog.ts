@@ -1,12 +1,12 @@
 import { type Item, ItemSpecial } from 'eolib';
-import type { Client } from '../../client';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
+import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
 
 import './trade-dialog.css';
-import { DialogResourceID } from '../../edf';
-import { TradeState } from '../../types';
-import { capitalize } from '../../utils';
+import { DialogResourceID } from '@/edf';
+import { TradeState } from '@/game-state';
+import { capitalize } from '@/utils';
 
 export class TradeDialog extends Base {
   private client: Client;

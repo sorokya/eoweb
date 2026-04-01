@@ -1,5 +1,5 @@
 import { Coords, ItemGetClientPacket, MapTileSpec, SitState } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 import {
   getBoardIntersecting,
   getCharacterIntersecting,
@@ -8,17 +8,17 @@ import {
   getLockerIntersecting,
   getNpcIntersecting,
   getSignIntersecting,
-} from '../collision';
+} from '@/collision';
 import {
   PLAYER_MENU_ITEM_HEIGHT,
   PLAYER_MENU_OFFSET_Y,
   PLAYER_MENU_WIDTH,
-} from '../consts';
-import { EOResourceID } from '../edf';
-import { CursorClickAnimation } from '../render';
-import { playSfxById, SfxId } from '../sfx';
-import { GameState, PlayerMenuItem } from '../types';
-import { capitalize } from '../utils';
+} from '@/consts';
+import { EOResourceID } from '@/edf';
+import { GameState, PlayerMenuItem } from '@/game-state';
+import { CursorClickAnimation } from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import { capitalize } from '@/utils';
 
 export class MouseController {
   private client: Client;

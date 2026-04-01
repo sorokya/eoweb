@@ -15,54 +15,53 @@ import {
 } from 'eolib';
 import './css/style.css';
 import 'notyf/notyf.min.css';
-import { PacketBus } from './bus';
-import { Client } from './client';
-import { MAX_CHALLENGE } from './consts';
-import { DialogResourceID } from './edf';
-import { GameState } from './types';
-import { BankDialog } from './ui/bank-dialog/bank-dialog';
-import { BarberDialog } from './ui/barber-dialog/barber-dialog';
-import { BoardDialog } from './ui/board-dialog';
-import { ChangePasswordForm } from './ui/change-password';
-import { CharacterSelect } from './ui/character-select';
-import { Chat } from './ui/chat/chat';
-import { ChestDialog } from './ui/chest-dialog';
-import { CreateAccountForm } from './ui/create-account';
-import { CreateCharacterForm } from './ui/create-character';
-import { ExitGame } from './ui/exit-game';
-import { GuildDialog } from './ui/guild-dialog/guild-dialog';
-import { Hotbar } from './ui/hotbar/hotbar';
-import { HUD } from './ui/hud/hud';
-import { InGameMenu } from './ui/in-game-menu/in-game-menu';
-import { Inventory } from './ui/inventory';
-import { ItemAmountDialog } from './ui/item-amount-dialog';
-import { LargeAlertSmallHeader } from './ui/large-alert-small-header';
-import { LargeConfirmSmallHeader } from './ui/large-confirm-small-header';
-import { LockerDialog } from './ui/locker-dialog';
-import { LoginForm } from './ui/login';
-import { MainMenu } from './ui/main-menu/main-menu';
-import { MobileControls } from './ui/mobile-controls/mobile-controls';
-//import { OffsetTweaker } from './ui/offset-tweaker';
-import { OnlineList } from './ui/online-list';
-import { Paperdoll } from './ui/paperdoll';
-import { PartyDialog } from './ui/party-dialog';
-import { QuestDialog } from './ui/quest-dialog';
-import { ShopDialog } from './ui/shop-dialog';
-import { SkillMasterDialog } from './ui/skill-master-dialog';
-import { SmallAlertLargeHeader } from './ui/small-alert-large-header';
-import { SmallAlertSmallHeader } from './ui/small-alert-small-header';
-import { SmallConfirm } from './ui/small-confirm';
-import { SpellBook } from './ui/spell-book';
-import { Stats } from './ui/stats/stats';
-import { TradeDialog } from './ui/trade-dialog/trade-dialog';
-import { randomRange } from './utils';
+import { PacketBus } from '@/bus';
+import { Client } from '@/client';
+import { MAX_CHALLENGE } from '@/consts';
+import { DialogResourceID } from '@/edf';
+import { GameState } from '@/game-state';
+import { BankDialog } from '@/ui/bank-dialog';
+import { BarberDialog } from '@/ui/barber-dialog';
+import { BoardDialog } from '@/ui/board-dialog';
+import { ChangePasswordForm } from '@/ui/change-password';
+import { CharacterSelect } from '@/ui/character-select';
+import { Chat } from '@/ui/chat';
+import { ChestDialog } from '@/ui/chest-dialog';
+import { CreateAccountForm } from '@/ui/create-account';
+import { CreateCharacterForm } from '@/ui/create-character';
+import { ExitGame } from '@/ui/exit-game';
+import { GuildDialog } from '@/ui/guild-dialog';
+import { Hotbar } from '@/ui/hotbar';
+import { HUD } from '@/ui/hud';
+import { InGameMenu } from '@/ui/in-game-menu';
+import { Inventory } from '@/ui/inventory';
+import { ItemAmountDialog } from '@/ui/item-amount-dialog';
+import { LargeAlertSmallHeader } from '@/ui/large-alert-small-header';
+import { LargeConfirmSmallHeader } from '@/ui/large-confirm-small-header';
+import { LockerDialog } from '@/ui/locker-dialog';
+import { LoginForm } from '@/ui/login';
+import { MainMenu } from '@/ui/main-menu';
+import { MobileControls } from '@/ui/mobile-controls';
+import { OnlineList } from '@/ui/online-list';
+import { Paperdoll } from '@/ui/paperdoll';
+import { PartyDialog } from '@/ui/party-dialog';
+import { QuestDialog } from '@/ui/quest-dialog';
+import { ShopDialog } from '@/ui/shop-dialog';
+import { SkillMasterDialog } from '@/ui/skill-master-dialog';
+import { SmallAlertLargeHeader } from '@/ui/small-alert-large-header';
+import { SmallAlertSmallHeader } from '@/ui/small-alert-small-header';
+import { SmallConfirm } from '@/ui/small-confirm';
+import { SpellBook } from '@/ui/spell-book';
+import { Stats } from '@/ui/stats';
+import { TradeDialog } from '@/ui/trade-dialog';
+import { randomRange } from '@/utils';
 import {
   getReconnectAttempts,
   incrementReconnectAttempts,
   resetReconnectAttempts,
   wireClientEvents,
-} from './wiring/client-events';
-import { wireUiEvents } from './wiring/ui-events';
+  wireUiEvents,
+} from '@/wiring';
 
 // ── Client & Mobile ──────────────────────────────────────────────────────
 
@@ -86,7 +85,6 @@ const smallAlertLargeHeader = new SmallAlertLargeHeader();
 const exitGame = new ExitGame();
 const smallConfirm = new SmallConfirm();
 const chat = new Chat(client);
-//const offsetTweaker = new OffsetTweaker();
 const inGameMenu = new InGameMenu();
 const inventory = new Inventory(client);
 const stats = new Stats(client);

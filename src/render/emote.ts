@@ -1,5 +1,5 @@
 import type { Emote as EmoteType } from 'eolib';
-import { EMOTE_ANIMATION_TICKS } from '../consts';
+import { EMOTE_ANIMATION_TICKS } from '@/consts';
 
 export class Emote {
   ticks = EMOTE_ANIMATION_TICKS - 1;

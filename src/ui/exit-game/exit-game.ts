@@ -1,5 +1,5 @@
 import mitt from 'mitt';
-import { Base } from '../base-ui';
+import { Base } from '@/ui/base-ui';
 
 import './exit-game.css';
 

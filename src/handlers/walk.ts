@@ -7,11 +7,14 @@ import {
   WalkPlayerServerPacket,
   WalkReplyServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { CharacterWalkAnimation } from '../render/character-walk';
-import { EffectAnimation, EffectTargetCharacter } from '../render/effect';
-import { playSfxById } from '../sfx';
-import { getPrevCoords } from '../utils/get-prev-coords';
+import type { Client } from '@/client';
+import {
+  CharacterWalkAnimation,
+  EffectAnimation,
+  EffectTargetCharacter,
+} from '@/render';
+import { playSfxById } from '@/sfx';
+import { getPrevCoords } from '@/utils';
 
 function handleWalkPlayer(client: Client, reader: EoReader) {
   const packet = WalkPlayerServerPacket.deserialize(reader);
@@ -23,17 +26,14 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
     return;
   }
 
-  character.direction = packet.direction;
-  character.coords.x = packet.coords.x;
-  character.coords.y = packet.coords.y;
-  client.animationController.characterAnimations.set(
+  client.animationController.pendingCharacterAnimations.set(
     packet.playerId,
     new CharacterWalkAnimation(
       getPrevCoords(
         packet.coords,
         packet.direction,
-        client!.map!.width,
-        client!.map!.height,
+        client.map.width,
+        client.map.height,
       ),
       packet.coords,
       packet.direction,

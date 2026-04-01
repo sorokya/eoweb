@@ -11,17 +11,16 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 import {
   EffectAnimation,
   EffectTargetCharacter,
   EffectTargetTile,
-} from '../render/effect';
-import { HealthBar } from '../render/health-bar';
-import { playSfxById, SfxId } from '../sfx';
-import { getVolumeFromDistance } from '../utils/get-volume-from-distance';
-import { getDistance } from '../utils/range';
-import type { Vector2 } from '../vector';
+  HealthBar,
+} from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
+import { getDistance, getVolumeFromDistance } from '@/utils';
+import type { Vector2 } from '@/vector';
 
 function handleEffectReport(client: Client) {
   client.mapRenderer.timedSpikesTicks = 9;

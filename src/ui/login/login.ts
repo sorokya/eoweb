@@ -1,6 +1,6 @@
 import mitt from 'mitt';
-import { playSfxById, SfxId } from '../../sfx';
-import { Base } from '../base-ui';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
 
 import './login.css';
 

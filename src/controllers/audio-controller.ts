@@ -1,7 +1,7 @@
 import { MapTileSpec } from 'eolib';
-import type { Client } from '../client';
-import { getDistance, getVolumeFromDistance, padWithZeros } from '../utils';
-import type { Vector2 } from '../vector';
+import type { Client } from '@/client';
+import { getDistance, getVolumeFromDistance, padWithZeros } from '@/utils';
+import type { Vector2 } from '@/vector';
 
 export class AudioController {
   private client: Client;

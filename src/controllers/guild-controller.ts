@@ -16,17 +16,17 @@ import {
   GuildTellClientPacket,
   GuildUseClientPacket,
 } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 import {
   GUILD_MAX_RANK,
   GUILD_MIN_DEPOSIT,
   GUILD_RANK_LEADER,
   GUILD_RANK_NEW_MEMBER,
-} from '../consts';
-import { DialogResourceID } from '../edf';
-import { playSfxById, SfxId } from '../sfx';
-import { GuildDialogState } from '../types';
-import { capitalize } from '../utils';
+} from '@/consts';
+import { DialogResourceID } from '@/edf';
+import { GuildDialogState } from '@/game-state';
+import { playSfxById, SfxId } from '@/sfx';
+import { capitalize } from '@/utils';
 
 const REPLY_DIALOG_IDS: Partial<Record<GuildReply, DialogResourceID>> = {
   [GuildReply.Busy]: DialogResourceID.GUILD_MASTER_IS_BUSY,
@@ -52,7 +52,7 @@ const REPLY_DIALOG_IDS: Partial<Record<GuildReply, DialogResourceID>> = {
     DialogResourceID.GUILD_REMOVE_PLAYER_NOT_MEMBER,
 };
 
-export type GuildInfoData = {
+type GuildInfoData = {
   name: string;
   tag: string;
   createDate: string;

@@ -1,6 +1,6 @@
 import { Emote as EmoteType } from 'eolib';
-import type { Client } from '../client';
-import { randomRange } from '../utils';
+import type { Client } from '@/client';
+import { randomRange } from '@/utils';
 
 export class DrunkController {
   private client: Client;

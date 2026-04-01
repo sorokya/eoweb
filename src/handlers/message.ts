@@ -4,10 +4,10 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
-import { EOResourceID } from '../edf';
-import { playSfxById, SfxId } from '../sfx';
-import { ChatIcon, ChatTab } from '../types';
+import type { Client } from '@/client';
+import { EOResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon, ChatTab } from '@/ui/ui-types';
 
 function handleMessagePing(client: Client) {
   const delta = Date.now() - client.commandController.pingStart;

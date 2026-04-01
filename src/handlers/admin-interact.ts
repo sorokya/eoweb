@@ -5,13 +5,13 @@ import {
   PacketAction,
   PacketFamily,
 } from 'eolib';
-import type { Client } from '../client';
+import type { Client } from '@/client';
 import {
   EffectAnimation,
   EffectTargetCharacter,
   EffectTargetTile,
-} from '../render/effect';
-import { playSfxById, SfxId } from '../sfx';
+} from '@/render';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handleAdminInteractRemove(client: Client, reader: EoReader) {
   const packet = AdminInteractRemoveServerPacket.deserialize(reader);

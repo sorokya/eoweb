@@ -7,7 +7,7 @@ import {
   MapTileSpec,
 } from 'eolib';
 import { CanvasSource, Rectangle, Texture } from 'pixi.js';
-import type { Client } from './client';
+import type { Client } from '@/client';
 import {
   ATLAS_EXPIRY_TICKS,
   CHARACTER_HEIGHT,
@@ -26,13 +26,10 @@ import {
   NUMBER_OF_EMOTES,
   NUMBER_OF_SLASHES,
   TILE_HEIGHT,
-} from './consts';
-import { GfxType } from './gfx';
-import { GfxLoader } from './gfx-loader/gfx-loader';
-import { LAYER_GFX_MAP } from './map';
-import { clipHair } from './utils/clip-hair';
-import { HatMaskType } from './utils/get-hat-metadata';
-import { getItemGraphicId } from './utils/get-item-graphic-id';
+} from '@/consts';
+import { GfxLoader, GfxType } from '@/gfx';
+import { LAYER_GFX_MAP } from '@/map';
+import { clipHair, getItemGraphicId, HatMaskType } from '@/utils';
 
 const ATLAS_SIZE = 2048;
 const CHARACTER_FRAME_SIZE = 100;

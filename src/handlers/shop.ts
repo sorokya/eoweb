@@ -8,8 +8,8 @@ import {
   ShopOpenServerPacket,
   ShopSellServerPacket,
 } from 'eolib';
-import type { Client } from '../client';
-import { playSfxById, SfxId } from '../sfx';
+import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
 
 function handleShopOpen(client: Client, reader: EoReader) {
   const packet = ShopOpenServerPacket.deserialize(reader);

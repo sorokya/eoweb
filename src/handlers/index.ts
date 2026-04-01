@@ -1,4 +1,4 @@
-import type { Client } from '../client';
+import type { Client } from '@/client';
 import { registerAccountHandlers } from './account';
 import { registerAdminInteractHandlers } from './admin-interact';
 import { registerArenaHandlers } from './arena';

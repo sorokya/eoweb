@@ -1,4 +1,4 @@
-import { DEATH_TICKS } from '../consts';
+import { DEATH_TICKS } from '@/consts';
 import { Animation } from './animation';
 
 export class NpcDeathAnimation extends Animation {

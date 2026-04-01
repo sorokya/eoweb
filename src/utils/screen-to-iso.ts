@@ -1,5 +1,5 @@
-import { HALF_TILE_HEIGHT, HALF_TILE_WIDTH } from '../consts';
-import type { Vector2 } from '../vector';
+import { HALF_TILE_HEIGHT, HALF_TILE_WIDTH } from '@/consts';
+import type { Vector2 } from '@/vector';
 
 export function screenToIso({ x, y }: Vector2) {
   return {

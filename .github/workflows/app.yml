@@ -28,4 +28,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm exec biome ci .
+      - run: pnpm knip
     # - run: pnpm test

@@ -1,14 +1,15 @@
 import { type Item, ItemSize } from 'eolib';
 import mitt from 'mitt';
-import type { Client } from '../../client';
-import { playSfxById, SfxId } from '../../sfx';
-import { getItemMeta } from '../../utils/get-item-meta';
-import type { Vector2 } from '../../vector';
-import { Base } from '../base-ui';
-import { setItemGridImageFromGfx } from '../utils/gfx-resource';
+import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
+import { Base } from '@/ui/base-ui';
+import { setItemGridImageFromGfx } from '@/ui/utils';
+import { getItemMeta } from '@/utils';
+import type { Vector2 } from '@/vector';
 
 import './inventory.css';
-import { type EquipmentSlot, getEquipmentSlotFromString } from '../../types';
+import type { EquipmentSlot } from '@/equipment';
+import { getEquipmentSlotFromString } from '@/equipment';
 
 type ItemPosition = {
   id: number;

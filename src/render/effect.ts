@@ -1,7 +1,7 @@
-import type { Rectangle } from '../collision';
-import type { EffectMetadata } from '../utils/get-effect-metadata';
-import { randomRange } from '../utils/random-range';
-import type { Vector2 } from '../vector';
+import type { Rectangle } from '@/collision';
+import type { EffectMetadata } from '@/utils';
+import { randomRange } from '@/utils';
+import type { Vector2 } from '@/vector';
 
 export abstract class EffectTarget {
   rect: Rectangle | null = null;
