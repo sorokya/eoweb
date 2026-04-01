@@ -6,3 +6,8 @@ pre-commit:
     typecheck:
       glob: "*.{ts,tsx}"
       run: npx tsc --noEmit
+
+pre-push:
+  commands:
+    knip:
+      run: pnpm knip
