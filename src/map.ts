@@ -260,10 +260,6 @@ export class MapRenderer {
     this._seenUiGraphics.clear();
   }
 
-  private markPersistentWorldNodes() {
-    this._seenWorldSprites.add('cursor:base');
-  }
-
   private sweepSprites(
     registry: Map<string, Sprite>,
     seen: Set<string>,
@@ -739,7 +735,6 @@ export class MapRenderer {
     }
 
     if (!inGame) {
-      this.markPersistentWorldNodes();
       this.endFrame();
       return;
     }
@@ -785,7 +780,6 @@ export class MapRenderer {
 
     this.addNameplateSprites(playerScreen);
     this.addPlayerMenuSprites();
-    this.markPersistentWorldNodes();
     this.endFrame();
   }
 
