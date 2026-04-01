@@ -112,7 +112,7 @@ async function getResourceUrl(
   }
 }
 
-export async function setImageFromGfx(
+async function setImageFromGfx(
   image: HTMLImageElement,
   fileId: number,
   resourceId: number,
@@ -130,7 +130,7 @@ export async function setImageFromGfx(
   }
 }
 
-export async function setBackgroundImageFromGfx(
+async function setBackgroundImageFromGfx(
   el: HTMLElement,
   fileId: number,
   resourceId: number,

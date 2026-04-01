@@ -6,7 +6,8 @@ const hardLimit = 150;
 const padding = 6;
 const lineHeight = 12;
 const triangleHeight = 6;
-export type ChatBubbleLayout = {
+
+type ChatBubbleLayout = {
   lines: string[];
   width: number;
   height: number;

@@ -14,7 +14,7 @@ import { capitalize } from '@/utils';
 // biome-ignore lint/suspicious/noExplicitAny: Event emitter callbacks require flexible argument types
 type EventCallback = (...args: any[]) => void;
 
-export interface UiEventDeps {
+interface UiEventDeps {
   client: Client;
   mainMenu: {
     show(): void;

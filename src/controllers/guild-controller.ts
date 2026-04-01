@@ -52,7 +52,7 @@ const REPLY_DIALOG_IDS: Partial<Record<GuildReply, DialogResourceID>> = {
     DialogResourceID.GUILD_REMOVE_PLAYER_NOT_MEMBER,
 };
 
-export type GuildInfoData = {
+type GuildInfoData = {
   name: string;
   tag: string;
   createDate: string;

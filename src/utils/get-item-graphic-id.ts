@@ -18,12 +18,3 @@ export function getItemGraphicId(
   }
   return graphicId * 2 - 1;
 }
-
-export function getItemGraphicPath(
-  itemId: number,
-  graphicId: number,
-  amount = 1,
-): string {
-  const gfId = getItemGraphicId(itemId, graphicId, amount);
-  return `/gfx/gfx023/${100 + gfId}.png`;
-}

@@ -1,2 +1,1 @@
-export * from './client';
-export * from './events';
+export { Client } from './client';

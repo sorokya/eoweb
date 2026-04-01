@@ -4,7 +4,7 @@ import { GameState } from '@/game-state';
 import { playSfxById, SfxId } from '@/sfx';
 import { ChatIcon, ChatTab } from '@/ui/ui-types';
 
-export interface ClientEventDeps {
+interface ClientEventDeps {
   client: Client;
   smallAlertLargeHeader: {
     setContent(msg: string, title: string): void;

@@ -12,7 +12,7 @@ import {
 import type { Client } from '@/client';
 import { MAX_CHARACTER_NAME_LENGTH } from '@/consts';
 
-export type AccountCreateData = {
+type AccountCreateData = {
   username: string;
   password: string;
   name: string;
@@ -20,7 +20,7 @@ export type AccountCreateData = {
   email: string;
 };
 
-export type CharacterCreateData = {
+type CharacterCreateData = {
   name: string;
   gender: Gender;
   hairStyle: number;

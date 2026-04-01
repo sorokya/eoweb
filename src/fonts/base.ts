@@ -11,13 +11,6 @@ export class FontCharacter {
   ) {}
 }
 
-export enum TextAlign {
-  CenterHorizontal = 0,
-  CenterVertical = 1,
-  Both = 2,
-  None = 3,
-}
-
 export abstract class Font {
   protected atlas: Atlas;
   protected characters!: FontCharacter[];

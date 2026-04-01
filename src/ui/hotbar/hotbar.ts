@@ -6,7 +6,7 @@ import { setItemImageFromGfx, setSkillBackgroundFromGfx } from '@/ui/utils';
 
 import './hotbar.css';
 
-export class Slot {
+class Slot {
   type: SlotType;
   typeId: number;
 

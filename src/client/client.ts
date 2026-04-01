@@ -32,7 +32,7 @@ import mitt, { type Emitter } from 'mitt';
 import { Notyf } from 'notyf';
 import { Application, Container } from 'pixi.js';
 import { Atlas } from '@/atlas';
-import type { ClientEvents, PacketBus } from '@/bus';
+import type { PacketBus } from '@/bus';
 import { clearRectangles } from '@/collision';
 import { getDefaultConfig, loadConfig } from '@/config';
 import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS } from '@/consts';
@@ -95,6 +95,7 @@ import {
   screenToIso,
 } from '@/utils';
 import type { Vector2 } from '@/vector';
+import type { ClientEvents } from './events';
 
 export class Client {
   private emitter: Emitter<ClientEvents>;
