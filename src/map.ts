@@ -4,9 +4,9 @@ import {
   Direction,
   ItemSpecial,
   MapTileSpec,
-  NpcType,
   SitState,
 } from 'eolib';
+import { Graphics, Sprite, type Texture } from 'pixi.js';
 import {
   CHARACTER_FRAME_OFFSETS,
   CharacterFrame,
@@ -44,13 +44,13 @@ import {
   WALK_HEIGHT_FACTOR,
   WALK_WIDTH_FACTOR,
 } from './consts';
-import { TextAlign } from './fonts/base';
 import { GfxType } from './gfx';
 import { CharacterAttackAnimation } from './render/character-attack';
 import { CharacterRangedAttackAnimation } from './render/character-attack-ranged';
 import { CharacterDeathAnimation } from './render/character-death';
 import { CharacterSpellChantAnimation } from './render/character-spell-chant';
 import { CharacterWalkAnimation } from './render/character-walk';
+import type { ChatBubble } from './render/chat-bubble';
 import {
   type EffectAnimation,
   EffectTargetCharacter,
@@ -66,6 +66,7 @@ import { GameState } from './types';
 import { capitalize } from './utils/capitalize';
 import { getItemGraphicId } from './utils/get-item-graphic-id';
 import { isoToScreen } from './utils/iso-to-screen';
+import { screenToIso } from './utils/screen-to-iso';
 import type { Vector2 } from './vector';
 
 enum EntityType {
@@ -103,6 +104,10 @@ enum Layer {
 
 const TDG = 0.00000001; // gap between depth of each tile on a layer
 const RDG = 0.001; // gap between depth of each row of tiles
+const CHAT_BUBBLE_LINE_HEIGHT = 12;
+const CHAT_BUBBLE_RADIUS = 6;
+const CHAT_BUBBLE_TRIANGLE_HEIGHT = 6;
+const CHAT_BUBBLE_TRIANGLE_WIDTH = 3;
 
 const layerDepth = [
   -3.0 + TDG * 1, // Ground
@@ -169,21 +174,193 @@ export class MapRenderer {
   npcIdleAnimationTicks = NPC_IDLE_ANIMATION_TICKS;
   npcIdleAnimationFrame = 0;
   buildingCache = false;
-  private topLayer: (() => void)[] = [];
   private staticTileGrid: StaticTile[][][] = [];
   private tileSpecCache: (MapTileSpec | null)[][] = [];
   private signCache: ({ title: string; message: string } | null)[][] = [];
-  private damageNumberCanvas: HTMLCanvasElement;
-  private damageNumberCtx: CanvasRenderingContext2D;
   private interpolation = 0;
   // Viewport-cached sorted static entities — only rebuilt when player moves
   private cachedStaticEntities: Entity[] = [];
   private cachedViewportKey = '';
+  // Per-frame render caches — updated once at the top of render() to avoid repeated lookups
+  private _halfGameWidth = 0;
+  private _halfGameHeight = 0;
+  private _gameWidth = 0;
+  // Reusable Coords buffer — avoids allocating a new eolib Coords per renderTile call
+  private readonly _coordsBuffer = new Coords();
+  // Per-frame effects maps — built once to avoid O(entities × effects) filter calls
+  private readonly _tileEffects: EffectAnimation[] = [];
+  private readonly _charEffects = new Map<number, EffectAnimation[]>();
+  private readonly _npcEffects = new Map<number, EffectAnimation[]>();
+  private readonly _worldSprites = new Map<string, Sprite>();
+  private readonly _uiSprites = new Map<string, Sprite>();
+  private readonly _uiGraphics = new Map<string, Graphics>();
+  private readonly _seenWorldSprites = new Set<string>();
+  private readonly _seenUiSprites = new Set<string>();
+  private readonly _seenUiGraphics = new Set<string>();
+  private _worldOrder = 0;
+  private _uiOrder = 0;
+
+  private labelSprite(sprite: Sprite, label: string) {
+    sprite.label = label;
+    if (sprite.texture) {
+      sprite.texture.label = `${label}:texture`;
+    }
+  }
+
+  private labelGraphics(graphics: Graphics, label: string) {
+    graphics.label = label;
+  }
+
+  private beginFrame() {
+    this.client.worldContainer.sortableChildren = true;
+    this.client.uiContainer.sortableChildren = true;
+    this._seenWorldSprites.clear();
+    this._seenUiSprites.clear();
+    this._seenUiGraphics.clear();
+    this._worldOrder = 0;
+    this._uiOrder = 0;
+  }
+
+  private endFrame() {
+    this.sweepSprites(
+      this._worldSprites,
+      this._seenWorldSprites,
+      this.client.worldContainer,
+    );
+    this.sweepSprites(
+      this._uiSprites,
+      this._seenUiSprites,
+      this.client.uiContainer,
+    );
+    this.sweepGraphics(
+      this._uiGraphics,
+      this._seenUiGraphics,
+      this.client.uiContainer,
+    );
+  }
+
+  private clearSceneNodes() {
+    for (const sprite of this._worldSprites.values()) {
+      this.client.worldContainer.removeChild(sprite);
+      sprite.destroy({ texture: false });
+    }
+    for (const sprite of this._uiSprites.values()) {
+      this.client.uiContainer.removeChild(sprite);
+      sprite.destroy({ texture: false });
+    }
+    for (const graphics of this._uiGraphics.values()) {
+      this.client.uiContainer.removeChild(graphics);
+      graphics.destroy();
+    }
+    this._worldSprites.clear();
+    this._uiSprites.clear();
+    this._uiGraphics.clear();
+    this._seenWorldSprites.clear();
+    this._seenUiSprites.clear();
+    this._seenUiGraphics.clear();
+  }
+
+  private markPersistentWorldNodes() {
+    this._seenWorldSprites.add('cursor:base');
+  }
+
+  private sweepSprites(
+    registry: Map<string, Sprite>,
+    seen: Set<string>,
+    container: { removeChild: (child: Sprite) => void },
+    destroy = false,
+  ) {
+    for (const [key, sprite] of registry) {
+      if (!seen.has(key)) {
+        container.removeChild(sprite);
+        if (destroy) {
+          sprite.destroy({ texture: false });
+        }
+        registry.delete(key);
+      }
+    }
+  }
+
+  private sweepGraphics(
+    registry: Map<string, Graphics>,
+    seen: Set<string>,
+    container: { removeChild: (child: Graphics) => void },
+    destroy = false,
+  ) {
+    for (const [key, graphics] of registry) {
+      if (!seen.has(key)) {
+        container.removeChild(graphics);
+        if (destroy) {
+          graphics.destroy();
+        }
+        registry.delete(key);
+      }
+    }
+  }
+
+  private ensureWorldSprite(key: string, label: string): Sprite {
+    this._seenWorldSprites.add(key);
+    let sprite = this._worldSprites.get(key);
+    if (!sprite) {
+      sprite = new Sprite();
+      sprite.eventMode = 'none';
+      sprite.tint = 0xffffff;
+      this._worldSprites.set(key, sprite);
+      this.client.worldContainer.addChild(sprite);
+    }
+    sprite.alpha = 1;
+    sprite.scale.set(1);
+    sprite.visible = true;
+    sprite.zIndex = this._worldOrder++;
+    this.labelSprite(sprite, label);
+    return sprite;
+  }
+
+  private ensureUiSprite(key: string, label: string): Sprite {
+    this._seenUiSprites.add(key);
+    let sprite = this._uiSprites.get(key);
+    if (!sprite) {
+      sprite = new Sprite();
+      sprite.eventMode = 'none';
+      this._uiSprites.set(key, sprite);
+      this.client.uiContainer.addChild(sprite);
+    }
+    sprite.alpha = 1;
+    sprite.tint = 0xffffff;
+    sprite.scale.set(1);
+    sprite.visible = true;
+    sprite.zIndex = this._uiOrder++;
+    this.labelSprite(sprite, label);
+    return sprite;
+  }
+
+  private ensureUiGraphics(key: string, label: string): Graphics {
+    this._seenUiGraphics.add(key);
+    let graphics = this._uiGraphics.get(key);
+    if (!graphics) {
+      graphics = new Graphics();
+      graphics.eventMode = 'none';
+      this._uiGraphics.set(key, graphics);
+      this.client.uiContainer.addChild(graphics);
+    }
+    graphics.clear();
+    graphics.alpha = 1;
+    graphics.scale.set(1);
+    graphics.visible = true;
+    graphics.zIndex = this._uiOrder++;
+    this.labelGraphics(graphics, label);
+    return graphics;
+  }
+
+  private getEffectNodeKey(
+    effectKeyBase: string,
+    layer: 'behind' | 'transparent' | 'front',
+  ): string {
+    return `${effectKeyBase}:${layer}`;
+  }
 
   constructor(client: Client) {
     this.client = client;
-    this.damageNumberCanvas = document.createElement('canvas');
-    this.damageNumberCtx = this.damageNumberCanvas.getContext('2d')!;
   }
 
   buildCaches() {
@@ -233,6 +410,7 @@ export class MapRenderer {
 
     this.buildingCache = false;
     this.cachedViewportKey = ''; // Invalidate viewport cache on map change
+    this.clearSceneNodes();
   }
 
   getRequiredTileIds(): { gfxType: GfxType; graphicId: number }[] {
@@ -296,12 +474,40 @@ export class MapRenderer {
     };
   }
 
-  render(ctx: CanvasRenderingContext2D, interpolation: number) {
+  update(interpolation: number) {
     if (!this.client.map || this.buildingCache) {
       return;
     }
 
     this.interpolation = interpolation;
+
+    this._halfGameWidth = this.client.viewportController.getHalfGameWidth();
+    this._halfGameHeight = this.client.viewportController.getHalfGameHeight();
+    this._gameWidth = this.client.viewportController.getGameWidth();
+
+    // Build per-frame effects maps
+    this._tileEffects.length = 0;
+    this._charEffects.clear();
+    this._npcEffects.clear();
+    for (const effect of this.client.animationController.effects) {
+      if (effect.target instanceof EffectTargetCharacter) {
+        const arr = this._charEffects.get(effect.target.playerId);
+        if (arr) {
+          arr.push(effect);
+        } else {
+          this._charEffects.set(effect.target.playerId, [effect]);
+        }
+      } else if (effect.target instanceof EffectTargetNpc) {
+        const arr = this._npcEffects.get(effect.target.index);
+        if (arr) {
+          arr.push(effect);
+        } else {
+          this._npcEffects.set(effect.target.index, [effect]);
+        }
+      } else if (effect.target instanceof EffectTargetTile) {
+        this._tileEffects.push(effect);
+      }
+    }
 
     const player = this.client.getPlayerCoords();
     let playerScreen = isoToScreen(player);
@@ -323,23 +529,19 @@ export class MapRenderer {
         mainCharacterAnimation.animationFrame,
         mainCharacterAnimation.direction,
       );
-
       playerScreen.x += interOffset.x;
       playerScreen.y += interOffset.y;
     }
 
     playerScreen.x += this.client.quakeController.quakeOffset;
 
-    const diag = Math.hypot(ctx.canvas.width, ctx.canvas.height);
-    const rangeX = Math.min(
-      this.client.map.width,
-      Math.ceil(diag / HALF_TILE_WIDTH) + 2,
-    );
-    const rangeY = Math.min(
-      this.client.map.height,
-      Math.ceil(diag / HALF_TILE_HEIGHT) + 2,
-    );
-    // --- Static entity caching: only rebuild when viewport changes ---
+    const gameWidth = this._gameWidth;
+    const gameHeight = this._halfGameHeight * 2;
+    const range =
+      Math.ceil((gameWidth / TILE_WIDTH + gameHeight / TILE_HEIGHT) / 2) + 2;
+    const rangeX = Math.min(this.client.map.width, range);
+    const rangeY = Math.min(this.client.map.height, range);
+
     const viewportKey = `${player.x},${player.y},${rangeX},${rangeY}`;
     if (viewportKey !== this.cachedViewportKey) {
       this.cachedStaticEntities.length = 0;
@@ -347,16 +549,17 @@ export class MapRenderer {
         if (y < 0 || y > this.client.map.height) continue;
         for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
           if (x < 0 || x > this.client.map.width) continue;
-          if (!this.staticTileGrid[y]?.[x]) return;
+          if (!this.staticTileGrid[y]?.[x]) continue;
           for (const t of this.staticTileGrid[y][x]) {
-            this.cachedStaticEntities.push({
+            const entity: Entity = {
               x,
               y,
               type: EntityType.Tile,
               typeId: t.bmpId,
               layer: t.layer,
               depth: t.depth,
-            });
+            };
+            this.cachedStaticEntities.push(entity);
           }
         }
       }
@@ -364,9 +567,8 @@ export class MapRenderer {
       this.cachedViewportKey = viewportKey;
     }
 
-    // --- Collect dynamic entities (characters, npcs, items, cursor) ---
+    // Collect dynamic entities
     const dynamics: Entity[] = [];
-
     const inGame = this.client.state === GameState.InGame;
     if (inGame) {
       const minX = Math.max(player.x - rangeX, 0);
@@ -414,17 +616,33 @@ export class MapRenderer {
       }
     }
 
-    if (this.client.mouseCoords && inGame) {
-      const spec = this.getTileSpec(
-        this.client.mouseCoords.x,
-        this.client.mouseCoords.y,
-      );
+    let renderMouseCoords: Vector2 | undefined;
+    if (this.client.mousePosition) {
+      const mouseWorldX =
+        this.client.mousePosition.x - this._halfGameWidth + playerScreen.x;
+      const mouseWorldY =
+        this.client.mousePosition.y -
+        this._halfGameHeight +
+        playerScreen.y +
+        HALF_TILE_HEIGHT;
+      const coords = screenToIso({ x: mouseWorldX, y: mouseWorldY });
+      if (
+        coords.x >= 0 &&
+        coords.y >= 0 &&
+        coords.x <= this.client.map.width &&
+        coords.y <= this.client.map.height
+      ) {
+        renderMouseCoords = coords;
+      }
+    }
+
+    if (renderMouseCoords && inGame) {
+      const spec = this.getTileSpec(renderMouseCoords.x, renderMouseCoords.y);
       if (
         spec === null ||
         ![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)
       ) {
         let typeId = 0;
-
         if (
           [
             MapTileSpec.Chest,
@@ -448,44 +666,45 @@ export class MapRenderer {
           ].includes(spec!) ||
           this.client.nearby.characters.some(
             (c) =>
-              c.coords.x === this.client.mouseCoords!.x &&
-              c.coords.y === this.client.mouseCoords!.y,
+              c.coords.x === renderMouseCoords!.x &&
+              c.coords.y === renderMouseCoords!.y,
           ) ||
           this.client.nearby.npcs.some(
             (n) =>
-              n.coords.x === this.client.mouseCoords!.x &&
-              n.coords.y === this.client.mouseCoords!.y,
+              n.coords.x === renderMouseCoords!.x &&
+              n.coords.y === renderMouseCoords!.y,
           )
         ) {
           typeId = 1;
         } else if (
           this.client.nearby.items.some(
             (i) =>
-              i.coords.x === this.client.mouseCoords!.x &&
-              i.coords.y === this.client.mouseCoords!.y,
+              i.coords.x === renderMouseCoords!.x &&
+              i.coords.y === renderMouseCoords!.y,
           )
         ) {
           typeId = 2;
         }
 
         dynamics.push({
-          x: this.client.mouseCoords.x,
-          y: this.client.mouseCoords.y,
+          x: renderMouseCoords.x,
+          y: renderMouseCoords.y,
           type: EntityType.Cursor,
           typeId,
           layer: Layer.Cursor,
           depth: this.calculateDepth(
             Layer.Cursor,
-            this.client.mouseCoords.x,
-            this.client.mouseCoords.y,
+            renderMouseCoords.x,
+            renderMouseCoords.y,
           ),
         });
       }
     }
 
-    // --- O(n+m) merge of pre-sorted statics with sorted dynamics ---
-    dynamics.sort((a, b) => a.depth - b.depth);
+    this.beginFrame();
 
+    // Merge-sort static + dynamic entities
+    dynamics.sort((a, b) => a.depth - b.depth);
     let staticIndex = 0;
     let dynamicIndex = 0;
     const statics = this.cachedStaticEntities;
@@ -502,91 +721,992 @@ export class MapRenderer {
       }
       switch (entity.type) {
         case EntityType.Tile:
-          this.renderTile(entity, playerScreen, ctx);
+          this.addTileSprite(entity, playerScreen);
           break;
         case EntityType.Character:
-          this.renderCharacter(entity, playerScreen, ctx);
+          this.addCharacterSprites(entity, playerScreen);
           break;
         case EntityType.Npc:
-          this.renderNpc(entity, playerScreen, ctx);
+          this.addNpcSprites(entity, playerScreen);
           break;
         case EntityType.Item:
-          this.renderItem(entity, playerScreen, ctx);
+          this.addItemSprite(entity, playerScreen);
           break;
         case EntityType.Cursor:
-          this.renderCursor(entity, playerScreen, ctx);
+          this.addCursorSprites(entity, playerScreen);
           break;
       }
     }
 
     if (!inGame) {
+      this.markPersistentWorldNodes();
+      this.endFrame();
       return;
     }
 
-    const tileEffects = this.client.animationController.effects.filter(
-      (e) => e.target instanceof EffectTargetTile,
-    );
-    for (const effect of tileEffects) {
+    for (const effect of this._tileEffects) {
+      const effectKeyBase = `tile-effect:${effect.instanceId}`;
       const target = effect.target as EffectTargetTile;
-      const tileScreen = isoToScreen(target.coords);
+      const tileScreenX = (target.coords.x - target.coords.y) * HALF_TILE_WIDTH;
+      const tileScreenY =
+        (target.coords.x + target.coords.y) * HALF_TILE_HEIGHT;
       effect.target.rect = new Rectangle(
         {
           x: Math.floor(
-            tileScreen.x -
+            tileScreenX -
               HALF_TILE_WIDTH -
               playerScreen.x +
-              this.client.viewportController.getHalfGameWidth(),
+              this._halfGameWidth,
           ),
           y: Math.floor(
-            tileScreen.y -
+            tileScreenY -
               HALF_TILE_HEIGHT -
               playerScreen.y +
-              this.client.viewportController.getHalfGameHeight(),
+              this._halfGameHeight,
           ),
         },
         TILE_WIDTH,
         TILE_HEIGHT,
       );
       effect.renderedFirstFrame = true;
-      this.renderEffectBehind(effect, ctx);
-      this.renderEffectTransparent(effect, ctx);
-      this.renderEffectFront(effect, ctx);
+      this.addEffectBehindSprite(effect, effectKeyBase);
+      this.addEffectTransparentSprite(effect, effectKeyBase);
+      this.addEffectFrontSprite(effect, effectKeyBase);
     }
 
+    // Player body at 40% alpha (ghost trail effect)
     const main = dynamics.find(
       (e) =>
         e.type === EntityType.Character && e.typeId === this.client.playerId,
     );
     if (main) {
-      ctx.globalAlpha = 0.4;
-
-      this.renderCharacter(main, playerScreen, ctx, true);
-
-      ctx.globalAlpha = 1;
+      this.addCharacterSprites(main, playerScreen, true, 0.4);
     }
 
-    this.renderNameplate(playerScreen, ctx);
-    for (const renderTopLayerEntity of this.topLayer) {
-      renderTopLayerEntity();
-    }
-    this.topLayer = [];
-    this.renderPlayerMenu(ctx);
+    this.addNameplateSprites(playerScreen);
+    this.addPlayerMenuSprites();
+    this.markPersistentWorldNodes();
+    this.endFrame();
   }
 
-  renderNameplate(playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
-    if (!this.client.mousePosition) {
+  private addTileSprite(entity: Entity, playerScreen: Vector2) {
+    if (entity.layer === Layer.Ground && entity.typeId === 0) {
       return;
     }
 
-    const frame = this.client.atlas.getStaticEntry(StaticAtlasEntryType.Sans11);
-    if (!frame) {
+    this._coordsBuffer.x = entity.x;
+    this._coordsBuffer.y = entity.y;
+
+    let bmpOffset = 0;
+    if (entity.layer === Layer.DownWall || entity.layer === Layer.RightWall) {
+      const door = this.client.mapController.getDoor(this._coordsBuffer);
+      if (door?.open) {
+        bmpOffset = 1;
+      }
+    }
+
+    const spec = this.getTileSpec(entity.x, entity.y);
+    if (entity.layer === Layer.Objects) {
+      if (spec === MapTileSpec.TimedSpikes && !this.timedSpikesTicks) {
+        return;
+      }
+
+      if (
+        spec === MapTileSpec.HiddenSpikes &&
+        !this.client.nearby.characters.some(
+          (c) => c.coords?.x === entity.x && c.coords?.y === entity.y,
+        )
+      ) {
+        return;
+      }
+    }
+
+    const gfxType = LAYER_GFX_MAP[entity.layer];
+    const tile = this.client.atlas.getTile(gfxType, entity.typeId + bmpOffset);
+    if (!tile) return;
+
+    const { screenX, screenY } = this.tileScreenPosition(
+      entity,
+      playerScreen,
+      tile,
+    );
+
+    let texture: Texture | undefined;
+
+    if (entity.layer === Layer.Ground && tile.w > TILE_WIDTH) {
+      texture = this.client.atlas.getFrameTexture({
+        atlasIndex: tile.atlasIndex,
+        x: tile.x + this.animationFrame * TILE_WIDTH,
+        y: tile.y,
+        w: TILE_WIDTH,
+        h: TILE_HEIGHT,
+      });
+    } else if (
+      tile.w > 120 &&
+      [Layer.DownWall, Layer.RightWall].includes(entity.layer)
+    ) {
+      const frameWidth = tile.w / 4;
+      texture = this.client.atlas.getFrameTexture({
+        atlasIndex: tile.atlasIndex,
+        x: tile.x + this.animationFrame * frameWidth,
+        y: tile.y,
+        w: frameWidth,
+        h: tile.h,
+      });
+    } else {
+      texture = this.client.atlas.getFrameTexture(tile);
+    }
+
+    if (!texture) return;
+
+    const tileKey = `tile:${entity.layer}:${entity.x}:${entity.y}`;
+    const sprite = this.ensureWorldSprite(
+      tileKey,
+      `map:tile layer=${entity.layer} id=${entity.typeId + bmpOffset}`,
+    );
+    sprite.texture = texture;
+    sprite.position.set(screenX, screenY);
+    if (entity.layer === Layer.Shadow) {
+      sprite.alpha = 0.2;
+    }
+
+    if (this.client.mapController.getDoor(this._coordsBuffer)) {
+      setDoorRectangle(
+        this._coordsBuffer,
+        new Rectangle(
+          { x: screenX, y: screenY + tile.h - DOOR_HEIGHT },
+          tile.w,
+          DOOR_HEIGHT,
+        ),
+      );
+    } else if (this.getSign(entity.x, entity.y)) {
+      setSignRectangle(
+        this._coordsBuffer,
+        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
+      );
+    } else if (spec === MapTileSpec.BankVault) {
+      setLockerRectangle(
+        this._coordsBuffer,
+        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
+      );
+    } else if (
+      spec !== null &&
+      spec >= MapTileSpec.Board1 &&
+      spec <= MapTileSpec.Board8
+    ) {
+      setBoardRectangle(
+        this._coordsBuffer,
+        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
+      );
+    }
+  }
+
+  private tileScreenPosition(
+    entity: Entity,
+    playerScreen: Vector2,
+    tile: { w: number; h: number; xOffset: number; yOffset: number },
+  ) {
+    const offset = this.getOffset(entity.layer, tile.w, tile.h);
+    const screenX = Math.floor(
+      (entity.x - entity.y) * HALF_TILE_WIDTH -
+        HALF_TILE_WIDTH -
+        playerScreen.x +
+        this._halfGameWidth +
+        offset.x +
+        tile.xOffset,
+    );
+    const screenY = Math.floor(
+      (entity.x + entity.y) * HALF_TILE_HEIGHT -
+        HALF_TILE_HEIGHT -
+        playerScreen.y +
+        this._halfGameHeight +
+        offset.y +
+        tile.yOffset,
+    );
+    return { screenX, screenY };
+  }
+
+  private addCharacterSprites(
+    entity: Entity,
+    playerScreen: Vector2,
+    justCharacter = false,
+    alphaOverride?: number,
+  ) {
+    const character = this.client.getCharacterById(entity.typeId);
+    if (!character) return;
+
+    let dyingTicks = 0;
+    let dying = false;
+    let animation = this.client.animationController.characterAnimations.get(
+      character.playerId,
+    );
+    if (animation instanceof CharacterDeathAnimation) {
+      dying = true;
+      dyingTicks = animation.ticks;
+      if (animation.base) {
+        animation = animation.base;
+      }
+    }
+
+    if (animation && !(animation instanceof CharacterSpellChantAnimation)) {
+      animation.renderedFirstFrame = true;
+    }
+
+    const downRight = [Direction.Down, Direction.Right].includes(
+      character.direction,
+    );
+    let characterFrame: CharacterFrame;
+    let walkOffset = { x: 0, y: 0 };
+    let coords: Vector2 = character.coords;
+    switch (true) {
+      case animation instanceof CharacterWalkAnimation: {
+        walkOffset = dying
+          ? WALK_OFFSETS[animation.animationFrame][animation.direction]
+          : this.interpolateWalkOffset(
+              animation.animationFrame,
+              animation.direction,
+            );
+        coords = animation.from;
+        characterFrame = downRight
+          ? CharacterFrame.WalkingDownRight1 + animation.animationFrame
+          : CharacterFrame.WalkingUpLeft1 + animation.animationFrame;
+        break;
+      }
+      case animation instanceof CharacterAttackAnimation:
+        characterFrame = downRight
+          ? CharacterFrame.MeleeAttackDownRight1 + animation.animationFrame
+          : CharacterFrame.MeleeAttackUpLeft1 + animation.animationFrame;
+        break;
+      case animation instanceof CharacterRangedAttackAnimation:
+        characterFrame = downRight
+          ? CharacterFrame.RangeAttackDownRight
+          : CharacterFrame.RangeAttackUpLeft;
+        break;
+      case animation instanceof CharacterSpellChantAnimation:
+        characterFrame = downRight
+          ? CharacterFrame.RaisedHandDownRight
+          : CharacterFrame.RaisedHandUpLeft;
+        break;
+      case character.sitState === SitState.Floor:
+        characterFrame = downRight
+          ? CharacterFrame.FloorDownRight
+          : CharacterFrame.FloorUpLeft;
+        break;
+      case character.sitState === SitState.Chair:
+        characterFrame = downRight
+          ? CharacterFrame.ChairDownRight
+          : CharacterFrame.ChairUpLeft;
+        break;
+      default:
+        characterFrame = downRight
+          ? CharacterFrame.StandingDownRight
+          : CharacterFrame.StandingUpLeft;
+        break;
+    }
+
+    const frame = this.client.atlas.getCharacterFrame(
+      character.playerId,
+      characterFrame,
+    );
+    if (!frame) return;
+
+    const texture = this.client.atlas.getFrameTexture(frame);
+    if (!texture) return;
+
+    const screenCoordsX = (coords.x - coords.y) * HALF_TILE_WIDTH;
+    const screenCoordsY = (coords.x + coords.y) * HALF_TILE_HEIGHT;
+    const mirrored = [Direction.Right, Direction.Up].includes(
+      character.direction,
+    );
+    const frameOffset = (
+      CHARACTER_FRAME_OFFSETS[character.gender][characterFrame] as Record<
+        Direction,
+        { x: number; y: number }
+      >
+    )[character.direction];
+
+    const screenX = Math.floor(
+      screenCoordsX -
+        playerScreen.x +
+        this._halfGameWidth +
+        walkOffset.x +
+        frameOffset.x,
+    );
+    const screenY = Math.floor(
+      screenCoordsY -
+        playerScreen.y +
+        this._halfGameHeight +
+        frame.yOffset +
+        walkOffset.y +
+        frameOffset.y,
+    );
+
+    const rect = new Rectangle(
+      {
+        x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
+        y: screenY,
+      },
+      frame.w,
+      frame.h,
+    );
+    setCharacterRectangle(character.playerId, rect);
+
+    const effects = justCharacter
+      ? []
+      : (this._charEffects.get(character.playerId) ?? []);
+
+    for (const effect of effects) {
+      const effectKeyBase = `char-effect:${character.playerId}:${effect.instanceId}`;
+      effect.target.rect = {
+        position: {
+          x:
+            screenCoordsX -
+            playerScreen.x +
+            this._halfGameWidth -
+            HALF_TILE_WIDTH +
+            walkOffset.x,
+          y: rect.position.y,
+        },
+        width: TILE_WIDTH,
+        height: rect.height,
+        depth: 0,
+      };
+      effect.renderedFirstFrame = true;
+      this.addEffectBehindSprite(effect, effectKeyBase);
+    }
+
+    let alpha = alphaOverride ?? 1;
+    if (dying) alpha = (dyingTicks / DEATH_TICKS) * (alphaOverride ?? 1);
+    if (character.invisible && this.client.admin !== AdminLevel.Player) {
+      alpha = Math.min(alpha, 0.4);
+    }
+
+    const isPlayer = entity.typeId === this.client.playerId;
+    const visible =
+      isPlayer ||
+      !character.invisible ||
+      this.client.admin !== AdminLevel.Player;
+
+    if (visible) {
+      const sprite = this.ensureWorldSprite(
+        `character:${character.playerId}:${justCharacter ? 'ghost' : 'main'}`,
+        `map:character${justCharacter ? '-ghost' : ''} id=${character.playerId}`,
+      );
+      sprite.texture = texture;
+      if (mirrored) {
+        // scale.x = -1 draws leftward from sprite.x, so place the right edge
+        // at screenX + mirroredXOffset + frame.w to get left edge at screenX + mirroredXOffset
+        sprite.scale.x = -1;
+        sprite.x = Math.floor(screenX + frame.mirroredXOffset + frame.w);
+      } else {
+        sprite.x = Math.floor(screenX + frame.xOffset);
+      }
+      sprite.y = screenY;
+      sprite.alpha = alpha;
+    }
+
+    for (const effect of effects) {
+      const effectKeyBase = `char-effect:${character.playerId}:${effect.instanceId}`;
+      this.addEffectTransparentSprite(effect, effectKeyBase);
+      this.addEffectFrontSprite(effect, effectKeyBase);
+    }
+
+    if (
+      !justCharacter &&
+      (!character.invisible || this.client.admin !== AdminLevel.Player)
+    ) {
+      const bubble = this.client.animationController.characterChats.get(
+        character.playerId,
+      );
+      const healthBar = this.client.animationController.characterHealthBars.get(
+        character.playerId,
+      );
+      const emote = this.client.animationController.characterEmotes.get(
+        character.playerId,
+      );
+
+      if (
+        !bubble &&
+        !healthBar &&
+        !emote &&
+        (!(animation instanceof CharacterSpellChantAnimation) ||
+          animation.animationFrame)
+      ) {
+        return;
+      }
+
+      const topCenter = {
+        x: screenCoordsX - playerScreen.x + this._halfGameWidth + walkOffset.x,
+        y: rect.position.y,
+      };
+
+      if (bubble) {
+        this.addChatBubbleSprites(
+          `ui:char-bubble:${character.playerId}`,
+          bubble,
+          topCenter,
+        );
+      }
+      this.addHealthBarSprites(
+        `ui:char-health:${character.playerId}`,
+        healthBar!,
+        topCenter,
+      );
+      if (emote) {
+        this.addEmoteSprite(
+          `ui:char-emote:${character.playerId}`,
+          emote,
+          topCenter,
+        );
+      }
+      if (animation instanceof CharacterSpellChantAnimation) {
+        this.addSpellChantSprites(
+          `ui:char-chant:${character.playerId}`,
+          animation,
+          topCenter,
+        );
+      }
+    }
+  }
+
+  private addNpcSprites(entity: Entity, playerScreen: Vector2) {
+    const npc = this.client.getNpcByIndex(entity.typeId);
+    if (!npc) return;
+
+    const record = this.client.getEnfRecordById(npc.id);
+    if (!record) return;
+
+    let dyingTicks = 0;
+    let dying = false;
+    let animation = this.client.animationController.npcAnimations.get(
+      npc.index,
+    );
+    if (animation) {
+      animation.renderedFirstFrame = true;
+    }
+    if (animation instanceof NpcDeathAnimation) {
+      dying = true;
+      dyingTicks = animation.ticks;
+      if (animation.base) {
+        animation = animation.base;
+      }
+    }
+
+    const meta = this.client.getNpcMetadata(record.graphicId);
+    const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
+    let walkOffset = { x: 0, y: 0 };
+    let npcFrame: NpcFrame;
+    let coords: Vector2 = npc.coords;
+
+    switch (true) {
+      case animation instanceof NpcWalkAnimation: {
+        walkOffset = dying
+          ? WALK_OFFSETS[animation.animationFrame][animation.direction]
+          : this.interpolateWalkOffset(
+              animation.animationFrame,
+              animation.direction,
+            );
+        coords = animation.from;
+        npcFrame = downRight
+          ? NpcFrame.WalkingDownRight1 + animation.animationFrame
+          : NpcFrame.WalkingUpLeft1 + animation.animationFrame;
+        break;
+      }
+      case animation instanceof NpcAttackAnimation:
+        npcFrame = downRight
+          ? NpcFrame.AttackDownRight1 + animation.animationFrame
+          : NpcFrame.AttackUpLeft1 + animation.animationFrame;
+        break;
+      default:
+        npcFrame =
+          (downRight ? NpcFrame.StandingDownRight1 : NpcFrame.StandingUpLeft1) +
+          (meta.animatedStanding ? this.npcIdleAnimationFrame : 0);
+        break;
+    }
+
+    const frame = this.client.atlas.getNpcFrame(record.graphicId, npcFrame);
+    if (!frame) return;
+
+    const texture = this.client.atlas.getFrameTexture(frame);
+    if (!texture) return;
+
+    const metaOffset = {
+      x:
+        meta.xOffset +
+        ([NpcFrame.AttackDownRight2, NpcFrame.AttackUpLeft2].includes(npcFrame)
+          ? meta.xOffsetAttack
+          : 0),
+      y: -meta.yOffset,
+    };
+    const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
+    if (mirrored) metaOffset.x = -metaOffset.x;
+
+    const additionalOffset = {
+      x: walkOffset.x + metaOffset.x,
+      y: walkOffset.y + metaOffset.y,
+    };
+
+    const screenCoordsX = (coords.x - coords.y) * HALF_TILE_WIDTH;
+    const screenCoordsY = (coords.x + coords.y) * HALF_TILE_HEIGHT;
+    const screenX = Math.floor(
+      screenCoordsX - playerScreen.x + this._halfGameWidth + additionalOffset.x,
+    );
+    const screenY = Math.floor(
+      screenCoordsY -
+        playerScreen.y +
+        this._halfGameHeight +
+        frame.yOffset +
+        additionalOffset.y,
+    );
+
+    const rect = new Rectangle(
+      {
+        x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
+        y: screenY,
+      },
+      frame.w,
+      frame.h,
+    );
+    setNpcRectangle(npc.index, rect);
+
+    const effects = this._npcEffects.get(npc.index) ?? [];
+    for (const effect of effects) {
+      const effectKeyBase = `npc-effect:${npc.index}:${effect.instanceId}`;
+      effect.target.rect = {
+        position: {
+          x:
+            screenCoordsX -
+            playerScreen.x +
+            this._halfGameWidth -
+            HALF_TILE_WIDTH +
+            walkOffset.x,
+          y: rect.position.y,
+        },
+        width: TILE_WIDTH,
+        height: rect.height,
+        depth: 0,
+      };
+      effect.renderedFirstFrame = true;
+      this.addEffectBehindSprite(effect, effectKeyBase);
+    }
+
+    let alpha = 1;
+    if (meta.transparent && !dying) alpha = 0.4;
+    else if (meta.transparent && dying)
+      alpha = 0.4 * (dyingTicks / DEATH_TICKS);
+    else if (dying) alpha = dyingTicks / DEATH_TICKS;
+
+    const sprite = this.ensureWorldSprite(
+      `npc:${npc.index}`,
+      `map:npc index=${npc.index} id=${npc.id}`,
+    );
+    sprite.texture = texture;
+    if (mirrored) {
+      // scale.x = -1 draws leftward from sprite.x, so place the right edge
+      // at screenX + mirroredXOffset + frame.w to get left edge at screenX + mirroredXOffset
+      sprite.scale.x = -1;
+      sprite.x = Math.floor(screenX + frame.mirroredXOffset + frame.w);
+    } else {
+      sprite.x = Math.floor(screenX + frame.xOffset);
+    }
+    sprite.y = screenY;
+    sprite.alpha = alpha;
+
+    for (const effect of effects) {
+      const effectKeyBase = `npc-effect:${npc.index}:${effect.instanceId}`;
+      this.addEffectTransparentSprite(effect, effectKeyBase);
+      this.addEffectFrontSprite(effect, effectKeyBase);
+    }
+
+    const bubble = this.client.animationController.npcChats.get(npc.index);
+    const healthBar = this.client.animationController.npcHealthBars.get(
+      npc.index,
+    );
+
+    if (!bubble && !healthBar) return;
+
+    const aboveCoords = { x: coords.x - 1, y: coords.y - 1 };
+    const aboveCoordsX = (aboveCoords.x - aboveCoords.y) * HALF_TILE_WIDTH;
+    const aboveCoordsY = (aboveCoords.x + aboveCoords.y) * HALF_TILE_HEIGHT;
+    const npcTopCenter = {
+      x: Math.floor(
+        aboveCoordsX - playerScreen.x + this._halfGameWidth + walkOffset.x,
+      ),
+      y: Math.floor(
+        aboveCoordsY -
+          playerScreen.y +
+          this._halfGameHeight -
+          meta.nameLabelOffset +
+          walkOffset.y +
+          16,
+      ),
+    };
+
+    if (bubble) {
+      this.addChatBubbleSprites(
+        `ui:npc-bubble:${npc.index}`,
+        bubble,
+        npcTopCenter,
+      );
+    }
+    if (healthBar) {
+      this.addHealthBarSprites(
+        `ui:npc-health:${npc.index}`,
+        healthBar,
+        npcTopCenter,
+      );
+    }
+  }
+
+  private addItemSprite(entity: Entity, playerScreen: Vector2) {
+    const item = this.client.getItemByIndex(entity.typeId);
+    if (!item) return;
+
+    const record = this.client.getEifRecordById(item.id);
+    if (!record) return;
+
+    const gfxId = getItemGraphicId(item.id, record.graphicId, item.amount);
+    const frame = this.client.atlas.getItem(gfxId);
+    if (!frame) return;
+
+    const texture = this.client.atlas.getFrameTexture(frame);
+    if (!texture) return;
+
+    const tileScreenX = (item.coords.x - item.coords.y) * HALF_TILE_WIDTH;
+    const tileScreenY = (item.coords.x + item.coords.y) * HALF_TILE_HEIGHT;
+    const screenX = Math.floor(
+      tileScreenX - playerScreen.x + this._halfGameWidth + frame.xOffset,
+    );
+    const screenY = Math.floor(
+      tileScreenY - playerScreen.y + this._halfGameHeight + frame.yOffset,
+    );
+
+    const sprite = this.ensureWorldSprite(
+      `item:${item.uid}`,
+      `map:item id=${item.id} uid=${item.uid}`,
+    );
+    sprite.texture = texture;
+    sprite.position.set(screenX, screenY);
+  }
+
+  private addCursorSprites(entity: Entity, playerScreen: Vector2) {
+    const mx = entity.x;
+    const my = entity.y;
+    if (
+      mx < 0 ||
+      mx > this.client.map!.width ||
+      my < 0 ||
+      my > this.client.map!.height
+    ) {
       return;
     }
 
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
+    const frame = this.client.atlas.getStaticEntry(StaticAtlasEntryType.Cursor);
+    if (!frame) return;
+
+    const tileScreenX = (mx - my) * HALF_TILE_WIDTH;
+    const tileScreenY = (mx + my) * HALF_TILE_HEIGHT;
+    const sourceX = entity.typeId * TILE_WIDTH;
+
+    const screenX = Math.floor(
+      tileScreenX - HALF_TILE_WIDTH - playerScreen.x + this._halfGameWidth,
+    );
+    const screenY = Math.floor(
+      tileScreenY - HALF_TILE_HEIGHT - playerScreen.y + this._halfGameHeight,
+    );
+
+    const cursorTexture = this.client.atlas.getFrameTexture({
+      atlasIndex: frame.atlasIndex,
+      x: frame.x + sourceX,
+      y: frame.y,
+      w: TILE_WIDTH,
+      h: TILE_HEIGHT,
+    });
+    if (cursorTexture) {
+      const sprite = this.ensureWorldSprite(
+        'cursor:base',
+        `map:cursor type=${entity.typeId}`,
+      );
+      sprite.texture = cursorTexture;
+      sprite.position.set(screenX, screenY);
+    }
+
+    const animation = this.client.animationController.cursorClickAnimation;
+    if (animation) {
+      animation.renderedFirstFrame = true;
+      const animX = Math.floor(
+        (animation.at.x - animation.at.y) * HALF_TILE_WIDTH -
+          HALF_TILE_WIDTH -
+          playerScreen.x +
+          this._halfGameWidth,
+      );
+      const animY = Math.floor(
+        (animation.at.x + animation.at.y) * HALF_TILE_HEIGHT -
+          HALF_TILE_HEIGHT -
+          playerScreen.y +
+          this._halfGameHeight,
+      );
+      const animSourceX = Math.floor(
+        (3 + animation.animationFrame) * TILE_WIDTH,
+      );
+      const animTexture = this.client.atlas.getFrameTexture({
+        atlasIndex: frame.atlasIndex,
+        x: frame.x + animSourceX,
+        y: frame.y,
+        w: TILE_WIDTH,
+        h: TILE_HEIGHT,
+      });
+      if (animTexture) {
+        const sprite = this.ensureWorldSprite(
+          'cursor:click',
+          'map:cursor-click',
+        );
+        sprite.texture = animTexture;
+        sprite.position.set(animX, animY);
+      }
+    }
+  }
+
+  private addHealthBarSprites(
+    nodeKey: string,
+    healthBar: HealthBar | null,
+    position: Vector2,
+  ) {
+    if (!healthBar) return;
+    healthBar.renderedFirstFrame = true;
+
+    const frame = this.client.atlas.getStaticEntry(
+      StaticAtlasEntryType.HealthBars,
+    );
+    if (!frame) return;
+
+    const offsetY = -10;
+
+    const bgTexture = this.client.atlas.getFrameTexture({
+      atlasIndex: frame.atlasIndex,
+      x: frame.x,
+      y: frame.y + 28,
+      w: 40,
+      h: 7,
+    });
+    if (bgTexture) {
+      const bgSprite = this.ensureUiSprite(`${nodeKey}:bg`, 'ui:healthbar-bg');
+      bgSprite.texture = bgTexture;
+      bgSprite.position.set(position.x - 20, position.y - 7 + offsetY);
+    }
+
+    let barOffsetY: number;
+    if (healthBar.percentage < 25) {
+      barOffsetY = 23;
+    } else if (healthBar.percentage < 50) {
+      barOffsetY = 16;
+    } else {
+      barOffsetY = 9;
+    }
+
+    const fillW = Math.floor(40 * (healthBar.percentage / 100));
+    if (fillW > 0) {
+      const fillTexture = this.client.atlas.getFrameTexture({
+        atlasIndex: frame.atlasIndex,
+        x: frame.x + 2,
+        y: frame.y + barOffsetY,
+        w: fillW,
+        h: 3,
+      });
+      if (fillTexture) {
+        const fillSprite = this.ensureUiSprite(
+          `${nodeKey}:fill`,
+          'ui:healthbar-fill',
+        );
+        fillSprite.texture = fillTexture;
+        fillSprite.position.set(position.x - 18, position.y - 5 + offsetY);
+      }
+    }
+
+    const amount = healthBar.damage || healthBar.heal;
+    if (!amount) {
+      const missFrame = this.client.atlas.getStaticEntry(
+        StaticAtlasEntryType.Miss,
+      );
+      if (!missFrame) return;
+      const missTexture = this.client.atlas.getFrameTexture(missFrame);
+      if (missTexture) {
+        const missSprite = this.ensureUiSprite(
+          `${nodeKey}:miss`,
+          'ui:healthbar-miss',
+        );
+        missSprite.texture = missTexture;
+        missSprite.position.set(
+          position.x - (missFrame.w >> 1),
+          position.y - 35 + healthBar.ticks,
+        );
+      }
       return;
     }
+
+    const numbersFrame = this.client.atlas.getStaticEntry(
+      healthBar.heal
+        ? StaticAtlasEntryType.HealNumbers
+        : StaticAtlasEntryType.DamageNumbers,
+    );
+    if (!numbersFrame) return;
+    const amountAsText = amount.toString();
+    const chars = amountAsText.split('');
+    const digitWidth = 9;
+    const totalWidth = chars.length * digitWidth;
+    const y = position.y - 35 + healthBar.ticks;
+    let x = position.x - totalWidth / 2;
+
+    for (const [index, char] of chars.entries()) {
+      const number = Number.parseInt(char, 10);
+      const digitTexture = this.client.atlas.getFrameTexture({
+        atlasIndex: numbersFrame.atlasIndex,
+        x: numbersFrame.x + number * digitWidth,
+        y: numbersFrame.y,
+        w: digitWidth,
+        h: numbersFrame.h,
+      });
+      if (!digitTexture) {
+        x += digitWidth;
+        continue;
+      }
+      const dnSprite = this.ensureUiSprite(
+        `${nodeKey}:digit:${index}`,
+        `ui:healthbar-digit value=${char}`,
+      );
+      dnSprite.texture = digitTexture;
+      dnSprite.position.set(x, y);
+      x += digitWidth;
+    }
+  }
+
+  private addEmoteSprite(
+    nodeKey: string,
+    emote: Emote,
+    position: { x: number; y: number },
+  ) {
+    emote.renderedFirstFrame = true;
+
+    const frame = this.client.atlas.getEmoteFrame(
+      emote.type,
+      emote.animationFrame,
+    );
+    if (!frame) return;
+
+    const texture = this.client.atlas.getFrameTexture(frame);
+    if (!texture) return;
+
+    const sprite = this.ensureUiSprite(nodeKey, `ui:emote type=${emote.type}`);
+    sprite.texture = texture;
+    sprite.position.set(
+      position.x + frame.xOffset,
+      position.y + frame.yOffset - 25,
+    );
+    sprite.alpha = emote.ticks / EMOTE_ANIMATION_TICKS;
+  }
+
+  private addEffectBehindSprite(
+    effect: EffectAnimation,
+    effectKeyBase: string,
+  ) {
+    const frame = this.client.atlas.getEffectBehindFrame(
+      effect.id,
+      effect.animationFrame,
+    );
+    if (!frame || !effect.target.rect) return;
+
+    const texture = this.client.atlas.getFrameTexture(frame);
+    if (!texture) return;
+
+    const sprite = this.ensureWorldSprite(
+      this.getEffectNodeKey(effectKeyBase, 'behind'),
+      `effect:behind id=${effect.id}`,
+    );
+    sprite.texture = texture;
+    sprite.position.set(
+      Math.floor(
+        effect.target.rect.position.x +
+          (effect.target.rect.width >> 1) +
+          frame.xOffset,
+      ),
+      Math.floor(
+        effect.target.rect.position.y +
+          effect.target.rect.height -
+          TILE_HEIGHT -
+          HALF_TILE_HEIGHT +
+          frame.yOffset,
+      ),
+    );
+  }
+
+  private addEffectTransparentSprite(
+    effect: EffectAnimation,
+    effectKeyBase: string,
+  ) {
+    const frame = this.client.atlas.getEffectTransparentFrame(
+      effect.id,
+      effect.animationFrame,
+    );
+    if (!frame || !effect.target.rect) return;
+
+    const texture = this.client.atlas.getFrameTexture(frame);
+    if (!texture) return;
+
+    const sprite = this.ensureWorldSprite(
+      this.getEffectNodeKey(effectKeyBase, 'transparent'),
+      `effect:transparent id=${effect.id}`,
+    );
+    sprite.texture = texture;
+    sprite.alpha = 0.4;
+    sprite.position.set(
+      Math.floor(
+        effect.target.rect.position.x +
+          (effect.target.rect.width >> 1) +
+          frame.xOffset,
+      ),
+      Math.floor(
+        effect.target.rect.position.y +
+          effect.target.rect.height -
+          TILE_HEIGHT -
+          HALF_TILE_HEIGHT +
+          frame.yOffset,
+      ),
+    );
+  }
+
+  private addEffectFrontSprite(effect: EffectAnimation, effectKeyBase: string) {
+    const frame = this.client.atlas.getEffectFrontFrame(
+      effect.id,
+      effect.animationFrame,
+    );
+    if (!frame || !effect.target.rect) return;
+
+    const texture = this.client.atlas.getFrameTexture(frame);
+    if (!texture) return;
+
+    const sprite = this.ensureWorldSprite(
+      this.getEffectNodeKey(effectKeyBase, 'front'),
+      `effect:front id=${effect.id}`,
+    );
+    sprite.texture = texture;
+    sprite.position.set(
+      Math.floor(
+        effect.target.rect.position.x +
+          (effect.target.rect.width >> 1) +
+          frame.xOffset,
+      ),
+      Math.floor(
+        effect.target.rect.position.y +
+          effect.target.rect.height -
+          TILE_HEIGHT -
+          HALF_TILE_HEIGHT +
+          frame.yOffset,
+      ),
+    );
+  }
+
+  private addNameplateSprites(playerScreen: Vector2) {
+    if (!this.client.mousePosition) return;
 
     const coords = { x: 0, y: 0 };
     const offset = { x: 0, y: 0 };
@@ -614,25 +1734,20 @@ export class MapRenderer {
 
       if (animation instanceof CharacterDeathAnimation) {
         dying = true;
-        if (animation.base) {
-          animation = animation.base;
-        }
+        if (animation.base) animation = animation.base;
       }
 
       if (
         !bubble &&
         !bar &&
         !(animation instanceof CharacterDeathAnimation) &&
+        !(animation instanceof CharacterSpellChantAnimation) &&
         character &&
         (!character.invisible || this.client.admin !== AdminLevel.Player)
       ) {
         name = capitalize(character.name);
         coords.x = character.coords.x;
         coords.y = character.coords.y;
-
-        // TODO: Friend color
-        // if (this.client.isFriend(character.name)) {
-        // color = COLORS.NameplateFriend;
 
         switch (character.sitState) {
           case SitState.Floor:
@@ -679,9 +1794,7 @@ export class MapRenderer {
 
         if (animation instanceof NpcDeathAnimation) {
           dying = true;
-          if (animation.base) {
-            animation = animation.base;
-          }
+          if (animation.base) animation = animation.base;
         }
 
         if (
@@ -720,27 +1833,19 @@ export class MapRenderer {
     }
 
     if (!name) {
-      if (!this.client.mouseCoords) {
-        return;
-      }
+      if (!this.client.mouseCoords) return;
 
       const items = this.client.nearby.items.filter(
         (i) =>
           i.coords.x === this.client.mouseCoords!.x &&
           i.coords.y === this.client.mouseCoords!.y,
       );
-      if (!items.length) {
-        return false;
-      }
+      if (!items.length) return;
 
       items.sort((a, b) => b.uid - a.uid);
-
       const item = items[0];
-
       const data = this.client.getEifRecordById(item.id);
-      if (!data) {
-        return;
-      }
+      if (!data) return;
 
       switch (data.special) {
         case ItemSpecial.Rare:
@@ -765,40 +1870,162 @@ export class MapRenderer {
             : data.name;
       coords.x = item.coords.x;
       coords.y = item.coords.y;
-
       offset.y -= HALF_TILE_HEIGHT + 6;
     }
 
-    const position = isoToScreen(coords);
+    if (!name) return;
 
+    const positionX = (coords.x - coords.y) * HALF_TILE_WIDTH;
+    const positionY = (coords.x + coords.y) * HALF_TILE_HEIGHT;
     const drawX = Math.floor(
-      position.x -
-        playerScreen.x +
-        this.client.viewportController.getHalfGameWidth() +
-        offset.x,
+      positionX - playerScreen.x + this._halfGameWidth + offset.x,
     );
-
     const drawY = Math.floor(
-      position.y -
-        playerScreen.y +
-        this.client.viewportController.getHalfGameHeight() +
-        offset.y,
+      positionY - playerScreen.y + this._halfGameHeight + offset.y,
     );
 
-    this.client.sans11.render(
-      ctx,
+    this.addAtlasTextSprites(
+      'ui:nameplate:shadow',
       name,
       { x: drawX + 1, y: drawY + 1 },
       '#000',
     );
-
-    this.client.sans11.render(ctx, name, { x: drawX, y: drawY }, color);
+    this.addAtlasTextSprites(
+      'ui:nameplate:text',
+      name,
+      { x: drawX, y: drawY },
+      color,
+    );
   }
 
-  renderPlayerMenu(ctx: CanvasRenderingContext2D) {
-    if (!this.client.menuPlayerId) {
-      return;
+  private addChatBubbleSprites(
+    nodeKey: string,
+    bubble: ChatBubble,
+    position: Vector2,
+  ) {
+    bubble.renderedFirstFrame = true;
+    const layout = bubble.getLayout();
+    const left = Math.floor(position.x - (layout.width >> 1));
+    const top = Math.floor(position.y - layout.height);
+    const bodyHeight = layout.height - CHAT_BUBBLE_TRIANGLE_HEIGHT;
+    const midX = left + (layout.width >> 1);
+    const triHalf = CHAT_BUBBLE_TRIANGLE_WIDTH >> 1;
+
+    const graphics = this.ensureUiGraphics(nodeKey, 'ui:chat-bubble-shape');
+    graphics.roundRect(left, top, layout.width, bodyHeight, CHAT_BUBBLE_RADIUS);
+    graphics.poly(
+      [
+        midX + triHalf,
+        top + bodyHeight,
+        midX,
+        top + bodyHeight + CHAT_BUBBLE_TRIANGLE_HEIGHT,
+        midX - triHalf,
+        top + bodyHeight,
+      ],
+      true,
+    );
+    graphics.stroke({
+      color: this.parseCssHexColor(layout.foreground),
+      width: 1,
+    });
+    graphics.fill({
+      color: this.parseCssHexColor(layout.background),
+      alpha: 0.65,
+    });
+    for (const [index, line] of layout.lines.entries()) {
+      this.addAtlasTextSprites(
+        `${nodeKey}:line:${index}`,
+        line,
+        { x: left + 6, y: top + 3 + index * CHAT_BUBBLE_LINE_HEIGHT },
+        layout.foreground,
+        false,
+        false,
+      );
     }
+  }
+
+  private addSpellChantSprites(
+    nodeKey: string,
+    animation: CharacterSpellChantAnimation,
+    position: Vector2,
+  ) {
+    const layout = animation.getLayout();
+    const drawX = Math.floor(position.x - (layout.width >> 1));
+    const drawY = Math.floor(position.y - layout.height - 4);
+
+    this.addAtlasTextSprites(
+      `${nodeKey}:shadow`,
+      animation.chant,
+      { x: drawX + 1, y: drawY + 1 },
+      '#000',
+      false,
+      false,
+    );
+    this.addAtlasTextSprites(
+      `${nodeKey}:text`,
+      animation.chant,
+      { x: drawX, y: drawY },
+      '#fff',
+      false,
+      false,
+    );
+  }
+
+  private addAtlasTextSprites(
+    nodeKey: string,
+    text: string,
+    position: Vector2,
+    color: string,
+    alignHorizontal = true,
+    alignVertical = true,
+  ) {
+    const chars = text
+      .split('')
+      .map((char) => this.client.sans11.getCharacter(char.charCodeAt(0)));
+    if (!chars.length) return;
+
+    const { width, height } = this.client.sans11.measureTextChars(chars);
+    let x = position.x;
+    let y = position.y;
+
+    if (alignHorizontal) {
+      x -= width >> 1;
+    }
+    if (alignVertical) {
+      y -= height;
+    }
+
+    const tint = this.parseCssHexColor(color);
+    for (const [index, char] of chars.entries()) {
+      const texture = this.client.sans11.getCharacterTexture(char.id);
+      if (!texture) {
+        x += char.width;
+        continue;
+      }
+      const sprite = this.ensureUiSprite(
+        `${nodeKey}:char:${index}`,
+        `ui:text-glyph char=${char.id}`,
+      );
+      sprite.texture = texture;
+      sprite.tint = tint;
+      sprite.position.set(Math.floor(x), Math.floor(y));
+      x += char.width;
+    }
+  }
+
+  private parseCssHexColor(value: string): number {
+    const hex = value.startsWith('#') ? value.slice(1) : value;
+    if (hex.length === 3) {
+      return Number.parseInt(
+        `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`,
+        16,
+      );
+    }
+    return Number.parseInt(hex, 16);
+  }
+
+  private addPlayerMenuSprites() {
+    if (!this.client.menuPlayerId) return;
 
     const rect = getCharacterRectangle(this.client.menuPlayerId);
     if (!rect) {
@@ -809,931 +2036,47 @@ export class MapRenderer {
     const frame = this.client.atlas.getStaticEntry(
       StaticAtlasEntryType.PlayerMenu,
     );
-    if (!frame) {
-      return;
-    }
+    if (!frame) return;
 
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
+    const menuTexture = this.client.atlas.getFrameTexture({
+      atlasIndex: frame.atlasIndex,
+      x: frame.x,
+      y: frame.y,
+      w: PLAYER_MENU_WIDTH,
+      h: PLAYER_MENU_HEIGHT,
+    });
+    if (menuTexture) {
+      const sprite = this.ensureUiSprite(
+        'ui:player-menu:base',
+        'ui:player-menu',
+      );
+      sprite.texture = menuTexture;
+      sprite.position.set(rect.position.x + rect.width + 10, rect.position.y);
     }
-
-    ctx.drawImage(
-      atlas,
-      frame.x,
-      frame.y,
-      PLAYER_MENU_WIDTH,
-      PLAYER_MENU_HEIGHT,
-      rect.position.x + rect.width + 10,
-      rect.position.y,
-      PLAYER_MENU_WIDTH,
-      PLAYER_MENU_HEIGHT,
-    );
 
     const hovered = this.client.mouseController.getHoveredPlayerMenuItem();
     if (hovered !== undefined) {
-      ctx.drawImage(
-        atlas,
-        frame.x + PLAYER_MENU_WIDTH,
-        frame.y + PLAYER_MENU_OFFSET_Y + hovered * PLAYER_MENU_ITEM_HEIGHT,
-        PLAYER_MENU_WIDTH,
-        PLAYER_MENU_ITEM_HEIGHT,
-        rect.position.x + rect.width + 10,
-        rect.position.y +
-          PLAYER_MENU_OFFSET_Y +
-          hovered * PLAYER_MENU_ITEM_HEIGHT,
-        PLAYER_MENU_WIDTH,
-        PLAYER_MENU_ITEM_HEIGHT,
-      );
-    }
-  }
-
-  renderTile(
-    entity: Entity,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    if (entity.layer === Layer.Ground && entity.typeId === 0) {
-      return;
-    }
-
-    const coords = new Coords();
-    coords.x = entity.x;
-    coords.y = entity.y;
-
-    let bmpOffset = 0;
-
-    if (entity.layer === Layer.DownWall || entity.layer === Layer.RightWall) {
-      const door = this.client.mapController.getDoor(coords);
-      if (door?.open) {
-        bmpOffset = 1;
-      }
-    }
-
-    const spec = this.getTileSpec(entity.x, entity.y);
-    if (entity.layer === Layer.Objects) {
-      if (spec === MapTileSpec.TimedSpikes && !this.timedSpikesTicks) {
-        return;
-      }
-
-      if (
-        spec === MapTileSpec.HiddenSpikes &&
-        !this.client.nearby.characters.some(
-          (c) => c.coords.x === entity.x && c.coords.y === entity.y,
-        )
-      ) {
-        return;
-      }
-    }
-
-    const tile = this.client.atlas.getTile(
-      LAYER_GFX_MAP[entity.layer],
-      entity.typeId + bmpOffset,
-    );
-    if (!tile) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(tile.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    const offset = this.getOffset(entity.layer, tile.w, tile.h);
-    const tileScreen = isoToScreen({ x: entity.x, y: entity.y });
-
-    const screenX = Math.floor(
-      tileScreen.x -
-        HALF_TILE_WIDTH -
-        playerScreen.x +
-        this.client.viewportController.getHalfGameWidth() +
-        offset.x +
-        tile.xOffset,
-    );
-    const screenY = Math.floor(
-      tileScreen.y -
-        HALF_TILE_HEIGHT -
-        playerScreen.y +
-        this.client.viewportController.getHalfGameHeight() +
-        offset.y +
-        tile.yOffset,
-    );
-
-    if (this.client.mapController.getDoor(coords)) {
-      setDoorRectangle(
-        coords,
-        new Rectangle(
-          { x: screenX, y: screenY + tile.h - DOOR_HEIGHT },
-          tile.w,
-          DOOR_HEIGHT,
-        ),
-      );
-    } else if (this.getSign(entity.x, entity.y)) {
-      setSignRectangle(
-        coords,
-        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
-      );
-    } else if (spec === MapTileSpec.BankVault) {
-      setLockerRectangle(
-        coords,
-        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
-      );
-    } else if (
-      spec !== null &&
-      spec >= MapTileSpec.Board1 &&
-      spec <= MapTileSpec.Board8
-    ) {
-      setBoardRectangle(
-        coords,
-        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
-      );
-    }
-
-    if (entity.layer === Layer.Shadow) {
-      ctx.globalAlpha = 0.2;
-    } else {
-      ctx.globalAlpha = 1;
-    }
-
-    if (entity.layer === Layer.Ground && tile.w > TILE_WIDTH) {
-      ctx.drawImage(
-        atlas,
-        tile.x + this.animationFrame * TILE_WIDTH,
-        tile.y,
-        TILE_WIDTH,
-        TILE_HEIGHT,
-        screenX,
-        screenY,
-        TILE_WIDTH,
-        TILE_HEIGHT,
-      );
-    } else if (
-      tile.w > 120 &&
-      [Layer.DownWall, Layer.RightWall].includes(entity.layer)
-    ) {
-      const frameWidth = tile.w / 4;
-      ctx.drawImage(
-        atlas,
-        tile.x + this.animationFrame * frameWidth,
-        tile.y,
-        frameWidth,
-        tile.h,
-        screenX,
-        screenY,
-        frameWidth,
-        tile.h,
-      );
-    } else {
-      ctx.drawImage(
-        atlas,
-        tile.x,
-        tile.y,
-        tile.w,
-        tile.h,
-        screenX,
-        screenY,
-        tile.w,
-        tile.h,
-      );
-    }
-    if (entity.layer === Layer.Shadow) {
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  renderCharacter(
-    entity: Entity,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-    justCharacter = false,
-  ) {
-    const character = this.client.getCharacterById(entity.typeId);
-    if (!character) {
-      return;
-    }
-
-    let dyingTicks = 0;
-    let dying = false;
-    let animation = this.client.animationController.characterAnimations.get(
-      character.playerId,
-    );
-    if (animation instanceof CharacterDeathAnimation) {
-      dying = true;
-      dyingTicks = animation.ticks;
-      if (animation.base) {
-        animation = animation.base;
-      }
-    }
-
-    if (animation) {
-      animation.renderedFirstFrame = true;
-    }
-
-    const downRight = [Direction.Down, Direction.Right].includes(
-      character.direction,
-    );
-    let characterFrame: CharacterFrame;
-    let walkOffset = { x: 0, y: 0 };
-    let coords: Vector2 = character.coords;
-    switch (true) {
-      case animation instanceof CharacterWalkAnimation: {
-        walkOffset = dying
-          ? WALK_OFFSETS[animation.animationFrame][animation.direction]
-          : this.interpolateWalkOffset(
-              animation.animationFrame,
-              animation.direction,
-            );
-        coords = animation.from;
-        characterFrame = downRight
-          ? CharacterFrame.WalkingDownRight1 + animation.animationFrame
-          : CharacterFrame.WalkingUpLeft1 + animation.animationFrame;
-        break;
-      }
-      case animation instanceof CharacterAttackAnimation:
-        characterFrame = downRight
-          ? CharacterFrame.MeleeAttackDownRight1 + animation.animationFrame
-          : CharacterFrame.MeleeAttackUpLeft1 + animation.animationFrame;
-        break;
-      case animation instanceof CharacterRangedAttackAnimation:
-        characterFrame = downRight
-          ? CharacterFrame.RangeAttackDownRight
-          : CharacterFrame.RangeAttackUpLeft;
-        break;
-      case animation instanceof CharacterSpellChantAnimation:
-        characterFrame = downRight
-          ? CharacterFrame.RaisedHandDownRight
-          : CharacterFrame.RaisedHandUpLeft;
-        break;
-      case character.sitState === SitState.Floor:
-        characterFrame = downRight
-          ? CharacterFrame.FloorDownRight
-          : CharacterFrame.FloorUpLeft;
-        break;
-      case character.sitState === SitState.Chair: {
-        characterFrame = downRight
-          ? CharacterFrame.ChairDownRight
-          : CharacterFrame.ChairUpLeft;
-        break;
-      }
-      default:
-        characterFrame = downRight
-          ? CharacterFrame.StandingDownRight
-          : CharacterFrame.StandingUpLeft;
-        break;
-    }
-
-    const frame = this.client.atlas.getCharacterFrame(
-      character.playerId,
-      characterFrame,
-    );
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    const screenCoords = isoToScreen(coords);
-    const mirrored = [Direction.Right, Direction.Up].includes(
-      character.direction,
-    );
-
-    const frameOffset = (
-      CHARACTER_FRAME_OFFSETS[character.gender][characterFrame] as Record<
-        Direction,
-        { x: number; y: number }
-      >
-    )[character.direction];
-
-    const screenX = Math.floor(
-      screenCoords.x -
-        playerScreen.x +
-        this.client.viewportController.getHalfGameWidth() +
-        walkOffset.x +
-        frameOffset.x,
-    );
-
-    const screenY = Math.floor(
-      screenCoords.y -
-        playerScreen.y +
-        this.client.viewportController.getHalfGameHeight() +
-        frame.yOffset +
-        walkOffset.y +
-        frameOffset.y,
-    );
-
-    const rect = new Rectangle(
-      {
-        x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
-        y: screenY,
-      },
-      frame.w,
-      frame.h,
-    );
-
-    setCharacterRectangle(character.playerId, rect);
-
-    const effects = justCharacter
-      ? []
-      : this.client.animationController.effects.filter(
-          (e) =>
-            e.target instanceof EffectTargetCharacter &&
-            e.target.playerId === character.playerId,
-        );
-
-    for (const effect of effects) {
-      effect.target.rect = {
-        position: {
-          x:
-            screenCoords.x -
-            playerScreen.x +
-            this.client.viewportController.getHalfGameWidth() -
-            HALF_TILE_WIDTH +
-            walkOffset.x,
-          y: rect.position.y,
-        },
-        width: TILE_WIDTH,
-        height: rect.height,
-        depth: 0,
-      };
-      effect.renderedFirstFrame = true;
-      this.renderEffectBehind(effect, ctx);
-    }
-
-    if (mirrored) {
-      ctx.save();
-      ctx.translate(this.client.viewportController.getGameWidth(), 0);
-      ctx.scale(-1, 1);
-    }
-
-    const drawX = Math.floor(
-      mirrored
-        ? this.client.viewportController.getGameWidth() -
-            screenX -
-            frame.w -
-            frame.mirroredXOffset
-        : screenX + frame.xOffset,
-    );
-
-    if (dying) {
-      ctx.globalAlpha = dyingTicks / DEATH_TICKS;
-    }
-
-    if (entity.typeId === this.client.playerId && !character.invisible) {
-      ctx.drawImage(
-        atlas,
-        frame.x,
-        frame.y,
-        frame.w,
-        frame.h,
-        drawX,
-        screenY,
-        frame.w,
-        frame.h,
-      );
-    } else {
-      if (character.invisible && this.client.admin !== AdminLevel.Player) {
-        ctx.globalAlpha = 0.4;
-        ctx.drawImage(
-          atlas,
-          frame.x,
-          frame.y,
-          frame.w,
-          frame.h,
-          drawX,
-          screenY,
-          frame.w,
-          frame.h,
-        );
-        ctx.globalAlpha = 1;
-      } else if (!character.invisible) {
-        ctx.drawImage(
-          atlas,
-          frame.x,
-          frame.y,
-          frame.w,
-          frame.h,
-          drawX,
-          screenY,
-          frame.w,
-          frame.h,
-        );
-      }
-    }
-
-    if (dying) {
-      ctx.globalAlpha = 1;
-    }
-
-    if (mirrored) {
-      ctx.restore();
-    }
-
-    for (const effect of effects) {
-      this.renderEffectTransparent(effect, ctx);
-      this.renderEffectFront(effect, ctx);
-    }
-
-    if (
-      !justCharacter &&
-      (!character.invisible || this.client.admin !== AdminLevel.Player)
-    ) {
-      const bubble = justCharacter
-        ? null
-        : this.client.animationController.characterChats.get(
-            character.playerId,
-          );
-      const healthBar = justCharacter
-        ? null
-        : this.client.animationController.characterHealthBars.get(
-            character.playerId,
-          );
-      const emote = justCharacter
-        ? null
-        : this.client.animationController.characterEmotes.get(
-            character.playerId,
-          );
-
-      if (
-        !bubble &&
-        !healthBar &&
-        !emote &&
-        !this.client.commandController.debug &&
-        (!(animation instanceof CharacterSpellChantAnimation) ||
-          animation.animationFrame)
-      ) {
-        return;
-      }
-
-      this.topLayer.push(() => {
-        const rect = getCharacterRectangle(character.playerId);
-        const characterTopCenter = {
-          x:
-            screenCoords.x -
-            playerScreen.x +
-            this.client.viewportController.getHalfGameWidth() +
-            walkOffset.x,
-          y: rect!.position.y,
-        };
-
-        if (bubble) {
-          bubble.render(characterTopCenter, ctx);
-        }
-        this.renderHealthBar(healthBar!, characterTopCenter, ctx);
-        if (emote) {
-          this.renderEmote(emote, characterTopCenter, ctx);
-        }
-
-        if (
-          animation instanceof CharacterSpellChantAnimation &&
-          !animation.animationFrame
-        ) {
-          animation.render(characterTopCenter, ctx);
-        }
-
-        if (this.client.commandController.debug) {
-          this.renderDebugRectangle(
-            rect!,
-            `id[${character.playerId}]`,
-            'green',
-            ctx,
-          );
-        }
+      const hoverTexture = this.client.atlas.getFrameTexture({
+        atlasIndex: frame.atlasIndex,
+        x: frame.x + PLAYER_MENU_WIDTH,
+        y: frame.y + PLAYER_MENU_OFFSET_Y + hovered * PLAYER_MENU_ITEM_HEIGHT,
+        w: PLAYER_MENU_WIDTH,
+        h: PLAYER_MENU_ITEM_HEIGHT,
       });
-    }
-  }
-
-  renderNpc(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
-    const npc = this.client.getNpcByIndex(e.typeId);
-    if (!npc) {
-      return;
-    }
-
-    const record = this.client.getEnfRecordById(npc.id);
-    if (!record) {
-      return;
-    }
-
-    let dyingTicks = 0;
-    let dying = false;
-    let animation = this.client.animationController.npcAnimations.get(
-      npc.index,
-    );
-    if (animation) {
-      animation.renderedFirstFrame = true;
-    }
-
-    if (animation instanceof NpcDeathAnimation) {
-      dying = true;
-      dyingTicks = animation.ticks;
-      if (animation.base) {
-        animation = animation.base;
-      }
-    }
-    const meta = this.client.getNpcMetadata(record.graphicId);
-    const downRight = [Direction.Down, Direction.Right].includes(npc.direction);
-    let walkOffset = { x: 0, y: 0 };
-    let npcFrame: NpcFrame;
-    let coords: Vector2 = npc.coords;
-
-    switch (true) {
-      case animation instanceof NpcWalkAnimation: {
-        walkOffset = dying
-          ? WALK_OFFSETS[animation.animationFrame][animation.direction]
-          : this.interpolateWalkOffset(
-              animation.animationFrame,
-              animation.direction,
-            );
-
-        coords = animation.from;
-        npcFrame = downRight
-          ? NpcFrame.WalkingDownRight1 + animation.animationFrame
-          : NpcFrame.WalkingUpLeft1 + animation.animationFrame;
-        break;
-      }
-      case animation instanceof NpcAttackAnimation:
-        npcFrame = downRight
-          ? NpcFrame.AttackDownRight1 + animation.animationFrame
-          : NpcFrame.AttackUpLeft1 + animation.animationFrame;
-        break;
-      default:
-        npcFrame =
-          (downRight ? NpcFrame.StandingDownRight1 : NpcFrame.StandingUpLeft1) +
-          (meta.animatedStanding ? this.npcIdleAnimationFrame : 0);
-        break;
-    }
-
-    const frame = this.client.atlas.getNpcFrame(record.graphicId, npcFrame);
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    const metaOffset = {
-      x:
-        meta.xOffset +
-        ([NpcFrame.AttackDownRight2, NpcFrame.AttackUpLeft2].includes(npcFrame)
-          ? meta.xOffsetAttack
-          : 0),
-      y: -meta.yOffset,
-    };
-
-    const mirrored = [Direction.Right, Direction.Up].includes(npc.direction);
-    if (mirrored) {
-      metaOffset.x = -metaOffset.x;
-    }
-
-    const additionalOffset = { x: walkOffset.x, y: walkOffset.y };
-    additionalOffset.x += metaOffset.x;
-    additionalOffset.y += metaOffset.y;
-
-    const screenCoords = isoToScreen(coords);
-    const screenX = Math.floor(
-      screenCoords.x -
-        playerScreen.x +
-        this.client.viewportController.getHalfGameWidth() +
-        additionalOffset.x,
-    );
-    const screenY = Math.floor(
-      screenCoords.y -
-        playerScreen.y +
-        this.client.viewportController.getHalfGameHeight() +
-        frame.yOffset +
-        additionalOffset.y,
-    );
-
-    const rect = new Rectangle(
-      {
-        x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
-        y: screenY,
-      },
-      frame.w,
-      frame.h,
-    );
-
-    setNpcRectangle(npc.index, rect);
-
-    const effects = this.client.animationController.effects.filter(
-      (e) =>
-        e.target instanceof EffectTargetNpc && e.target.index === npc.index,
-    );
-
-    for (const effect of effects) {
-      effect.target.rect = {
-        position: {
-          x:
-            screenCoords.x -
-            playerScreen.x +
-            this.client.viewportController.getHalfGameWidth() -
-            HALF_TILE_WIDTH +
-            walkOffset.x,
-          y: rect.position.y,
-        },
-        width: TILE_WIDTH,
-        height: rect.height,
-        depth: 0,
-      };
-      effect.renderedFirstFrame = true;
-      this.renderEffectBehind(effect, ctx);
-    }
-
-    if (mirrored) {
-      ctx.save(); // Save the current context state
-      ctx.translate(this.client.viewportController.getGameWidth(), 0); // Move origin to the right edge
-      ctx.scale(-1, 1); // Flip horizontally
-    }
-
-    const drawX = Math.floor(
-      mirrored
-        ? this.client.viewportController.getGameWidth() -
-            screenX -
-            frame.w -
-            frame.mirroredXOffset
-        : screenX + frame.xOffset,
-    );
-
-    if (meta.transparent) {
-      if (!dying) {
-        ctx.globalAlpha = 0.4;
-      } else {
-        ctx.globalAlpha = 0.4 * (dyingTicks / DEATH_TICKS);
-      }
-    } else if (dying) {
-      ctx.globalAlpha = dyingTicks / DEATH_TICKS;
-    }
-
-    ctx.drawImage(
-      atlas,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
-      drawX,
-      screenY,
-      frame.w,
-      frame.h,
-    );
-
-    if (dying || meta.transparent) {
-      ctx.globalAlpha = 1;
-    }
-
-    if (mirrored) {
-      ctx.restore(); // Restore the context to its original state
-    }
-
-    for (const effect of effects) {
-      this.renderEffectTransparent(effect, ctx);
-      this.renderEffectFront(effect, ctx);
-    }
-
-    const bubble = this.client.animationController.npcChats.get(npc.index);
-    const healthBar = this.client.animationController.npcHealthBars.get(
-      npc.index,
-    );
-
-    if (!bubble && !healthBar && !this.client.commandController.debug) {
-      return;
-    }
-
-    this.topLayer.push(() => {
-      const aboveCoords = {
-        x: coords.x - 1,
-        y: coords.y - 1,
-      };
-      const screenCoords = isoToScreen(aboveCoords);
-
-      const npcTopCenter = {
-        x: Math.floor(
-          screenCoords.x -
-            playerScreen.x +
-            this.client.viewportController.getHalfGameWidth() +
-            walkOffset.x,
-        ),
-        y: Math.floor(
-          screenCoords.y -
-            playerScreen.y +
-            this.client.viewportController.getHalfGameHeight() -
-            meta.nameLabelOffset +
-            walkOffset.y +
-            16,
-        ),
-      };
-
-      if (bubble) {
-        bubble.render(npcTopCenter, ctx);
-      }
-
-      if (healthBar) {
-        this.renderHealthBar(healthBar, npcTopCenter, ctx);
-      }
-
-      if (this.client.commandController.debug) {
-        this.renderDebugRectangle(
-          rect,
-          `idx[${npc.index}]`,
-          [NpcType.Aggressive, NpcType.Passive].includes(record.type)
-            ? 'red'
-            : 'purple',
-          ctx,
+      if (hoverTexture) {
+        const hoverSprite = this.ensureUiSprite(
+          `ui:player-menu:hover:${hovered}`,
+          `ui:player-menu-hover index=${hovered}`,
+        );
+        hoverSprite.texture = hoverTexture;
+        hoverSprite.position.set(
+          rect.position.x + rect.width + 10,
+          rect.position.y +
+            PLAYER_MENU_OFFSET_Y +
+            hovered * PLAYER_MENU_ITEM_HEIGHT,
         );
       }
-    });
-  }
-
-  renderItem(e: Entity, playerScreen: Vector2, ctx: CanvasRenderingContext2D) {
-    const item = this.client.getItemByIndex(e.typeId);
-    if (!item) {
-      return;
     }
-
-    const record = this.client.getEifRecordById(item.id);
-    if (!record) {
-      return;
-    }
-
-    const gfxId = getItemGraphicId(item.id, record.graphicId, item.amount);
-    const frame = this.client.atlas.getItem(gfxId);
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    const tileScreen = isoToScreen(item.coords);
-
-    const screenX = Math.floor(
-      tileScreen.x -
-        playerScreen.x +
-        this.client.viewportController.getHalfGameWidth() +
-        frame.xOffset,
-    );
-    const screenY = Math.floor(
-      tileScreen.y -
-        playerScreen.y +
-        this.client.viewportController.getHalfGameHeight() +
-        frame.yOffset,
-    );
-
-    ctx.drawImage(
-      atlas,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
-      screenX,
-      screenY,
-      frame.w,
-      frame.h,
-    );
-
-    if (this.client.commandController.debug) {
-      this.renderDebugRectangle(
-        new Rectangle({ x: screenX, y: screenY }, frame.w, frame.h),
-        `idx[${item.uid}]`,
-        'blue',
-        ctx,
-      );
-    }
-  }
-
-  private renderDebugRectangle(
-    rect: Rectangle,
-    label: string,
-    color: string,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    ctx.strokeStyle = color;
-    ctx.strokeRect(rect.position.x, rect.position.y, rect.width, rect.height);
-
-    const frame = this.client.atlas.getStaticEntry(StaticAtlasEntryType.Sans11);
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    ctx.fillStyle = color;
-    ctx.fillRect(
-      rect.position.x,
-      rect.position.y - 12,
-      ctx.measureText(label).width + 4,
-      12,
-    );
-
-    this.client.sans11.render(
-      ctx,
-      label,
-      { x: rect.position.x, y: rect.position.y - 12 },
-      '#fff',
-      TextAlign.None,
-    );
-  }
-
-  renderCursor(
-    entity: Entity,
-    playerScreen: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    if (
-      this.client.mouseCoords!.x < 0 ||
-      this.client.mouseCoords!.x > this.client.map!.width ||
-      this.client.mouseCoords!.y < 0 ||
-      this.client.mouseCoords!.y > this.client.map!.height
-    ) {
-      return;
-    }
-
-    const frame = this.client.atlas.getStaticEntry(StaticAtlasEntryType.Cursor);
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    const tileScreen = isoToScreen({
-      x: this.client.mouseCoords!.x,
-      y: this.client.mouseCoords!.y,
-    });
-
-    const sourceX = entity.typeId * TILE_WIDTH;
-
-    const screenX = Math.floor(
-      tileScreen.x -
-        HALF_TILE_WIDTH -
-        playerScreen.x +
-        this.client.viewportController.getHalfGameWidth(),
-    );
-    const screenY = Math.floor(
-      tileScreen.y -
-        HALF_TILE_HEIGHT -
-        playerScreen.y +
-        this.client.viewportController.getHalfGameHeight(),
-    );
-
-    ctx.drawImage(
-      atlas,
-      frame.x + sourceX,
-      frame.y,
-      TILE_WIDTH,
-      TILE_HEIGHT,
-      screenX,
-      screenY,
-      TILE_WIDTH,
-      TILE_HEIGHT,
-    );
-
-    const animation = this.client.animationController.cursorClickAnimation;
-    if (animation) {
-      animation.renderedFirstFrame = true;
-      const animationScreen = isoToScreen(animation.at);
-      const animationX = Math.floor(
-        animationScreen.x -
-          HALF_TILE_WIDTH -
-          playerScreen.x +
-          this.client.viewportController.getHalfGameWidth(),
-      );
-      const animationY = Math.floor(
-        animationScreen.y -
-          HALF_TILE_HEIGHT -
-          playerScreen.y +
-          this.client.viewportController.getHalfGameHeight(),
-      );
-      const sourceX = Math.floor((3 + animation.animationFrame) * TILE_WIDTH);
-      ctx.drawImage(
-        atlas,
-        frame.x + sourceX,
-        frame.y,
-        TILE_WIDTH,
-        TILE_HEIGHT,
-        animationX,
-        animationY,
-        TILE_WIDTH,
-        TILE_HEIGHT,
-      );
-    }
-  }
-
-  getGraphicId(layer: number, x: number, y: number): number | null {
-    const cell = this.staticTileGrid[y]?.[x];
-    if (!cell) return null;
-    const t = cell.find((t) => t.layer === layer);
-    return t ? t.bmpId : null;
   }
 
   private getTileSpec(x: number, y: number): MapTileSpec | null {
@@ -1779,310 +2122,5 @@ export class MapRenderer {
     }
 
     return { x: 0, y: 0 };
-  }
-
-  private renderHealthBar(
-    healthBar: HealthBar | null,
-    position: Vector2,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    if (!healthBar) {
-      return;
-    }
-
-    healthBar.renderedFirstFrame = true;
-
-    const frame = this.client.atlas.getStaticEntry(
-      StaticAtlasEntryType.HealthBars,
-    );
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    const offsetY = -10;
-
-    ctx.drawImage(
-      atlas,
-      frame.x,
-      frame.y + 28,
-      40,
-      7,
-      position.x - 20,
-      position.y - 7 + offsetY,
-      40,
-      7,
-    );
-
-    let barOffsetY: number;
-    if (healthBar.percentage < 25) {
-      barOffsetY = 23;
-    } else if (healthBar.percentage < 50) {
-      barOffsetY = 16;
-    } else {
-      barOffsetY = 9;
-    }
-
-    ctx.drawImage(
-      atlas,
-      frame.x + 2,
-      frame.y + barOffsetY,
-      Math.floor(40 * (healthBar.percentage / 100)),
-      3,
-      position.x - 18,
-      position.y - 5 + offsetY,
-      40 * (healthBar.percentage / 100),
-      3,
-    );
-
-    const amount = healthBar.damage || healthBar.heal;
-    if (!amount) {
-      const frame = this.client.atlas.getStaticEntry(StaticAtlasEntryType.Miss);
-      if (!frame) {
-        return;
-      }
-
-      const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-      if (!atlas) {
-        return;
-      }
-
-      ctx.drawImage(
-        atlas,
-        frame.x,
-        frame.y,
-        frame.w,
-        frame.h,
-        position.x - (frame.w >> 1),
-        position.y - 35 + healthBar.ticks,
-        frame.w,
-        frame.h,
-      );
-      return;
-    }
-
-    const amountAsText = amount.toString();
-    const chars = amountAsText.split('');
-    this.damageNumberCanvas.width = chars.length * 9;
-    this.damageNumberCanvas.height = 12;
-    this.damageNumberCtx.clearRect(
-      0,
-      0,
-      this.damageNumberCanvas.width,
-      this.damageNumberCanvas.height,
-    );
-
-    const numbersFrame = this.client.atlas.getStaticEntry(
-      healthBar.heal
-        ? StaticAtlasEntryType.HealNumbers
-        : StaticAtlasEntryType.DamageNumbers,
-    );
-
-    if (!numbersFrame) {
-      return;
-    }
-
-    const numbersAtlas = this.client.atlas.getAtlas(numbersFrame.atlasIndex);
-    if (!numbersAtlas) {
-      return;
-    }
-
-    let index = 0;
-    for (const char of chars) {
-      const number = Number.parseInt(char, 10);
-      this.damageNumberCtx.drawImage(
-        numbersAtlas,
-        numbersFrame.x + number * 9,
-        numbersFrame.y,
-        9,
-        12,
-        index * 9,
-        0,
-        9,
-        12,
-      );
-      index++;
-    }
-
-    ctx.drawImage(
-      this.damageNumberCanvas,
-      position.x - this.damageNumberCanvas.width / 2,
-      position.y - 35 + healthBar.ticks,
-    );
-  }
-
-  renderEmote(
-    emote: Emote,
-    position: { x: number; y: number },
-    ctx: CanvasRenderingContext2D,
-  ) {
-    emote.renderedFirstFrame = true;
-
-    const frame = this.client.atlas.getEmoteFrame(
-      emote.type,
-      emote.animationFrame,
-    );
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    ctx.globalAlpha = emote.ticks / EMOTE_ANIMATION_TICKS;
-
-    ctx.drawImage(
-      atlas,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
-      position.x + frame.xOffset,
-      position.y + frame.yOffset - 25,
-      frame.w,
-      frame.h,
-    );
-
-    ctx.globalAlpha = 1;
-  }
-
-  private renderEffectBehind(
-    effect: EffectAnimation,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    const frame = this.client.atlas.getEffectBehindFrame(
-      effect.id,
-      effect.animationFrame,
-    );
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    if (!effect.target.rect) {
-      return;
-    }
-
-    ctx.drawImage(
-      atlas,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
-      Math.floor(
-        effect.target.rect.position.x +
-          (effect.target.rect.width >> 1) +
-          frame.xOffset,
-      ),
-      Math.floor(
-        effect.target.rect.position.y +
-          effect.target.rect.height -
-          TILE_HEIGHT -
-          HALF_TILE_HEIGHT +
-          frame.yOffset,
-      ),
-      frame.w,
-      frame.h,
-    );
-  }
-
-  private renderEffectTransparent(
-    effect: EffectAnimation,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    const frame = this.client.atlas.getEffectTransparentFrame(
-      effect.id,
-      effect.animationFrame,
-    );
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    if (!effect.target.rect) {
-      return;
-    }
-
-    ctx.globalAlpha = 0.4;
-    ctx.drawImage(
-      atlas,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
-      Math.floor(
-        effect.target.rect.position.x +
-          (effect.target.rect.width >> 1) +
-          frame.xOffset,
-      ),
-      Math.floor(
-        effect.target.rect.position.y +
-          effect.target.rect.height -
-          TILE_HEIGHT -
-          HALF_TILE_HEIGHT +
-          frame.yOffset,
-      ),
-      frame.w,
-      frame.h,
-    );
-    ctx.globalAlpha = 1;
-  }
-
-  private renderEffectFront(
-    effect: EffectAnimation,
-    ctx: CanvasRenderingContext2D,
-  ) {
-    const frame = this.client.atlas.getEffectFrontFrame(
-      effect.id,
-      effect.animationFrame,
-    );
-    if (!frame) {
-      return;
-    }
-
-    const atlas = this.client.atlas.getAtlas(frame.atlasIndex);
-    if (!atlas) {
-      return;
-    }
-
-    if (!effect.target.rect) {
-      return;
-    }
-
-    ctx.drawImage(
-      atlas,
-      frame.x,
-      frame.y,
-      frame.w,
-      frame.h,
-      Math.floor(
-        effect.target.rect.position.x +
-          (effect.target.rect.width >> 1) +
-          frame.xOffset,
-      ),
-      Math.floor(
-        effect.target.rect.position.y +
-          effect.target.rect.height -
-          TILE_HEIGHT -
-          HALF_TILE_HEIGHT +
-          frame.yOffset,
-      ),
-      frame.w,
-      frame.h,
-    );
   }
 }

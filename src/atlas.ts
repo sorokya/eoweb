@@ -6,6 +6,7 @@ import {
   Gender,
   MapTileSpec,
 } from 'eolib';
+import { CanvasSource, Rectangle, Texture } from 'pixi.js';
 import type { Client } from './client';
 import {
   ATLAS_EXPIRY_TICKS,
@@ -316,31 +317,54 @@ type PlaceableFrame = {
 class AtlasCanvas {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
-  private img: HTMLImageElement;
-  private loaded = false;
+  private source: CanvasSource;
+  private texture: Texture;
+  private labelPrefix: string;
+  private committed = false;
+  private subTextureCache = new Map<string, Texture>();
   skyline = [{ x: 0, y: 0, w: ATLAS_SIZE }];
 
-  constructor() {
+  constructor(labelPrefix: string) {
+    this.labelPrefix = labelPrefix;
     this.canvas = document.createElement('canvas');
     this.canvas.width = ATLAS_SIZE;
     this.canvas.height = ATLAS_SIZE;
+    this.canvas.id = `${labelPrefix}-canvas`;
     this.ctx = this.canvas.getContext('2d', { willReadFrequently: true })!;
-    this.img = new Image();
-    this.img.onload = () => {
-      this.loaded = true;
-    };
+    this.source = new CanvasSource({
+      resource: this.canvas,
+      scaleMode: 'nearest',
+      label: `${labelPrefix}-source`,
+    });
+    this.texture = new Texture({
+      source: this.source,
+      label: `${labelPrefix}-texture`,
+    });
   }
 
   commit() {
-    this.img.src = this.canvas.toDataURL();
+    this.source.update();
+    this.subTextureCache.clear();
+    this.committed = true;
   }
 
-  getImg(): HTMLImageElement | undefined {
-    if (!this.loaded) {
-      return;
-    }
+  getTexture(): Texture | undefined {
+    if (!this.committed) return undefined;
+    return this.texture;
+  }
 
-    return this.img;
+  getSubTexture(x: number, y: number, w: number, h: number): Texture {
+    const key = `${x},${y},${w},${h}`;
+    let t = this.subTextureCache.get(key);
+    if (!t) {
+      t = new Texture({
+        source: this.source,
+        frame: new Rectangle(x, y, w, h),
+        label: `${this.labelPrefix}-subtex(${x},${y},${w},${h})`,
+      });
+      this.subTextureCache.set(key, t);
+    }
+    return t;
   }
 
   getCanvas(): HTMLCanvasElement {
@@ -400,9 +424,9 @@ export class Atlas {
 
   constructor(client: Client) {
     this.client = client;
-    this.staticAtlas = new AtlasCanvas();
-    this.mapAtlas = new AtlasCanvas();
-    this.atlases = [new AtlasCanvas()];
+    this.staticAtlas = new AtlasCanvas('atlas-static');
+    this.mapAtlas = new AtlasCanvas('atlas-map');
+    this.atlases = [new AtlasCanvas('atlas-dynamic-0')];
     this.ctx = this.atlases[0].getContext();
     this.tmpCanvas = document.createElement('canvas');
     this.tmpCtx = this.tmpCanvas.getContext('2d', {
@@ -417,16 +441,35 @@ export class Atlas {
     })!;
   }
 
-  getAtlas(index: number): HTMLImageElement | undefined {
-    if (index === STATIC_ATLAS_INDEX) {
-      return this.staticAtlas.getImg();
-    }
+  getAtlas(index: number): HTMLCanvasElement | undefined {
+    // Kept for ground pre-rendering (renderTile with canvas 2D ctx).
+    // Returns a hidden img backed by the atlas canvas for drawImage compatibility.
+    const atlasCanvas = this.getAtlasCanvas(index);
+    if (!atlasCanvas?.getTexture()) return undefined;
+    // Expose the underlying HTML canvas as an image-like source for ctx.drawImage.
+    return atlasCanvas.getCanvas();
+  }
 
-    if (index === MAP_ATLAS_INDEX) {
-      return this.mapAtlas.getImg();
-    }
+  getAtlasTexture(index: number): Texture | undefined {
+    return this.getAtlasCanvas(index)?.getTexture();
+  }
 
-    return this.atlases[index]?.getImg();
+  getFrameTexture(
+    frame:
+      | Frame
+      | TileAtlasEntry
+      | ItemAtlasEntry
+      | { atlasIndex: number; x: number; y: number; w: number; h: number },
+  ): Texture | undefined {
+    const atlasCanvas = this.getAtlasCanvas(frame.atlasIndex);
+    if (!atlasCanvas?.getTexture()) return undefined;
+    return atlasCanvas.getSubTexture(frame.x, frame.y, frame.w, frame.h);
+  }
+
+  private getAtlasCanvas(index: number): AtlasCanvas | undefined {
+    if (index === STATIC_ATLAS_INDEX) return this.staticAtlas;
+    if (index === MAP_ATLAS_INDEX) return this.mapAtlas;
+    return this.atlases[index];
   }
 
   getItem(graphicId: number): ItemAtlasEntry | undefined {
@@ -611,7 +654,7 @@ export class Atlas {
 
     // No fit found → create new atlas
     if (bestAtlasIndex === -1) {
-      const newAtlas = new AtlasCanvas();
+      const newAtlas = new AtlasCanvas(`atlas-dynamic-${this.atlases.length}`);
       newAtlas.skyline = [{ x: 0, y: 0, w: ATLAS_SIZE }];
       this.atlases.push(newAtlas);
       this.currentAtlasIndex = this.atlases.length - 1;
@@ -754,6 +797,16 @@ export class Atlas {
       return;
     }
 
+    // Snapshot every atlas canvas BEFORE clearing so we can copy from the
+    // original positions even after the destination canvases are wiped.
+    const snapshots: HTMLCanvasElement[] = this.atlases.map((atlas) => {
+      const snap = document.createElement('canvas');
+      snap.width = ATLAS_SIZE;
+      snap.height = ATLAS_SIZE;
+      snap.getContext('2d')!.drawImage(atlas.getCanvas(), 0, 0);
+      return snap;
+    });
+
     for (const atlas of this.atlases) {
       const ctx = atlas.getContext();
       ctx.clearRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
@@ -771,10 +824,10 @@ export class Atlas {
         continue;
       }
 
-      const img = atlas.getImg();
+      const img = snapshots[placeable.atlasIndex];
       if (!img) {
         console.error(
-          'Atlas image not found for defragmentation',
+          'Atlas snapshot not found for defragmentation',
           placeable.atlasIndex,
         );
         continue;

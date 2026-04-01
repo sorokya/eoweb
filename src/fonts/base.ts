@@ -1,5 +1,5 @@
+import type { Texture } from 'pixi.js';
 import type { Atlas, TileAtlasEntry } from '../atlas';
-import type { Vector2 } from '../vector';
 
 export class FontCharacter {
   constructor(
@@ -21,13 +21,9 @@ export enum TextAlign {
 export abstract class Font {
   protected atlas: Atlas;
   protected characters!: FontCharacter[];
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
 
   constructor(atlas: Atlas) {
     this.atlas = atlas;
-    this.canvas = document.createElement('canvas');
-    this.ctx = this.canvas.getContext('2d')!;
   }
 
   public getCharacter(charId: number): FontCharacter {
@@ -63,83 +59,20 @@ export abstract class Font {
     return this.measureTextChars(chars);
   }
 
-  abstract getFrame(): TileAtlasEntry | undefined;
-
-  public render(
-    ctx: CanvasRenderingContext2D,
-    text: string,
-    position: Vector2,
-    color = '#fff',
-    align: TextAlign = TextAlign.Both,
-  ) {
+  public getCharacterTexture(charId: number): Texture | null {
     const frame = this.getFrame();
-    if (!frame) {
-      throw new Error('Font frame not found');
-    }
+    if (!frame) return null;
 
-    const img = this.atlas.getAtlas(frame.atlasIndex);
-    if (!img) {
-      throw new Error('Font atlas not found');
-    }
-
-    const chars = this.stringToCharacters(text);
-    const { width, height } = this.measureTextChars(chars);
-
-    let x = 0;
-
-    this.canvas.width = width;
-    this.canvas.height = height;
-
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    for (const char of chars) {
-      this.ctx.drawImage(
-        img,
-        frame.x + char.x,
-        frame.y + char.y,
-        char.width,
-        char.height,
-        x,
-        0,
-        char.width,
-        char.height,
-      );
-      x += char.width;
-    }
-
-    if (color !== '#fff') {
-      this.ctx.globalCompositeOperation = 'source-in';
-      this.ctx.fillStyle = color;
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-      this.ctx.globalCompositeOperation = 'source-over';
-    }
-
-    let drawX = position.x;
-    let drawY = position.y;
-
-    switch (align) {
-      case TextAlign.CenterHorizontal:
-        drawX -= width >> 1;
-        break;
-      case TextAlign.CenterVertical:
-        drawY -= height;
-        break;
-      case TextAlign.Both:
-        drawX -= width >> 1;
-        drawY -= height;
-        break;
-    }
-
-    ctx.drawImage(
-      this.canvas,
-      0,
-      0,
-      this.canvas.width,
-      this.canvas.height,
-      Math.floor(drawX),
-      Math.floor(drawY),
-      this.canvas.width,
-      this.canvas.height,
-    );
+    const char = this.getCharacter(charId);
+    const texture = this.atlas.getFrameTexture({
+      atlasIndex: frame.atlasIndex,
+      x: frame.x + char.x,
+      y: frame.y + char.y,
+      w: char.width,
+      h: char.height,
+    });
+    return texture ?? null;
   }
+
+  abstract getFrame(): TileAtlasEntry | undefined;
 }

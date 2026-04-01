@@ -1,8 +1,7 @@
-import type { ChatBubble } from '../chat-bubble';
 import type { Client } from '../client';
 import { SPELL_COOLDOWN_TICKS } from '../consts';
 import {
-  type CharacterAnimation,
+  type Animation,
   CharacterDeathAnimation,
   CharacterSpellChantAnimation,
   CharacterWalkAnimation,
@@ -10,14 +9,14 @@ import {
   type EffectAnimation,
   type Emote,
   type HealthBar,
-  type NpcAnimation,
   NpcDeathAnimation,
 } from '../render';
+import type { ChatBubble } from '../render/chat-bubble';
 
 export class AnimationController {
   private client: Client;
-  characterAnimations: Map<number, CharacterAnimation> = new Map();
-  npcAnimations: Map<number, NpcAnimation> = new Map();
+  characterAnimations: Map<number, Animation> = new Map();
+  npcAnimations: Map<number, Animation> = new Map();
   characterChats: Map<number, ChatBubble> = new Map();
   npcChats: Map<number, ChatBubble> = new Map();
   npcHealthBars: Map<number, HealthBar> = new Map();

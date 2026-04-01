@@ -1,14 +1,15 @@
-import type { Coords, Direction } from 'eolib';
+import type { Direction } from 'eolib';
 import { WALK_TICKS } from '../consts';
-import { NpcAnimation } from './npc-base-animation';
+import type { Vector2 } from '../vector';
+import { Animation } from './animation';
 
-export class NpcWalkAnimation extends NpcAnimation {
-  from: Coords;
-  to: Coords;
+export class NpcWalkAnimation extends Animation {
+  from: Vector2;
+  to: Vector2;
   direction: Direction;
   animationFrame = 0;
 
-  constructor(from: Coords, to: Coords, direction: Direction) {
+  constructor(from: Vector2, to: Vector2, direction: Direction) {
     super();
     this.ticks = WALK_TICKS - 1;
     this.from = from;

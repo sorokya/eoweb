@@ -17,7 +17,7 @@ import './css/style.css';
 import 'notyf/notyf.min.css';
 import { PacketBus } from './bus';
 import { Client } from './client';
-import { GAME_FPS, MAX_CHALLENGE } from './consts';
+import { MAX_CHALLENGE } from './consts';
 import { DialogResourceID } from './edf';
 import { GameState } from './types';
 import { BankDialog } from './ui/bank-dialog/bank-dialog';
@@ -71,34 +71,8 @@ const mobileControls = new MobileControls();
 
 // ── Render Loop ──────────────────────────────────────────────────────────
 
-let lastTime: DOMHighResTimeStamp | undefined;
 let accumulator = 0;
 const TICK = 120;
-const render = (now: DOMHighResTimeStamp) => {
-  if (!lastTime) {
-    lastTime = now;
-  }
-
-  const ellapsed = now - lastTime;
-  if (ellapsed < GAME_FPS) {
-    requestAnimationFrame(render);
-    return;
-  }
-
-  const dt = now - lastTime;
-  accumulator += dt;
-
-  while (accumulator >= TICK) {
-    client.tick();
-    accumulator -= TICK;
-  }
-
-  lastTime = now;
-
-  const interpolation = accumulator / TICK;
-  client.render(interpolation);
-  requestAnimationFrame(render);
-};
 
 // ── UI Component Instantiation ───────────────────────────────────────────
 
@@ -314,7 +288,20 @@ function loadInventoryGrid() {
   };
 }
 
+const MAX_ACCUMULATOR = TICK * 10;
 window.addEventListener('DOMContentLoaded', async () => {
+  await client.initPixi();
+
+  client.app.ticker.add((ticker) => {
+    accumulator = Math.min(accumulator + ticker.deltaMS, MAX_ACCUMULATOR);
+    while (accumulator >= TICK) {
+      client.tick();
+      accumulator -= TICK;
+    }
+    const interpolation = accumulator / TICK;
+    client.render(interpolation);
+  });
+
   const response = await fetch('/maps/00005.emf');
   const map = await response.arrayBuffer();
   const reader = new EoReader(new Uint8Array(map));
@@ -347,7 +334,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   //setTimeout(setDebugData, 300);
 
   loadInventoryGrid();
-  requestAnimationFrame(render);
 });
 
 function _setDebugData() {

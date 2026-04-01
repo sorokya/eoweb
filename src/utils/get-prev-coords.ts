@@ -1,12 +1,13 @@
-import { Coords, Direction } from 'eolib';
+import { Direction } from 'eolib';
+import type { Vector2 } from '../vector';
 
 export function getPrevCoords(
-  coords: Coords,
+  coords: Vector2,
   direction: Direction,
   maxWidth: number,
   maxHeight: number,
-): Coords {
-  const prev = new Coords();
+): Vector2 {
+  const prev = { x: 0, y: 0 };
   switch (direction) {
     case Direction.Down:
       prev.x = coords.x;

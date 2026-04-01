@@ -12,8 +12,8 @@ import {
   ShopOpenClientPacket,
   StatSkillOpenClientPacket,
 } from 'eolib';
-import { ChatBubble } from '../chat-bubble';
 import type { Client } from '../client';
+import { ChatBubble } from '../render/chat-bubble';
 import { SpellTarget } from '../types';
 
 export class NpcController {

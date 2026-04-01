@@ -1,9 +1,9 @@
 import { DEATH_TICKS } from '../consts';
-import { NpcAnimation } from './npc-base-animation';
+import { Animation } from './animation';
 
-export class NpcDeathAnimation extends NpcAnimation {
-  base: NpcAnimation | undefined;
-  constructor(base?: NpcAnimation) {
+export class NpcDeathAnimation extends Animation {
+  base: Animation | undefined;
+  constructor(base?: Animation) {
     super();
     this.ticks = DEATH_TICKS - 1;
     this.base = base;

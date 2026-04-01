@@ -14,10 +14,10 @@ import {
   PacketFamily,
   PlayerKilledState,
 } from 'eolib';
-import { ChatBubble } from '../chat-bubble';
 import type { Client } from '../client';
 import { ITEM_PROTECT_TICKS_NPC } from '../consts';
 import { EOResourceID } from '../edf';
+import { ChatBubble } from '../render/chat-bubble';
 import { Emote } from '../render/emote';
 import { HealthBar } from '../render/health-bar';
 import { NpcAttackAnimation } from '../render/npc-attack';
