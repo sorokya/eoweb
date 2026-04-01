@@ -441,13 +441,13 @@ export class Atlas {
     })!;
   }
 
-  getAtlas(index: number): HTMLImageElement | undefined {
+  getAtlas(index: number): HTMLCanvasElement | undefined {
     // Kept for ground pre-rendering (renderTile with canvas 2D ctx).
     // Returns a hidden img backed by the atlas canvas for drawImage compatibility.
     const atlasCanvas = this.getAtlasCanvas(index);
     if (!atlasCanvas?.getTexture()) return undefined;
     // Expose the underlying HTML canvas as an image-like source for ctx.drawImage.
-    return atlasCanvas.getCanvas() as unknown as HTMLImageElement;
+    return atlasCanvas.getCanvas();
   }
 
   getAtlasTexture(index: number): Texture | undefined {

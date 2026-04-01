@@ -13,7 +13,6 @@ import { SfxId } from '../types';
 export class CommandController {
   private client: Client;
   pingStart = 0;
-  debug = false;
   nowall = false;
 
   constructor(client: Client) {
@@ -75,12 +74,6 @@ export class CommandController {
         }
 
         this.nowall = !this.nowall;
-        playSfxById(SfxId.TextBoxFocus);
-        return true;
-      }
-
-      case '#debug': {
-        this.debug = !this.debug;
         playSfxById(SfxId.TextBoxFocus);
         return true;
       }

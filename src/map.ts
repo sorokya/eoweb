@@ -1129,7 +1129,6 @@ export class MapRenderer {
         !bubble &&
         !healthBar &&
         !emote &&
-        !this.client.commandController.debug &&
         (!(animation instanceof CharacterSpellChantAnimation) ||
           animation.animationFrame)
       ) {
@@ -1324,7 +1323,7 @@ export class MapRenderer {
       npc.index,
     );
 
-    if (!bubble && !healthBar && !this.client.commandController.debug) return;
+    if (!bubble && !healthBar) return;
 
     const aboveCoords = { x: coords.x - 1, y: coords.y - 1 };
     const aboveCoordsX = (aboveCoords.x - aboveCoords.y) * HALF_TILE_WIDTH;
@@ -1558,7 +1557,7 @@ export class MapRenderer {
     const y = position.y - 35 + healthBar.ticks;
     let x = position.x - totalWidth / 2;
 
-    for (const char of chars) {
+    for (const [index, char] of chars.entries()) {
       const number = Number.parseInt(char, 10);
       const digitTexture = this.client.atlas.getFrameTexture({
         atlasIndex: numbersFrame.atlasIndex,
@@ -1572,7 +1571,7 @@ export class MapRenderer {
         continue;
       }
       const dnSprite = this.ensureUiSprite(
-        `${nodeKey}:digit:${x}:${char}`,
+        `${nodeKey}:digit:${index}`,
         `ui:healthbar-digit value=${char}`,
       );
       dnSprite.texture = digitTexture;
@@ -1997,14 +1996,14 @@ export class MapRenderer {
     }
 
     const tint = this.parseCssHexColor(color);
-    for (const char of chars) {
+    for (const [index, char] of chars.entries()) {
       const texture = this.client.sans11.getCharacterTexture(char.id);
       if (!texture) {
         x += char.width;
         continue;
       }
       const sprite = this.ensureUiSprite(
-        `${nodeKey}:char:${x}:${char.id}`,
+        `${nodeKey}:char:${index}`,
         `ui:text-glyph char=${char.id}`,
       );
       sprite.texture = texture;

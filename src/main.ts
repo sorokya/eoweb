@@ -288,11 +288,12 @@ function loadInventoryGrid() {
   };
 }
 
+const MAX_ACCUMULATOR = TICK * 10;
 window.addEventListener('DOMContentLoaded', async () => {
   await client.initPixi();
 
   client.app.ticker.add((ticker) => {
-    accumulator += ticker.deltaMS;
+    accumulator = Math.min(accumulator + ticker.deltaMS, MAX_ACCUMULATOR);
     while (accumulator >= TICK) {
       client.tick();
       accumulator -= TICK;
