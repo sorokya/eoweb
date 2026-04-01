@@ -639,7 +639,9 @@ export class Client {
     }
     this.minimapEnabled = false;
     this.animationController.characterAnimations.clear();
+    this.animationController.pendingCharacterAnimations.clear();
     this.animationController.npcAnimations.clear();
+    this.animationController.pendingNpcAnimations.clear();
     this.animationController.characterChats.clear();
     this.animationController.npcChats.clear();
     this.npcController.queuedNpcChats.clear();
@@ -694,7 +696,7 @@ export class Client {
     }
 
     const current = this.animationController.npcAnimations.get(index);
-    this.animationController.npcAnimations.set(
+    this.animationController.pendingNpcAnimations.set(
       index,
       new NpcDeathAnimation(current),
     );
@@ -707,7 +709,7 @@ export class Client {
     }
 
     const current = this.animationController.characterAnimations.get(playerId);
-    this.animationController.characterAnimations.set(
+    this.animationController.pendingCharacterAnimations.set(
       playerId,
       new CharacterDeathAnimation(current),
     );

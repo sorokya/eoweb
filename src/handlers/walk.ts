@@ -26,17 +26,14 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
     return;
   }
 
-  character.direction = packet.direction;
-  character.coords.x = packet.coords.x;
-  character.coords.y = packet.coords.y;
-  client.animationController.characterAnimations.set(
+  client.animationController.pendingCharacterAnimations.set(
     packet.playerId,
     new CharacterWalkAnimation(
       getPrevCoords(
         packet.coords,
         packet.direction,
-        client!.map!.width,
-        client!.map!.height,
+        client.map.width,
+        client.map.height,
       ),
       packet.coords,
       packet.direction,

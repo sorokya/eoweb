@@ -26,7 +26,7 @@ import {
 } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
 import { ChatIcon, ChatTab } from '@/ui/ui-types';
-import { capitalize } from '@/utils';
+import { capitalize, getPrevCoords } from '@/utils';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
   const packet = NpcPlayerServerPacket.deserialize(reader);
@@ -38,14 +38,19 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
       continue;
     }
 
-    npc.direction = position.direction;
-    if (npc.coords !== position.coords) {
-      client.animationController.npcAnimations.set(
-        npc.index,
-        new NpcWalkAnimation(npc.coords, position.coords, position.direction),
-      );
-      npc.coords = position.coords;
-    }
+    client.animationController.pendingNpcAnimations.set(
+      npc.index,
+      new NpcWalkAnimation(
+        getPrevCoords(
+          position.coords,
+          position.direction,
+          client.map.width,
+          client.map.height,
+        ),
+        position.coords,
+        position.direction,
+      ),
+    );
   }
 
   let someoneKilled = false;
@@ -63,7 +68,7 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
 
     npc.direction = attack.direction;
     playSfxById(SfxId.PunchAttack);
-    client.animationController.npcAnimations.set(
+    client.animationController.pendingNpcAnimations.set(
       npc.index,
       new NpcAttackAnimation(),
     );

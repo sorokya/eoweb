@@ -30,7 +30,7 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
   character.direction = packet.direction;
 
   const metadata = client.getWeaponMetadata(character.equipment.weapon);
-  client.animationController.characterAnimations.set(
+  client.animationController.pendingCharacterAnimations.set(
     packet.playerId,
     metadata.ranged
       ? new CharacterRangedAttackAnimation()

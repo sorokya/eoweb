@@ -27,7 +27,7 @@ function handleSpellRequest(client: Client, reader: EoReader) {
     return;
   }
 
-  client.animationController.characterAnimations.set(
+  client.animationController.pendingCharacterAnimations.set(
     packet.playerId,
     new CharacterSpellChantAnimation(
       client.sans11!,
