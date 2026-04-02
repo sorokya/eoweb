@@ -1,3 +1,5 @@
+export { Ui } from './ui';
+
 export enum DialogIcon {
   Buy = 0,
   Sell = 1,

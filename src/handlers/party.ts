@@ -18,7 +18,7 @@ import type { Client } from '@/client';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { Emote } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatIcon, ChatTab } from '@/ui';
 import { capitalize } from '@/utils';
 
 function handlePartyReply(client: Client, reader: EoReader) {

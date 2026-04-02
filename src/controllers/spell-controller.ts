@@ -21,7 +21,7 @@ import {
   NpcDeathAnimation,
 } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { SlotType } from '@/ui/ui-types';
+import { SlotType } from '@/ui';
 import { getTimestamp } from './movement-controller';
 
 enum SpellState {

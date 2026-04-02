@@ -7,7 +7,7 @@ import {
 import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatIcon, ChatTab } from '@/ui';
 
 function handleMessagePing(client: Client) {
   const delta = Date.now() - client.commandController.pingStart;

@@ -76,7 +76,7 @@ import { MapRenderer } from '@/map';
 import { MinimapRenderer } from '@/minimap';
 import { CharacterDeathAnimation, NpcDeathAnimation } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import type { ISlot } from '@/ui/ui-types';
+import type { ISlot } from '@/ui';
 import type {
   EffectMetadata,
   NPCMetadata,

@@ -25,7 +25,7 @@ import {
   NpcWalkAnimation,
 } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatIcon, ChatTab } from '@/ui';
 import { capitalize, getPrevCoords } from '@/utils';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {

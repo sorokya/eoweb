@@ -13,7 +13,7 @@ import { ITEM_PROTECT_TICKS_NPC } from '@/consts';
 import { EOResourceID } from '@/edf';
 import { EffectTargetNpc, Emote, HealthBar } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatIcon, ChatTab } from '@/ui';
 
 function handleCastReply(client: Client, reader: EoReader) {
   const packet = CastReplyServerPacket.deserialize(reader);

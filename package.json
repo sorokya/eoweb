@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.10",
+    "@preact/preset-vite": "^2.10.5",
     "@types/node": "^25.5.0",
     "knip": "^6.2.0",
     "lefthook": "^2.1.4",
@@ -24,7 +25,8 @@
     "idb": "^8.0.3",
     "mitt": "^3.0.1",
     "notyf": "^3.10.0",
-    "pixi.js": "^8.17.1"
+    "pixi.js": "^8.17.1",
+    "preact": "^10.29.0"
   },
   "packageManager": "pnpm@10.33.0"
 }
