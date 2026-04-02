@@ -27,7 +27,7 @@ import {
   HealthBar,
 } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatIcon, ChatTab } from '@/ui';
 
 function handleItemAdd(client: Client, reader: EoReader) {
   const packet = ItemAddServerPacket.deserialize(reader);

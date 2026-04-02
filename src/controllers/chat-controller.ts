@@ -11,7 +11,7 @@ import type { Client } from '@/client';
 import { COLORS, MAX_CHAT_LENGTH } from '@/consts';
 import { ChatBubble } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatIcon, ChatTab } from '@/ui';
 import { capitalize, makeDrunk } from '@/utils';
 
 export class ChatController {

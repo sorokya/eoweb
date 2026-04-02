@@ -8,7 +8,7 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon } from '@/ui/ui-types';
+import { ChatIcon } from '@/ui';
 
 function handleArenaUse(client: Client, reader: EoReader) {
   const packet = ArenaUseServerPacket.deserialize(reader);
