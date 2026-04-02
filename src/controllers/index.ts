@@ -1,3 +1,4 @@
+export { AlertController } from './alert-controller';
 export { AnimationController } from './animation-controller';
 export { AudioController } from './audio-controller';
 export { AuthenticationController } from './authentication-controller';

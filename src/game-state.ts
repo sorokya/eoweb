@@ -1,6 +1,6 @@
 export enum GameState {
   Initial = 0,
-  Connected = 1,
+  CreateAccount = 1,
   Login = 2,
   LoggedIn = 3,
   InGame = 4,

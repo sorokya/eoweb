@@ -10,7 +10,7 @@ import {
 } from 'eolib';
 import './css/style.css';
 import 'notyf/notyf.min.css';
-import React from 'preact/compat';
+import { render } from 'preact';
 import { Client } from '@/client';
 import { Ui } from './ui';
 
@@ -64,5 +64,5 @@ window.addEventListener('DOMContentLoaded', async () => {
   character.equipment.hat = 0;
   client.nearby.characters = [character];
   client.atlas.refresh();
-  React.render(<Ui client={client} />, document.getElementById('ui')!);
+  render(<Ui client={client} />, document.getElementById('ui')!);
 });
