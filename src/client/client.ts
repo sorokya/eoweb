@@ -290,15 +290,21 @@ export class Client {
       this.config = config;
       const txtHost =
         document.querySelector<HTMLInputElement>('input[name="host"]')!;
-      if (this.config.staticHost) {
-        txtHost!.classList.add('hidden');
+
+      if (txtHost) {
+        if (this.config.staticHost) {
+          txtHost!.classList.add('hidden');
+        }
+        txtHost!.value = config.host;
       }
-      txtHost!.value = config.host;
+
       document.title = config.title;
 
       const mainMenuLogo =
         document.querySelector<HTMLDivElement>('#main-menu-logo')!;
-      mainMenuLogo!.setAttribute('data-slogan', config.slogan);
+      if (mainMenuLogo) {
+        mainMenuLogo!.setAttribute('data-slogan', config.slogan);
+      }
     });
     this.atlas = new Atlas(this);
     this.sans11 = new Sans11Font(this.atlas);
