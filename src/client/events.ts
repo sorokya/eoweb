@@ -12,10 +12,12 @@ import type {
   SkillLearn,
   ThreeItem,
 } from 'eolib';
+import type { GameState } from '@/game-state';
 import type { SfxId } from '@/sfx';
 import type { ChatIcon, ChatTab } from '@/ui';
 
 export type ClientEvents = {
+  stateChanged: GameState;
   error: { title: string; message: string };
   confirmation: {
     title: string;

@@ -110,28 +110,38 @@ function handleInitOk(
   client.playerId = data.playerId;
   // Hack to keep pre-game UI stable
   client.nearby.characters[0].playerId = data.playerId;
-  const bus = client.bus;
-  if (!bus) {
-    throw new Error('Bus is null');
-  }
-
-  bus.setEncryption(
+  client.bus.setEncryption(
     data.clientEncryptionMultiple,
     data.serverEncryptionMultiple,
   );
-  bus.setSequence(InitSequenceStart.fromInitValues(data.seq1, data.seq2));
+  client.bus.setSequence(
+    InitSequenceStart.fromInitValues(data.seq1, data.seq2),
+  );
 
   const packet = new ConnectionAcceptClientPacket();
   packet.clientEncryptionMultiple = data.clientEncryptionMultiple;
   packet.serverEncryptionMultiple = data.serverEncryptionMultiple;
   packet.playerId = data.playerId;
-  bus.send(packet);
-  client.setState(GameState.Connected);
+  client.bus.send(packet);
 
-  if (client.rememberMe && client.loginToken) {
+  if (
+    client.postConnectState === GameState.Login &&
+    client.rememberMe &&
+    client.loginToken
+  ) {
     const writer = new EoWriter();
     writer.addString(client.loginToken);
-    bus.sendBuf(PacketFamily.Login, PacketAction.Use, writer.toByteArray());
+    client.bus.sendBuf(
+      PacketFamily.Login,
+      PacketAction.Use,
+      writer.toByteArray(),
+    );
+    return;
+  }
+
+  if (client.postConnectState) {
+    client.setState(client.postConnectState);
+    client.postConnectState = undefined;
   }
 }
 
@@ -147,8 +157,14 @@ function handleInitOutOfDate(
   client: Client,
   data: InitInitServerPacket.ReplyCodeDataOutOfDate,
 ) {
-  client.version = data.version;
-  client.emit('reconnect', undefined);
+  const strings = client.getDialogStrings(
+    DialogResourceID.CONNECTION_CLIENT_OUT_OF_DATE,
+  );
+  client.alertController.show(
+    strings[0],
+    `${strings[1]} ${data.version.major}.${data.version.minor}.${data.version.patch}`,
+  );
+  client.disconnect();
 }
 
 function handleInitBanned(
@@ -159,14 +175,19 @@ function handleInitBanned(
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_IP_BAN_PERM,
     );
-    client.showError(text[1], text[0]);
+    client.alertController.show(text[0], text[1]);
+    client.disconnect();
     return;
   }
 
   const banData =
     data.banTypeData as InitInitServerPacket.ReplyCodeDataBanned.BanTypeData0;
   const text = client.getDialogStrings(DialogResourceID.CONNECTION_IP_BAN_TEMP);
-  client.showError(`${text[0]} ${banData.minutesRemaining} minutes`, text[1]);
+  client.alertController.show(
+    `${text[0]} ${banData.minutesRemaining} minutes`,
+    text[1],
+  );
+  client.disconnect();
 }
 
 function handleInitFileEcf(
