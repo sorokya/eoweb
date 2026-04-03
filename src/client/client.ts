@@ -196,10 +196,6 @@ export class Client {
   hatMetadata = getHatMetadata();
   typing = false;
   reconnecting = false;
-  rememberMe = Boolean(localStorage.getItem('remember-me')) || false;
-  loginToken = localStorage.getItem('login-token');
-  lastCharacterId =
-    Number.parseInt(localStorage.getItem('last-character-id') ?? '', 10) || 0;
   edfs: {
     game1: Edf | null;
     game2: Edf | null;
@@ -223,6 +219,7 @@ export class Client {
   minimapEnabled = false;
   minimapRenderer: MinimapRenderer;
   onlinePlayers: OnlinePlayer[] = [];
+  playerTriggeredDisconnect = false;
 
   constructor() {
     registerAllHandlers(this);
@@ -687,6 +684,11 @@ export class Client {
   }
 
   private handleConnectionClose() {
+    if (this.playerTriggeredDisconnect) {
+      this.playerTriggeredDisconnect = false;
+      return;
+    }
+
     const strings = this.getDialogStrings(
       DialogResourceID.CONNECTION_LOST_CONNECTION,
     );
@@ -703,18 +705,12 @@ export class Client {
   }
 
   disconnect() {
+    this.playerTriggeredDisconnect = true;
     this.setState(GameState.Initial);
-    this.clearSession();
+    this.authenticationController.clearSession();
     if (this.bus) {
       this.bus.disconnect();
     }
-  }
-
-  clearSession() {
-    this.loginToken = '';
-    this.lastCharacterId = 0;
-    localStorage.removeItem('login-token');
-    localStorage.removeItem('last-character-id');
   }
 
   setStatusLabel(type: EOResourceID, text: string) {

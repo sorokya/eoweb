@@ -1,6 +1,8 @@
 import { useCallback } from 'preact/hooks';
 import { playSfxById, SfxId } from '@/sfx';
 
+type ButtonType = 'button' | 'submit';
+
 type ButtonVariant =
   | ''
   | 'neutral'
@@ -30,8 +32,9 @@ type ButtonVariant =
 
 type ButtonProps = {
   children: preact.ComponentChildren;
+  type?: ButtonType;
   label?: string;
-  variant?: ButtonVariant;
+  variant?: ButtonVariant | ButtonVariant[];
   onClick?: () => void;
 };
 
@@ -39,6 +42,7 @@ export function Button({
   children,
   label,
   variant = '',
+  type = 'button',
   onClick,
 }: ButtonProps) {
   const clickHandler = useCallback(() => {
@@ -48,9 +52,15 @@ export function Button({
     }
   }, [onClick]);
 
+  const variantClasses = (Array.isArray(variant) ? variant : [variant])
+    .filter(Boolean)
+    .map((v) => `btn-${v}`)
+    .join(' ');
+
   return (
     <button
-      class={`btn${variant ? ` btn-${variant}` : ''}`}
+      type={type}
+      class={`btn${variantClasses ? ` ${variantClasses}` : ''}`}
       onClick={clickHandler}
       aria-label={label}
     >

@@ -1,25 +1,31 @@
-import { useMemo, useState } from 'preact/hooks';
 import type { Client } from '@/client';
 import { GameState } from '@/game-state';
-import { AlertContainer } from '@/ui/containers';
-import { ClientProvider, LocaleProvider } from '@/ui/context';
-import { MainMenu } from '@/ui/main-menu';
+import {
+  AlertContainer,
+  CharacterSelect,
+  Login,
+  MainMenu,
+} from '@/ui/containers';
+import { ClientProvider, LocaleProvider, useGameState } from '@/ui/context';
+
+function UiContent() {
+  const gameState = useGameState();
+
+  return (
+    <AlertContainer>
+      {(gameState === GameState.Initial ||
+        gameState === GameState.Connected) && <MainMenu />}
+      {gameState === GameState.Login && <Login />}
+      {gameState === GameState.LoggedIn && <CharacterSelect />}
+    </AlertContainer>
+  );
+}
 
 export function Ui({ client }: { client: Client }) {
-  const [state, setState] = useState(client.state);
-
-  useMemo(() => {
-    client.on('stateChanged', (newState) => {
-      setState(newState);
-    });
-  }, [client]);
-
   return (
     <ClientProvider client={client}>
       <LocaleProvider>
-        <AlertContainer>
-          {state === GameState.Initial && <MainMenu />}
-        </AlertContainer>
+        <UiContent />
       </LocaleProvider>
     </ClientProvider>
   );

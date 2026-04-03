@@ -18,19 +18,22 @@ type InputVariant =
 type InputType = 'text' | 'password' | 'email' | 'number';
 
 type InputProps = {
-  id: string;
+  label?: string;
+  name?: string;
   value: string;
   onChange: (value: string) => void;
-  variant?: InputVariant;
+  variant?: InputVariant | InputVariant[];
   type?: InputType;
   placeholder?: string;
   min?: number;
   max?: number;
   required?: boolean;
+  autofocus?: boolean;
 };
 
 export function Input({
-  id,
+  label,
+  name,
   value,
   onChange,
   type = 'text',
@@ -39,18 +42,45 @@ export function Input({
   max,
   required,
   variant = '',
+  autofocus,
 }: InputProps) {
+  const variantClasses = (Array.isArray(variant) ? variant : [variant])
+    .filter(Boolean)
+    .map((v) => `input-${v}`)
+    .join(' ');
+
+  if (label) {
+    return (
+      <label class={`input ${variantClasses}`}>
+        <span class='label'>{label}</span>
+        <input
+          type={type}
+          name={name}
+          value={value}
+          onChange={(e) => onChange((e.target as HTMLInputElement).value)}
+          placeholder={placeholder}
+          min={min}
+          max={max}
+          required={required}
+          // biome-ignore lint/a11y/noAutofocus: We will only use autofocus when it is appropriate
+          autoFocus={autofocus}
+        />
+      </label>
+    );
+  }
+
   return (
     <input
-      id={id}
-      class={`input${variant ? ` input-${variant}` : ''}`}
+      class={`input ${variantClasses}`}
       type={type}
+      name={name}
       value={value}
       onInput={(e) => onChange((e.target as HTMLInputElement).value)}
       placeholder={placeholder}
       min={min}
       max={max}
       required={required}
+      autofocus={autofocus}
     />
   );
 }

@@ -17,21 +17,21 @@ function handleAccountReply(client: Client, reader: EoReader) {
       const text = client.getDialogStrings(
         DialogResourceID.ACCOUNT_CREATE_NAME_EXISTS,
       );
-      client.showError(text[1], text[0]);
+      client.alertController.show(text[0], text[1]);
       return;
     }
     case AccountReply.NotApproved: {
       const text = client.getDialogStrings(
         DialogResourceID.ACCOUNT_CREATE_NAME_NOT_APPROVED,
       );
-      client.showError(text[1], text[0]);
+      client.alertController.show(text[0], text[1]);
       return;
     }
     case AccountReply.ChangeFailed: {
       const text = client.getDialogStrings(
         DialogResourceID.CHANGE_PASSWORD_MISMATCH,
       );
-      client.showError(text[1], text[0]);
+      client.alertController.show(text[0], text[1]);
       return;
     }
     case AccountReply.Changed:

@@ -174,7 +174,8 @@ export class KeyboardController {
           break;
         case 'Tab':
           this.updateInputHeld(Input.Tab, true);
-          if (!this.client.typing) e.preventDefault();
+          // TODO: Fix tab capturing later
+          //if (!this.client.typing) e.preventDefault();
           break;
         case 'KeyR':
           this.updateInputHeld(Input.Refresh, true);
