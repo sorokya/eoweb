@@ -5,7 +5,6 @@ import {
   Emf,
   Enf,
   EoReader,
-  EoWriter,
   Esf,
   InitBanType,
   InitInitServerPacket,
@@ -102,7 +101,7 @@ function handleInitOk(
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_LOST_CONNECTION,
     );
-    client.showError(text[1], text[0]);
+    client.alertController.show(text[0], text[1]);
     client.disconnect();
     return;
   }
@@ -126,16 +125,8 @@ function handleInitOk(
 
   if (
     client.postConnectState === GameState.Login &&
-    client.rememberMe &&
-    client.loginToken
+    client.authenticationController.autoLogin()
   ) {
-    const writer = new EoWriter();
-    writer.addString(client.loginToken);
-    client.bus.sendBuf(
-      PacketFamily.Login,
-      PacketAction.Use,
-      writer.toByteArray(),
-    );
     return;
   }
 

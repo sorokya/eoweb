@@ -80,6 +80,7 @@ export class PacketBus {
   }
 
   disconnect() {
+    this.sequencer = new PacketSequencer(SequenceStart.zero());
     if (this.socket) {
       this.socket.close();
       this.socket = undefined;

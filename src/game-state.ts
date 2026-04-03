@@ -1,9 +1,10 @@
 export enum GameState {
   Initial = 0,
-  CreateAccount = 1,
-  Login = 2,
-  LoggedIn = 3,
-  InGame = 4,
+  Connected = 1,
+  CreateAccount = 2,
+  Login = 3,
+  LoggedIn = 4,
+  InGame = 5,
 }
 
 export enum SpellTarget {
