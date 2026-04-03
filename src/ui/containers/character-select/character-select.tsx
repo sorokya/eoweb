@@ -1,4 +1,5 @@
 import { useCallback } from 'preact/hooks';
+import { GameState } from '@/game-state';
 import { Button } from '@/ui/components';
 import { useCharacters, useClient, useLocale } from '@/ui/context';
 import { Character } from './character';
@@ -12,6 +13,10 @@ export function CharacterSelect() {
     client.disconnect();
   }, [client]);
 
+  const changePassword = useCallback(() => {
+    client.setState(GameState.ChangePassword);
+  }, [client]);
+
   return (
     <div class='card bg-base-100 w-11/12 max-h-[90dvh] shadow-sm'>
       <div class='card-body flex flex-col min-h-0'>
@@ -23,7 +28,9 @@ export function CharacterSelect() {
         </div>
         <div class='card-actions shrink-0'>
           <Button variant='primary'>{locale.btnNewCharacter}</Button>
-          <Button variant='ghost'>{locale.btnChangePassword}</Button>
+          <Button variant='ghost' onClick={changePassword}>
+            {locale.btnChangePassword}
+          </Button>
           <Button variant='ghost' onClick={cancel}>
             {locale.btnCancel}
           </Button>
