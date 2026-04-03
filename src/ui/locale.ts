@@ -22,6 +22,11 @@ export const locales = {
     characterEmptySlot: 'Empty Slot',
     btnLogin: 'Login',
     btnDeleteCharacter: 'Delete',
+    changePasswordTitle: 'Change Password',
+    changePasswordUsername: 'Username',
+    changePasswordOldPassword: 'Old Password',
+    changePasswordNewPassword: 'New Password',
+    changePasswordConfirmPassword: 'Confirm New Password',
   },
 } as const;
 

@@ -122,6 +122,7 @@ function handleInitOk(
   packet.serverEncryptionMultiple = data.serverEncryptionMultiple;
   packet.playerId = data.playerId;
   client.bus.send(packet);
+  client.setState(GameState.Connected);
 
   if (
     client.postConnectState === GameState.Login &&
