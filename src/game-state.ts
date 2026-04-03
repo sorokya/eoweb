@@ -5,7 +5,8 @@ export enum GameState {
   Login = 3,
   CharacterSelect = 4,
   ChangePassword = 5,
-  InGame = 6,
+  CreateCharacter = 6,
+  InGame = 7,
 }
 
 export enum SpellTarget {

@@ -30,7 +30,9 @@ export const RANGED_ATTACK_TICKS = 4;
 export const DEATH_TICKS = 6;
 export const ANIMATION_TICKS = 6;
 export const MAX_CHALLENGE = 11_092_110;
+export const MIN_USERNAME_LENGTH = 4;
 export const MAX_USERNAME_LENGTH = 16;
+export const MIN_PASSWORD_LENGTH = 6;
 export const MAX_PASSWORD_LENGTH = 12;
 export const MIN_CHARACTER_NAME_LENGTH = 4;
 export const MAX_CHARACTER_NAME_LENGTH = 12;
@@ -82,8 +84,13 @@ export const COLORS = {
 
 export const MAX_GENDER = 2;
 export const MAX_HAIR_STYLE = 20;
+export const MIN_HAIR_STYLE = 1;
 export const MAX_HAIR_COLOR = 10;
+export const MIN_HAIR_COLOR = 0;
 export const MAX_SKIN = 4;
+export const MIN_SKIN = 0;
+export const CREATE_CHARACTER_PREVIEW_PLAYER_ID = 4;
+export const MAX_CHARACTERS = 3;
 
 export const BARBER_BASE_COST = 200;
 export const BARBER_COST_PER_LEVEL = 200;

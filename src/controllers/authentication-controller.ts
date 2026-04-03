@@ -157,6 +157,10 @@ export class AuthenticationController {
     if (code === AccountReply.Changed) {
       this.client.setState(GameState.CharacterSelect);
     }
+
+    if (code === AccountReply.Created) {
+      this.client.setState(GameState.Login);
+    }
   }
 
   notifyCharacterReply(
