@@ -181,7 +181,7 @@ export class AuthenticationController {
         subscriber(characters);
       }
       playSfxById(SfxId.Login);
-      this.client.setState(GameState.LoggedIn);
+      this.client.setState(GameState.CharacterSelect);
     });
   }
 

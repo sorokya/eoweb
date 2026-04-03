@@ -2,6 +2,7 @@ import type { Client } from '@/client';
 import { GameState } from '@/game-state';
 import {
   AlertContainer,
+  ChangePassword,
   CharacterSelect,
   Login,
   MainMenu,
@@ -16,7 +17,8 @@ function UiContent() {
       {(gameState === GameState.Initial ||
         gameState === GameState.Connected) && <MainMenu />}
       {gameState === GameState.Login && <Login />}
-      {gameState === GameState.LoggedIn && <CharacterSelect />}
+      {gameState === GameState.CharacterSelect && <CharacterSelect />}
+      {gameState === GameState.ChangePassword && <ChangePassword />}
     </AlertContainer>
   );
 }
