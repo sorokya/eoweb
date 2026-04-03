@@ -165,6 +165,8 @@ const WALK_OFFSETS = [
     [Direction.Left]: { x: -WALK_WIDTH_FACTOR * 4, y: -WALK_HEIGHT_FACTOR * 4 },
   },
 ];
+// Wasn't sure where best to place this yet, so it's beside WALK_OFFSETS for now.
+const STEPPING_STONE_Y_OFFSETS = [-8, -16, -16, -8];
 
 export class MapRenderer {
   client: Client;
@@ -467,6 +469,35 @@ export class MapRenderer {
       y: Math.floor(
         prevOffset.y + (walkOffset.y - prevOffset.y) * this.interpolation,
       ),
+    };
+  }
+
+  private getCharacterWalkState(
+    animation: CharacterWalkAnimation,
+    dying: boolean,
+  ): { frame: number; offset: Vector2 } {
+    const steppingStone =
+      this.getTileSpec(animation.from.x, animation.from.y) ===
+        MapTileSpec.Jump ||
+      this.getTileSpec(animation.to.x, animation.to.y) === MapTileSpec.Jump;
+    const offset = dying
+      ? WALK_OFFSETS[animation.animationFrame][animation.direction]
+      : this.interpolateWalkOffset(
+          animation.animationFrame,
+          animation.direction,
+        );
+
+    return {
+      frame:
+        steppingStone && animation.animationFrame > 0
+          ? 0
+          : animation.animationFrame,
+      offset: steppingStone
+        ? {
+            x: offset.x,
+            y: offset.y + STEPPING_STONE_Y_OFFSETS[animation.animationFrame],
+          }
+        : offset,
     };
   }
 
@@ -954,16 +985,12 @@ export class MapRenderer {
     let coords: Vector2 = character.coords;
     switch (true) {
       case animation instanceof CharacterWalkAnimation: {
-        walkOffset = dying
-          ? WALK_OFFSETS[animation.animationFrame][animation.direction]
-          : this.interpolateWalkOffset(
-              animation.animationFrame,
-              animation.direction,
-            );
+        const walkState = this.getCharacterWalkState(animation, dying);
+        walkOffset = walkState.offset;
         coords = animation.from;
         characterFrame = downRight
-          ? CharacterFrame.WalkingDownRight1 + animation.animationFrame
-          : CharacterFrame.WalkingUpLeft1 + animation.animationFrame;
+          ? CharacterFrame.WalkingDownRight1 + walkState.frame
+          : CharacterFrame.WalkingUpLeft1 + walkState.frame;
         break;
       }
       case animation instanceof CharacterAttackAnimation:
@@ -1760,12 +1787,10 @@ export class MapRenderer {
         }
 
         if (animation instanceof CharacterWalkAnimation) {
-          const walkOffset = dying
-            ? WALK_OFFSETS[animation.animationFrame][animation.direction]
-            : this.interpolateWalkOffset(
-                animation.animationFrame,
-                animation.direction,
-              );
+          const walkOffset = this.getCharacterWalkState(
+            animation,
+            dying,
+          ).offset;
           offset.x += walkOffset.x;
           offset.y += walkOffset.y;
           coords.x = animation.from.x;
