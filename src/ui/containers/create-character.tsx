@@ -135,7 +135,7 @@ export function CreateCharacter() {
         <div class='flex gap-4'>
           <button
             type='button'
-            class='flex-shrink-0 flex items-center justify-center cursor-pointer bg-transparent border-none p-0'
+            class='shrink-0 flex items-center justify-center cursor-pointer bg-transparent border-none p-0'
             onClick={rotatePreview}
           >
             <CharacterPreview previewUrl={previewUrl} alt='preview' />

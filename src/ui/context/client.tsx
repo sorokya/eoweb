@@ -25,7 +25,7 @@ export function ClientProvider({ client, children }: ClientProviderProps) {
 
   useMemo(() => {
     client.on('stateChanged', setGameState);
-    client.authenticationController.subscribeLogin(setCharacters);
+    client.authenticationController.subscribeCharactersChanged(setCharacters);
   }, [client]);
 
   return (
