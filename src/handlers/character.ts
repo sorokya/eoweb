@@ -1,5 +1,4 @@
 import {
-  CharacterCreateClientPacket,
   CharacterPlayerServerPacket,
   CharacterReply,
   CharacterReplyServerPacket,
@@ -8,65 +7,21 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '@/client';
-import { DialogResourceID } from '@/edf';
-import { playSfxById, SfxId } from '@/sfx';
 
 function handleCharacterReply(client: Client, reader: EoReader) {
   const packet = CharacterReplyServerPacket.deserialize(reader);
-  switch (packet.replyCode) {
-    case CharacterReply.Exists: {
-      const text = client.getDialogStrings(
-        DialogResourceID.CHARACTER_CREATE_NAME_EXISTS,
-      );
-      client.alertController.show(text[0], text[1]);
-      return;
-    }
-    case CharacterReply.NotApproved: {
-      const text = client.getDialogStrings(
-        DialogResourceID.CHARACTER_CREATE_NAME_NOT_APPROVED,
-      );
-      client.alertController.show(text[0], text[1]);
-      return;
-    }
-    case CharacterReply.Full:
-      {
-        const text = client.getDialogStrings(
-          DialogResourceID.CHARACTER_CREATE_TOO_MANY_CHARS,
-        );
-        client.alertController.show(text[0], text[1]);
-      }
-      return;
-    case CharacterReply.Deleted: {
-      const data =
-        packet.replyCodeData as CharacterReplyServerPacket.ReplyCodeDataDeleted;
-      client.emit('characterDeleted', data.characters);
-      playSfxById(SfxId.DeleteCharacter);
-      return;
-    }
-    case CharacterReply.Ok: {
-      const data =
-        packet.replyCodeData as CharacterReplyServerPacket.ReplyCodeDataOk;
-      client.emit('characterCreated', data.characters);
-      return;
-    }
-    default: {
-      const characterData = client.authenticationController.characterCreateData;
-      if (!characterData) {
-        return;
-      }
 
-      const reply = new CharacterCreateClientPacket();
-      reply.sessionId = packet.replyCode as number;
-      reply.name = characterData.name;
-      reply.gender = characterData.gender;
-      reply.hairColor = characterData.hairColor;
-      reply.hairStyle = characterData.hairStyle;
-      reply.skin = characterData.skin;
-
-      client.bus!.send(reply);
-      break;
-    }
+  if (packet.replyCode in CharacterReply) {
+    client.authenticationController.notifyCharacterReply(
+      packet.replyCode,
+      packet.replyCodeData,
+    );
+    return;
   }
+
+  client.authenticationController.finishCharacterCreation(
+    packet.replyCode as number,
+  );
 }
 
 function handleCharacterPlayer(client: Client, reader: EoReader) {
