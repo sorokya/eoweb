@@ -1,9 +1,14 @@
 import {
   AccountAgreeClientPacket,
+  AccountCreateClientPacket,
   AccountReply,
+  AccountReplySequenceStart,
   AccountRequestClientPacket,
+  CharacterCreateClientPacket,
   CharacterMapInfo,
   CharacterRemoveClientPacket,
+  CharacterReply,
+  type CharacterReplyServerPacket,
   CharacterRequestClientPacket,
   type CharacterSelectionListEntry,
   CharacterTakeClientPacket,
@@ -18,7 +23,7 @@ import {
   WelcomeRequestClientPacket,
 } from 'eolib';
 import type { Client } from '@/client';
-import { MAX_CHARACTER_NAME_LENGTH } from '@/consts';
+import { MAX_CHARACTER_NAME_LENGTH, MIN_CHARACTER_NAME_LENGTH } from '@/consts';
 import { DialogResourceID } from '@/edf';
 import { GameState } from '@/game-state';
 import { playSfxById, SfxId } from '@/sfx';
@@ -60,6 +65,16 @@ const ACCOUNT_REPLY_DIALOG_IDS: Partial<
   [AccountReply.RequestDenied]: DialogResourceID.LOGIN_SERVER_COULD_NOT_PROCESS,
 };
 
+const CHARACTER_REPLY_DIALOG_IDS: Partial<
+  Record<CharacterReply, DialogResourceID>
+> = {
+  [CharacterReply.Exists]: DialogResourceID.CHARACTER_CREATE_NAME_EXISTS,
+  [CharacterReply.Full]: DialogResourceID.CHARACTER_CREATE_TOO_MANY_CHARS,
+  [CharacterReply.Full3]: DialogResourceID.CHARACTER_CREATE_TOO_MANY_CHARS,
+  [CharacterReply.NotApproved]:
+    DialogResourceID.CHARACTER_CREATE_NAME_NOT_APPROVED,
+};
+
 export class AuthenticationController {
   private client: Client;
   private loginToken: string | null = localStorage.getItem('login-token');
@@ -68,7 +83,7 @@ export class AuthenticationController {
   accountCreateData: AccountCreateData | null = null;
   characterCreateData: CharacterCreateData | null = null;
 
-  private loginSubscribers: ((
+  private charactersChangeSubscribers: ((
     characters: CharacterSelectionListEntry[],
   ) => void)[] = [];
 
@@ -125,9 +140,7 @@ export class AuthenticationController {
       return;
     }
     const strings = this.client.getDialogStrings(dialogId);
-    if (strings) {
-      this.client.alertController.show(strings[0], strings[1]);
-    }
+    this.client.alertController.show(strings[0], strings[1]);
   }
 
   notifyAccountReply(code: AccountReply): void {
@@ -137,15 +150,56 @@ export class AuthenticationController {
       return;
     }
     const strings = this.client.getDialogStrings(dialogId);
-    if (strings) {
-      this.client.alertController.show(strings[0], strings[1]);
+    this.client.alertController.show(strings[0], strings[1]);
+  }
+
+  notifyCharacterReply(
+    code: CharacterReply,
+    data: CharacterReplyServerPacket.ReplyCodeData,
+  ): void {
+    if (code === CharacterReply.Deleted) {
+      this.notifyCharacterDeleted(
+        (data as CharacterReplyServerPacket.ReplyCodeDataDeleted).characters,
+      );
+      return;
     }
+
+    if (code === CharacterReply.Ok) {
+      this.notifyCharacterCreated(
+        (data as CharacterReplyServerPacket.ReplyCodeDataOk).characters,
+      );
+      return;
+    }
+
+    const dialogId = CHARACTER_REPLY_DIALOG_IDS[code];
+    if (!dialogId) {
+      console.warn(`No dialog mapped for character reply code: ${code}`);
+      return;
+    }
+    const strings = this.client.getDialogStrings(dialogId);
+    this.client.alertController.show(strings[0], strings[1]);
+  }
+
+  private notifyCharacterCreated(characters: CharacterSelectionListEntry[]) {
+    this.notifyCharactersChanged(characters).then(() => {
+      const strings = this.client.getDialogStrings(
+        DialogResourceID.CHARACTER_CREATE_SUCCESS,
+      );
+      this.client.alertController.show(strings[0], strings[1]);
+      this.client.setState(GameState.CharacterSelect);
+    });
+  }
+
+  private notifyCharacterDeleted(characters: CharacterSelectionListEntry[]) {
+    this.notifyCharactersChanged(characters).then(() => {
+      playSfxById(SfxId.DeleteCharacter);
+    });
   }
 
   subscribeLogin(
     subscriber: (characters: CharacterSelectionListEntry[]) => void,
   ) {
-    this.loginSubscribers.push(subscriber);
+    this.charactersChangeSubscribers.push(subscriber);
   }
 
   subscribeLoginFailed(subscriber: () => void) {
@@ -153,6 +207,15 @@ export class AuthenticationController {
   }
 
   notifyLoggedIn(characters: CharacterSelectionListEntry[]): void {
+    this.notifyCharactersChanged(characters).then(() => {
+      playSfxById(SfxId.Login);
+      this.client.setState(GameState.CharacterSelect);
+    });
+  }
+
+  private async notifyCharactersChanged(
+    characters: CharacterSelectionListEntry[],
+  ): Promise<void> {
     this.client.nearby.characters = this.client.nearby.characters.filter(
       (c) => c.playerId === this.client.playerId,
     );
@@ -176,13 +239,11 @@ export class AuthenticationController {
         return info;
       }),
     );
-    this.client.atlas.refreshAsync().then(() => {
-      for (const subscriber of this.loginSubscribers) {
-        subscriber(characters);
-      }
-      playSfxById(SfxId.Login);
-      this.client.setState(GameState.CharacterSelect);
-    });
+    await this.client.atlas.refreshAsync();
+
+    for (const subscriber of this.charactersChangeSubscribers) {
+      subscriber(characters);
+    }
   }
 
   requestAccountCreation(data: AccountCreateData): void {
@@ -192,17 +253,59 @@ export class AuthenticationController {
     this.client.bus!.send(packet);
   }
 
+  finishAccountCreation(sessionId: number, sequenceStart: number): void {
+    if (!this.accountCreateData) {
+      console.error('No account data found for account creation');
+      return;
+    }
+
+    this.client.bus!.setSequence(
+      AccountReplySequenceStart.fromValue(sequenceStart),
+    );
+
+    const reply = new AccountCreateClientPacket();
+    reply.sessionId = sessionId;
+    reply.username = this.accountCreateData.username;
+    reply.password = this.accountCreateData.password;
+    reply.fullName = this.accountCreateData.name;
+    reply.location = this.accountCreateData.location;
+    reply.email = this.accountCreateData.email;
+    reply.hdid = this.client.hdid;
+    reply.computer = 'eoweb';
+    this.client.bus!.send(reply);
+  }
+
   requestCharacterCreation(data: CharacterCreateData): void {
     if (
-      data.name.trim().length < 4 ||
+      data.name.trim().length < MIN_CHARACTER_NAME_LENGTH ||
       data.name.trim().length > MAX_CHARACTER_NAME_LENGTH
     ) {
-      this.client.showError('Invalid character name');
+      const strings = this.client.getDialogStrings(
+        DialogResourceID.CHARACTER_CREATE_NAME_TOO_SHORT,
+      );
+      this.client.alertController.show(strings[0], strings[1]);
       return;
     }
 
     this.characterCreateData = data;
     this.client.bus!.send(new CharacterRequestClientPacket());
+  }
+
+  finishCharacterCreation(sessionId: number): void {
+    if (!this.characterCreateData) {
+      console.error('No character data found for character creation');
+      return;
+    }
+
+    const reply = new CharacterCreateClientPacket();
+    reply.sessionId = sessionId;
+    reply.name = this.characterCreateData.name;
+    reply.gender = this.characterCreateData.gender;
+    reply.hairColor = this.characterCreateData.hairColor;
+    reply.hairStyle = this.characterCreateData.hairStyle;
+    reply.skin = this.characterCreateData.skin;
+
+    this.client.bus!.send(reply);
   }
 
   changePassword(

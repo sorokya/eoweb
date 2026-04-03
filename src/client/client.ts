@@ -115,6 +115,7 @@ export class Client {
   config = getDefaultConfig();
   version: Version;
   challenge: number;
+  hdid = String(Math.floor(Math.random() * 2147483647));
   playerId = 0;
   characterId = 0;
   name = '';
@@ -699,7 +700,7 @@ export class Client {
   private beginHandshake() {
     const packet = new InitInitClientPacket();
     packet.challenge = this.challenge = randomRange(1, MAX_CHALLENGE);
-    packet.hdid = String(Math.floor(Math.random() * 2147483647));
+    packet.hdid = this.hdid;
     packet.version = this.version;
     this.bus.send(packet);
   }
