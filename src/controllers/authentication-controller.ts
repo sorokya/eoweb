@@ -206,7 +206,7 @@ export class AuthenticationController {
     });
   }
 
-  subscribeLogin(
+  subscribeCharactersChanged(
     subscriber: (characters: CharacterSelectionListEntry[]) => void,
   ) {
     this.charactersChangeSubscribers.push(subscriber);

@@ -68,6 +68,12 @@ export function Character({ character }: CharacterProps) {
     setPreviewUrl(drawCharacterPreview(client, playerId, direction));
   }, [client, character, direction]);
 
+  useMemo(() => {
+    client.authenticationController.subscribeCharactersChanged(() => {
+      setDeleteConfirmed(false);
+    });
+  }, [client]);
+
   const rotatePreview = useCallback(() => {
     setDirection((d) => ((d + 1) % DIRECTION_COUNT) as Direction);
   }, []);
