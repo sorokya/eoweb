@@ -8,9 +8,7 @@ export function Login() {
   const { locale } = useLocale();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(
-    localStorage.getItem('login-token') !== null,
-  );
+  const [rememberMe, setRememberMe] = useState(true);
 
   useMemo(() => {
     client.authenticationController.subscribeLoginFailed(() => {

@@ -141,6 +141,8 @@ export class AuthenticationController {
     }
     const strings = this.client.getDialogStrings(dialogId);
     this.client.alertController.show(strings[0], strings[1]);
+
+    this.clearSession();
   }
 
   notifyAccountReply(code: AccountReply): void {
@@ -151,6 +153,10 @@ export class AuthenticationController {
     }
     const strings = this.client.getDialogStrings(dialogId);
     this.client.alertController.show(strings[0], strings[1]);
+
+    if (code === AccountReply.Changed) {
+      this.client.setState(GameState.CharacterSelect);
+    }
   }
 
   notifyCharacterReply(
