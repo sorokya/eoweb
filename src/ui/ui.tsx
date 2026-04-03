@@ -4,6 +4,8 @@ import {
   AlertContainer,
   ChangePassword,
   CharacterSelect,
+  CreateAccount,
+  CreateCharacter,
   Login,
   MainMenu,
 } from '@/ui/containers';
@@ -13,13 +15,15 @@ function UiContent() {
   const gameState = useGameState();
 
   return (
-    <AlertContainer>
+    <>
       {(gameState === GameState.Initial ||
         gameState === GameState.Connected) && <MainMenu />}
       {gameState === GameState.Login && <Login />}
+      {gameState === GameState.CreateAccount && <CreateAccount />}
       {gameState === GameState.CharacterSelect && <CharacterSelect />}
       {gameState === GameState.ChangePassword && <ChangePassword />}
-    </AlertContainer>
+      {gameState === GameState.CreateCharacter && <CreateCharacter />}
+    </>
   );
 }
 
@@ -27,7 +31,9 @@ export function Ui({ client }: { client: Client }) {
   return (
     <ClientProvider client={client}>
       <LocaleProvider>
-        <UiContent />
+        <AlertContainer>
+          <UiContent />
+        </AlertContainer>
       </LocaleProvider>
     </ClientProvider>
   );

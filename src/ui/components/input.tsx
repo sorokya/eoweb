@@ -27,6 +27,7 @@ type InputProps = {
   placeholder?: string;
   min?: number;
   max?: number;
+  maxlength?: number;
   required?: boolean;
   autofocus?: boolean;
 };
@@ -40,6 +41,7 @@ export function Input({
   placeholder,
   min,
   max,
+  maxlength,
   required,
   variant = '',
   autofocus,
@@ -61,6 +63,7 @@ export function Input({
           placeholder={placeholder}
           min={min}
           max={max}
+          maxLength={maxlength}
           required={required}
           // biome-ignore lint/a11y/noAutofocus: We will only use autofocus when it is appropriate
           autoFocus={autofocus}
@@ -79,6 +82,7 @@ export function Input({
       placeholder={placeholder}
       min={min}
       max={max}
+      maxLength={maxlength}
       required={required}
       autofocus={autofocus}
     />
