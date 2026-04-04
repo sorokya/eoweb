@@ -190,16 +190,6 @@ type ChatManagerContextValue = {
     fromTabId: string,
     dialogId: ChatDialogId,
   ) => void;
-  /**
-   * Set the channels for a specific tab. Channels removed are returned to the
-   * General tab of chat-main. Channels added are removed from wherever they
-   * currently live.
-   */
-  setTabChannels: (
-    tabId: string,
-    dialogId: ChatDialogId,
-    channels: ChatChannel[],
-  ) => void;
   /** Remove a tab from a dialog, repatriating its non-PM channels back to General/System. */
   closeTab: (tabId: string, dialogId: ChatDialogId) => void;
   setActiveTab: (dialogId: ChatDialogId, tabId: string) => void;
@@ -427,43 +417,6 @@ export function ChatManagerProvider({
     [],
   );
 
-  const setTabChannels = useCallback(
-    (tabId: string, dialogId: ChatDialogId, newChannels: ChatChannel[]) => {
-      setDialogs((prev) => {
-        const dialog = prev.find((d) => d.id === dialogId);
-        const tab = dialog?.tabs.find((t) => t.id === tabId);
-        if (!tab) return prev;
-
-        const removed = tab.channels.filter((ch) => !newChannels.includes(ch));
-        const added = newChannels.filter((ch) => !tab.channels.includes(ch));
-
-        let next = prev.map((d) => ({
-          ...d,
-          tabs: d.tabs.map((t) => {
-            if (t.id === tabId && d.id === dialogId) {
-              return { ...t, channels: newChannels };
-            }
-            const stripped = t.channels.filter((ch) => !added.includes(ch));
-            if (stripped.length === t.channels.length) return t;
-            return { ...t, channels: stripped };
-          }),
-        }));
-
-        next = repatriateChannels(next, removed);
-
-        next = next
-          .map((d) => ({
-            ...d,
-            tabs: d.tabs.filter((t) => t.channels.length > 0 || t.id === tabId),
-          }))
-          .filter((d) => d.id === 'chat-main' || d.tabs.length > 0);
-
-        return next;
-      });
-    },
-    [],
-  );
-
   return (
     <ChatManagerContext.Provider
       value={{
@@ -471,7 +424,6 @@ export function ChatManagerProvider({
         messages,
         unreadTabs,
         splitChannelToNewTab,
-        setTabChannels,
         closeTab,
         setActiveTab,
       }}
