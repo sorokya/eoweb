@@ -11,3 +11,5 @@ export { Checkbox } from './checkbox';
 export { Confirm } from './confirm';
 export { CycleInput } from './cycle-input';
 export { Input } from './input';
+export { ProgressBar } from './progress-bar';
+export { type TabItem, Tabs } from './tabs';

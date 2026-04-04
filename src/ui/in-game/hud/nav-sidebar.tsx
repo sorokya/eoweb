@@ -9,6 +9,7 @@ import {
 } from 'react-icons/gi';
 import { LuMenu } from 'react-icons/lu';
 import { DialogResourceID } from '@/edf';
+import { Button } from '@/ui/components';
 import { useClient } from '@/ui/context';
 import { type DialogId, useWindowManager } from '@/ui/in-game';
 import { HUD_Z } from './consts';
@@ -57,26 +58,26 @@ export function NavSidebar() {
         onContextMenu={(e) => e.stopPropagation()}
       >
         {NAV_BUTTONS.map(({ id, label, Icon }) => (
-          <button
+          <Button
             key={id}
-            type='button'
-            class='btn btn-xs btn-neutral w-14 flex flex-col items-center gap-0.5 h-auto py-1.5'
+            variant={['xs', 'neutral']}
+            class='w-14 flex flex-col items-center gap-0.5 h-auto py-1.5'
             onClick={() => (isOpen(id) ? closeDialog(id) : openDialog(id))}
-            title={label}
+            label={label}
           >
             <Icon size={16} />
             <span class='text-[9px] leading-none'>{label}</span>
-          </button>
+          </Button>
         ))}
-        <button
-          type='button'
-          class='btn btn-xs btn-neutral w-14 flex flex-col items-center gap-0.5 h-auto py-1.5 mt-1'
+        <Button
+          variant={['xs', 'neutral']}
+          class='w-14 flex flex-col items-center gap-0.5 h-auto py-1.5 mt-1'
           onClick={exitGame}
-          title='Exit Game'
+          label='Exit Game'
         >
           <span class='text-base leading-none'>←</span>
           <span class='text-[9px] leading-none'>Exit</span>
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -97,55 +98,53 @@ export function MobileNav() {
         onKeyDown={(e) => e.stopPropagation()}
         onContextMenu={(e) => e.stopPropagation()}
       >
-        <button
-          type='button'
-          class='btn btn-xs btn-neutral px-2'
+        <Button
+          variant={['xs', 'neutral']}
+          class='px-2'
           onClick={() => setOpen((o) => !o)}
-          aria-label='Menu'
+          label='Menu'
         >
           <LuMenu size={14} />
-        </button>
+        </Button>
 
         {open && (
-          <div
-            class='absolute right-0 top-full mt-1 rounded-lg shadow-xl flex flex-col p-1 min-w-[8rem]'
-            style={{
-              background: 'rgba(15,23,42,0.97)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
+          <ul
+            class='menu menu-sm bg-base-300/97 rounded-box shadow-xl absolute right-0 top-full mt-1 z-50 border border-white/10 min-w-32 p-1'
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             {NAV_BUTTONS.map(({ id, label, Icon }) => (
+              <li key={id}>
+                <button
+                  type='button'
+                  class={isOpen(id) ? 'bg-white/15' : ''}
+                  onClick={() => {
+                    isOpen(id) ? closeDialog(id) : openDialog(id);
+                    setOpen(false);
+                  }}
+                >
+                  <Icon size={13} />
+                  {label}
+                </button>
+              </li>
+            ))}
+            <li>
+              <div class='divider my-0' />
+            </li>
+            <li>
               <button
-                key={id}
                 type='button'
-                class={`flex items-center gap-2 px-2 py-1.5 text-xs rounded text-left text-white transition-colors ${
-                  isOpen(id) ? 'bg-white/15' : 'hover:bg-white/10'
-                }`}
+                class='text-error'
                 onClick={() => {
-                  isOpen(id) ? closeDialog(id) : openDialog(id);
                   setOpen(false);
+                  exitGame();
                 }}
               >
-                <Icon size={13} />
-                {label}
+                <span class='text-sm leading-none'>←</span>
+                Exit Game
               </button>
-            ))}
-            <div
-              class='my-0.5'
-              style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}
-            />
-            <button
-              type='button'
-              class='flex items-center gap-2 px-2 py-1.5 text-xs rounded text-left text-red-400 hover:bg-red-500/15 transition-colors w-full'
-              onClick={() => {
-                setOpen(false);
-                exitGame();
-              }}
-            >
-              <span class='text-sm leading-none'>←</span>
-              Exit Game
-            </button>
-          </div>
+            </li>
+          </ul>
         )}
       </div>
     </div>

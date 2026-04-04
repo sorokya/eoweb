@@ -155,12 +155,10 @@ export function DialogBase({
       onKeyDown={stopProp}
       onContextMenu={stopProp}
     >
-      {/* Title bar */}
       <div
         class={`flex items-center gap-1 px-2 py-1.5 bg-white/5 rounded-t-lg ${noDrag ? '' : 'cursor-move'}`}
         onPointerDown={onDragPointerDown}
       >
-        {/* Title or custom content (e.g. tabs) */}
         <div class='flex-1 min-w-0 flex items-center gap-1'>
           {titleContent ?? (
             <span class='text-sm font-semibold truncate select-none px-1'>
@@ -169,10 +167,8 @@ export function DialogBase({
           )}
         </div>
 
-        {/* Controls — hidden for dialogs like main chat */}
         {!hideControls && (
           <div class='flex items-center gap-1 shrink-0'>
-            {/* Layout mode dropdown */}
             <div class='relative'>
               <button
                 type='button'
@@ -187,28 +183,32 @@ export function DialogBase({
                 <LuLayoutGrid size={13} />
               </button>
               {menuOpen && (
-                <div
-                  class='absolute top-full right-0 mt-1 bg-base-300 rounded shadow-lg border border-base-200 z-50 overflow-hidden'
+                <ul
+                  class='menu menu-xs bg-base-300 rounded shadow-lg border border-base-200 absolute top-full right-0 mt-1 z-50 p-1'
                   onPointerDown={(e) => e.stopPropagation()}
                 >
                   {AUTO_LAYOUT_OPTIONS.map((l) => (
-                    <button
-                      key={l}
-                      type='button'
-                      class={`block w-full text-left px-3 py-1 text-xs hover:bg-base-100 ${!isManual && l === layout ? 'font-bold text-primary' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLayoutChange(l);
-                      }}
-                    >
-                      {DIALOG_LAYOUT_LABELS[l]}
-                    </button>
+                    <li key={l}>
+                      <button
+                        type='button'
+                        class={
+                          !isManual && l === layout
+                            ? 'font-bold text-primary'
+                            : ''
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLayoutChange(l);
+                        }}
+                      >
+                        {DIALOG_LAYOUT_LABELS[l]}
+                      </button>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </div>
 
-            {/* Minimize / restore button */}
             <button
               type='button'
               class='btn btn-ghost btn-xs btn-circle'
@@ -223,7 +223,6 @@ export function DialogBase({
               {minimized ? <LuMaximize2 size={13} /> : <LuMinus size={13} />}
             </button>
 
-            {/* Close button */}
             <button
               type='button'
               class='btn btn-ghost btn-xs btn-circle'
@@ -241,7 +240,6 @@ export function DialogBase({
         )}
       </div>
 
-      {/* Dialog content — hidden when minimized */}
       {!minimized && <div class='p-3'>{children}</div>}
     </div>
   );

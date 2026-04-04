@@ -1,56 +1,14 @@
+import { ProgressBar } from '@/ui/components';
 import { usePlayerStats } from '@/ui/in-game';
 import { getExpForLevel } from '@/utils';
 import { HUD_Z } from './consts';
 
 const stopPropagation = (e: { stopPropagation(): void }) => e.stopPropagation();
 
-function fmt(n: number): string {
-  if (n >= 1_000_000)
-    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}m`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
-  return String(n);
-}
-
 function hpBarClass(pct: number): string {
   if (pct >= 50) return 'bg-gradient-to-r from-green-700 to-green-500';
   if (pct >= 25) return 'bg-gradient-to-r from-yellow-600 to-yellow-400';
   return 'bg-gradient-to-r from-red-700 to-red-500';
-}
-
-function ProgressBar({
-  value,
-  max,
-  label,
-  barClass,
-}: {
-  value: number;
-  max: number;
-  label: string;
-  barClass: string;
-}) {
-  const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
-  return (
-    <div class='flex items-center gap-1 w-full min-w-0'>
-      <span class='flex-shrink-0 text-[8px] md:text-[9px] font-bold w-5 text-right opacity-80 uppercase tracking-wide'>
-        {label}
-      </span>
-      <div
-        class='relative flex-1 h-3 md:h-4 rounded overflow-hidden'
-        style={{
-          background: 'rgba(0,0,0,0.45)',
-          border: '1px solid rgba(255,255,255,0.08)',
-        }}
-      >
-        <div
-          class={`absolute inset-y-0 left-0 rounded transition-[width] duration-500 ease-out ${barClass}`}
-          style={{ width: `${pct}%` }}
-        />
-        <span class='absolute inset-0 flex items-center justify-center text-[7px] md:text-[8px] font-semibold leading-none drop-shadow text-white'>
-          {fmt(value)}/{fmt(max)}
-        </span>
-      </div>
-    </div>
-  );
 }
 
 export function PlayerHud() {
@@ -84,7 +42,6 @@ export function PlayerHud() {
       onKeyDown={stopPropagation}
       onContextMenu={stopPropagation}
     >
-      {/* Name + level */}
       <div class='flex-shrink-0 flex items-center gap-1'>
         <span class='text-sm font-bold leading-tight truncate text-white'>
           {stats.name}
@@ -93,7 +50,6 @@ export function PlayerHud() {
           Lv {stats.level}
         </span>
       </div>
-      {/* Bars */}
       <div class='flex-1 md:flex-none md:w-full flex flex-row md:flex-col gap-1 min-w-0'>
         <ProgressBar
           value={stats.hp}

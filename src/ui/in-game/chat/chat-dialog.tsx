@@ -41,7 +41,7 @@ const DETACH_CHANNELS: ChatChannel[] = [
   ChatChannels.Admin,
 ];
 
-// Preview: per-message fade timing
+// Per-message fade timing for chat preview
 const PREVIEW_FADE_START_MS = 3_000;
 const PREVIEW_FADE_END_MS = 8_000;
 const PREVIEW_MAX_MESSAGES = 6;
@@ -57,8 +57,6 @@ function msgOpacity(timestampUtc: number, now: number): number {
   );
 }
 
-// ---------------------------------------------------------------------------
-// ChatPreview: chromeless overlay with fading messages + ghost input
 // ---------------------------------------------------------------------------
 
 type PreviewProps = {
@@ -137,8 +135,6 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
 }
 
 // ---------------------------------------------------------------------------
-// AddTabButton — + button to split a channel into a new tab
-// ---------------------------------------------------------------------------
 
 function AddTabButton({ dialogId }: { dialogId: ChatDialogId }) {
   const client = useClient();
@@ -192,32 +188,27 @@ function AddTabButton({ dialogId }: { dialogId: ChatDialogId }) {
         <LuPlus size={13} />
       </button>
       {open && (
-        <div
-          class='absolute top-full right-0 mt-1 bg-base-300 rounded shadow-lg border border-base-200 z-50 overflow-hidden text-xs'
+        <ul
+          class='menu menu-xs bg-base-300 rounded shadow-lg border border-base-200 absolute top-full right-0 mt-1 z-50 p-1'
           style={{ minWidth: 130 }}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
           {availableChannels.map((ch) => (
-            <button
-              key={ch}
-              type='button'
-              class='flex items-center gap-2 w-full text-left px-3 py-1.5 hover:bg-base-100'
-              onClick={() => handleAdd(ch)}
-            >
-              <span class={`font-semibold ${channelColor(ch)}`}>
-                {channelLabel(ch)}
-              </span>
-            </button>
+            <li key={ch}>
+              <button type='button' onClick={() => handleAdd(ch)}>
+                <span class={`font-semibold ${channelColor(ch)}`}>
+                  {channelLabel(ch)}
+                </span>
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// ChatDialog
 // ---------------------------------------------------------------------------
 
 type Props = {
@@ -329,13 +320,11 @@ export function ChatDialog({ id }: Props) {
           maxHeight: '45vh',
         }}
       >
-        {/* Row 1: Input + Send */}
         <ChatInput
           tab={activeTab}
           onActivity={onFocus}
           inputRef={inputRef as RefObject<HTMLInputElement>}
         />
-        {/* Row 2: Tabs */}
         {tabs.length > 1 && (
           <div class='flex items-center gap-1 px-2 py-0.5 border-b border-white/10 bg-base-300/60'>
             <ChatTabBar
@@ -347,7 +336,6 @@ export function ChatDialog({ id }: Props) {
             <AddTabButton dialogId={id} />
           </div>
         )}
-        {/* Row 3: Chat log */}
         <ChatMessageList
           tab={activeTab}
           messages={tabMessages}
