@@ -14,7 +14,7 @@ import type {
 } from 'eolib';
 import type { GameState } from '@/game-state';
 import type { SfxId } from '@/sfx';
-import type { ChatIcon, ChatTab } from '@/ui';
+import type { ChatChannel, ChatIcon } from '@/ui';
 
 export type ClientEvents = {
   stateChanged: GameState;
@@ -32,7 +32,7 @@ export type ClientEvents = {
   selectCharacter: undefined;
   enterGame: { news: string[] };
   chat: {
-    tab: ChatTab;
+    channel: ChatChannel;
     message: string;
     icon?: ChatIcon | null;
     name?: string;

@@ -6,6 +6,7 @@ import {
   CharacterSelect,
   CreateAccount,
   CreateCharacter,
+  InGame,
   Login,
   MainMenu,
 } from '@/ui/containers';
@@ -23,6 +24,7 @@ function UiContent() {
       {gameState === GameState.CharacterSelect && <CharacterSelect />}
       {gameState === GameState.ChangePassword && <ChangePassword />}
       {gameState === GameState.CreateCharacter && <CreateCharacter />}
+      {gameState === GameState.InGame && <InGame />}
     </>
   );
 }

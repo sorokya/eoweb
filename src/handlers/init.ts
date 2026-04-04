@@ -19,7 +19,7 @@ import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '@/db';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { GameState } from '@/game-state';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui';
+import { ChatChannels, ChatIcon } from '@/ui';
 
 function handleInitInit(client: Client, reader: EoReader) {
   const packet = InitInitServerPacket.deserialize(reader);
@@ -285,13 +285,13 @@ function handleInitMapMutation(
   playSfxById(SfxId.MapMutation);
   const message = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${client.getResourceString(EOResourceID.SERVER_MESSAGE_MAP_MUTATION)}}`;
   client.emit('chat', {
-    tab: ChatTab.Local,
+    channel: ChatChannels.Local,
     icon: ChatIcon.Exclamation,
     message,
   });
 
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.Exclamation,
     message,
   });

@@ -18,7 +18,7 @@ import type { Client } from '@/client';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { Emote } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui';
+import { ChatChannels, ChatIcon } from '@/ui';
 import { capitalize } from '@/utils';
 
 function handlePartyReply(client: Client, reader: EoReader) {
@@ -34,7 +34,7 @@ function handlePartyReply(client: Client, reader: EoReader) {
         )}`,
       );
       client.emit('chat', {
-        tab: ChatTab.System,
+        channel: ChatChannels.System,
         icon: ChatIcon.Error,
         message: `${capitalize(data.playerName)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_IN_ANOTHER_PARTY)}`,
       });
@@ -50,7 +50,7 @@ function handlePartyReply(client: Client, reader: EoReader) {
         )}`,
       );
       client.emit('chat', {
-        tab: ChatTab.System,
+        channel: ChatChannels.System,
         icon: ChatIcon.Error,
         message: `${capitalize(data.playerName)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_MEMBER)}`,
       });
@@ -64,7 +64,7 @@ function handlePartyReply(client: Client, reader: EoReader) {
         ),
       );
       client.emit('chat', {
-        tab: ChatTab.System,
+        channel: ChatChannels.System,
         icon: ChatIcon.Error,
         message: client.getResourceString(
           EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL,
@@ -109,7 +109,7 @@ function handlePartyCreate(client: Client, reader: EoReader) {
     client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED),
   );
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.PlayerParty,
     message: client.getResourceString(
       EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED,
@@ -126,7 +126,7 @@ function handlePartyAdd(client: Client, reader: EoReader) {
     `${capitalize(packet.member.name)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_JOINED_YOUR)}`,
   );
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.PlayerParty,
     message: `${capitalize(packet.member.name)} ${client.getResourceString(
       EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED,
@@ -151,7 +151,7 @@ function handlePartyRemove(client: Client, reader: EoReader) {
     `${capitalize(member.name)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_LEFT_YOUR)}`,
   );
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.PlayerParty,
     message: `${capitalize(member.name)} ${client.getResourceString(
       EOResourceID.STATUS_LABEL_PARTY_LEFT_YOUR,
@@ -205,7 +205,7 @@ function handlePartyTargetGroup(client: Client, reader: EoReader) {
       client.emit('chat', {
         message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain.experience} EXP`,
         icon: ChatIcon.Star,
-        tab: ChatTab.System,
+        channel: ChatChannels.System,
       });
 
       if (gain.levelUp) {

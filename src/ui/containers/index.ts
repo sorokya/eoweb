@@ -3,5 +3,6 @@ export { ChangePassword } from './change-password';
 export { CharacterSelect } from './character-select';
 export { CreateAccount } from './create-account';
 export { CreateCharacter } from './create-character';
+export { InGame } from './in-game';
 export { Login } from './login';
 export { MainMenu } from './main-menu';

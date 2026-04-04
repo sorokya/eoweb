@@ -13,7 +13,7 @@ import { ITEM_PROTECT_TICKS_NPC } from '@/consts';
 import { EOResourceID } from '@/edf';
 import { EffectTargetNpc, Emote, HealthBar } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui';
+import { ChatChannels, ChatIcon } from '@/ui';
 
 function handleCastReply(client: Client, reader: EoReader) {
   const packet = CastReplyServerPacket.deserialize(reader);
@@ -79,7 +79,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
 
     const record = client.getEifRecordById(item.id);
     client.emit('chat', {
-      tab: ChatTab.System,
+      channel: ChatChannels.System,
       icon: ChatIcon.DownArrow,
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
     });
@@ -95,7 +95,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
     client.emit('chat', {
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
       icon: ChatIcon.Star,
-      tab: ChatTab.System,
+      channel: ChatChannels.System,
     });
     client.emit('statsUpdate', undefined);
   }
@@ -141,7 +141,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
 
     const record = client.getEifRecordById(item.id);
     client.emit('chat', {
-      tab: ChatTab.System,
+      channel: ChatChannels.System,
       icon: ChatIcon.DownArrow,
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
     });
@@ -171,7 +171,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
     client.emit('chat', {
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
       icon: ChatIcon.Star,
-      tab: ChatTab.System,
+      channel: ChatChannels.System,
     });
     client.emit('statsUpdate', undefined);
   }
