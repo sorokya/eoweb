@@ -1,9 +1,20 @@
 import { Ecf, Eif, Emf, Enf, EoReader, EoWriter, Esf } from 'eolib';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
 import { Edf } from '@/edf';
+import type { ChatChannel, ChatIcon } from '@/ui';
 import { padWithZeros } from '@/utils';
 
 type PubsKey = 'eif' | 'enf' | 'ecf' | 'esf';
+
+export type StoredChatMessage = {
+  id: string;
+  characterId: number;
+  channel: ChatChannel;
+  name?: string;
+  message: string;
+  icon?: ChatIcon | null;
+  timestampUtc: number;
+};
 
 interface DB extends DBSchema {
   pubs: {
@@ -18,27 +29,57 @@ interface DB extends DBSchema {
     key: number;
     value: Uint8Array;
   };
+  chatMessages: {
+    key: string;
+    value: StoredChatMessage;
+    indexes: { 'by-char-channel': [number, string] };
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<DB>>;
 
 function getDb(): Promise<IDBPDatabase<DB>> {
   if (!dbPromise) {
-    dbPromise = openDB<DB>('db', 2, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains('pubs')) {
+    dbPromise = openDB<DB>('db', 3, {
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1 || !db.objectStoreNames.contains('pubs')) {
           db.createObjectStore('pubs');
         }
-        if (!db.objectStoreNames.contains('maps')) {
+        if (oldVersion < 1 || !db.objectStoreNames.contains('maps')) {
           db.createObjectStore('maps');
         }
-        if (!db.objectStoreNames.contains('edfs')) {
+        if (oldVersion < 2 || !db.objectStoreNames.contains('edfs')) {
           db.createObjectStore('edfs');
+        }
+        if (!db.objectStoreNames.contains('chatMessages')) {
+          const store = db.createObjectStore('chatMessages', { keyPath: 'id' });
+          store.createIndex('by-char-channel', ['characterId', 'channel']);
         }
       },
     });
   }
   return dbPromise;
+}
+
+export async function saveChatMessage(msg: StoredChatMessage): Promise<void> {
+  const db = await getDb();
+  await db.put('chatMessages', msg);
+}
+
+export async function getChatMessages(
+  characterId: number,
+  channel: ChatChannel,
+  limit = 200,
+): Promise<StoredChatMessage[]> {
+  const db = await getDb();
+  const index = db.transaction('chatMessages').store.index('by-char-channel');
+  const results: StoredChatMessage[] = [];
+  let cursor = await index.openCursor([characterId, channel], 'prev');
+  while (cursor && results.length < limit) {
+    results.unshift(cursor.value);
+    cursor = await cursor.continue();
+  }
+  return results;
 }
 
 export async function getEmf(id: number): Promise<Emf | null> {
