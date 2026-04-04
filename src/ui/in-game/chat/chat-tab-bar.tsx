@@ -1,7 +1,6 @@
-import { useCallback, useRef } from 'preact/hooks';
+import { useCallback } from 'preact/hooks';
 import { LuX } from 'react-icons/lu';
 import type { ChatDialogId } from '@/ui/in-game';
-import { ChatContextMenu, useContextMenu } from './chat-context-menu';
 import type { ChatTabConfig } from './chat-manager';
 import { useChatManager } from './chat-manager';
 
@@ -20,98 +19,64 @@ export function ChatTabBar({
   isMain = false,
 }: Props) {
   const { setActiveTab, closeTab, unreadTabs } = useChatManager();
-  const { menu, openMenu, closeMenu } = useContextMenu();
 
-  const handleContextMenu = useCallback(
-    (e: MouseEvent, tab: ChatTabConfig) => {
-      e.preventDefault();
+  const handleTabClick = useCallback(
+    (e: MouseEvent, tabId: string) => {
       e.stopPropagation();
-      openMenu(e.clientX, e.clientY, tab);
+      setActiveTab(dialogId, tabId);
     },
-    [openMenu],
+    [dialogId, setActiveTab],
   );
 
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleLongPressStart = useCallback(
-    (e: PointerEvent, tab: ChatTabConfig) => {
-      longPressTimer.current = setTimeout(() => {
-        openMenu(e.clientX, e.clientY, tab);
-      }, 500);
+  const handleCloseClick = useCallback(
+    (e: MouseEvent, tabId: string) => {
+      e.stopPropagation();
+      closeTab(tabId, dialogId);
     },
-    [openMenu],
+    [dialogId, closeTab],
   );
-  const clearLongPress = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
 
   return (
-    <>
-      <div class='flex items-center gap-0.5 min-w-0 overflow-hidden'>
-        {tabs.map((tab) => {
-          const isActive = tab.id === activeTabId;
-          const isCloseable =
-            isMain && tab.id !== 'general' && tab.id !== 'system';
-          const hasUnread = !isActive && unreadTabs.has(tab.id);
-          return (
-            <div
-              key={tab.id}
-              class={`flex items-center min-w-0 shrink rounded transition-colors select-none ${
-                isActive ? 'bg-white/20' : 'hover:bg-white/10'
-              }`}
-              style={{ maxWidth: '8rem' }}
+    <div class='flex items-center gap-0.5 min-w-0 overflow-hidden'>
+      {tabs.map((tab) => {
+        const isActive = tab.id === activeTabId;
+        const isCloseable =
+          isMain && tab.id !== 'general' && tab.id !== 'system';
+        const hasUnread = !isActive && unreadTabs.has(tab.id);
+        return (
+          <div
+            key={tab.id}
+            class={`flex items-center min-w-0 shrink rounded transition-colors select-none ${
+              isActive ? 'bg-white/20' : 'hover:bg-white/10'
+            }`}
+            style={{ maxWidth: '8rem' }}
+          >
+            <button
+              type='button'
+              class={`flex items-center gap-1 min-w-0 flex-1 px-2 py-0.5 text-xs ${isActive ? 'font-semibold' : ''}`}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => handleTabClick(e, tab.id)}
             >
+              <span class='truncate'>{tab.name}</span>
+              {hasUnread && (
+                <span class='flex-shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400' />
+              )}
+            </button>
+            {isCloseable && (
               <button
                 type='button'
-                class={`flex items-center gap-1 min-w-0 flex-1 px-2 py-0.5 text-xs ${isActive ? 'font-semibold' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveTab(dialogId, tab.id);
-                }}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  handleLongPressStart(e, tab);
-                }}
-                onPointerUp={clearLongPress}
-                onPointerCancel={clearLongPress}
-                onContextMenu={(e) => handleContextMenu(e, tab)}
+                class='flex-shrink-0 opacity-50 hover:opacity-100 leading-none pr-1'
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => handleCloseClick(e, tab.id)}
+                tabIndex={-1}
+                aria-label={`Close ${tab.name}`}
               >
-                <span class='truncate'>{tab.name}</span>
-                {hasUnread && (
-                  <span class='flex-shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400' />
-                )}
+                <LuX size={10} />
               </button>
-              {isCloseable && (
-                <button
-                  type='button'
-                  class='flex-shrink-0 opacity-50 hover:opacity-100 leading-none pr-1'
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeTab(tab.id, dialogId);
-                  }}
-                  tabIndex={-1}
-                  aria-label={`Close ${tab.name}`}
-                >
-                  <LuX size={10} />
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {menu && (
-        <ChatContextMenu
-          x={menu.x}
-          y={menu.y}
-          tab={menu.tab}
-          dialogId={dialogId}
-          onClose={closeMenu}
-        />
-      )}
-    </>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
