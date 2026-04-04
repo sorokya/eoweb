@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useCallback, useState } from 'preact/hooks';
 import {
   GiBackpack,
   GiCompass,
@@ -11,8 +11,19 @@ import { LuMenu } from 'react-icons/lu';
 import { DialogResourceID } from '@/edf';
 import { useClient } from '@/ui/context';
 import { type DialogId, useWindowManager } from '@/ui/in-game';
+import { HUD_Z } from './consts';
 
-const HUD_Z = 10;
+function useExitGame() {
+  const client = useClient();
+  return useCallback(() => {
+    const strings = client.getDialogStrings(
+      DialogResourceID.EXIT_GAME_ARE_YOU_SURE,
+    );
+    client.alertController.showConfirm(strings[0], strings[1], (confirmed) => {
+      if (confirmed) client.disconnect();
+    });
+  }, [client]);
+}
 
 type NavButton = {
   id: DialogId;
@@ -29,20 +40,9 @@ const NAV_BUTTONS: NavButton[] = [
   { id: 'settings', label: 'Settings', Icon: GiGears },
 ];
 
-/** Desktop-only vertical nav sidebar (right edge, vertically centered). */
 export function NavSidebar() {
   const { openDialog, closeDialog, isOpen } = useWindowManager();
-  const client = useClient();
-
-  function handleExit(e: MouseEvent) {
-    e.stopPropagation();
-    const strings = client.getDialogStrings(
-      DialogResourceID.EXIT_GAME_ARE_YOU_SURE,
-    );
-    client.alertController.showConfirm(strings[0], strings[1], (confirmed) => {
-      if (confirmed) client.disconnect();
-    });
-  }
+  const exitGame = useExitGame();
 
   return (
     <div
@@ -71,7 +71,7 @@ export function NavSidebar() {
         <button
           type='button'
           class='btn btn-xs btn-neutral w-14 flex flex-col items-center gap-0.5 h-auto py-1.5 mt-1'
-          onClick={handleExit}
+          onClick={exitGame}
           title='Exit Game'
         >
           <span class='text-base leading-none'>←</span>
@@ -85,18 +85,8 @@ export function NavSidebar() {
 /** Mobile-only floating hamburger menu (below HUD strip, right edge). */
 export function MobileNav() {
   const { openDialog, closeDialog, isOpen } = useWindowManager();
-  const client = useClient();
+  const exitGame = useExitGame();
   const [open, setOpen] = useState(false);
-
-  function handleExit() {
-    setOpen(false);
-    const strings = client.getDialogStrings(
-      DialogResourceID.EXIT_GAME_ARE_YOU_SURE,
-    );
-    client.alertController.showConfirm(strings[0], strings[1], (confirmed) => {
-      if (confirmed) client.disconnect();
-    });
-  }
 
   return (
     <div class='md:hidden absolute top-8 right-1' style={{ zIndex: HUD_Z }}>
@@ -147,7 +137,10 @@ export function MobileNav() {
             <button
               type='button'
               class='flex items-center gap-2 px-2 py-1.5 text-xs rounded text-left text-red-400 hover:bg-red-500/15 transition-colors w-full'
-              onClick={handleExit}
+              onClick={() => {
+                setOpen(false);
+                exitGame();
+              }}
             >
               <span class='text-sm leading-none'>←</span>
               Exit Game

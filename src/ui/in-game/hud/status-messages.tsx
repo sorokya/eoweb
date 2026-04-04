@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useClient } from '@/ui/context';
 import { usePosition } from '@/ui/in-game';
+import { HUD_Z } from './consts';
 
-const HUD_Z = 10;
 const DISMISS_AFTER_MS = 4_000;
 
 type StatusMsg = {

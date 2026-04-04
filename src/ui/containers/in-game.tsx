@@ -63,10 +63,18 @@ function InGameContent() {
   );
   const minimized = open.filter((id) => isMinimized(id));
   const nonMinimized = open.filter((id) => !isMinimized(id));
-  const manual = nonMinimized.filter((id) => getLayout(id) === 'manual');
-  const autoLeft = nonMinimized.filter((id) => getLayout(id) === 'left');
-  const autoCenter = nonMinimized.filter((id) => getLayout(id) === 'center');
-  const autoRight = nonMinimized.filter((id) => getLayout(id) === 'right');
+  const manual = nonMinimized.filter(
+    (id) => !id.startsWith('chat-') && getLayout(id) === 'manual',
+  );
+  const autoLeft = nonMinimized.filter(
+    (id) => !id.startsWith('chat-') && getLayout(id) === 'left',
+  );
+  const autoCenter = nonMinimized.filter(
+    (id) => !id.startsWith('chat-') && getLayout(id) === 'center',
+  );
+  const autoRight = nonMinimized.filter(
+    (id) => !id.startsWith('chat-') && getLayout(id) === 'right',
+  );
 
   return (
     <>

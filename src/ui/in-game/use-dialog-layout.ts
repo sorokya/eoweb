@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
+import { RESET_EVENT } from './use-position';
 import type { DialogId } from './window-manager';
 
 export type DialogLayout =
@@ -17,7 +18,6 @@ export const DIALOG_LAYOUT_LABELS: Record<DialogLayout, string> = {
 };
 
 const STORAGE_PREFIX = 'eoweb:layout:dialog:';
-const RESET_EVENT = 'eoweb:reset-positions';
 
 const STATIC_DEFAULTS: Partial<Record<string, DialogLayout>> = {
   inventory: 'right',
