@@ -35,6 +35,7 @@ type ButtonProps = {
   type?: ButtonType;
   label?: string;
   variant?: ButtonVariant | ButtonVariant[];
+  class?: string;
   onClick?: () => void;
 };
 
@@ -43,6 +44,7 @@ export function Button({
   label,
   variant = '',
   type = 'button',
+  class: extraClass,
   onClick,
 }: ButtonProps) {
   const clickHandler = useCallback(() => {
@@ -57,10 +59,12 @@ export function Button({
     .map((v) => `btn-${v}`)
     .join(' ');
 
+  const classes = ['btn', variantClasses, extraClass].filter(Boolean).join(' ');
+
   return (
     <button
       type={type}
-      class={`btn${variantClasses ? ` ${variantClasses}` : ''}`}
+      class={classes}
       onClick={clickHandler}
       aria-label={label}
     >

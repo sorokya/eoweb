@@ -59,7 +59,7 @@ export function ChatTabBar({
             >
               <span class='truncate'>{tab.name}</span>
               {hasUnread && (
-                <span class='flex-shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400' />
+                <span class='status status-xs status-info flex-shrink-0' />
               )}
             </button>
             {isCloseable && (

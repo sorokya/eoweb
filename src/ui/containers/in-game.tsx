@@ -83,7 +83,6 @@ function InGameContent() {
       <NavSidebar />
       <StatusMessages />
 
-      {/* Left-layout group */}
       {autoLeft.length > 0 && (
         <div
           class='pointer-events-none absolute inset-0 flex items-center justify-start pl-5'
@@ -97,7 +96,6 @@ function InGameContent() {
         </div>
       )}
 
-      {/* Center-layout group */}
       {autoCenter.length > 0 && (
         <div
           class='pointer-events-none absolute inset-0 flex items-center justify-center'
@@ -111,7 +109,6 @@ function InGameContent() {
         </div>
       )}
 
-      {/* Right-layout group */}
       {autoRight.length > 0 && (
         <div
           class='pointer-events-none absolute inset-0 flex items-center justify-end pr-5'
