@@ -1,44 +1,8 @@
-import { useEffect, useState } from 'preact/hooks';
-import { useClient } from '@/ui/context';
+import { usePlayerStats } from '@/ui/in-game';
 import { DialogBase } from './dialog-base';
 
-type Stats = {
-  name: string;
-  level: number;
-  hp: number;
-  maxHp: number;
-  tp: number;
-  maxTp: number;
-  experience: number;
-};
-
 export function StatsDialog() {
-  const client = useClient();
-  const [stats, setStats] = useState<Stats>({
-    name: client.name,
-    level: client.level,
-    hp: client.hp,
-    maxHp: client.maxHp,
-    tp: client.tp,
-    maxTp: client.maxTp,
-    experience: client.experience,
-  });
-
-  useEffect(() => {
-    const handler = () => {
-      setStats({
-        name: client.name,
-        level: client.level,
-        hp: client.hp,
-        maxHp: client.maxHp,
-        tp: client.tp,
-        maxTp: client.maxTp,
-        experience: client.experience,
-      });
-    };
-    client.on('statsUpdate', handler);
-    return () => client.off('statsUpdate', handler);
-  }, [client]);
+  const stats = usePlayerStats();
 
   return (
     <DialogBase id='stats' title='Stats' defaultWidth={280}>

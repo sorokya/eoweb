@@ -112,16 +112,10 @@ export function DialogBase({
 
   const handleLayoutChange = useCallback(
     (l: DialogLayout) => {
-      if (l === 'manual') {
-        const rect = containerRef.current?.getBoundingClientRect();
-        if (rect) setManualPos(id, rect.left, rect.top);
-        else setLayout(id, 'manual');
-      } else {
-        setLayout(id, l);
-      }
+      setLayout(id, l);
       setMenuOpen(false);
     },
-    [id, setLayout, setManualPos],
+    [id, setLayout],
   );
 
   const toggleMinimize = useCallback(() => {

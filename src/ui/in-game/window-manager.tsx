@@ -6,9 +6,9 @@ import {
   type DialogLayout,
   getDialogLayoutById,
 } from './use-dialog-layout';
+import { RESET_EVENT } from './use-position';
 
 const BASE_Z_INDEX = 20;
-const RESET_EVENT = 'eoweb:reset-positions';
 
 export type StaticDialogId =
   | 'inventory'

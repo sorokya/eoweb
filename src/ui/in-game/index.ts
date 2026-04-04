@@ -35,6 +35,8 @@ export {
   clearAllVisibilityOverrides,
   useHudVisibility,
 } from './use-hud-visibility';
+export type { PlayerStats } from './use-player-stats';
+export { usePlayerStats } from './use-player-stats';
 export type { Position } from './use-position';
 export { clearAllPositions, RESET_EVENT, usePosition } from './use-position';
 export { useViewport } from './use-viewport';

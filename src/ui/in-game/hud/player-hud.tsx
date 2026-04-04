@@ -1,19 +1,8 @@
-import { useEffect, useState } from 'preact/hooks';
-import { useClient } from '@/ui/context';
-import { calculateTnl, getExpForLevel } from '@/utils';
+import { usePlayerStats } from '@/ui/in-game';
+import { getExpForLevel } from '@/utils';
+import { HUD_Z } from './consts';
 
-const HUD_Z = 10;
 const stopPropagation = (e: { stopPropagation(): void }) => e.stopPropagation();
-
-type Stats = {
-  name: string;
-  level: number;
-  hp: number;
-  maxHp: number;
-  tp: number;
-  maxTp: number;
-  experience: number;
-};
 
 function fmt(n: number): string {
   if (n >= 1_000_000)
@@ -65,39 +54,12 @@ function ProgressBar({
 }
 
 export function PlayerHud() {
-  const client = useClient();
-
-  const [stats, setStats] = useState<Stats>({
-    name: client.name,
-    level: client.level,
-    hp: client.hp,
-    maxHp: client.maxHp,
-    tp: client.tp,
-    maxTp: client.maxTp,
-    experience: client.experience,
-  });
-
-  useEffect(() => {
-    const handler = () => {
-      setStats({
-        name: client.name,
-        level: client.level,
-        hp: client.hp,
-        maxHp: client.maxHp,
-        tp: client.tp,
-        maxTp: client.maxTp,
-        experience: client.experience,
-      });
-    };
-    client.on('statsUpdate', handler);
-    return () => client.off('statsUpdate', handler);
-  }, [client]);
+  const stats = usePlayerStats();
 
   const expForCurrentLevel = getExpForLevel(stats.level);
   const expForNextLevel = getExpForLevel(stats.level + 1);
   const tnlTotal = expForNextLevel - expForCurrentLevel;
   const tnlProgress = Math.max(0, stats.experience - expForCurrentLevel);
-  const _tnl = calculateTnl(stats.experience);
 
   const hpPct =
     stats.maxHp > 0 ? Math.round((stats.hp / stats.maxHp) * 100) : 0;

@@ -10,7 +10,7 @@ import {
   channelLabel,
 } from '@/ui/enums';
 import type { ChatDialogId } from '@/ui/in-game';
-import { DialogBase } from '@/ui/in-game';
+import { DialogBase, useViewport } from '@/ui/in-game';
 import { ChatInput } from './chat-input';
 import type { ChatMessage } from './chat-manager';
 import { useChatManager } from './chat-manager';
@@ -69,6 +69,7 @@ type PreviewProps = {
 
 function ChatPreview({ messages, now, onFocus }: PreviewProps) {
   const isMobile = useIsMobile();
+  const { vw } = useViewport();
   const shown = messages
     .slice(-PREVIEW_MAX_MESSAGES)
     .filter((m) => msgOpacity(m.timestampUtc, now) > 0);
@@ -117,7 +118,7 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
     <div
       role='presentation'
       class='flex flex-col gap-0.5'
-      style={{ width: Math.min(340, window.innerWidth - 64) }}
+      style={{ width: Math.min(340, vw - 64) }}
       onPointerDown={onFocus}
     >
       {isMobile ? (
@@ -227,6 +228,7 @@ export function ChatDialog({ id }: Props) {
   const { dialogs, messages } = useChatManager();
   const dialog = dialogs.find((d) => d.id === id);
   const isMobile = useIsMobile();
+  const { vw } = useViewport();
 
   const isMain = id === MAIN_DIALOG_ID;
   const [focused, setFocused] = useState(!isMain);
@@ -295,7 +297,7 @@ export function ChatDialog({ id }: Props) {
     return <ChatPreview messages={tabMessages} now={now} onFocus={onFocus} />;
   }
 
-  const dialogWidth = Math.min(340, window.innerWidth - 64);
+  const dialogWidth = Math.min(340, vw - 64);
 
   const titleContent = (
     <div class='flex items-center gap-1 min-w-0 flex-1'>
@@ -323,7 +325,7 @@ export function ChatDialog({ id }: Props) {
         role='presentation'
         class='flex flex-col bg-base-300/85 border border-white/10 rounded-t'
         style={{
-          width: Math.min(340, window.innerWidth - 16),
+          width: Math.min(340, vw - 16),
           maxHeight: '45vh',
         }}
       >

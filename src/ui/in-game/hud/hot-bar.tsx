@@ -1,4 +1,5 @@
-const HUD_Z = 10;
+import { HUD_Z } from './consts';
+
 const SLOT_COUNT = 6;
 
 export function HotBar() {

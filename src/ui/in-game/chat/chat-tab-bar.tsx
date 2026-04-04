@@ -56,33 +56,37 @@ export function ChatTabBar({
             isMain && tab.id !== 'general' && tab.id !== 'system';
           const hasUnread = !isActive && unreadTabs.has(tab.id);
           return (
-            <button
+            <div
               key={tab.id}
-              type='button'
-              class={`flex items-center gap-1 min-w-0 shrink px-2 py-0.5 text-xs rounded transition-colors select-none ${
-                isActive ? 'bg-white/20 font-semibold' : 'hover:bg-white/10'
+              class={`flex items-center min-w-0 shrink rounded transition-colors select-none ${
+                isActive ? 'bg-white/20' : 'hover:bg-white/10'
               }`}
               style={{ maxWidth: '8rem' }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveTab(dialogId, tab.id);
-              }}
-              onPointerDown={(e) => {
-                e.stopPropagation();
-                handleLongPressStart(e, tab);
-              }}
-              onPointerUp={clearLongPress}
-              onPointerCancel={clearLongPress}
-              onContextMenu={(e) => handleContextMenu(e, tab)}
             >
-              <span class='truncate'>{tab.name}</span>
-              {hasUnread && (
-                <span class='flex-shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400' />
-              )}
+              <button
+                type='button'
+                class={`flex items-center gap-1 min-w-0 flex-1 px-2 py-0.5 text-xs ${isActive ? 'font-semibold' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveTab(dialogId, tab.id);
+                }}
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  handleLongPressStart(e, tab);
+                }}
+                onPointerUp={clearLongPress}
+                onPointerCancel={clearLongPress}
+                onContextMenu={(e) => handleContextMenu(e, tab)}
+              >
+                <span class='truncate'>{tab.name}</span>
+                {hasUnread && (
+                  <span class='flex-shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400' />
+                )}
+              </button>
               {isCloseable && (
                 <button
                   type='button'
-                  class='flex-shrink-0 opacity-50 hover:opacity-100 leading-none'
+                  class='flex-shrink-0 opacity-50 hover:opacity-100 leading-none pr-1'
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -94,7 +98,7 @@ export function ChatTabBar({
                   <LuX size={10} />
                 </button>
               )}
-            </button>
+            </div>
           );
         })}
       </div>

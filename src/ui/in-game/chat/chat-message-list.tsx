@@ -30,7 +30,6 @@ export function ChatMessageList({
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length]);
 
-  const tabMessages = messages.filter((m) => tab.channels.includes(m.channel));
   const showChannelLabel = tab.channels.length > 1;
 
   const minHeightStyle = heightClass.includes('flex-1')
@@ -43,7 +42,7 @@ export function ChatMessageList({
       class={`flex flex-col gap-0.5 overflow-y-auto px-2 py-1 text-xs ${heightClass}`}
       style={minHeightStyle}
     >
-      {tabMessages.map((msg) => {
+      {messages.map((msg) => {
         const timeStr = formatTime(msg.timestampUtc);
         const chColor = channelColor(msg.channel);
         return (
@@ -66,7 +65,7 @@ export function ChatMessageList({
           </div>
         );
       })}
-      {tabMessages.length === 0 && (
+      {messages.length === 0 && (
         <div class='opacity-40 italic'>No messages yet.</div>
       )}
     </div>
