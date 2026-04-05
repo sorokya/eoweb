@@ -71,14 +71,10 @@ export class MouseController {
     });
 
     window.addEventListener('click', (e) => {
-      // Only handle clicks that land directly on the game canvas —
-      // UI elements (dialogs, buttons, etc.) are not the canvas.
-      if (e.target !== this.client.app?.renderer?.canvas) return;
       this.handleClick(e);
     });
 
     window.addEventListener('contextmenu', (e) => {
-      if (e.target !== this.client.app?.renderer?.canvas) return;
       this.handleRightClick(e);
       e.preventDefault();
     });
