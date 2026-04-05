@@ -12,7 +12,7 @@ import { getEmf } from '@/db';
 import { EOResourceID } from '@/edf';
 import { EffectAnimation, EffectTargetCharacter } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatChannels, ChatIcon } from '@/ui';
 
 function handleWarpRequest(client: Client, reader: EoReader) {
   const packet = WarpRequestServerPacket.deserialize(reader);
@@ -69,7 +69,7 @@ function handleWarpAgree(client: Client, reader: EoReader) {
       if (!map) return;
       if (map.name) {
         client.emit('chat', {
-          tab: ChatTab.System,
+          channel: ChatChannels.System,
           message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_ENTERED)} ${map.name}`,
           icon: ChatIcon.NoteLeftArrow,
         });

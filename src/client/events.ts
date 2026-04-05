@@ -12,10 +12,12 @@ import type {
   SkillLearn,
   ThreeItem,
 } from 'eolib';
+import type { GameState } from '@/game-state';
 import type { SfxId } from '@/sfx';
-import type { ChatIcon, ChatTab } from '@/ui/ui-types';
+import type { ChatChannel, ChatIcon } from '@/ui';
 
 export type ClientEvents = {
+  stateChanged: GameState;
   error: { title: string; message: string };
   confirmation: {
     title: string;
@@ -30,7 +32,7 @@ export type ClientEvents = {
   selectCharacter: undefined;
   enterGame: { news: string[] };
   chat: {
-    tab: ChatTab;
+    channel: ChatChannel;
     message: string;
     icon?: ChatIcon | null;
     name?: string;

@@ -10,6 +10,7 @@ import {
   TalkPlayerServerPacket,
   TalkReply,
   TalkReplyServerPacket,
+  TalkRequestServerPacket,
   TalkServerServerPacket,
   TalkTellServerPacket,
 } from 'eolib';
@@ -18,7 +19,7 @@ import { COLORS } from '@/consts';
 import { EOResourceID } from '@/edf';
 import { ChatBubble } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatChannels, ChatIcon } from '@/ui';
 import { capitalize } from '@/utils';
 
 function handleTalkPlayer(client: Client, reader: EoReader) {
@@ -36,7 +37,7 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
   );
 
   client.emit('chat', {
-    tab: ChatTab.Local,
+    channel: ChatChannels.Local,
     name: capitalize(character.name),
     message: packet.message,
   });
@@ -55,7 +56,7 @@ function handleTalkMsg(client: Client, reader: EoReader) {
     icon: ChatIcon.GlobalAnnounce,
     name: capitalize(packet.playerName),
     message: packet.message,
-    tab: ChatTab.Global,
+    channel: ChatChannels.Global,
   });
 }
 
@@ -65,18 +66,19 @@ function handleTalkAdmin(client: Client, reader: EoReader) {
     icon: ChatIcon.GM,
     name: capitalize(packet.playerName),
     message: packet.message,
-    tab: ChatTab.Group,
+    channel: ChatChannels.Admin,
   });
   playSfxById(SfxId.AdminChatReceived);
 }
 
 function handleTalkTell(client: Client, reader: EoReader) {
   const packet = TalkTellServerPacket.deserialize(reader);
+  const pmChannel = `pm:${packet.playerName.toLowerCase()}` as const;
   client.emit('chat', {
     icon: ChatIcon.Note,
-    name: `${capitalize(packet.playerName)}->${capitalize(client.name)}`,
+    name: capitalize(packet.playerName),
     message: packet.message,
-    tab: ChatTab.Local,
+    channel: pmChannel,
   });
   playSfxById(SfxId.PrivateMessageReceived);
 }
@@ -88,19 +90,19 @@ function handleTalkAnnounce(client: Client, reader: EoReader) {
     new ChatBubble(client.sans11!, packet.message),
   );
   client.emit('chat', {
-    tab: ChatTab.Local,
+    channel: ChatChannels.Local,
     name: capitalize(packet.playerName),
     message: packet.message,
     icon: ChatIcon.GlobalAnnounce,
   });
   client.emit('chat', {
-    tab: ChatTab.Group,
+    channel: ChatChannels.Admin,
     name: capitalize(packet.playerName),
     message: packet.message,
     icon: ChatIcon.GlobalAnnounce,
   });
   client.emit('chat', {
-    tab: ChatTab.Global,
+    channel: ChatChannels.Global,
     name: capitalize(packet.playerName),
     message: packet.message,
     icon: ChatIcon.GlobalAnnounce,
@@ -118,7 +120,7 @@ function handleTalkOpen(client: Client, reader: EoReader) {
   }
 
   client.emit('chat', {
-    tab: ChatTab.Group,
+    channel: ChatChannels.Party,
     name: capitalize(player.name),
     message: packet.message,
     icon: ChatIcon.PlayerParty,
@@ -145,13 +147,24 @@ function handleTalkOpen(client: Client, reader: EoReader) {
   playSfxById(SfxId.GroupChatReceived);
 }
 
+function handleTalkRequest(client: Client, reader: EoReader) {
+  const packet = TalkRequestServerPacket.deserialize(reader);
+  client.emit('chat', {
+    icon: ChatIcon.Guild,
+    name: capitalize(packet.playerName),
+    message: packet.message,
+    channel: ChatChannels.Guild,
+  });
+}
+
 function handleTalkReply(client: Client, reader: EoReader) {
   const packet = TalkReplyServerPacket.deserialize(reader);
   if (packet.replyCode === TalkReply.NotFound) {
+    const pmChannel = `pm:${packet.name.toLowerCase()}` as const;
     client.emit('chat', {
       icon: ChatIcon.Error,
       message: `${capitalize(packet.name)} ${client.getResourceString(EOResourceID.SYS_CHAT_PM_PLAYER_COULD_NOT_BE_FOUND)}`,
-      tab: ChatTab.Local,
+      channel: pmChannel,
     });
     playSfxById(SfxId.PrivateMessageSent);
   }
@@ -192,6 +205,11 @@ export function registerTalkHandlers(client: Client) {
     PacketFamily.Talk,
     PacketAction.Open,
     (reader) => handleTalkOpen(client, reader),
+  );
+  client.bus!.registerPacketHandler(
+    PacketFamily.Talk,
+    PacketAction.Request,
+    (reader) => handleTalkRequest(client, reader),
   );
   client.bus!.registerPacketHandler(
     PacketFamily.Talk,

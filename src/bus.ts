@@ -14,7 +14,7 @@ import {
   swapMultiples,
 } from 'eolib';
 export class PacketBus {
-  private socket: WebSocket;
+  private socket?: WebSocket;
   private sequencer: PacketSequencer;
   private encodeMultiple = 0;
   private decodeMultiple = 0;
@@ -22,23 +22,69 @@ export class PacketBus {
     PacketFamily,
     Map<PacketAction, (reader: EoReader) => void>
   > = new Map();
-  constructor(socket: WebSocket) {
-    this.socket = socket;
+
+  constructor() {
     this.sequencer = new PacketSequencer(SequenceStart.zero());
-    this.socket.addEventListener('message', (e) => {
-      const promise = e.data.arrayBuffer();
-      promise
-        .then((buf: ArrayBuffer) => {
-          this.handlePacket(new Uint8Array(buf));
-        })
-        .catch((err: Error) => {
-          console.error('Failed to get array buffer', err);
+  }
+
+  async connect(url: string, onClose: () => void): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      try {
+        this.socket = new WebSocket(url);
+
+        this.socket.addEventListener('open', () => {
+          resolve();
         });
+
+        this.socket.addEventListener('close', () => {
+          if (this.socket) {
+            this.socket.close();
+            this.socket = undefined;
+          }
+          onClose();
+        });
+
+        this.socket.addEventListener('error', (err) => {
+          if (this.socket) {
+            this.socket.close();
+            this.socket = undefined;
+          }
+          reject(err);
+        });
+
+        setTimeout(() => {
+          if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+            if (this.socket) {
+              this.socket.close();
+              this.socket = undefined;
+            }
+            reject(new Error('Connection timed out'));
+          }
+        }, 5000);
+
+        this.socket.addEventListener('message', (e) => {
+          const promise = e.data.arrayBuffer();
+          promise
+            .then((buf: ArrayBuffer) => {
+              this.handlePacket(new Uint8Array(buf));
+            })
+            .catch((err: Error) => {
+              console.error('Failed to get array buffer', err);
+            });
+        });
+      } catch (err) {
+        reject(err);
+        return;
+      }
     });
   }
 
   disconnect() {
-    this.socket.close();
+    this.sequencer = new PacketSequencer(SequenceStart.zero());
+    if (this.socket) {
+      this.socket.close();
+      this.socket = undefined;
+    }
   }
 
   setSequence(sequence: SequenceStart) {
@@ -113,7 +159,7 @@ export class PacketBus {
     const lengthBytes = encodeNumber(temp.length);
 
     const payload = new Uint8Array([lengthBytes[0], lengthBytes[1], ...temp]);
-    this.socket.send(payload);
+    this.socket?.send(payload);
   }
 
   registerPacketHandler(

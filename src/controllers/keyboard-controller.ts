@@ -62,7 +62,7 @@ function inputToDirection(input: Input): Direction | null {
 }
 
 const WALK_TICKS = WALK_ANIMATION_TICKS - 1;
-const DRAG_THRESHOLD = 30;
+//const DRAG_THRESHOLD = 30;
 
 export class KeyboardController {
   private client: Client;
@@ -78,11 +78,13 @@ export class KeyboardController {
   private held: boolean[] = [];
   private lastInputHeld: Input[] = [];
 
+  /*
   private touchStartX: number | null = null;
   private touchStartY: number | null = null;
   private touchId: number | null = null;
   private activeTouchDir: Input | null = null;
   private inputVector = { x: 0, y: 0 };
+  */
 
   constructor(client: Client) {
     this.client = client;
@@ -172,7 +174,8 @@ export class KeyboardController {
           break;
         case 'Tab':
           this.updateInputHeld(Input.Tab, true);
-          if (!this.client.typing) e.preventDefault();
+          // TODO: Fix tab capturing later
+          //if (!this.client.typing) e.preventDefault();
           break;
         case 'KeyR':
           this.updateInputHeld(Input.Refresh, true);
@@ -275,6 +278,7 @@ export class KeyboardController {
       { passive: false },
     );
 
+    /*
     const joystickContainer = document.getElementById('joystick-container');
     const thumb = document.getElementById('joystick-thumb');
     const maxRadius = 40;
@@ -319,8 +323,10 @@ export class KeyboardController {
     btnSit!.addEventListener('touchend', () => {
       this.updateInputHeld(Input.SitStand, false);
     });
+    */
   }
 
+  /*
   private handleTouchMove(
     e: TouchEvent,
     joystickContainer: HTMLElement,
@@ -380,6 +386,7 @@ export class KeyboardController {
     }
     return dy < 0 ? Input.Up : Input.Down;
   }
+    */
 
   private updateInputHeld(input: Input, down: boolean) {
     this.held[input] = down;

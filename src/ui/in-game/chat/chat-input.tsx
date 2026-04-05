@@ -1,0 +1,125 @@
+import type * as preact from 'preact';
+import { useCallback, useState } from 'preact/hooks';
+import { useClient } from '@/ui/context';
+import {
+  type ChatChannel,
+  ChatChannels,
+  isPMChannel,
+  pmChannelName,
+} from '@/ui/enums';
+import type { ChatTabConfig } from './chat-manager';
+
+/** Channels that cannot receive user-sent messages. */
+const READ_ONLY_CHANNELS: ChatChannel[] = [ChatChannels.System];
+
+function isTabReadOnly(tab: ChatTabConfig): boolean {
+  return tab.channels.every((ch) => READ_ONLY_CHANNELS.includes(ch));
+}
+
+/** For single-channel tabs, the prefix to prepend automatically. */
+function getAutoPrefix(channel: ChatChannel): string {
+  if (isPMChannel(channel)) return `!${pmChannelName(channel)} `;
+  if (channel === ChatChannels.Global) return '~';
+  if (channel === ChatChannels.Party) return "'";
+  if (channel === ChatChannels.Guild) return '&';
+  if (channel === ChatChannels.Admin) return '+';
+  return ''; // Local and System need no prefix
+}
+
+type Props = {
+  tab: ChatTabConfig;
+  onActivity?: () => void;
+  /** Called when the user dismisses chat (Esc or Enter on empty input). */
+  onDismiss?: () => void;
+  /** Pass a ref to get direct access to the underlying <input> element. */
+  inputRef?: preact.Ref<HTMLInputElement>;
+};
+
+export function ChatInput({ tab, onActivity, onDismiss, inputRef }: Props) {
+  const client = useClient();
+  const [input, setInput] = useState('');
+
+  const readOnly = isTabReadOnly(tab);
+  const isSingleChannel = tab.channels.length === 1;
+  const sendChannel = isSingleChannel ? tab.channels[0] : null;
+
+  const handleSend = useCallback(() => {
+    if (readOnly) return;
+    const text = input.trim();
+    if (!text) return;
+
+    if (sendChannel) {
+      // Single-channel tab: auto-apply the correct prefix
+      const prefix = getAutoPrefix(sendChannel);
+      client.chatController.chat(`${prefix}${text}`);
+    } else {
+      // Multi-channel tab: send as-is (user types prefix manually)
+      client.chatController.chat(text);
+    }
+    setInput('');
+  }, [client, input, readOnly, sendChannel]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      e.stopPropagation();
+      if (e.key === 'Escape') {
+        onDismiss?.();
+        return;
+      }
+      if (e.key === 'Enter') {
+        if (!input.trim()) {
+          onDismiss?.();
+        } else {
+          handleSend();
+        }
+      }
+    },
+    [handleSend, input, onDismiss],
+  );
+
+  if (readOnly) {
+    return (
+      <div class='flex border-t border-base-content/10 px-2 py-1 opacity-40 text-xs italic select-none'>
+        Read-only channel
+      </div>
+    );
+  }
+
+  const placeholder =
+    sendChannel && isPMChannel(sendChannel)
+      ? `Send to ${pmChannelName(sendChannel)}...`
+      : isSingleChannel
+        ? 'Say something...'
+        : "Say something... (use ~, &, ', + for other channels)";
+
+  return (
+    <div class='flex border-t border-base-content/10'>
+      <input
+        ref={inputRef}
+        type='text'
+        class='input input-xs flex-1 rounded-none focus:outline-none bg-transparent text-xs'
+        placeholder={placeholder}
+        value={input}
+        onInput={(e) => {
+          setInput((e.target as HTMLInputElement).value);
+          onActivity?.();
+        }}
+        onFocus={onActivity}
+        onKeyDown={handleKeyDown}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      />
+      <button
+        type='button'
+        class='btn btn-ghost btn-xs rounded-none px-2 text-base'
+        onClick={(e) => {
+          e.stopPropagation();
+          handleSend();
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        ↵
+      </button>
+    </div>
+  );
+}

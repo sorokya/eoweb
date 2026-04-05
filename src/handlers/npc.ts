@@ -25,7 +25,7 @@ import {
   NpcWalkAnimation,
 } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatChannels, ChatIcon } from '@/ui';
 import { capitalize, getPrevCoords } from '@/utils';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
@@ -149,7 +149,7 @@ function handleNpcSpec(client: Client, reader: EoReader) {
 
     const record = client.getEifRecordById(item.id);
     client.emit('chat', {
-      tab: ChatTab.System,
+      channel: ChatChannels.System,
       icon: ChatIcon.DownArrow,
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
     });
@@ -165,7 +165,7 @@ function handleNpcSpec(client: Client, reader: EoReader) {
     client.emit('chat', {
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
       icon: ChatIcon.Star,
-      tab: ChatTab.System,
+      channel: ChatChannels.System,
     });
     client.emit('statsUpdate', undefined);
   }
@@ -194,7 +194,7 @@ function handleNpcAccept(client: Client, reader: EoReader) {
 
     const record = client.getEifRecordById(item.id);
     client.emit('chat', {
-      tab: ChatTab.System,
+      channel: ChatChannels.System,
       icon: ChatIcon.DownArrow,
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
     });
@@ -224,7 +224,7 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     client.emit('chat', {
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
       icon: ChatIcon.Star,
-      tab: ChatTab.System,
+      channel: ChatChannels.System,
     });
     client.emit('statsUpdate', undefined);
   }
@@ -261,7 +261,7 @@ function handleNpcDialog(client: Client, reader: EoReader) {
     new ChatBubble(client.sans11!, packet.message),
   );
   client.emit('chat', {
-    tab: ChatTab.Local,
+    channel: ChatChannels.Local,
     message: `${packet.message}`,
     name: `${capitalize(record.name)}`,
   });

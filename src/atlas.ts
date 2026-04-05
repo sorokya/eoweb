@@ -400,6 +400,7 @@ export class Atlas {
   private pendingBmpPromises: Promise<void>[] = [];
   private pendingCharacterFramePromises: Promise<void>[] = [];
   private loading = false;
+  private loadingPromise: Promise<void> | null = null;
   private appended = true;
   private staticAtlas: AtlasCanvas;
   private mapAtlas: AtlasCanvas;
@@ -888,7 +889,7 @@ export class Atlas {
   }
 
   refresh(): Promise<void> | void {
-    if (this.loading) return;
+    if (this.loading) return this.loadingPromise ?? undefined;
     this.loading = true;
 
     this.bmpsToLoad = [];
@@ -919,12 +920,14 @@ export class Atlas {
     }
 
     if (this.bmpsToLoad.length) {
-      return Promise.all(this.pendingBmpPromises).then(() =>
+      this.loadingPromise = Promise.all(this.pendingBmpPromises).then(() =>
         this.updateAtlas(),
       );
+      return this.loadingPromise;
     }
 
     this.loading = false;
+    this.loadingPromise = null;
   }
 
   private addBmpToLoad(gfxType: GfxType, id: number) {
@@ -1550,14 +1553,13 @@ export class Atlas {
     }
   }
 
-  private updateAtlas() {
+  private async updateAtlas(): Promise<void> {
     this.pendingCharacterFramePromises = [];
     this.defragmentAtlases();
     this.preRenderCharacterFrames();
     this.calculateFrameSizes();
-    Promise.all(this.pendingCharacterFramePromises).then(() =>
-      this.finishUpdatingAtlas(),
-    );
+    await Promise.all(this.pendingCharacterFramePromises);
+    this.finishUpdatingAtlas();
   }
 
   private finishUpdatingAtlas() {
@@ -1608,6 +1610,7 @@ export class Atlas {
     }
 
     this.loading = false;
+    this.loadingPromise = null;
     this.bmpsToLoad = [];
   }
 

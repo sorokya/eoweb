@@ -14,6 +14,7 @@ import {
   type Esf,
   type EsfRecord,
   type FileType,
+  InitInitClientPacket,
   type Item,
   type ItemMapInfo,
   MapType,
@@ -32,11 +33,12 @@ import mitt, { type Emitter } from 'mitt';
 import { Notyf } from 'notyf';
 import { Application, Container } from 'pixi.js';
 import { Atlas } from '@/atlas';
-import type { PacketBus } from '@/bus';
+import { PacketBus } from '@/bus';
 import { clearRectangles } from '@/collision';
 import { getDefaultConfig, loadConfig } from '@/config';
-import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS } from '@/consts';
+import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS, MAX_CHALLENGE } from '@/consts';
 import {
+  AlertController,
   AnimationController,
   AudioController,
   AuthenticationController,
@@ -68,7 +70,7 @@ import {
   ViewportController,
 } from '@/controllers';
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from '@/db';
-import { type DialogResourceID, type Edf, EOResourceID } from '@/edf';
+import { DialogResourceID, type Edf, EOResourceID } from '@/edf';
 import { Sans11Font } from '@/fonts';
 import { GameState } from '@/game-state';
 import { registerAllHandlers } from '@/handlers';
@@ -76,7 +78,7 @@ import { MapRenderer } from '@/map';
 import { MinimapRenderer } from '@/minimap';
 import { CharacterDeathAnimation, NpcDeathAnimation } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import type { ISlot } from '@/ui/ui-types';
+import type { ISlot } from '@/ui';
 import type {
   EffectMetadata,
   NPCMetadata,
@@ -92,6 +94,7 @@ import {
   getWeaponMetaData,
   HatMaskType,
   isoToScreen,
+  randomRange,
   screenToIso,
 } from '@/utils';
 import type { Vector2 } from '@/vector';
@@ -108,10 +111,11 @@ export class Client {
   height = 600;
   zoom = 1;
   tickCount = 0;
-  bus!: PacketBus;
+  bus = new PacketBus();
   config = getDefaultConfig();
   version: Version;
   challenge: number;
+  hdid = String(Math.floor(Math.random() * 2147483647));
   playerId = 0;
   characterId = 0;
   name = '';
@@ -142,6 +146,7 @@ export class Client {
   warpMapId = 0;
   warpQueued = false;
   state = GameState.Initial;
+  postConnectState?: GameState;
   sessionId = 0;
   serverSettings: ServerSettings | null = null;
   motd = '';
@@ -184,6 +189,7 @@ export class Client {
   usageController: UsageController;
   tradeController: TradeController;
   guildController: GuildController;
+  alertController: AlertController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, WeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
@@ -191,10 +197,6 @@ export class Client {
   hatMetadata = getHatMetadata();
   typing = false;
   reconnecting = false;
-  rememberMe = Boolean(localStorage.getItem('remember-me')) || false;
-  loginToken = localStorage.getItem('login-token');
-  lastCharacterId =
-    Number.parseInt(localStorage.getItem('last-character-id') ?? '', 10) || 0;
   edfs: {
     game1: Edf | null;
     game2: Edf | null;
@@ -218,8 +220,10 @@ export class Client {
   minimapEnabled = false;
   minimapRenderer: MinimapRenderer;
   onlinePlayers: OnlinePlayer[] = [];
+  playerTriggeredDisconnect = false;
 
   constructor() {
+    registerAllHandlers(this);
     this.container = document.querySelector('#game-container')!;
     this.emitter = mitt<ClientEvents>();
     this.version = new Version();
@@ -272,6 +276,7 @@ export class Client {
     this.drunkController = new DrunkController(this);
     this.inventoryController = new InventoryController(this);
     this.itemProtectionController = new ItemProtectionController();
+    this.alertController = new AlertController();
     this.lockerController = new LockerController(this);
     this.mapController = new MapController(this);
     this.mouseController = new MouseController(this);
@@ -290,15 +295,21 @@ export class Client {
       this.config = config;
       const txtHost =
         document.querySelector<HTMLInputElement>('input[name="host"]')!;
-      if (this.config.staticHost) {
-        txtHost!.classList.add('hidden');
+
+      if (txtHost) {
+        if (this.config.staticHost) {
+          txtHost!.classList.add('hidden');
+        }
+        txtHost!.value = config.host;
       }
-      txtHost!.value = config.host;
+
       document.title = config.title;
 
       const mainMenuLogo =
         document.querySelector<HTMLDivElement>('#main-menu-logo')!;
-      mainMenuLogo!.setAttribute('data-slogan', config.slogan);
+      if (mainMenuLogo) {
+        mainMenuLogo!.setAttribute('data-slogan', config.slogan);
+      }
     });
     this.atlas = new Atlas(this);
     this.sans11 = new Sans11Font(this.atlas);
@@ -621,13 +632,11 @@ export class Client {
     this.emitter.on(event, handler);
   }
 
-  setBus(bus: PacketBus) {
-    this.bus = bus;
-    registerAllHandlers(this);
-  }
-
-  clearBus() {
-    this.bus = null!;
+  off<Event extends keyof ClientEvents>(
+    event: Event,
+    handler: (data: ClientEvents[Event]) => void,
+  ) {
+    this.emitter.off(event, handler);
   }
 
   setState(state: GameState) {
@@ -662,21 +671,54 @@ export class Client {
     this.onlinePlayers = [];
     this.inventoryController.equipmentSwap = null;
     this.itemProtectionController.itemProtectionTimers.clear();
+    this.emit('stateChanged', this.state);
+  }
+
+  connect(nextState: GameState) {
+    this.postConnectState = nextState;
+    this.bus
+      .connect(this.config.host, () => this.handleConnectionClose())
+      .then(() => {
+        this.beginHandshake();
+      })
+      .catch((err) => {
+        console.warn('Failed to connect to server', err);
+        const strings = this.getDialogStrings(
+          DialogResourceID.CONNECTION_SERVER_NOT_FOUND,
+        );
+        this.alertController.show(strings[0], strings[1]);
+        this.postConnectState = undefined;
+      });
+  }
+
+  private handleConnectionClose() {
+    if (this.playerTriggeredDisconnect) {
+      this.playerTriggeredDisconnect = false;
+      return;
+    }
+
+    const strings = this.getDialogStrings(
+      DialogResourceID.CONNECTION_LOST_CONNECTION,
+    );
+    this.alertController.show(strings[0], strings[1]);
+    this.setState(GameState.Initial);
+  }
+
+  private beginHandshake() {
+    const packet = new InitInitClientPacket();
+    packet.challenge = this.challenge = randomRange(1, MAX_CHALLENGE);
+    packet.hdid = this.hdid;
+    packet.version = this.version;
+    this.bus.send(packet);
   }
 
   disconnect() {
+    this.playerTriggeredDisconnect = true;
     this.setState(GameState.Initial);
-    this.clearSession();
+    this.authenticationController.clearSession();
     if (this.bus) {
       this.bus.disconnect();
     }
-  }
-
-  clearSession() {
-    this.loginToken = '';
-    this.lastCharacterId = 0;
-    localStorage.removeItem('login-token');
-    localStorage.removeItem('last-character-id');
   }
 
   setStatusLabel(type: EOResourceID, text: string) {
