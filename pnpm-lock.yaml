@@ -23,6 +23,9 @@ importers:
       pixi.js:
         specifier: ^8.17.1
         version: 8.17.1
+      spessasynth_lib:
+        specifier: ^4.2.9
+        version: 4.2.9
     devDependencies:
       '@biomejs/biome':
         specifier: 2.4.10
@@ -1179,6 +1182,12 @@ packages:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
 
+  spessasynth_core@4.2.7:
+    resolution: {integrity: sha512-+pYsf8ydSMoACv2XTiJHop/u5ouZ4Q57n/hjVDw8lU44xC904Y7KXoXeWOCgl4VYdmPuGrWhEXRwhmMtVPLFBg==}
+
+  spessasynth_lib@4.2.9:
+    resolution: {integrity: sha512-MI1tfXjFj/AnneXItGZqRLoJv+B9Rqi3WzXkO+0ghFc8PL+XFNu7szC8saWy/Dv59HeN33YkI4Af7j1tIAI+og==}
+
   strip-json-comments@5.0.3:
     resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
     engines: {node: '>=14.16'}
@@ -2149,6 +2158,12 @@ snapshots:
   smol-toml@1.6.1: {}
 
   source-map-js@1.2.1: {}
+
+  spessasynth_core@4.2.7: {}
+
+  spessasynth_lib@4.2.9:
+    dependencies:
+      spessasynth_core: 4.2.7
 
   strip-json-comments@5.0.3: {}
 

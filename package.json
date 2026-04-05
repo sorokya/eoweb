@@ -24,7 +24,8 @@
     "idb": "^8.0.3",
     "mitt": "^3.0.1",
     "notyf": "^3.10.0",
-    "pixi.js": "^8.17.1"
+    "pixi.js": "^8.17.1",
+    "spessasynth_lib": "^4.2.9"
   },
   "packageManager": "pnpm@10.33.0"
 }

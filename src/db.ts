@@ -18,13 +18,18 @@ interface DB extends DBSchema {
     key: number;
     value: Uint8Array;
   };
+  assets: {
+    key: string;
+    value: ArrayBuffer;
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<DB>>;
+const textDecoder = new TextDecoder();
 
 function getDb(): Promise<IDBPDatabase<DB>> {
   if (!dbPromise) {
-    dbPromise = openDB<DB>('db', 2, {
+    dbPromise = openDB<DB>('db', 3, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('pubs')) {
           db.createObjectStore('pubs');
@@ -35,10 +40,46 @@ function getDb(): Promise<IDBPDatabase<DB>> {
         if (!db.objectStoreNames.contains('edfs')) {
           db.createObjectStore('edfs');
         }
+        if (!db.objectStoreNames.contains('assets')) {
+          db.createObjectStore('assets');
+        }
       },
     });
   }
   return dbPromise;
+}
+
+function isLikelyHtmlDocument(buf: Uint8Array): boolean {
+  const preview = textDecoder
+    .decode(buf.subarray(0, Math.min(buf.length, 512)))
+    .trimStart()
+    .toLowerCase();
+
+  return (
+    preview.startsWith('<!doctype html') ||
+    preview.startsWith('<html') ||
+    preview.startsWith('<head') ||
+    preview.startsWith('<body')
+  );
+}
+
+async function fetchEdfBuffer(id: number): Promise<Uint8Array | null> {
+  const response = await fetch(`/data/dat${padWithZeros(id, 3)}.edf`);
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = new Uint8Array(await response.arrayBuffer());
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+
+  if (contentType.includes('text/html') || isLikelyHtmlDocument(data)) {
+    console.warn(
+      `Refusing to cache invalid EDF response for dat${padWithZeros(id, 3)}.edf`,
+    );
+    return null;
+  }
+
+  return data;
 }
 
 export async function getEmf(id: number): Promise<Emf | null> {
@@ -63,21 +104,19 @@ export function saveEmf(id: number, emf: Emf) {
 export async function getEdf(id: number): Promise<Edf | null> {
   const db = await getDb();
   const buf = await db.get('edfs', id);
-  if (!buf) {
-    const response = await fetch(`/data/dat${padWithZeros(id, 3)}.edf`);
-    if (!response.ok) {
-      return null;
-    }
 
-    const data = await response.arrayBuffer();
-    const buf = new Uint8Array(data);
-
-    db.put('edfs', buf, id);
-
-    return Edf.deserialize(new Uint8Array(data));
+  if (buf) {
+    return Edf.deserialize(buf);
   }
 
-  return Edf.deserialize(buf);
+  const data = await fetchEdfBuffer(id);
+  if (!data) {
+    return null;
+  }
+
+  await db.put('edfs', data, id);
+
+  return Edf.deserialize(data);
 }
 
 export async function getEif(): Promise<Eif | null> {
@@ -154,4 +193,13 @@ export function saveEsf(esf: Esf) {
     Esf.serialize(writer, esf);
     db.put('pubs', writer.toByteArray(), 'esf');
   });
+}
+
+export async function getCachedAsset(key: string): Promise<ArrayBuffer | null> {
+  const db = await getDb();
+  return (await db.get('assets', key)) ?? null;
+}
+
+export function saveCachedAsset(key: string, buffer: ArrayBuffer): void {
+  getDb().then((db) => db.put('assets', buffer, key));
 }
