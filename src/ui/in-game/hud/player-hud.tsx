@@ -26,17 +26,14 @@ export function PlayerHud() {
     <div
       role='presentation'
       class={[
-        // Mobile: full-width strip across the top
         'absolute top-0 left-0 right-0 flex flex-row items-center gap-1.5 px-2 py-1',
-        'border-b border-white/10 rounded-none shadow-md',
+        'border-b border-base-content/10 rounded-none shadow-md bg-base-300/95 backdrop-blur-sm',
         // Desktop: vertical box at top-left
         'md:top-2.5 md:left-2.5 md:right-auto md:w-48 md:flex-col md:gap-1.5 md:p-2.5',
-        'md:rounded-lg md:border md:border-white/10 md:shadow-xl',
+        'md:rounded-lg md:border md:border-base-content/10 md:shadow-xl',
       ].join(' ')}
       style={{
         zIndex: HUD_Z,
-        background:
-          'linear-gradient(160deg, rgba(15,23,42,0.97) 0%, rgba(30,41,59,0.92) 100%)',
       }}
       onClick={stopPropagation}
       onKeyDown={stopPropagation}

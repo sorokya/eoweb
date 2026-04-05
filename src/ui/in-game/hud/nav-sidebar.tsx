@@ -109,7 +109,7 @@ export function MobileNav() {
 
         {open && (
           <ul
-            class='menu menu-sm bg-base-300/97 rounded-box shadow-xl absolute right-0 top-full mt-1 z-50 border border-white/10 min-w-32 p-1'
+            class='menu menu-sm bg-base-300/90 backdrop-blur-sm rounded-box shadow-xl absolute right-0 top-full mt-1 z-50 border border-base-content/10 min-w-32 p-1'
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >
@@ -117,7 +117,7 @@ export function MobileNav() {
               <li key={id}>
                 <button
                   type='button'
-                  class={isOpen(id) ? 'bg-white/15' : ''}
+                  class={isOpen(id) ? 'bg-base-content/15' : ''}
                   onClick={() => {
                     isOpen(id) ? closeDialog(id) : openDialog(id);
                     setOpen(false);

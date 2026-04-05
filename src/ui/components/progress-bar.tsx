@@ -19,13 +19,7 @@ export function ProgressBar({ value, max, label, barClass }: ProgressBarProps) {
       <span class='flex-shrink-0 text-[8px] md:text-[9px] font-bold w-5 text-right opacity-80 uppercase tracking-wide'>
         {label}
       </span>
-      <div
-        class='relative flex-1 h-3 md:h-4 rounded overflow-hidden'
-        style={{
-          background: 'rgba(0,0,0,0.45)',
-          border: '1px solid rgba(255,255,255,0.08)',
-        }}
-      >
+      <div class='relative flex-1 h-3 md:h-4 rounded overflow-hidden bg-black/45 ring-1 ring-inset ring-white/8'>
         <div
           class={`absolute inset-y-0 left-0 rounded transition-[width] duration-500 ease-out ${barClass}`}
           style={{ width: `${pct}%` }}

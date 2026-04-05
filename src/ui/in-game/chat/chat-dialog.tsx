@@ -75,7 +75,7 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
   const ghostInput = (
     <button
       type='button'
-      class='mx-1 px-3 py-1.5 rounded-lg bg-base-200/15 border border-white/10 cursor-text text-left w-full'
+      class='mx-1 px-3 py-1.5 rounded-lg bg-base-content/10 border border-base-content/10 cursor-text text-left w-full'
       onClick={onFocus}
     >
       <span class='text-xs text-white/25 select-none'>
@@ -189,7 +189,7 @@ function AddTabButton({ dialogId }: { dialogId: ChatDialogId }) {
       </button>
       {open && (
         <ul
-          class='menu menu-xs bg-base-300 rounded shadow-lg border border-base-200 absolute top-full right-0 mt-1 z-50 p-1'
+          class='menu menu-xs bg-base-300 rounded shadow-lg border border-base-content/10 absolute top-full right-0 mt-1 z-50 p-1'
           style={{ minWidth: 130 }}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
@@ -314,7 +314,7 @@ export function ChatDialog({ id }: Props) {
       <div
         ref={containerRef}
         role='presentation'
-        class='flex flex-col bg-base-300/85 border border-white/10 rounded-t'
+        class='flex flex-col bg-base-300/90 backdrop-blur-sm border border-base-content/10 rounded-t'
         style={{
           width: Math.min(340, vw - 16),
           maxHeight: '45vh',
@@ -326,7 +326,7 @@ export function ChatDialog({ id }: Props) {
           inputRef={inputRef as RefObject<HTMLInputElement>}
         />
         {tabs.length > 1 && (
-          <div class='flex items-center gap-1 px-2 py-0.5 border-b border-white/10 bg-base-300/60'>
+          <div class='flex items-center gap-1 px-2 py-0.5 border-b border-base-content/10 bg-base-content/5'>
             <ChatTabBar
               dialogId={id}
               tabs={tabs}
