@@ -148,7 +148,7 @@ export function DialogBase({
       ref={containerRef}
       role='presentation'
       data-chat-dialog={id.startsWith('chat-') ? id : undefined}
-      class={`flex flex-col rounded-lg shadow-xl border border-white/10 bg-base-200/40 backdrop-blur-md overflow-visible select-none transition-opacity ${focused ? 'opacity-100' : 'opacity-80'}`}
+      class={`flex flex-col rounded-lg shadow-xl border border-base-content/10 bg-base-300/90 backdrop-blur-sm overflow-visible select-none transition-opacity ${focused ? 'opacity-100' : 'opacity-80'}`}
       style={posStyle}
       onPointerDown={handlePointerDown}
       onClick={stopProp}
@@ -156,7 +156,7 @@ export function DialogBase({
       onContextMenu={stopProp}
     >
       <div
-        class={`flex items-center gap-1 px-2 py-1.5 bg-white/5 rounded-t-lg ${noDrag ? '' : 'cursor-move'}`}
+        class={`flex items-center gap-1 px-2 py-1.5 bg-base-content/5 rounded-t-lg ${noDrag ? '' : 'cursor-move'}`}
         onPointerDown={onDragPointerDown}
       >
         <div class='flex-1 min-w-0 flex items-center gap-1'>
@@ -184,7 +184,7 @@ export function DialogBase({
               </button>
               {menuOpen && (
                 <ul
-                  class='menu menu-xs bg-base-300 rounded shadow-lg border border-base-200 absolute top-full right-0 mt-1 z-50 p-1'
+                  class='menu menu-xs bg-base-300 rounded shadow-lg border border-base-content/10 absolute top-full right-0 mt-1 z-50 p-1'
                   onPointerDown={(e) => e.stopPropagation()}
                 >
                   {AUTO_LAYOUT_OPTIONS.map((l) => (

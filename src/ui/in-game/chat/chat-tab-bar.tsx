@@ -47,7 +47,7 @@ export function ChatTabBar({
           <div
             key={tab.id}
             class={`flex items-center min-w-0 shrink rounded transition-colors select-none ${
-              isActive ? 'bg-white/20' : 'hover:bg-white/10'
+              isActive ? 'bg-base-content/20' : 'hover:bg-base-content/10'
             }`}
             style={{ maxWidth: '8rem' }}
           >
