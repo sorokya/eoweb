@@ -15,7 +15,20 @@ function formatTime(utcMs: number): string {
   const m = d.getMinutes().toString().padStart(2, '0');
   const ampm = h >= 12 ? 'PM' : 'AM';
   const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${m} ${ampm}`;
+
+  const today = new Date();
+  const isToday =
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate();
+
+  const timeOnly = `${h12}:${m} ${ampm}`;
+  if (isToday) return timeOnly;
+
+  const yyyy = d.getFullYear();
+  const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+  const dd = d.getDate().toString().padStart(2, '0');
+  return `${yyyy}-${mm}-${dd} ${timeOnly}`;
 }
 
 export function ChatMessageList({
