@@ -4,5 +4,8 @@ public/sfx*
 public/mfx*
 public/maps
 public/data
+public/jbox/*
+!public/jbox/.gitkeep
+public/soundfonts
 dist
 .DS_Store

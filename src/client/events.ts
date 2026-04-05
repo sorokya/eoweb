@@ -60,6 +60,8 @@ export type ClientEvents = {
     details: CharacterDetails;
     questNames: string[];
   };
+  jukeboxOpened: { requestedBy: string | null };
+  jukeboxUpdated: { requestedBy: string | null };
   chestOpened: {
     items: ThreeItem[];
   };

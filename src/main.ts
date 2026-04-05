@@ -36,6 +36,7 @@ import { HUD } from '@/ui/hud';
 import { InGameMenu } from '@/ui/in-game-menu';
 import { Inventory } from '@/ui/inventory';
 import { ItemAmountDialog } from '@/ui/item-amount-dialog';
+import { JukeboxDialog } from '@/ui/jukebox-dialog';
 import { LargeAlertSmallHeader } from '@/ui/large-alert-small-header';
 import { LargeConfirmSmallHeader } from '@/ui/large-confirm-small-header';
 import { LockerDialog } from '@/ui/locker-dialog';
@@ -92,6 +93,7 @@ const onlineList = new OnlineList(client);
 const paperdoll = new Paperdoll(client);
 const hud = new HUD();
 const itemAmountDialog = new ItemAmountDialog();
+const jukeboxDialog = new JukeboxDialog(client);
 const questDialog = new QuestDialog(client);
 const chestDialog = new ChestDialog(client);
 const shopDialog = new ShopDialog(client);
@@ -228,6 +230,7 @@ wireClientEvents({
   bankDialog,
   barberDialog,
   boardDialog,
+  jukeboxDialog,
   lockerDialog,
   skillMasterDialog,
   partyDialog,
@@ -258,6 +261,7 @@ wireUiEvents({
   questDialog,
   shopDialog,
   bankDialog,
+  jukeboxDialog,
   lockerDialog,
   hotbar,
   itemAmountDialog,

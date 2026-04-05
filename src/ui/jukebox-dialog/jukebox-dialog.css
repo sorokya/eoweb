@@ -1,0 +1,34 @@
+#jukebox-dialog {
+  position: relative;
+  user-select: none;
+  box-sizing: border-box;
+  width: 272px;
+  height: 202px;
+  background-color: #000;
+  background-image: url("/gfx/gfx002/160.png");
+}
+
+#jukebox-dialog .title {
+  position: absolute;
+  left: 24px;
+  top: 20px;
+  width: 224px;
+  color: #fff;
+  font-size: 12px;
+}
+
+#jukebox-dialog .item-list {
+  position: absolute;
+  top: 60px;
+  left: 22px;
+  width: 232px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#jukebox-dialog button[data-id="cancel"] {
+  position: absolute;
+  top: 158px;
+  left: 92px;
+}

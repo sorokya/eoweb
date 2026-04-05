@@ -7,6 +7,10 @@ export class Edf {
     return this.lines[index];
   }
 
+  getLines(): readonly string[] {
+    return this.lines;
+  }
+
   static deserialize(buf: Uint8Array): Edf {
     const edf = new Edf();
     edf.lines = [];

@@ -50,6 +50,7 @@ import {
   GuildController,
   InventoryController,
   ItemProtectionController,
+  JukeboxController,
   KeyboardController,
   LockerController,
   MapController,
@@ -170,6 +171,7 @@ export class Client {
   commandController: CommandController;
   inventoryController: InventoryController;
   lockerController: LockerController;
+  jukeboxController: JukeboxController;
   mapController: MapController;
   mouseController: MouseController;
   npcController: NpcController;
@@ -272,6 +274,7 @@ export class Client {
     this.drunkController = new DrunkController(this);
     this.inventoryController = new InventoryController(this);
     this.itemProtectionController = new ItemProtectionController();
+    this.jukeboxController = new JukeboxController(this);
     this.lockerController = new LockerController(this);
     this.mapController = new MapController(this);
     this.mouseController = new MouseController(this);
@@ -580,6 +583,7 @@ export class Client {
         playSfxById(SfxId.EnterPkMap);
       }
 
+      this.audioController.stopJukeboxTrack();
       this.audioController.stopAmbientSound();
 
       if (this.map.ambientSoundId) {

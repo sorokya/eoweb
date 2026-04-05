@@ -3,6 +3,23 @@ import type { DialogIcon } from '@/ui/ui-types';
 import { getItemMeta } from '@/utils';
 import { setItemImageFromGfx, setSkillBackgroundFromGfx } from './gfx-resource';
 
+const DIALOG_ICON_SIZE = 31;
+const DIALOG_ICONS_PER_ROW = 9;
+const DIALOG_ICON_OFFSET_Y = 291;
+
+function setDialogIconBackgroundPosition(
+  menuIcon: HTMLDivElement,
+  icon: DialogIcon,
+) {
+  const iconIndex = Number(icon);
+  const x = (iconIndex % DIALOG_ICONS_PER_ROW) * DIALOG_ICON_SIZE;
+  const y =
+    DIALOG_ICON_OFFSET_Y +
+    Math.floor(iconIndex / DIALOG_ICONS_PER_ROW) * DIALOG_ICON_SIZE;
+
+  menuIcon.style.backgroundPosition = `-${x}px -${y}px`;
+}
+
 export function createIconMenuItem(
   icon: DialogIcon,
   label: string,
@@ -14,6 +31,7 @@ export function createIconMenuItem(
   const menuIcon = document.createElement('div');
   menuIcon.classList.add('menu-item-icon');
   menuIcon.setAttribute('data-id', `${icon}`);
+  setDialogIconBackgroundPosition(menuIcon, icon);
   menuItem.appendChild(menuIcon);
 
   const menuLabel = document.createElement('div');
