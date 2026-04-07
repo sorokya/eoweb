@@ -15,7 +15,7 @@
     "@biomejs/biome": "2.4.10",
     "@types/node": "^25.5.0",
     "knip": "^6.2.0",
-    "lefthook": "^2.1.4",
+    "lefthook": "^2.1.5",
     "typescript": "~6.0.2",
     "vite": "^8.0.3"
   },
