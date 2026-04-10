@@ -12,7 +12,7 @@
     "knip": "knip"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.10",
+    "@biomejs/biome": "2.4.11",
     "@types/node": "^25.5.0",
     "knip": "^6.2.0",
     "lefthook": "^2.1.4",
