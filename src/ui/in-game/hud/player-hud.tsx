@@ -60,6 +60,17 @@ export function PlayerHud() {
           label='TNL'
           barClass='bg-gradient-to-r from-amber-700 to-amber-500'
         />
+        <ProgressBar
+          value={stats.weight}
+          max={stats.maxWeight}
+          label='Wt'
+          barClass='bg-gradient-to-r from-stone-600 to-stone-400'
+        />
+      </div>
+      <div class='flex shrink-0 flex-col items-end gap-0.5'>
+        <span class='text-[10px] text-yellow-400 leading-tight'>
+          &#9830; {stats.gold.toLocaleString()}
+        </span>
       </div>
     </div>
   );
