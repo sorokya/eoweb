@@ -48,7 +48,7 @@ export function PlayerHud() {
           Lv {stats.level}
         </span>
       </div>
-      <div class='flex min-w-0 flex-1 flex-row gap-1'>
+      <div class='flex min-w-0 flex-1 flex-row justify-between gap-1'>
         <ProgressBar
           value={stats.hp}
           max={stats.maxHp}

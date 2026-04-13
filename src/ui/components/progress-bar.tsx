@@ -17,7 +17,7 @@ type ProgressBarProps = {
 export function ProgressBar({ value, max, label, barClass }: ProgressBarProps) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
-    <div class='flex w-full min-w-0 items-center gap-1'>
+    <div class='flex w-full min-w-0 max-w-40 items-center gap-1'>
       <span class='flex w-5 flex-shrink-0 items-center justify-end opacity-80'>
         {label}
       </span>
