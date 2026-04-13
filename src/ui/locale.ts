@@ -46,6 +46,12 @@ export const locales = {
     createAccountFullName: 'Full Name',
     createAccountLocation: 'Location',
     createAccountEmail: 'Email',
+    hudHP: 'HP',
+    hudTP: 'TP',
+    hudTNL: 'TNL',
+    hudWeight: 'Weight',
+    hudGold: 'Gold',
+    hudLvl: 'Lv',
   },
 } as const;
 
