@@ -226,10 +226,13 @@ function StatsTab() {
   ];
 
   const derivedRows: [string, string][] = [
-    [locale.statsLabelDmg, `${s.minDamage} - ${s.maxDamage}`],
-    [locale.statsLabelAccuracy, String(s.accuracy)],
-    [locale.statsLabelEvade, String(s.evade)],
-    [locale.statsLabelArmor, String(s.armor)],
+    [
+      locale.statsLabelDmg,
+      `${s.minDamage.toLocaleString()} - ${s.maxDamage.toLocaleString()}`,
+    ],
+    [locale.statsLabelAccuracy, s.accuracy.toLocaleString()],
+    [locale.statsLabelEvade, s.evade.toLocaleString()],
+    [locale.statsLabelArmor, s.armor.toLocaleString()],
   ];
 
   return (
@@ -238,7 +241,7 @@ function StatsTab() {
         {baseRows.map(([label, value]) => (
           <div key={label} class='flex justify-between'>
             <span class='opacity-60'>{label}</span>
-            <span>{value}</span>
+            <span>{value.toLocaleString()}</span>
           </div>
         ))}
       </div>
