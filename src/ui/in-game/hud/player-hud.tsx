@@ -1,3 +1,10 @@
+import {
+  GiBoltSpellCast,
+  GiCoins,
+  GiHeartPlus,
+  GiStarMedal,
+  GiWeight,
+} from 'react-icons/gi';
 import { ProgressBar } from '@/ui/components';
 import { usePlayerStats } from '@/ui/in-game';
 import { getExpForLevel } from '@/utils';
@@ -45,31 +52,48 @@ export function PlayerHud() {
         <ProgressBar
           value={stats.hp}
           max={stats.maxHp}
-          label='HP'
+          label={
+            <span class='text-red-400'>
+              <GiHeartPlus size={10} />
+            </span>
+          }
           barClass={hpBarClass(hpPct)}
         />
         <ProgressBar
           value={stats.tp}
           max={stats.maxTp}
-          label='TP'
+          label={
+            <span class='text-blue-400'>
+              <GiBoltSpellCast size={10} />
+            </span>
+          }
           barClass='bg-gradient-to-r from-blue-700 to-blue-500'
         />
         <ProgressBar
           value={tnlProgress}
           max={tnlTotal}
-          label='TNL'
+          label={
+            <span class='text-amber-400'>
+              <GiStarMedal size={10} />
+            </span>
+          }
           barClass='bg-gradient-to-r from-amber-700 to-amber-500'
         />
         <ProgressBar
           value={stats.weight}
           max={stats.maxWeight}
-          label='Wt'
+          label={
+            <span class='text-stone-400'>
+              <GiWeight size={10} />
+            </span>
+          }
           barClass='bg-gradient-to-r from-stone-600 to-stone-400'
         />
       </div>
       <div class='flex shrink-0 flex-col items-end gap-0.5'>
-        <span class='text-[10px] text-yellow-400 leading-tight'>
-          &#9830; {stats.gold.toLocaleString()}
+        <span class='flex items-center gap-0.5 text-[10px] text-yellow-400 leading-tight'>
+          <GiCoins size={11} />
+          {stats.gold.toLocaleString()}
         </span>
       </div>
     </div>

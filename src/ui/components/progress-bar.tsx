@@ -1,3 +1,5 @@
+import type { ComponentChildren } from 'preact';
+
 function fmt(n: number): string {
   if (n >= 1_000_000)
     return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}m`;
@@ -8,7 +10,7 @@ function fmt(n: number): string {
 type ProgressBarProps = {
   value: number;
   max: number;
-  label: string;
+  label: ComponentChildren;
   barClass: string;
 };
 
@@ -16,7 +18,7 @@ export function ProgressBar({ value, max, label, barClass }: ProgressBarProps) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
     <div class='flex w-full min-w-0 items-center gap-1'>
-      <span class='w-5 flex-shrink-0 text-right font-bold text-[8px] uppercase tracking-wide opacity-80 md:text-[9px]'>
+      <span class='flex w-5 flex-shrink-0 items-center justify-end opacity-80'>
         {label}
       </span>
       <div class='relative h-3 flex-1 overflow-hidden rounded bg-black/45 ring-1 ring-white/8 ring-inset md:h-4'>
