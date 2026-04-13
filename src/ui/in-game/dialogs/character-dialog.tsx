@@ -1,30 +1,27 @@
 import { AdminLevel } from 'eolib';
 import { useState } from 'preact/hooks';
 import { ItemIcon, Tabs } from '@/ui/components';
-import { useClient } from '@/ui/context';
+import { useClient, useLocale } from '@/ui/context';
 import { usePlayerStats } from '@/ui/in-game';
 import { DialogBase } from './dialog-base';
 
 type CharacterTab = 'paperdoll' | 'stats' | 'book';
 
-const TABS = [
-  { id: 'paperdoll', label: 'Paperdoll' },
-  { id: 'stats', label: 'Stats' },
-  { id: 'book', label: 'Book' },
-] as const;
-
-function adminLabel(level: AdminLevel): string | null {
+function adminLabel(
+  level: AdminLevel,
+  locale: ReturnType<typeof useLocale>['locale'],
+): string | null {
   switch (level) {
     case AdminLevel.LightGuide:
-      return 'Light Guide';
+      return locale.adminLightGuide;
     case AdminLevel.Guardian:
-      return 'Guardian';
+      return locale.adminGuardian;
     case AdminLevel.GameMaster:
-      return 'Game Master';
+      return locale.adminGameMaster;
     case AdminLevel.HighGameMaster:
-      return 'High GM';
+      return locale.adminHighGameMaster;
     case AdminLevel.Spy:
-      return 'Spy';
+      return locale.adminSpy;
     default:
       return null;
   }
@@ -44,15 +41,15 @@ function EquipSlot({ label, itemId }: EquipSlotProps) {
       class='tooltip tooltip-bottom flex flex-col items-center gap-0.5'
       data-tip={record?.name ?? label}
     >
-      <div class='flex h-10 w-10 items-center justify-center rounded border border-base-300 bg-base-200'>
+      <div class='flex h-8 w-8 items-center justify-center rounded border border-base-300 bg-base-200'>
         {record ? (
           <ItemIcon
             graphicId={record.graphicId}
             alt={record.name}
-            class='max-h-9 max-w-9 object-contain'
+            class='max-h-7 max-w-7 object-contain'
           />
         ) : (
-          <span class='text-center text-[9px] text-base-content/40 leading-tight'>
+          <span class='text-center text-[8px] text-base-content/40 leading-tight'>
             {label}
           </span>
         )}
@@ -63,106 +60,103 @@ function EquipSlot({ label, itemId }: EquipSlotProps) {
 
 function PaperdollTab() {
   const client = useClient();
+  const { locale } = useLocale();
   const stats = usePlayerStats();
   const eq = client.equipment;
-  const admin = adminLabel(client.admin);
+  const admin = adminLabel(client.admin, locale);
   const classRecord = client.ecf?.classes?.[client.classId - 1];
 
+  const infoRows: [string, string][] = [
+    [locale.charLabelName, stats.name],
+    [locale.charLabelTitle, stats.title || '—'],
+    [locale.charLabelHome, stats.home || '—'],
+    [locale.charLabelPartner, stats.partner || '—'],
+    [locale.charLabelGuild, client.guildName || '—'],
+    [locale.charLabelRank, client.guildRankName || '—'],
+    [locale.charLabelClass, classRecord?.name ?? '—'],
+  ];
+
   return (
-    <div class='flex flex-col gap-3'>
-      {/* Character info */}
-      <div class='flex flex-col gap-0.5 text-sm'>
-        {[
-          ['Name', stats.name],
-          ['Title', stats.title || '—'],
-          ['Home', stats.home || '—'],
-          ['Partner', stats.partner || '—'],
-          ['Guild', client.guildName || '—'],
-          ['Rank', client.guildRankName || '—'],
-          ['Class', classRecord?.name ?? '—'],
-        ].map(([label, value]) => (
+    <div class='flex gap-3'>
+      {/* Equipment slots (left) */}
+      <div class='flex flex-col items-center gap-1.5'>
+        <div class='flex gap-1.5'>
+          <EquipSlot label={locale.slotHat} itemId={eq.hat} />
+        </div>
+        <div class='flex gap-1.5'>
+          <EquipSlot label={locale.slotNecklace} itemId={eq.necklace} />
+          <EquipSlot label={locale.slotArmor} itemId={eq.armor} />
+          <EquipSlot label={locale.slotWeapon} itemId={eq.weapon} />
+        </div>
+        <div class='flex gap-1.5'>
+          <EquipSlot label={locale.slotRing1} itemId={eq.ring[0] ?? 0} />
+          <EquipSlot label={locale.slotRing2} itemId={eq.ring[1] ?? 0} />
+          <EquipSlot label={locale.slotShield} itemId={eq.shield} />
+        </div>
+        <div class='flex gap-1.5'>
+          <EquipSlot label={locale.slotGloves} itemId={eq.gloves} />
+          <EquipSlot label={locale.slotBelt} itemId={eq.belt} />
+          <EquipSlot label={locale.slotBoots} itemId={eq.boots} />
+        </div>
+        <div class='flex flex-wrap justify-center gap-1.5'>
+          <EquipSlot label={locale.slotAccessory} itemId={eq.accessory} />
+          <EquipSlot label={locale.slotArmlet1} itemId={eq.armlet[0] ?? 0} />
+          <EquipSlot label={locale.slotArmlet2} itemId={eq.armlet[1] ?? 0} />
+        </div>
+        <div class='flex gap-1.5'>
+          <EquipSlot label={locale.slotBracer1} itemId={eq.bracer[0] ?? 0} />
+          <EquipSlot label={locale.slotBracer2} itemId={eq.bracer[1] ?? 0} />
+        </div>
+      </div>
+
+      {/* Character info (right) */}
+      <div class='flex min-w-0 flex-1 flex-col gap-0.5 text-sm'>
+        {infoRows.map(([label, value]) => (
           <div key={label} class='flex justify-between gap-2'>
-            <span class='opacity-60'>{label}</span>
-            <span class='max-w-[160px] truncate font-medium'>{value}</span>
+            <span class='shrink-0 opacity-60'>{label}</span>
+            <span class='min-w-0 truncate font-medium'>{value}</span>
           </div>
         ))}
         {admin && (
           <div class='flex justify-between gap-2'>
-            <span class='opacity-60'>Admin</span>
+            <span class='shrink-0 opacity-60'>{locale.charLabelAdmin}</span>
             <span class='badge badge-warning badge-sm'>{admin}</span>
           </div>
         )}
-      </div>
-
-      <div class='divider my-0' />
-
-      {/* Equipment slots */}
-      <div class='flex flex-col items-center gap-2'>
-        {/* Row: Hat */}
-        <div class='flex justify-center gap-2'>
-          <EquipSlot label='Hat' itemId={eq.hat} />
-        </div>
-
-        {/* Row: Necklace | Armor | Weapon/Shield */}
-        <div class='flex w-full justify-between gap-2'>
-          <div class='flex flex-col gap-2'>
-            <EquipSlot label='Necklace' itemId={eq.necklace} />
-            <EquipSlot label='Ring 1' itemId={eq.ring[0] ?? 0} />
-            <EquipSlot label='Ring 2' itemId={eq.ring[1] ?? 0} />
-          </div>
-          <EquipSlot label='Armor' itemId={eq.armor} />
-          <div class='flex flex-col gap-2'>
-            <EquipSlot label='Weapon' itemId={eq.weapon} />
-            <EquipSlot label='Shield' itemId={eq.shield} />
-          </div>
-        </div>
-
-        {/* Row: Gloves | Belt | Boots */}
-        <div class='flex justify-center gap-2'>
-          <EquipSlot label='Gloves' itemId={eq.gloves} />
-          <EquipSlot label='Belt' itemId={eq.belt} />
-          <EquipSlot label='Boots' itemId={eq.boots} />
-        </div>
-
-        {/* Row: Accessories & bracers */}
-        <div class='flex justify-center gap-2'>
-          <EquipSlot label='Accessory' itemId={eq.accessory} />
-          <EquipSlot label='Armlet 1' itemId={eq.armlet[0] ?? 0} />
-          <EquipSlot label='Armlet 2' itemId={eq.armlet[1] ?? 0} />
-          <EquipSlot label='Bracer 1' itemId={eq.bracer[0] ?? 0} />
-          <EquipSlot label='Bracer 2' itemId={eq.bracer[1] ?? 0} />
-        </div>
       </div>
     </div>
   );
 }
 
 function StatsTab() {
+  const { locale } = useLocale();
   const stats = usePlayerStats();
   const b = stats.baseStats;
   const s = stats.secondaryStats;
 
   const baseRows: [string, number][] = [
-    ['STR', b.str],
-    ['INT', b.intl],
-    ['WIS', b.wis],
-    ['AGI', b.agi],
-    ['CON', b.con],
-    ['CHA', b.cha],
+    [locale.statsLabelStr, b.str],
+    [locale.statsLabelInt, b.intl],
+    [locale.statsLabelWis, b.wis],
+    [locale.statsLabelAgi, b.agi],
+    [locale.statsLabelCon, b.con],
+    [locale.statsLabelCha, b.cha],
   ];
 
   const derivedRows: [string, string][] = [
-    ['Min DMG', String(s.minDamage)],
-    ['Max DMG', String(s.maxDamage)],
-    ['Accuracy', String(s.accuracy)],
-    ['Evade', String(s.evade)],
-    ['Armor', String(s.armor)],
+    [locale.statsLabelMinDmg, String(s.minDamage)],
+    [locale.statsLabelMaxDmg, String(s.maxDamage)],
+    [locale.statsLabelAccuracy, String(s.accuracy)],
+    [locale.statsLabelEvade, String(s.evade)],
+    [locale.statsLabelArmor, String(s.armor)],
   ];
 
   return (
     <div class='flex gap-4 text-sm'>
       <div class='flex flex-1 flex-col gap-0.5'>
-        <p class='mb-1 font-semibold text-xs uppercase opacity-60'>Base</p>
+        <p class='mb-1 font-semibold text-xs uppercase opacity-60'>
+          {locale.statsLabelBase}
+        </p>
         {baseRows.map(([label, value]) => (
           <div key={label} class='flex justify-between'>
             <span class='opacity-60'>{label}</span>
@@ -171,7 +165,9 @@ function StatsTab() {
         ))}
       </div>
       <div class='flex flex-1 flex-col gap-0.5'>
-        <p class='mb-1 font-semibold text-xs uppercase opacity-60'>Derived</p>
+        <p class='mb-1 font-semibold text-xs uppercase opacity-60'>
+          {locale.statsLabelDerived}
+        </p>
         {derivedRows.map(([label, value]) => (
           <div key={label} class='flex justify-between'>
             <span class='opacity-60'>{label}</span>
@@ -184,18 +180,30 @@ function StatsTab() {
 }
 
 function BookTab() {
+  const { locale } = useLocale();
   return (
     <div class='py-4 text-center text-sm opacity-60'>
-      Quest history coming soon
+      {locale.charQuestComingSoon}
     </div>
   );
 }
 
 export function CharacterDialog() {
+  const { locale } = useLocale();
   const [activeTab, setActiveTab] = useState<CharacterTab>('paperdoll');
 
+  const TABS = [
+    { id: 'paperdoll', label: locale.charTabPaperdoll },
+    { id: 'stats', label: locale.charTabStats },
+    { id: 'book', label: locale.charTabBook },
+  ] as const;
+
   return (
-    <DialogBase id='character' title='Character' defaultWidth={300}>
+    <DialogBase
+      id='character'
+      title={locale.charDialogTitle}
+      defaultWidth={320}
+    >
       <div class='flex flex-col gap-3'>
         <Tabs
           items={TABS as unknown as { id: string; label: string }[]}

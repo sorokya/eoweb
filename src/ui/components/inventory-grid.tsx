@@ -1,7 +1,7 @@
 import { type Item, ItemSize } from 'eolib';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { playSfxById, SfxId } from '@/sfx';
-import { useClient } from '@/ui/context';
+import { useClient, useLocale } from '@/ui/context';
 import { getItemMeta } from '@/utils';
 import { ItemIcon } from './item-icon';
 
@@ -86,12 +86,10 @@ function loadPositions(
       positions = [];
     }
 
-    // Remove stale positions for items no longer in inventory
     positions = positions.filter(
       (p) => p.id === 1 || items.some((i) => i.id === p.id),
     );
 
-    // Add positions for new items
     for (const item of items) {
       if (!positions.find((p) => p.id === item.id)) {
         const span = records.get(item.id);
@@ -134,11 +132,18 @@ type Props = {
 
 export function InventoryGrid({ itemIds }: Props) {
   const client = useClient();
+  const { locale } = useLocale();
   const [activeTab, setActiveTab] = useState(0);
   const [positions, setPositions] = useState<ItemPosition[]>([]);
   const [drag, setDrag] = useState<DragState | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef(0);
+
+  const dragRef = useRef<DragState | null>(null);
+  dragRef.current = drag;
+
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
 
   const getVisibleItems = () =>
     itemIds ? client.items.filter((i) => itemIds.includes(i.id)) : client.items;
@@ -181,8 +186,7 @@ export function InventoryGrid({ itemIds }: Props) {
 
     const withoutCurrent = positions.filter((p) => p.id !== itemId);
     if (doesItemFitAt(withoutCurrent, records, tab, x, y, span)) {
-      const next = [...withoutCurrent, { id: itemId, tab, x, y }];
-      savePositions(next);
+      savePositions([...withoutCurrent, { id: itemId, tab, x, y }]);
       playSfxById(SfxId.InventoryPlace);
     }
   };
@@ -193,41 +197,94 @@ export function InventoryGrid({ itemIds }: Props) {
     if (!span) return;
 
     const withoutCurrent = positions.filter((p) => p.id !== itemId);
-    const pos = findNextAvailablePosition(
-      withoutCurrent,
-      records,
-      itemId,
-      span,
-    );
-    if (!pos) return;
-
-    const finalPos = { ...pos, tab };
-    const retry = findNextAvailablePosition(
-      withoutCurrent,
-      records,
-      itemId,
-      span,
-    );
-    if (!retry) return;
-
-    const next = [
-      ...withoutCurrent,
-      { id: itemId, tab: tab, ...{ x: retry.x, y: retry.y } },
-    ];
-    savePositions(next);
-    playSfxById(SfxId.InventoryPlace);
-    void finalPos;
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        if (doesItemFitAt(withoutCurrent, records, tab, x, y, span)) {
+          savePositions([...withoutCurrent, { id: itemId, tab, x, y }]);
+          playSfxById(SfxId.InventoryPlace);
+          return;
+        }
+      }
+    }
   };
+
+  const tryMoveToCellRef = useRef(tryMoveToCell);
+  tryMoveToCellRef.current = tryMoveToCell;
+
+  const tryMoveToTabRef = useRef(tryMoveToTab);
+  tryMoveToTabRef.current = tryMoveToTab;
+
+  const isDragging = drag !== null;
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMove = (e: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d || e.pointerId !== d.pointerId) return;
+      e.preventDefault();
+      setDrag(
+        (prev) => prev && { ...prev, ghostX: e.clientX, ghostY: e.clientY },
+      );
+    };
+
+    const handleUp = (e: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d || e.pointerId !== d.pointerId) return;
+
+      const { item } = d;
+      setDrag(null);
+
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      if (!target || !gridRef.current) {
+        playSfxById(SfxId.InventoryPlace);
+        return;
+      }
+
+      const cell = (target as HTMLElement).closest<HTMLElement>('[data-cell]');
+      if (cell && gridRef.current.contains(cell)) {
+        const cx = Number.parseInt(cell.dataset.x ?? '0', 10);
+        const cy = Number.parseInt(cell.dataset.y ?? '0', 10);
+        tryMoveToCellRef.current(item.id, activeTabRef.current, cx, cy);
+        return;
+      }
+
+      const tabBtn = (target as HTMLElement).closest<HTMLElement>('[data-tab]');
+      if (tabBtn) {
+        const tab = Number.parseInt(tabBtn.dataset.tab ?? '0', 10);
+        tryMoveToTabRef.current(item.id, tab);
+        return;
+      }
+
+      playSfxById(SfxId.InventoryPlace);
+    };
+
+    const handleCancel = (e: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d || e.pointerId !== d.pointerId) return;
+      setDrag(null);
+      playSfxById(SfxId.InventoryPlace);
+    };
+
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+    window.addEventListener('pointercancel', handleCancel);
+
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      window.removeEventListener('pointercancel', handleCancel);
+    };
+  }, [isDragging]);
 
   const onPointerDown = (e: PointerEvent, item: Item) => {
     if (e.button !== 0 && e.pointerType !== 'touch') return;
     e.preventDefault();
-    (e.target as Element).setPointerCapture(e.pointerId);
 
     const now = Date.now();
     if (now - lastTapRef.current < 250) {
-      // double tap / click — use item
       lastTapRef.current = 0;
+      client.inventoryController.useItem(item.id);
       return;
     }
     lastTapRef.current = now;
@@ -246,76 +303,31 @@ export function InventoryGrid({ itemIds }: Props) {
     });
   };
 
-  const onPointerMove = (e: PointerEvent) => {
-    if (!drag || e.pointerId !== drag.pointerId) return;
-    e.preventDefault();
-    setDrag((d) => d && { ...d, ghostX: e.clientX, ghostY: e.clientY });
-  };
-
-  const onPointerUp = (e: PointerEvent) => {
-    if (!drag || e.pointerId !== drag.pointerId) return;
-
-    const { item } = drag;
-    setDrag(null);
-
-    const target = document.elementFromPoint(e.clientX, e.clientY);
-    if (!target || !gridRef.current) {
-      playSfxById(SfxId.InventoryPlace);
-      return;
-    }
-
-    const cell = (target as HTMLElement).closest<HTMLElement>('[data-cell]');
-    if (cell && gridRef.current.contains(cell)) {
-      const cx = Number.parseInt(cell.dataset.x ?? '0', 10);
-      const cy = Number.parseInt(cell.dataset.y ?? '0', 10);
-      tryMoveToCell(item.id, activeTab, cx, cy);
-      return;
-    }
-
-    const tabBtn = (target as HTMLElement).closest<HTMLElement>('[data-tab]');
-    if (tabBtn) {
-      const tab = Number.parseInt(tabBtn.dataset.tab ?? '0', 10);
-      tryMoveToTab(item.id, tab);
-      return;
-    }
-
-    playSfxById(SfxId.InventoryPlace);
-  };
-
-  const onPointerCancel = (e: PointerEvent) => {
-    if (!drag || e.pointerId !== drag.pointerId) return;
-    setDrag(null);
-    playSfxById(SfxId.InventoryPlace);
-  };
-
   const tabItems = positions.filter((p) => p.tab === activeTab);
 
-  const getTooltip = (item: Item): string => {
+  const getTooltipLines = (item: Item): string[] => {
     const record = client.getEifRecordById(item.id);
-    if (!record) return '';
+    if (!record) return [];
     const meta = getItemMeta(record);
     const qty = item.id === 1 || item.amount > 1 ? ` x${item.amount}` : '';
-    return [record.name + qty, ...meta].join('\n');
+    return [record.name + qty, ...meta];
   };
 
+  const TAB_LABELS = [locale.inventoryTab1, locale.inventoryTab2];
+
   return (
-    <div
-      class='flex select-none flex-col gap-1'
-      onPointerMove={drag ? onPointerMove : undefined}
-      onPointerUp={drag ? onPointerUp : undefined}
-      onPointerCancel={drag ? onPointerCancel : undefined}
-    >
+    <div class='flex select-none flex-col gap-1'>
       {/* Tab bar */}
-      <div role='tablist' class='tabs tabs-border tabs-sm'>
+      <div role='tablist' class='tabs tabs-lifted tabs-sm'>
         {Array.from({ length: TABS }, (_, i) => (
           <button
             key={i}
             role='tab'
             data-tab={i}
-            class={`tab${activeTab === i ? 'tab-active' : ''}`}
+            class={`tab${activeTab === i ? ' tab-active' : ''}`}
             onClick={() => setActiveTab(i)}
           >
-            {i + 1}
+            {TAB_LABELS[i]}
           </button>
         ))}
       </div>
@@ -358,13 +370,13 @@ export function InventoryGrid({ itemIds }: Props) {
           if (!item || !record) return null;
 
           const span = ITEM_SPAN[record.size];
-          const isDragging = drag?.item.id === item.id;
+          const itemIsDragging = drag?.item.id === item.id;
+          const tooltipLines = getTooltipLines(item);
 
           return (
             <div
               key={item.id}
-              class={`tooltip absolute flex cursor-grab items-center justify-center tooltip-right${isDragging ? 'opacity-30' : ''}`}
-              data-tip={getTooltip(item)}
+              class={`group absolute flex cursor-grab items-center justify-center${itemIsDragging ? ' opacity-30' : ''}`}
               style={{
                 left: pos.x * CELL_SIZE,
                 top: pos.y * CELL_SIZE,
@@ -378,10 +390,18 @@ export function InventoryGrid({ itemIds }: Props) {
                 alt={record.name}
                 class='pointer-events-none max-h-full max-w-full object-contain'
               />
-              {item.amount > 1 && (
-                <span class='pointer-events-none absolute right-0 bottom-0 text-[8px] text-base-content/80 leading-none'>
-                  {item.amount}
-                </span>
+              {/* Multi-line tooltip */}
+              {!itemIsDragging && tooltipLines.length > 0 && (
+                <div class='pointer-events-none absolute left-full top-0 z-50 ml-1 hidden w-max max-w-[160px] rounded bg-base-300 px-2 py-1 text-xs shadow-lg group-hover:block'>
+                  {tooltipLines.map((line, i) => (
+                    <div
+                      key={i}
+                      class={i === 0 ? 'font-semibold' : 'opacity-70'}
+                    >
+                      {line}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           );
