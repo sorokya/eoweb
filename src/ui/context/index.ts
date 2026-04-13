@@ -1,6 +1,7 @@
 export {
   ClientContext,
   ClientProvider,
+  useCharacterInfo,
   useCharacters,
   useClient,
   useGameState,

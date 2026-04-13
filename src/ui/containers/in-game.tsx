@@ -1,3 +1,4 @@
+import { useEffect } from 'preact/hooks';
 import { useClient } from '@/ui/context';
 import type { ChatDialogId, DialogId } from '@/ui/in-game';
 import {
@@ -51,7 +52,8 @@ function DialogById({ id }: { id: DialogId }) {
 const DIALOG_Z = 20;
 
 function InGameContent() {
-  const { isOpen, isMinimized, getLayout } = useWindowManager();
+  const client = useClient();
+  const { isOpen, isMinimized, getLayout, openDialog } = useWindowManager();
   const { dialogs: chatDialogs } = useChatManager();
 
   const chatDialogIds = chatDialogs.map((d) => d.id);
@@ -75,6 +77,12 @@ function InGameContent() {
   const autoRight = nonMinimized.filter(
     (id) => !id.startsWith('chat-') && getLayout(id) === 'right',
   );
+
+  useEffect(() => {
+    client.socialController.subscribePaperdollOpened(() => {
+      openDialog('character');
+    });
+  }, [client]);
 
   return (
     <>

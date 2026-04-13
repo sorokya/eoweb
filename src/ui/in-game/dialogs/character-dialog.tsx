@@ -1,7 +1,7 @@
 import type { EifRecord } from 'eolib';
-import { useState } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import { ItemIcon, Tabs } from '@/ui/components';
-import { useClient, useLocale } from '@/ui/context';
+import { useCharacterInfo, useClient, useLocale } from '@/ui/context';
 import { usePlayerStats } from '@/ui/in-game';
 import { capitalize, getItemMeta } from '@/utils';
 import { DialogBase } from './dialog-base';
@@ -57,128 +57,128 @@ function EquipSlot({ label, itemId, gridColumn, gridRow }: SlotConfig) {
 }
 
 function PaperdollTab() {
-  const client = useClient();
+  const info = useCharacterInfo();
   const { locale } = useLocale();
-  const stats = usePlayerStats();
-  const eq = client.equipment;
-  const classRecord = client.ecf?.classes?.[client.classId - 1];
 
   const slots: SlotConfig[] = [
     {
       key: 'hat',
       label: locale.slotHat,
-      itemId: eq.hat,
+      itemId: info?.equipment.hat ?? 0,
       gridColumn: '3 / span 2',
       gridRow: '1 / span 2',
     },
     {
       key: 'necklace',
       label: locale.slotNecklace,
-      itemId: eq.necklace,
+      itemId: info?.equipment.necklace ?? 0,
       gridColumn: '5 / span 2',
       gridRow: '1 / span 2',
     },
     {
       key: 'weapon',
       label: locale.slotWeapon,
-      itemId: eq.weapon,
+      itemId: info?.equipment.weapon ?? 0,
       gridColumn: '1 / span 2',
       gridRow: '3 / span 3',
     },
     {
       key: 'armor',
       label: locale.slotArmor,
-      itemId: eq.armor,
+      itemId: info?.equipment.armor ?? 0,
       gridColumn: '3 / span 2',
       gridRow: '3 / span 3',
     },
     {
       key: 'shield',
       label: locale.slotShield,
-      itemId: eq.shield,
+      itemId: info?.equipment.shield ?? 0,
       gridColumn: '5 / span 2',
       gridRow: '3 / span 3',
     },
     {
       key: 'gloves',
       label: locale.slotGloves,
-      itemId: eq.gloves,
+      itemId: info?.equipment.gloves ?? 0,
       gridColumn: '1 / span 2',
       gridRow: '6 / span 2',
     },
     {
       key: 'belt',
       label: locale.slotBelt,
-      itemId: eq.belt,
+      itemId: info?.equipment.belt ?? 0,
       gridColumn: '3 / span 2',
       gridRow: '6',
     },
     {
       key: 'ring1',
       label: locale.slotRing1,
-      itemId: eq.ring[0] ?? 0,
+      itemId: info?.equipment.ring[0] ?? 0,
       gridColumn: '5',
       gridRow: '6',
     },
     {
       key: 'ring2',
       label: locale.slotRing2,
-      itemId: eq.ring[1] ?? 0,
+      itemId: info?.equipment.ring[1] ?? 0,
       gridColumn: '6',
       gridRow: '6',
     },
     {
       key: 'armlet1',
       label: locale.slotArmlet1,
-      itemId: eq.armlet[0] ?? 0,
+      itemId: info?.equipment.armlet[0] ?? 0,
       gridColumn: '5',
       gridRow: '7',
     },
     {
       key: 'armlet2',
       label: locale.slotArmlet2,
-      itemId: eq.armlet[1] ?? 0,
+      itemId: info?.equipment.armlet[1] ?? 0,
       gridColumn: '6',
       gridRow: '7',
     },
     {
       key: 'boots',
       label: locale.slotBoots,
-      itemId: eq.boots,
+      itemId: info?.equipment.boots ?? 0,
       gridColumn: '3 / span 2',
       gridRow: '7 / span 2',
     },
     {
       key: 'accessory',
       label: locale.slotAccessory,
-      itemId: eq.accessory,
+      itemId: info?.equipment.accessory ?? 0,
       gridColumn: '2',
       gridRow: '8',
     },
     {
       key: 'bracer1',
       label: locale.slotBracer1,
-      itemId: eq.bracer[0] ?? 0,
+      itemId: info?.equipment.bracer[0] ?? 0,
       gridColumn: '5',
       gridRow: '8',
     },
     {
       key: 'bracer2',
       label: locale.slotBracer2,
-      itemId: eq.bracer[1] ?? 0,
+      itemId: info?.equipment.bracer[1] ?? 0,
       gridColumn: '6',
       gridRow: '8',
     },
   ];
 
   const infoRows: [string, string][] = [
-    [locale.charLabelName, capitalize(stats.name)],
-    [locale.charLabelHome, stats.home || '—'],
-    [locale.charLabelClass, classRecord?.name ?? '—'],
-    [locale.charLabelPartner, stats.partner ? capitalize(stats.partner) : '—'],
-    [locale.charLabelTitle, stats.title || '—'],
-    [locale.charLabelGuild, client.guildName || '—'],
-    [locale.charLabelRank, client.guildRankName || '—'],
+    [locale.charLabelName, info ? capitalize(info.details.name) : '—'],
+    [locale.charLabelHome, info ? info.details.home : '—'],
+    [locale.charLabelClass, info ? info.className : '—'],
+    [
+      locale.charLabelPartner,
+      info?.details.partner ? capitalize(info.details.partner) : '—',
+    ],
+    [locale.charLabelTitle, info?.details.title || '—'],
+    [locale.charLabelGuild, info?.details.guild || '—'],
+    [locale.charLabelRank, info?.details.guildRank || '—'],
   ];
 
   return (
@@ -212,27 +212,25 @@ function PaperdollTab() {
 
 function StatsTab() {
   const { locale } = useLocale();
-  const stats = usePlayerStats();
-  const b = stats.baseStats;
-  const s = stats.secondaryStats;
+  const { baseStats: base, secondaryStats: secondary } = usePlayerStats();
 
   const baseRows: [string, number][] = [
-    [locale.statsLabelStr, b.str],
-    [locale.statsLabelInt, b.intl],
-    [locale.statsLabelWis, b.wis],
-    [locale.statsLabelAgi, b.agi],
-    [locale.statsLabelCon, b.con],
-    [locale.statsLabelCha, b.cha],
+    [locale.statsLabelStr, base.str],
+    [locale.statsLabelInt, base.intl],
+    [locale.statsLabelWis, base.wis],
+    [locale.statsLabelAgi, base.agi],
+    [locale.statsLabelCon, base.con],
+    [locale.statsLabelCha, base.cha],
   ];
 
   const derivedRows: [string, string][] = [
     [
       locale.statsLabelDmg,
-      `${s.minDamage.toLocaleString()} - ${s.maxDamage.toLocaleString()}`,
+      `${secondary.minDamage.toLocaleString()} - ${secondary.maxDamage.toLocaleString()}`,
     ],
-    [locale.statsLabelAccuracy, s.accuracy.toLocaleString()],
-    [locale.statsLabelEvade, s.evade.toLocaleString()],
-    [locale.statsLabelArmor, s.armor.toLocaleString()],
+    [locale.statsLabelAccuracy, secondary.accuracy.toLocaleString()],
+    [locale.statsLabelEvade, secondary.evade.toLocaleString()],
+    [locale.statsLabelArmor, secondary.armor.toLocaleString()],
   ];
 
   return (
@@ -269,12 +267,23 @@ function BookTab() {
 export function CharacterDialog() {
   const { locale } = useLocale();
   const [activeTab, setActiveTab] = useState<CharacterTab>('paperdoll');
+  const client = useClient();
+  const info = useCharacterInfo();
 
-  const TABS = [
-    { id: 'paperdoll', label: locale.charTabPaperdoll },
-    { id: 'stats', label: locale.charTabStats },
-    { id: 'book', label: locale.charTabBook },
-  ] as const;
+  const TABS = useMemo(() => {
+    if (info?.details.playerId === client.playerId) {
+      return [
+        { id: 'paperdoll', label: locale.charTabPaperdoll },
+        { id: 'stats', label: locale.charTabStats },
+        { id: 'book', label: locale.charTabBook },
+      ] as const;
+    }
+
+    return [
+      { id: 'paperdoll', label: locale.charTabPaperdoll },
+      { id: 'book', label: locale.charTabBook },
+    ] as const;
+  }, [info, client, locale]);
 
   return (
     <DialogBase

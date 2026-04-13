@@ -1,4 +1,8 @@
-import type { CharacterSelectionListEntry } from 'eolib';
+import type {
+  CharacterDetails,
+  CharacterSelectionListEntry,
+  EquipmentPaperdoll,
+} from 'eolib';
 import { createContext } from 'preact';
 import { useContext, useMemo, useState } from 'preact/hooks';
 import type { Client } from '@/client';
@@ -8,6 +12,7 @@ type ClientContextProps = {
   client: Client;
   gameState: GameState;
   characters: CharacterSelectionListEntry[];
+  characterInfo?: CharacterInfo;
 };
 
 export const ClientContext = createContext<ClientContextProps | null>(null);
@@ -17,19 +22,40 @@ type ClientProviderProps = {
   children: preact.ComponentChildren;
 };
 
+type CharacterInfo = {
+  details: CharacterDetails;
+  equipment: EquipmentPaperdoll;
+  className: string;
+};
+
 export function ClientProvider({ client, children }: ClientProviderProps) {
   const [gameState, setGameState] = useState(client.state);
   const [characters, setCharacters] = useState<CharacterSelectionListEntry[]>(
     [],
   );
 
+  const [characterInfo, setCharacterInfo] = useState<
+    CharacterInfo | undefined
+  >();
+
   useMemo(() => {
     client.on('stateChanged', setGameState);
     client.authenticationController.subscribeCharactersChanged(setCharacters);
+    client.socialController.subscribePaperdollOpened(
+      ({ details, equipment }) => {
+        setCharacterInfo({
+          details,
+          equipment,
+          className: client.ecf?.classes[details.classId]?.name,
+        });
+      },
+    );
   }, [client]);
 
   return (
-    <ClientContext.Provider value={{ client, gameState, characters }}>
+    <ClientContext.Provider
+      value={{ client, gameState, characters, characterInfo }}
+    >
       {children}
     </ClientContext.Provider>
   );
@@ -53,4 +79,8 @@ export function useGameState() {
 
 export function useCharacters() {
   return useClientContext().characters;
+}
+
+export function useCharacterInfo() {
+  return useClientContext().characterInfo;
 }

@@ -42,8 +42,21 @@ const NAV_BUTTONS: NavButton[] = [
 ];
 
 export function NavSidebar() {
-  const { openDialog, closeDialog, isOpen } = useWindowManager();
+  const client = useClient();
+  const { openDialog: wmOpenDialog, closeDialog, isOpen } = useWindowManager();
   const exitGame = useExitGame();
+
+  const openDialog = useCallback(
+    (id: DialogId) => {
+      if (id === 'character') {
+        client.socialController.requestPaperdoll(client.playerId);
+        return;
+      }
+
+      wmOpenDialog(id);
+    },
+    [wmOpenDialog, client],
+  );
 
   return (
     <div
@@ -85,9 +98,22 @@ export function NavSidebar() {
 
 /** Mobile-only floating hamburger menu (below HUD strip, right edge). */
 export function MobileNav() {
-  const { openDialog, closeDialog, isOpen } = useWindowManager();
+  const client = useClient();
+  const { openDialog: wmOpenDialog, closeDialog, isOpen } = useWindowManager();
   const exitGame = useExitGame();
   const [open, setOpen] = useState(false);
+
+  const openDialog = useCallback(
+    (id: DialogId) => {
+      if (id === 'character') {
+        client.socialController.requestPaperdoll(client.playerId);
+        return;
+      }
+
+      wmOpenDialog(id);
+    },
+    [wmOpenDialog, client],
+  );
 
   return (
     <div class='absolute top-8 right-1 md:hidden' style={{ zIndex: HUD_Z }}>

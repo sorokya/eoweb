@@ -1,7 +1,9 @@
 import {
   BookRequestClientPacket,
+  type CharacterDetails,
   EmoteReportClientPacket,
   type Emote as EmoteType,
+  type EquipmentPaperdoll,
   PaperdollRequestClientPacket,
   PartyAcceptClientPacket,
   PartyRemoveClientPacket,
@@ -14,11 +16,33 @@ import {
 import type { Client } from '@/client';
 import { Emote } from '@/render';
 
+type PaperdollOpenedData = {
+  details: CharacterDetails;
+  equipment: EquipmentPaperdoll;
+};
+
 export class SocialController {
   private client: Client;
 
   constructor(client: Client) {
     this.client = client;
+  }
+
+  private paperdollOpenedSubscribers: ((data: PaperdollOpenedData) => void)[] =
+    [];
+  subscribePaperdollOpened(callback: (data: PaperdollOpenedData) => void) {
+    this.paperdollOpenedSubscribers.push(callback);
+  }
+
+  notifyPaperdollOpened(data: PaperdollOpenedData) {
+    if (data.details.playerId === this.client.playerId) {
+      this.client.home = data.details.home;
+      this.client.partner = data.details.partner;
+    }
+
+    for (const subscriber of this.paperdollOpenedSubscribers) {
+      subscriber(data);
+    }
   }
 
   requestPaperdoll(playerId: number): void {
