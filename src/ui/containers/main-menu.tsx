@@ -1,10 +1,11 @@
-import { useCallback } from 'preact/hooks';
+import { useCallback, useState } from 'preact/hooks';
 import { GameState } from '@/game-state';
-import { Button } from '@/ui/components';
+import { Button, Input } from '@/ui/components';
 import { useClient, useLocale } from '@/ui/context';
 
 export function MainMenu() {
   const client = useClient();
+  const [host, setHost] = useState(client.config.host);
   const { locale } = useLocale();
 
   const viewCredits = useCallback(() => {
@@ -27,10 +28,26 @@ export function MainMenu() {
     }
   }, [client]);
 
+  const handleHostChange = useCallback(
+    (value: string) => {
+      setHost(value);
+      client.config.host = value;
+    },
+    [client],
+  );
+
   return (
     <div class='align-center flex-col gap-4 flex w-full h-full justify-center items-center'>
       <img src='/logo.png' alt={locale.logoAlt} />
       <div class='flex flex-col gap-2'>
+        {!client.config.staticHost && (
+          <Input
+            type='text'
+            placeholder={locale.inputHost}
+            value={host}
+            onChange={(val) => handleHostChange(val)}
+          />
+        )}
         <Button onClick={createAccount}>{locale.btnCreateAccount}</Button>
         <Button onClick={playGame}>{locale.btnPlayGame}</Button>
         <Button onClick={viewCredits}>{locale.btnViewCredits}</Button>

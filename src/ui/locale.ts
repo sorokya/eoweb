@@ -4,6 +4,7 @@ export const locales = {
     btnCancel: 'Cancel',
     btnYes: 'Yes',
     btnNo: 'No',
+    inputHost: 'wss://ws.reoserv.net',
     btnCreateAccount: 'Create Account',
     btnPlayGame: 'Play Game',
     btnViewCredits: 'View Credits',
