@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'preact/compat';
+
 type InputVariant =
   | ''
   | 'ghost'
@@ -51,6 +53,14 @@ export function Input({
     .map((v) => `input-${v}`)
     .join(' ');
 
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (autofocus && ref.current) {
+      ref.current.focus();
+    }
+  }, [autofocus]);
+
   if (label) {
     return (
       <label class={`input ${variantClasses}`}>
@@ -65,8 +75,7 @@ export function Input({
           max={max}
           maxLength={maxlength}
           required={required}
-          // biome-ignore lint/a11y/noAutofocus: We will only use autofocus when it is appropriate
-          autoFocus={autofocus}
+          ref={ref}
         />
       </label>
     );
@@ -84,7 +93,7 @@ export function Input({
       max={max}
       maxLength={maxlength}
       required={required}
-      autofocus={autofocus}
+      ref={ref}
     />
   );
 }
