@@ -50,6 +50,11 @@ export function ClientProvider({ client, children }: ClientProviderProps) {
         });
       },
     );
+    client.on('equipmentChanged', () => {
+      setCharacterInfo((prev) =>
+        prev ? { ...prev, equipment: client.equipment } : prev,
+      );
+    });
   }, [client]);
 
   return (

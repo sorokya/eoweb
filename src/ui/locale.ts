@@ -99,6 +99,12 @@ export const locales = {
     adminSpy: 'Spy',
     inventoryTab1: 'I',
     inventoryTab2: 'II',
+    ctxUseItem: 'Use',
+    ctxDropItem: 'Drop',
+    ctxJunkItem: 'Junk',
+    ctxAssignSlot: 'Assign Slot',
+    junkConfirmTitle: 'Junk Item',
+    junkConfirmMessage: 'Are you sure you want to junk {name}?',
   },
 } as const;
 

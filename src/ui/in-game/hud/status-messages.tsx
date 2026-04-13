@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
+import { HUD_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import { usePosition } from '@/ui/in-game';
-import { HUD_Z } from './consts';
 
 const DISMISS_AFTER_MS = 4_000;
 

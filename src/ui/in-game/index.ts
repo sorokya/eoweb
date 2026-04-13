@@ -21,6 +21,9 @@ export { HotBar } from './hud/hot-bar';
 export { MobileNav, NavSidebar } from './hud/nav-sidebar';
 export { PlayerHud } from './hud/player-hud';
 export { StatusMessages } from './hud/status-messages';
+export type { DragDropResult, DragInfo } from './item-drag-context';
+// Drag
+export { ItemDragProvider, useItemDrag } from './item-drag-context';
 export {
   clearAllDialogLayouts,
   DIALOG_DEFAULT_LAYOUTS,

@@ -10,9 +10,9 @@ import {
 import { LuMenu } from 'react-icons/lu';
 import { DialogResourceID } from '@/edf';
 import { Button } from '@/ui/components';
+import { HUD_Z, SIDEMENU_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import { type DialogId, useWindowManager } from '@/ui/in-game';
-import { HUD_Z } from './consts';
 
 function useExitGame() {
   const client = useClient();
@@ -116,7 +116,10 @@ export function MobileNav() {
   );
 
   return (
-    <div class='absolute top-8 right-1 md:hidden' style={{ zIndex: HUD_Z }}>
+    <div
+      class='absolute top-8 right-1 md:hidden'
+      style={{ zIndex: open ? SIDEMENU_Z : HUD_Z }}
+    >
       <div
         role='presentation'
         class='relative'

@@ -3,10 +3,10 @@ import { FaHeart } from 'react-icons/fa';
 import { GiCoins, GiWeightLiftingUp } from 'react-icons/gi';
 import { GrMagic } from 'react-icons/gr';
 import { ProgressBar } from '@/ui/components';
+import { HUD_Z } from '@/ui/consts';
 import { useLocale } from '@/ui/context';
 import { usePlayerStats } from '@/ui/in-game';
 import { capitalize, getExpForLevel } from '@/utils';
-import { HUD_Z } from './consts';
 
 const stopPropagation = (e: { stopPropagation(): void }) => e.stopPropagation();
 

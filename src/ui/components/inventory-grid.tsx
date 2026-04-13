@@ -1,8 +1,11 @@
-import { type Item, ItemSize } from 'eolib';
+import { Item, ItemSize } from 'eolib';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
 import { useClient, useLocale } from '@/ui/context';
+import { useItemDrag } from '@/ui/in-game';
 import { getItemMeta } from '@/utils';
+import { InventoryContextMenu } from './inventory-context-menu';
 import { ItemIcon } from './item-icon';
 
 const TABS = 2;
@@ -116,14 +119,7 @@ function loadPositions(
   return positions;
 }
 
-type DragState = {
-  item: Item;
-  pointerId: number;
-  ghostX: number;
-  ghostY: number;
-  offsetX: number;
-  offsetY: number;
-};
+type ContextMenuState = { item: Item; x: number; y: number } | null;
 
 type Props = {
   /** If provided, only items with these IDs are shown. Defaults to all client items. */
@@ -133,20 +129,43 @@ type Props = {
 export function InventoryGrid({ itemIds }: Props) {
   const client = useClient();
   const { locale } = useLocale();
+  const { startDrag, cancelDrag, currentDrag } = useItemDrag();
   const [activeTab, setActiveTab] = useState(0);
   const [positions, setPositions] = useState<ItemPosition[]>([]);
-  const [drag, setDrag] = useState<DragState | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
+  const [touchTooltipId, setTouchTooltipId] = useState<number | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef(0);
-
-  const dragRef = useRef<DragState | null>(null);
-  dragRef.current = drag;
+  const suppressContextMenuUntilRef = useRef(0);
 
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
 
-  const getVisibleItems = () =>
-    itemIds ? client.items.filter((i) => itemIds.includes(i.id)) : client.items;
+  // Clear touch tooltip when touching outside an inventory item
+  useEffect(() => {
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      if (!(e.target as HTMLElement).closest('[data-inventory-item]')) {
+        setTouchTooltipId(null);
+      }
+    };
+    window.addEventListener('pointerdown', handlePointerDown);
+    return () => window.removeEventListener('pointerdown', handlePointerDown);
+  }, []);
+
+  const getVisibleItems = (): Item[] => {
+    const items = itemIds
+      ? client.items.filter((i) => itemIds.includes(i.id))
+      : client.items;
+    // Gold (id=1) is always shown even at 0 quantity
+    if (!items.some((i) => i.id === 1)) {
+      const gold = new Item();
+      gold.id = 1;
+      gold.amount = 0;
+      return [gold, ...items];
+    }
+    return items;
+  };
 
   const buildRecordMap = (): Map<number, ItemSpan> => {
     const map = new Map<number, ItemSpan>();
@@ -185,10 +204,45 @@ export function InventoryGrid({ itemIds }: Props) {
     if (!span) return;
 
     const withoutCurrent = positions.filter((p) => p.id !== itemId);
-    if (doesItemFitAt(withoutCurrent, records, tab, x, y, span)) {
-      savePositions([...withoutCurrent, { id: itemId, tab, x, y }]);
-      playSfxById(SfxId.InventoryPlace);
+
+    // Check if target cell overlaps with another item
+    const overlapping = withoutCurrent.find((pos) => {
+      const s = records.get(pos.id);
+      if (!s || pos.tab !== tab) return false;
+      const ox = x < pos.x + s.cols && x + span.cols > pos.x;
+      const oy = y < pos.y + s.rows && y + span.rows > pos.y;
+      return ox && oy;
+    });
+
+    if (!overlapping) {
+      if (doesItemFitAt(withoutCurrent, records, tab, x, y, span)) {
+        savePositions([...withoutCurrent, { id: itemId, tab, x, y }]);
+      }
+      return;
     }
+
+    // Swap: remove both, place dragged at target, find space for displaced
+    const displacedId = overlapping.id;
+    const displacedSpan = records.get(displacedId);
+    if (!displacedSpan) return;
+
+    const withoutBoth = positions.filter(
+      (p) => p.id !== itemId && p.id !== displacedId,
+    );
+
+    if (!doesItemFitAt(withoutBoth, records, tab, x, y, span)) return;
+
+    const withDragged = [...withoutBoth, { id: itemId, tab, x, y }];
+    const newDisplacedPos = findNextAvailablePosition(
+      withDragged,
+      records,
+      displacedId,
+      displacedSpan,
+    );
+
+    if (!newDisplacedPos) return;
+
+    savePositions([...withDragged, newDisplacedPos]);
   };
 
   const tryMoveToTab = (itemId: number, tab: number) => {
@@ -197,11 +251,12 @@ export function InventoryGrid({ itemIds }: Props) {
     if (!span) return;
 
     const withoutCurrent = positions.filter((p) => p.id !== itemId);
+
+    // Find first free spot in the target tab
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
         if (doesItemFitAt(withoutCurrent, records, tab, x, y, span)) {
           savePositions([...withoutCurrent, { id: itemId, tab, x, y }]);
-          playSfxById(SfxId.InventoryPlace);
           return;
         }
       }
@@ -214,68 +269,10 @@ export function InventoryGrid({ itemIds }: Props) {
   const tryMoveToTabRef = useRef(tryMoveToTab);
   tryMoveToTabRef.current = tryMoveToTab;
 
-  const isDragging = drag !== null;
-
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const handleMove = (e: PointerEvent) => {
-      const d = dragRef.current;
-      if (!d || e.pointerId !== d.pointerId) return;
-      e.preventDefault();
-      setDrag(
-        (prev) => prev && { ...prev, ghostX: e.clientX, ghostY: e.clientY },
-      );
-    };
-
-    const handleUp = (e: PointerEvent) => {
-      const d = dragRef.current;
-      if (!d || e.pointerId !== d.pointerId) return;
-
-      const { item } = d;
-      setDrag(null);
-
-      const target = document.elementFromPoint(e.clientX, e.clientY);
-      if (!target || !gridRef.current) {
-        playSfxById(SfxId.InventoryPlace);
-        return;
-      }
-
-      const cell = (target as HTMLElement).closest<HTMLElement>('[data-cell]');
-      if (cell && gridRef.current.contains(cell)) {
-        const cx = Number.parseInt(cell.dataset.x ?? '0', 10);
-        const cy = Number.parseInt(cell.dataset.y ?? '0', 10);
-        tryMoveToCellRef.current(item.id, activeTabRef.current, cx, cy);
-        return;
-      }
-
-      const tabBtn = (target as HTMLElement).closest<HTMLElement>('[data-tab]');
-      if (tabBtn) {
-        const tab = Number.parseInt(tabBtn.dataset.tab ?? '0', 10);
-        tryMoveToTabRef.current(item.id, tab);
-        return;
-      }
-
-      playSfxById(SfxId.InventoryPlace);
-    };
-
-    const handleCancel = (e: PointerEvent) => {
-      const d = dragRef.current;
-      if (!d || e.pointerId !== d.pointerId) return;
-      setDrag(null);
-      playSfxById(SfxId.InventoryPlace);
-    };
-
-    window.addEventListener('pointermove', handleMove);
-    window.addEventListener('pointerup', handleUp);
-    window.addEventListener('pointercancel', handleCancel);
-
-    return () => {
-      window.removeEventListener('pointermove', handleMove);
-      window.removeEventListener('pointerup', handleUp);
-      window.removeEventListener('pointercancel', handleCancel);
-    };
-  }, [isDragging]);
+  const getCoords = () => {
+    const p = client.getPlayerCharacter();
+    return p ? { x: p.coords.x, y: p.coords.y } : { x: 0, y: 0 };
+  };
 
   const onPointerDown = (e: PointerEvent, item: Item) => {
     if (e.button !== 0 && e.pointerType !== 'touch') return;
@@ -284,23 +281,125 @@ export function InventoryGrid({ itemIds }: Props) {
     const now = Date.now();
     if (now - lastTapRef.current < 250) {
       lastTapRef.current = 0;
+      suppressContextMenuUntilRef.current = now + 750;
       client.inventoryController.useItem(item.id);
       return;
     }
     lastTapRef.current = now;
 
-    const target = e.target as HTMLElement;
+    const target = e.currentTarget as HTMLElement;
     const rect = target.getBoundingClientRect();
+    const record = client.getEifRecordById(item.id);
+    if (!record) return;
+
+    const span = ITEM_SPAN[record.size];
+
+    // Long-press timer for context menu (mobile): cancel drag and show menu
+    let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+    if (e.pointerType === 'touch') {
+      setTouchTooltipId(item.id);
+      longPressTimer = setTimeout(() => {
+        longPressTimer = null;
+        if (Date.now() < suppressContextMenuUntilRef.current) return;
+        setTouchTooltipId(null);
+        cancelDrag();
+        setContextMenu({ item, x: e.clientX, y: e.clientY });
+      }, 700);
+    }
 
     playSfxById(SfxId.InventoryPickup);
-    setDrag({
-      item,
-      pointerId: e.pointerId,
-      ghostX: e.clientX,
-      ghostY: e.clientY,
-      offsetX: e.clientX - rect.left,
-      offsetY: e.clientY - rect.top,
+
+    startDrag({
+      info: {
+        source: 'inventory',
+        itemId: item.id,
+        pointerId: e.pointerId,
+        ghostX: e.clientX,
+        ghostY: e.clientY,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top,
+        graphicId: record.graphicId,
+        ghostWidth: span.cols * CELL_SIZE,
+        ghostHeight: span.rows * CELL_SIZE,
+      },
+      onMove: (mx, my) => {
+        if (longPressTimer && Math.hypot(mx - e.clientX, my - e.clientY) > 5) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        // Keep the game-world cursor in sync while dragging
+        if (client.app) {
+          const canvas = client.app.renderer.canvas;
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = canvas.width / rect.width;
+          const scaleY = canvas.height / rect.height;
+          client.setMousePosition({
+            x: Math.min(
+              Math.max(Math.floor((mx - rect.left) * scaleX), 0),
+              canvas.width,
+            ),
+            y: Math.min(
+              Math.max(Math.floor((my - rect.top) * scaleY), 0),
+              canvas.height,
+            ),
+          });
+        }
+      },
+      onResolve: (result) => {
+        playSfxById(SfxId.InventoryPlace);
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        if (result.type === 'cancelled') {
+          // Tap without drag: handle as potential double-tap on next tap
+          // (no action needed — useItem fires on the second tap)
+        } else {
+          if (result.type === 'cell') {
+            tryMoveToCellRef.current(item.id, result.tab, result.x, result.y);
+          } else if (result.type === 'tab') {
+            tryMoveToTabRef.current(item.id, result.tab);
+          } else if (result.type === 'equip-slot') {
+            client.inventoryController.equipItem(item.id, result.slot);
+          } else if (result.type === 'ground') {
+            if (!client.mapController.cursorInDropRange()) return;
+            const coords = client.mouseCoords ?? getCoords();
+            const itemName = client.getEifRecordById(item.id)?.name ?? '';
+            if (item.amount > 1) {
+              const title = client.getResourceString(
+                EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
+              );
+              const actionLabel = client.getResourceString(
+                EOResourceID.DIALOG_TRANSFER_DROP,
+              );
+              client.alertController.showAmount(
+                title,
+                itemName,
+                item.amount,
+                actionLabel,
+                (amount) => {
+                  if (amount !== null && amount > 0) {
+                    client.inventoryController.dropItem(
+                      item.id,
+                      amount,
+                      coords,
+                    );
+                  }
+                },
+              );
+            } else {
+              client.inventoryController.dropItem(item.id, 1, coords);
+            }
+          }
+        }
+      },
     });
+  };
+
+  const onContextMenu = (e: MouseEvent, item: Item) => {
+    e.preventDefault();
+    if (Date.now() < suppressContextMenuUntilRef.current) return;
+    setContextMenu({ item, x: e.clientX, y: e.clientY });
   };
 
   const tabItems = positions.filter((p) => p.tab === activeTab);
@@ -326,7 +425,7 @@ export function InventoryGrid({ itemIds }: Props) {
           <button
             key={i}
             role='tab'
-            data-tab={i}
+            data-inventory-tab={i}
             /* biome-ignore lint/nursery/useSortedClasses: Need space */
             class={`tab${activeTab === i ? ' tab-active' : ''}`}
             onClick={() => setActiveTab(i)}
@@ -353,7 +452,8 @@ export function InventoryGrid({ itemIds }: Props) {
           Array.from({ length: COLS }, (_, col) => (
             <div
               key={`${col}-${row}`}
-              data-cell
+              data-inventory-cell
+              data-tab={activeTab}
               data-x={col}
               data-y={row}
               class='border border-base-300/30'
@@ -374,12 +474,21 @@ export function InventoryGrid({ itemIds }: Props) {
           if (!item || !record) return null;
 
           const span = ITEM_SPAN[record.size];
-          const itemIsDragging = drag?.item.id === item.id;
+          // Only dim if THIS item is being dragged from inventory (not from equip)
+          const itemIsDragging =
+            currentDrag?.source === 'inventory' &&
+            currentDrag?.itemId === item.id;
           const tooltipLines = getTooltipLines(item);
 
           return (
             <div
               key={item.id}
+              data-inventory-cell
+              data-inventory-item={item.id}
+              data-tab={activeTab}
+              data-x={pos.x}
+              data-y={pos.y}
+              /* biome-ignore lint/nursery/useSortedClasses: Need space */
               class={`group absolute flex cursor-grab items-center justify-center${itemIsDragging ? ' opacity-30' : ''}`}
               style={{
                 left: pos.x * CELL_SIZE,
@@ -388,57 +497,42 @@ export function InventoryGrid({ itemIds }: Props) {
                 height: span.rows * CELL_SIZE,
               }}
               onPointerDown={(e) => onPointerDown(e, item)}
+              onContextMenu={(e) => onContextMenu(e, item)}
             >
               <ItemIcon
                 graphicId={record.graphicId}
                 alt={record.name}
                 class='pointer-events-none max-h-full max-w-full object-contain'
               />
-              {/* Multi-line tooltip */}
-              {!itemIsDragging && tooltipLines.length > 0 && (
-                <div class='pointer-events-none absolute top-0 left-full z-50 ml-1 hidden w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg group-hover:block'>
-                  {tooltipLines.map((line, i) => (
-                    <div
-                      key={i}
-                      class={i === 0 ? 'font-semibold' : 'opacity-70'}
-                    >
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              )}
+              {/* Multi-line tooltip: show on desktop hover or when touch-activated */}
+              {(touchTooltipId === item.id || !itemIsDragging) &&
+                tooltipLines.length > 0 && (
+                  <div
+                    class={`pointer-events-none absolute top-0 left-full z-50 ml-1 w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg${touchTooltipId === item.id ? 'block' : 'hidden group-hover:block'}`}
+                  >
+                    {tooltipLines.map((line, i) => (
+                      <div
+                        key={i}
+                        class={i === 0 ? 'font-semibold' : 'opacity-70'}
+                      >
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                )}
             </div>
           );
         })}
       </div>
 
-      {/* Drag ghost */}
-      {drag && (
-        <div
-          class='pointer-events-none fixed z-9999 opacity-90'
-          style={{
-            left: drag.ghostX - drag.offsetX,
-            top: drag.ghostY - drag.offsetY,
-            width: (() => {
-              const record = client.getEifRecordById(drag.item.id);
-              return record
-                ? ITEM_SPAN[record.size].cols * CELL_SIZE
-                : CELL_SIZE;
-            })(),
-            height: (() => {
-              const record = client.getEifRecordById(drag.item.id);
-              return record
-                ? ITEM_SPAN[record.size].rows * CELL_SIZE
-                : CELL_SIZE;
-            })(),
-          }}
-        >
-          <ItemIcon
-            graphicId={client.getEifRecordById(drag.item.id)?.graphicId ?? 0}
-            alt=''
-            class='max-h-full max-w-full object-contain'
-          />
-        </div>
+      {/* Context menu */}
+      {contextMenu && (
+        <InventoryContextMenu
+          item={contextMenu.item}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+        />
       )}
     </div>
   );

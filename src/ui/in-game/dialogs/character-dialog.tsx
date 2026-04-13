@@ -1,8 +1,10 @@
 import type { EifRecord } from 'eolib';
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { EquipmentSlot } from '@/equipment';
+import { playSfxById, SfxId } from '@/sfx';
 import { ItemIcon, Tabs } from '@/ui/components';
 import { useCharacterInfo, useClient, useLocale } from '@/ui/context';
-import { usePlayerStats } from '@/ui/in-game';
+import { useItemDrag, usePlayerStats } from '@/ui/in-game';
 import { capitalize, getItemMeta } from '@/utils';
 import { DialogBase } from './dialog-base';
 
@@ -18,19 +20,103 @@ type SlotConfig = {
   key: string;
   label: string;
   itemId: number;
+  slot: EquipmentSlot;
   gridColumn: string;
   gridRow: string;
 };
 
-function EquipSlot({ label, itemId, gridColumn, gridRow }: SlotConfig) {
+function EquipSlot({ label, itemId, slot, gridColumn, gridRow }: SlotConfig) {
   const client = useClient();
+  const info = useCharacterInfo();
+  const { startDrag, cancelDrag } = useItemDrag();
   const record = itemId ? client.getEifRecordById(itemId) : null;
   const tooltipLines = record ? getEquipTooltipLines(record) : null;
+  const isOwnCharacter = info?.details.playerId === client.playerId;
+  const [touchTooltip, setTouchTooltip] = useState(false);
+  const slotRef = useRef<HTMLDivElement>(null);
+
+  // Clear touch tooltip when touching outside this slot
+  useEffect(() => {
+    const handler = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      if (!slotRef.current?.contains(e.target as Node)) {
+        setTouchTooltip(false);
+      }
+    };
+    window.addEventListener('pointerdown', handler);
+    return () => window.removeEventListener('pointerdown', handler);
+  }, []);
+
+  const doUnequip = () => {
+    client.inventoryController.unequipItem(slot);
+  };
+
+  const onPointerDown = (e: PointerEvent) => {
+    if (!record || !itemId || !isOwnCharacter) return;
+    if (e.button !== 0 && e.pointerType !== 'touch') return;
+    e.preventDefault();
+
+    if (e.pointerType === 'touch') {
+      setTouchTooltip(true);
+    }
+
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+
+    // Long-press on touch: cancel drag and unequip
+    let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+    if (e.pointerType === 'touch') {
+      longPressTimer = setTimeout(() => {
+        longPressTimer = null;
+        cancelDrag();
+        setTouchTooltip(false);
+        doUnequip();
+      }, 700);
+    }
+
+    playSfxById(SfxId.InventoryPickup);
+
+    startDrag({
+      info: {
+        source: 'equipment',
+        itemId,
+        equipSlot: slot,
+        pointerId: e.pointerId,
+        ghostX: e.clientX,
+        ghostY: e.clientY,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top,
+        graphicId: record.graphicId,
+        ghostWidth: rect.width,
+        ghostHeight: rect.height,
+      },
+      onResolve: (result) => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        setTouchTooltip(false);
+        if (result.type !== 'cancelled') {
+          doUnequip();
+        }
+      },
+    });
+  };
+
+  const onContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    if (!record || !itemId || !isOwnCharacter) return;
+    doUnequip();
+  };
 
   return (
     <div
-      class='group relative flex items-center justify-center rounded border border-base-300 bg-base-200'
+      ref={slotRef}
+      data-equip-slot={isOwnCharacter ? slot : undefined}
+      class={`group relative flex items-center justify-center rounded border border-base-300 bg-base-200${isOwnCharacter && itemId ? 'cursor-grab' : ''}`}
       style={{ gridColumn, gridRow }}
+      onPointerDown={onPointerDown}
+      onContextMenu={onContextMenu}
     >
       {record ? (
         <ItemIcon
@@ -44,7 +130,9 @@ function EquipSlot({ label, itemId, gridColumn, gridRow }: SlotConfig) {
         </span>
       )}
       {tooltipLines && tooltipLines.length > 0 && (
-        <div class='pointer-events-none absolute top-0 left-full z-50 ml-1 hidden w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg group-hover:block'>
+        <div
+          class={`pointer-events-none absolute top-0 left-full z-50 ml-1 w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg${touchTooltip ? 'block' : 'hidden group-hover:block'}`}
+        >
           {tooltipLines.map((line, i) => (
             <div key={i} class={i === 0 ? 'font-semibold' : 'opacity-70'}>
               {line}
@@ -65,6 +153,7 @@ function PaperdollTab() {
       key: 'hat',
       label: locale.slotHat,
       itemId: info?.equipment.hat ?? 0,
+      slot: EquipmentSlot.Hat,
       gridColumn: '3 / span 2',
       gridRow: '1 / span 2',
     },
@@ -72,6 +161,7 @@ function PaperdollTab() {
       key: 'necklace',
       label: locale.slotNecklace,
       itemId: info?.equipment.necklace ?? 0,
+      slot: EquipmentSlot.Necklace,
       gridColumn: '5 / span 2',
       gridRow: '1 / span 2',
     },
@@ -79,6 +169,7 @@ function PaperdollTab() {
       key: 'weapon',
       label: locale.slotWeapon,
       itemId: info?.equipment.weapon ?? 0,
+      slot: EquipmentSlot.Weapon,
       gridColumn: '1 / span 2',
       gridRow: '3 / span 3',
     },
@@ -86,6 +177,7 @@ function PaperdollTab() {
       key: 'armor',
       label: locale.slotArmor,
       itemId: info?.equipment.armor ?? 0,
+      slot: EquipmentSlot.Armor,
       gridColumn: '3 / span 2',
       gridRow: '3 / span 3',
     },
@@ -93,6 +185,7 @@ function PaperdollTab() {
       key: 'shield',
       label: locale.slotShield,
       itemId: info?.equipment.shield ?? 0,
+      slot: EquipmentSlot.Shield,
       gridColumn: '5 / span 2',
       gridRow: '3 / span 3',
     },
@@ -100,6 +193,7 @@ function PaperdollTab() {
       key: 'gloves',
       label: locale.slotGloves,
       itemId: info?.equipment.gloves ?? 0,
+      slot: EquipmentSlot.Gloves,
       gridColumn: '1 / span 2',
       gridRow: '6 / span 2',
     },
@@ -107,6 +201,7 @@ function PaperdollTab() {
       key: 'belt',
       label: locale.slotBelt,
       itemId: info?.equipment.belt ?? 0,
+      slot: EquipmentSlot.Belt,
       gridColumn: '3 / span 2',
       gridRow: '6',
     },
@@ -114,6 +209,7 @@ function PaperdollTab() {
       key: 'ring1',
       label: locale.slotRing1,
       itemId: info?.equipment.ring[0] ?? 0,
+      slot: EquipmentSlot.Ring1,
       gridColumn: '5',
       gridRow: '6',
     },
@@ -121,6 +217,7 @@ function PaperdollTab() {
       key: 'ring2',
       label: locale.slotRing2,
       itemId: info?.equipment.ring[1] ?? 0,
+      slot: EquipmentSlot.Ring2,
       gridColumn: '6',
       gridRow: '6',
     },
@@ -128,6 +225,7 @@ function PaperdollTab() {
       key: 'armlet1',
       label: locale.slotArmlet1,
       itemId: info?.equipment.armlet[0] ?? 0,
+      slot: EquipmentSlot.Armlet1,
       gridColumn: '5',
       gridRow: '7',
     },
@@ -135,6 +233,7 @@ function PaperdollTab() {
       key: 'armlet2',
       label: locale.slotArmlet2,
       itemId: info?.equipment.armlet[1] ?? 0,
+      slot: EquipmentSlot.Armlet2,
       gridColumn: '6',
       gridRow: '7',
     },
@@ -142,6 +241,7 @@ function PaperdollTab() {
       key: 'boots',
       label: locale.slotBoots,
       itemId: info?.equipment.boots ?? 0,
+      slot: EquipmentSlot.Boots,
       gridColumn: '3 / span 2',
       gridRow: '7 / span 2',
     },
@@ -149,6 +249,7 @@ function PaperdollTab() {
       key: 'accessory',
       label: locale.slotAccessory,
       itemId: info?.equipment.accessory ?? 0,
+      slot: EquipmentSlot.Accessory,
       gridColumn: '2',
       gridRow: '8',
     },
@@ -156,6 +257,7 @@ function PaperdollTab() {
       key: 'bracer1',
       label: locale.slotBracer1,
       itemId: info?.equipment.bracer[0] ?? 0,
+      slot: EquipmentSlot.Bracer1,
       gridColumn: '5',
       gridRow: '8',
     },
@@ -163,6 +265,7 @@ function PaperdollTab() {
       key: 'bracer2',
       label: locale.slotBracer2,
       itemId: info?.equipment.bracer[1] ?? 0,
+      slot: EquipmentSlot.Bracer2,
       gridColumn: '6',
       gridRow: '8',
     },

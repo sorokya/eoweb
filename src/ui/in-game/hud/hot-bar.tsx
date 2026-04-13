@@ -1,4 +1,4 @@
-import { HUD_Z } from './consts';
+import { HUD_Z } from '@/ui/consts';
 
 const SLOT_COUNT = 6;
 

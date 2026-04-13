@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { Alert, Backdrop, Confirm } from '@/ui/components';
+import { Alert, AmountDialog, Backdrop, Confirm } from '@/ui/components';
 import { useClient } from '@/ui/context';
 
 type AlertContainerProps = {
@@ -13,9 +13,18 @@ type AlertState = {
   callback?: (confirmed: boolean) => void;
 };
 
+type AmountState = {
+  title: string;
+  message: string;
+  max: number;
+  actionLabel: string;
+  callback: (amount: number | null) => void;
+};
+
 export function AlertContainer({ children }: AlertContainerProps) {
   const client = useClient();
   const [alert, setAlert] = useState<AlertState | null>(null);
+  const [amountState, setAmountState] = useState<AmountState | null>(null);
 
   const returnFocusRef = useRef<Element | null>(null);
 
@@ -29,29 +38,58 @@ export function AlertContainer({ children }: AlertContainerProps) {
       returnFocusRef.current = document.activeElement;
       setAlert({ title, message, confirm: true, callback });
     });
+
+    client.alertController.subscribeAmount(
+      (title, message, max, actionLabel, callback) => {
+        returnFocusRef.current = document.activeElement;
+        setAmountState({ title, message, max, actionLabel, callback });
+      },
+    );
   }, [client]);
+
+  const restoreFocus = () => {
+    if (returnFocusRef.current instanceof HTMLElement) {
+      returnFocusRef.current.focus();
+    }
+  };
 
   const handleClose = useCallback(
     (confirmed = false) => {
       alert?.callback?.(confirmed);
       setAlert(null);
-      if (returnFocusRef.current instanceof HTMLElement) {
-        returnFocusRef.current.focus();
-      }
+      restoreFocus();
     },
     [alert],
   );
 
+  const handleAmountConfirm = useCallback(
+    (amount: number) => {
+      amountState?.callback(amount);
+      setAmountState(null);
+      restoreFocus();
+    },
+    [amountState],
+  );
+
+  const handleAmountCancel = useCallback(() => {
+    amountState?.callback(null);
+    setAmountState(null);
+    restoreFocus();
+  }, [amountState]);
+
   useEffect(() => {
-    if (!alert) return;
+    if (!alert && !amountState) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
+      if (e.key === 'Escape') {
+        if (amountState) handleAmountCancel();
+        else handleClose();
+      }
     };
 
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [alert, handleClose]);
+  }, [alert, amountState, handleClose, handleAmountCancel]);
 
   return (
     <>
@@ -71,6 +109,18 @@ export function AlertContainer({ children }: AlertContainerProps) {
               onClose={() => handleClose()}
             />
           )}
+        </Backdrop>
+      )}
+      {amountState && (
+        <Backdrop>
+          <AmountDialog
+            title={amountState.title}
+            message={amountState.message}
+            max={amountState.max}
+            actionLabel={amountState.actionLabel}
+            onConfirm={handleAmountConfirm}
+            onCancel={handleAmountCancel}
+          />
         </Backdrop>
       )}
       {children}
