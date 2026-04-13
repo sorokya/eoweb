@@ -36,7 +36,7 @@ const NAV_BUTTONS: NavButton[] = [
   { id: 'inventory', label: 'Inventory', Icon: GiBackpack },
   { id: 'map', label: 'Map', Icon: GiCompass },
   { id: 'spells', label: 'Spells', Icon: GiSpellBook },
-  { id: 'stats', label: 'Stats', Icon: GiSwordman },
+  { id: 'character', label: 'Character', Icon: GiSwordman },
   { id: 'quests', label: 'Quests', Icon: GiScrollUnfurled },
   { id: 'settings', label: 'Settings', Icon: GiGears },
 ];

@@ -9,13 +9,13 @@ export type {
 } from './chat/chat-manager';
 export { ChatManagerProvider, useChatManager } from './chat/chat-manager';
 // Dialog components
+export { CharacterDialog } from './dialogs/character-dialog';
 export { DialogBase } from './dialogs/dialog-base';
 export { InventoryDialog } from './dialogs/inventory-dialog';
 export { MapDialog } from './dialogs/map-dialog';
 export { QuestsDialog } from './dialogs/quests-dialog';
 export { SettingsDialog } from './dialogs/settings-dialog';
 export { SpellsDialog } from './dialogs/spells-dialog';
-export { StatsDialog } from './dialogs/stats-dialog';
 // HUD components
 export { HotBar } from './hud/hot-bar';
 export { MobileNav, NavSidebar } from './hud/nav-sidebar';

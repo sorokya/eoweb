@@ -11,5 +11,7 @@ export { Checkbox } from './checkbox';
 export { Confirm } from './confirm';
 export { CycleInput } from './cycle-input';
 export { Input } from './input';
+export { InventoryGrid } from './inventory-grid';
+export { ItemIcon } from './item-icon';
 export { ProgressBar } from './progress-bar';
 export { type TabItem, Tabs } from './tabs';

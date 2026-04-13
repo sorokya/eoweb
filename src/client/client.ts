@@ -73,6 +73,7 @@ import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from '@/db';
 import { DialogResourceID, type Edf, EOResourceID } from '@/edf';
 import { Sans11Font } from '@/fonts';
 import { GameState } from '@/game-state';
+import { GfxLoader } from '@/gfx';
 import { registerAllHandlers } from '@/handlers';
 import { MapRenderer } from '@/map';
 import { MinimapRenderer } from '@/minimap';
@@ -120,6 +121,8 @@ export class Client {
   characterId = 0;
   name = '';
   title = '';
+  home = '';
+  partner = '';
   guildName = '';
   guildTag = '';
   guildRank = 0;
@@ -213,6 +216,7 @@ export class Client {
     },
   });
   atlas: Atlas;
+  gfxLoader = new GfxLoader();
   hotbarSlots: ISlot[] = [];
   sans11: Sans11Font;
   menuPlayerId = 0;

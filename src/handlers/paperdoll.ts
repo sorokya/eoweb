@@ -13,6 +13,12 @@ import { playSfxById, SfxId } from '@/sfx';
 
 function handlePaperdollReply(client: Client, reader: EoReader) {
   const packet = PaperdollReplyServerPacket.deserialize(reader);
+
+  if (packet.details.playerId === client.playerId) {
+    client.home = packet.details.home;
+    client.partner = packet.details.partner;
+  }
+
   client.emit('openPaperdoll', {
     icon: packet.icon,
     details: packet.details,

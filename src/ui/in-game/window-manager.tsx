@@ -14,7 +14,7 @@ export type StaticDialogId =
   | 'inventory'
   | 'map'
   | 'spells'
-  | 'stats'
+  | 'character'
   | 'quests'
   | 'settings';
 

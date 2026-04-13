@@ -23,7 +23,7 @@ const STATIC_DEFAULTS: Partial<Record<string, DialogLayout>> = {
   inventory: 'right',
   map: 'center',
   spells: 'center',
-  stats: 'center',
+  character: 'center',
   quests: 'center',
   settings: 'center',
 };

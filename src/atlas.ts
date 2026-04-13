@@ -27,7 +27,7 @@ import {
   NUMBER_OF_SLASHES,
   TILE_HEIGHT,
 } from '@/consts';
-import { GfxLoader, GfxType } from '@/gfx';
+import { GfxType } from '@/gfx';
 import { LAYER_GFX_MAP } from '@/map';
 import { clipHair, getItemGraphicId, HatMaskType } from '@/utils';
 
@@ -393,7 +393,6 @@ export class Atlas {
   private effects: EffectAtlasEntry[] = [];
   private staticEntries: Map<StaticAtlasEntryType, TileAtlasEntry> = new Map();
   private client: Client;
-  private gfxLoader = new GfxLoader();
   mapId = 0;
   private mapHasChairs = false;
   private bmpsToLoad: Bmp[] = [];
@@ -938,7 +937,7 @@ export class Atlas {
       this.bmpsToLoad.push(bmp);
 
       this.pendingBmpPromises.push(
-        this.gfxLoader
+        this.client.gfxLoader
           .loadResource(gfxType, id + 100)
           .then((imageBitmap) => {
             bmp.img = imageBitmap;

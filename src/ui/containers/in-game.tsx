@@ -1,6 +1,7 @@
 import { useClient } from '@/ui/context';
 import type { ChatDialogId, DialogId } from '@/ui/in-game';
 import {
+  CharacterDialog,
   ChatDialog,
   ChatManagerProvider,
   HotBar,
@@ -12,7 +13,6 @@ import {
   QuestsDialog,
   SettingsDialog,
   SpellsDialog,
-  StatsDialog,
   StatusMessages,
   useChatManager,
   useWindowManager,
@@ -23,7 +23,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'inventory',
   'map',
   'spells',
-  'stats',
+  'character',
   'quests',
   'settings',
 ];
@@ -39,8 +39,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <MapDialog />;
     case 'spells':
       return <SpellsDialog />;
-    case 'stats':
-      return <StatsDialog />;
+    case 'character':
+      return <CharacterDialog />;
     case 'quests':
       return <QuestsDialog />;
     case 'settings':
