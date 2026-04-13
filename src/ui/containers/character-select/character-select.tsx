@@ -5,7 +5,7 @@ import {
   EquipmentMapInfo,
   Gender,
 } from 'eolib';
-import { useCallback } from 'preact/hooks';
+import { useCallback, useEffect } from 'preact/hooks';
 import {
   CREATE_CHARACTER_PREVIEW_PLAYER_ID,
   MAX_CHARACTERS,
@@ -15,6 +15,7 @@ import {
 } from '@/consts';
 import { DialogResourceID } from '@/edf';
 import { GameState } from '@/game-state';
+import { playSfxById, SfxId } from '@/sfx';
 import { Button, drawCharacterPreview } from '@/ui/components';
 import { useCharacters, useClient, useLocale } from '@/ui/context';
 import { Character } from './character';
@@ -66,6 +67,25 @@ export function CharacterSelect() {
   const changePassword = useCallback(() => {
     client.setState(GameState.ChangePassword);
   }, [client]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        cancel();
+      }
+
+      if (['1', '2', '3'].includes(e.key)) {
+        const character = characters[Number.parseInt(e.key, 10) - 1];
+        if (!character) return;
+        playSfxById(SfxId.ButtonClick);
+        client.authenticationController.selectCharacter(character.id);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [cancel, client, characters]);
 
   return (
     <div class='card bg-base-100 w-11/12 max-h-[90dvh] shadow-sm'>
