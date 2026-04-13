@@ -40,18 +40,9 @@ type SlotConfig = {
   itemId: number;
   gridColumn: string;
   gridRow: string;
-  cols: number;
-  rows: number;
 };
 
-function EquipSlot({
-  label,
-  itemId,
-  gridColumn,
-  gridRow,
-  cols,
-  rows,
-}: SlotConfig) {
+function EquipSlot({ label, itemId, gridColumn, gridRow }: SlotConfig) {
   const client = useClient();
   const record = itemId ? client.getEifRecordById(itemId) : null;
   const tooltipLines = record ? getEquipTooltipLines(record) : null;
@@ -59,18 +50,13 @@ function EquipSlot({
   return (
     <div
       class='group relative flex items-center justify-center rounded border border-base-300 bg-base-200'
-      style={{
-        gridColumn,
-        gridRow,
-        width: cols * EQUIP_CELL,
-        height: rows * EQUIP_CELL,
-      }}
+      style={{ gridColumn, gridRow }}
     >
       {record ? (
         <ItemIcon
           graphicId={record.graphicId}
           alt={record.name}
-          class='pointer-events-none max-h-full max-w-full object-contain'
+          class='pointer-events-none'
         />
       ) : (
         <span class='pointer-events-none text-center text-[7px] text-base-content/40 leading-tight'>
@@ -105,8 +91,6 @@ function PaperdollTab() {
       itemId: eq.hat,
       gridColumn: '2',
       gridRow: '1',
-      cols: 1,
-      rows: 1,
     },
     {
       key: 'necklace',
@@ -114,8 +98,6 @@ function PaperdollTab() {
       itemId: eq.necklace,
       gridColumn: '4',
       gridRow: '1',
-      cols: 1,
-      rows: 1,
     },
     {
       key: 'weapon',
@@ -123,8 +105,6 @@ function PaperdollTab() {
       itemId: eq.weapon,
       gridColumn: '1',
       gridRow: '2 / span 2',
-      cols: 1,
-      rows: 2,
     },
     {
       key: 'armor',
@@ -132,8 +112,6 @@ function PaperdollTab() {
       itemId: eq.armor,
       gridColumn: '2 / span 2',
       gridRow: '2 / span 2',
-      cols: 2,
-      rows: 2,
     },
     {
       key: 'shield',
@@ -141,8 +119,6 @@ function PaperdollTab() {
       itemId: eq.shield,
       gridColumn: '4',
       gridRow: '2 / span 2',
-      cols: 1,
-      rows: 2,
     },
     {
       key: 'gloves',
@@ -150,8 +126,6 @@ function PaperdollTab() {
       itemId: eq.gloves,
       gridColumn: '1',
       gridRow: '4',
-      cols: 1,
-      rows: 1,
     },
     {
       key: 'belt',
@@ -159,8 +133,6 @@ function PaperdollTab() {
       itemId: eq.belt,
       gridColumn: '2',
       gridRow: '4',
-      cols: 1,
-      rows: 1,
     },
     {
       key: 'ring1',
@@ -168,8 +140,6 @@ function PaperdollTab() {
       itemId: eq.ring[0] ?? 0,
       gridColumn: '3',
       gridRow: '4',
-      cols: 1,
-      rows: 1,
     },
     {
       key: 'ring2',
@@ -177,8 +147,6 @@ function PaperdollTab() {
       itemId: eq.ring[1] ?? 0,
       gridColumn: '4',
       gridRow: '4',
-      cols: 1,
-      rows: 1,
     },
     {
       key: 'boots',
@@ -186,8 +154,6 @@ function PaperdollTab() {
       itemId: eq.boots,
       gridColumn: '2',
       gridRow: '5 / span 2',
-      cols: 1,
-      rows: 2,
     },
     {
       key: 'armlet1',
@@ -195,8 +161,6 @@ function PaperdollTab() {
       itemId: eq.armlet[0] ?? 0,
       gridColumn: '3',
       gridRow: '5',
-      cols: 1,
-      rows: 1,
     },
     {
       key: 'armlet2',
@@ -204,8 +168,6 @@ function PaperdollTab() {
       itemId: eq.armlet[1] ?? 0,
       gridColumn: '4',
       gridRow: '5',
-      cols: 1,
-      rows: 1,
     },
     {
       key: 'accessory',
@@ -213,8 +175,6 @@ function PaperdollTab() {
       itemId: eq.accessory,
       gridColumn: '1',
       gridRow: '6',
-      cols: 1,
-      rows: 1,
     },
     {
       key: 'bracer1',
@@ -222,8 +182,6 @@ function PaperdollTab() {
       itemId: eq.bracer[0] ?? 0,
       gridColumn: '3',
       gridRow: '6',
-      cols: 1,
-      rows: 1,
     },
     {
       key: 'bracer2',
@@ -231,8 +189,6 @@ function PaperdollTab() {
       itemId: eq.bracer[1] ?? 0,
       gridColumn: '4',
       gridRow: '6',
-      cols: 1,
-      rows: 1,
     },
   ];
 
@@ -254,8 +210,6 @@ function PaperdollTab() {
           display: 'grid',
           gridTemplateColumns: `repeat(4, ${EQUIP_CELL}px)`,
           gridTemplateRows: `repeat(6, ${EQUIP_CELL}px)`,
-          width: 4 * EQUIP_CELL,
-          height: 6 * EQUIP_CELL,
           gap: 1,
         }}
       >
