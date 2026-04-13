@@ -80,7 +80,7 @@ export function CreateAccount() {
   }, [client]);
 
   return (
-    <div class='card bg-base-100 w-96 shadow-sm'>
+    <div class='card w-96 bg-base-100 shadow-sm'>
       <div class='card-body'>
         <div class='card-title'>{locale.createAccountTitle}</div>
         <form onSubmit={onSubmit} class='flex flex-col gap-3'>

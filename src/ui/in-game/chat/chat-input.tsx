@@ -79,7 +79,7 @@ export function ChatInput({ tab, onActivity, onDismiss, inputRef }: Props) {
 
   if (readOnly) {
     return (
-      <div class='flex border-t border-base-content/10 px-2 py-1 opacity-40 text-xs italic select-none'>
+      <div class='flex select-none border-base-content/10 border-t px-2 py-1 text-xs italic opacity-40'>
         Read-only channel
       </div>
     );
@@ -93,11 +93,11 @@ export function ChatInput({ tab, onActivity, onDismiss, inputRef }: Props) {
         : "Say something... (use ~, &, ', + for other channels)";
 
   return (
-    <div class='flex border-t border-base-content/10'>
+    <div class='flex border-base-content/10 border-t'>
       <input
         ref={inputRef}
         type='text'
-        class='input input-xs flex-1 rounded-none focus:outline-none bg-transparent text-xs'
+        class='input input-xs flex-1 rounded-none bg-transparent text-xs focus:outline-none'
         placeholder={placeholder}
         value={input}
         onInput={(e) => {

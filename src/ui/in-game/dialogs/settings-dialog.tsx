@@ -21,7 +21,7 @@ export function SettingsDialog() {
         <p class='text-sm opacity-60'>More settings coming soon.</p>
         <div class='divider my-0' />
         <div>
-          <p class='text-xs opacity-50 mb-1'>
+          <p class='mb-1 text-xs opacity-50'>
             Reset all UI positions and layout settings back to defaults.
           </p>
           <Button

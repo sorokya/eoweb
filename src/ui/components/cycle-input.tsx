@@ -27,12 +27,12 @@ export function CycleInput({
 
   return (
     <div class='flex items-center gap-2'>
-      <span class='label text-sm flex-1'>{label}</span>
+      <span class='label flex-1 text-sm'>{label}</span>
       <div class='flex items-center gap-1'>
         <button type='button' class='btn btn-xs btn-ghost' onClick={prev}>
           {'<'}
         </button>
-        <span class='text-sm min-w-12 text-center'>
+        <span class='min-w-12 text-center text-sm'>
           {format ? format(value) : value}
         </span>
         <button type='button' class='btn btn-xs btn-ghost' onClick={next}>

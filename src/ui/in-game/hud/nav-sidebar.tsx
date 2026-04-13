@@ -48,7 +48,7 @@ export function NavSidebar() {
   return (
     <div
       role='presentation'
-      class='hidden md:flex absolute right-0 top-0 bottom-0 flex-col items-end justify-center gap-1 pr-0 pointer-events-none'
+      class='pointer-events-none absolute top-0 right-0 bottom-0 hidden flex-col items-end justify-center gap-1 pr-0 md:flex'
       style={{ zIndex: HUD_Z }}
     >
       <div
@@ -61,7 +61,7 @@ export function NavSidebar() {
           <Button
             key={id}
             variant={['xs', 'neutral']}
-            class='w-14 flex flex-col items-center gap-0.5 h-auto py-1.5'
+            class='flex h-auto w-14 flex-col items-center gap-0.5 py-1.5'
             onClick={() => (isOpen(id) ? closeDialog(id) : openDialog(id))}
             label={label}
           >
@@ -71,7 +71,7 @@ export function NavSidebar() {
         ))}
         <Button
           variant={['xs', 'neutral']}
-          class='w-14 flex flex-col items-center gap-0.5 h-auto py-1.5 mt-1'
+          class='mt-1 flex h-auto w-14 flex-col items-center gap-0.5 py-1.5'
           onClick={exitGame}
           label='Exit Game'
         >
@@ -90,7 +90,7 @@ export function MobileNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div class='md:hidden absolute top-8 right-1' style={{ zIndex: HUD_Z }}>
+    <div class='absolute top-8 right-1 md:hidden' style={{ zIndex: HUD_Z }}>
       <div
         role='presentation'
         class='relative'
@@ -109,7 +109,7 @@ export function MobileNav() {
 
         {open && (
           <ul
-            class='menu menu-sm bg-base-300/90 backdrop-blur-sm rounded-box shadow-xl absolute right-0 top-full mt-1 z-50 border border-base-content/10 min-w-32 p-1'
+            class='menu menu-sm absolute top-full right-0 z-50 mt-1 min-w-32 rounded-box border border-base-content/10 bg-base-300/90 p-1 shadow-xl backdrop-blur-sm'
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >

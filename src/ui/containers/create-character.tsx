@@ -135,12 +135,12 @@ export function CreateCharacter() {
         <div class='flex gap-4'>
           <button
             type='button'
-            class='shrink-0 flex items-center justify-center cursor-pointer bg-transparent border-none p-0'
+            class='flex shrink-0 cursor-pointer items-center justify-center border-none bg-transparent p-0'
             onClick={rotatePreview}
           >
             <CharacterPreview previewUrl={previewUrl} alt='preview' />
           </button>
-          <form onSubmit={onSubmit} class='flex flex-col gap-3 flex-1 min-w-0'>
+          <form onSubmit={onSubmit} class='flex min-w-0 flex-1 flex-col gap-3'>
             <Input
               label={locale.createCharacterName}
               name='name'

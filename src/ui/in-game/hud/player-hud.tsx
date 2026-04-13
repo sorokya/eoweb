@@ -25,13 +25,7 @@ export function PlayerHud() {
   return (
     <div
       role='presentation'
-      class={[
-        'absolute top-0 left-0 right-0 flex flex-row items-center gap-1.5 px-2 py-1',
-        'border-b border-base-content/10 rounded-none shadow-md bg-base-300/95 backdrop-blur-sm',
-        // Desktop: vertical box at top-left
-        'md:top-2.5 md:left-2.5 md:right-auto md:w-48 md:flex-col md:gap-1.5 md:p-2.5',
-        'md:rounded-lg md:border md:border-base-content/10 md:shadow-xl',
-      ].join(' ')}
+      class='absolute top-0 right-0 left-0 flex flex-row items-center gap-1.5 rounded-none border-base-content/10 border-b bg-base-300/95 px-2 py-1 shadow-md backdrop-blur-sm'
       style={{
         zIndex: HUD_Z,
       }}
@@ -39,15 +33,15 @@ export function PlayerHud() {
       onKeyDown={stopPropagation}
       onContextMenu={stopPropagation}
     >
-      <div class='flex-shrink-0 flex items-center gap-1'>
-        <span class='text-sm font-bold leading-tight truncate text-white'>
+      <div class='flex shrink-0 items-center gap-1'>
+        <span class='truncate font-bold text-sm text-white leading-tight'>
           {stats.name}
         </span>
-        <span class='text-[10px] md:text-xs opacity-50 leading-tight text-white'>
+        <span class='text-[10px] text-white leading-tight opacity-50'>
           Lv {stats.level}
         </span>
       </div>
-      <div class='flex-1 md:flex-none md:w-full flex flex-row md:flex-col gap-1 min-w-0'>
+      <div class='flex min-w-0 flex-1 flex-row gap-1'>
         <ProgressBar
           value={stats.hp}
           max={stats.maxHp}

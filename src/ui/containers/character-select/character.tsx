@@ -102,12 +102,12 @@ export function Character({ character }: CharacterProps) {
 
   if (!character) {
     return (
-      <div class='card bg-base-200 flex-1 flex flex-col p-4 min-h-0 opacity-40'>
-        <div class='shrink-0 h-6' />
-        <div class='flex-1 flex items-center justify-center min-h-0'>
+      <div class='card flex min-h-0 flex-1 flex-col bg-base-200 p-4 opacity-40'>
+        <div class='h-6 shrink-0' />
+        <div class='flex min-h-0 flex-1 items-center justify-center'>
           <CharacterPreview previewUrl={undefined} alt='' />
         </div>
-        <div class='shrink-0 flex justify-center mt-auto pt-3'>
+        <div class='mt-auto flex shrink-0 justify-center pt-3'>
           <span class='text-xs'>{locale.characterEmptySlot}</span>
         </div>
       </div>
@@ -117,10 +117,10 @@ export function Character({ character }: CharacterProps) {
   const adminBadge = ADMIN_BADGES[character.admin as AdminLevel];
 
   return (
-    <div class='card bg-base-200 flex-1 flex flex-col p-4 min-h-0'>
-      <div class='shrink-0 flex items-center justify-center gap-2'>
-        <span class='text-sm font-semibold'>{character.name}</span>
-        <span class='text-xs text-base-content/60'>Lvl {character.level}</span>
+    <div class='card flex min-h-0 flex-1 flex-col bg-base-200 p-4'>
+      <div class='flex shrink-0 items-center justify-center gap-2'>
+        <span class='font-semibold text-sm'>{character.name}</span>
+        <span class='text-base-content/60 text-xs'>Lvl {character.level}</span>
         {adminBadge && (
           <span class={`badge badge-xs ${adminBadge.color}`}>
             {locale[adminBadge.label]}
@@ -129,12 +129,12 @@ export function Character({ character }: CharacterProps) {
       </div>
       <button
         type='button'
-        class='flex-1 flex items-center justify-center min-h-0 py-2 bg-transparent border-none cursor-pointer p-0'
+        class='flex min-h-0 flex-1 cursor-pointer items-center justify-center border-none bg-transparent p-0 py-2'
         onClick={rotatePreview}
       >
         <CharacterPreview previewUrl={previewUrl} alt={character.name} />
       </button>
-      <div class='shrink-0 flex justify-center gap-2 mt-auto'>
+      <div class='mt-auto flex shrink-0 justify-center gap-2'>
         <Button variant={['primary', 'xs']} onClick={login}>
           {locale.btnLogin}
         </Button>

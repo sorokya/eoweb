@@ -148,7 +148,7 @@ export function DialogBase({
       ref={containerRef}
       role='presentation'
       data-chat-dialog={id.startsWith('chat-') ? id : undefined}
-      class={`flex flex-col rounded-lg shadow-xl border border-base-content/10 bg-base-300/90 backdrop-blur-sm overflow-visible select-none transition-opacity ${focused ? 'opacity-100' : 'opacity-80'}`}
+      class={`flex select-none flex-col overflow-visible rounded-lg border border-base-content/10 bg-base-300/90 shadow-xl backdrop-blur-sm transition-opacity ${focused ? 'opacity-100' : 'opacity-80'}`}
       style={posStyle}
       onPointerDown={handlePointerDown}
       onClick={stopProp}
@@ -156,19 +156,19 @@ export function DialogBase({
       onContextMenu={stopProp}
     >
       <div
-        class={`flex items-center gap-1 px-2 py-1.5 bg-base-content/5 rounded-t-lg ${noDrag ? '' : 'cursor-move'}`}
+        class={`flex items-center gap-1 rounded-t-lg bg-base-content/5 px-2 py-1.5 ${noDrag ? '' : 'cursor-move'}`}
         onPointerDown={onDragPointerDown}
       >
-        <div class='flex-1 min-w-0 flex items-center gap-1'>
+        <div class='flex min-w-0 flex-1 items-center gap-1'>
           {titleContent ?? (
-            <span class='text-sm font-semibold truncate select-none px-1'>
+            <span class='select-none truncate px-1 font-semibold text-sm'>
               {title}
             </span>
           )}
         </div>
 
         {!hideControls && (
-          <div class='flex items-center gap-1 shrink-0'>
+          <div class='flex shrink-0 items-center gap-1'>
             <div class='relative'>
               <button
                 type='button'
@@ -184,7 +184,7 @@ export function DialogBase({
               </button>
               {menuOpen && (
                 <ul
-                  class='menu menu-xs bg-base-300 rounded shadow-lg border border-base-content/10 absolute top-full right-0 mt-1 z-50 p-1'
+                  class='menu menu-xs absolute top-full right-0 z-50 mt-1 rounded border border-base-content/10 bg-base-300 p-1 shadow-lg'
                   onPointerDown={(e) => e.stopPropagation()}
                 >
                   {AUTO_LAYOUT_OPTIONS.map((l) => (

@@ -12,8 +12,8 @@ export function Alert({ title, message, onClose }: AlertProps) {
 
   return (
     <dialog class='modal' open style={{ background: 'transparent' }}>
-      <div class='modal-box backdrop-blur-sm bg-base-100/80'>
-        <h3 class='text-lg font-bold'>{title}</h3>
+      <div class='modal-box bg-base-100/80 backdrop-blur-sm'>
+        <h3 class='font-bold text-lg'>{title}</h3>
         <p class='py-4'>{message}</p>
         <div class='modal-action'>
           <Button variant='primary' onClick={onClose}>

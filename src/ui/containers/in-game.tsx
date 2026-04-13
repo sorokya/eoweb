@@ -88,7 +88,7 @@ function InGameContent() {
           class='pointer-events-none absolute inset-0 flex items-center justify-start pl-5'
           style={{ zIndex: DIALOG_Z }}
         >
-          <div class='pointer-events-auto flex flex-row gap-3 items-start'>
+          <div class='pointer-events-auto flex flex-row items-start gap-3'>
             {autoLeft.map((id) => (
               <DialogById key={id} id={id} />
             ))}
@@ -101,7 +101,7 @@ function InGameContent() {
           class='pointer-events-none absolute inset-0 flex items-center justify-center'
           style={{ zIndex: DIALOG_Z }}
         >
-          <div class='pointer-events-auto flex flex-row gap-3 items-start'>
+          <div class='pointer-events-auto flex flex-row items-start gap-3'>
             {autoCenter.map((id) => (
               <DialogById key={id} id={id} />
             ))}
@@ -114,7 +114,7 @@ function InGameContent() {
           class='pointer-events-none absolute inset-0 flex items-center justify-end pr-5'
           style={{ zIndex: DIALOG_Z }}
         >
-          <div class='pointer-events-auto flex flex-row-reverse gap-3 items-start'>
+          <div class='pointer-events-auto flex flex-row-reverse items-start gap-3'>
             {autoRight.map((id) => (
               <DialogById key={id} id={id} />
             ))}
@@ -124,15 +124,15 @@ function InGameContent() {
 
       {/* Desktop bottom bar: chat left | hotbar centered | spacer right */}
       <div
-        class='pointer-events-none hidden md:flex absolute inset-x-0 bottom-0 pb-2 px-2 items-end'
+        class='pointer-events-none absolute inset-x-0 bottom-0 hidden items-end px-2 pb-2 md:flex'
         style={{ zIndex: DIALOG_Z }}
       >
-        <div class='flex-1 pointer-events-auto flex justify-start items-end'>
+        <div class='pointer-events-auto flex flex-1 items-end justify-start'>
           {chatDialogIds.map((id) => (
             <DialogById key={id} id={id as DialogId} />
           ))}
         </div>
-        <div class='flex-1 pointer-events-none flex justify-center'>
+        <div class='pointer-events-none flex flex-1 justify-center'>
           <div class='pointer-events-auto'>
             <HotBar />
           </div>
@@ -142,7 +142,7 @@ function InGameContent() {
 
       {/* Mobile: chat at top below HUD */}
       <div
-        class='md:hidden pointer-events-none absolute inset-x-0 top-0 pt-8 flex justify-start'
+        class='pointer-events-none absolute inset-x-0 top-0 flex justify-start pt-8 md:hidden'
         style={{ zIndex: DIALOG_Z }}
       >
         <div class='pointer-events-auto'>
@@ -154,7 +154,7 @@ function InGameContent() {
 
       {/* Mobile: hotbar at bottom center */}
       <div
-        class='md:hidden pointer-events-none absolute inset-x-0 bottom-0 pb-2 flex justify-center'
+        class='pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2 md:hidden'
         style={{ zIndex: DIALOG_Z }}
       >
         <div class='pointer-events-auto'>
@@ -165,10 +165,10 @@ function InGameContent() {
       {/* Minimized strip */}
       {minimized.length > 0 && (
         <div
-          class='pointer-events-none absolute inset-0 flex flex-col items-start justify-center pl-1 gap-1'
+          class='pointer-events-none absolute inset-0 flex flex-col items-start justify-center gap-1 pl-1'
           style={{ zIndex: DIALOG_Z }}
         >
-          <div class='pointer-events-auto flex flex-col gap-1 items-start'>
+          <div class='pointer-events-auto flex flex-col items-start gap-1'>
             {minimized.map((id) => (
               <DialogById key={id} id={id} />
             ))}

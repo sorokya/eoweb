@@ -37,7 +37,7 @@ export function MainMenu() {
   );
 
   return (
-    <div class='align-center flex-col gap-4 flex w-full h-full justify-center items-center'>
+    <div class='flex h-full w-full flex-col items-center justify-center gap-4 align-center'>
       <img src='/logo.png' alt={locale.logoAlt} />
       <div class='flex flex-col gap-2'>
         {!client.config.staticHost && (

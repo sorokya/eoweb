@@ -37,13 +37,13 @@ export function StatusMessages() {
 
   return (
     <div
-      class='absolute flex flex-col items-center gap-1 pointer-events-none'
+      class='pointer-events-none absolute flex flex-col items-center gap-1'
       style={{ left: pos.x, top: pos.y, zIndex: HUD_Z }}
     >
       {messages.map((msg) => (
         <div
           key={msg.id}
-          class='px-4 py-1 rounded-full bg-base-100/80 border border-base-300 text-sm font-semibold shadow animate-fade-in'
+          class='animate-fade-in rounded-full border border-base-300 bg-base-100/80 px-4 py-1 font-semibold text-sm shadow'
         >
           {msg.message}
         </div>

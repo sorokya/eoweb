@@ -88,10 +88,10 @@ export function CharacterSelect() {
   }, [cancel, client, characters]);
 
   return (
-    <div class='card bg-base-100 w-11/12 max-h-[90dvh] shadow-sm'>
-      <div class='card-body flex flex-col min-h-0'>
+    <div class='card max-h-[90dvh] w-11/12 bg-base-100 shadow-sm'>
+      <div class='card-body flex min-h-0 flex-col'>
         <div class='card-title shrink-0'>{locale.characterSelectTitle}</div>
-        <div class='flex flex-col sm:flex-row gap-2 flex-1 min-h-0 overflow-y-auto'>
+        <div class='flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:flex-row'>
           {[0, 1, 2].map((slot) => (
             <Character key={slot} character={characters[slot]} />
           ))}

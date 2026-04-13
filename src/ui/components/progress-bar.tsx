@@ -15,16 +15,16 @@ type ProgressBarProps = {
 export function ProgressBar({ value, max, label, barClass }: ProgressBarProps) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
-    <div class='flex items-center gap-1 w-full min-w-0'>
-      <span class='flex-shrink-0 text-[8px] md:text-[9px] font-bold w-5 text-right opacity-80 uppercase tracking-wide'>
+    <div class='flex w-full min-w-0 items-center gap-1'>
+      <span class='w-5 flex-shrink-0 text-right font-bold text-[8px] uppercase tracking-wide opacity-80 md:text-[9px]'>
         {label}
       </span>
-      <div class='relative flex-1 h-3 md:h-4 rounded overflow-hidden bg-black/45 ring-1 ring-inset ring-white/8'>
+      <div class='relative h-3 flex-1 overflow-hidden rounded bg-black/45 ring-1 ring-white/8 ring-inset md:h-4'>
         <div
           class={`absolute inset-y-0 left-0 rounded transition-[width] duration-500 ease-out ${barClass}`}
           style={{ width: `${pct}%` }}
         />
-        <span class='absolute inset-0 flex items-center justify-center text-[7px] md:text-[8px] font-semibold leading-none drop-shadow text-white'>
+        <span class='absolute inset-0 flex items-center justify-center font-semibold text-[7px] text-white leading-none drop-shadow md:text-[8px]'>
           {fmt(value)}/{fmt(max)}
         </span>
       </div>

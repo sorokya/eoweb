@@ -81,6 +81,9 @@
         "useButtonType": "off",
         "noStaticElementInteractions": "off",
         "useKeyWithClickEvents": "off"
+      },
+      "nursery": {
+        "useSortedClasses": "on"
       }
     }
   },

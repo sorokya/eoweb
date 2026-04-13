@@ -21,14 +21,14 @@ export function Tabs({
   return (
     <div
       role='tablist'
-      class={`tabs tabs-${style}${size ? ` tabs-${size}` : ''}`}
+      class={`tabs tabs-${style}${size ? `tabs-${size}` : ''}`}
     >
       {items.map((item) => (
         <button
           key={item.id}
           role='tab'
           type='button'
-          class={`tab${item.id === activeId ? ' tab-active' : ''}`}
+          class={`tab${item.id === activeId ? 'tab-active' : ''}`}
           onClick={() => onSelect(item.id)}
         >
           {item.label}

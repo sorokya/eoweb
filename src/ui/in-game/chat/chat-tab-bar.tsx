@@ -37,7 +37,7 @@ export function ChatTabBar({
   );
 
   return (
-    <div class='flex items-center gap-0.5 min-w-0 overflow-hidden'>
+    <div class='flex min-w-0 items-center gap-0.5 overflow-hidden'>
       {tabs.map((tab) => {
         const isActive = tab.id === activeTabId;
         const isCloseable =
@@ -46,14 +46,14 @@ export function ChatTabBar({
         return (
           <div
             key={tab.id}
-            class={`flex items-center min-w-0 shrink rounded transition-colors select-none ${
+            class={`flex min-w-0 shrink select-none items-center rounded transition-colors ${
               isActive ? 'bg-base-content/20' : 'hover:bg-base-content/10'
             }`}
             style={{ maxWidth: '8rem' }}
           >
             <button
               type='button'
-              class={`flex items-center gap-1 min-w-0 flex-1 px-2 py-0.5 text-xs ${isActive ? 'font-semibold' : ''}`}
+              class={`flex min-w-0 flex-1 items-center gap-1 px-2 py-0.5 text-xs ${isActive ? 'font-semibold' : ''}`}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => handleTabClick(e, tab.id)}
             >
@@ -65,7 +65,7 @@ export function ChatTabBar({
             {isCloseable && (
               <button
                 type='button'
-                class='flex-shrink-0 opacity-50 hover:opacity-100 leading-none pr-1'
+                class='flex-shrink-0 pr-1 leading-none opacity-50 hover:opacity-100'
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => handleCloseClick(e, tab.id)}
                 tabIndex={-1}
