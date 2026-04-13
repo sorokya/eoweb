@@ -56,7 +56,7 @@ function EquipSlot({ label, itemId, gridColumn, gridRow }: SlotConfig) {
         <ItemIcon
           graphicId={record.graphicId}
           alt={record.name}
-          class='pointer-events-none'
+          class='pointer-events-none h-full w-full object-contain'
         />
       ) : (
         <span class='pointer-events-none text-center text-[7px] text-base-content/40 leading-tight'>
@@ -89,106 +89,106 @@ function PaperdollTab() {
       key: 'hat',
       label: locale.slotHat,
       itemId: eq.hat,
-      gridColumn: '2',
-      gridRow: '1',
+      gridColumn: '2 / span 2',
+      gridRow: '1 / span 2',
     },
     {
       key: 'necklace',
       label: locale.slotNecklace,
       itemId: eq.necklace,
-      gridColumn: '4',
-      gridRow: '1',
+      gridColumn: '6',
+      gridRow: '1 / span 2',
     },
     {
       key: 'weapon',
       label: locale.slotWeapon,
       itemId: eq.weapon,
       gridColumn: '1',
-      gridRow: '2 / span 2',
+      gridRow: '3 / span 2',
     },
     {
       key: 'armor',
       label: locale.slotArmor,
       itemId: eq.armor,
-      gridColumn: '2 / span 2',
-      gridRow: '2 / span 2',
+      gridColumn: '3 / span 2',
+      gridRow: '3 / span 2',
     },
     {
       key: 'shield',
       label: locale.slotShield,
       itemId: eq.shield,
-      gridColumn: '4',
-      gridRow: '2 / span 2',
+      gridColumn: '6',
+      gridRow: '3 / span 2',
     },
     {
       key: 'gloves',
       label: locale.slotGloves,
       itemId: eq.gloves,
-      gridColumn: '1',
-      gridRow: '4',
+      gridColumn: '1 / span 2',
+      gridRow: '5 / span 2',
     },
     {
       key: 'belt',
       label: locale.slotBelt,
       itemId: eq.belt,
-      gridColumn: '2',
-      gridRow: '4',
+      gridColumn: '3',
+      gridRow: '5 / span 2',
     },
     {
       key: 'ring1',
       label: locale.slotRing1,
       itemId: eq.ring[0] ?? 0,
-      gridColumn: '3',
-      gridRow: '4',
+      gridColumn: '4',
+      gridRow: '5',
     },
     {
       key: 'ring2',
       label: locale.slotRing2,
       itemId: eq.ring[1] ?? 0,
-      gridColumn: '4',
-      gridRow: '4',
-    },
-    {
-      key: 'boots',
-      label: locale.slotBoots,
-      itemId: eq.boots,
-      gridColumn: '2',
-      gridRow: '5 / span 2',
+      gridColumn: '5',
+      gridRow: '5',
     },
     {
       key: 'armlet1',
       label: locale.slotArmlet1,
       itemId: eq.armlet[0] ?? 0,
-      gridColumn: '3',
-      gridRow: '5',
+      gridColumn: '4',
+      gridRow: '6',
     },
     {
       key: 'armlet2',
       label: locale.slotArmlet2,
       itemId: eq.armlet[1] ?? 0,
-      gridColumn: '4',
-      gridRow: '5',
+      gridColumn: '5',
+      gridRow: '6',
+    },
+    {
+      key: 'boots',
+      label: locale.slotBoots,
+      itemId: eq.boots,
+      gridColumn: '3 / span 2',
+      gridRow: '7 / span 2',
     },
     {
       key: 'accessory',
       label: locale.slotAccessory,
       itemId: eq.accessory,
       gridColumn: '1',
-      gridRow: '6',
+      gridRow: '8',
     },
     {
       key: 'bracer1',
       label: locale.slotBracer1,
       itemId: eq.bracer[0] ?? 0,
-      gridColumn: '3',
-      gridRow: '6',
+      gridColumn: '5',
+      gridRow: '8',
     },
     {
       key: 'bracer2',
       label: locale.slotBracer2,
       itemId: eq.bracer[1] ?? 0,
-      gridColumn: '4',
-      gridRow: '6',
+      gridColumn: '6',
+      gridRow: '8',
     },
   ];
 
@@ -208,8 +208,8 @@ function PaperdollTab() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(4, ${EQUIP_CELL}px)`,
-          gridTemplateRows: `repeat(6, ${EQUIP_CELL}px)`,
+          gridTemplateColumns: `repeat(6, ${EQUIP_CELL}px)`,
+          gridTemplateRows: `repeat(8, ${EQUIP_CELL}px)`,
           gap: 1,
         }}
       >
