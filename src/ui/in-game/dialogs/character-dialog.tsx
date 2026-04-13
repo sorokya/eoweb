@@ -1,4 +1,4 @@
-import { AdminLevel, type EifRecord } from 'eolib';
+import type { EifRecord } from 'eolib';
 import { useState } from 'preact/hooks';
 import { ItemIcon, Tabs } from '@/ui/components';
 import { useClient, useLocale } from '@/ui/context';
@@ -9,26 +9,6 @@ import { DialogBase } from './dialog-base';
 const EQUIP_CELL = 23;
 
 type CharacterTab = 'paperdoll' | 'stats' | 'book';
-
-function adminLabel(
-  level: AdminLevel,
-  locale: ReturnType<typeof useLocale>['locale'],
-): string | null {
-  switch (level) {
-    case AdminLevel.LightGuide:
-      return locale.adminLightGuide;
-    case AdminLevel.Guardian:
-      return locale.adminGuardian;
-    case AdminLevel.GameMaster:
-      return locale.adminGameMaster;
-    case AdminLevel.HighGameMaster:
-      return locale.adminHighGameMaster;
-    case AdminLevel.Spy:
-      return locale.adminSpy;
-    default:
-      return null;
-  }
-}
 
 function getEquipTooltipLines(record: EifRecord): string[] {
   return [record.name, ...getItemMeta(record)];
@@ -81,7 +61,6 @@ function PaperdollTab() {
   const { locale } = useLocale();
   const stats = usePlayerStats();
   const eq = client.equipment;
-  const admin = adminLabel(client.admin, locale);
   const classRecord = client.ecf?.classes?.[client.classId - 1];
 
   const slots: SlotConfig[] = [
@@ -194,12 +173,12 @@ function PaperdollTab() {
 
   const infoRows: [string, string][] = [
     [locale.charLabelName, capitalize(stats.name)],
-    [locale.charLabelTitle, stats.title || '—'],
     [locale.charLabelHome, stats.home || '—'],
+    [locale.charLabelClass, classRecord?.name ?? '—'],
     [locale.charLabelPartner, stats.partner ? capitalize(stats.partner) : '—'],
+    [locale.charLabelTitle, stats.title || '—'],
     [locale.charLabelGuild, client.guildName || '—'],
     [locale.charLabelRank, client.guildRankName || '—'],
-    [locale.charLabelClass, classRecord?.name ?? '—'],
   ];
 
   return (
@@ -226,12 +205,6 @@ function PaperdollTab() {
             <span class='min-w-0 truncate font-medium'>{value}</span>
           </div>
         ))}
-        {admin && (
-          <div class='flex justify-between gap-2'>
-            <span class='shrink-0 opacity-60'>{locale.charLabelAdmin}</span>
-            <span class='badge badge-warning badge-sm'>{admin}</span>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -253,8 +226,7 @@ function StatsTab() {
   ];
 
   const derivedRows: [string, string][] = [
-    [locale.statsLabelMinDmg, String(s.minDamage)],
-    [locale.statsLabelMaxDmg, String(s.maxDamage)],
+    [locale.statsLabelDmg, `${s.minDamage} - ${s.maxDamage}`],
     [locale.statsLabelAccuracy, String(s.accuracy)],
     [locale.statsLabelEvade, String(s.evade)],
     [locale.statsLabelArmor, String(s.armor)],
@@ -263,9 +235,6 @@ function StatsTab() {
   return (
     <div class='flex gap-4 text-sm'>
       <div class='flex flex-1 flex-col gap-0.5'>
-        <p class='mb-1 font-semibold text-xs uppercase opacity-60'>
-          {locale.statsLabelBase}
-        </p>
         {baseRows.map(([label, value]) => (
           <div key={label} class='flex justify-between'>
             <span class='opacity-60'>{label}</span>
@@ -274,9 +243,6 @@ function StatsTab() {
         ))}
       </div>
       <div class='flex flex-1 flex-col gap-0.5'>
-        <p class='mb-1 font-semibold text-xs uppercase opacity-60'>
-          {locale.statsLabelDerived}
-        </p>
         {derivedRows.map(([label, value]) => (
           <div key={label} class='flex justify-between'>
             <span class='opacity-60'>{label}</span>
@@ -311,7 +277,7 @@ export function CharacterDialog() {
     <DialogBase
       id='character'
       title={locale.charDialogTitle}
-      defaultWidth={320}
+      defaultWidth={360}
     >
       <div class='flex flex-col gap-3'>
         <Tabs

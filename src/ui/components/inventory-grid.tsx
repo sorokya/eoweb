@@ -321,12 +321,13 @@ export function InventoryGrid({ itemIds }: Props) {
   return (
     <div class='flex select-none flex-col gap-1'>
       {/* Tab bar */}
-      <div role='tablist' class='tabs tabs-lifted tabs-sm'>
+      <div role='tablist' class='tabs tabs-border tabs-sm'>
         {Array.from({ length: TABS }, (_, i) => (
           <button
             key={i}
             role='tab'
             data-tab={i}
+            /* biome-ignore lint/nursery/useSortedClasses: Need space */
             class={`tab${activeTab === i ? ' tab-active' : ''}`}
             onClick={() => setActiveTab(i)}
           >
@@ -395,7 +396,7 @@ export function InventoryGrid({ itemIds }: Props) {
               />
               {/* Multi-line tooltip */}
               {!itemIsDragging && tooltipLines.length > 0 && (
-                <div class='pointer-events-none absolute left-full top-0 z-50 ml-1 hidden w-max max-w-[160px] rounded bg-base-300 px-2 py-1 text-xs shadow-lg group-hover:block'>
+                <div class='pointer-events-none absolute top-0 left-full z-50 ml-1 hidden w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg group-hover:block'>
                   {tooltipLines.map((line, i) => (
                     <div
                       key={i}
@@ -414,7 +415,7 @@ export function InventoryGrid({ itemIds }: Props) {
       {/* Drag ghost */}
       {drag && (
         <div
-          class='pointer-events-none fixed z-[9999] opacity-90'
+          class='pointer-events-none fixed z-9999 opacity-90'
           style={{
             left: drag.ghostX - drag.offsetX,
             top: drag.ghostY - drag.offsetY,
