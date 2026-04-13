@@ -111,7 +111,7 @@ function InGameContent() {
 
       {autoRight.length > 0 && (
         <div
-          class='pointer-events-none absolute inset-0 flex items-center justify-end pr-5'
+          class='pointer-events-none absolute inset-0 flex items-center justify-end pr-20'
           style={{ zIndex: DIALOG_Z }}
         >
           <div class='pointer-events-auto flex flex-row-reverse items-start gap-3'>

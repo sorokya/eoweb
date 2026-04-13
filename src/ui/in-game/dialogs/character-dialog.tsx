@@ -1,9 +1,12 @@
-import { AdminLevel } from 'eolib';
+import { AdminLevel, type EifRecord } from 'eolib';
 import { useState } from 'preact/hooks';
 import { ItemIcon, Tabs } from '@/ui/components';
 import { useClient, useLocale } from '@/ui/context';
 import { usePlayerStats } from '@/ui/in-game';
+import { capitalize, getItemMeta } from '@/utils';
 import { DialogBase } from './dialog-base';
+
+const EQUIP_CELL = 23;
 
 type CharacterTab = 'paperdoll' | 'stats' | 'book';
 
@@ -27,33 +30,62 @@ function adminLabel(
   }
 }
 
-type EquipSlotProps = {
+function getEquipTooltipLines(record: EifRecord): string[] {
+  return [record.name, ...getItemMeta(record)];
+}
+
+type SlotConfig = {
+  key: string;
   label: string;
   itemId: number;
+  gridColumn: string;
+  gridRow: string;
+  cols: number;
+  rows: number;
 };
 
-function EquipSlot({ label, itemId }: EquipSlotProps) {
+function EquipSlot({
+  label,
+  itemId,
+  gridColumn,
+  gridRow,
+  cols,
+  rows,
+}: SlotConfig) {
   const client = useClient();
   const record = itemId ? client.getEifRecordById(itemId) : null;
+  const tooltipLines = record ? getEquipTooltipLines(record) : null;
 
   return (
     <div
-      class='tooltip tooltip-bottom flex flex-col items-center gap-0.5'
-      data-tip={record?.name ?? label}
+      class='group relative flex items-center justify-center rounded border border-base-300 bg-base-200'
+      style={{
+        gridColumn,
+        gridRow,
+        width: cols * EQUIP_CELL,
+        height: rows * EQUIP_CELL,
+      }}
     >
-      <div class='flex h-8 w-8 items-center justify-center rounded border border-base-300 bg-base-200'>
-        {record ? (
-          <ItemIcon
-            graphicId={record.graphicId}
-            alt={record.name}
-            class='max-h-7 max-w-7 object-contain'
-          />
-        ) : (
-          <span class='text-center text-[8px] text-base-content/40 leading-tight'>
-            {label}
-          </span>
-        )}
-      </div>
+      {record ? (
+        <ItemIcon
+          graphicId={record.graphicId}
+          alt={record.name}
+          class='pointer-events-none max-h-full max-w-full object-contain'
+        />
+      ) : (
+        <span class='pointer-events-none text-center text-[7px] text-base-content/40 leading-tight'>
+          {label}
+        </span>
+      )}
+      {tooltipLines && tooltipLines.length > 0 && (
+        <div class='pointer-events-none absolute left-full top-0 z-50 ml-1 hidden w-max max-w-[160px] rounded bg-base-300 px-2 py-1 text-xs shadow-lg group-hover:block'>
+          {tooltipLines.map((line, i) => (
+            <div key={i} class={i === 0 ? 'font-semibold' : 'opacity-70'}>
+              {line}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -66,11 +98,149 @@ function PaperdollTab() {
   const admin = adminLabel(client.admin, locale);
   const classRecord = client.ecf?.classes?.[client.classId - 1];
 
+  const slots: SlotConfig[] = [
+    {
+      key: 'hat',
+      label: locale.slotHat,
+      itemId: eq.hat,
+      gridColumn: '2',
+      gridRow: '1',
+      cols: 1,
+      rows: 1,
+    },
+    {
+      key: 'necklace',
+      label: locale.slotNecklace,
+      itemId: eq.necklace,
+      gridColumn: '4',
+      gridRow: '1',
+      cols: 1,
+      rows: 1,
+    },
+    {
+      key: 'weapon',
+      label: locale.slotWeapon,
+      itemId: eq.weapon,
+      gridColumn: '1',
+      gridRow: '2 / span 2',
+      cols: 1,
+      rows: 2,
+    },
+    {
+      key: 'armor',
+      label: locale.slotArmor,
+      itemId: eq.armor,
+      gridColumn: '2 / span 2',
+      gridRow: '2 / span 2',
+      cols: 2,
+      rows: 2,
+    },
+    {
+      key: 'shield',
+      label: locale.slotShield,
+      itemId: eq.shield,
+      gridColumn: '4',
+      gridRow: '2 / span 2',
+      cols: 1,
+      rows: 2,
+    },
+    {
+      key: 'gloves',
+      label: locale.slotGloves,
+      itemId: eq.gloves,
+      gridColumn: '1',
+      gridRow: '4',
+      cols: 1,
+      rows: 1,
+    },
+    {
+      key: 'belt',
+      label: locale.slotBelt,
+      itemId: eq.belt,
+      gridColumn: '2',
+      gridRow: '4',
+      cols: 1,
+      rows: 1,
+    },
+    {
+      key: 'ring1',
+      label: locale.slotRing1,
+      itemId: eq.ring[0] ?? 0,
+      gridColumn: '3',
+      gridRow: '4',
+      cols: 1,
+      rows: 1,
+    },
+    {
+      key: 'ring2',
+      label: locale.slotRing2,
+      itemId: eq.ring[1] ?? 0,
+      gridColumn: '4',
+      gridRow: '4',
+      cols: 1,
+      rows: 1,
+    },
+    {
+      key: 'boots',
+      label: locale.slotBoots,
+      itemId: eq.boots,
+      gridColumn: '2',
+      gridRow: '5 / span 2',
+      cols: 1,
+      rows: 2,
+    },
+    {
+      key: 'armlet1',
+      label: locale.slotArmlet1,
+      itemId: eq.armlet[0] ?? 0,
+      gridColumn: '3',
+      gridRow: '5',
+      cols: 1,
+      rows: 1,
+    },
+    {
+      key: 'armlet2',
+      label: locale.slotArmlet2,
+      itemId: eq.armlet[1] ?? 0,
+      gridColumn: '4',
+      gridRow: '5',
+      cols: 1,
+      rows: 1,
+    },
+    {
+      key: 'accessory',
+      label: locale.slotAccessory,
+      itemId: eq.accessory,
+      gridColumn: '1',
+      gridRow: '6',
+      cols: 1,
+      rows: 1,
+    },
+    {
+      key: 'bracer1',
+      label: locale.slotBracer1,
+      itemId: eq.bracer[0] ?? 0,
+      gridColumn: '3',
+      gridRow: '6',
+      cols: 1,
+      rows: 1,
+    },
+    {
+      key: 'bracer2',
+      label: locale.slotBracer2,
+      itemId: eq.bracer[1] ?? 0,
+      gridColumn: '4',
+      gridRow: '6',
+      cols: 1,
+      rows: 1,
+    },
+  ];
+
   const infoRows: [string, string][] = [
-    [locale.charLabelName, stats.name],
+    [locale.charLabelName, capitalize(stats.name)],
     [locale.charLabelTitle, stats.title || '—'],
     [locale.charLabelHome, stats.home || '—'],
-    [locale.charLabelPartner, stats.partner || '—'],
+    [locale.charLabelPartner, stats.partner ? capitalize(stats.partner) : '—'],
     [locale.charLabelGuild, client.guildName || '—'],
     [locale.charLabelRank, client.guildRankName || '—'],
     [locale.charLabelClass, classRecord?.name ?? '—'],
@@ -78,35 +248,20 @@ function PaperdollTab() {
 
   return (
     <div class='flex gap-3'>
-      {/* Equipment slots (left) */}
-      <div class='flex flex-col items-center gap-1.5'>
-        <div class='flex gap-1.5'>
-          <EquipSlot label={locale.slotHat} itemId={eq.hat} />
-        </div>
-        <div class='flex gap-1.5'>
-          <EquipSlot label={locale.slotNecklace} itemId={eq.necklace} />
-          <EquipSlot label={locale.slotArmor} itemId={eq.armor} />
-          <EquipSlot label={locale.slotWeapon} itemId={eq.weapon} />
-        </div>
-        <div class='flex gap-1.5'>
-          <EquipSlot label={locale.slotRing1} itemId={eq.ring[0] ?? 0} />
-          <EquipSlot label={locale.slotRing2} itemId={eq.ring[1] ?? 0} />
-          <EquipSlot label={locale.slotShield} itemId={eq.shield} />
-        </div>
-        <div class='flex gap-1.5'>
-          <EquipSlot label={locale.slotGloves} itemId={eq.gloves} />
-          <EquipSlot label={locale.slotBelt} itemId={eq.belt} />
-          <EquipSlot label={locale.slotBoots} itemId={eq.boots} />
-        </div>
-        <div class='flex flex-wrap justify-center gap-1.5'>
-          <EquipSlot label={locale.slotAccessory} itemId={eq.accessory} />
-          <EquipSlot label={locale.slotArmlet1} itemId={eq.armlet[0] ?? 0} />
-          <EquipSlot label={locale.slotArmlet2} itemId={eq.armlet[1] ?? 0} />
-        </div>
-        <div class='flex gap-1.5'>
-          <EquipSlot label={locale.slotBracer1} itemId={eq.bracer[0] ?? 0} />
-          <EquipSlot label={locale.slotBracer2} itemId={eq.bracer[1] ?? 0} />
-        </div>
+      {/* Equipment grid (left) */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(4, ${EQUIP_CELL}px)`,
+          gridTemplateRows: `repeat(6, ${EQUIP_CELL}px)`,
+          width: 4 * EQUIP_CELL,
+          height: 6 * EQUIP_CELL,
+          gap: 1,
+        }}
+      >
+        {slots.map(({ key, ...rest }) => (
+          <EquipSlot key={key} {...rest} />
+        ))}
       </div>
 
       {/* Character info (right) */}

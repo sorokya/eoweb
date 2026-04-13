@@ -309,7 +309,10 @@ export function InventoryGrid({ itemIds }: Props) {
     const record = client.getEifRecordById(item.id);
     if (!record) return [];
     const meta = getItemMeta(record);
-    const qty = item.id === 1 || item.amount > 1 ? ` x${item.amount}` : '';
+    const qty =
+      item.id === 1 || item.amount > 1
+        ? ` x${item.amount.toLocaleString()}`
+        : '';
     return [record.name + qty, ...meta];
   };
 
