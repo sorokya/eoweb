@@ -19,23 +19,7 @@ export const DIALOG_LAYOUT_LABELS: Record<DialogLayout, string> = {
 
 const STORAGE_PREFIX = 'eoweb:layout:dialog:';
 
-const STATIC_DEFAULTS: Partial<Record<string, DialogLayout>> = {
-  inventory: 'right',
-  map: 'center',
-  spells: 'center',
-  character: 'center',
-  quests: 'center',
-  settings: 'center',
-};
-
-// Keep the exported const typed as before for static dialogs
-export const DIALOG_DEFAULT_LAYOUTS = STATIC_DEFAULTS as Record<
-  DialogId,
-  DialogLayout
->;
-
 function defaultLayoutForId(id: string): DialogLayout {
-  if (STATIC_DEFAULTS[id]) return STATIC_DEFAULTS[id] as DialogLayout;
   if (id === 'chat-main') return 'bottom-left';
   return 'center';
 }

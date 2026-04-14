@@ -26,7 +26,6 @@ export type { DragDropResult, DragInfo } from './item-drag-context';
 export { ItemDragProvider, useItemDrag } from './item-drag-context';
 export {
   clearAllDialogLayouts,
-  DIALOG_DEFAULT_LAYOUTS,
   DIALOG_LAYOUT_LABELS,
   type DialogLayout,
   getDialogLayoutById,

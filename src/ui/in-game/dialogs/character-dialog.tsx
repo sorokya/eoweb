@@ -52,13 +52,15 @@ function EquipSlot({ label, itemId, slot, gridColumn, gridRow }: SlotConfig) {
   };
 
   const onPointerDown = (e: PointerEvent) => {
-    if (!record || !itemId || !isOwnCharacter) return;
+    if (!record || !itemId) return;
     if (e.button !== 0 && e.pointerType !== 'touch') return;
     e.preventDefault();
 
     if (e.pointerType === 'touch') {
       setTouchTooltip(true);
     }
+
+    if (!isOwnCharacter) return;
 
     const target = e.currentTarget as HTMLElement;
     const rect = target.getBoundingClientRect();

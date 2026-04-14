@@ -2,7 +2,6 @@ import { createContext } from 'preact';
 import { useCallback, useContext, useEffect, useState } from 'preact/hooks';
 import {
   clearAllDialogLayouts,
-  DIALOG_DEFAULT_LAYOUTS,
   type DialogLayout,
   getDialogLayoutById,
 } from './use-dialog-layout';
@@ -198,7 +197,7 @@ export function WindowManagerProvider({
             {
               minimized: false,
               manualPos: undefined,
-              layout: DIALOG_DEFAULT_LAYOUTS[id as DialogId],
+              layout: 'center',
             },
           ]),
         ) as Partial<Record<string, DialogMeta>>,
