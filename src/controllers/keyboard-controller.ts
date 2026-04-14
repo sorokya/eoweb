@@ -43,6 +43,7 @@ enum Input {
   Hotbar5 = 21,
   Tab = 22,
   Refresh = 23,
+  Hotbar6 = 24,
   Unknown = -1,
 }
 
@@ -172,6 +173,9 @@ export class KeyboardController {
         case 'Digit5':
           this.updateInputHeld(Input.Hotbar5, true);
           break;
+        case 'Digit6':
+          this.updateInputHeld(Input.Hotbar6, true);
+          break;
         case 'Tab':
           this.updateInputHeld(Input.Tab, true);
           // TODO: Fix tab capturing later
@@ -256,6 +260,9 @@ export class KeyboardController {
           break;
         case 'Digit5':
           this.updateInputHeld(Input.Hotbar5, false);
+          break;
+        case 'Digit6':
+          this.updateInputHeld(Input.Hotbar6, false);
           break;
         case 'Tab':
           this.updateInputHeld(Input.Tab, false);
@@ -483,6 +490,9 @@ export class KeyboardController {
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     } else if (this.isOrWasInputHeld(Input.Hotbar5) && this.hotbarTicks === 0) {
       this.client.spellController.useHotbarSlot(4);
+      this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
+    } else if (this.isOrWasInputHeld(Input.Hotbar6) && this.hotbarTicks === 0) {
+      this.client.spellController.useHotbarSlot(5);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     }
 

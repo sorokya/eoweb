@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
 import { useClient, useLocale } from '@/ui/context';
-import { useItemDrag } from '@/ui/in-game';
+import { SlotType } from '@/ui/enums';
+import { useHotbar, useItemDrag } from '@/ui/in-game';
 import { getItemMeta } from '@/utils';
 import { InventoryContextMenu } from './inventory-context-menu';
 import { ItemIcon } from './item-icon';
@@ -130,6 +131,7 @@ export function InventoryGrid({ itemIds }: Props) {
   const client = useClient();
   const { locale } = useLocale();
   const { startDrag, cancelDrag, currentDrag } = useItemDrag();
+  const { setSlot } = useHotbar();
   const [activeTab, setActiveTab] = useState(0);
   const [positions, setPositions] = useState<ItemPosition[]>([]);
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
@@ -361,6 +363,11 @@ export function InventoryGrid({ itemIds }: Props) {
             tryMoveToTabRef.current(item.id, result.tab);
           } else if (result.type === 'equip-slot') {
             client.inventoryController.equipItem(result.slot, item.id);
+          } else if (result.type === 'hotbar-slot') {
+            const record = client.getEifRecordById(item.id);
+            if (record) {
+              setSlot(result.index, { type: SlotType.Item, typeId: item.id });
+            }
           } else if (result.type === 'ground') {
             if (!client.mapController.cursorInDropRange()) return;
             const coords = client.mouseCoords ?? getCoords();

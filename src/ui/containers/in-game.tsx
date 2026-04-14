@@ -7,6 +7,7 @@ import {
   ChatDialog,
   ChatManagerProvider,
   HotBar,
+  HotbarProvider,
   InventoryDialog,
   ItemDragProvider,
   MapDialog,
@@ -202,11 +203,13 @@ export function InGame() {
   const client = useClient();
   return (
     <ItemDragProvider>
-      <WindowManagerProvider>
-        <ChatManagerProvider characterId={client.characterId}>
-          <InGameContent />
-        </ChatManagerProvider>
-      </WindowManagerProvider>
+      <HotbarProvider>
+        <WindowManagerProvider>
+          <ChatManagerProvider characterId={client.characterId}>
+            <InGameContent />
+          </ChatManagerProvider>
+        </WindowManagerProvider>
+      </HotbarProvider>
     </ItemDragProvider>
   );
 }

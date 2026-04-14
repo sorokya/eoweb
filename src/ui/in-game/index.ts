@@ -18,6 +18,7 @@ export { SettingsDialog } from './dialogs/settings-dialog';
 export { SpellsDialog } from './dialogs/spells-dialog';
 // HUD components
 export { HotBar } from './hud/hot-bar';
+export { HotbarProvider, useHotbar } from './hud/hotbar-context';
 export { MobileNav, NavSidebar } from './hud/nav-sidebar';
 export { PlayerHud } from './hud/player-hud';
 export { StatusMessages } from './hud/status-messages';

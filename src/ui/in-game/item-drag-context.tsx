@@ -15,6 +15,7 @@ export type DragDropResult =
   | { type: 'cell'; tab: number; x: number; y: number }
   | { type: 'tab'; tab: number }
   | { type: 'equip-slot'; slot: EquipmentSlot }
+  | { type: 'hotbar-slot'; index: number }
   | { type: 'ground' }
   | { type: 'cancelled' };
 
@@ -170,6 +171,17 @@ export function ItemDragProvider({
         ) as EquipmentSlot;
         if (slot >= 0) {
           resolve({ type: 'equip-slot', slot });
+          return;
+        }
+      }
+
+      const hotbarEl = (target as HTMLElement).closest<HTMLElement>(
+        '[data-hotbar-slot]',
+      );
+      if (hotbarEl) {
+        const index = Number.parseInt(hotbarEl.dataset.hotbarSlot ?? '-1', 10);
+        if (index >= 0) {
+          resolve({ type: 'hotbar-slot', index });
           return;
         }
       }
