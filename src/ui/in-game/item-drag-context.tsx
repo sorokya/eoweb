@@ -193,10 +193,18 @@ export function ItemDragProvider({
     window.addEventListener('pointerup', handleUp);
     window.addEventListener('pointercancel', handleCancel);
 
+    // On iOS, preventing panning during a drag requires blocking touchmove
+    // (pointermove.preventDefault() alone is not enough for touch pipelines).
+    const handleTouchMove = (e: TouchEvent) => {
+      if (dragRef.current) e.preventDefault();
+    };
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+
     return () => {
       window.removeEventListener('pointermove', handleMove);
       window.removeEventListener('pointerup', handleUp);
       window.removeEventListener('pointercancel', handleCancel);
+      window.removeEventListener('touchmove', handleTouchMove);
     };
   }, []); // run once — always active; uses refs so no deps needed
 
