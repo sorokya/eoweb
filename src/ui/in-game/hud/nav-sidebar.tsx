@@ -129,7 +129,7 @@ export function MobileNav() {
       >
         <Button
           variant={['xs', 'neutral']}
-          class='px-2'
+          class='border border-base-content/40 bg-base-100/20 px-2 text-base-content/50'
           onClick={() => setOpen((o) => !o)}
           label='Menu'
         >
