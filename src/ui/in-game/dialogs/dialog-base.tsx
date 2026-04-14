@@ -15,6 +15,8 @@ type DialogBaseProps = {
   hideControls?: boolean;
   /** Disable drag handle on the title bar. */
   noDrag?: boolean;
+  /** When true, children are rendered without the default px-1 pb-1 padding wrapper. */
+  noPadding?: boolean;
   /** Optional override for the close button action. Defaults to closeDialog(id). */
   onClose?: () => void;
 };
@@ -29,6 +31,7 @@ export function DialogBase({
   titleContent,
   hideControls = false,
   noDrag = false,
+  noPadding = false,
   onClose,
 }: DialogBaseProps) {
   const { locale } = useLocale();
@@ -166,7 +169,7 @@ export function DialogBase({
         )}
       </div>
 
-      <div class='px-1 pb-1'>{children}</div>
+      <div class={noPadding ? '' : 'px-1 pb-1'}>{children}</div>
     </div>
   );
 }

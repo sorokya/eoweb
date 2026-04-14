@@ -100,12 +100,10 @@ export const ChatInput = forwardRef<HTMLInputElement, Props>(function ChatInput(
   const placeholder =
     sendChannel && isPMChannel(sendChannel)
       ? `Send to ${pmChannelName(sendChannel)}...`
-      : isSingleChannel
-        ? 'Say something...'
-        : "Say something... (use ~, &, ', + for other channels)";
+      : 'Say something...';
 
   return (
-    <div class='flex border-base-content/10 border-t'>
+    <div class='flex rounded-b-large border-base-content/10 border-t'>
       <input
         ref={(el) => {
           internalRef.current = el;
@@ -116,7 +114,7 @@ export const ChatInput = forwardRef<HTMLInputElement, Props>(function ChatInput(
           }
         }}
         type='text'
-        class='input input-xs flex-1 rounded-none bg-transparent text-xs focus:outline-none'
+        class='input input-xs flex-1 rounded-t-none rounded-br-none rounded-bl-large bg-transparent text-xs focus:outline-none'
         placeholder={placeholder}
         value={input}
         onInput={(e) => {

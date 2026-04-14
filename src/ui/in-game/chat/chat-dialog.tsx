@@ -73,6 +73,7 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
       type='button'
       class='btn btn-ghost btn-xs mx-1 w-full justify-start border border-base-200/20 bg-base-200/30 text-left font-normal normal-case'
       onClick={onFocus}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <span class='text-base-content/50 text-xs'>
         {isMobile ? 'Tap to chat…' : 'Press enter to chat…'}
@@ -302,13 +303,12 @@ export function ChatDialog() {
       <div
         ref={containerRef}
         role='presentation'
-        class='flex flex-col rounded-t border border-base-content/10 bg-base-300/90 backdrop-blur-sm'
+        class='flex flex-col overflow-hidden rounded-lg border border-base-content/10 bg-base-300/90 backdrop-blur-sm'
         style={{
           width: Math.min(340, vw - 16),
           maxHeight: '45vh',
         }}
       >
-        <ChatInput ref={inputRef} tab={activeTab} onActivity={onFocus} />
         {tabs.length > 1 && (
           <div class='flex items-center gap-1 border-base-content/10 border-b bg-base-content/5 px-2 py-0.5'>
             <ChatTabBar
@@ -324,6 +324,7 @@ export function ChatDialog() {
           messages={tabMessages}
           heightClass='flex-1 min-h-0 overflow-y-auto'
         />
+        <ChatInput ref={inputRef} tab={activeTab} onActivity={onFocus} />
       </div>
     );
   }
@@ -337,8 +338,9 @@ export function ChatDialog() {
         defaultWidth={dialogWidth}
         hideControls={true}
         noDrag={true}
+        noPadding={true}
       >
-        <div class='-mx-3 -mb-3 flex flex-col'>
+        <div class='flex flex-col overflow-hidden rounded-b-lg'>
           <ChatMessageList
             tab={activeTab}
             messages={tabMessages}
