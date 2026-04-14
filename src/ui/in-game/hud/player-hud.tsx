@@ -80,17 +80,10 @@ export function PlayerHud() {
           label={locale.hudTNL}
           barClass='bg-gradient-to-r from-amber-700 to-amber-500'
         />
-        <ProgressBar
-          value={stats.weight}
-          max={stats.maxWeight}
-          icon={
-            <span class='text-stone-400'>
-              <GiWeightLiftingUp size={12} />
-            </span>
-          }
-          label={locale.hudWeight}
-          barClass='bg-gradient-to-r from-stone-600 to-stone-400'
-        />
+        <span class='flex items-center gap-0.5 text-[10px] text-stone-400 leading-tight'>
+          <GiWeightLiftingUp size={12} />
+          {stats.weight} / {stats.maxWeight}
+        </span>
         <span class='flex items-center gap-0.5 text-[10px] text-yellow-400 leading-tight'>
           <GiCoins size={12} />
           {stats.gold.toLocaleString()} {locale.hudGold}

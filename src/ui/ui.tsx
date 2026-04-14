@@ -31,12 +31,14 @@ function UiContent() {
 
 export function Ui({ client }: { client: Client }) {
   return (
-    <ClientProvider client={client}>
-      <LocaleProvider>
-        <AlertContainer>
-          <UiContent />
-        </AlertContainer>
-      </LocaleProvider>
-    </ClientProvider>
+    <div class='select-none'>
+      <ClientProvider client={client}>
+        <LocaleProvider>
+          <AlertContainer>
+            <UiContent />
+          </AlertContainer>
+        </LocaleProvider>
+      </ClientProvider>
+    </div>
   );
 }

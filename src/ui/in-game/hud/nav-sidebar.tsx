@@ -61,7 +61,7 @@ export function NavSidebar() {
   return (
     <div
       role='presentation'
-      class='pointer-events-none absolute top-0 right-0 bottom-0 hidden flex-col items-end justify-center gap-1 pr-0 md:flex'
+      class='pointer-events-none absolute top-0 right-0 bottom-0 hidden flex-col items-end justify-center gap-1 pr-0 lg:flex'
       style={{ zIndex: HUD_Z }}
     >
       <div
@@ -117,7 +117,7 @@ export function MobileNav() {
 
   return (
     <div
-      class='absolute top-8 right-1 md:hidden'
+      class='absolute top-8 right-1 lg:hidden'
       style={{ zIndex: open ? SIDEMENU_Z : HUD_Z }}
     >
       <div

@@ -11,6 +11,7 @@ import {
 } from '@/ui/enums';
 import type { ChatDialogId } from '@/ui/in-game';
 import { DialogBase, useViewport } from '@/ui/in-game';
+import { isMobile } from '@/utils';
 import { ChatInput } from './chat-input';
 import type { ChatMessage } from './chat-manager';
 import { useChatManager } from './chat-manager';
@@ -18,16 +19,14 @@ import { ChatMessageList } from './chat-message-list';
 import { ChatTabBar } from './chat-tab-bar';
 
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(
-    () => window.matchMedia('(max-width: 767px)').matches,
-  );
+  const [mobile, setMobile] = useState(() => isMobile());
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    const mq = window.matchMedia('(pointer: coarse)');
+    const handler = (e: MediaQueryListEvent) => setMobile(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
-  return isMobile;
+  return mobile;
 }
 
 const MAIN_DIALOG_ID = 'chat-main';
@@ -89,7 +88,7 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
       {shown.map((msg) => (
         <div
           key={msg.id}
-          class='break-words text-xs leading-tight'
+          class='wrap-break-word text-xs leading-tight'
           style={{ opacity: msgOpacity(msg.timestampUtc, now) }}
         >
           <span

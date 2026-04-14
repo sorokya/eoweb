@@ -134,7 +134,7 @@ function InGameContent() {
 
       {/* Desktop bottom bar: chat left | hotbar centered | spacer right */}
       <div
-        class='pointer-events-none absolute inset-x-0 bottom-0 hidden items-end px-2 pb-2 md:flex'
+        class='pointer-events-none absolute inset-x-0 bottom-0 hidden items-end px-2 pb-2 lg:flex'
         style={{ zIndex: CHAT_Z }}
       >
         <div class='pointer-events-auto flex flex-1 items-end justify-start'>
@@ -152,7 +152,7 @@ function InGameContent() {
 
       {/* Mobile: chat at top below HUD */}
       <div
-        class='pointer-events-none absolute inset-x-0 top-0 flex justify-start pt-8 md:hidden'
+        class='pointer-events-none absolute inset-x-0 top-0 flex justify-start pt-8 lg:hidden'
         style={{ zIndex: CHAT_Z }}
       >
         <div class='pointer-events-auto'>
@@ -164,7 +164,7 @@ function InGameContent() {
 
       {/* Mobile: hotbar at bottom center */}
       <div
-        class='pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2 md:hidden'
+        class='pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2 lg:hidden'
         style={{ zIndex: CHAT_Z }}
       >
         <div class='pointer-events-auto'>

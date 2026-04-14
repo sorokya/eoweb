@@ -1,13 +1,9 @@
 import { useCallback, useState } from 'preact/hooks';
+import { isMobile } from '@/utils';
 
 export type HudVisibility = 'auto' | 'always' | 'never';
 
 const STORAGE_PREFIX = 'eoweb:vis:';
-const MOBILE_BREAKPOINT = 768;
-
-function isMobile(): boolean {
-  return window.innerWidth < MOBILE_BREAKPOINT;
-}
 
 function readVisibility(key: string): HudVisibility | null {
   try {

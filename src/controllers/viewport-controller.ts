@@ -1,4 +1,5 @@
 import type { Client } from '@/client';
+import { isMobile } from '@/utils';
 
 export class ViewportController {
   private width = 800;
@@ -82,7 +83,7 @@ export class ViewportController {
     }
 
     this.setGameSize(w, h);
-    this.mobile = viewportWidth < 940;
+    this.mobile = isMobile();
     this.client.emit('resize', undefined);
   }
 }

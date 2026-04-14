@@ -24,7 +24,7 @@ export function ProgressBar({
 }: ProgressBarProps) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
-    <div class='flex w-full min-w-0 max-w-40 items-center gap-1'>
+    <div class='flex w-full min-w-0 max-w-30 items-center gap-1'>
       <span class='flex w-5 shrink-0 items-center justify-end opacity-80'>
         {icon}
       </span>

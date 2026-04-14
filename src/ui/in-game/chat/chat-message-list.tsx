@@ -59,7 +59,7 @@ export function ChatMessageList({
         const timeStr = formatTime(msg.timestampUtc);
         const chColor = channelColor(msg.channel);
         return (
-          <div key={msg.id} class='break-words leading-tight'>
+          <div key={msg.id} class='wrap-break-word select-text leading-tight'>
             <span class='opacity-60'>{timeStr} </span>
             {showChannelLabel && (
               <span class={`font-semibold ${chColor}`}>
