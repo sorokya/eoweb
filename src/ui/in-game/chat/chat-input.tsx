@@ -1,5 +1,4 @@
-import type * as preact from 'preact';
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { useClient } from '@/ui/context';
 import {
   type ChatChannel,
@@ -31,13 +30,12 @@ type Props = {
   onActivity?: () => void;
   /** Called when the user dismisses chat (Esc or Enter on empty input). */
   onDismiss?: () => void;
-  /** Pass a ref to get direct access to the underlying <input> element. */
-  inputRef?: preact.Ref<HTMLInputElement>;
 };
 
-export function ChatInput({ tab, onActivity, onDismiss, inputRef }: Props) {
+export function ChatInput({ tab, onActivity, onDismiss }: Props) {
   const client = useClient();
   const [input, setInput] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const readOnly = isTabReadOnly(tab);
   const isSingleChannel = tab.channels.length === 1;
@@ -79,11 +77,17 @@ export function ChatInput({ tab, onActivity, onDismiss, inputRef }: Props) {
 
   if (readOnly) {
     return (
-      <div class='flex select-none border-base-content/10 border-t px-2 py-1 text-xs italic opacity-40'>
+      <div class='flex border-base-content/10 border-t px-2 py-1 text-xs italic opacity-40'>
         Read-only channel
       </div>
     );
   }
+
+  useEffect(() => {
+    if (!readOnly && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [readOnly]);
 
   const placeholder =
     sendChannel && isPMChannel(sendChannel)

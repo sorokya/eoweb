@@ -26,31 +26,76 @@ export class MouseController {
   constructor(client: Client) {
     this.client = client;
 
+    let longPressTimer = 0;
+    let isLongPress = false;
+
+    const isInUI = (target: EventTarget | null) => {
+      const ui = document.getElementById('ui');
+      return ui && target && target !== ui && ui.contains(target as Node);
+    };
+
+    const updatePositionFromTouch = (touch: Touch) => {
+      if (!this.client.app) return;
+      const canvas = this.client.app.renderer.canvas;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      this.client.setMousePosition({
+        x: Math.min(
+          Math.max(Math.floor((touch.clientX - rect.left) * scaleX), 0),
+          canvas.width,
+        ),
+        y: Math.min(
+          Math.max(Math.floor((touch.clientY - rect.top) * scaleY), 0),
+          canvas.height,
+        ),
+      });
+    };
+
     window.addEventListener(
-      'touchmove',
+      'touchstart',
       (e) => {
-        if (!this.client.app) return;
-        const canvas = this.client.app.renderer.canvas;
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        this.client.setMousePosition({
-          x: Math.min(
-            Math.max(
-              Math.floor((e.touches[0].clientX - rect.left) * scaleX),
-              0,
-            ),
-            canvas.width,
-          ),
-          y: Math.min(
-            Math.max(Math.floor((e.touches[0].clientY - rect.top) * scaleY), 0),
-            canvas.height,
-          ),
-        });
+        if (isInUI(e.target)) return;
         e.preventDefault();
+        isLongPress = false;
+        updatePositionFromTouch(e.touches[0]);
+        longPressTimer = window.setTimeout(() => {
+          isLongPress = true;
+          this.handleRightClick({ target: e.target } as MouseEvent);
+        }, 500);
       },
       { passive: false },
     );
+
+    window.addEventListener(
+      'touchmove',
+      (e) => {
+        if (isInUI(e.target)) return;
+        e.preventDefault();
+        clearTimeout(longPressTimer);
+        updatePositionFromTouch(e.touches[0]);
+      },
+      { passive: false },
+    );
+
+    window.addEventListener(
+      'touchend',
+      (e) => {
+        if (isInUI(e.target)) return;
+        e.preventDefault();
+        clearTimeout(longPressTimer);
+        if (!isLongPress) {
+          this.handleClick({ target: e.target } as MouseEvent);
+        }
+        isLongPress = false;
+      },
+      { passive: false },
+    );
+
+    window.addEventListener('touchcancel', () => {
+      clearTimeout(longPressTimer);
+      isLongPress = false;
+    });
 
     window.addEventListener('mousemove', (e) => {
       if (!this.client.app) return;

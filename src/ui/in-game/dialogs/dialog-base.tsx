@@ -148,7 +148,7 @@ export function DialogBase({
       ref={containerRef}
       role='presentation'
       data-chat-dialog={id.startsWith('chat-') ? id : undefined}
-      class={`flex select-none flex-col overflow-visible rounded-lg border border-base-content/10 bg-base-300/90 shadow-xl backdrop-blur-sm transition-opacity ${focused ? 'opacity-100' : 'opacity-80'}`}
+      class={`flex flex-col overflow-visible rounded-lg border border-base-content/10 bg-base-300/90 shadow-xl backdrop-blur-sm transition-opacity ${focused ? 'opacity-100' : 'opacity-80'}`}
       style={posStyle}
       onPointerDown={handlePointerDown}
       onClick={stopProp}
@@ -161,9 +161,7 @@ export function DialogBase({
       >
         <div class='flex min-w-0 flex-1 items-center gap-1'>
           {titleContent ?? (
-            <span class='select-none truncate px-1 font-semibold text-sm'>
-              {title}
-            </span>
+            <span class='truncate px-1 font-semibold text-sm'>{title}</span>
           )}
         </div>
 

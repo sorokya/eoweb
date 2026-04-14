@@ -64,12 +64,15 @@ export class ViewportController {
   }
 
   resizeCanvases() {
-    const container = document.getElementById('container');
-    if (!container) return;
-    const viewportWidth =
-      window.visualViewport?.width ?? container.getBoundingClientRect().width;
-    const viewportHeight =
-      window.visualViewport?.height ?? container.getBoundingClientRect().height;
+    const viewportWidth = Math.max(
+      document.documentElement.clientWidth || 0,
+      window.innerWidth || 0,
+    );
+    const viewportHeight = Math.max(
+      document.documentElement.clientHeight || 0,
+      window.innerHeight || 0,
+    );
+
     if (!this.userOverride) this.setZoom(viewportWidth >= 1280 ? 2 : 1);
     const w = Math.floor(viewportWidth / this.zoom);
     const h = Math.floor(viewportHeight / this.zoom);

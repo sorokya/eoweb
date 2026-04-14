@@ -77,7 +77,7 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
       class='mx-1 w-full cursor-text rounded-lg border border-base-content/10 bg-base-content/10 px-3 py-1.5 text-left'
       onClick={onFocus}
     >
-      <span class='select-none text-white/25 text-xs'>
+      <span class='text-white/25 text-xs'>
         {isMobile ? 'Tap to chat…' : 'Press enter to chat…'}
       </span>
     </button>
@@ -224,7 +224,6 @@ export function ChatDialog({ id }: Props) {
   const [focused, setFocused] = useState(!isMain);
   const [now, setNow] = useState(Date.now);
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const onFocus = useCallback(() => {
     if (isMain) setFocused(true);
@@ -266,14 +265,6 @@ export function ChatDialog({ id }: Props) {
   const activeTabId = dialog?.activeTabId ?? '';
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
-  // Auto-focus the text input when the full dialog opens or when switching tabs
-  useEffect(() => {
-    if (isMain && focused) {
-      const raf = requestAnimationFrame(() => inputRef.current?.focus());
-      return () => cancelAnimationFrame(raf);
-    }
-  }, [isMain, focused, activeTabId]);
-
   const tabMessages = activeTab
     ? activeTab.channels
         .flatMap((ch) => messages.get(ch) ?? [])
@@ -299,9 +290,7 @@ export function ChatDialog({ id }: Props) {
           isMain={isMain}
         />
       ) : (
-        <span class='select-none px-1 font-semibold text-xs'>
-          {activeTab.name}
-        </span>
+        <span class='px-1 font-semibold text-xs'>{activeTab.name}</span>
       )}
       {isMain && <AddTabButton dialogId={id} />}
     </div>
@@ -319,11 +308,7 @@ export function ChatDialog({ id }: Props) {
           maxHeight: '45vh',
         }}
       >
-        <ChatInput
-          tab={activeTab}
-          onActivity={onFocus}
-          inputRef={inputRef as RefObject<HTMLInputElement>}
-        />
+        <ChatInput tab={activeTab} onActivity={onFocus} />
         {tabs.length > 1 && (
           <div class='flex items-center gap-1 border-base-content/10 border-b bg-base-content/5 px-2 py-0.5'>
             <ChatTabBar
@@ -364,7 +349,6 @@ export function ChatDialog({ id }: Props) {
             tab={activeTab}
             onActivity={isMain ? onFocus : undefined}
             onDismiss={isMain ? () => setFocused(false) : undefined}
-            inputRef={inputRef as RefObject<HTMLInputElement>}
           />
         </div>
       </DialogBase>

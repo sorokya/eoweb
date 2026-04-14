@@ -4,3 +4,17 @@
     dim --default,
     light;
 }
+
+*:not(.select-text) {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+canvas {
+  touch-action: none;
+}

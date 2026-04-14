@@ -418,7 +418,7 @@ export function InventoryGrid({ itemIds }: Props) {
   const TAB_LABELS = [locale.inventoryTab1, locale.inventoryTab2];
 
   return (
-    <div class='flex select-none flex-col gap-1'>
+    <div class='flex flex-col gap-1'>
       {/* Tab bar */}
       <div role='tablist' class='tabs tabs-border tabs-sm'>
         {Array.from({ length: TABS }, (_, i) => (
