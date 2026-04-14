@@ -89,7 +89,65 @@ export class Chat extends Base {
 
     const msg = document.createElement('span');
     msg.classList.add('chat-message');
-    msg.innerHTML = this.replaceLinks(this.sanitize(message));
+
+    const urlRegex = /\b((https?:\/\/|www\.)[^\s<]+)/gi;
+
+    let lastIndex = 0;
+    let match: RegExpExecArray | null = urlRegex.exec(message);
+    while (match !== null) {
+      let rawUrl = match[0];
+
+      // Handle trailing punctuation (common in chat)
+      const trailingMatch = rawUrl.match(/[.,!?)\]}]+$/);
+      let trailing = '';
+
+      if (trailingMatch) {
+        trailing = trailingMatch[0];
+        rawUrl = rawUrl.slice(0, -trailing.length);
+      }
+
+      // Append text before the URL
+      if (match.index > lastIndex) {
+        msg.appendChild(
+          document.createTextNode(message.slice(lastIndex, match.index)),
+        );
+      }
+
+      // Normalize URL (add protocol if missing)
+      const normalizedUrl = rawUrl.startsWith('www.')
+        ? `https://${rawUrl}`
+        : rawUrl;
+
+      if (this.isSafeUrl(normalizedUrl)) {
+        const a = document.createElement('a');
+        a.href = normalizedUrl;
+
+        // Display original text (not normalized)
+        a.textContent = rawUrl;
+
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer nofollow';
+
+        msg.appendChild(a);
+      } else {
+        // Fallback: treat as plain text
+        msg.appendChild(document.createTextNode(rawUrl));
+      }
+
+      // Append trailing punctuation back as text
+      if (trailing) {
+        msg.appendChild(document.createTextNode(trailing));
+      }
+
+      lastIndex = match.index + match[0].length;
+      match = urlRegex.exec(message);
+    }
+
+    // Append remaining text
+    if (lastIndex < message.length) {
+      msg.appendChild(document.createTextNode(message.slice(lastIndex)));
+    }
+
     msgContainer.appendChild(msg);
     li.appendChild(msgContainer);
 
@@ -123,6 +181,17 @@ export class Chat extends Base {
     chatWindow.appendChild(li);
     chatWindow.scrollTo(0, chatWindow.scrollHeight);
     chatTab.classList.add('active');
+  }
+
+  private isSafeUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+
+      // Only allow safe protocols
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
 
   clear() {
@@ -237,27 +306,5 @@ export class Chat extends Base {
     handler: (data: Events[Event]) => void,
   ) {
     this.emitter.on(event, handler);
-  }
-
-  private sanitize(input: string): string {
-    const map = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#x27;',
-      '/': '&#x2F;',
-    };
-    const sanitized = input
-      .replace(/[&<>"'/]/g, (char) => map[char as keyof typeof map])
-      .trim();
-    return sanitized;
-  }
-
-  private replaceLinks(input: string): string {
-    const urlRegex = /(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g;
-    return input.replace(urlRegex, (url) => {
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-    });
   }
 }
