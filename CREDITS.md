@@ -15,5 +15,5 @@
 - **JessJess** — Create-character preview fixes, board dialog UI and packet handlers.
 - **ghoul** — Deferred frame buffering in the atlas to prevent character flicker during equipment changes.
 - **sjbmcg** — Hat rendering for characters.
-- **claude 🤖** — pushed through the pain of UI work while other's watched YouTube
+- **claude 🤖** — pushed through the pain of UI work while others watched YouTube
 - **lowky** — Found XSS vulnerability in chat rendering
