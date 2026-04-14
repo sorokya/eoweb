@@ -7,7 +7,7 @@ import {
   GiSpellBook,
   GiSwordman,
 } from 'react-icons/gi';
-import { LuMenu } from 'react-icons/lu';
+import { LuLogOut, LuMenu } from 'react-icons/lu';
 import { DialogResourceID } from '@/edf';
 import { Button } from '@/ui/components';
 import { HUD_Z, SIDEMENU_Z } from '@/ui/consts';
@@ -88,7 +88,7 @@ export function NavSidebar() {
           onClick={exitGame}
           label='Exit Game'
         >
-          <span class='text-base leading-none'>←</span>
+          <LuLogOut size={16} />
           <span class='text-[9px] leading-none'>Exit</span>
         </Button>
       </div>
@@ -117,7 +117,7 @@ export function MobileNav() {
 
   return (
     <div
-      class='absolute top-8 right-1 lg:hidden'
+      class='absolute top-9 right-1 lg:hidden'
       style={{ zIndex: open ? SIDEMENU_Z : HUD_Z }}
     >
       <div
@@ -146,7 +146,7 @@ export function MobileNav() {
               <li key={id}>
                 <button
                   type='button'
-                  class={isOpen(id) ? 'bg-base-content/15' : ''}
+                  class={isOpen(id) ? 'bg-base-content/10' : ''}
                   onClick={() => {
                     isOpen(id) ? closeDialog(id) : openDialog(id);
                     setOpen(false);
@@ -169,7 +169,7 @@ export function MobileNav() {
                   exitGame();
                 }}
               >
-                <span class='text-sm leading-none'>←</span>
+                <LuLogOut size={13} />
                 Exit Game
               </button>
             </li>

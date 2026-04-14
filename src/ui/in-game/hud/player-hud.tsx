@@ -6,14 +6,20 @@ import { ProgressBar } from '@/ui/components';
 import { HUD_Z } from '@/ui/consts';
 import { useLocale } from '@/ui/context';
 import { usePlayerStats } from '@/ui/in-game';
-import { capitalize, getExpForLevel } from '@/utils';
+import { capitalize, formatBigNumber, getExpForLevel } from '@/utils';
 
 const stopPropagation = (e: { stopPropagation(): void }) => e.stopPropagation();
 
-function hpBarClass(pct: number): string {
-  if (pct >= 50) return 'bg-gradient-to-r from-green-700 to-green-500';
-  if (pct >= 25) return 'bg-gradient-to-r from-yellow-600 to-yellow-400';
-  return 'bg-gradient-to-r from-red-700 to-red-500';
+function hpColor(pct: number): 'success' | 'warning' | 'error' {
+  if (pct >= 50) return 'success';
+  if (pct >= 25) return 'warning';
+  return 'error';
+}
+
+function tpColor(pct: number): 'info' | 'warning' | 'error' {
+  if (pct >= 50) return 'info';
+  if (pct >= 25) return 'warning';
+  return 'error';
 }
 
 export function PlayerHud() {
@@ -26,11 +32,13 @@ export function PlayerHud() {
 
   const hpPct =
     stats.maxHp > 0 ? Math.round((stats.hp / stats.maxHp) * 100) : 0;
+  const tpPct =
+    stats.maxTp > 0 ? Math.round((stats.tp / stats.maxTp) * 100) : 0;
 
   return (
     <div
       role='presentation'
-      class='absolute top-0 right-0 left-0 flex flex-row items-center gap-1.5 rounded-none border-base-content/10 border-b bg-base-300/95 px-2 py-1 shadow-md backdrop-blur-sm'
+      class='absolute top-0 right-0 left-0 flex h-8 flex-row items-center gap-1.5 rounded-none border-base-content/10 border-b bg-base-200/80 px-2 shadow-md backdrop-blur-xs'
       style={{
         zIndex: HUD_Z,
       }}
@@ -39,10 +47,10 @@ export function PlayerHud() {
       onContextMenu={stopPropagation}
     >
       <div class='flex shrink-0 items-center gap-1'>
-        <span class='truncate font-bold text-sm text-white leading-tight'>
+        <span class='truncate font-bold text-base-content text-sm leading-tight'>
           {capitalize(stats.name)}
         </span>
-        <span class='text-[10px] text-white leading-tight opacity-50'>
+        <span class='text-[10px] text-base-content/50 leading-tight'>
           {locale.hudLvl} {stats.level}
         </span>
       </div>
@@ -51,43 +59,44 @@ export function PlayerHud() {
           value={stats.hp}
           max={stats.maxHp}
           icon={
-            <span class='text-red-400'>
+            <span class='text-red-300'>
               <FaHeart size={12} />
             </span>
           }
           label={locale.hudHP}
-          barClass={hpBarClass(hpPct)}
+          color={hpColor(hpPct)}
         />
         <ProgressBar
           value={stats.tp}
           max={stats.maxTp}
           icon={
-            <span class='text-blue-400'>
+            <span class='text-blue-300'>
               <GrMagic size={12} />
             </span>
           }
           label={locale.hudTP}
-          barClass='bg-gradient-to-r from-blue-700 to-blue-500'
+          color={tpColor(tpPct)}
         />
         <ProgressBar
           value={tnlProgress}
           max={tnlTotal}
           icon={
-            <span class='text-amber-400'>
+            <span class='text-yellow-300'>
               <BiSolidStar size={12} />
             </span>
           }
           label={locale.hudTNL}
-          barClass='bg-gradient-to-r from-amber-700 to-amber-500'
+          color='warning'
         />
-        <span class='flex items-center gap-0.5 text-[10px] text-stone-400 leading-tight'>
+        <span class='flex items-center gap-0.5 text-[10px] text-accent leading-tight'>
           <GiWeightLiftingUp size={12} />
           {stats.weight} / {stats.maxWeight}
         </span>
-        <span class='flex items-center gap-0.5 text-[10px] text-yellow-400 leading-tight'>
+        <div class='flex items-center gap-0.5 text-[10px] text-warning leading-tight'>
           <GiCoins size={12} />
-          {stats.gold.toLocaleString()} {locale.hudGold}
-        </span>
+          {formatBigNumber(stats.gold)}
+          <span class='hidden md:inline'>{locale.hudGold}</span>
+        </div>
       </div>
     </div>
   );

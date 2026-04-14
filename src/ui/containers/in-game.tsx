@@ -157,7 +157,7 @@ function InGameContent() {
 
       {/* Mobile: chat at top below HUD */}
       <div
-        class='pointer-events-none absolute inset-x-0 top-0 flex justify-start pt-8 lg:hidden'
+        class='pointer-events-none absolute inset-x-0 top-0 flex justify-start pt-10 lg:hidden'
         style={{ zIndex: CHAT_Z }}
       >
         <div class='pointer-events-auto'>

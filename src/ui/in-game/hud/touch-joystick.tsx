@@ -10,8 +10,8 @@ import {
 } from '@/ui/in-game';
 
 // Rem-based sizing for CSS rendering
-const BASE_REM = 6;
-const THUMB_REM = 2.5;
+const BASE_REM = 8;
+const THUMB_REM = 3.25;
 // Pixel equivalents for pointer math (assumes 16px root font)
 const BASE_PX = BASE_REM * 16;
 const THUMB_PX = THUMB_REM * 16;

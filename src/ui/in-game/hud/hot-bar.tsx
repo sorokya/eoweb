@@ -4,98 +4,11 @@ import { playSfxById, SfxId } from '@/sfx';
 import { HUD_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
-import { useItemDrag } from '@/ui/in-game';
+import { useItemDrag, useItemGfxUrl, usePillowGfxUrl } from '@/ui/in-game';
 import { useHotbar } from './hotbar-context';
 
 const SLOT_COUNT = 6;
 const SLOT_SIZE = '3rem';
-
-// ---------------------------------------------------------------------------
-// Pillow background (gfx003, resource 100) — cached module-level URL
-// ---------------------------------------------------------------------------
-let pillowUrl: string | null = null;
-
-async function loadPillowUrl(gfxLoader: {
-  loadResource(fileId: number, resourceId: number): Promise<ImageBitmap>;
-}): Promise<string> {
-  if (pillowUrl) return pillowUrl;
-  const bitmap = await gfxLoader.loadResource(GfxType.MapTiles, 100);
-  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-  const ctx = canvas.getContext('2d')!;
-  ctx.drawImage(bitmap, 0, 0);
-  const blob = await canvas.convertToBlob({ type: 'image/png' });
-  const url = URL.createObjectURL(blob);
-  pillowUrl = url;
-  return url;
-}
-
-function usePillowUrl(): string | null {
-  const client = useClient();
-  const [url, setUrl] = useState<string | null>(() => pillowUrl);
-  useEffect(() => {
-    if (url) return;
-    let cancelled = false;
-    loadPillowUrl(client.gfxLoader).then((u) => {
-      if (!cancelled) setUrl(u);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [client, url]);
-  return url;
-}
-
-// ---------------------------------------------------------------------------
-// Item icon — reuse ItemIcon pattern but inline for ground texture
-// ---------------------------------------------------------------------------
-const itemUrlCache = new Map<number, string>();
-
-async function loadItemUrl(
-  gfxLoader: {
-    loadResource(fileId: number, resourceId: number): Promise<ImageBitmap>;
-  },
-  graphicId: number,
-): Promise<string> {
-  const cached = itemUrlCache.get(graphicId);
-  if (cached) return cached;
-  const bitmap = await gfxLoader.loadResource(
-    GfxType.Items,
-    100 + graphicId * 2 - 1,
-  );
-  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-  const ctx = canvas.getContext('2d')!;
-  ctx.drawImage(bitmap, 0, 0);
-  const blob = await canvas.convertToBlob({ type: 'image/png' });
-  const url = URL.createObjectURL(blob);
-  itemUrlCache.set(graphicId, url);
-  return url;
-}
-
-function useItemUrl(graphicId: number | null): string | null {
-  const client = useClient();
-  const [url, setUrl] = useState<string | null>(() =>
-    graphicId !== null ? (itemUrlCache.get(graphicId) ?? null) : null,
-  );
-  useEffect(() => {
-    if (graphicId === null) {
-      setUrl(null);
-      return;
-    }
-    const cached = itemUrlCache.get(graphicId);
-    if (cached) {
-      setUrl(cached);
-      return;
-    }
-    let cancelled = false;
-    loadItemUrl(client.gfxLoader, graphicId).then((u) => {
-      if (!cancelled) setUrl(u);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [client, graphicId]);
-  return url;
-}
 
 // ---------------------------------------------------------------------------
 // Spell icon — sprite sheet with 2 frames (34×32 each): left=normal, right=active
@@ -194,7 +107,7 @@ function HotBarSlot({ index, pillow }: SlotProps) {
     ? (client.getEsfRecordById(slot.typeId)?.iconId ?? null)
     : null;
 
-  const itemUrl = useItemUrl(itemGraphicId);
+  const itemUrl = useItemGfxUrl(itemGraphicId, { shadow: true });
   const spellUrls = useSpellIconUrls(spellIconId);
 
   // Track whether this spell is currently selected/armed
@@ -247,14 +160,12 @@ function HotBarSlot({ index, pillow }: SlotProps) {
 
   return (
     <div
-      class={`relative flex items-center justify-center overflow-visible rounded border transition-colors${
+      class={`relative flex items-center justify-center overflow-visible rounded border border-base-content/20 bg-base-200/20 transition-colors ${
         isDropTarget ? 'ring-2 ring-primary/60' : ''
       }`}
       style={{
         width: SLOT_SIZE,
         height: SLOT_SIZE,
-        borderColor: 'color-mix(in srgb, currentColor 20%, transparent)',
-        backgroundColor: 'color-mix(in srgb, var(--b1, #fff) 20%, transparent)',
         touchAction: 'none',
       }}
       data-hotbar-slot={index}
@@ -308,7 +219,7 @@ function HotBarSlot({ index, pillow }: SlotProps) {
 // HotBar
 // ---------------------------------------------------------------------------
 export function HotBar() {
-  const pillow = usePillowUrl();
+  const pillow = usePillowGfxUrl();
 
   return (
     <div

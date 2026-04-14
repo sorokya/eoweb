@@ -43,7 +43,7 @@ export function StatusMessages() {
       {messages.map((msg) => (
         <div
           key={msg.id}
-          class='animate-fade-in rounded-full border border-base-300 bg-base-100/80 px-4 py-1 font-semibold text-sm shadow'
+          class='badge badge-neutral badge-lg animate-fade-in shadow-md'
         >
           {msg.message}
         </div>

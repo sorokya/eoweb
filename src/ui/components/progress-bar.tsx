@@ -1,18 +1,21 @@
 import type { ComponentChildren } from 'preact';
+import { formatBigNumber } from '@/utils';
 
-function fmt(n: number): string {
-  if (n >= 1_000_000)
-    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}m`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
-  return String(n);
-}
+type ProgressColor =
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'info'
+  | 'primary'
+  | 'secondary'
+  | 'accent';
 
 type ProgressBarProps = {
   value: number;
   max: number;
   icon: ComponentChildren;
   label: string;
-  barClass: string;
+  color: ProgressColor;
 };
 
 export function ProgressBar({
@@ -20,23 +23,35 @@ export function ProgressBar({
   max,
   icon,
   label,
-  barClass,
+  color,
 }: ProgressBarProps) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
-    <div class='flex w-full min-w-0 max-w-30 items-center gap-1'>
-      <span class='flex w-5 shrink-0 items-center justify-end opacity-80'>
+    <>
+      {/* Compact: icon + value, shown on small screens only */}
+      <div
+        class={`inline-flex items-center gap-0.5 text-[10px] text-${color} leading-tight md:hidden`}
+      >
         {icon}
-      </span>
-      <div class='relative h-3 flex-1 overflow-hidden rounded bg-black/45 ring-1 ring-white/8 ring-inset md:h-4'>
-        <div
-          class={`absolute inset-y-0 left-0 rounded transition-[width] duration-500 ease-out ${barClass}`}
-          style={{ width: `${pct}%` }}
-        />
-        <span class='absolute inset-0 flex items-center justify-center font-semibold text-[7px] text-white leading-none drop-shadow md:text-[8px]'>
-          {fmt(value)}/{fmt(max)} {label}
-        </span>
+        {pct}%
       </div>
-    </div>
+
+      {/* Full bar: shown on md+ screens only */}
+      <div class='hidden w-full min-w-0 max-w-30 items-center gap-1 md:flex'>
+        <span class='flex w-5 shrink-0 items-center justify-end opacity-70'>
+          {icon}
+        </span>
+        <div class='relative flex flex-1 items-center'>
+          <progress
+            class={`progress progress-${color} h-4 w-full`}
+            value={pct}
+            max={100}
+          />
+          <span class='pointer-events-none absolute inset-0 flex items-center justify-center font-semibold text-[8px] text-white leading-none drop-shadow-[0_1px_3px_rgba(0,0,0,1)]'>
+            {formatBigNumber(value)}/{formatBigNumber(max)} {label}
+          </span>
+        </div>
+      </div>
+    </>
   );
 }

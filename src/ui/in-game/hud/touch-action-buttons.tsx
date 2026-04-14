@@ -215,12 +215,14 @@ export function TouchActionButtons() {
           {/* Picker toggle — anchored above rotated emote pill's visual top */}
           <button
             type='button'
-            class='absolute flex select-none items-center justify-center rounded-md border border-base-content/20 bg-base-100/20 text-[0.6rem] active:bg-base-content/25'
+            class='btn btn-ghost btn-xs absolute select-none bg-base-200/20 text-[0.6rem] opacity-70 active:opacity-100'
             style={{
               left: pickLeft,
               top: pickTop,
               width: r(PICK_W),
               height: r(PICK_H),
+              minHeight: 'unset',
+              padding: '0',
               touchAction: 'none',
               transform: 'rotate(30deg)',
             }}
@@ -235,15 +237,18 @@ export function TouchActionButtons() {
           {/* Emote — rotated −60° to hug attack circle tangentially */}
           <button
             type='button'
-            class='absolute flex select-none items-center justify-center rounded-xl border border-base-content/20 bg-base-100/10 text-sm active:bg-base-content/20'
+            class='btn btn-ghost absolute select-none rounded-xl border border-base-content/20 bg-base-200/20 text-sm'
             style={{
               left: emoteLeft,
               top: emoteTop,
               width: r(SAT_W),
               height: r(SAT_H),
+              minHeight: 'unset',
+              padding: '0',
               transform: `rotate(${EMOTE_ROT}deg)`,
               touchAction: 'none',
             }}
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
               handleEmoteUse();
@@ -264,12 +269,14 @@ export function TouchActionButtons() {
           <button
             ref={sitStandRef}
             type='button'
-            class='absolute flex select-none items-center justify-center rounded-xl border border-base-content/20 bg-base-100/10 text-sm active:bg-base-content/20'
+            class='btn btn-ghost absolute select-none rounded-xl border border-base-content/20 bg-base-200/20 text-sm'
             style={{
               left: sitLeft,
               top: sitTop,
               width: r(SAT_W),
               height: r(SAT_H),
+              minHeight: 'unset',
+              padding: '0',
               transform: `rotate(${SIT_ROT}deg)`,
               touchAction: 'none',
             }}
@@ -289,7 +296,7 @@ export function TouchActionButtons() {
           <button
             ref={attackRef}
             type='button'
-            class='absolute flex select-none items-center justify-center rounded-full border border-base-content/25 bg-base-100/15 text-2xl active:bg-base-content/25'
+            class='btn btn-ghost btn-circle absolute select-none border border-base-content/20 bg-base-200/20 text-2xl'
             style={{
               left: atkLeft,
               top: atkTop,

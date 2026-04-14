@@ -74,10 +74,10 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
   const ghostInput = (
     <button
       type='button'
-      class='mx-1 w-full cursor-text rounded-lg border border-base-content/10 bg-base-content/10 px-3 py-1.5 text-left'
+      class='btn btn-ghost btn-xs mx-1 w-full justify-start border border-base-200/20 bg-base-200/30 text-left font-normal normal-case'
       onClick={onFocus}
     >
-      <span class='text-white/25 text-xs'>
+      <span class='text-base-content/50 text-xs'>
         {isMobile ? 'Tap to chat…' : 'Press enter to chat…'}
       </span>
     </button>
@@ -173,7 +173,7 @@ function AddTabButton({ dialogId }: { dialogId: ChatDialogId }) {
   if (availableChannels.length === 0) return null;
 
   return (
-    <div class='relative flex-shrink-0' ref={ref}>
+    <div class='relative shrink-0' ref={ref}>
       <button
         type='button'
         class='btn btn-ghost btn-xs btn-circle opacity-60 hover:opacity-100'
