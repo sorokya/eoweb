@@ -74,6 +74,7 @@ The production-ready output will be in the `dist/` directory, which you can host
 - 🕹 [Play Test Server](https://game.reoserv.net)
 - 🔌 [WebSocket Bridge](https://github.com/sorokya/eo-ws-bridge)
 - 🖼 [EGF Image Extractor](https://github.com/sorokya/extract-egf-images)
+- 👥 [EOWeb Credits](https://github.com/sorokya/eoweb/blob/master/CREDITS.md)
 
 ---
 
