@@ -7,6 +7,7 @@ import {
   useState,
 } from 'preact/hooks';
 import { getChatMessages, type StoredChatMessage, saveChatMessage } from '@/db';
+import { playSfxById, SfxId } from '@/sfx';
 import { useClient } from '@/ui/context';
 import {
   type ChatChannel,
@@ -341,6 +342,7 @@ export function ChatManagerProvider({
       next.delete(tabId);
       return next;
     });
+    playSfxById(SfxId.ButtonClick);
   }, []);
 
   const splitChannelToNewTab = useCallback(

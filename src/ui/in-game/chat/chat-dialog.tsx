@@ -2,6 +2,7 @@ import { AdminLevel } from 'eolib';
 import { flushSync } from 'preact/compat';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { LuPlus } from 'react-icons/lu';
+import { playSfxById, SfxId } from '@/sfx';
 import { useClient } from '@/ui/context';
 import {
   type ChatChannel,
@@ -68,11 +69,16 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
     .slice(-PREVIEW_MAX_MESSAGES)
     .filter((m) => msgOpacity(m.timestampUtc, now) > 0);
 
+  const handleFocus = useCallback(() => {
+    playSfxById(SfxId.TextBoxFocus);
+    onFocus();
+  }, [onFocus]);
+
   const ghostInput = (
     <button
       type='button'
       class='btn btn-ghost btn-xs mx-1 w-full justify-start border border-base-200/20 bg-base-200/30 text-left font-normal normal-case'
-      onClick={onFocus}
+      onClick={handleFocus}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <span class='text-base-content/50 text-xs'>
@@ -230,15 +236,19 @@ export function ChatDialog() {
     inputRef.current?.focus();
   }, []);
 
-  // On desktop: pressing Enter while preview is showing opens the chat
+  // Pressing Enter while preview is showing opens the chat
   useEffect(() => {
-    if (focused || isMobile) return;
+    if (focused) return;
+
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.repeat) onFocus();
+      if (e.key === 'Enter' && !e.repeat) {
+        playSfxById(SfxId.TextBoxFocus);
+        onFocus();
+      }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [focused, isMobile, onFocus]);
+  }, [focused, onFocus]);
 
   // Tick `now` when showing preview so message opacity animations run
   useEffect(() => {
@@ -280,23 +290,6 @@ export function ChatDialog() {
     return <ChatPreview messages={tabMessages} now={now} onFocus={onFocus} />;
   }
 
-  const dialogWidth = Math.min(340, vw - 64);
-
-  const titleContent = (
-    <div class='flex min-w-0 flex-1 items-center gap-1'>
-      {tabs.length > 1 ? (
-        <ChatTabBar
-          tabs={tabs}
-          activeTabId={activeTabId}
-          onFocusInput={focusInput}
-        />
-      ) : (
-        <span class='px-1 font-semibold text-xs'>{activeTab.name}</span>
-      )}
-      <AddTabButton />
-    </div>
-  );
-
   // On mobile the main chat uses a full-width-ish panel layout instead of DialogBase
   if (isMobile) {
     return (
@@ -309,25 +302,41 @@ export function ChatDialog() {
           maxHeight: '45vh',
         }}
       >
-        {tabs.length > 1 && (
-          <div class='flex items-center gap-1 border-base-content/10 border-b bg-base-content/5 px-2 py-0.5'>
-            <ChatTabBar
-              tabs={tabs}
-              activeTabId={activeTabId}
-              onFocusInput={focusInput}
-            />
-            <AddTabButton />
-          </div>
-        )}
+        <div class='flex items-center gap-1 border-base-content/10 border-b bg-base-content/5 px-2 py-0.5'>
+          <ChatTabBar
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onFocusInput={focusInput}
+          />
+          <AddTabButton />
+        </div>
         <ChatMessageList
           tab={activeTab}
           messages={tabMessages}
           heightClass='flex-1 min-h-0 overflow-y-auto'
         />
-        <ChatInput ref={inputRef} tab={activeTab} onActivity={onFocus} />
+        <ChatInput
+          ref={inputRef}
+          tab={activeTab}
+          onActivity={onFocus}
+          onDismiss={() => setFocused(false)}
+        />
       </div>
     );
   }
+
+  const titleContent = (
+    <div class='flex min-w-0 flex-1 items-center gap-1'>
+      <ChatTabBar
+        tabs={tabs}
+        activeTabId={activeTabId}
+        onFocusInput={focusInput}
+      />
+      <AddTabButton />
+    </div>
+  );
+
+  const dialogWidth = Math.min(340, vw - 64);
 
   return (
     <div ref={containerRef} role='presentation'>
