@@ -240,7 +240,17 @@ export class Chat extends Base {
   }
 
   private sanitize(input: string): string {
-    const sanitized = input.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#x27;',
+      '/': '&#x2F;',
+    };
+    const sanitized = input
+      .replace(/[&<>"'/]/g, (char) => map[char as keyof typeof map])
+      .trim();
     return sanitized;
   }
 
