@@ -1,7 +1,7 @@
 import { AdminLevel } from 'eolib';
 import { flushSync } from 'preact/compat';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { LuPlus } from 'react-icons/lu';
+import { LuPlus, LuSearch } from 'react-icons/lu';
 import { playSfxById, SfxId } from '@/sfx';
 import { useClient } from '@/ui/context';
 import {
@@ -10,7 +10,7 @@ import {
   channelColor,
   channelLabel,
 } from '@/ui/enums';
-import { DialogBase, useViewport } from '@/ui/in-game';
+import { DialogBase, useViewport, useWindowManager } from '@/ui/in-game';
 import { isMobile } from '@/utils';
 import { ChatInput } from './chat-input';
 import type { ChatMessage } from './chat-manager';
@@ -137,7 +137,25 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
   );
 }
 
-// ---------------------------------------------------------------------------
+function ChatLogButton() {
+  const { toggleDialog } = useWindowManager();
+
+  const handleClick = useCallback(() => {
+    playSfxById(SfxId.ButtonClick);
+    toggleDialog('chat-log');
+  }, [toggleDialog]);
+
+  return (
+    <button
+      type='button'
+      class='btn btn-ghost btn-xs btn-circle opacity-60 hover:opacity-100'
+      aria-label='Chat log'
+      onClick={handleClick}
+    >
+      <LuSearch size={13} />
+    </button>
+  );
+}
 
 function AddTabButton() {
   const client = useClient();
@@ -172,8 +190,6 @@ function AddTabButton() {
     },
     [generalTab, splitChannelToNewTab],
   );
-
-  if (availableChannels.length === 0) return null;
 
   return (
     <div class='relative shrink-0' ref={ref}>
@@ -210,8 +226,6 @@ function AddTabButton() {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
 
 export function ChatDialog() {
   const client = useClient();
@@ -309,6 +323,7 @@ export function ChatDialog() {
             onFocusInput={focusInput}
           />
           <AddTabButton />
+          <ChatLogButton />
         </div>
         <ChatMessageList
           tab={activeTab}
@@ -333,6 +348,7 @@ export function ChatDialog() {
         onFocusInput={focusInput}
       />
       <AddTabButton />
+      <ChatLogButton />
     </div>
   );
 

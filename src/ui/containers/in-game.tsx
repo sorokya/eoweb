@@ -5,12 +5,12 @@ import type { DialogId } from '@/ui/in-game';
 import {
   CharacterDialog,
   ChatDialog,
+  ChatLogDialog,
   ChatManagerProvider,
   HotBar,
   HotbarProvider,
   InventoryDialog,
   ItemDragProvider,
-  MapDialog,
   MobileNav,
   NavSidebar,
   PlayerHud,
@@ -26,20 +26,18 @@ import {
 
 const ALL_DIALOG_IDS: DialogId[] = [
   'inventory',
-  'map',
   'spells',
   'character',
   'quests',
   'settings',
   'chat',
+  'chat-log',
 ];
 
 function DialogById({ id }: { id: DialogId }) {
   switch (id) {
     case 'inventory':
       return <InventoryDialog />;
-    case 'map':
-      return <MapDialog />;
     case 'spells':
       return <SpellsDialog />;
     case 'character':
@@ -50,6 +48,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <SettingsDialog />;
     case 'chat':
       return <ChatDialog />;
+    case 'chat-log':
+      return <ChatLogDialog />;
   }
 }
 
@@ -61,12 +61,8 @@ function InGameContent() {
 
   // Chat dialogs are always considered open — they manage their own visibility.
   const open = ALL_DIALOG_IDS.filter((id) => isOpen(id));
-  const manual = open.filter(
-    (id) => !id.startsWith('chat-') && getLayout(id) === 'manual',
-  );
-  const autoCenter = open.filter(
-    (id) => !id.startsWith('chat-') && getLayout(id) === 'center',
-  );
+  const manual = open.filter((id) => getLayout(id) === 'manual');
+  const autoCenter = open.filter((id) => getLayout(id) === 'center');
 
   useEffect(() => {
     client.socialController.subscribePaperdollOpened(() => {

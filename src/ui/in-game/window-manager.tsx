@@ -13,12 +13,12 @@ const BASE_Z_INDEX = 20;
 
 export type DialogId =
   | 'inventory'
-  | 'map'
   | 'spells'
   | 'character'
   | 'quests'
   | 'settings'
-  | 'chat';
+  | 'chat'
+  | 'chat-log';
 
 type DialogMeta = {
   /** Saved layout preference (persisted to localStorage). */
@@ -36,6 +36,7 @@ type WindowManagerState = {
 
 type WindowManagerContextValue = {
   stack: readonly DialogId[];
+  toggleDialog: (id: DialogId) => void;
   openDialog: (id: DialogId) => void;
   closeDialog: (id: DialogId) => void;
   bringToFront: (id: DialogId) => void;
@@ -97,6 +98,17 @@ export function WindowManagerProvider({
       return { stack: prev.stack.filter((d) => d !== id), meta };
     });
   }, []);
+
+  const toggleDialog = useCallback(
+    (id: DialogId) => {
+      if (state.stack.includes(id)) {
+        closeDialog(id);
+      } else {
+        openDialog(id);
+      }
+    },
+    [state.stack, closeDialog, openDialog],
+  );
 
   const bringToFront = useCallback((id: DialogId) => {
     setState((prev) => {
@@ -234,6 +246,7 @@ export function WindowManagerProvider({
         closeDialog,
         bringToFront,
         isOpen,
+        toggleDialog,
         isFocused,
         zIndexOf,
         setLayout,

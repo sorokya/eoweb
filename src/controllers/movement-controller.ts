@@ -112,6 +112,7 @@ export class MovementController {
   }
 
   sit(): void {
+    playSfxById(SfxId.Sit);
     const packet = new SitRequestClientPacket();
     packet.sitAction = SitAction.Sit;
     packet.sitActionData = new SitRequestClientPacket.SitActionDataSit();

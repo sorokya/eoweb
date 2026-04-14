@@ -10,9 +10,9 @@ export type {
 export { ChatManagerProvider, useChatManager } from './chat/chat-manager';
 // Dialog components
 export { CharacterDialog } from './dialogs/character-dialog';
+export { ChatLogDialog } from './dialogs/chat-log-dialog';
 export { DialogBase } from './dialogs/dialog-base';
 export { InventoryDialog } from './dialogs/inventory-dialog';
-export { MapDialog } from './dialogs/map-dialog';
 export { QuestsDialog } from './dialogs/quests-dialog';
 export { SettingsDialog } from './dialogs/settings-dialog';
 export { SpellsDialog } from './dialogs/spells-dialog';

@@ -9,6 +9,7 @@ import {
 } from 'react-icons/gi';
 import { LuLogOut, LuMenu } from 'react-icons/lu';
 import { DialogResourceID } from '@/edf';
+import { playSfxById, SfxId } from '@/sfx';
 import { Button } from '@/ui/components';
 import { HUD_Z, SIDEMENU_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
@@ -26,13 +27,13 @@ function useExitGame() {
   }, [client]);
 }
 
-type NavButton = {
-  id: DialogId;
+type NavDialogButton = {
+  id: string;
   label: string;
   Icon: preact.ComponentType<{ size?: number }>;
 };
 
-const NAV_BUTTONS: NavButton[] = [
+const NAV_BUTTONS: NavDialogButton[] = [
   { id: 'inventory', label: 'Inventory', Icon: GiBackpack },
   { id: 'map', label: 'Map', Icon: GiCompass },
   { id: 'spells', label: 'Spells', Icon: GiSpellBook },
@@ -58,6 +59,24 @@ export function NavSidebar() {
     [wmOpenDialog, client],
   );
 
+  const handleNavClick = useCallback(
+    (id: string) => {
+      playSfxById(SfxId.ButtonClick);
+      if (id === 'map') {
+        client.toggleMinimap();
+        return;
+      }
+
+      const dialogId = id as DialogId;
+      if (isOpen(dialogId)) {
+        closeDialog(dialogId);
+      } else {
+        openDialog(dialogId);
+      }
+    },
+    [isOpen, closeDialog, openDialog, client],
+  );
+
   return (
     <div
       role='presentation'
@@ -75,7 +94,7 @@ export function NavSidebar() {
             key={id}
             variant={['xs', 'neutral']}
             class='flex h-auto w-14 flex-col items-center gap-0.5 py-1.5'
-            onClick={() => (isOpen(id) ? closeDialog(id) : openDialog(id))}
+            onClick={() => handleNavClick(id)}
             label={label}
           >
             <Icon size={16} />
@@ -115,6 +134,24 @@ export function MobileNav() {
     [wmOpenDialog, client],
   );
 
+  const handleNavClick = useCallback(
+    (id: string) => {
+      playSfxById(SfxId.ButtonClick);
+      if (id === 'map') {
+        client.toggleMinimap();
+        return;
+      }
+
+      const dialogId = id as DialogId;
+      if (isOpen(dialogId)) {
+        closeDialog(dialogId);
+      } else {
+        openDialog(dialogId);
+      }
+    },
+    [isOpen, closeDialog, openDialog, client],
+  );
+
   return (
     <div
       class='absolute top-9 right-1 lg:hidden'
@@ -146,9 +183,8 @@ export function MobileNav() {
               <li key={id}>
                 <button
                   type='button'
-                  class={isOpen(id) ? 'bg-base-content/10' : ''}
                   onClick={() => {
-                    isOpen(id) ? closeDialog(id) : openDialog(id);
+                    handleNavClick(id);
                     setOpen(false);
                   }}
                 >
