@@ -15,9 +15,10 @@ import {
   isPMChannel,
   pmChannelName,
 } from '@/ui/enums';
-import { type ChatDialogId, useWindowManager } from '@/ui/in-game';
+import { type DialogId, useWindowManager } from '@/ui/in-game';
+import { capitalize } from '@/utils';
 
-const STORAGE_KEY = 'eoweb:chat:dialogs:v2';
+const STORAGE_KEY = 'eoweb:chat:dialogs:v3';
 const MAX_MESSAGES = 200;
 
 export type ChatMessage = StoredChatMessage;
@@ -31,168 +32,141 @@ export type ChatTabConfig = {
 };
 
 export type ChatDialogConfig = {
-  id: ChatDialogId;
+  id: DialogId;
   tabs: ChatTabConfig[];
   activeTabId: string;
 };
 
-const DEFAULT_DIALOGS: ChatDialogConfig[] = [
-  {
-    id: 'chat-main',
-    tabs: [
-      {
-        id: 'general',
-        name: 'General',
-        channels: [
-          ChatChannels.Local,
-          ChatChannels.Global,
-          ChatChannels.Party,
-          ChatChannels.Guild,
-          ChatChannels.Admin,
-        ],
-      },
-      {
-        id: 'system',
-        name: 'System',
-        channels: [ChatChannels.System],
-      },
-    ],
-    activeTabId: 'general',
-  },
-];
+const DEFAULT_DIALOG: ChatDialogConfig = {
+  id: 'chat',
+  tabs: [
+    {
+      id: 'general',
+      name: 'General',
+      channels: [
+        ChatChannels.Local,
+        ChatChannels.Global,
+        ChatChannels.Party,
+        ChatChannels.Guild,
+        ChatChannels.Admin,
+      ],
+    },
+    {
+      id: 'system',
+      name: 'System',
+      channels: [ChatChannels.System],
+    },
+  ],
+  activeTabId: 'general',
+};
 
-function isValidDialogConfig(d: unknown): d is ChatDialogConfig {
-  if (!d || typeof d !== 'object') return false;
-  const obj = d as Record<string, unknown>;
-  return (
-    typeof obj.id === 'string' &&
-    obj.id.startsWith('chat-') &&
-    Array.isArray(obj.tabs) &&
-    (obj.tabs as unknown[]).every(
-      (t) =>
-        t &&
-        typeof t === 'object' &&
-        typeof (t as Record<string, unknown>).id === 'string' &&
-        typeof (t as Record<string, unknown>).name === 'string' &&
-        Array.isArray((t as Record<string, unknown>).channels),
-    )
-  );
-}
-
-function loadDialogConfigs(): ChatDialogConfig[] {
+function loadDialogConfig(): ChatDialogConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as unknown[];
-      if (Array.isArray(parsed) && parsed.every(isValidDialogConfig)) {
-        // Only keep chat-main; strip PM channels from saved tabs; reset active tab
-        return parsed
-          .filter((d) => d.id === 'chat-main')
-          .map((d) => ({
-            ...d,
-            activeTabId: 'general',
-            tabs: d.tabs
-              .map((t) => ({
-                ...t,
-                channels: t.channels.filter(
-                  (ch: ChatChannel) => !isPMChannel(ch),
-                ),
-              }))
-              .filter(
-                (t) =>
-                  t.channels.length > 0 ||
-                  t.id === 'general' ||
-                  t.id === 'system',
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed) {
+        // Only keep chat; strip PM channels from saved tabs; reset active tab
+        const d = parsed as ChatDialogConfig;
+        return {
+          ...d,
+          activeTabId: 'general',
+          tabs: d.tabs
+            .map((t) => ({
+              ...t,
+              channels: t.channels.filter(
+                (ch: ChatChannel) => !isPMChannel(ch),
               ),
-          }));
+            }))
+            .filter(
+              (t) =>
+                t.channels.length > 0 ||
+                t.id === 'general' ||
+                t.id === 'system',
+            ),
+        };
       }
     }
   } catch {
     /* ignore */
   }
-  return DEFAULT_DIALOGS;
+  return DEFAULT_DIALOG;
 }
 
-function saveDialogConfigs(configs: ChatDialogConfig[]) {
+function saveDialogConfig(config: ChatDialogConfig) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
   } catch {
     /* ignore */
   }
 }
 
 /**
- * Return channels to chat-main after a tab is closed:
+ * Return channels to chat after a tab is closed:
  *  - System channel → System tab (created if missing)
  *  - Non-PM, non-System channels → General tab (created if missing)
  *  - PM channels are dropped (ephemeral)
  */
 function repatriateChannels(
-  dialogs: ChatDialogConfig[],
+  dialog: ChatDialogConfig,
   channels: ChatChannel[],
-): ChatDialogConfig[] {
+): ChatDialogConfig {
   const generalOrphans = channels.filter(
     (ch) => ch !== ChatChannels.System && !isPMChannel(ch),
   );
   const systemOrphans = channels.includes(ChatChannels.System);
 
-  if (!generalOrphans.length && !systemOrphans) return dialogs;
+  if (!generalOrphans.length && !systemOrphans) return dialog;
 
-  return dialogs.map((d) => {
-    if (d.id !== 'chat-main') return d;
-
-    let tabs = d.tabs;
-
-    if (generalOrphans.length > 0) {
-      const generalIdx = tabs.findIndex((t) => t.id === 'general');
-      if (generalIdx >= 0) {
-        const existing = tabs[generalIdx];
-        const toAdd = generalOrphans.filter(
-          (ch) => !existing.channels.includes(ch),
+  let tabs = dialog.tabs;
+  if (generalOrphans.length > 0) {
+    const generalIdx = tabs.findIndex((t) => t.id === 'general');
+    if (generalIdx >= 0) {
+      const existing = tabs[generalIdx];
+      const toAdd = generalOrphans.filter(
+        (ch) => !existing.channels.includes(ch),
+      );
+      if (toAdd.length > 0) {
+        tabs = tabs.map((t) =>
+          t.id === 'general'
+            ? { ...t, channels: [...t.channels, ...toAdd] }
+            : t,
         );
-        if (toAdd.length > 0) {
-          tabs = tabs.map((t) =>
-            t.id === 'general'
-              ? { ...t, channels: [...t.channels, ...toAdd] }
-              : t,
-          );
-        }
-      } else {
-        tabs = [
-          { id: 'general', name: 'General', channels: generalOrphans },
-          ...tabs,
-        ];
       }
+    } else {
+      tabs = [
+        { id: 'general', name: 'General', channels: generalOrphans },
+        ...tabs,
+      ];
     }
+  }
 
-    if (systemOrphans) {
-      const systemIdx = tabs.findIndex((t) => t.id === 'system');
-      if (systemIdx < 0) {
-        tabs = [
-          ...tabs,
-          { id: 'system', name: 'System', channels: [ChatChannels.System] },
-        ];
-      }
+  if (systemOrphans) {
+    const systemIdx = tabs.findIndex((t) => t.id === 'system');
+    if (systemIdx < 0) {
+      tabs = [
+        ...tabs,
+        { id: 'system', name: 'System', channels: [ChatChannels.System] },
+      ];
     }
+  }
 
-    return { ...d, tabs };
-  });
+  return {
+    ...dialog,
+    tabs,
+  };
 }
 
 type ChatManagerContextValue = {
-  dialogs: ChatDialogConfig[];
+  dialog: ChatDialogConfig;
   messages: Map<string, ChatMessage[]>;
   /** Set of tab IDs that have unread messages (received since last viewed). */
   unreadTabs: Set<string>;
   /** Split a single channel out of a tab into a new tab within the same dialog. */
-  splitChannelToNewTab: (
-    channel: ChatChannel,
-    fromTabId: string,
-    dialogId: ChatDialogId,
-  ) => void;
+  splitChannelToNewTab: (channel: ChatChannel, fromTabId: string) => void;
   /** Remove a tab from a dialog, repatriating its non-PM channels back to General/System. */
-  closeTab: (tabId: string, dialogId: ChatDialogId) => void;
-  setActiveTab: (dialogId: ChatDialogId, tabId: string) => void;
+  closeTab: (tabId: string) => void;
+  setActiveTab: (tabId: string) => void;
 };
 
 const ChatManagerContext = createContext<ChatManagerContextValue | null>(null);
@@ -206,20 +180,20 @@ export function ChatManagerProvider({
 }) {
   const client = useClient();
   const { openDialog } = useWindowManager();
-  const [dialogs, setDialogs] = useState<ChatDialogConfig[]>(() =>
-    loadDialogConfigs(),
+  const [dialog, setDialog] = useState<ChatDialogConfig>(() =>
+    loadDialogConfig(),
   );
   const [messages, setMessages] = useState<Map<string, ChatMessage[]>>(
     new Map(),
   );
   const [unreadTabs, setUnreadTabs] = useState<Set<string>>(new Set());
 
-  const dialogsRef = useRef(dialogs);
-  dialogsRef.current = dialogs;
+  const dialogRef = useRef(dialog);
+  dialogRef.current = dialog;
 
-  // Open chat-main in the WM on mount
+  // Open chat in the WM on mount
   useEffect(() => {
-    openDialog('chat-main');
+    openDialog('chat');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -250,31 +224,28 @@ export function ChatManagerProvider({
     saveChatMessage(msg);
 
     const { channel } = msg;
-    const currentDialogs = dialogsRef.current;
+    const currentDialog = dialogRef.current;
 
-    // PM channel → auto-create a dedicated tab in chat-main
+    // PM channel → auto-create a dedicated tab in chat
     if (isPMChannel(channel)) {
-      const alreadyTracked = currentDialogs.some((d) =>
-        d.tabs.some((t) => t.channels.includes(channel)),
+      const alreadyTracked = currentDialog.tabs.some((t) =>
+        t.channels.includes(channel),
       );
       if (!alreadyTracked) {
         const name = pmChannelName(channel);
         const newTabId = `pm-${channel.replace('pm:', '')}`;
-        setDialogs((prev) =>
-          prev.map((d) => {
-            if (d.id !== 'chat-main') return d;
-            const newTab: ChatTabConfig = {
+        setDialog((prev) => ({
+          ...prev,
+          tabs: [
+            ...prev.tabs,
+            {
               id: newTabId,
-              name: name.charAt(0).toUpperCase() + name.slice(1),
+              name: capitalize(name),
               channels: [channel],
-            };
-            return {
-              ...d,
-              tabs: [...d.tabs, newTab],
-              activeTabId: newTabId,
-            };
-          }),
-        );
+            },
+          ],
+          activeTabId: newTabId,
+        }));
         // New PM tab starts as "unread" immediately since we auto-switch to it,
         // but setActiveTab will clear it — nothing to do here.
       }
@@ -283,11 +254,9 @@ export function ChatManagerProvider({
     // Mark any non-active tabs that subscribe to this channel as unread
     setUnreadTabs((prev) => {
       const next = new Set(prev);
-      for (const dialog of currentDialogs) {
-        for (const tab of dialog.tabs) {
-          if (tab.channels.includes(channel) && tab.id !== dialog.activeTabId) {
-            next.add(tab.id);
-          }
+      for (const tab of currentDialog.tabs) {
+        if (tab.channels.includes(channel) && tab.id !== dialog.activeTabId) {
+          next.add(tab.id);
         }
       }
       return next;
@@ -342,34 +311,30 @@ export function ChatManagerProvider({
 
   // Persist dialog configs when they change
   useEffect(() => {
-    saveDialogConfigs(dialogs);
-  }, [dialogs]);
+    saveDialogConfig(dialog);
+  }, [dialog]);
 
-  const closeTab = useCallback((tabId: string, dialogId: ChatDialogId) => {
-    setDialogs((prev) => {
-      const dialog = prev.find((d) => d.id === dialogId);
-      const tab = dialog?.tabs.find((t) => t.id === tabId);
+  const closeTab = useCallback((tabId: string) => {
+    setDialog((prev) => {
+      const tab = prev.tabs.find((t) => t.id === tabId);
       if (!tab) return prev;
 
-      const withoutTab = prev.map((d) => {
-        if (d.id !== dialogId) return d;
-        const newTabs = d.tabs.filter((t) => t.id !== tabId);
-        return {
-          ...d,
-          tabs: newTabs,
-          activeTabId:
-            d.activeTabId === tabId ? (newTabs[0]?.id ?? '') : d.activeTabId,
-        };
-      });
+      const newTabs = prev.tabs.filter((t) => t.id !== tabId);
+      const withoutTab = {
+        ...prev,
+        tabs: newTabs,
+        activeTabId:
+          prev.activeTabId === tabId
+            ? (newTabs[0]?.id ?? '')
+            : prev.activeTabId,
+      };
 
       return repatriateChannels(withoutTab, tab.channels);
     });
   }, []);
 
-  const setActiveTab = useCallback((dialogId: ChatDialogId, tabId: string) => {
-    setDialogs((prev) =>
-      prev.map((d) => (d.id === dialogId ? { ...d, activeTabId: tabId } : d)),
-    );
+  const setActiveTab = useCallback((tabId: string) => {
+    setDialog((prev) => ({ ...prev, activeTabId: tabId }));
     setUnreadTabs((prev) => {
       if (!prev.has(tabId)) return prev;
       const next = new Set(prev);
@@ -379,10 +344,9 @@ export function ChatManagerProvider({
   }, []);
 
   const splitChannelToNewTab = useCallback(
-    (channel: ChatChannel, fromTabId: string, dialogId: ChatDialogId) => {
-      setDialogs((prev) => {
-        const dialog = prev.find((d) => d.id === dialogId);
-        const fromTab = dialog?.tabs.find((t) => t.id === fromTabId);
+    (channel: ChatChannel, fromTabId: string) => {
+      setDialog((prev) => {
+        const fromTab = prev.tabs.find((t) => t.id === fromTabId);
         if (!fromTab?.channels.includes(channel)) return prev;
 
         const newTabId = `tab-${channel}-${Math.random().toString(36).slice(2, 6)}`;
@@ -392,26 +356,23 @@ export function ChatManagerProvider({
           channels: [channel],
         };
 
-        return prev.map((d) => {
-          if (d.id !== dialogId) return d;
-          return {
-            ...d,
-            tabs: [
-              ...d.tabs
-                .map((t) =>
-                  t.id === fromTabId
-                    ? {
-                        ...t,
-                        channels: t.channels.filter((c) => c !== channel),
-                      }
-                    : t,
-                )
-                .filter((t) => t.channels.length > 0),
-              newTab,
-            ],
-            activeTabId: newTabId,
-          };
-        });
+        return {
+          ...prev,
+          tabs: [
+            ...prev.tabs
+              .map((t) =>
+                t.id === fromTabId
+                  ? {
+                      ...t,
+                      channels: t.channels.filter((ch) => ch !== channel),
+                    }
+                  : t,
+              )
+              .filter((t) => t.channels.length > 0),
+            newTab,
+          ],
+          activeTabId: newTabId,
+        };
       });
     },
     [],
@@ -420,7 +381,7 @@ export function ChatManagerProvider({
   return (
     <ChatManagerContext.Provider
       value={{
-        dialogs,
+        dialog,
         messages,
         unreadTabs,
         splitChannelToNewTab,

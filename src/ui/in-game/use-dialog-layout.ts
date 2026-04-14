@@ -2,38 +2,19 @@ import { useCallback, useEffect, useState } from 'preact/hooks';
 import { RESET_EVENT } from './use-position';
 import type { DialogId } from './window-manager';
 
-export type DialogLayout =
-  | 'center'
-  | 'right'
-  | 'left'
-  | 'bottom-left'
-  | 'manual';
-
-export const DIALOG_LAYOUT_LABELS: Record<DialogLayout, string> = {
-  center: 'Center',
-  right: 'Right',
-  left: 'Left',
-  'bottom-left': 'Bottom Left',
-  manual: 'Manual',
-};
+export type DialogLayout = 'center' | 'bottom-left' | 'manual';
 
 const STORAGE_PREFIX = 'eoweb:layout:dialog:';
 
 function defaultLayoutForId(id: string): DialogLayout {
-  if (id === 'chat-main') return 'bottom-left';
+  if (id === 'chat') return 'bottom-left';
   return 'center';
 }
 
 function readDialogLayout(id: string): DialogLayout | null {
   try {
     const raw = localStorage.getItem(STORAGE_PREFIX + id);
-    if (
-      raw === 'center' ||
-      raw === 'right' ||
-      raw === 'left' ||
-      raw === 'bottom-left' ||
-      raw === 'manual'
-    )
+    if (raw === 'center' || raw === 'bottom-left' || raw === 'manual')
       return raw;
     return null;
   } catch {

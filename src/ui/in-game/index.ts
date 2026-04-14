@@ -29,7 +29,6 @@ export type { DragDropResult, DragInfo } from './item-drag-context';
 export { ItemDragProvider, useItemDrag } from './item-drag-context';
 export {
   clearAllDialogLayouts,
-  DIALOG_LAYOUT_LABELS,
   type DialogLayout,
   getDialogLayoutById,
   useDialogLayout,
@@ -48,7 +47,7 @@ export { clearAllPositions, RESET_EVENT, usePosition } from './use-position';
 export { useRepositionMode } from './use-reposition-mode';
 export { applyUiScale, UI_SCALE_OPTIONS, useUiScale } from './use-ui-scale';
 export { useViewport } from './use-viewport';
-export type { ChatDialogId, DialogId } from './window-manager';
+export type { DialogId } from './window-manager';
 export {
   useWindowManager,
   WindowManagerProvider,

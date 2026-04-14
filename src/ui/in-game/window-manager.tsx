@@ -11,17 +11,14 @@ import { RESET_EVENT } from './use-position';
 
 const BASE_Z_INDEX = 20;
 
-export type StaticDialogId =
+export type DialogId =
   | 'inventory'
   | 'map'
   | 'spells'
   | 'character'
   | 'quests'
-  | 'settings';
-
-export type ChatDialogId = `chat-${string}`;
-
-export type DialogId = StaticDialogId | ChatDialogId;
+  | 'settings'
+  | 'chat';
 
 type DialogMeta = {
   /** Saved layout preference (persisted to localStorage). */
@@ -34,7 +31,7 @@ type DialogMeta = {
 type WindowManagerState = {
   /** Ordered list of open dialog ids, back-to-front (last = topmost). */
   stack: DialogId[];
-  meta: Partial<Record<string, DialogMeta>>;
+  meta: Partial<Record<DialogId, DialogMeta>>;
 };
 
 type WindowManagerContextValue = {

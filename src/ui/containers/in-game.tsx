@@ -1,7 +1,7 @@
 import { useEffect } from 'preact/hooks';
 import { CHAT_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
-import type { ChatDialogId, DialogId } from '@/ui/in-game';
+import type { DialogId } from '@/ui/in-game';
 import {
   CharacterDialog,
   ChatDialog,
@@ -20,7 +20,6 @@ import {
   StatusMessages,
   TouchActionButtons,
   TouchJoystick,
-  useChatManager,
   useWindowManager,
   WindowManagerProvider,
 } from '@/ui/in-game';
@@ -32,12 +31,10 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'character',
   'quests',
   'settings',
+  'chat',
 ];
 
 function DialogById({ id }: { id: DialogId }) {
-  if (id.startsWith('chat-')) {
-    return <ChatDialog id={id as ChatDialogId} />;
-  }
   switch (id) {
     case 'inventory':
       return <InventoryDialog />;
@@ -51,6 +48,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <QuestsDialog />;
     case 'settings':
       return <SettingsDialog />;
+    case 'chat':
+      return <ChatDialog />;
   }
 }
 
@@ -58,29 +57,15 @@ const DIALOG_Z = 20;
 
 function InGameContent() {
   const client = useClient();
-  const { isOpen, isMinimized, getLayout, openDialog } = useWindowManager();
-  const { dialogs: chatDialogs } = useChatManager();
-
-  const chatDialogIds = chatDialogs.map((d) => d.id);
-  const allDialogIds: DialogId[] = [...ALL_DIALOG_IDS, ...chatDialogIds];
+  const { isOpen, getLayout, openDialog } = useWindowManager();
 
   // Chat dialogs are always considered open — they manage their own visibility.
-  const open = allDialogIds.filter((id) =>
-    id.startsWith('chat-') ? true : isOpen(id),
-  );
-  const minimized = open.filter((id) => isMinimized(id));
-  const nonMinimized = open.filter((id) => !isMinimized(id));
-  const manual = nonMinimized.filter(
+  const open = ALL_DIALOG_IDS.filter((id) => isOpen(id));
+  const manual = open.filter(
     (id) => !id.startsWith('chat-') && getLayout(id) === 'manual',
   );
-  const autoLeft = nonMinimized.filter(
-    (id) => !id.startsWith('chat-') && getLayout(id) === 'left',
-  );
-  const autoCenter = nonMinimized.filter(
+  const autoCenter = open.filter(
     (id) => !id.startsWith('chat-') && getLayout(id) === 'center',
-  );
-  const autoRight = nonMinimized.filter(
-    (id) => !id.startsWith('chat-') && getLayout(id) === 'right',
   );
 
   useEffect(() => {
@@ -98,19 +83,6 @@ function InGameContent() {
       <TouchJoystick />
       <TouchActionButtons />
 
-      {autoLeft.length > 0 && (
-        <div
-          class='pointer-events-none absolute inset-0 flex items-center justify-start pl-5'
-          style={{ zIndex: DIALOG_Z }}
-        >
-          <div class='pointer-events-auto flex flex-row items-start gap-3'>
-            {autoLeft.map((id) => (
-              <DialogById key={id} id={id} />
-            ))}
-          </div>
-        </div>
-      )}
-
       {autoCenter.length > 0 && (
         <div
           class='pointer-events-none absolute inset-0 flex flex-col items-center justify-center md:flex-row'
@@ -124,28 +96,13 @@ function InGameContent() {
         </div>
       )}
 
-      {autoRight.length > 0 && (
-        <div
-          class='pointer-events-none absolute inset-0 flex items-center justify-end pr-5 md:pr-20'
-          style={{ zIndex: DIALOG_Z }}
-        >
-          <div class='pointer-events-auto flex flex-row-reverse items-start gap-3'>
-            {autoRight.map((id) => (
-              <DialogById key={id} id={id} />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Desktop bottom bar: chat left | hotbar centered | spacer right */}
       <div
         class='pointer-events-none absolute inset-x-0 bottom-0 hidden items-end px-2 pb-2 lg:flex'
         style={{ zIndex: CHAT_Z }}
       >
         <div class='pointer-events-auto flex flex-1 items-end justify-start'>
-          {chatDialogIds.map((id) => (
-            <DialogById key={id} id={id as DialogId} />
-          ))}
+          <DialogById id={'chat'} />
         </div>
         <div class='pointer-events-none flex flex-1 justify-center'>
           <div class='pointer-events-auto'>
@@ -161,9 +118,7 @@ function InGameContent() {
         style={{ zIndex: CHAT_Z }}
       >
         <div class='pointer-events-auto'>
-          {chatDialogIds.map((id) => (
-            <DialogById key={id} id={id as DialogId} />
-          ))}
+          <DialogById id={'chat'} />
         </div>
       </div>
 
@@ -176,20 +131,6 @@ function InGameContent() {
           <HotBar />
         </div>
       </div>
-
-      {/* Minimized strip */}
-      {minimized.length > 0 && (
-        <div
-          class='pointer-events-none absolute inset-0 flex flex-col items-start justify-center gap-1 pl-1'
-          style={{ zIndex: DIALOG_Z }}
-        >
-          <div class='pointer-events-auto flex flex-col items-start gap-1'>
-            {minimized.map((id) => (
-              <DialogById key={id} id={id} />
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Manually dragged dialogs */}
       {manual.map((id) => (

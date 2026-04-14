@@ -9,7 +9,6 @@ import {
   channelColor,
   channelLabel,
 } from '@/ui/enums';
-import type { ChatDialogId } from '@/ui/in-game';
 import { DialogBase, useViewport } from '@/ui/in-game';
 import { isMobile } from '@/utils';
 import { ChatInput } from './chat-input';
@@ -28,8 +27,6 @@ function useIsMobile() {
   }, []);
   return mobile;
 }
-
-const MAIN_DIALOG_ID = 'chat-main';
 
 /** Channels available to split from the main General tab into a new tab. */
 const DETACH_CHANNELS: ChatChannel[] = [
@@ -135,15 +132,14 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
 
 // ---------------------------------------------------------------------------
 
-function AddTabButton({ dialogId }: { dialogId: ChatDialogId }) {
+function AddTabButton() {
   const client = useClient();
-  const { dialogs, splitChannelToNewTab } = useChatManager();
+  const { dialog, splitChannelToNewTab } = useChatManager();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const isAdmin = client.admin !== AdminLevel.Player;
 
-  const dialog = dialogs.find((d) => d.id === dialogId);
   const generalTab = dialog?.tabs.find((t) => t.id === 'general');
   const availableChannels = DETACH_CHANNELS.filter((ch) => {
     if (ch === ChatChannels.Admin && !isAdmin) return false;
@@ -164,10 +160,10 @@ function AddTabButton({ dialogId }: { dialogId: ChatDialogId }) {
   const handleAdd = useCallback(
     (ch: ChatChannel) => {
       if (!generalTab) return;
-      splitChannelToNewTab(ch, generalTab.id, dialogId);
+      splitChannelToNewTab(ch, generalTab.id);
       setOpen(false);
     },
-    [generalTab, dialogId, splitChannelToNewTab],
+    [generalTab, splitChannelToNewTab],
   );
 
   if (availableChannels.length === 0) return null;
@@ -210,19 +206,13 @@ function AddTabButton({ dialogId }: { dialogId: ChatDialogId }) {
 
 // ---------------------------------------------------------------------------
 
-type Props = {
-  id: ChatDialogId;
-};
-
-export function ChatDialog({ id }: Props) {
+export function ChatDialog() {
   const client = useClient();
-  const { dialogs, messages } = useChatManager();
-  const dialog = dialogs.find((d) => d.id === id);
+  const { dialog, messages } = useChatManager();
   const isMobile = useIsMobile();
   const { vw } = useViewport();
 
-  const isMain = id === MAIN_DIALOG_ID;
-  const [focused, setFocused] = useState(!isMain);
+  const [focused, setFocused] = useState(false);
   const [now, setNow] = useState(Date.now);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -232,34 +222,33 @@ export function ChatDialog({ id }: Props) {
   }, []);
 
   const onFocus = useCallback(() => {
-    if (!isMain) return;
     // flushSync forces a synchronous render so the ChatInput is in the DOM
     // before we call focus() — required for iOS which only allows programmatic
     // focus inside a synchronous user-gesture call stack.
     flushSync(() => setFocused(true));
     inputRef.current?.focus();
-  }, [isMain]);
+  }, []);
 
   // On desktop: pressing Enter while preview is showing opens the chat
   useEffect(() => {
-    if (!isMain || focused || isMobile) return;
+    if (focused || isMobile) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && !e.repeat) onFocus();
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [isMain, focused, isMobile, onFocus]);
+  }, [focused, isMobile, onFocus]);
 
   // Tick `now` when showing preview so message opacity animations run
   useEffect(() => {
-    if (!isMain || focused) return;
+    if (focused) return;
     const timerId = setInterval(() => setNow(Date.now()), 200);
     return () => clearInterval(timerId);
-  }, [isMain, focused]);
+  }, [focused]);
 
   // Unfocus when user clicks/taps outside the chat dialog
   useEffect(() => {
-    if (!isMain || !focused) return;
+    if (!focused) return;
     const handler = (e: PointerEvent) => {
       if (
         containerRef.current &&
@@ -271,7 +260,7 @@ export function ChatDialog({ id }: Props) {
     };
     document.addEventListener('pointerdown', handler);
     return () => document.removeEventListener('pointerdown', handler);
-  }, [isMain, focused]);
+  }, [focused]);
 
   const tabs = dialog?.tabs ?? [];
   const activeTabId = dialog?.activeTabId ?? '';
@@ -286,7 +275,7 @@ export function ChatDialog({ id }: Props) {
   if (!dialog || !activeTab) return null;
 
   // Unfocused: chromeless preview
-  if (isMain && !focused) {
+  if (!focused) {
     return <ChatPreview messages={tabMessages} now={now} onFocus={onFocus} />;
   }
 
@@ -296,21 +285,19 @@ export function ChatDialog({ id }: Props) {
     <div class='flex min-w-0 flex-1 items-center gap-1'>
       {tabs.length > 1 ? (
         <ChatTabBar
-          dialogId={id}
           tabs={tabs}
           activeTabId={activeTabId}
-          isMain={isMain}
           onFocusInput={focusInput}
         />
       ) : (
         <span class='px-1 font-semibold text-xs'>{activeTab.name}</span>
       )}
-      {isMain && <AddTabButton dialogId={id} />}
+      <AddTabButton />
     </div>
   );
 
   // On mobile the main chat uses a full-width-ish panel layout instead of DialogBase
-  if (isMain && isMobile) {
+  if (isMobile) {
     return (
       <div
         ref={containerRef}
@@ -325,13 +312,11 @@ export function ChatDialog({ id }: Props) {
         {tabs.length > 1 && (
           <div class='flex items-center gap-1 border-base-content/10 border-b bg-base-content/5 px-2 py-0.5'>
             <ChatTabBar
-              dialogId={id}
               tabs={tabs}
               activeTabId={activeTabId}
-              isMain={isMain}
               onFocusInput={focusInput}
             />
-            <AddTabButton dialogId={id} />
+            <AddTabButton />
           </div>
         )}
         <ChatMessageList
@@ -346,12 +331,12 @@ export function ChatDialog({ id }: Props) {
   return (
     <div ref={containerRef} role='presentation'>
       <DialogBase
-        id={id}
+        id='chat'
         title='Chat'
         titleContent={titleContent}
         defaultWidth={dialogWidth}
-        hideControls={isMain}
-        noDrag={isMain}
+        hideControls={true}
+        noDrag={true}
       >
         <div class='-mx-3 -mb-3 flex flex-col'>
           <ChatMessageList
@@ -362,8 +347,8 @@ export function ChatDialog({ id }: Props) {
           <ChatInput
             ref={inputRef}
             tab={activeTab}
-            onActivity={isMain ? onFocus : undefined}
-            onDismiss={isMain ? () => setFocused(false) : undefined}
+            onActivity={onFocus}
+            onDismiss={() => setFocused(false)}
           />
         </div>
       </DialogBase>
