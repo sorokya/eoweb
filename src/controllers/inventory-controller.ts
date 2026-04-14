@@ -168,27 +168,17 @@ export class InventoryController {
       return false;
     }
 
-    const equipment = this.getEquipmentArray();
-    if (equipment[slot]) {
-      if (equipment[slot] === itemId) {
-        return false;
-      }
+    const record = this.client.getEifRecordById(item.id);
+    if (!record) {
+      return false;
+    }
 
-      this.equipmentSwap = {
-        slot,
-        itemId,
-      };
-      this.unequipItem(slot);
+    if (!this.itemTypeValidForSlot(record.type, slot)) {
       return false;
     }
 
     const character = this.client.getPlayerCharacter();
     if (!character) {
-      return false;
-    }
-
-    const record = this.client.getEifRecordById(item.id);
-    if (!record) {
       return false;
     }
 
@@ -265,6 +255,20 @@ export class InventoryController {
       return false;
     }
 
+    const equipment = this.getEquipmentArray();
+    if (equipment[slot]) {
+      if (equipment[slot] === itemId) {
+        return false;
+      }
+
+      this.equipmentSwap = {
+        slot,
+        itemId,
+      };
+      this.unequipItem(slot);
+      return false;
+    }
+
     const packet = new PaperdollAddClientPacket();
     packet.itemId = itemId;
     packet.subLoc = 0;
@@ -291,6 +295,38 @@ export class InventoryController {
       EquipmentSlot.Shield,
       EquipmentSlot.Weapon,
     ].includes(slot);
+  }
+
+  itemTypeValidForSlot(itemType: ItemType, slot: EquipmentSlot): boolean {
+    switch (slot) {
+      case EquipmentSlot.Hat:
+        return itemType === ItemType.Hat;
+      case EquipmentSlot.Armor:
+        return itemType === ItemType.Armor;
+      case EquipmentSlot.Weapon:
+        return itemType === ItemType.Weapon;
+      case EquipmentSlot.Shield:
+        return itemType === ItemType.Shield;
+      case EquipmentSlot.Boots:
+        return itemType === ItemType.Boots;
+      case EquipmentSlot.Gloves:
+        return itemType === ItemType.Gloves;
+      case EquipmentSlot.Belt:
+        return itemType === ItemType.Belt;
+      case EquipmentSlot.Necklace:
+        return itemType === ItemType.Necklace;
+      case EquipmentSlot.Accessory:
+        return itemType === ItemType.Accessory;
+      case EquipmentSlot.Ring1:
+      case EquipmentSlot.Ring2:
+        return itemType === ItemType.Ring;
+      case EquipmentSlot.Armlet1:
+      case EquipmentSlot.Armlet2:
+        return itemType === ItemType.Armlet;
+      case EquipmentSlot.Bracer1:
+      case EquipmentSlot.Bracer2:
+        return itemType === ItemType.Bracer;
+    }
   }
 
   setEquipmentSlot(slot: EquipmentSlot, itemId: number): void {

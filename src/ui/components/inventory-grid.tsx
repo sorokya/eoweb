@@ -360,7 +360,7 @@ export function InventoryGrid({ itemIds }: Props) {
           } else if (result.type === 'tab') {
             tryMoveToTabRef.current(item.id, result.tab);
           } else if (result.type === 'equip-slot') {
-            client.inventoryController.equipItem(item.id, result.slot);
+            client.inventoryController.equipItem(result.slot, item.id);
           } else if (result.type === 'ground') {
             if (!client.mapController.cursorInDropRange()) return;
             const coords = client.mouseCoords ?? getCoords();
@@ -504,22 +504,21 @@ export function InventoryGrid({ itemIds }: Props) {
                 alt={record.name}
                 class='pointer-events-none max-h-full max-w-full object-contain'
               />
-              {/* Multi-line tooltip: show on desktop hover or when touch-activated */}
-              {(touchTooltipId === item.id || !itemIsDragging) &&
-                tooltipLines.length > 0 && (
-                  <div
-                    class={`pointer-events-none absolute top-0 left-full z-50 ml-1 w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg${touchTooltipId === item.id ? 'block' : 'hidden group-hover:block'}`}
-                  >
-                    {tooltipLines.map((line, i) => (
-                      <div
-                        key={i}
-                        class={i === 0 ? 'font-semibold' : 'opacity-70'}
-                      >
-                        {line}
-                      </div>
-                    ))}
-                  </div>
-                )}
+              {/* Multi-line tooltip: desktop hover or touch-activated */}
+              {tooltipLines.length > 0 && (
+                <div
+                  class={`pointer-events-none absolute top-0 left-full z-50 ml-1 w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg ${touchTooltipId === item.id ? 'block' : 'hidden group-hover:block'}`}
+                >
+                  {tooltipLines.map((line, i) => (
+                    <div
+                      key={i}
+                      class={i === 0 ? 'font-semibold' : 'opacity-70'}
+                    >
+                      {line}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}

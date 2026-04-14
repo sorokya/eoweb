@@ -95,7 +95,6 @@ function EquipSlot({ label, itemId, slot, gridColumn, gridRow }: SlotConfig) {
           clearTimeout(longPressTimer);
           longPressTimer = null;
         }
-        setTouchTooltip(false);
         if (result.type !== 'cancelled') {
           doUnequip();
         }
@@ -131,7 +130,7 @@ function EquipSlot({ label, itemId, slot, gridColumn, gridRow }: SlotConfig) {
       )}
       {tooltipLines && tooltipLines.length > 0 && (
         <div
-          class={`pointer-events-none absolute top-0 left-full z-50 ml-1 w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg${touchTooltip ? 'block' : 'hidden group-hover:block'}`}
+          class={`pointer-events-none absolute top-0 left-full z-50 ml-1 w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg ${touchTooltip ? 'block' : 'hidden group-hover:block'}`}
         >
           {tooltipLines.map((line, i) => (
             <div key={i} class={i === 0 ? 'font-semibold' : 'opacity-70'}>
