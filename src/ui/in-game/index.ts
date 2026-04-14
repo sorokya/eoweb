@@ -21,6 +21,8 @@ export { HotBar } from './hud/hot-bar';
 export { MobileNav, NavSidebar } from './hud/nav-sidebar';
 export { PlayerHud } from './hud/player-hud';
 export { StatusMessages } from './hud/status-messages';
+export { TouchActionButtons } from './hud/touch-action-buttons';
+export { TouchJoystick } from './hud/touch-joystick';
 export type { DragDropResult, DragInfo } from './item-drag-context';
 // Drag
 export { ItemDragProvider, useItemDrag } from './item-drag-context';
@@ -41,6 +43,7 @@ export type { PlayerStats } from './use-player-stats';
 export { usePlayerStats } from './use-player-stats';
 export type { Position } from './use-position';
 export { clearAllPositions, RESET_EVENT, usePosition } from './use-position';
+export { useRepositionMode } from './use-reposition-mode';
 export { applyUiScale, UI_SCALE_OPTIONS, useUiScale } from './use-ui-scale';
 export { useViewport } from './use-viewport';
 export type { ChatDialogId, DialogId } from './window-manager';

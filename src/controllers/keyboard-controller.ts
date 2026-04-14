@@ -388,6 +388,21 @@ export class KeyboardController {
   }
     */
 
+  setTouchDirection(direction: Direction | null): void {
+    this.updateInputHeld(Input.Up, direction === Direction.Up);
+    this.updateInputHeld(Input.Down, direction === Direction.Down);
+    this.updateInputHeld(Input.Left, direction === Direction.Left);
+    this.updateInputHeld(Input.Right, direction === Direction.Right);
+  }
+
+  setTouchAttack(held: boolean): void {
+    this.updateInputHeld(Input.Attack, held);
+  }
+
+  setTouchSitStand(held: boolean): void {
+    this.updateInputHeld(Input.SitStand, held);
+  }
+
   private updateInputHeld(input: Input, down: boolean) {
     this.held[input] = down;
     const index = this.lastInputHeld.indexOf(input);

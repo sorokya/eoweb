@@ -17,6 +17,8 @@ import {
   SettingsDialog,
   SpellsDialog,
   StatusMessages,
+  TouchActionButtons,
+  TouchJoystick,
   useChatManager,
   useWindowManager,
   WindowManagerProvider,
@@ -92,6 +94,8 @@ function InGameContent() {
       <MobileNav />
       <NavSidebar />
       <StatusMessages />
+      <TouchJoystick />
+      <TouchActionButtons />
 
       {autoLeft.length > 0 && (
         <div
