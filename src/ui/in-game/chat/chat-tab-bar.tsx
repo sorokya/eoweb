@@ -1,3 +1,4 @@
+import { flushSync } from 'preact/compat';
 import { useCallback } from 'preact/hooks';
 import { LuX } from 'react-icons/lu';
 import type { ChatDialogId } from '@/ui/in-game';
@@ -10,6 +11,8 @@ type Props = {
   activeTabId: string;
   /** When true, non-default tabs show a close (×) button. */
   isMain?: boolean;
+  /** Called after a tab switch so the parent can re-focus the input. */
+  onFocusInput?: () => void;
 };
 
 export function ChatTabBar({
@@ -17,15 +20,20 @@ export function ChatTabBar({
   tabs,
   activeTabId,
   isMain = false,
+  onFocusInput,
 }: Props) {
   const { setActiveTab, closeTab, unreadTabs } = useChatManager();
 
   const handleTabClick = useCallback(
     (e: MouseEvent, tabId: string) => {
       e.stopPropagation();
-      setActiveTab(dialogId, tabId);
+      // flushSync forces the re-render to complete synchronously so that
+      // inputRef is stable when onFocusInput calls focus() — required on iOS
+      // where focus() must be called within the user-gesture call stack.
+      flushSync(() => setActiveTab(dialogId, tabId));
+      onFocusInput?.();
     },
-    [dialogId, setActiveTab],
+    [dialogId, setActiveTab, onFocusInput],
   );
 
   const handleCloseClick = useCallback(

@@ -1,5 +1,5 @@
 import { AdminLevel } from 'eolib';
-import type { RefObject } from 'preact';
+import { flushSync } from 'preact/compat';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { LuPlus } from 'react-icons/lu';
 import { useClient } from '@/ui/context';
@@ -225,9 +225,19 @@ export function ChatDialog({ id }: Props) {
   const [focused, setFocused] = useState(!isMain);
   const [now, setNow] = useState(Date.now);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const focusInput = useCallback(() => {
+    inputRef.current?.focus();
+  }, []);
 
   const onFocus = useCallback(() => {
-    if (isMain) setFocused(true);
+    if (!isMain) return;
+    // flushSync forces a synchronous render so the ChatInput is in the DOM
+    // before we call focus() — required for iOS which only allows programmatic
+    // focus inside a synchronous user-gesture call stack.
+    flushSync(() => setFocused(true));
+    inputRef.current?.focus();
   }, [isMain]);
 
   // On desktop: pressing Enter while preview is showing opens the chat
@@ -290,6 +300,7 @@ export function ChatDialog({ id }: Props) {
           tabs={tabs}
           activeTabId={activeTabId}
           isMain={isMain}
+          onFocusInput={focusInput}
         />
       ) : (
         <span class='px-1 font-semibold text-xs'>{activeTab.name}</span>
@@ -310,7 +321,7 @@ export function ChatDialog({ id }: Props) {
           maxHeight: '45vh',
         }}
       >
-        <ChatInput tab={activeTab} onActivity={onFocus} />
+        <ChatInput ref={inputRef} tab={activeTab} onActivity={onFocus} />
         {tabs.length > 1 && (
           <div class='flex items-center gap-1 border-base-content/10 border-b bg-base-content/5 px-2 py-0.5'>
             <ChatTabBar
@@ -318,6 +329,7 @@ export function ChatDialog({ id }: Props) {
               tabs={tabs}
               activeTabId={activeTabId}
               isMain={isMain}
+              onFocusInput={focusInput}
             />
             <AddTabButton dialogId={id} />
           </div>
@@ -348,6 +360,7 @@ export function ChatDialog({ id }: Props) {
             heightClass='h-[22vh]'
           />
           <ChatInput
+            ref={inputRef}
             tab={activeTab}
             onActivity={isMain ? onFocus : undefined}
             onDismiss={isMain ? () => setFocused(false) : undefined}

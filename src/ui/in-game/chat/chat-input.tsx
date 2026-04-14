@@ -1,3 +1,4 @@
+import { forwardRef } from 'preact/compat';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { useClient } from '@/ui/context';
 import {
@@ -30,16 +31,29 @@ type Props = {
   onActivity?: () => void;
   /** Called when the user dismisses chat (Esc or Enter on empty input). */
   onDismiss?: () => void;
+  /** Whether to auto-focus the input on mount / tab change. Default: true. */
+  autoFocus?: boolean;
 };
 
-export function ChatInput({ tab, onActivity, onDismiss }: Props) {
+export const ChatInput = forwardRef<HTMLInputElement, Props>(function ChatInput(
+  { tab, onActivity, onDismiss, autoFocus = true },
+  forwardedRef,
+) {
   const client = useClient();
   const [input, setInput] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const internalRef = useRef<HTMLInputElement>(null);
 
   const readOnly = isTabReadOnly(tab);
   const isSingleChannel = tab.channels.length === 1;
   const sendChannel = isSingleChannel ? tab.channels[0] : null;
+
+  // Must be before any conditional return to satisfy rules of hooks.
+  // Re-fires when tab changes so switching to a new tab refocuses the input.
+  useEffect(() => {
+    if (!readOnly && autoFocus) {
+      internalRef.current?.focus();
+    }
+  }, [readOnly, tab.id, autoFocus]);
 
   const handleSend = useCallback(() => {
     if (readOnly) return;
@@ -83,12 +97,6 @@ export function ChatInput({ tab, onActivity, onDismiss }: Props) {
     );
   }
 
-  useEffect(() => {
-    if (!readOnly && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [readOnly]);
-
   const placeholder =
     sendChannel && isPMChannel(sendChannel)
       ? `Send to ${pmChannelName(sendChannel)}...`
@@ -99,7 +107,14 @@ export function ChatInput({ tab, onActivity, onDismiss }: Props) {
   return (
     <div class='flex border-base-content/10 border-t'>
       <input
-        ref={inputRef}
+        ref={(el) => {
+          internalRef.current = el;
+          if (typeof forwardedRef === 'function') {
+            forwardedRef(el);
+          } else if (forwardedRef) {
+            forwardedRef.current = el;
+          }
+        }}
         type='text'
         class='input input-xs flex-1 rounded-none bg-transparent text-xs focus:outline-none'
         placeholder={placeholder}
@@ -126,4 +141,4 @@ export function ChatInput({ tab, onActivity, onDismiss }: Props) {
       </button>
     </div>
   );
-}
+});
