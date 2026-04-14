@@ -280,7 +280,6 @@ export function ChatManagerProvider({
       name?: string;
     }) => {
       addMessage({
-        id: `${Date.now()}-${Math.random()}`,
         characterId,
         channel: data.channel,
         name: data.name,
@@ -294,7 +293,6 @@ export function ChatManagerProvider({
       icon?: number | null;
     }) => {
       addMessage({
-        id: `${Date.now()}-${Math.random()}`,
         characterId,
         channel: ChatChannels.System,
         message: data.message,

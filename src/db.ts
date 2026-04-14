@@ -7,7 +7,7 @@ import { padWithZeros } from '@/utils';
 type PubsKey = 'eif' | 'enf' | 'ecf' | 'esf';
 
 export type StoredChatMessage = {
-  id: string;
+  id?: number;
   characterId: number;
   channel: ChatChannel;
   name?: string;
@@ -30,7 +30,7 @@ interface DB extends DBSchema {
     value: Uint8Array;
   };
   chatMessages: {
-    key: string;
+    key: number;
     value: StoredChatMessage;
     indexes: { 'by-char-channel': [number, string] };
   };
@@ -51,8 +51,10 @@ function getDb(): Promise<IDBPDatabase<DB>> {
         if (oldVersion < 2 || !db.objectStoreNames.contains('edfs')) {
           db.createObjectStore('edfs');
         }
-        if (!db.objectStoreNames.contains('chatMessages')) {
-          const store = db.createObjectStore('chatMessages', { keyPath: 'id' });
+        if (oldVersion < 3 || !db.objectStoreNames.contains('chatMessages')) {
+          const store = db.createObjectStore('chatMessages', {
+            autoIncrement: true,
+          });
           store.createIndex('by-char-channel', ['characterId', 'channel']);
         }
       },
