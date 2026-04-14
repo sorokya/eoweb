@@ -23,6 +23,11 @@ import { capitalize } from '@/utils';
 export class MouseController {
   private client: Client;
 
+  private ignoreNextClick = false;
+  setIgnoreNextClick() {
+    this.ignoreNextClick = true;
+  }
+
   constructor(client: Client) {
     this.client = client;
 
@@ -126,6 +131,11 @@ export class MouseController {
   }
 
   handleClick(e: MouseEvent): void {
+    if (this.ignoreNextClick) {
+      this.ignoreNextClick = false;
+      return;
+    }
+
     if (this.client.menuPlayerId) {
       const hovered = this.getHoveredPlayerMenuItem();
       if (hovered !== undefined) {

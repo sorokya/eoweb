@@ -215,6 +215,7 @@ type Props = {
 };
 
 export function ChatDialog({ id }: Props) {
+  const client = useClient();
   const { dialogs, messages } = useChatManager();
   const dialog = dialogs.find((d) => d.id === id);
   const isMobile = useIsMobile();
@@ -255,6 +256,7 @@ export function ChatDialog({ id }: Props) {
         !containerRef.current.contains(e.target as Node)
       ) {
         setFocused(false);
+        client.mouseController.setIgnoreNextClick();
       }
     };
     document.addEventListener('pointerdown', handler);
