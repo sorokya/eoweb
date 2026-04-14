@@ -153,10 +153,10 @@ export function ItemDragProvider({
       }
 
       const tabBtn = (target as HTMLElement).closest<HTMLElement>(
-        '[data-inventory-tab]',
+        'button[name="tab-inventory-tabs"]',
       );
       if (tabBtn) {
-        const tab = Number.parseInt(tabBtn.dataset.inventoryTab ?? '0', 10);
+        const tab = Number.parseInt(tabBtn.dataset.tabIndex ?? '0', 10);
         resolve({ type: 'tab', tab });
         return;
       }

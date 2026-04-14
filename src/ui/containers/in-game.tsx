@@ -113,10 +113,10 @@ function InGameContent() {
 
       {autoCenter.length > 0 && (
         <div
-          class='pointer-events-none absolute inset-0 flex items-center justify-center'
+          class='pointer-events-none absolute inset-0 flex flex-col items-center justify-center md:flex-row'
           style={{ zIndex: DIALOG_Z }}
         >
-          <div class='pointer-events-auto flex flex-row items-start gap-3'>
+          <div class='pointer-events-auto flex flex-col items-center gap-3 md:flex-row md:items-start'>
             {autoCenter.map((id) => (
               <DialogById key={id} id={id} />
             ))}

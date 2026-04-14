@@ -15,6 +15,7 @@ import type {
 import type { GameState } from '@/game-state';
 import type { SfxId } from '@/sfx';
 import type { ChatChannel, ChatIcon } from '@/ui';
+import type { DialogId } from '@/ui/in-game';
 
 export type ClientEvents = {
   stateChanged: GameState;
@@ -125,4 +126,5 @@ export type ClientEvents = {
   };
   reconnected: undefined;
   resize: undefined;
+  toggleDialog: { id: DialogId };
 };

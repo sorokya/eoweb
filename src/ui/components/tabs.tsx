@@ -1,9 +1,13 @@
+import { useCallback } from 'preact/hooks';
+import { playSfxById, SfxId } from '@/sfx';
+
 export type TabItem = {
   id: string;
   label: string;
 };
 
 type TabsProps = {
+  name?: string;
   items: TabItem[];
   activeId: string;
   onSelect: (id: string) => void;
@@ -12,25 +16,36 @@ type TabsProps = {
 };
 
 export function Tabs({
+  name = 'tab',
   items,
   activeId,
   onSelect,
   style = 'box',
   size,
 }: TabsProps) {
+  const handleClick = useCallback(
+    (id: string) => {
+      playSfxById(SfxId.ButtonClick);
+      onSelect(id);
+    },
+    [onSelect],
+  );
+
   return (
     <div
       role='tablist'
       class={`tabs tabs-${style} ${size ? `tabs-${size}` : ''}`}
     >
-      {items.map((item) => (
+      {items.map((item, index) => (
         <button
           key={item.id}
           role='tab'
           type='button'
+          name={`tab-${name}`}
+          data-tab-index={index}
           /*biome-ignore lint/nursery/useSortedClasses: Need space */
           class={`tab${item.id === activeId ? ' tab-active' : ''}`}
-          onClick={() => onSelect(item.id)}
+          onClick={() => handleClick(item.id)}
         >
           {item.label}
         </button>

@@ -8,10 +8,11 @@ import { useHotbar, useItemDrag } from '@/ui/in-game';
 import { getItemMeta } from '@/utils';
 import { InventoryContextMenu } from './inventory-context-menu';
 import { ItemIcon } from './item-icon';
+import { Tabs } from './tabs';
 
 const TABS = 2;
-const COLS = 8;
-const ROWS = 10;
+const COLS = 15;
+const ROWS = 8;
 const CELL_SIZE = 23;
 
 type ItemSpan = { cols: number; rows: number };
@@ -427,25 +428,21 @@ export function InventoryGrid({ itemIds }: Props) {
   return (
     <div class='flex flex-col gap-1'>
       {/* Tab bar */}
-      <div role='tablist' class='tabs tabs-border tabs-sm'>
-        {Array.from({ length: TABS }, (_, i) => (
-          <button
-            key={i}
-            role='tab'
-            data-inventory-tab={i}
-            /* biome-ignore lint/nursery/useSortedClasses: Need space */
-            class={`tab${activeTab === i ? ' tab-active' : ''}`}
-            onClick={() => setActiveTab(i)}
-          >
-            {TAB_LABELS[i]}
-          </button>
-        ))}
-      </div>
-
+      <Tabs
+        name='inventory-tabs'
+        items={TAB_LABELS.map((label, index) => ({
+          id: index.toString(),
+          label,
+        }))}
+        activeId={activeTab.toString()}
+        onSelect={(id) => setActiveTab(Number(id))}
+        style='border'
+        size='sm'
+      />
       {/* Grid */}
       <div
         ref={gridRef}
-        class='relative border border-base-300 bg-base-200'
+        class='relative border border-base-300 bg-base-200/50'
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${COLS}, ${CELL_SIZE}px)`,
@@ -463,7 +460,7 @@ export function InventoryGrid({ itemIds }: Props) {
               data-tab={activeTab}
               data-x={col}
               data-y={row}
-              class='border border-base-300/30'
+              class='border border-base-200/50'
               style={{
                 gridColumn: col + 1,
                 gridRow: row + 1,

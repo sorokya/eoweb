@@ -47,12 +47,16 @@ export function Button({
   class: extraClass,
   onClick,
 }: ButtonProps) {
-  const clickHandler = useCallback(() => {
-    playSfxById(SfxId.ButtonClick);
-    if (onClick) {
-      onClick();
-    }
-  }, [onClick]);
+  const clickHandler = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      playSfxById(SfxId.ButtonClick);
+      if (onClick) {
+        onClick();
+      }
+    },
+    [onClick],
+  );
 
   const variantClasses = (Array.isArray(variant) ? variant : [variant])
     .filter(Boolean)
@@ -67,6 +71,7 @@ export function Button({
       class={classes}
       onClick={clickHandler}
       aria-label={label}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       {children}
     </button>

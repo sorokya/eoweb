@@ -105,6 +105,8 @@ export const locales = {
     ctxAssignSlot: 'Assign Slot',
     junkConfirmTitle: 'Junk Item',
     junkConfirmMessage: 'Are you sure you want to junk {name}?',
+    dialogClose: 'Close dialog',
+    dialogRestore: 'Restore position',
   },
 } as const;
 

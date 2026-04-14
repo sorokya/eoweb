@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'preact/hooks';
 
 const STORAGE_KEY = 'eoweb:ui-scale';
-export const UI_SCALE_OPTIONS = [0.5, 1, 1.5, 2, 3];
-const DEFAULT_SCALE_INDEX = 1; // 1x
+export const UI_SCALE_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 3];
+const DEFAULT_SCALE_INDEX = 2; // 1x
 
 function readScaleIndex(): number {
   try {

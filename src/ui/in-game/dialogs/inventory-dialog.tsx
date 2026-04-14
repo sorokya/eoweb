@@ -3,7 +3,7 @@ import { DialogBase } from './dialog-base';
 
 export function InventoryDialog() {
   return (
-    <DialogBase id='inventory' title='Inventory' defaultWidth={220}>
+    <DialogBase id='inventory' title='Inventory' defaultWidth={355}>
       <InventoryGrid />
     </DialogBase>
   );

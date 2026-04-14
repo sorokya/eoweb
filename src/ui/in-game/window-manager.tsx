@@ -1,5 +1,7 @@
 import { createContext } from 'preact';
 import { useCallback, useContext, useEffect, useState } from 'preact/hooks';
+import { playSfxById, SfxId } from '@/sfx';
+import { useClient } from '@/ui/context';
 import {
   clearAllDialogLayouts,
   type DialogLayout,
@@ -63,6 +65,7 @@ export function WindowManagerProvider({
 }: {
   children: preact.ComponentChildren;
 }) {
+  const client = useClient();
   const [state, setState] = useState<WindowManagerState>({
     stack: [],
     meta: {},
@@ -206,6 +209,25 @@ export function WindowManagerProvider({
     window.addEventListener(RESET_EVENT, onReset);
     return () => window.removeEventListener(RESET_EVENT, onReset);
   }, []);
+
+  useEffect(() => {
+    const onToggleDialog = ({ id }: { id: DialogId }) => {
+      playSfxById(SfxId.ButtonClick);
+      if (isOpen(id)) {
+        closeDialog(id);
+      } else {
+        if (id === 'character') {
+          client.socialController.requestPaperdoll(client.playerId);
+        } else {
+          openDialog(id);
+        }
+      }
+    };
+    client.on('toggleDialog', onToggleDialog);
+    return () => {
+      client.off('toggleDialog', onToggleDialog);
+    };
+  }, [client, state.stack, isOpen, openDialog, closeDialog]);
 
   return (
     <WindowManagerContext.Provider

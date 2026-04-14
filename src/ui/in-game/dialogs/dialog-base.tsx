@@ -1,11 +1,8 @@
-import { useCallback, useRef, useState } from 'preact/hooks';
-import { LuLayoutGrid, LuMaximize2, LuMinus, LuX } from 'react-icons/lu';
-import {
-  DIALOG_LAYOUT_LABELS,
-  type DialogId,
-  type DialogLayout,
-  useWindowManager,
-} from '@/ui/in-game';
+import { useCallback, useRef } from 'preact/hooks';
+import { FaWindowClose, FaWindowRestore } from 'react-icons/fa';
+import { Button } from '@/ui/components';
+import { useLocale } from '@/ui/context';
+import { type DialogId, useWindowManager } from '@/ui/in-game';
 
 type DialogBaseProps = {
   id: DialogId;
@@ -22,9 +19,6 @@ type DialogBaseProps = {
   onClose?: () => void;
 };
 
-// All auto layouts shown in the dropdown
-const AUTO_LAYOUT_OPTIONS: DialogLayout[] = ['center', 'right', 'left'];
-
 const stopProp = (e: { stopPropagation(): void }) => e.stopPropagation();
 
 export function DialogBase({
@@ -37,20 +31,17 @@ export function DialogBase({
   noDrag = false,
   onClose,
 }: DialogBaseProps) {
+  const { locale } = useLocale();
   const {
     closeDialog,
-    bringToFront,
     zIndexOf,
-    isFocused,
-    setLayout,
     getLayout,
+    setLayout,
     setManualPos,
     getManualPos,
-    setMinimized,
-    isMinimized,
+    bringToFront,
   } = useWindowManager();
 
-  const [menuOpen, setMenuOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<{
     ptrX: number;
@@ -60,8 +51,6 @@ export function DialogBase({
   } | null>(null);
 
   const layout = getLayout(id);
-  const minimized = isMinimized(id);
-  const focused = isFocused(id);
   const manualPos = getManualPos(id);
   const isManual = layout === 'manual';
 
@@ -77,7 +66,6 @@ export function DialogBase({
       e.preventDefault();
       e.stopPropagation();
       bringToFront(id);
-      setMenuOpen(false);
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
       dragStart.current = {
@@ -107,52 +95,36 @@ export function DialogBase({
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
     },
-    [id, bringToFront, noDrag],
+    [id, noDrag],
   );
 
-  const handleLayoutChange = useCallback(
-    (l: DialogLayout) => {
-      setLayout(id, l);
-      setMenuOpen(false);
-    },
-    [id, setLayout],
-  );
-
-  const toggleMinimize = useCallback(() => {
-    setMinimized(id, !minimized);
-  }, [id, minimized, setMinimized]);
-
-  const handlePointerDown = useCallback(() => {
-    bringToFront(id);
-    setMenuOpen(false);
-  }, [id, bringToFront]);
-
-  const posStyle =
-    isManual && !minimized
-      ? {
-          position: 'absolute' as const,
-          left: manualPos?.x ?? 0,
-          top: manualPos?.y ?? 0,
-          zIndex: zIndexOf(id),
-          width: defaultWidth,
-          minWidth: 160,
-        }
-      : {
-          width: minimized ? 200 : defaultWidth,
-          minWidth: 160,
-          flexShrink: 0,
-        };
+  const posStyle = isManual
+    ? {
+        position: 'absolute' as const,
+        left: manualPos?.x ?? 0,
+        top: manualPos?.y ?? 0,
+        zIndex: zIndexOf(id),
+        width: defaultWidth,
+        minWidth: 160,
+        touchAction: 'none' as const,
+      }
+    : {
+        width: defaultWidth,
+        minWidth: 160,
+        flexShrink: 0,
+        touchAction: 'none' as const,
+      };
 
   return (
     <div
       ref={containerRef}
       role='presentation'
       data-chat-dialog={id.startsWith('chat-') ? id : undefined}
-      class={`flex flex-col overflow-visible rounded-lg border border-base-content/10 bg-base-300/90 shadow-xl backdrop-blur-sm transition-opacity ${focused ? 'opacity-100' : 'opacity-80'}`}
+      class={
+        'flex flex-col overflow-visible rounded-lg border border-base-content/10 bg-base-300/80 shadow-sm backdrop-blur-sm'
+      }
       style={posStyle}
-      onPointerDown={handlePointerDown}
       onClick={stopProp}
-      onKeyDown={stopProp}
       onContextMenu={stopProp}
     >
       <div
@@ -167,78 +139,34 @@ export function DialogBase({
 
         {!hideControls && (
           <div class='flex shrink-0 items-center gap-1'>
-            <div class='relative'>
-              <button
+            {isManual && (
+              <Button
                 type='button'
-                class='btn btn-ghost btn-xs btn-circle opacity-60 hover:opacity-100'
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMenuOpen((o) => !o);
+                class='btn btn-ghost btn-xs'
+                onClick={() => {
+                  setLayout(id, 'center');
                 }}
-                title='Change layout'
+                aria-label={locale.dialogRestore}
               >
-                <LuLayoutGrid size={13} />
-              </button>
-              {menuOpen && (
-                <ul
-                  class='menu menu-xs absolute top-full right-0 z-50 mt-1 rounded border border-base-content/10 bg-base-300 p-1 shadow-lg'
-                  onPointerDown={(e) => e.stopPropagation()}
-                >
-                  {AUTO_LAYOUT_OPTIONS.map((l) => (
-                    <li key={l}>
-                      <button
-                        type='button'
-                        class={
-                          !isManual && l === layout
-                            ? 'font-bold text-primary'
-                            : ''
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLayoutChange(l);
-                        }}
-                      >
-                        {DIALOG_LAYOUT_LABELS[l]}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <button
+                <FaWindowRestore size={13} />
+              </Button>
+            )}
+            <Button
               type='button'
-              class='btn btn-ghost btn-xs btn-circle'
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleMinimize();
-              }}
-              aria-label={minimized ? 'Restore dialog' : 'Minimize dialog'}
-              title={minimized ? 'Restore' : 'Minimize'}
-            >
-              {minimized ? <LuMaximize2 size={13} /> : <LuMinus size={13} />}
-            </button>
-
-            <button
-              type='button'
-              class='btn btn-ghost btn-xs btn-circle'
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
+              class='btn btn-ghost btn-xs'
+              onClick={() => {
                 if (onClose) onClose();
                 else closeDialog(id);
               }}
-              aria-label='Close dialog'
+              aria-label={locale.dialogClose}
             >
-              <LuX size={13} />
-            </button>
+              <FaWindowClose size={13} />
+            </Button>
           </div>
         )}
       </div>
 
-      {!minimized && <div class='p-3'>{children}</div>}
+      <div class='px-1 pb-1'>{children}</div>
     </div>
   );
 }
