@@ -1,13 +1,17 @@
-import { Button } from '@/ui/components';
+import { Button, CycleInput } from '@/ui/components';
 import {
   clearAllDialogLayouts,
   clearAllPositions,
   clearAllVisibilityOverrides,
   RESET_EVENT,
+  UI_SCALE_OPTIONS,
+  useUiScale,
 } from '@/ui/in-game';
 import { DialogBase } from './dialog-base';
 
 export function SettingsDialog() {
+  const [scaleIndex, setScaleIndex] = useUiScale();
+
   function handleResetPositions() {
     clearAllPositions();
     clearAllVisibilityOverrides();
@@ -18,7 +22,14 @@ export function SettingsDialog() {
   return (
     <DialogBase id='settings' title='Settings' defaultWidth={300}>
       <div class='flex flex-col gap-3'>
-        <p class='text-sm opacity-60'>More settings coming soon.</p>
+        <CycleInput
+          label='UI Scale'
+          value={scaleIndex}
+          min={0}
+          max={UI_SCALE_OPTIONS.length - 1}
+          format={(i) => `${UI_SCALE_OPTIONS[i]}x`}
+          onChange={setScaleIndex}
+        />
         <div class='divider my-0' />
         <div>
           <p class='mb-1 text-xs opacity-50'>

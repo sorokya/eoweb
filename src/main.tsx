@@ -12,7 +12,10 @@ import './css/style.css';
 import 'notyf/notyf.min.css';
 import { render } from 'preact';
 import { Client } from '@/client';
+import { applyUiScale } from '@/ui/in-game';
 import { Ui } from './ui';
+
+applyUiScale();
 
 // ── Client & Mobile ──────────────────────────────────────────────────────
 

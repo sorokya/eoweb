@@ -42,6 +42,7 @@ export type { PlayerStats } from './use-player-stats';
 export { usePlayerStats } from './use-player-stats';
 export type { Position } from './use-position';
 export { clearAllPositions, RESET_EVENT, usePosition } from './use-position';
+export { applyUiScale, UI_SCALE_OPTIONS, useUiScale } from './use-ui-scale';
 export { useViewport } from './use-viewport';
 export type { ChatDialogId, DialogId } from './window-manager';
 export {
