@@ -21,7 +21,7 @@ import {
   Emote,
 } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { randomRange } from '@/utils';
+import { getPrevCoords, isSteppingStoneWalk, randomRange } from '@/utils';
 import type { Vector2 } from '@/vector';
 
 export class MovementController {
@@ -51,6 +51,17 @@ export class MovementController {
     const spec = this.client
       .map!.tileSpecRows.find((r) => r.y === coords.y)
       ?.tiles.find((t) => t.x === coords.x);
+
+    const from = getPrevCoords(
+      coords,
+      direction,
+      this.client.map.width,
+      this.client.map.height,
+    );
+
+    if (isSteppingStoneWalk(this.client.map, from, coords)) {
+      playSfxById(SfxId.JumpStone);
+    }
 
     if (spec && spec.tileSpec === MapTileSpec.Water) {
       const metadata = this.client.getEffectMetadata(9);

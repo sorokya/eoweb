@@ -13,8 +13,8 @@ import {
   EffectAnimation,
   EffectTargetCharacter,
 } from '@/render';
-import { playSfxById } from '@/sfx';
-import { getPrevCoords } from '@/utils';
+import { playSfxById, SfxId } from '@/sfx';
+import { getPrevCoords, isSteppingStoneWalk } from '@/utils';
 
 function handleWalkPlayer(client: Client, reader: EoReader) {
   const packet = WalkPlayerServerPacket.deserialize(reader);
@@ -26,22 +26,24 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
     return;
   }
 
+  const from = getPrevCoords(
+    packet.coords,
+    packet.direction,
+    client.map.width,
+    client.map.height,
+  );
+
   client.animationController.pendingCharacterAnimations.set(
     packet.playerId,
-    new CharacterWalkAnimation(
-      getPrevCoords(
-        packet.coords,
-        packet.direction,
-        client.map.width,
-        client.map.height,
-      ),
-      packet.coords,
-      packet.direction,
-    ),
+    new CharacterWalkAnimation(from, packet.coords, packet.direction),
   );
 
   if (character.invisible && client.admin === AdminLevel.Player) {
     return;
+  }
+
+  if (isSteppingStoneWalk(client.map, from, packet.coords)) {
+    playSfxById(SfxId.JumpStone);
   }
 
   const spec = client!
