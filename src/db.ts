@@ -32,7 +32,10 @@ interface DB extends DBSchema {
   chatMessages: {
     key: number;
     value: StoredChatMessage;
-    indexes: { 'by-char-channel': [number, string] };
+    indexes: {
+      'by-char-channel': [number, string];
+      'by-char': number;
+    };
   };
 }
 
@@ -40,8 +43,8 @@ let dbPromise: Promise<IDBPDatabase<DB>>;
 
 function getDb(): Promise<IDBPDatabase<DB>> {
   if (!dbPromise) {
-    dbPromise = openDB<DB>('db', 3, {
-      upgrade(db, oldVersion) {
+    dbPromise = openDB<DB>('db', 4, {
+      upgrade(db, oldVersion, _newVersion, tx) {
         if (oldVersion < 1 || !db.objectStoreNames.contains('pubs')) {
           db.createObjectStore('pubs');
         }
@@ -56,6 +59,13 @@ function getDb(): Promise<IDBPDatabase<DB>> {
             autoIncrement: true,
           });
           store.createIndex('by-char-channel', ['characterId', 'channel']);
+          store.createIndex('by-char', 'characterId');
+        } else if (oldVersion < 4) {
+          // v3→v4: add by-char index to existing store
+          const store = tx.objectStore('chatMessages');
+          if (!store.indexNames.contains('by-char')) {
+            store.createIndex('by-char', 'characterId');
+          }
         }
       },
     });
@@ -82,6 +92,125 @@ export async function getChatMessages(
     cursor = await cursor.continue();
   }
   return results;
+}
+
+export type PagedChatResult = {
+  messages: StoredChatMessage[];
+  total: number;
+  totalPages: number;
+};
+
+export async function getPagedChatMessages(
+  characterId: number,
+  channel: ChatChannel | null,
+  page: number,
+  pageSize: number,
+  search: string,
+  sortDir: 'asc' | 'desc' = 'asc',
+): Promise<PagedChatResult> {
+  const db = await getDb();
+  const tx = db.transaction('chatMessages', 'readonly');
+  let all: StoredChatMessage[] = [];
+
+  if (channel !== null) {
+    const index = tx.store.index('by-char-channel');
+    let cursor = await index.openCursor([characterId, channel], 'prev');
+    while (cursor) {
+      all.unshift({ ...cursor.value, id: cursor.primaryKey });
+      cursor = await cursor.continue();
+    }
+  } else {
+    const index = tx.store.index('by-char');
+    let cursor = await index.openCursor(characterId, 'prev');
+    while (cursor) {
+      all.unshift({ ...cursor.value, id: cursor.primaryKey });
+      cursor = await cursor.continue();
+    }
+  }
+
+  if (search.trim()) {
+    const q = search.trim().toLowerCase();
+    all = all.filter(
+      (m) =>
+        m.message.toLowerCase().includes(q) ||
+        (m.name?.toLowerCase().includes(q) ?? false),
+    );
+  }
+
+  // sort by timestamp
+  all.sort((a, b) =>
+    sortDir === 'asc'
+      ? a.timestampUtc - b.timestampUtc
+      : b.timestampUtc - a.timestampUtc,
+  );
+
+  const total = all.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const start = (safePage - 1) * pageSize;
+  return { messages: all.slice(start, start + pageSize), total, totalPages };
+}
+
+export async function getAllFilteredChatMessages(
+  characterId: number,
+  channel: ChatChannel | null,
+  search: string,
+  sortDir: 'asc' | 'desc' = 'asc',
+): Promise<StoredChatMessage[]> {
+  const db = await getDb();
+  const tx = db.transaction('chatMessages', 'readonly');
+  let all: StoredChatMessage[] = [];
+
+  if (channel !== null) {
+    const index = tx.store.index('by-char-channel');
+    let cursor = await index.openCursor([characterId, channel], 'prev');
+    while (cursor) {
+      all.unshift({ ...cursor.value, id: cursor.primaryKey });
+      cursor = await cursor.continue();
+    }
+  } else {
+    const index = tx.store.index('by-char');
+    let cursor = await index.openCursor(characterId, 'prev');
+    while (cursor) {
+      all.unshift({ ...cursor.value, id: cursor.primaryKey });
+      cursor = await cursor.continue();
+    }
+  }
+
+  if (search.trim()) {
+    const q = search.trim().toLowerCase();
+    all = all.filter(
+      (m) =>
+        m.message.toLowerCase().includes(q) ||
+        (m.name?.toLowerCase().includes(q) ?? false),
+    );
+  }
+
+  all.sort((a, b) =>
+    sortDir === 'asc'
+      ? a.timestampUtc - b.timestampUtc
+      : b.timestampUtc - a.timestampUtc,
+  );
+  return all;
+}
+
+export async function deleteChatMessage(id: number): Promise<void> {
+  const db = await getDb();
+  await db.delete('chatMessages', id);
+}
+
+export async function deleteAllChatMessages(
+  characterId: number,
+): Promise<void> {
+  const db = await getDb();
+  const tx = db.transaction('chatMessages', 'readwrite');
+  const index = tx.store.index('by-char');
+  let cursor = await index.openCursor(characterId);
+  while (cursor) {
+    await cursor.delete();
+    cursor = await cursor.continue();
+  }
+  await tx.done;
 }
 
 export async function getEmf(id: number): Promise<Emf | null> {

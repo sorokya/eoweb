@@ -16,4 +16,5 @@ export { InventoryContextMenu } from './inventory-context-menu';
 export { InventoryGrid } from './inventory-grid';
 export { ItemIcon } from './item-icon';
 export { ProgressBar } from './progress-bar';
+export { Select } from './select';
 export { type TabItem, Tabs } from './tabs';
