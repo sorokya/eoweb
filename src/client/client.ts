@@ -19,6 +19,7 @@ import {
   type ItemMapInfo,
   MapType,
   NearbyInfo,
+  type NpcKilledData,
   type NpcMapInfo,
   type NpcType,
   type OnlinePlayer,
@@ -75,6 +76,7 @@ import { Sans11Font } from '@/fonts';
 import { GameState } from '@/game-state';
 import { GfxLoader } from '@/gfx';
 import { registerAllHandlers } from '@/handlers';
+import { defaultLocale, formatLocaleString, locales } from '@/locale';
 import { MapRenderer } from '@/map';
 import { MinimapRenderer } from '@/minimap';
 import { CharacterDeathAnimation, NpcDeathAnimation } from '@/render';
@@ -87,6 +89,7 @@ import type {
   WeaponMetadata,
 } from '@/utils';
 import {
+  capitalize,
   EffectAnimationType,
   getEffectMetaData,
   getHatMetadata,
@@ -220,6 +223,7 @@ export class Client {
   minimapRenderer: MinimapRenderer;
   onlinePlayers: OnlinePlayer[] = [];
   playerTriggeredDisconnect = false;
+  locale = locales[defaultLocale];
 
   constructor() {
     registerAllHandlers(this);
@@ -770,5 +774,76 @@ export class Client {
         ownerId,
       });
     }
+  }
+
+  getNpcKilledMessage(data: NpcKilledData, exp = 0, levelUp = false): string {
+    let killerName: string;
+    if (data.killerId === this.playerId) {
+      killerName = this.locale.wordYou;
+    } else {
+      const killer = this.nearby.characters.find(
+        (c) => c.playerId === data.killerId,
+      );
+      killerName = killer ? capitalize(killer.name) : this.locale.wordUnknown;
+    }
+
+    const npc = this.nearby.npcs.find((n) => n.index === data.npcIndex);
+    const record = npc ? this.getEnfRecordById(npc.id) : undefined;
+    const npcName = record ? record.name : this.locale.wordUnknown;
+
+    const messages = [
+      formatLocaleString(this.locale.killedNpc, {
+        killer: killerName,
+        npc: npcName,
+      }),
+    ];
+
+    if (data.killerId === this.playerId && exp > 0) {
+      messages.push(
+        formatLocaleString(this.locale.gainedExp, {
+          exp: exp.toLocaleString(),
+        }),
+      );
+    }
+
+    if (levelUp) {
+      messages.push(
+        formatLocaleString(this.locale.levelUp, {
+          level: this.level.toLocaleString(),
+        }),
+      );
+    }
+
+    if (data.dropId && data.dropAmount) {
+      const itemRecord = this.getEifRecordById(data.dropId);
+      const itemName = itemRecord ? itemRecord.name : this.locale.wordUnknown;
+      const amountText =
+        data.dropAmount > 1 ? `${data.dropAmount.toLocaleString()} ` : '';
+      messages.push(
+        formatLocaleString(this.locale.npcDrop, {
+          item: `${amountText}${itemName}`,
+        }),
+      );
+    }
+
+    return messages.join(' ');
+  }
+
+  getExpShareMessage(exp: number, levelUp = false): string {
+    const messages = [
+      formatLocaleString(this.locale.expShare, {
+        exp: exp.toLocaleString(),
+      }),
+    ];
+
+    if (levelUp) {
+      messages.push(
+        formatLocaleString(this.locale.levelUp, {
+          level: this.level.toLocaleString(),
+        }),
+      );
+    }
+
+    return messages.join(' ');
   }
 }

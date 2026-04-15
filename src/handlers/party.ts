@@ -176,7 +176,15 @@ function handlePartyTargetGroup(client: Client, reader: EoReader) {
   for (const gain of packet.gains) {
     if (gain.playerId === client.playerId) {
       client.experience += gain.experience;
-      const message = `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain.experience} EXP`;
+      if (gain.levelUp) {
+        client.level = gain.levelUp;
+      }
+
+      const message = client.getExpShareMessage(
+        gain.experience,
+        !!gain.levelUp,
+      );
+
       client.toastController.show(message);
       client.emit('chat', {
         message,
@@ -184,9 +192,6 @@ function handlePartyTargetGroup(client: Client, reader: EoReader) {
         channel: ChatChannels.System,
       });
 
-      if (gain.levelUp) {
-        client.level = gain.levelUp;
-      }
       client.emit('statsUpdate', undefined);
     }
 

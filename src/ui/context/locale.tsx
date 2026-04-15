@@ -1,6 +1,6 @@
 import { createContext } from 'preact';
 import { useContext, useState } from 'preact/hooks';
-import { defaultLocale, type LocaleKey, locales } from '@/ui/locale';
+import { defaultLocale, type LocaleKey, locales } from '@/locale';
 
 type LocaleContextProps = {
   localeKey: LocaleKey;

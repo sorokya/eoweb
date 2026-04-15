@@ -16,7 +16,7 @@ type AdminBadgeColor =
   | 'badge-error';
 
 type AdminBadgeInfo = {
-  label: keyof import('@/ui/locale').LocaleStrings;
+  label: keyof import('@/locale').LocaleStrings;
   color: AdminBadgeColor;
 };
 

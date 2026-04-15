@@ -107,6 +107,13 @@ export const locales = {
     junkConfirmMessage: 'Are you sure you want to junk {name}?',
     dialogClose: 'Close dialog',
     dialogRestore: 'Restore position',
+    wordYou: 'You',
+    wordUnknown: 'Unknown',
+    killedNpc: '{killer} killed {npc}!',
+    gainedExp: 'You gained {exp} EXP!',
+    npcDrop: 'Dropped {item}!',
+    expShare: 'You gained {exp} EXP from party share!',
+    levelUp: 'Congratulations! You reached level {level}!',
   },
 } as const;
 
@@ -114,3 +121,12 @@ export type LocaleKey = keyof typeof locales;
 export type LocaleStrings = (typeof locales)[LocaleKey];
 
 export const defaultLocale: LocaleKey = 'en';
+
+export function formatLocaleString(
+  str: string,
+  params: Record<string, string>,
+): string {
+  return str.replace(/{(\w+)}/g, (_, key) => {
+    return params[key] !== undefined ? params[key] : `{${key}}`;
+  });
+}
