@@ -64,6 +64,7 @@ type PreviewProps = {
 
 function ChatPreview({ messages, now, onFocus }: PreviewProps) {
   const isMobile = useIsMobile();
+  const client = useClient();
   const { vw } = useViewport();
   const shown = messages
     .slice(-PREVIEW_MAX_MESSAGES)
@@ -71,8 +72,9 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
 
   const handleFocus = useCallback(() => {
     playSfxById(SfxId.TextBoxFocus);
+    client.mouseController.setIgnoreNextClick();
     onFocus();
-  }, [onFocus]);
+  }, [onFocus, client]);
 
   const ghostInput = (
     <button

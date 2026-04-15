@@ -1,4 +1,4 @@
-import { useEffect } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 import { CHAT_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import type { DialogId } from '@/ui/in-game';
@@ -7,6 +7,7 @@ import {
   ChatDialog,
   ChatLogDialog,
   ChatManagerProvider,
+  CommandPalette,
   HotBar,
   HotbarProvider,
   InventoryDialog,
@@ -58,6 +59,7 @@ const DIALOG_Z = 20;
 function InGameContent() {
   const client = useClient();
   const { isOpen, getLayout, openDialog } = useWindowManager();
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   // Chat dialogs are always considered open — they manage their own visibility.
   const open = ALL_DIALOG_IDS.filter((id) => isOpen(id));
@@ -68,10 +70,26 @@ function InGameContent() {
     client.socialController.subscribePaperdollOpened(() => {
       openDialog('character');
     });
+
+    client.on('toggleCommandPalette', () => {
+      setCommandPaletteOpen((open) => {
+        if (!open) {
+          client.typing = true;
+        }
+
+        return !open;
+      });
+    });
+  }, [client, setCommandPaletteOpen]);
+
+  const onCommandPaletteClose = useCallback(() => {
+    client.typing = false;
+    setCommandPaletteOpen(false);
   }, [client]);
 
   return (
     <>
+      {commandPaletteOpen && <CommandPalette onClose={onCommandPaletteClose} />}
       <PlayerHud />
       <MobileNav />
       <NavSidebar />

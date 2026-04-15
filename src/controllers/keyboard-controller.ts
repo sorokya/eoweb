@@ -83,14 +83,6 @@ export class KeyboardController {
   private held: boolean[] = [];
   private lastInputHeld: Input[] = [];
 
-  /*
-  private touchStartX: number | null = null;
-  private touchStartY: number | null = null;
-  private touchId: number | null = null;
-  private activeTouchDir: Input | null = null;
-  private inputVector = { x: 0, y: 0 };
-  */
-
   constructor(client: Client) {
     this.client = client;
     this.setupListeners();
@@ -100,10 +92,20 @@ export class KeyboardController {
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && ['=', '+', '-', '_'].includes(e.key)) {
         e.preventDefault();
-        if (e.key === '=' || e.key === '+')
+        if (e.key === '=' || e.key === '+') {
           this.client.viewportController.zoomIn();
-        else this.client.viewportController.zoomOut();
+        } else {
+          this.client.viewportController.zoomOut();
+        }
+        return;
       }
+
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyP') {
+        e.preventDefault();
+        this.client.emit('toggleCommandPalette', undefined);
+        return;
+      }
+
       switch (e.code) {
         case 'KeyW':
         case 'ArrowUp':

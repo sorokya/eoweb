@@ -8,6 +8,8 @@ export type {
   ChatTabConfig,
 } from './chat/chat-manager';
 export { ChatManagerProvider, useChatManager } from './chat/chat-manager';
+// Command palette
+export { CommandPalette } from './command-palette/command-palette';
 // Dialog components
 export { CharacterDialog } from './dialogs/character-dialog';
 export { ChatLogDialog } from './dialogs/chat-log-dialog';

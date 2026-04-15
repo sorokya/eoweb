@@ -127,4 +127,5 @@ export type ClientEvents = {
   reconnected: undefined;
   resize: undefined;
   toggleDialog: { id: DialogId };
+  toggleCommandPalette: undefined;
 };
