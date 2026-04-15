@@ -500,8 +500,7 @@ export class KeyboardController {
         const record = this.client.getEifRecordById(shield);
         if (!record || record.subtype !== ItemSubtype.Arrows) {
           playSfxById(SfxId.NoArrows);
-          this.client.setStatusLabel(
-            EOResourceID.STATUS_LABEL_TYPE_WARNING,
+          this.client.toastController.showWarning(
             this.client.getResourceString(
               EOResourceID.STATUS_LABEL_YOU_HAVE_NO_ARROWS,
             ),

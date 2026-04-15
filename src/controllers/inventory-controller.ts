@@ -98,8 +98,7 @@ export class InventoryController {
     }
 
     if (record.type === ItemType.Teleport && !this.client.map!.canScroll) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_ACTION,
+      this.client.toastController.show(
         this.client.getResourceString(
           EOResourceID.STATUS_LABEL_NOTHING_HAPPENED,
         ),
@@ -183,8 +182,7 @@ export class InventoryController {
     }
 
     if (record.type === ItemType.Armor && record.spec2 !== character.gender) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      this.client.toastController.showWarning(
         this.client.getResourceString(
           EOResourceID.STATUS_LABEL_ITEM_EQUIP_DOES_NOT_FIT_GENDER,
         ) ?? '',
@@ -197,8 +195,7 @@ export class InventoryController {
       record.classRequirement !== this.client.classId
     ) {
       const classRecord = this.client.getEcfRecordById(record.classRequirement);
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_CAN_ONLY_BE_USED_BY)} ${classRecord?.name || 'Unknown'}`,
       );
       return false;
@@ -239,8 +236,7 @@ export class InventoryController {
 
     for (const check of statChecks) {
       if (check.req > check.stat) {
-        this.client.setStatusLabel(
-          EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        this.client.toastController.showWarning(
           `${this.client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${check.req} ${check.label}`,
         );
         return false;
@@ -248,8 +244,7 @@ export class InventoryController {
     }
 
     if (record.levelRequirement > this.client.level) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} LVL ${record.levelRequirement}`,
       );
       return false;

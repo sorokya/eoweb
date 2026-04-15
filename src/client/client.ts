@@ -64,6 +64,7 @@ import {
   SocialController,
   SpellController,
   StatSkillController,
+  ToastController,
   TradeController,
   UsageController,
   ViewportController,
@@ -78,7 +79,7 @@ import { MapRenderer } from '@/map';
 import { MinimapRenderer } from '@/minimap';
 import { CharacterDeathAnimation, NpcDeathAnimation } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import type { ISlot } from '@/ui';
+import type { ISlot } from '@/ui/enums';
 import type {
   EffectMetadata,
   NPCMetadata,
@@ -192,6 +193,7 @@ export class Client {
   tradeController: TradeController;
   guildController: GuildController;
   alertController: AlertController;
+  toastController: ToastController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, WeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
@@ -288,6 +290,7 @@ export class Client {
     this.usageController = new UsageController(this);
     this.tradeController = new TradeController(this);
     this.guildController = new GuildController(this);
+    this.toastController = new ToastController();
     loadConfig().then((config) => {
       this.config = config;
       const txtHost =
@@ -718,12 +721,6 @@ export class Client {
     }
   }
 
-  setStatusLabel(type: EOResourceID, text: string) {
-    this.emit('statusMessage', {
-      message: `[ ${this.getResourceString(type)} ] ${text}`,
-    });
-  }
-
   refresh() {
     this.bus.send(new RefreshRequestClientPacket());
   }
@@ -756,8 +753,7 @@ export class Client {
 
   toggleMinimap() {
     if (!this.map.mapAvailable) {
-      this.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      this.toastController.showWarning(
         this.getResourceString(EOResourceID.STATUS_LABEL_NO_MAP_OF_AREA),
       );
       return;

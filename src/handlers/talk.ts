@@ -19,7 +19,7 @@ import { COLORS } from '@/consts';
 import { EOResourceID } from '@/edf';
 import { ChatBubble } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatChannels, ChatIcon } from '@/ui';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize } from '@/utils';
 
 function handleTalkPlayer(client: Client, reader: EoReader) {

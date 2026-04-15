@@ -7,7 +7,7 @@ import {
 import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatChannels, ChatIcon } from '@/ui';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleMessagePing(client: Client) {
   const delta = Date.now() - client.commandController.pingStart;
@@ -19,7 +19,7 @@ function handleMessagePing(client: Client) {
 
 function handleMessageOpen(client: Client, reader: EoReader) {
   const packet = MessageOpenServerPacket.deserialize(reader);
-  client.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, packet.message);
+  client.toastController.show(packet.message);
   client.emit('chat', {
     channel: ChatChannels.System,
     icon: ChatIcon.QuestMessage,
@@ -32,7 +32,7 @@ function handleMessageClose(client: Client) {
   const message = client.getResourceString(
     EOResourceID.REBOOT_SEQUENCE_STARTED,
   );
-  client.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, message!);
+  client.toastController.showWarning(message);
   const chatMessage = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${message}`;
   client.emit('chat', {
     channel: ChatChannels.Local,

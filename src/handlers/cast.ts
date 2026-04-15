@@ -13,7 +13,7 @@ import { ITEM_PROTECT_TICKS_NPC } from '@/consts';
 import { EOResourceID } from '@/edf';
 import { EffectTargetNpc, Emote, HealthBar } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatChannels, ChatIcon } from '@/ui';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleCastReply(client: Client, reader: EoReader) {
   const packet = CastReplyServerPacket.deserialize(reader);
@@ -78,22 +78,22 @@ function handleCastSpec(client: Client, reader: EoReader) {
     client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);
+    const message = `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`;
+    client.toastController.show(message);
     client.emit('chat', {
       channel: ChatChannels.System,
       icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
+      message,
     });
   }
 
   if (packet.experience) {
     const gain = packet.experience - client.experience;
     client.experience = packet.experience;
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-      `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
-    );
+    const message = `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`;
+    client.toastController.show(message);
     client.emit('chat', {
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
+      message,
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
     });
@@ -140,10 +140,12 @@ function handleCastAccept(client: Client, reader: EoReader) {
     client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);
+    const message = `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`;
+    client.toastController.show(message);
     client.emit('chat', {
       channel: ChatChannels.System,
       icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
+      message,
     });
   }
 
@@ -164,12 +166,10 @@ function handleCastAccept(client: Client, reader: EoReader) {
   if (packet.experience) {
     const gain = packet.experience - client.experience;
     client.experience = packet.experience;
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-      `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
-    );
+    const message = `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`;
+    client.toastController.show(message);
     client.emit('chat', {
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
+      message,
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
     });

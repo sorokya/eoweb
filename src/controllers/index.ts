@@ -25,6 +25,7 @@ export { ShopController } from './shop-controller';
 export { SocialController } from './social-controller';
 export { SpellController } from './spell-controller';
 export { StatSkillController } from './stat-skill-controller';
+export { ToastController } from './toast-controller';
 export { TradeController } from './trade-controller';
 export { UsageController } from './usage-controller';
 export { ViewportController } from './viewport-controller';

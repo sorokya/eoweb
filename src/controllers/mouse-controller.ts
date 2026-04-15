@@ -253,10 +253,7 @@ export class MouseController {
                 EOResourceID.STATUS_LABEL_ITEM_PICKUP_PROTECTED,
               );
 
-          this.client.setStatusLabel(
-            EOResourceID.STATUS_LABEL_TYPE_WARNING,
-            message ?? '',
-          );
+          this.client.toastController.showWarning(message);
           return;
         }
       }
@@ -307,6 +304,7 @@ export class MouseController {
     const door = doorAt ? this.client.mapController.getDoor(doorAt) : undefined;
     if (door && !door.open) {
       this.client.mapController.openDoor(doorAt!);
+      return;
     }
 
     const lockerAt = getLockerIntersecting(this.client.mousePosition!);

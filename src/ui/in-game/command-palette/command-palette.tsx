@@ -29,7 +29,7 @@ function CommandItem({
     <li onMouseEnter={onMouseEnter}>
       <button
         type='button'
-        class={`flex w-full items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm${active ? ' bg-primary text-primary-content' : ''}`}
+        class={`flex w-full items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm${active ? 'bg-primary text-primary-content' : ''}`}
         onClick={onClick}
       >
         <span class='truncate'>{command.label}</span>

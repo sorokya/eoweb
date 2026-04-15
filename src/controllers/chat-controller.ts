@@ -12,7 +12,7 @@ import type { Client } from '@/client';
 import { COLORS, MAX_CHAT_LENGTH } from '@/consts';
 import { ChatBubble } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatChannels, ChatIcon } from '@/ui';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize, makeDrunk } from '@/utils';
 
 export class ChatController {

@@ -21,7 +21,7 @@ import {
   NpcDeathAnimation,
 } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { SlotType } from '@/ui';
+import { SlotType } from '@/ui/enums';
 import { getTimestamp } from './movement-controller';
 
 enum SpellState {
@@ -108,8 +108,7 @@ export class SpellController {
     }
 
     if (this.client.tp < record.tpCost) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      this.client.toastController.showWarning(
         this.client.getResourceString(EOResourceID.ATTACK_YOU_ARE_EXHAUSTED_TP),
       );
       this.queuedSpellId = 0;

@@ -1,7 +1,7 @@
 import { Ecf, Eif, Emf, Enf, EoReader, EoWriter, Esf } from 'eolib';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
 import { Edf } from '@/edf';
-import type { ChatChannel, ChatIcon } from '@/ui';
+import type { ChatChannel, ChatIcon } from '@/ui/enums';
 import { padWithZeros } from '@/utils';
 
 type PubsKey = 'eif' | 'enf' | 'ecf' | 'esf';

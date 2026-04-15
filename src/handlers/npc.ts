@@ -25,7 +25,7 @@ import {
   NpcWalkAnimation,
 } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatChannels, ChatIcon } from '@/ui';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize, getPrevCoords } from '@/utils';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
@@ -148,22 +148,23 @@ function handleNpcSpec(client: Client, reader: EoReader) {
     client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);
+    const message = `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`;
+    client.toastController.show(message);
     client.emit('chat', {
       channel: ChatChannels.System,
       icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
+      message,
     });
   }
 
   if (packet.experience) {
     const gain = packet.experience - client.experience;
     client.experience = packet.experience;
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-      `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
-    );
+    const message = `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`;
+    client.toastController.show(message);
+
     client.emit('chat', {
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
+      message,
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
     });
@@ -193,10 +194,12 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     client.atlas.refresh();
 
     const record = client.getEifRecordById(item.id);
+    const message = `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`;
+    client.toastController.show(message);
     client.emit('chat', {
       channel: ChatChannels.System,
       icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
+      message: message,
     });
   }
 
@@ -217,12 +220,10 @@ function handleNpcAccept(client: Client, reader: EoReader) {
   if (packet.experience) {
     const gain = packet.experience - client.experience;
     client.experience = packet.experience;
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-      `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
-    );
+    const message = `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`;
+    client.toastController.show(message);
     client.emit('chat', {
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
+      message: message,
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
     });
@@ -288,8 +289,7 @@ function handleNpcReply(client: Client, reader: EoReader) {
     packet.playerId === client.playerId &&
     packet.killStealProtection === NpcKillStealProtectionState.Protected
   ) {
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+    client.toastController.showWarning(
       client.getResourceString(EOResourceID.STATUS_LABEL_UNABLE_TO_ATTACK),
     );
   }

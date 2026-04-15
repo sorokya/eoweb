@@ -68,8 +68,7 @@ export class ChestController {
 
     if (!haveKeys) {
       playSfxById(SfxId.DoorOrChestLocked);
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_THE_CHEST_IS_LOCKED_EXCLAMATION)} - ${keyName}`,
       );
       return;
