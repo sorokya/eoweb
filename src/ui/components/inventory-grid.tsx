@@ -371,6 +371,7 @@ export function InventoryGrid({ itemIds }: Props) {
             }
           } else if (result.type === 'ground') {
             if (!client.mapController.cursorInDropRange()) return;
+            client.mouseController.setIgnoreNextClick();
             const coords = client.mouseCoords ?? getCoords();
             const itemName = client.getEifRecordById(item.id)?.name ?? '';
             if (item.amount > 1) {

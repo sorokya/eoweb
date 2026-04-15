@@ -1,4 +1,4 @@
-import { type ToastOptions, ToastType } from '@/ui/types';
+import type { ToastOptions } from '@/ui/types';
 
 export class ToastController {
   private subscribers: ((options: ToastOptions) => void)[] = [];
@@ -11,9 +11,9 @@ export class ToastController {
     this.subscribers = this.subscribers.filter((cb) => cb !== callback);
   }
 
-  showToast({ type = ToastType.Info, message, icon = '✨' }: ToastOptions) {
+  showToast({ message, icon = '✨' }: ToastOptions) {
     for (const cb of this.subscribers) {
-      cb({ type, message, icon });
+      cb({ message, icon });
     }
   }
 
@@ -22,14 +22,14 @@ export class ToastController {
   }
 
   showSuccess(message: string) {
-    this.showToast({ type: ToastType.Success, message, icon: '🎉' });
+    this.showToast({ message, icon: '🎉' });
   }
 
   showWarning(message: string) {
-    this.showToast({ type: ToastType.Warning, message, icon: '⚠️' });
+    this.showToast({ message, icon: '⚠️' });
   }
 
   showError(message: string) {
-    this.showToast({ type: ToastType.Error, message, icon: '❌' });
+    this.showToast({ message, icon: '❌' });
   }
 }
