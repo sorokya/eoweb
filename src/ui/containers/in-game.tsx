@@ -31,7 +31,6 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'character',
   'quests',
   'settings',
-  'chat',
   'chat-log',
 ];
 
@@ -47,8 +46,6 @@ function DialogById({ id }: { id: DialogId }) {
       return <QuestsDialog />;
     case 'settings':
       return <SettingsDialog />;
-    case 'chat':
-      return <ChatDialog />;
     case 'chat-log':
       return <ChatLogDialog />;
   }
@@ -116,7 +113,7 @@ function InGameContent() {
         style={{ zIndex: CHAT_Z }}
       >
         <div class='pointer-events-auto flex flex-1 items-end justify-start'>
-          <DialogById id={'chat'} />
+          <ChatDialog />
         </div>
         <div class='pointer-events-none flex flex-1 justify-center'>
           <div class='pointer-events-auto'>
@@ -132,7 +129,7 @@ function InGameContent() {
         style={{ zIndex: CHAT_Z }}
       >
         <div class='pointer-events-auto'>
-          <DialogById id={'chat'} />
+          <ChatDialog />
         </div>
       </div>
 

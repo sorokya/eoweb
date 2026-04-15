@@ -10,7 +10,7 @@ import {
   channelColor,
   channelLabel,
 } from '@/ui/enums';
-import { DialogBase, useViewport, useWindowManager } from '@/ui/in-game';
+import { useViewport, useWindowManager } from '@/ui/in-game';
 import { isMobile } from '@/utils';
 import { ChatInput } from './chat-input';
 import type { ChatMessage } from './chat-manager';
@@ -358,15 +358,22 @@ export function ChatDialog() {
 
   return (
     <div ref={containerRef} role='presentation'>
-      <DialogBase
-        id='chat'
-        title='Chat'
-        titleContent={titleContent}
-        defaultWidth={dialogWidth}
-        hideControls={true}
-        noDrag={true}
-        noPadding={true}
+      <div
+        class='flex flex-col overflow-visible rounded-lg border border-base-content/10 bg-base-300/80 shadow-sm backdrop-blur-sm'
+        style={{
+          width: dialogWidth,
+          minWidth: 160,
+          flexShrink: 0,
+          touchAction: 'none',
+        }}
+        onClick={(e) => e.stopPropagation()}
+        onContextMenu={(e) => e.stopPropagation()}
       >
+        <div class='flex items-center gap-1 rounded-t-lg bg-base-content/5 px-2 py-1.5'>
+          <div class='flex min-w-0 flex-1 items-center gap-1'>
+            {titleContent}
+          </div>
+        </div>
         <div class='flex flex-col overflow-hidden rounded-b-lg'>
           <ChatMessageList
             tab={activeTab}
@@ -380,7 +387,7 @@ export function ChatDialog() {
             onDismiss={() => setFocused(false)}
           />
         </div>
-      </DialogBase>
+      </div>
     </div>
   );
 }

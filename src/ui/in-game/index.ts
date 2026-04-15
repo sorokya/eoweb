@@ -33,7 +33,6 @@ export {
   clearAllDialogLayouts,
   type DialogLayout,
   getDialogLayoutById,
-  useDialogLayout,
 } from './use-dialog-layout';
 export { useDrag } from './use-drag';
 export type { HudVisibility } from './use-hud-visibility';

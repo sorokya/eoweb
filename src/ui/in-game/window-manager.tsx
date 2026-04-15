@@ -17,7 +17,6 @@ export type DialogId =
   | 'character'
   | 'quests'
   | 'settings'
-  | 'chat'
   | 'chat-log';
 
 type DialogMeta = {
@@ -209,7 +208,7 @@ export function WindowManagerProvider({
             {
               minimized: false,
               manualPos: undefined,
-              layout: 'center',
+              layout: getDialogLayoutById(id as DialogId),
             },
           ]),
         ) as Partial<Record<string, DialogMeta>>,

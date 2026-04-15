@@ -16,7 +16,6 @@ import {
   isPMChannel,
   pmChannelName,
 } from '@/ui/enums';
-import { type DialogId, useWindowManager } from '@/ui/in-game';
 import { capitalize } from '@/utils';
 
 const STORAGE_KEY = 'eoweb:chat:dialogs:v3';
@@ -33,13 +32,11 @@ export type ChatTabConfig = {
 };
 
 export type ChatDialogConfig = {
-  id: DialogId;
   tabs: ChatTabConfig[];
   activeTabId: string;
 };
 
 const DEFAULT_DIALOG: ChatDialogConfig = {
-  id: 'chat',
   tabs: [
     {
       id: 'general',
@@ -180,7 +177,6 @@ export function ChatManagerProvider({
   characterId: number;
 }) {
   const client = useClient();
-  const { openDialog } = useWindowManager();
   const [dialog, setDialog] = useState<ChatDialogConfig>(() =>
     loadDialogConfig(),
   );
@@ -191,12 +187,6 @@ export function ChatManagerProvider({
 
   const dialogRef = useRef(dialog);
   dialogRef.current = dialog;
-
-  // Open chat in the WM on mount
-  useEffect(() => {
-    openDialog('chat');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Load history from IndexedDB on mount
   useEffect(() => {
