@@ -30,7 +30,6 @@ import {
   Weight,
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
-import { Notyf } from 'notyf';
 import { Application, Container } from 'pixi.js';
 import { Atlas } from '@/atlas';
 import { PacketBus } from '@/bus';
@@ -209,12 +208,6 @@ export class Client {
     game2: null,
     jukebox: null,
   };
-  notyf = new Notyf({
-    position: {
-      x: 'right',
-      y: 'top',
-    },
-  });
   atlas: Atlas;
   gfxLoader = new GfxLoader();
   hotbarSlots: ISlot[] = [];
@@ -726,7 +719,7 @@ export class Client {
   }
 
   setStatusLabel(type: EOResourceID, text: string) {
-    this.notyf.open({
+    this.emit('statusMessage', {
       message: `[ ${this.getResourceString(type)} ] ${text}`,
     });
   }
