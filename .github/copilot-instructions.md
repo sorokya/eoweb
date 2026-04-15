@@ -17,7 +17,7 @@ There is no test suite.
 
 The app has two rendering layers that serve different purposes:
 
-- **Preact UI** (`src/ui/`) — shown only for non-game screens (main menu, login, character select, change password). Conditionally rendered based on `GameState` enum.
+- **Preact UI** (`src/ui/`) — overlaid on the canvas at all times. For pre-game screens (main menu, login, character select, etc.) it renders full-screen containers. In the `InGame` state it renders the in-game overlay: HUD, chat, hotbar, dialogs, touch controls, etc. Conditionally rendered based on `GameState` enum.
 - **Pixi.js** (`src/map.ts`, `src/atlas.ts`, `src/render/`) — handles all in-game rendering: map tiles, characters, NPCs, animations, effects.
 
 The central object is `Client` (`src/client/client.ts`). It owns all game state, every controller, the packet bus, the Pixi.js `Application`, and the `MapRenderer`. Nearly everything receives a `Client` reference.
@@ -31,7 +31,7 @@ WebSocket → PacketBus → handlers/ → client state / emit events → UI / Pi
 - **`src/bus.ts` (`PacketBus`)** — manages the WebSocket connection and dispatches incoming packets by `PacketFamily + PacketAction` to registered handler functions.
 - **`src/handlers/`** — one file per packet family. Each exports a `registerXxxHandlers(client: Client)` function that calls `client.bus.registerPacketHandler(family, action, fn)`. All are registered at startup via `registerAllHandlers(client)`.
 - **`src/controllers/`** — encapsulate client-side logic for sending packets and managing related state (e.g., `MovementController`, `InventoryController`). Each takes `Client` in its constructor.
-- **`src/client/events.ts`** — typed `ClientEvents` map used by the mitt emitter on `Client`. Handlers call `client.emit(...)`, UI subscribes via `client.on(...)`.
+- **`src/client/events.ts`** — typed `ClientEvents` map used by the mitt emitter on `Client`. Most handlers still call `client.emit(...)` and UI subscribes via `client.on(...)`, but newer controllers expose typed `subscribe*` methods (e.g. `subscribeConfirm`, `subscribePaperdollOpened`) as part of an ongoing refactor away from `ClientEvents`.
 
 ### Persistence
 
@@ -50,7 +50,7 @@ client.render(interp);    // interpolated Pixi render
 
 ### Graphics
 
-`src/atlas.ts` (`Atlas`) builds a dynamic texture atlas for character/NPC sprites on demand. Graphics files are loaded from `public/gfx/gfxNNN/` (Custom PE Files extracted via gfx-loader). `src/gfx/gfx-loader.worker.ts` loads graphics in a Web Worker.
+`src/atlas.ts` (`Atlas`) builds a dynamic texture atlas for character/NPC sprites on demand. Graphics files are loaded from `public/gfx/gfxNNN.egf` (Custom PE Files). `src/gfx/gfx-loader.worker.ts` loads and parses these files in a Web Worker.
 
 ## Key Conventions
 
@@ -59,7 +59,8 @@ client.render(interp);    // interpolated Pixi render
 - **Always use `@/` path alias** — never `../` relative parent imports. This is enforced by Biome as an error.
 - **Import from barrel files**, not deep paths. The following modules have barrels and must be imported from the top level:
   - `@/utils`, `@/render`, `@/controllers`, `@/handlers`, `@/gfx`, `@/fonts`
-  - For UI sub-modules: `@/ui/chat` not `@/ui/chat/chat`
+  - For in-game UI: `@/ui/in-game` (not `@/ui/in-game/chat/chat-manager`, etc.)
+  - For UI enums (`ChatTab`, `ChatIcon`, `DialogIcon`, `SlotType`, `ISlot`): import from `@/ui/enums` directly to avoid circular dependencies, not from `@/ui`
 
 ### Style
 
@@ -103,13 +104,13 @@ positions based on screen size.
 
 A global UI Scale setting should allow the player to adjust the size of all UI elements (except the main game canvas) for better readability on different screen sizes.
 
-The following elements are planned:
-- Hotbar (assignable item/skill slots) (Not implemented)
-- HUD (character name/level/HP/TP/TNL display (numeric & bars)) (Not implemented)
-- Side menu (inventory, map, stats, skills, quests, settings, etc.) (Not implemented)
+The following elements are planned/implemented:
+- Hotbar (assignable item/skill slots) (**Implemented**: `HotBar` in `src/ui/in-game/hud/hot-bar.tsx`)
+- HUD (character name/level/HP/TP/TNL display (numeric & bars)) (**Implemented**: `PlayerHud` in `src/ui/in-game/hud/player-hud.tsx`)
+- Side menu (inventory, map, stats, skills, quests, settings, etc.) (**Implemented**: `NavSidebar` / `MobileNav` in `src/ui/in-game/hud/nav-sidebar.tsx`)
   - Collapsed to hamburger menu for mobile screens
-- Touch controls (virtual joystick + buttons, shown only on mobile) (Not implemented)
-- Chat (Not implemented)
+- Touch controls (virtual joystick + buttons, shown only on mobile) (**Implemented**: `TouchJoystick` / `TouchActionButtons` in `src/ui/in-game/hud/`)
+- Chat (**Implemented**: `ChatDialog` / `ChatManagerProvider` in `src/ui/in-game/chat/`)
   - All messages have a name (optional), icon (optional), and text.
   - The client tracks timestamp for each message and displays as local time (e.g., `[12:34:56]`).
   - Chat messages are saved in IndexedDB for chat history to view/search in the Chat Log window.
@@ -121,9 +122,10 @@ The following elements are planned:
   - Admin channel (GMs only, prefixed with `+` to send to admin)
   - Whisper channel(s) (private messages, prefixed with `!recipientName` to send a whisper)
   - System messages (Combat log, item pickups, etc. system generated)
-- Dialog windows
+- Dialog windows (**Partially implemented**: `src/ui/in-game/dialogs/`)
   - Flex positions by default (centered with gap), but allow dragging to reposition (and save position per dialog type).
-  - Support multiple open dialogs at once (e.g., Inventory + Paperdoll + Chest) with proper z-index stacking when clicked.
+  - Support multiple open dialogs at once (e.g., Inventory + Character + Quests) with proper z-index stacking when clicked.
+  - Implemented dialogs: `InventoryDialog`, `SpellsDialog`, `CharacterDialog` (Paperdoll), `QuestsDialog`, `SettingsDialog`, `ChatLogDialog`
   - Base dialog types:
     - Scrolling List
       - Layout:
@@ -140,7 +142,7 @@ The following elements are planned:
       - Push/Pop state for nested dialogs (e.g., inventory -> item details)
       - Dialogs using this layout: Chest, Locker, Skill list
   - Custom Dialog Types:
-    - Paperdoll
+    - Paperdoll (**Implemented** as `CharacterDialog`)
       - Displays player information and equipment
       - Layout:
         - Character info (name, title, home, class, partner, guild name, guild rank name, admin badge)
@@ -163,5 +165,5 @@ Game data files must be placed in `public/` before running:
 
 - Currently a lot of game state is stored in `Client`. Some things have been extracted into controllers but there's still
 a lot that need to be moved out.
-- The `ClientEvent` type is being phased out in favor of controller specific events (e.g., `CharacterSelectEvent`) that are emitted by controllers instead of the client. This allows for better separation of concerns and more modular code.
-- The `GameState` enum is being expanded to include more specific states (e.g., `CharacterSelect`, `ChangePassword`) instead of the generic `LoggedIn`. This allows for more precise control over the UI and game flow.
+- The `ClientEvents` / `client.emit` pattern is being phased out in favor of controller-specific `subscribe*` methods (e.g. `subscribeConfirm`, `subscribePaperdollOpened`) that UI hooks call directly. Handlers still predominantly use `client.emit`, but new code should prefer the subscribe pattern on the relevant controller.
+- The `GameState` enum has been expanded with all necessary specific states (`CharacterSelect`, `ChangePassword`, `CreateCharacter`, `InGame`, etc.) — this refactor is complete.
