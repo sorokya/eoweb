@@ -63,16 +63,21 @@ export class AudioController {
    * If the browser grants autoplay (context state = 'running'), unlock right
    * away. Otherwise we leave the context in place and the first user gesture
    * via notifyGesture() will resume it.
+   * Wrapped in try-catch because iOS Safari may throw outside a gesture.
    */
   private tryAutoplay(): void {
-    this.midiContext = new AudioContext();
-    if (this.midiContext.state === 'running') {
-      this.gestureUnlocked = true;
-      if (this.queuedMusic) {
-        const { mfxId, loop } = this.queuedMusic;
-        this.queuedMusic = null;
-        this.playMusic(mfxId, loop);
+    try {
+      this.midiContext = new AudioContext();
+      if (this.midiContext.state === 'running') {
+        this.gestureUnlocked = true;
+        if (this.queuedMusic) {
+          const { mfxId, loop } = this.queuedMusic;
+          this.queuedMusic = null;
+          this.playMusic(mfxId, loop);
+        }
       }
+    } catch {
+      // Autoplay blocked; will retry on first gesture via notifyGesture().
     }
   }
 
@@ -195,38 +200,54 @@ export class AudioController {
     }
 
     this.synthInitPromise = (async () => {
-      // Reuse the AudioContext created synchronously in notifyGesture() if available.
-      if (!this.midiContext) {
-        this.midiContext = new AudioContext();
+      try {
+        // Reuse the AudioContext created synchronously in notifyGesture() if available.
+        if (!this.midiContext) {
+          this.midiContext = new AudioContext();
+        }
+
+        if (!this.midiContext.audioWorklet) {
+          console.warn('MIDI disabled: AudioWorklet not supported');
+          return;
+        }
+
+        // iOS Safari requires the context to be running before addModule works.
+        if (this.midiContext.state === 'suspended') {
+          await this.midiContext.resume();
+        }
+
+        await this.midiContext.audioWorklet.addModule(processorUrl);
+
+        this.midiSynth = new WorkletSynthesizer(this.midiContext);
+        this.midiSynth.connect(this.midiContext.destination);
+
+        if (!this.sfBuffer) {
+          const res = await fetch('/gm.sf2');
+          this.sfBuffer = await res.arrayBuffer();
+        }
+        await this.midiSynth.soundBankManager.addSoundBank(this.sfBuffer, 'gm');
+        await this.midiSynth.isReady;
+
+        this.midiSequencer = new Sequencer(this.midiSynth);
+
+        this.midiSequencer.eventHandler.addEvent(
+          'songEnded',
+          'audio-controller',
+          () => {
+            this.currentMfxId = null;
+            if (this.pendingMusic) {
+              const { mfxId, loop } = this.pendingMusic;
+              this.pendingMusic = null;
+              this.playMusic(mfxId, loop);
+            }
+          },
+        );
+
+        this.applyMusicVolume();
+      } catch (e) {
+        console.warn('MIDI init failed:', e);
+        this.synthInitPromise = null;
       }
-      await this.midiContext.audioWorklet.addModule(processorUrl);
-
-      this.midiSynth = new WorkletSynthesizer(this.midiContext);
-      this.midiSynth.connect(this.midiContext.destination);
-
-      if (!this.sfBuffer) {
-        const res = await fetch('/gm.sf2');
-        this.sfBuffer = await res.arrayBuffer();
-      }
-      await this.midiSynth.soundBankManager.addSoundBank(this.sfBuffer, 'gm');
-      await this.midiSynth.isReady;
-
-      this.midiSequencer = new Sequencer(this.midiSynth);
-
-      this.midiSequencer.eventHandler.addEvent(
-        'songEnded',
-        'audio-controller',
-        () => {
-          this.currentMfxId = null;
-          if (this.pendingMusic) {
-            const { mfxId, loop } = this.pendingMusic;
-            this.pendingMusic = null;
-            this.playMusic(mfxId, loop);
-          }
-        },
-      );
-
-      this.applyMusicVolume();
     })();
 
     return this.synthInitPromise;
@@ -246,6 +267,10 @@ export class AudioController {
     }
 
     await this.ensureSynth();
+
+    if (!this.midiSequencer) {
+      return; // AudioWorklet not supported on this device
+    }
 
     const url = `/mfx/mfx${padWithZeros(mfxId, 3)}.mid`;
     const res = await fetch(url);
@@ -272,15 +297,24 @@ export class AudioController {
     this.gestureUnlocked = true;
 
     if (!this.midiContext) {
-      this.midiContext = new AudioContext();
-    } else if (this.midiContext.state === 'suspended') {
-      this.midiContext.resume();
+      try {
+        this.midiContext = new AudioContext();
+      } catch {
+        return;
+      }
     }
+
+    // Resume then play — ensureSynth also resumes, but doing it here first
+    // ensures the context is running before any async chain starts.
+    const resume =
+      this.midiContext.state === 'suspended'
+        ? this.midiContext.resume()
+        : Promise.resolve();
 
     if (this.queuedMusic) {
       const { mfxId, loop } = this.queuedMusic;
       this.queuedMusic = null;
-      this.playMusic(mfxId, loop);
+      resume.then(() => this.playMusic(mfxId, loop));
     }
   }
 
