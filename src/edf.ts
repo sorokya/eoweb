@@ -3,6 +3,10 @@ import { deinterleave, swapMultiples } from 'eolib';
 export class Edf {
   private lines!: string[];
 
+  getCount(): number {
+    return this.lines.length;
+  }
+
   getLine(index: number): string | undefined {
     return this.lines[index];
   }

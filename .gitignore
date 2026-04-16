@@ -2,6 +2,7 @@ node_modules
 public/gfx*
 public/sfx*
 public/mfx*
+public/jbox*
 public/maps
 public/data
 dist

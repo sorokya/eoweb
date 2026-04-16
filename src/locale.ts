@@ -50,7 +50,6 @@ export const locales = {
     hudTP: 'TP',
     hudTNL: 'TNL',
     hudWeight: 'Weight',
-    hudGold: 'Gold',
     hudLvl: 'Lv',
     charDialogTitle: 'Character',
     charTabPaperdoll: 'Paperdoll',
@@ -114,6 +113,7 @@ export const locales = {
     npcDrop: 'Dropped {item}!',
     expShare: 'You gained {exp} EXP from party share!',
     levelUp: 'Congratulations! You reached level {level}!',
+    wordGold: 'Gold',
     // Settings tabs
     settingsTabGraphics: 'Graphics',
     settingsTabInterface: 'Interface',
@@ -168,7 +168,6 @@ export const locales = {
     settingsHudWidgetTp: 'TP',
     settingsHudWidgetTnl: 'TNL',
     settingsHudWidgetWeight: 'Weight',
-    settingsHudWidgetGold: 'Gold',
     // Debug tab
     settingsDebugMapLayers: 'Map Layers',
     settingsDebugLayerGround: 'Ground',
@@ -199,6 +198,9 @@ export const locales = {
     langNl: 'Dutch',
     langSv: 'Swedish',
     langPt: 'Portugese',
+    // Jukebox dialog
+    jukeboxNoSongs: 'No songs available',
+    jukeboxNowPlaying: 'Now playing: {track}',
   },
 } as const;
 

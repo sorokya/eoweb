@@ -16,6 +16,7 @@ export type DialogId =
   | 'spells'
   | 'character'
   | 'quests'
+  | 'jukebox'
   | 'settings'
   | 'chat-log';
 

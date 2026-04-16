@@ -277,7 +277,11 @@ export class AudioController {
   }
 
   /** Play a MIDI file by its mfx ID. Pass `loop = true` for repeating music. */
-  async playMusic(mfxId: number, loop: boolean): Promise<void> {
+  async playMusic(
+    mfxId: number,
+    loop: boolean,
+    path: 'mfx' | 'jbox' = 'mfx',
+  ): Promise<void> {
     if (this.client.configController.musicVolume <= 0) {
       return;
     }
@@ -295,7 +299,7 @@ export class AudioController {
       return; // AudioWorklet not supported on this device
     }
 
-    const url = `/mfx/mfx${padWithZeros(mfxId, 3)}.mid`;
+    const url = `/${path}/${path}${padWithZeros(mfxId, 3)}.mid`;
     const res = await fetch(url);
     if (!res.ok) {
       return;
@@ -355,7 +359,16 @@ export class AudioController {
    * Play a jukebox track once. When finished, automatically resumes the
    * current map's music (if any). A map change clears this behaviour.
    */
-  async playJukeboxMusic(mfxId: number): Promise<void> {
+  async playJukeboxMusic(trackId: number): Promise<void> {
+    this.jukeboxActive = true;
+    this.pendingMusic = null;
+    await this.playMusic(trackId, false, 'jbox');
+  }
+
+  /**
+   * Used when the server directly commands a music change (e.g. via a map effect).
+   */
+  async playServerMusic(mfxId: number): Promise<void> {
     this.jukeboxActive = true;
     this.pendingMusic = null;
     await this.playMusic(mfxId, false);

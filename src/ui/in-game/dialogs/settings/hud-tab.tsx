@@ -75,7 +75,7 @@ export function HudTab() {
       tp: locale.settingsHudWidgetTp,
       tnl: locale.settingsHudWidgetTnl,
       weight: locale.settingsHudWidgetWeight,
-      gold: locale.settingsHudWidgetGold,
+      gold: locale.wordGold,
     };
     return map[id];
   };

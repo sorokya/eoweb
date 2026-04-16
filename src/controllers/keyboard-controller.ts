@@ -586,6 +586,12 @@ export class KeyboardController {
           return;
         }
 
+        if (this.client.mapController.jukeboxAt(to)) {
+          this.client.jukeboxController.openJukebox(to);
+          this.walkTicks = WALK_TICKS;
+          return;
+        }
+
         if (
           this.client.mapController.isFacingChairAt(to) &&
           !this.client.mapController.occupied(to)

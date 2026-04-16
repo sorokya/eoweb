@@ -53,6 +53,7 @@ import {
   GuildController,
   InventoryController,
   ItemProtectionController,
+  JukeboxController,
   KeyboardController,
   LockerController,
   MapController,
@@ -179,6 +180,7 @@ export class Client {
   chestController: ChestController;
   cleanupController: CleanupController;
   drunkController: DrunkController;
+  jukeboxController: JukeboxController;
   commandController: CommandController;
   inventoryController: InventoryController;
   lockerController: LockerController;
@@ -253,6 +255,7 @@ export class Client {
     });
     getEdf(4).then((edf) => {
       this.edfs.jukebox = edf;
+      this.jukeboxController.loadTracks();
     });
     getEdf(5).then((edf) => {
       this.edfs.game1 = edf;
@@ -298,6 +301,7 @@ export class Client {
     this.tradeController = new TradeController(this);
     this.guildController = new GuildController(this);
     this.toastController = new ToastController();
+    this.jukeboxController = new JukeboxController(this);
     loadConfig().then((config) => {
       this.config = config;
       const txtHost =
@@ -583,6 +587,7 @@ export class Client {
     this.animationController.npcHealthBars.clear();
     this.animationController.characterHealthBars.clear();
     this.itemProtectionController.itemProtectionTimers.clear();
+    this.jukeboxController.reset();
     if (this.map) {
       clearRectangles();
       this.mapRenderer.buildCaches();

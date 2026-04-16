@@ -5,6 +5,7 @@ import {
   getCharacterIntersecting,
   getCharacterRectangle,
   getDoorIntersecting,
+  getJukeboxIntersecting,
   getLockerIntersecting,
   getNpcIntersecting,
   getSignIntersecting,
@@ -351,6 +352,12 @@ export class MouseController {
       if (boardSpec !== undefined) {
         this.client.boardController.openBoard(boardSpec - MapTileSpec.Board1);
       }
+      return;
+    }
+
+    const jukeboxAt = getJukeboxIntersecting(this.client.mousePosition!);
+    if (jukeboxAt) {
+      this.client.jukeboxController.openJukebox(jukeboxAt);
       return;
     }
 

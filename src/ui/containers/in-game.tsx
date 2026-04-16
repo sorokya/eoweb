@@ -13,6 +13,7 @@ import {
   HotbarProvider,
   InventoryDialog,
   ItemDragProvider,
+  JukeboxDialog,
   MobileNav,
   NavSidebar,
   PlayerHud,
@@ -31,6 +32,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'spells',
   'character',
   'quests',
+  'jukebox',
   'settings',
   'chat-log',
 ];
@@ -45,6 +47,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <CharacterDialog />;
     case 'quests':
       return <QuestsDialog />;
+    case 'jukebox':
+      return <JukeboxDialog />;
     case 'settings':
       return <SettingsDialog />;
     case 'chat-log':
@@ -54,15 +58,24 @@ function DialogById({ id }: { id: DialogId }) {
 
 function InGameContent() {
   const client = useClient();
-  const { isOpen, getLayout, openDialog } = useWindowManager();
+  const { isOpen, getLayout, openDialog, closeDialog } = useWindowManager();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   // Chat dialogs are always considered open — they manage their own visibility.
   const open = ALL_DIALOG_IDS.filter((id) => isOpen(id));
 
+  // TODO: This might be creating stale closures. Should return cleanup functions from the effect that unsubscribe from events
   useEffect(() => {
     client.socialController.subscribePaperdollOpened(() => {
       openDialog('character');
+    });
+
+    client.jukeboxController.subscribeOpened(() => {
+      openDialog('jukebox');
+    });
+
+    client.jukeboxController.subscribeRequestSucceeded(() => {
+      closeDialog('jukebox');
     });
 
     client.on('toggleCommandPalette', () => {

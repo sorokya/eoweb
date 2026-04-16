@@ -61,6 +61,16 @@ export class MapController {
     );
   }
 
+  jukeboxAt(coords: Vector2): boolean {
+    return this.client.map!.tileSpecRows.some(
+      (r) =>
+        r.y === coords.y &&
+        r.tiles.some(
+          (t) => t.x === coords.x && t.tileSpec === MapTileSpec.Jukebox,
+        ),
+    );
+  }
+
   boardAt(coords: Vector2): MapTileSpec | undefined {
     for (const r of this.client.map!.tileSpecRows) {
       if (r.y !== coords.y) continue;

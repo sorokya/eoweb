@@ -21,6 +21,7 @@ export { DrunkController } from './drunk-controller';
 export { GuildController } from './guild-controller';
 export { InventoryController } from './inventory-controller';
 export { ItemProtectionController } from './item-protection-controller';
+export { JukeboxController } from './jukebox-controller';
 export { KeyboardController } from './keyboard-controller';
 export { LockerController } from './locker-controller';
 export { MapController } from './map-controller';

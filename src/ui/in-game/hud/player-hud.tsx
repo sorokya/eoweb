@@ -120,7 +120,7 @@ function GoldWidget({ stats }: WidgetProps) {
         <GiCoins size={12} />
       </span>
       {formatBigNumber(stats.gold)}
-      <span class='hidden md:inline'>{locale.hudGold}</span>
+      <span class='hidden md:inline'>{locale.wordGold}</span>
     </div>
   );
 }

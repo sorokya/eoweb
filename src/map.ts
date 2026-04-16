@@ -22,6 +22,7 @@ import {
   setBoardRectangle,
   setCharacterRectangle,
   setDoorRectangle,
+  setJukeboxRectangle,
   setLockerRectangle,
   setNpcRectangle,
   setSignRectangle,
@@ -888,6 +889,11 @@ export class MapRenderer {
       );
     } else if (spec === MapTileSpec.BankVault) {
       setLockerRectangle(
+        this._coordsBuffer,
+        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
+      );
+    } else if (spec === MapTileSpec.Jukebox) {
+      setJukeboxRectangle(
         this._coordsBuffer,
         new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
       );
