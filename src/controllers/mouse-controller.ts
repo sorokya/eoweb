@@ -19,6 +19,7 @@ import { GameState, PlayerMenuItem } from '@/game-state';
 import { CursorClickAnimation } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
 import { capitalize } from '@/utils';
+import type { Vector2 } from '@/vector';
 
 export class MouseController {
   private client: Client;
@@ -27,6 +28,8 @@ export class MouseController {
   setIgnoreNextClick() {
     this.ignoreNextClick = true;
   }
+
+  private touchStartPosition: Vector2 | null = null;
 
   constructor(client: Client) {
     this.client = client;
@@ -39,13 +42,13 @@ export class MouseController {
       return ui && target && target !== ui && ui.contains(target as Node);
     };
 
-    const updatePositionFromTouch = (touch: Touch) => {
-      if (!this.client.app) return;
+    const getCoordsFromTouch = (touch: Touch): Vector2 | null => {
+      if (!this.client.app) return null;
       const canvas = this.client.app.renderer.canvas;
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
-      this.client.setMousePosition({
+      return {
         x: Math.min(
           Math.max(Math.floor((touch.clientX - rect.left) * scaleX), 0),
           canvas.width,
@@ -54,7 +57,7 @@ export class MouseController {
           Math.max(Math.floor((touch.clientY - rect.top) * scaleY), 0),
           canvas.height,
         ),
-      });
+      };
     };
 
     window.addEventListener(
@@ -63,7 +66,16 @@ export class MouseController {
         if (isInUI(e.target)) return;
         e.preventDefault();
         isLongPress = false;
-        updatePositionFromTouch(e.touches[0]);
+
+        const coords = getCoordsFromTouch(e.touches[0]);
+        if (coords) {
+          this.touchStartPosition = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+          };
+          this.client.setMousePosition(coords);
+        }
+
         longPressTimer = window.setTimeout(() => {
           isLongPress = true;
           this.handleRightClick({ target: e.target } as MouseEvent);
@@ -78,7 +90,10 @@ export class MouseController {
         if (isInUI(e.target)) return;
         e.preventDefault();
         clearTimeout(longPressTimer);
-        updatePositionFromTouch(e.touches[0]);
+        const coords = getCoordsFromTouch(e.touches[0]);
+        if (coords) {
+          this.client.setMousePosition(coords);
+        }
       },
       { passive: false },
     );
@@ -90,6 +105,14 @@ export class MouseController {
         e.preventDefault();
         clearTimeout(longPressTimer);
         if (!isLongPress) {
+          const diffX =
+            e.changedTouches[0].clientX - this.touchStartPosition!.x;
+          const diffY =
+            e.changedTouches[0].clientY - this.touchStartPosition!.y;
+          if (Math.sqrt(diffX * diffX + diffY * diffY) > 10) {
+            // Consider it a swipe, not a tap
+            return;
+          }
           this.handleClick({ target: e.target } as MouseEvent);
         }
         isLongPress = false;
