@@ -36,6 +36,8 @@ export class AudioController {
   private queuedMusic: { mfxId: number; loop: boolean } | null = null;
 
   private alwaysLoop = true;
+  private mapMusicState: { mfxId: number; loop: boolean } | null = null;
+  private jukeboxActive = false;
 
   constructor(client: Client) {
     this.client = client;
@@ -249,6 +251,15 @@ export class AudioController {
               this.currentMfxId = null;
               this.pendingMusic = null;
               this.playMusic(mfxId, loop);
+            } else if (this.jukeboxActive) {
+              this.jukeboxActive = false;
+              this.currentMfxId = null;
+              if (this.mapMusicState) {
+                this.playMusic(
+                  this.mapMusicState.mfxId,
+                  this.mapMusicState.loop,
+                );
+              }
             } else if (this.alwaysLoop && this.currentMfxId !== null) {
               this.playMusic(this.currentMfxId, true);
             }
@@ -337,6 +348,17 @@ export class AudioController {
     }
     this.currentMfxId = null;
     this.pendingMusic = null;
+    this.jukeboxActive = false;
+  }
+
+  /**
+   * Play a jukebox track once. When finished, automatically resumes the
+   * current map's music (if any). A map change clears this behaviour.
+   */
+  async playJukeboxMusic(mfxId: number): Promise<void> {
+    this.jukeboxActive = true;
+    this.pendingMusic = null;
+    await this.playMusic(mfxId, false);
   }
 
   /**
@@ -351,7 +373,10 @@ export class AudioController {
       return;
     }
 
+    this.jukeboxActive = false;
+
     if (control === MapMusicControl.InterruptPlayNothing || musicId === 0) {
+      this.mapMusicState = null;
       this.stopMusic();
       return;
     }
@@ -360,6 +385,8 @@ export class AudioController {
       control === MapMusicControl.InterruptIfDifferentPlayRepeat ||
       control === MapMusicControl.InterruptPlayRepeat ||
       control === MapMusicControl.FinishPlayRepeat;
+
+    this.mapMusicState = { mfxId: musicId, loop };
 
     switch (control) {
       case MapMusicControl.InterruptIfDifferentPlayOnce:

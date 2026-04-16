@@ -25,7 +25,7 @@ export function registerMusicHandlers(client: Client) {
     (reader) => {
       const packet = JukeboxPlayerServerPacket.deserialize(reader);
       if (packet.mfxId) {
-        client.audioController.playMusic(packet.mfxId, true);
+        client.audioController.playJukeboxMusic(packet.mfxId);
       }
     },
   );
