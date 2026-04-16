@@ -10,30 +10,20 @@ import { CanvasSource, Rectangle, Texture } from 'pixi.js';
 import type { Client } from '@/client';
 import {
   ATLAS_EXPIRY_TICKS,
-  CHARACTER_HEIGHT,
-  CHARACTER_MELEE_ATTACK_WIDTH,
-  CHARACTER_RAISED_HAND_HEIGHT,
-  CHARACTER_RANGE_ATTACK_WIDTH,
-  CHARACTER_SIT_CHAIR_HEIGHT,
-  CHARACTER_SIT_CHAIR_WIDTH,
-  CHARACTER_SIT_GROUND_HEIGHT,
-  CHARACTER_SIT_GROUND_WIDTH,
-  CHARACTER_WALKING_HEIGHT,
-  CHARACTER_WALKING_WIDTH,
-  CHARACTER_WIDTH,
-  HALF_HALF_TILE_HEIGHT,
   NUMBER_OF_EFFECTS,
   NUMBER_OF_EMOTES,
-  NUMBER_OF_SLASHES,
-  TILE_HEIGHT,
 } from '@/consts';
 import { GfxType } from '@/gfx';
 import { LAYER_GFX_MAP } from '@/map';
-import { clipHair, getItemGraphicId, HatMaskType } from '@/utils';
+import { getItemGraphicId } from '@/utils';
+import type {
+  CompositeCharacterSpec,
+  CompositeResult,
+  RawPixels,
+} from './compositor.worker';
+import { CompositorClient } from './compositor-client';
 
 const ATLAS_SIZE = 2048;
-const CHARACTER_FRAME_SIZE = 100;
-const HALF_CHARACTER_FRAME_SIZE = CHARACTER_FRAME_SIZE >> 1;
 
 const MAP_ATLAS_INDEX = 254;
 const STATIC_ATLAS_INDEX = 255;
@@ -82,127 +72,6 @@ export enum NpcFrame {
   AttackUpLeft2 = 15,
 }
 
-const FRAMES_TO_FRAME_COUNT_MAP = {
-  [CharacterFrame.StandingDownRight]: 1,
-  [CharacterFrame.StandingUpLeft]: 1,
-  [CharacterFrame.WalkingDownRight1]: 4,
-  [CharacterFrame.WalkingDownRight2]: 4,
-  [CharacterFrame.WalkingDownRight3]: 4,
-  [CharacterFrame.WalkingDownRight4]: 4,
-  [CharacterFrame.WalkingUpLeft1]: 4,
-  [CharacterFrame.WalkingUpLeft2]: 4,
-  [CharacterFrame.WalkingUpLeft3]: 4,
-  [CharacterFrame.WalkingUpLeft4]: 4,
-  [CharacterFrame.MeleeAttackDownRight1]: 2,
-  [CharacterFrame.MeleeAttackDownRight2]: 2,
-  [CharacterFrame.MeleeAttackUpLeft1]: 2,
-  [CharacterFrame.MeleeAttackUpLeft2]: 2,
-  [CharacterFrame.RaisedHandDownRight]: 1,
-  [CharacterFrame.RaisedHandUpLeft]: 1,
-  [CharacterFrame.ChairDownRight]: 1,
-  [CharacterFrame.ChairUpLeft]: 1,
-  [CharacterFrame.FloorDownRight]: 1,
-  [CharacterFrame.FloorUpLeft]: 1,
-  [CharacterFrame.RangeAttackDownRight]: 1,
-  [CharacterFrame.RangeAttackUpLeft]: 1,
-};
-
-const FRAME_TO_FRAME_NUMBER_MAP = {
-  [CharacterFrame.StandingDownRight]: 0,
-  [CharacterFrame.StandingUpLeft]: 0,
-  [CharacterFrame.WalkingDownRight1]: 0,
-  [CharacterFrame.WalkingDownRight2]: 1,
-  [CharacterFrame.WalkingDownRight3]: 2,
-  [CharacterFrame.WalkingDownRight4]: 3,
-  [CharacterFrame.WalkingUpLeft1]: 0,
-  [CharacterFrame.WalkingUpLeft2]: 1,
-  [CharacterFrame.WalkingUpLeft3]: 2,
-  [CharacterFrame.WalkingUpLeft4]: 3,
-  [CharacterFrame.MeleeAttackDownRight1]: 0,
-  [CharacterFrame.MeleeAttackDownRight2]: 1,
-  [CharacterFrame.MeleeAttackUpLeft1]: 0,
-  [CharacterFrame.MeleeAttackUpLeft2]: 1,
-  [CharacterFrame.RaisedHandDownRight]: 0,
-  [CharacterFrame.RaisedHandUpLeft]: 0,
-  [CharacterFrame.ChairDownRight]: 0,
-  [CharacterFrame.ChairUpLeft]: 0,
-  [CharacterFrame.FloorDownRight]: 0,
-  [CharacterFrame.FloorUpLeft]: 0,
-  [CharacterFrame.RangeAttackDownRight]: 0,
-  [CharacterFrame.RangeAttackUpLeft]: 0,
-};
-
-const WEAPON_VISIBLE_MAP = {
-  [CharacterFrame.StandingDownRight]: true,
-  [CharacterFrame.StandingUpLeft]: true,
-  [CharacterFrame.WalkingDownRight1]: true,
-  [CharacterFrame.WalkingDownRight2]: true,
-  [CharacterFrame.WalkingDownRight3]: true,
-  [CharacterFrame.WalkingDownRight4]: true,
-  [CharacterFrame.WalkingUpLeft1]: true,
-  [CharacterFrame.WalkingUpLeft2]: true,
-  [CharacterFrame.WalkingUpLeft3]: true,
-  [CharacterFrame.WalkingUpLeft4]: true,
-  [CharacterFrame.MeleeAttackDownRight1]: true,
-  [CharacterFrame.MeleeAttackDownRight2]: true,
-  [CharacterFrame.MeleeAttackUpLeft1]: true,
-  [CharacterFrame.MeleeAttackUpLeft2]: true,
-  [CharacterFrame.RaisedHandDownRight]: true,
-  [CharacterFrame.RaisedHandUpLeft]: true,
-  [CharacterFrame.ChairDownRight]: false,
-  [CharacterFrame.ChairUpLeft]: false,
-  [CharacterFrame.FloorDownRight]: false,
-  [CharacterFrame.FloorUpLeft]: false,
-  [CharacterFrame.RangeAttackDownRight]: true,
-  [CharacterFrame.RangeAttackUpLeft]: true,
-};
-
-const WEAPON_FRAME_MAP = {
-  [CharacterFrame.StandingDownRight]: 0,
-  [CharacterFrame.StandingUpLeft]: 1,
-  [CharacterFrame.WalkingDownRight1]: 2,
-  [CharacterFrame.WalkingDownRight2]: 3,
-  [CharacterFrame.WalkingDownRight3]: 4,
-  [CharacterFrame.WalkingDownRight4]: 5,
-  [CharacterFrame.WalkingUpLeft1]: 6,
-  [CharacterFrame.WalkingUpLeft2]: 7,
-  [CharacterFrame.WalkingUpLeft3]: 8,
-  [CharacterFrame.WalkingUpLeft4]: 9,
-  [CharacterFrame.RaisedHandDownRight]: 10,
-  [CharacterFrame.RaisedHandUpLeft]: 11,
-  [CharacterFrame.MeleeAttackDownRight1]: 12,
-  [CharacterFrame.MeleeAttackDownRight2]: 13,
-  [CharacterFrame.MeleeAttackUpLeft1]: 14,
-  [CharacterFrame.MeleeAttackUpLeft2]: 15,
-  [CharacterFrame.RangeAttackDownRight]: 17,
-  [CharacterFrame.RangeAttackUpLeft]: 18,
-};
-
-const BACK_FRAME_MAP = {
-  [CharacterFrame.StandingDownRight]: 0,
-  [CharacterFrame.StandingUpLeft]: 1,
-  [CharacterFrame.WalkingDownRight1]: 0,
-  [CharacterFrame.WalkingDownRight2]: 0,
-  [CharacterFrame.WalkingDownRight3]: 0,
-  [CharacterFrame.WalkingDownRight4]: 0,
-  [CharacterFrame.WalkingUpLeft1]: 1,
-  [CharacterFrame.WalkingUpLeft2]: 1,
-  [CharacterFrame.WalkingUpLeft3]: 1,
-  [CharacterFrame.WalkingUpLeft4]: 1,
-  [CharacterFrame.RaisedHandDownRight]: 0,
-  [CharacterFrame.RaisedHandUpLeft]: 1,
-  [CharacterFrame.MeleeAttackDownRight1]: 2,
-  [CharacterFrame.MeleeAttackDownRight2]: 2,
-  [CharacterFrame.MeleeAttackUpLeft1]: 3,
-  [CharacterFrame.MeleeAttackUpLeft2]: 3,
-  [CharacterFrame.ChairDownRight]: 0,
-  [CharacterFrame.ChairUpLeft]: 1,
-  [CharacterFrame.FloorDownRight]: 0,
-  [CharacterFrame.FloorUpLeft]: 1,
-  [CharacterFrame.RangeAttackDownRight]: 2,
-  [CharacterFrame.RangeAttackUpLeft]: 3,
-};
-
 type Rect = {
   x: number;
   y: number;
@@ -232,6 +101,7 @@ type CharacterAtlasEntry = {
   hash: string;
   frames: (Frame | undefined)[];
   pendingFrames?: (Frame | undefined)[];
+  neededGfx: Array<{ gfxType: GfxType; graphicId: number }>;
 };
 
 export type TileAtlasEntry = {
@@ -397,7 +267,6 @@ export class Atlas {
   private mapHasChairs = false;
   private bmpsToLoad: Bmp[] = [];
   private pendingBmpPromises: Promise<void>[] = [];
-  private pendingCharacterFramePromises: Promise<void>[] = [];
   private loading = false;
   private loadingPromise: Promise<void> | null = null;
   private appended = true;
@@ -407,10 +276,10 @@ export class Atlas {
   private currentAtlasIndex = 0;
   private ctx: CanvasRenderingContext2D;
   private temporaryCharacterFrames: CharacterFrameImg[] = [];
-  private tmpBehindCanvas: HTMLCanvasElement;
-  private tmpBehindCtx: CanvasRenderingContext2D;
   private tmpCanvas: HTMLCanvasElement;
   private tmpCtx: CanvasRenderingContext2D;
+  private compositorClient: CompositorClient;
+  private dirtyDynamicAtlasIndices: Set<number> = new Set();
 
   offsetFrame: HTMLSelectElement =
     document.querySelector<HTMLSelectElement>('#offset-frame')!;
@@ -429,13 +298,7 @@ export class Atlas {
     this.tmpCtx = this.tmpCanvas.getContext('2d', {
       willReadFrequently: true,
     })!;
-
-    this.tmpBehindCanvas = document.createElement('canvas');
-    this.tmpBehindCanvas.width = CHARACTER_FRAME_SIZE;
-    this.tmpBehindCanvas.height = CHARACTER_FRAME_SIZE;
-    this.tmpBehindCtx = this.tmpBehindCanvas.getContext('2d', {
-      willReadFrequently: true,
-    })!;
+    this.compositorClient = new CompositorClient(client.gfxLoader);
   }
 
   getAtlas(index: number): HTMLCanvasElement | undefined {
@@ -1286,6 +1149,8 @@ export class Atlas {
       }
 
       if (!existing || existing.hash !== hash) {
+        const neededGfx: Array<{ gfxType: GfxType; graphicId: number }> = [];
+
         if (char.hairStyle) {
           const baseId = (char.hairStyle - 1) * 40 + char.hairColor * 4;
           const gfxType =
@@ -1295,6 +1160,7 @@ export class Atlas {
 
           for (let i = 1; i <= 4; ++i) {
             this.addBmpToLoad(gfxType, baseId + i);
+            neededGfx.push({ gfxType, graphicId: baseId + i });
           }
         }
 
@@ -1307,6 +1173,7 @@ export class Atlas {
 
           for (let i = 1; i <= 22; ++i) {
             this.addBmpToLoad(gfxType, baseId + i);
+            neededGfx.push({ gfxType, graphicId: baseId + i });
           }
         }
 
@@ -1319,6 +1186,7 @@ export class Atlas {
 
           for (let i = 1; i <= 16; ++i) {
             this.addBmpToLoad(gfxType, baseId + i);
+            neededGfx.push({ gfxType, graphicId: baseId + i });
           }
         }
 
@@ -1328,7 +1196,9 @@ export class Atlas {
             char.gender === Gender.Female ? GfxType.FemaleHat : GfxType.MaleHat;
 
           this.addBmpToLoad(gfxType, baseId + 1);
+          neededGfx.push({ gfxType, graphicId: baseId + 1 });
           this.addBmpToLoad(gfxType, baseId + 3);
+          neededGfx.push({ gfxType, graphicId: baseId + 3 });
         }
 
         if (char.equipment.shield > 0) {
@@ -1343,6 +1213,7 @@ export class Atlas {
 
           for (let i = 1; i <= frames; ++i) {
             this.addBmpToLoad(gfxType, baseId + i);
+            neededGfx.push({ gfxType, graphicId: baseId + i });
           }
         }
 
@@ -1361,10 +1232,12 @@ export class Atlas {
 
           for (let i = 1; i <= frames; ++i) {
             this.addBmpToLoad(gfxType, baseId + i);
+            neededGfx.push({ gfxType, graphicId: baseId + i });
           }
 
           if (meta.slash !== null) {
             this.addBmpToLoad(GfxType.PostLoginUI, 40);
+            neededGfx.push({ gfxType: GfxType.PostLoginUI, graphicId: 40 });
           }
         }
 
@@ -1375,6 +1248,7 @@ export class Atlas {
           existing.skin = char.skin;
           existing.gender = char.gender;
           existing.equipment = char.equipment;
+          existing.neededGfx = neededGfx;
         }
 
         const frames = [];
@@ -1439,6 +1313,7 @@ export class Atlas {
             hash,
             frames,
             tickCount: this.client.tickCount,
+            neededGfx,
           });
         }
       }
@@ -1553,12 +1428,121 @@ export class Atlas {
   }
 
   private async updateAtlas(): Promise<void> {
-    this.pendingCharacterFramePromises = [];
+    this.dirtyDynamicAtlasIndices = new Set();
     this.defragmentAtlases();
-    this.preRenderCharacterFrames();
+
+    // Build compositor specs and kick off compositing in the worker thread
+    // before the main-thread frame-size calculations so they run in parallel.
+    const compositorSpecs = this.buildCompositorSpecs();
+    const compositePromise =
+      compositorSpecs.length > 0
+        ? this.compositorClient.compositeCharacterFrames(compositorSpecs)
+        : Promise.resolve<CompositeResult[]>([]);
+
     this.calculateFrameSizes();
-    await Promise.all(this.pendingCharacterFramePromises);
+    const compositeResults = await compositePromise;
+    this.applyCompositorResults(compositeResults);
+
     this.finishUpdatingAtlas();
+  }
+
+  private buildCompositorSpecs(): CompositeCharacterSpec[] {
+    const specs: CompositeCharacterSpec[] = [];
+
+    for (const character of this.characters) {
+      const activeFrames = character.pendingFrames || character.frames;
+      if (!activeFrames.some((f) => f && f.atlasIndex === -1)) {
+        continue;
+      }
+
+      const frameIndices: number[] = [];
+      for (const [index, frame] of activeFrames.entries()) {
+        if (frame && frame.atlasIndex === -1) {
+          frameIndices.push(index);
+        }
+      }
+
+      const resources: Record<string, RawPixels> = {};
+
+      // Skin sprites are always needed
+      for (let i = 1; i <= 8; ++i) {
+        const key = `${GfxType.SkinSprites}:${i}`;
+        if (!resources[key]) {
+          const raw = this.client.gfxLoader.getRawPixels(
+            GfxType.SkinSprites,
+            i + 100,
+          );
+          if (raw) resources[key] = raw;
+        }
+      }
+
+      // Equipment and hair GFX
+      for (const { gfxType, graphicId } of character.neededGfx) {
+        const key = `${gfxType}:${graphicId}`;
+        if (!resources[key]) {
+          const raw = this.client.gfxLoader.getRawPixels(
+            gfxType,
+            graphicId + 100,
+          );
+          if (raw) resources[key] = raw;
+        }
+      }
+
+      specs.push({
+        playerId: character.playerId,
+        gender: character.gender,
+        skin: character.skin,
+        hairStyle: character.hairStyle,
+        hairColor: character.hairColor,
+        equipment: {
+          armor: character.equipment.armor,
+          boots: character.equipment.boots,
+          hat: character.equipment.hat,
+          shield: character.equipment.shield,
+          weapon: character.equipment.weapon,
+        },
+        frameIndices,
+        resources,
+      });
+    }
+
+    return specs;
+  }
+
+  private applyCompositorResults(results: CompositeResult[]) {
+    this.temporaryCharacterFrames = [];
+
+    for (const result of results) {
+      const character = this.characters.find(
+        (c) => c.playerId === result.playerId,
+      );
+      if (!character) {
+        result.bitmap.close();
+        continue;
+      }
+
+      const activeFrames = character.pendingFrames || character.frames;
+      const frame = activeFrames[result.frameIndex];
+      if (!frame) {
+        result.bitmap.close();
+        continue;
+      }
+
+      frame.x = result.x;
+      frame.y = result.y;
+      frame.w = result.w;
+      frame.h = result.h;
+      frame.xOffset = result.xOffset;
+      frame.yOffset = result.yOffset;
+      frame.mirroredXOffset = result.mirroredXOffset;
+
+      this.temporaryCharacterFrames.push({
+        playerId: result.playerId,
+        frameIndex: result.frameIndex,
+        img: result.bitmap,
+        loaded: true,
+      });
+    }
   }
 
   private finishUpdatingAtlas() {
@@ -1573,8 +1557,9 @@ export class Atlas {
       }
     }
 
-    for (const atlas of this.atlases) {
-      atlas.commit();
+    // Only commit atlases that were actually written to during placeFrames()
+    for (const idx of this.dirtyDynamicAtlasIndices) {
+      if (this.atlases[idx]) this.atlases[idx].commit();
     }
 
     if (!this.appended) {
@@ -2020,252 +2005,16 @@ export class Atlas {
           rect.w,
           rect.h,
         );
+        // Track which dynamic atlases were written to for selective commits
+        if (
+          this.currentAtlasIndex !== MAP_ATLAS_INDEX &&
+          this.currentAtlasIndex !== STATIC_ATLAS_INDEX
+        ) {
+          this.dirtyDynamicAtlasIndices.add(this.currentAtlasIndex);
+        }
       }
     }
   }
-
-  private preRenderCharacterFrames() {
-    this.temporaryCharacterFrames = [];
-    this.tmpCanvas.width = CHARACTER_FRAME_SIZE;
-    this.tmpCanvas.height = CHARACTER_FRAME_SIZE;
-
-    for (const character of this.characters) {
-      const activeFrames = character.pendingFrames || character.frames;
-      if (!activeFrames.some((f) => f && f.atlasIndex === -1)) {
-        continue;
-      }
-
-      for (const [index, frame] of activeFrames.entries()) {
-        if (!frame) {
-          continue;
-        }
-
-        this.tmpCtx.clearRect(0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
-        this.tmpBehindCtx.clearRect(
-          0,
-          0,
-          CHARACTER_FRAME_SIZE,
-          CHARACTER_FRAME_SIZE,
-        );
-
-        const weaponVisible = (WEAPON_VISIBLE_MAP as Record<number, boolean>)[
-          index
-        ];
-
-        const upLeft = [
-          CharacterFrame.StandingUpLeft,
-          CharacterFrame.WalkingUpLeft1,
-          CharacterFrame.WalkingUpLeft2,
-          CharacterFrame.WalkingUpLeft3,
-          CharacterFrame.WalkingUpLeft4,
-          CharacterFrame.MeleeAttackUpLeft1,
-          CharacterFrame.MeleeAttackUpLeft2,
-          CharacterFrame.RaisedHandUpLeft,
-          CharacterFrame.ChairUpLeft,
-          CharacterFrame.FloorUpLeft,
-          CharacterFrame.RangeAttackUpLeft,
-        ].includes(index);
-
-        const maskType = this.client.getHatMetadata(character.equipment.hat);
-
-        if (character.equipment.shield && !upLeft) {
-          const meta = this.client.getShieldMetadata(
-            character.equipment.shield,
-          );
-          if (meta.back) {
-            this.renderCharacterBack(
-              character.gender,
-              character.equipment.shield,
-              index,
-            );
-          }
-        }
-
-        if (character.equipment.weapon && weaponVisible) {
-          this.renderCharacterWeaponBehind(
-            character.gender,
-            character.equipment.weapon,
-            index,
-          );
-        }
-
-        if (maskType !== HatMaskType.HideHair && character.hairStyle) {
-          this.renderCharacterHairBehind(
-            character.gender,
-            character.hairStyle,
-            character.hairColor,
-            upLeft,
-            index,
-          );
-        }
-
-        const skinSize = this.getCharacterFrameSize(index);
-        this.renderCharacterSkin(
-          character.gender,
-          character.skin,
-          upLeft,
-          skinSize,
-          index,
-        );
-
-        if (character.equipment.boots) {
-          this.renderCharacterBoots(
-            character.gender,
-            character.equipment.boots,
-            index,
-          );
-        }
-
-        if (character.equipment.armor) {
-          this.renderCharacterArmor(
-            character.gender,
-            character.equipment.armor,
-            index,
-          );
-        }
-
-        if (maskType === HatMaskType.FaceMask && character.equipment.hat) {
-          this.renderCharacterHat(
-            character.gender,
-            character.equipment.hat,
-            index,
-            upLeft,
-          );
-        }
-
-        if (maskType !== HatMaskType.HideHair && character.hairStyle) {
-          this.renderCharacterHair(
-            character.gender,
-            character.hairStyle,
-            character.hairColor,
-            upLeft,
-            index,
-          );
-        }
-
-        if (maskType !== HatMaskType.FaceMask && character.equipment.hat) {
-          this.renderCharacterHat(
-            character.gender,
-            character.equipment.hat,
-            index,
-            upLeft,
-          );
-        }
-
-        if (character.equipment.shield) {
-          const meta = this.client.getShieldMetadata(
-            character.equipment.shield,
-          );
-          if (!meta.back && weaponVisible) {
-            this.renderCharacterShield(
-              character.gender,
-              character.equipment.shield,
-              index,
-            );
-          } else if (meta.back && upLeft) {
-            this.renderCharacterBack(
-              character.gender,
-              character.equipment.shield,
-              index,
-              false,
-            );
-          }
-        }
-
-        if (
-          character.equipment.weapon &&
-          index === CharacterFrame.MeleeAttackDownRight2
-        ) {
-          this.renderCharacterWeaponFront(
-            character.gender,
-            character.equipment.weapon,
-          );
-        }
-
-        clipHair(this.tmpCtx, 0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
-
-        if (
-          character.equipment.weapon &&
-          [
-            CharacterFrame.MeleeAttackDownRight2,
-            CharacterFrame.MeleeAttackUpLeft2,
-          ].includes(index)
-        ) {
-          const meta = this.client.getWeaponMetadata(
-            character.equipment.weapon,
-          );
-
-          if (meta.slash !== null) {
-            this.renderCharacterSlash(character.gender, meta.slash, index);
-          }
-        }
-
-        this.tmpBehindCtx.drawImage(
-          this.tmpCanvas,
-          0,
-          0,
-          CHARACTER_FRAME_SIZE,
-          CHARACTER_FRAME_SIZE,
-        );
-
-        const frameBounds = {
-          x: CHARACTER_FRAME_SIZE,
-          y: CHARACTER_FRAME_SIZE,
-          maxX: 0,
-          maxY: 0,
-        };
-
-        const imgData = this.tmpBehindCtx.getImageData(
-          0,
-          0,
-          CHARACTER_FRAME_SIZE,
-          CHARACTER_FRAME_SIZE,
-        );
-
-        for (let y = 0; y < CHARACTER_FRAME_SIZE; ++y) {
-          for (let x = 0; x < CHARACTER_FRAME_SIZE; ++x) {
-            const alpha = imgData.data[(y * CHARACTER_FRAME_SIZE + x) * 4 + 3];
-            if (alpha !== 0) {
-              if (x < frameBounds.x) frameBounds.x = x;
-              if (y < frameBounds.y) frameBounds.y = y;
-              if (x > frameBounds.maxX) frameBounds.maxX = x;
-              if (y > frameBounds.maxY) frameBounds.maxY = y;
-            }
-          }
-        }
-
-        // Calculate width and height from min/max values
-        frame.x = frameBounds.x;
-        frame.y = frameBounds.y;
-        frame.w = frameBounds.maxX - frameBounds.x + 1;
-        frame.h = frameBounds.maxY - frameBounds.y + 1;
-        frame.xOffset = frameBounds.x - HALF_CHARACTER_FRAME_SIZE;
-        frame.yOffset =
-          frameBounds.y -
-          CHARACTER_FRAME_SIZE +
-          TILE_HEIGHT -
-          HALF_HALF_TILE_HEIGHT;
-        frame.mirroredXOffset =
-          HALF_CHARACTER_FRAME_SIZE - (frameBounds.x + frame.w);
-
-        const characterFrameImg: CharacterFrameImg = {
-          playerId: character.playerId,
-          frameIndex: index,
-          img: null,
-          loaded: false,
-        };
-        this.pendingCharacterFramePromises.push(
-          createImageBitmap(this.tmpBehindCtx.canvas).then((bm) => {
-            characterFrameImg.img = bm;
-            characterFrameImg.loaded = true;
-          }),
-        );
-
-        this.temporaryCharacterFrames.push(characterFrameImg);
-      }
-    }
-  }
-
   private calculateFrameSizes() {
     for (const npc of this.npcs) {
       this.calculateNpcFrameSizes(npc);
@@ -2669,807 +2418,11 @@ export class Atlas {
   private getBmpByPath(path: string): ImageBitmap | undefined {
     return this.bmpsToLoad.find((bmp) => bmp.path === path)?.img ?? undefined;
   }
-
-  private renderCharacterHairBehind(
-    gender: Gender,
-    hairStyle: number,
-    hairColor: number,
-    upLeft: boolean,
-    frame: CharacterFrame,
-  ) {
-    const baseId = (hairStyle - 1) * 40 + hairColor * 4;
-    const graphicId = baseId + 1 + (upLeft ? 2 : 0);
-    const bmp = this.getBmp(
-      gender === Gender.Female ? GfxType.FemaleHair : GfxType.MaleHair,
-      graphicId,
-    );
-
-    if (!bmp) {
-      console.error(
-        `Missing hair bitmap for ${gender} ${hairStyle} ${hairColor}`,
-      );
-      return;
-    }
-
-    const offset = HAIR_OFFSETS[gender][frame];
-
-    const destX = Math.floor(
-      HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x,
-    );
-    const destY = Math.floor(
-      HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y,
-    );
-
-    this.tmpBehindCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-  }
-
-  private renderCharacterHair(
-    gender: Gender,
-    hairStyle: number,
-    hairColor: number,
-    upLeft: boolean,
-    frame: CharacterFrame,
-  ) {
-    const baseId = (hairStyle - 1) * 40 + hairColor * 4;
-    const graphicId = baseId + 2 + (upLeft ? 2 : 0);
-    const bmp = this.getBmp(
-      gender === Gender.Female ? GfxType.FemaleHair : GfxType.MaleHair,
-      graphicId,
-    );
-
-    if (!bmp) {
-      console.error(
-        `Missing hair bitmap for ${gender} ${hairStyle} ${hairColor}`,
-      );
-      return;
-    }
-
-    const offset = HAIR_OFFSETS[gender][frame];
-
-    const destX = Math.floor(
-      HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x,
-    );
-    const destY = Math.floor(
-      HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y,
-    );
-
-    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-  }
-
-  private renderCharacterSkin(
-    gender: Gender,
-    skin: number,
-    upLeft: boolean,
-    size: { w: number; h: number },
-    frame: CharacterFrame,
-  ) {
-    const bmp = this.getBmp(
-      GfxType.SkinSprites,
-      this.getCharacterFrameGraphicId(frame),
-    );
-
-    if (!bmp) {
-      return;
-    }
-
-    const frameCount = FRAMES_TO_FRAME_COUNT_MAP[frame];
-    const frameNumber = FRAME_TO_FRAME_NUMBER_MAP[frame];
-
-    const startX = gender === Gender.Female ? 0 : size.w * frameCount * 2;
-    const sourceX =
-      startX + (upLeft ? size.w * frameCount : 0) + size.w * frameNumber;
-    const sourceY = skin * size.h;
-
-    const destX = HALF_CHARACTER_FRAME_SIZE - (size.w >> 1);
-    const destY = HALF_CHARACTER_FRAME_SIZE - (size.h >> 1);
-
-    this.tmpCtx.drawImage(
-      bmp,
-      sourceX,
-      sourceY,
-      size.w,
-      size.h,
-      destX,
-      destY,
-      size.w,
-      size.h,
-    );
-  }
-
-  private renderCharacterWeaponBehind(
-    gender: Gender,
-    weapon: number,
-    frame: CharacterFrame,
-  ) {
-    const graphicId =
-      (weapon - 1) * 100 +
-      (WEAPON_FRAME_MAP as Record<number, number>)[frame] +
-      1;
-
-    const bmp = this.getBmp(
-      gender === Gender.Female ? GfxType.FemaleWeapons : GfxType.MaleWeapons,
-      graphicId,
-    );
-
-    if (!bmp) {
-      return;
-    }
-
-    const offset = (
-      WEAPON_OFFSETS[gender] as Record<number, { x: number; y: number }>
-    )[frame];
-
-    const destX = Math.floor(
-      HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x,
-    );
-    const destY = Math.floor(
-      HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y,
-    );
-
-    this.tmpBehindCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-  }
-
-  private renderCharacterWeaponFront(gender: Gender, weapon: number) {
-    const graphicId = (weapon - 1) * 100 + 17;
-
-    const bmp = this.getBmp(
-      gender === Gender.Female ? GfxType.FemaleWeapons : GfxType.MaleWeapons,
-      graphicId,
-    );
-
-    if (!bmp) {
-      console.error(
-        `Missing weapon bitmap for ${Gender[gender]} ${weapon} MeleeAttackDownRight2`,
-      );
-      return;
-    }
-
-    const offset = WEAPON_OFFSETS[gender][CharacterFrame.MeleeAttackDownRight2];
-
-    const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
-    const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
-
-    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-  }
-
-  private renderCharacterBack(
-    gender: Gender,
-    back: number,
-    frame: number,
-    behind = true,
-  ) {
-    const graphicId =
-      (back - 1) * 50 + (BACK_FRAME_MAP as Record<number, number>)[frame] + 1;
-
-    const bmp = this.getBmp(
-      gender === Gender.Female ? GfxType.FemaleBack : GfxType.MaleBack,
-      graphicId,
-    );
-
-    if (!bmp) {
-      console.error(
-        `Missing back bitmap for ${Gender[gender]} ${back} ${CharacterFrame[frame]}`,
-      );
-      return;
-    }
-
-    const offset = (
-      BACK_OFFSETS[gender] as Record<number, { x: number; y: number }>
-    )[frame];
-    const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
-    const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
-
-    if (behind) {
-      this.tmpBehindCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-    } else {
-      this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-    }
-  }
-
-  private renderCharacterShield(gender: Gender, shield: number, frame: number) {
-    const graphicId = (shield - 1) * 50 + frame + 1;
-
-    const bmp = this.getBmp(
-      gender === Gender.Female ? GfxType.FemaleBack : GfxType.MaleBack,
-      graphicId,
-    );
-
-    if (!bmp) {
-      return;
-    }
-
-    const offset = (
-      SHIELD_OFFSETS[gender] as Record<number, { x: number; y: number }>
-    )[frame];
-
-    const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
-    const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
-
-    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-  }
-
-  private renderCharacterSlash(
-    gender: Gender,
-    index: number,
-    frame: CharacterFrame,
-  ) {
-    const bmp = this.getBmp(GfxType.PostLoginUI, 40);
-    if (!bmp) {
-      return;
-    }
-
-    const frameWidth = Math.floor(bmp.width / 4);
-    const frameHeight = Math.floor(bmp.height / NUMBER_OF_SLASHES);
-
-    const sourceX =
-      (frame === CharacterFrame.MeleeAttackDownRight2 ? 0 : 1) * frameWidth;
-    const sourceY = index * frameHeight;
-
-    const destX = Math.floor(
-      HALF_CHARACTER_FRAME_SIZE -
-        (frameWidth >> 1) +
-        (frame === CharacterFrame.MeleeAttackDownRight2 ? -9 : -13) +
-        (gender === Gender.Female ? 0 : -1),
-    );
-    const destY = Math.floor(
-      HALF_CHARACTER_FRAME_SIZE -
-        (frameHeight >> 1) +
-        (frame === CharacterFrame.MeleeAttackDownRight2 ? 4 : -9) +
-        (gender === Gender.Female ? 0 : -1),
-    );
-
-    this.tmpCtx.globalAlpha = 0.4;
-    this.tmpCtx.drawImage(
-      bmp,
-      sourceX,
-      sourceY,
-      frameWidth,
-      frameHeight,
-      destX,
-      destY,
-      frameWidth,
-      frameHeight,
-    );
-    this.tmpCtx.globalAlpha = 1.0;
-  }
-
-  private renderCharacterBoots(
-    gender: Gender,
-    boots: number,
-    frame: CharacterFrame,
-  ) {
-    const baseId = (boots - 1) * 40;
-    let graphicId = (boots - 1) * 40 + frame + 1;
-
-    switch (true) {
-      case frame === CharacterFrame.RaisedHandDownRight:
-      case frame === CharacterFrame.MeleeAttackDownRight1:
-        graphicId = baseId + 1;
-        break;
-      case frame === CharacterFrame.RaisedHandUpLeft:
-      case frame === CharacterFrame.MeleeAttackUpLeft1:
-        graphicId = baseId + 2;
-        break;
-      case frame === CharacterFrame.MeleeAttackDownRight2:
-      case frame === CharacterFrame.RangeAttackDownRight:
-        graphicId = baseId + 11;
-        break;
-      case frame === CharacterFrame.MeleeAttackUpLeft2:
-      case frame === CharacterFrame.RangeAttackUpLeft:
-        graphicId = baseId + 12;
-        break;
-      case frame === CharacterFrame.ChairDownRight:
-        graphicId = baseId + 13;
-        break;
-      case frame === CharacterFrame.ChairUpLeft:
-        graphicId = baseId + 14;
-        break;
-      case frame === CharacterFrame.FloorDownRight:
-        graphicId = baseId + 15;
-        break;
-      case frame === CharacterFrame.FloorUpLeft:
-        graphicId = baseId + 16;
-        break;
-    }
-
-    const bmp = this.getBmp(
-      gender === Gender.Female ? GfxType.FemaleShoes : GfxType.MaleShoes,
-      graphicId,
-    );
-
-    if (!bmp) {
-      console.error(
-        `Missing boots bitmap for ${Gender[gender]} ${boots} ${CharacterFrame[frame]}`,
-      );
-      return;
-    }
-
-    const offset = BOOTS_OFFSETS[gender][frame];
-
-    const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
-    const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
-
-    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-  }
-
-  private renderCharacterArmor(
-    gender: Gender,
-    armor: number,
-    frame: CharacterFrame,
-  ) {
-    const graphicId = (armor - 1) * 50 + frame + 1;
-
-    const bmp = this.getBmp(
-      gender === Gender.Female ? GfxType.FemaleArmor : GfxType.MaleArmor,
-      graphicId,
-    );
-
-    if (!bmp) {
-      console.error(
-        `Missing armor bitmap for ${Gender[gender]} ${armor} ${CharacterFrame[frame]}`,
-      );
-      return;
-    }
-
-    const offset = ARMOR_OFFSETS[gender][frame];
-
-    const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
-    const destY = HALF_CHARACTER_FRAME_SIZE - (bmp.height >> 1) + offset.y;
-
-    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-  }
-
-  private renderCharacterHat(
-    gender: Gender,
-    hat: number,
-    frame: CharacterFrame,
-    upLeft: boolean,
-  ) {
-    const graphicId = (hat - 1) * 10 + (upLeft ? 3 : 1);
-
-    const bmp = this.getBmp(
-      gender === Gender.Female ? GfxType.FemaleHat : GfxType.MaleHat,
-      graphicId,
-    );
-
-    if (!bmp) {
-      console.error(
-        `Missing hat bitmap for ${Gender[gender]} ${hat} ${CharacterFrame[frame]}`,
-      );
-      return;
-    }
-
-    const offset = HAT_OFFSETS[gender][frame];
-
-    const destX = HALF_CHARACTER_FRAME_SIZE - (bmp.width >> 1) + offset.x;
-    const destY = -(bmp.height >> 1) + offset.y;
-
-    this.tmpCtx.drawImage(bmp, destX, destY, bmp.width, bmp.height);
-  }
-
-  private getCharacterFrameGraphicId(frame: CharacterFrame): number {
-    switch (frame) {
-      case CharacterFrame.StandingDownRight:
-      case CharacterFrame.StandingUpLeft:
-        return 1;
-      case CharacterFrame.WalkingDownRight1:
-      case CharacterFrame.WalkingDownRight2:
-      case CharacterFrame.WalkingDownRight3:
-      case CharacterFrame.WalkingDownRight4:
-      case CharacterFrame.WalkingUpLeft1:
-      case CharacterFrame.WalkingUpLeft2:
-      case CharacterFrame.WalkingUpLeft3:
-      case CharacterFrame.WalkingUpLeft4:
-        return 2;
-      case CharacterFrame.MeleeAttackDownRight1:
-      case CharacterFrame.MeleeAttackDownRight2:
-      case CharacterFrame.MeleeAttackUpLeft1:
-      case CharacterFrame.MeleeAttackUpLeft2:
-        return 3;
-      case CharacterFrame.RaisedHandDownRight:
-      case CharacterFrame.RaisedHandUpLeft:
-        return 4;
-      case CharacterFrame.ChairDownRight:
-      case CharacterFrame.ChairUpLeft:
-        return 5;
-      case CharacterFrame.FloorDownRight:
-      case CharacterFrame.FloorUpLeft:
-        return 6;
-      case CharacterFrame.RangeAttackDownRight:
-      case CharacterFrame.RangeAttackUpLeft:
-        return 7;
-      default:
-        throw new Error(`Unknown character frame: ${frame}`);
-    }
-  }
-
-  private getCharacterFrameSize(frame: CharacterFrame): {
-    w: number;
-    h: number;
-  } {
-    switch (frame) {
-      case CharacterFrame.StandingDownRight:
-      case CharacterFrame.StandingUpLeft:
-        return { w: CHARACTER_WIDTH, h: CHARACTER_HEIGHT };
-      case CharacterFrame.WalkingDownRight1:
-      case CharacterFrame.WalkingDownRight2:
-      case CharacterFrame.WalkingDownRight3:
-      case CharacterFrame.WalkingDownRight4:
-      case CharacterFrame.WalkingUpLeft1:
-      case CharacterFrame.WalkingUpLeft2:
-      case CharacterFrame.WalkingUpLeft3:
-      case CharacterFrame.WalkingUpLeft4:
-        return { w: CHARACTER_WALKING_WIDTH, h: CHARACTER_WALKING_HEIGHT };
-      case CharacterFrame.MeleeAttackDownRight1:
-      case CharacterFrame.MeleeAttackDownRight2:
-      case CharacterFrame.MeleeAttackUpLeft1:
-      case CharacterFrame.MeleeAttackUpLeft2:
-        return { w: CHARACTER_MELEE_ATTACK_WIDTH, h: CHARACTER_HEIGHT };
-      case CharacterFrame.RaisedHandDownRight:
-      case CharacterFrame.RaisedHandUpLeft:
-        return {
-          w: CHARACTER_WIDTH,
-          h: CHARACTER_RAISED_HAND_HEIGHT,
-        };
-      case CharacterFrame.ChairDownRight:
-      case CharacterFrame.ChairUpLeft:
-        return { w: CHARACTER_SIT_CHAIR_WIDTH, h: CHARACTER_SIT_CHAIR_HEIGHT };
-      case CharacterFrame.FloorDownRight:
-      case CharacterFrame.FloorUpLeft:
-        return {
-          w: CHARACTER_SIT_GROUND_WIDTH,
-          h: CHARACTER_SIT_GROUND_HEIGHT,
-        };
-      case CharacterFrame.RangeAttackDownRight:
-      case CharacterFrame.RangeAttackUpLeft:
-        return { w: CHARACTER_RANGE_ATTACK_WIDTH, h: CHARACTER_HEIGHT };
-      default:
-        throw new Error(`Unknown character frame: ${frame}`);
-    }
-  }
 }
 
 function generateCharacterHash(character: CharacterMapInfo) {
   return `${character.skin}${character.gender}${character.hairStyle}${character.hairColor}${character.equipment.armor}${character.equipment.boots}${character.equipment.hat}${character.equipment.shield}${character.equipment.weapon}`;
 }
-
-const HAIR_OFFSETS = {
-  [Gender.Female]: {
-    [CharacterFrame.StandingDownRight]: { x: -1, y: -14 },
-    [CharacterFrame.StandingUpLeft]: { x: -1, y: -14 },
-    [CharacterFrame.WalkingDownRight1]: { x: -1, y: -14 },
-    [CharacterFrame.WalkingDownRight2]: { x: -1, y: -14 },
-    [CharacterFrame.WalkingDownRight3]: { x: -1, y: -14 },
-    [CharacterFrame.WalkingDownRight4]: { x: -1, y: -14 },
-    [CharacterFrame.WalkingUpLeft1]: { x: -1, y: -14 },
-    [CharacterFrame.WalkingUpLeft2]: { x: -1, y: -14 },
-    [CharacterFrame.WalkingUpLeft3]: { x: -1, y: -14 },
-    [CharacterFrame.WalkingUpLeft4]: { x: -1, y: -14 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 0, y: -14 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -4, y: -9 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 0, y: -14 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -4, y: -13 },
-    [CharacterFrame.RaisedHandDownRight]: { x: -1, y: -12 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: -1, y: -12 },
-    [CharacterFrame.ChairDownRight]: { x: 1, y: -13 },
-    [CharacterFrame.ChairUpLeft]: { x: 2, y: -13 },
-    [CharacterFrame.FloorDownRight]: { x: 1, y: -8 },
-    [CharacterFrame.FloorUpLeft]: { x: 3, y: -8 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 5, y: -15 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 3, y: -14 },
-  },
-  [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: -1, y: -15 },
-    [CharacterFrame.StandingUpLeft]: { x: -1, y: -15 },
-    [CharacterFrame.WalkingDownRight1]: { x: 0, y: -15 },
-    [CharacterFrame.WalkingDownRight2]: { x: 0, y: -15 },
-    [CharacterFrame.WalkingDownRight3]: { x: 0, y: -15 },
-    [CharacterFrame.WalkingDownRight4]: { x: 0, y: -15 },
-    [CharacterFrame.WalkingUpLeft1]: { x: -1, y: -15 },
-    [CharacterFrame.WalkingUpLeft2]: { x: -1, y: -15 },
-    [CharacterFrame.WalkingUpLeft3]: { x: -1, y: -15 },
-    [CharacterFrame.WalkingUpLeft4]: { x: -1, y: -15 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: -15 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -5, y: -11 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: -15 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -3, y: -14 },
-    [CharacterFrame.RaisedHandDownRight]: { x: -1, y: -13 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: -1, y: -13 },
-    [CharacterFrame.ChairDownRight]: { x: 2, y: -12 },
-    [CharacterFrame.ChairUpLeft]: { x: 2, y: -12 },
-    [CharacterFrame.FloorDownRight]: { x: 2, y: -7 },
-    [CharacterFrame.FloorUpLeft]: { x: 4, y: -7 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 4, y: -15 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 2, y: -15 },
-  },
-};
-
-const BOOTS_OFFSETS = {
-  [Gender.Female]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: 21 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: 21 },
-    [CharacterFrame.WalkingDownRight1]: { x: 0, y: 21 },
-    [CharacterFrame.WalkingDownRight2]: { x: 0, y: 21 },
-    [CharacterFrame.WalkingDownRight3]: { x: 0, y: 21 },
-    [CharacterFrame.WalkingDownRight4]: { x: 0, y: 21 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: 21 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: 21 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: 21 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 20 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: 21 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -1, y: 21 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: 21 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -1, y: 21 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 23 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 23 },
-    [CharacterFrame.ChairDownRight]: { x: 2, y: 15 },
-    [CharacterFrame.ChairUpLeft]: { x: 3, y: 8 },
-    [CharacterFrame.FloorDownRight]: { x: 1, y: 13 },
-    [CharacterFrame.FloorUpLeft]: { x: 3, y: 6 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 2, y: 21 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 2, y: 21 },
-  },
-  [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: 20 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: 20 },
-    [CharacterFrame.WalkingDownRight1]: { x: 1, y: 19 },
-    [CharacterFrame.WalkingDownRight2]: { x: 1, y: 19 },
-    [CharacterFrame.WalkingDownRight3]: { x: 1, y: 19 },
-    [CharacterFrame.WalkingDownRight4]: { x: 1, y: 19 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: 19 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: 19 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: 19 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 19 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 2, y: 20 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -2, y: 20 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: 20 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: 20 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 22 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 22 },
-    [CharacterFrame.ChairDownRight]: { x: 3, y: 16 },
-    [CharacterFrame.ChairUpLeft]: { x: 3, y: 9 },
-    [CharacterFrame.FloorDownRight]: { x: 3, y: 15 },
-    [CharacterFrame.FloorUpLeft]: { x: 3, y: 7 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 2, y: 20 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: -2, y: 20 },
-  },
-};
-
-const ARMOR_OFFSETS = {
-  [Gender.Female]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: -3 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: -3 },
-    [CharacterFrame.WalkingDownRight1]: { x: 0, y: -4 },
-    [CharacterFrame.WalkingDownRight2]: { x: 0, y: -4 },
-    [CharacterFrame.WalkingDownRight3]: { x: 0, y: -4 },
-    [CharacterFrame.WalkingDownRight4]: { x: 0, y: -4 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -4 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -4 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -4 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -4 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: -3 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -1, y: -3 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: -3 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -1, y: -3 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -1 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -1 },
-    [CharacterFrame.ChairDownRight]: { x: 2, y: -8 },
-    [CharacterFrame.ChairUpLeft]: { x: 3, y: -8 },
-    [CharacterFrame.FloorDownRight]: { x: 1, y: -3 },
-    [CharacterFrame.FloorUpLeft]: { x: 3, y: -3 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 1, y: -3 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 1, y: -3 },
-  },
-  [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: -4 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: -4 },
-    [CharacterFrame.WalkingDownRight1]: { x: 1, y: -5 },
-    [CharacterFrame.WalkingDownRight2]: { x: 1, y: -5 },
-    [CharacterFrame.WalkingDownRight3]: { x: 1, y: -5 },
-    [CharacterFrame.WalkingDownRight4]: { x: 1, y: -5 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -5 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -5 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -5 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -5 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 2, y: -4 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -2, y: -4 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: -4 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: -4 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -2 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -2 },
-    [CharacterFrame.ChairDownRight]: { x: 3, y: -7 },
-    [CharacterFrame.ChairUpLeft]: { x: 3, y: -7 },
-    [CharacterFrame.FloorDownRight]: { x: 3, y: -3 },
-    [CharacterFrame.FloorUpLeft]: { x: 3, y: -2 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 2, y: -4 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 2, y: -4 },
-  },
-};
-
-const HAT_OFFSETS = {
-  [Gender.Female]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: 23 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: 23 },
-    [CharacterFrame.WalkingDownRight1]: { x: 0, y: 23 },
-    [CharacterFrame.WalkingDownRight2]: { x: 0, y: 23 },
-    [CharacterFrame.WalkingDownRight3]: { x: 0, y: 23 },
-    [CharacterFrame.WalkingDownRight4]: { x: 0, y: 23 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: 23 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: 23 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: 23 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 23 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: 23 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -3, y: 28 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: 23 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -3, y: 24 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 25 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 25 },
-    [CharacterFrame.ChairDownRight]: { x: 2, y: 24 },
-    [CharacterFrame.ChairUpLeft]: { x: 3, y: 24 },
-    [CharacterFrame.FloorDownRight]: { x: 2, y: 29 },
-    [CharacterFrame.FloorUpLeft]: { x: 4, y: 29 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 6, y: 22 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 4, y: 23 },
-  },
-  [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: 22 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingDownRight1]: { x: 1, y: 22 },
-    [CharacterFrame.WalkingDownRight2]: { x: 1, y: 22 },
-    [CharacterFrame.WalkingDownRight3]: { x: 1, y: 22 },
-    [CharacterFrame.WalkingDownRight4]: { x: 1, y: 22 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: 22 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: 22 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 2, y: 22 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -4, y: 26 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: 22 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: 23 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: 24 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: 24 },
-    [CharacterFrame.ChairDownRight]: { x: 3, y: 25 },
-    [CharacterFrame.ChairUpLeft]: { x: 3, y: 25 },
-    [CharacterFrame.FloorDownRight]: { x: 3, y: 30 },
-    [CharacterFrame.FloorUpLeft]: { x: 5, y: 30 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 5, y: 22 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 3, y: 22 },
-  },
-};
-
-const WEAPON_OFFSETS = {
-  [Gender.Female]: {
-    [CharacterFrame.StandingDownRight]: { x: -9, y: -6 },
-    [CharacterFrame.StandingUpLeft]: { x: -9, y: -6 },
-    [CharacterFrame.WalkingDownRight1]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingDownRight2]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingDownRight3]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingDownRight4]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingUpLeft1]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingUpLeft2]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingUpLeft3]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingUpLeft4]: { x: -9, y: -7 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: -8, y: -6 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -10, y: -6 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: -8, y: -6 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -10, y: -6 },
-    [CharacterFrame.RaisedHandDownRight]: { x: -9, y: -4 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: -9, y: -4 },
-    [CharacterFrame.RangeAttackDownRight]: { x: -8, y: -6 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: -8, y: -6 },
-  },
-  [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: -9, y: -7 },
-    [CharacterFrame.StandingUpLeft]: { x: -9, y: -7 },
-    [CharacterFrame.WalkingDownRight1]: { x: -8, y: -8 },
-    [CharacterFrame.WalkingDownRight2]: { x: -8, y: -8 },
-    [CharacterFrame.WalkingDownRight3]: { x: -8, y: -8 },
-    [CharacterFrame.WalkingDownRight4]: { x: -8, y: -8 },
-    [CharacterFrame.WalkingUpLeft1]: { x: -9, y: -8 },
-    [CharacterFrame.WalkingUpLeft2]: { x: -9, y: -8 },
-    [CharacterFrame.WalkingUpLeft3]: { x: -9, y: -8 },
-    [CharacterFrame.WalkingUpLeft4]: { x: -9, y: -8 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: -7, y: -7 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -11, y: -7 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: -7, y: -7 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -11, y: -7 },
-    [CharacterFrame.RaisedHandDownRight]: { x: -9, y: -5 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: -9, y: -5 },
-    [CharacterFrame.RangeAttackDownRight]: { x: -7, y: -7 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: -7, y: -7 },
-  },
-};
-
-const SHIELD_OFFSETS = {
-  [Gender.Female]: {
-    [CharacterFrame.StandingDownRight]: { x: -5, y: 5 },
-    [CharacterFrame.StandingUpLeft]: { x: -5, y: 5 },
-    [CharacterFrame.WalkingDownRight1]: { x: -5, y: 4 },
-    [CharacterFrame.WalkingDownRight2]: { x: -5, y: 4 },
-    [CharacterFrame.WalkingDownRight3]: { x: -5, y: 4 },
-    [CharacterFrame.WalkingDownRight4]: { x: -5, y: 4 },
-    [CharacterFrame.WalkingUpLeft1]: { x: -5, y: 4 },
-    [CharacterFrame.WalkingUpLeft2]: { x: -5, y: 4 },
-    [CharacterFrame.WalkingUpLeft3]: { x: -5, y: 4 },
-    [CharacterFrame.WalkingUpLeft4]: { x: -5, y: 4 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: -4, y: 5 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -6, y: 5 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: -4, y: 5 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -6, y: 5 },
-    [CharacterFrame.RaisedHandDownRight]: { x: -5, y: 7 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: -5, y: 7 },
-  },
-  [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: -5, y: 4 },
-    [CharacterFrame.StandingUpLeft]: { x: -5, y: 4 },
-    [CharacterFrame.WalkingDownRight1]: { x: -4, y: 3 },
-    [CharacterFrame.WalkingDownRight2]: { x: -4, y: 3 },
-    [CharacterFrame.WalkingDownRight3]: { x: -4, y: 3 },
-    [CharacterFrame.WalkingDownRight4]: { x: -4, y: 3 },
-    [CharacterFrame.WalkingUpLeft1]: { x: -5, y: 3 },
-    [CharacterFrame.WalkingUpLeft2]: { x: -5, y: 3 },
-    [CharacterFrame.WalkingUpLeft3]: { x: -5, y: 3 },
-    [CharacterFrame.WalkingUpLeft4]: { x: -5, y: 3 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: -3, y: 4 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -7, y: 4 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: -3, y: 4 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -7, y: 4 },
-    [CharacterFrame.RaisedHandDownRight]: { x: -5, y: 6 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: -5, y: 6 },
-  },
-};
-
-const BACK_OFFSETS = {
-  [Gender.Female]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: -17 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingDownRight1]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingDownRight2]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingDownRight3]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingDownRight4]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -17 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: 0, y: -17 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -15 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -15 },
-    [CharacterFrame.ChairDownRight]: { x: 2, y: -16 },
-    [CharacterFrame.ChairUpLeft]: { x: 3, y: -16 },
-    [CharacterFrame.FloorDownRight]: { x: 2, y: -11 },
-    [CharacterFrame.FloorUpLeft]: { x: 4, y: -11 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 1, y: -17 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 1, y: -17 },
-  },
-  [Gender.Male]: {
-    [CharacterFrame.StandingDownRight]: { x: 0, y: -18 },
-    [CharacterFrame.StandingUpLeft]: { x: 0, y: -18 },
-    [CharacterFrame.WalkingDownRight1]: { x: 1, y: -18 },
-    [CharacterFrame.WalkingDownRight2]: { x: 1, y: -18 },
-    [CharacterFrame.WalkingDownRight3]: { x: 1, y: -18 },
-    [CharacterFrame.WalkingDownRight4]: { x: 1, y: -18 },
-    [CharacterFrame.WalkingUpLeft1]: { x: 0, y: -18 },
-    [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -18 },
-    [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -18 },
-    [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -18 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 2, y: -18 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: -2, y: -18 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 2, y: -18 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: -18 },
-    [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -16 },
-    [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -16 },
-    [CharacterFrame.ChairDownRight]: { x: 3, y: -15 },
-    [CharacterFrame.ChairUpLeft]: { x: 3, y: -15 },
-    [CharacterFrame.FloorDownRight]: { x: 3, y: -10 },
-    [CharacterFrame.FloorUpLeft]: { x: 5, y: -10 },
-    [CharacterFrame.RangeAttackDownRight]: { x: 2, y: -18 },
-    [CharacterFrame.RangeAttackUpLeft]: { x: 2, y: -18 },
-  },
-};
-
 export const CHARACTER_FRAME_OFFSETS = {
   [Gender.Female]: {
     [CharacterFrame.StandingDownRight]: {
