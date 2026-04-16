@@ -311,12 +311,6 @@ export class Client {
       }
 
       document.title = config.title;
-
-      const mainMenuLogo =
-        document.querySelector<HTMLDivElement>('#main-menu-logo')!;
-      if (mainMenuLogo) {
-        mainMenuLogo!.setAttribute('data-slogan', config.slogan);
-      }
     });
     this.atlas = new Atlas(this);
     this.sans11 = new Sans11Font(this.atlas);

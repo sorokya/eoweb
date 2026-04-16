@@ -222,7 +222,11 @@ export class AudioController {
         this.midiSynth.connect(this.midiContext.destination);
 
         if (!this.sfBuffer) {
-          const res = await fetch('/gm.sf2');
+          if (!this.client.config.soundFont) {
+            console.warn('No sound font specified in config; MIDI disabled');
+            return;
+          }
+          const res = await fetch(`/${this.client.config.soundFont}`);
           this.sfBuffer = await res.arrayBuffer();
         }
         await this.midiSynth.soundBankManager.addSoundBank(this.sfBuffer, 'gm');
