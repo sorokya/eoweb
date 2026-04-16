@@ -20,6 +20,7 @@ export { InventoryDialog } from './dialogs/inventory-dialog';
 export { JukeboxDialog } from './dialogs/jukebox-dialog';
 export { QuestsDialog } from './dialogs/quests-dialog';
 export { SettingsDialog } from './dialogs/settings-dialog';
+export { SocialDialog } from './dialogs/social-dialog';
 export { SpellsDialog } from './dialogs/spells-dialog';
 // HUD components
 export { HotBar } from './hud/hot-bar';

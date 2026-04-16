@@ -141,8 +141,7 @@ function handleInitPlayersList(
   client: Client,
   data: InitInitServerPacket.ReplyCodeDataPlayersList,
 ) {
-  data.playersList.players.sort((a, b) => a.name.localeCompare(b.name));
-  client.emit('playersListUpdated', data.playersList.players);
+  client.socialController.notifyPlayersList(data.playersList.players);
 }
 
 function handleInitOutOfDate(

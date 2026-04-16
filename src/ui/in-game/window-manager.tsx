@@ -18,7 +18,8 @@ export type DialogId =
   | 'quests'
   | 'jukebox'
   | 'settings'
-  | 'chat-log';
+  | 'chat-log'
+  | 'social';
 
 type DialogMeta = {
   /** Saved layout preference (persisted to localStorage). */

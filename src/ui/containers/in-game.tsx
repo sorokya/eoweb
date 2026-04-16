@@ -19,6 +19,7 @@ import {
   PlayerHud,
   QuestsDialog,
   SettingsDialog,
+  SocialDialog,
   SpellsDialog,
   StatusMessages,
   TouchActionButtons,
@@ -35,6 +36,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'jukebox',
   'settings',
   'chat-log',
+  'social',
 ];
 
 function DialogById({ id }: { id: DialogId }) {
@@ -53,6 +55,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <SettingsDialog />;
     case 'chat-log':
       return <ChatLogDialog />;
+    case 'social':
+      return <SocialDialog />;
   }
 }
 

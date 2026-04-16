@@ -4,12 +4,14 @@ import {
   EmoteReportClientPacket,
   type Emote as EmoteType,
   type EquipmentPaperdoll,
+  type OnlinePlayer,
   PaperdollRequestClientPacket,
   PartyAcceptClientPacket,
   PartyRemoveClientPacket,
   PartyRequestClientPacket,
   PartyRequestType,
   PartyTakeClientPacket,
+  PlayersRequestClientPacket,
   TradeRequestClientPacket,
 } from 'eolib';
 
@@ -21,8 +23,12 @@ type PaperdollOpenedData = {
   equipment: EquipmentPaperdoll;
 };
 
+type PlayerListSubscriber = (players: OnlinePlayer[]) => void;
+
 export class SocialController {
   private client: Client;
+  playerList: OnlinePlayer[] = [];
+  private playerListSubscribers: PlayerListSubscriber[] = [];
 
   constructor(client: Client) {
     this.client = client;
@@ -108,5 +114,26 @@ export class SocialController {
     const packet = new PartyTakeClientPacket();
     packet.membersCount = this.client.partyMembers.length;
     this.client.bus!.send(packet);
+  }
+
+  requestOnlinePlayers(): void {
+    this.client.bus!.send(new PlayersRequestClientPacket());
+  }
+
+  subscribePlayerList(callback: PlayerListSubscriber) {
+    this.playerListSubscribers.push(callback);
+  }
+
+  unsubscribePlayerList(callback: PlayerListSubscriber) {
+    this.playerListSubscribers = this.playerListSubscribers.filter(
+      (cb) => cb !== callback,
+    );
+  }
+
+  notifyPlayersList(players: OnlinePlayer[]) {
+    this.playerList = players;
+    for (const subscriber of this.playerListSubscribers) {
+      subscriber(players);
+    }
   }
 }
