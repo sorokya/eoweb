@@ -20,6 +20,20 @@ applyUiScale();
 
 const client = new Client();
 
+// Unlock audio after the first user gesture (browser autoplay policy).
+// One-time handler on click/keydown/touchstart.
+(function addGestureUnlock() {
+  const unlock = () => {
+    client.audioController.notifyGesture();
+    window.removeEventListener('click', unlock, true);
+    window.removeEventListener('keydown', unlock, true);
+    window.removeEventListener('touchstart', unlock, true);
+  };
+  window.addEventListener('click', unlock, true);
+  window.addEventListener('keydown', unlock, true);
+  window.addEventListener('touchstart', unlock, true);
+})();
+
 // Apply persisted theme on startup
 (function applyTheme() {
   const theme = client.configController.theme;

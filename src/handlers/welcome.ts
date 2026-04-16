@@ -153,6 +153,10 @@ function handleEnterGame(
   client.usageController.usageTicks = USAGE_TICKS;
   client.setState(GameState.InGame);
   client.emit('enterGame', { news: data.news });
+  client.audioController.handleMapMusic(
+    client.map.musicId,
+    client.map.musicControl,
+  );
   client.bus!.send(new GlobalOpenClientPacket());
   const diffMap = client.atlas.mapId !== client.mapId;
   client.atlas.reset();

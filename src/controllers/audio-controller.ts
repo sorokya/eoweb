@@ -1,6 +1,9 @@
-import { MapTileSpec } from 'eolib';
+import { MapMusicControl, MapTileSpec } from 'eolib';
 import { Howl, Howler, type PannerAttributes } from 'howler';
+import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
+import processorUrl from 'spessasynth_lib/dist/spessasynth_processor.min.js?url';
 import type { Client } from '@/client';
+import { GameState } from '@/game-state';
 import type { SfxId } from '@/sfx';
 import { padWithZeros } from '@/utils';
 import type { Vector2 } from '@/vector';
@@ -19,6 +22,19 @@ export class AudioController {
   private spatialCache = new Map<number, Howl>();
   private ambientHowl: Howl | null = null;
 
+  // MIDI state
+  private midiContext: AudioContext | null = null;
+  private midiSynth: WorkletSynthesizer | null = null;
+  private midiSequencer: Sequencer | null = null;
+  private sfBuffer: ArrayBuffer | null = null;
+  private synthInitPromise: Promise<void> | null = null;
+  private currentMfxId: number | null = null;
+  private pendingMusic: { mfxId: number; loop: boolean } | null = null;
+
+  // Deferred until first user gesture (browser autoplay policy)
+  private gestureUnlocked = false;
+  private queuedMusic: { mfxId: number; loop: boolean } | null = null;
+
   constructor(client: Client) {
     this.client = client;
 
@@ -35,6 +51,29 @@ export class AudioController {
       this.applyVolumeConfig(),
     );
     this.applyVolumeConfig();
+
+    // Queue title music; also try immediate autoplay (works on refresh if
+    // the browser remembers prior permission).
+    this.handleStateChange(client.state);
+    this.tryAutoplay();
+  }
+
+  /**
+   * Attempt to create an AudioContext immediately on startup.
+   * If the browser grants autoplay (context state = 'running'), unlock right
+   * away. Otherwise we leave the context in place and the first user gesture
+   * via notifyGesture() will resume it.
+   */
+  private tryAutoplay(): void {
+    this.midiContext = new AudioContext();
+    if (this.midiContext.state === 'running') {
+      this.gestureUnlocked = true;
+      if (this.queuedMusic) {
+        const { mfxId, loop } = this.queuedMusic;
+        this.queuedMusic = null;
+        this.playMusic(mfxId, loop);
+      }
+    }
   }
 
   private sfxUrl(id: SfxId): string {
@@ -46,6 +85,17 @@ export class AudioController {
     Howler.volume(cfg.masterVolume);
     if (this.ambientHowl) {
       this.ambientHowl.volume(cfg.ambientVolume);
+    }
+    this.applyMusicVolume();
+  }
+
+  private applyMusicVolume(): void {
+    if (this.midiSynth) {
+      const cfg = this.client.configController;
+      this.midiSynth.setMasterParameter(
+        'masterGain',
+        cfg.masterVolume * cfg.musicVolume,
+      );
     }
   }
 
@@ -138,15 +188,171 @@ export class AudioController {
     }
   }
 
-  // TODO: MIDI music playback via sf2 soundfont + .mid file
-  // Planned approach: parse the .mid file with a MIDI parser, then drive a
-  // sf2 soundfont synthesizer (e.g. MIDI.js or similar) to produce audio.
-  // The musicVolume config setting is already wired in ConfigController.
-  playMusic(_midiFile: string, _soundfontFile: string): void {
-    // Not yet implemented
+  /** Lazily initializes the MIDI synthesizer on first use. */
+  private async ensureSynth(): Promise<void> {
+    if (this.synthInitPromise) {
+      return this.synthInitPromise;
+    }
+
+    this.synthInitPromise = (async () => {
+      // Reuse the AudioContext created synchronously in notifyGesture() if available.
+      if (!this.midiContext) {
+        this.midiContext = new AudioContext();
+      }
+      await this.midiContext.audioWorklet.addModule(processorUrl);
+
+      this.midiSynth = new WorkletSynthesizer(this.midiContext);
+      this.midiSynth.connect(this.midiContext.destination);
+
+      if (!this.sfBuffer) {
+        const res = await fetch('/gm.sf2');
+        this.sfBuffer = await res.arrayBuffer();
+      }
+      await this.midiSynth.soundBankManager.addSoundBank(this.sfBuffer, 'gm');
+      await this.midiSynth.isReady;
+
+      this.midiSequencer = new Sequencer(this.midiSynth);
+
+      this.midiSequencer.eventHandler.addEvent(
+        'songEnded',
+        'audio-controller',
+        () => {
+          this.currentMfxId = null;
+          if (this.pendingMusic) {
+            const { mfxId, loop } = this.pendingMusic;
+            this.pendingMusic = null;
+            this.playMusic(mfxId, loop);
+          }
+        },
+      );
+
+      this.applyMusicVolume();
+    })();
+
+    return this.synthInitPromise;
   }
 
+  /** Play a MIDI file by its mfx ID. Pass `loop = true` for repeating music. */
+  async playMusic(mfxId: number, loop: boolean): Promise<void> {
+    if (this.client.configController.musicVolume <= 0) {
+      return;
+    }
+
+    // Browser autoplay policy: AudioContext can't play until a user gesture.
+    // Queue the request and wait for unlock via notifyGesture().
+    if (!this.gestureUnlocked) {
+      this.queuedMusic = { mfxId, loop };
+      return;
+    }
+
+    await this.ensureSynth();
+
+    const url = `/mfx/mfx${padWithZeros(mfxId, 3)}.mid`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      return;
+    }
+    const buffer = await res.arrayBuffer();
+
+    this.currentMfxId = mfxId;
+    this.midiSequencer!.loadNewSongList([{ binary: buffer }]);
+    this.midiSequencer!.loopCount = loop ? Number.POSITIVE_INFINITY : 0;
+    this.midiSequencer!.play();
+  }
+
+  /**
+   * Call this on the first meaningful user gesture (click / keydown / touchstart).
+   * Resumes the AudioContext (created eagerly in tryAutoplay) and starts any
+   * queued music.
+   */
+  notifyGesture(): void {
+    if (this.gestureUnlocked) {
+      return;
+    }
+    this.gestureUnlocked = true;
+
+    if (!this.midiContext) {
+      this.midiContext = new AudioContext();
+    } else if (this.midiContext.state === 'suspended') {
+      this.midiContext.resume();
+    }
+
+    if (this.queuedMusic) {
+      const { mfxId, loop } = this.queuedMusic;
+      this.queuedMusic = null;
+      this.playMusic(mfxId, loop);
+    }
+  }
+
+  /** Stop all MIDI music immediately and clear any pending music. */
   stopMusic(): void {
-    // Not yet implemented
+    if (this.midiSequencer) {
+      this.midiSequencer.pause();
+    }
+    this.currentMfxId = null;
+    this.pendingMusic = null;
+  }
+
+  /**
+   * Handle map music changes according to the map's `musicControl` field.
+   * Call this whenever a new map is loaded.
+   */
+  async handleMapMusic(
+    musicId: number,
+    control: MapMusicControl,
+  ): Promise<void> {
+    if (this.client.state !== GameState.InGame) {
+      return;
+    }
+
+    if (control === MapMusicControl.InterruptPlayNothing || musicId === 0) {
+      this.stopMusic();
+      return;
+    }
+
+    const loop =
+      control === MapMusicControl.InterruptIfDifferentPlayRepeat ||
+      control === MapMusicControl.InterruptPlayRepeat ||
+      control === MapMusicControl.FinishPlayRepeat;
+
+    switch (control) {
+      case MapMusicControl.InterruptIfDifferentPlayOnce:
+      case MapMusicControl.InterruptIfDifferentPlayRepeat:
+        if (this.currentMfxId === musicId) {
+          return;
+        }
+        await this.playMusic(musicId, loop);
+        break;
+
+      case MapMusicControl.InterruptPlayOnce:
+      case MapMusicControl.InterruptPlayRepeat:
+        await this.playMusic(musicId, loop);
+        break;
+
+      case MapMusicControl.FinishPlayOnce:
+      case MapMusicControl.FinishPlayRepeat:
+        if (this.currentMfxId === null) {
+          await this.playMusic(musicId, loop);
+        } else {
+          this.pendingMusic = { mfxId: musicId, loop };
+        }
+        break;
+    }
+  }
+
+  /**
+   * Handle game state changes to control title screen music.
+   * Title music (mfx001) plays on all non-InGame screens.
+   */
+  handleStateChange(state: GameState): void {
+    if (state === GameState.InGame) {
+      // Map music will be triggered separately via handleMapMusic in setMap().
+      this.stopMusic();
+    } else if (
+      this.currentMfxId !== 1 &&
+      this.client.configController.musicVolume > 0
+    ) {
+      this.playMusic(1, true);
+    }
   }
 }

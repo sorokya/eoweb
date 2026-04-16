@@ -605,6 +605,10 @@ export class Client {
       }
 
       this.audioController.updateListenerPosition(this.getPlayerCoords());
+      this.audioController.handleMapMusic(
+        this.map.musicId,
+        this.map.musicControl,
+      );
 
       if (!this.map.mapAvailable) {
         this.minimapEnabled = false;
@@ -681,6 +685,7 @@ export class Client {
     this.inventoryController.equipmentSwap = null;
     this.itemProtectionController.itemProtectionTimers.clear();
     this.emit('stateChanged', this.state);
+    this.audioController.handleStateChange(state);
   }
 
   connect(nextState: GameState) {

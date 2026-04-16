@@ -31,7 +31,8 @@
     "mitt": "^3.0.1",
     "pixi.js": "^8.17.1",
     "preact": "^10.29.0",
-    "react-icons": "^5.6.0"
+    "react-icons": "^5.6.0",
+    "spessasynth_lib": "^4.2.13"
   },
   "packageManager": "pnpm@10.33.0"
 }

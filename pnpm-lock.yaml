@@ -29,6 +29,9 @@ importers:
       react-icons:
         specifier: ^5.6.0
         version: 5.6.0(react@19.2.4)
+      spessasynth_lib:
+        specifier: ^4.2.13
+        version: 4.2.13
     devDependencies:
       '@biomejs/biome':
         specifier: 2.4.10
@@ -1587,6 +1590,12 @@ packages:
     resolution: {integrity: sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==}
     engines: {node: '>= 12'}
 
+  spessasynth_core@4.2.10:
+    resolution: {integrity: sha512-84TqOFezAtKjY/Titr89WLoeKTAj6BPCf4WC3/SwLdsKLB0mRKFMV4VGl3/Q009D9ZD8etXIDxl5ILU1g8djGA==}
+
+  spessasynth_lib@4.2.13:
+    resolution: {integrity: sha512-eaRWvcXY30HHCwo9FJkNE3yv81z1czXJj+xcSuM+Q5KZjzZVvOqGpj1PA4+KB2JDyB0NuF8TSb9kyD1YfsXk7A==}
+
   stack-trace@1.0.0-pre2:
     resolution: {integrity: sha512-2ztBJRek8IVofG9DBJqdy2N5kulaacX30Nz7xmkYF6ale9WBVmIy6mFBchvGX7Vx/MyjBhx+Rcxqrj+dbOnQ6A==}
     engines: {node: '>=16'}
@@ -2973,6 +2982,12 @@ snapshots:
   source-map-js@1.2.1: {}
 
   source-map@0.7.6: {}
+
+  spessasynth_core@4.2.10: {}
+
+  spessasynth_lib@4.2.13:
+    dependencies:
+      spessasynth_core: 4.2.10
 
   stack-trace@1.0.0-pre2: {}
 
