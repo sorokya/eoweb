@@ -14,8 +14,9 @@ import {
   type PagedChatResult,
   type StoredChatMessage,
 } from '@/db';
+import { formatLocaleString } from '@/locale';
 import { Button, Confirm, Select } from '@/ui/components';
-import { useClient } from '@/ui/context';
+import { useClient, useLocale } from '@/ui/context';
 import {
   type ChatChannel,
   ChatChannels,
@@ -28,15 +29,27 @@ const PAGE_SIZE = 200;
 
 const ALL_CHANNELS_VALUE = '__all__';
 
-const STATIC_CHANNEL_OPTIONS = [
-  { value: ALL_CHANNELS_VALUE, label: 'All Channels' },
-  { value: ChatChannels.Local, label: 'Local' },
-  { value: ChatChannels.Global, label: 'Global' },
-  { value: ChatChannels.Party, label: 'Party' },
-  { value: ChatChannels.Guild, label: 'Guild' },
-  { value: ChatChannels.Admin, label: 'Admin' },
-  { value: ChatChannels.System, label: 'System' },
-];
+type ChannelOption = { value: string; label: string };
+
+function buildChannelOptions(locale: {
+  chatLogAllChannels: string;
+  chatLogLocal: string;
+  chatLogGlobal: string;
+  chatLogParty: string;
+  chatLogGuild: string;
+  chatLogAdmin: string;
+  chatLogSystem: string;
+}): ChannelOption[] {
+  return [
+    { value: ALL_CHANNELS_VALUE, label: locale.chatLogAllChannels },
+    { value: ChatChannels.Local, label: locale.chatLogLocal },
+    { value: ChatChannels.Global, label: locale.chatLogGlobal },
+    { value: ChatChannels.Party, label: locale.chatLogParty },
+    { value: ChatChannels.Guild, label: locale.chatLogGuild },
+    { value: ChatChannels.Admin, label: locale.chatLogAdmin },
+    { value: ChatChannels.System, label: locale.chatLogSystem },
+  ];
+}
 
 function formatTimestamp(utc: number): string {
   return new Date(utc).toLocaleTimeString([], {
@@ -105,6 +118,7 @@ type ExportDropdownProps = {
 function ExportDropdown({ onExport }: ExportDropdownProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { locale } = useLocale();
 
   useEffect(() => {
     if (!open) return;
@@ -126,7 +140,7 @@ function ExportDropdown({ onExport }: ExportDropdownProps) {
         onClick={() => setOpen((o) => !o)}
       >
         <LuDownload size={13} />
-        Export
+        {locale.chatLogExport}
       </Button>
       {open && (
         <ul class='menu menu-xs absolute right-0 bottom-full z-50 mb-1 min-w-30 rounded border border-base-content/10 bg-base-300 p-1 shadow-lg'>
@@ -138,7 +152,7 @@ function ExportDropdown({ onExport }: ExportDropdownProps) {
                 setOpen(false);
               }}
             >
-              Plain Text
+              {locale.chatLogPlainText}
             </button>
           </li>
           <li>
@@ -149,7 +163,7 @@ function ExportDropdown({ onExport }: ExportDropdownProps) {
                 setOpen(false);
               }}
             >
-              JSON
+              {locale.chatLogJson}
             </button>
           </li>
           <li>
@@ -160,7 +174,7 @@ function ExportDropdown({ onExport }: ExportDropdownProps) {
                 setOpen(false);
               }}
             >
-              CSV
+              {locale.chatLogCsv}
             </button>
           </li>
         </ul>
@@ -171,6 +185,7 @@ function ExportDropdown({ onExport }: ExportDropdownProps) {
 
 export function ChatLogDialog() {
   const client = useClient();
+  const { locale } = useLocale();
   const characterId = client.characterId;
 
   const [search, setSearch] = useState('');
@@ -265,14 +280,14 @@ export function ChatLogDialog() {
     [characterId, channel, debouncedSearch, sortDir],
   );
 
-  const channelOptions = STATIC_CHANNEL_OPTIONS;
+  const channelOptions = buildChannelOptions(locale);
 
   return (
-    <DialogBase id='chat-log' title='Chat Log' size='lg'>
+    <DialogBase id='chat-log' title={locale.chatLogTitle} size='lg'>
       {confirmClearAll && (
         <Confirm
-          title='Clear Chat Log'
-          message='Delete all saved chat messages? This cannot be undone.'
+          title={locale.chatLogClearTitle}
+          message={locale.chatLogClearMessage}
           onYes={handleClearAll}
           onNo={() => setConfirmClearAll(false)}
         />
@@ -283,7 +298,7 @@ export function ChatLogDialog() {
         <input
           class='input input-xs flex-1'
           type='text'
-          placeholder='Search name or message…'
+          placeholder={locale.chatLogSearchPlaceholder}
           value={search}
           onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
           onKeyDown={(e) => e.stopPropagation()}
@@ -298,19 +313,31 @@ export function ChatLogDialog() {
         <button
           type='button'
           class='btn btn-ghost btn-xs shrink-0 gap-1'
-          title={sortDir === 'asc' ? 'Oldest first' : 'Newest first'}
+          title={
+            sortDir === 'asc'
+              ? locale.chatLogSortOldestFirst
+              : locale.chatLogSortNewestFirst
+          }
           onClick={toggleSortDir}
         >
           <LuArrowDownUp size={13} />
-          {sortDir === 'asc' ? 'Oldest' : 'Newest'}
+          {sortDir === 'asc'
+            ? locale.chatLogSortOldest
+            : locale.chatLogSortNewest}
         </button>
       </div>
 
       {/* Message list */}
       <div class='mt-1 h-[52vh] overflow-y-auto rounded border border-base-content/10'>
-        {loading && <p class='py-4 text-center text-xs opacity-60'>Loading…</p>}
+        {loading && (
+          <p class='py-4 text-center text-xs opacity-60'>
+            {locale.chatLogLoading}
+          </p>
+        )}
         {!loading && result.messages.length === 0 && (
-          <p class='py-4 text-center text-xs opacity-60'>No messages found.</p>
+          <p class='py-4 text-center text-xs opacity-60'>
+            {locale.chatLogNoMessages}
+          </p>
         )}
         {!loading &&
           result.messages.map((msg) => (
@@ -337,7 +364,7 @@ export function ChatLogDialog() {
                   <button
                     type='button'
                     class='btn btn-ghost btn-xs shrink-0 opacity-60 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:hover:opacity-100! [@media(hover:hover)]:group-hover:opacity-60'
-                    aria-label='Delete message'
+                    aria-label={locale.chatLogDeleteMessage}
                     onClick={() => handleDelete(msg.id)}
                   >
                     <LuTrash2 size={11} />
@@ -360,8 +387,12 @@ export function ChatLogDialog() {
         </button>
         <span class='text-xs opacity-60'>
           {result.total === 0
-            ? 'No messages'
-            : `Page ${page} of ${result.totalPages} · ${result.total} total`}
+            ? locale.chatLogNoMessagesShort
+            : formatLocaleString(locale.chatLogPagination, {
+                page: String(page),
+                totalPages: String(result.totalPages),
+                total: String(result.total),
+              })}
         </span>
         <button
           type='button'
@@ -383,7 +414,7 @@ export function ChatLogDialog() {
           onClick={() => setConfirmClearAll(true)}
         >
           <LuTrash2 size={13} />
-          Clear All
+          {locale.chatLogClearAll}
         </Button>
       </div>
     </DialogBase>

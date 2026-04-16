@@ -113,7 +113,7 @@ export function SettingsDialog() {
   ];
 
   return (
-    <DialogBase id='settings' title='Settings' size='lg'>
+    <DialogBase id='settings' title={locale.settingsTitle} size='lg'>
       <div class='flex flex-col'>
         <div class='overflow-x-auto'>
           <Tabs

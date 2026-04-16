@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { useClient } from '@/ui/context';
+import { useClient, useLocale } from '@/ui/context';
 import { useWindowManager } from '@/ui/in-game';
 import {
   ALL_COMMANDS,
@@ -91,6 +91,7 @@ type CommandPaletteProps = {
 
 export function CommandPalette({ onClose }: CommandPaletteProps) {
   const client = useClient();
+  const { locale } = useLocale();
   const { toggleDialog, isOpen: isDialogOpen } = useWindowManager();
   const [query, setQuery] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -185,7 +186,7 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
             ref={inputRef}
             class='input input-bordered w-full'
             type='text'
-            placeholder='Search commands…'
+            placeholder={locale.cmdSearchPlaceholder}
             value={query}
             onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
             onKeyDown={handleKeyDown}
@@ -196,13 +197,13 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
         <div class='flex items-center gap-3 px-4 pb-2 text-xs opacity-50'>
           <span>
             <kbd class='kbd kbd-xs'>↑</kbd>
-            <kbd class='kbd kbd-xs'>↓</kbd> navigate
+            <kbd class='kbd kbd-xs'>↓</kbd> {locale.cmdNavigate}
           </span>
           <span>
-            <kbd class='kbd kbd-xs'>↵</kbd> run
+            <kbd class='kbd kbd-xs'>↵</kbd> {locale.cmdRun}
           </span>
           <span>
-            <kbd class='kbd kbd-xs'>Esc</kbd> close
+            <kbd class='kbd kbd-xs'>Esc</kbd> {locale.cmdClose}
           </span>
         </div>
 
@@ -212,18 +213,18 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
         <ul class='menu max-h-72 overflow-y-auto p-2'>
           {navList.length === 0 && (
             <li class='py-4 text-center text-sm opacity-50'>
-              No commands found
+              {locale.cmdNoResults}
             </li>
           )}
           <CommandSection
-            title='Recently Used'
+            title={locale.cmdRecentlyUsed}
             commands={recentCommands}
             activeId={activeId}
             onHover={setActiveId}
             onSelect={execute}
           />
           <CommandSection
-            title={query ? 'Results' : 'Commands'}
+            title={query ? locale.cmdResults : locale.cmdAll}
             commands={otherCommands}
             activeId={activeId}
             onHover={setActiveId}

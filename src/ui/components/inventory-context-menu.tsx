@@ -2,6 +2,7 @@ import type { Item } from 'eolib';
 import { createPortal } from 'preact/compat';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { EOResourceID } from '@/edf';
+import { formatLocaleString } from '@/locale';
 import { useClient, useLocale } from '@/ui/context';
 
 type Props = {
@@ -31,7 +32,9 @@ export function InventoryContextMenu({ item, x, y, onClose }: Props) {
   }, [x, y]);
 
   const record = client.getEifRecordById(item.id);
-  const name = record?.name ?? `Item ${item.id}`;
+  const name =
+    record?.name ??
+    formatLocaleString(locale.itemFallbackName, { id: String(item.id) });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'preact/hooks';
+import { useLocale } from '@/ui/context';
 import { channelColor, channelLabel, isPMChannel } from '@/ui/enums';
 import type { ChatMessage, ChatTabConfig } from './chat-manager';
 
@@ -37,6 +38,7 @@ export function ChatMessageList({
   heightClass = 'max-h-40',
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
+  const { locale } = useLocale();
 
   useEffect(() => {
     const el = listRef.current;
@@ -79,7 +81,7 @@ export function ChatMessageList({
         );
       })}
       {messages.length === 0 && (
-        <div class='italic opacity-40'>No messages yet.</div>
+        <div class='italic opacity-40'>{locale.chatNoMessages}</div>
       )}
     </div>
   );

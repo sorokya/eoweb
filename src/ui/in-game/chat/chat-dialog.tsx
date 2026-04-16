@@ -3,7 +3,7 @@ import { flushSync } from 'preact/compat';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { LuPlus, LuSearch } from 'react-icons/lu';
 import { playSfxById, SfxId } from '@/sfx';
-import { useClient } from '@/ui/context';
+import { useClient, useLocale } from '@/ui/context';
 import {
   type ChatChannel,
   ChatChannels,
@@ -65,6 +65,7 @@ type PreviewProps = {
 function ChatPreview({ messages, now, onFocus }: PreviewProps) {
   const isMobile = useIsMobile();
   const client = useClient();
+  const { locale } = useLocale();
   const { vw } = useViewport();
   const shown = messages
     .slice(-PREVIEW_MAX_MESSAGES)
@@ -84,7 +85,7 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
       onPointerDown={(e) => e.stopPropagation()}
     >
       <span class='text-base-content/50 text-xs'>
-        {isMobile ? 'Tap to chat…' : 'Press enter to chat…'}
+        {isMobile ? locale.chatTapToChat : locale.chatPressEnterToChat}
       </span>
     </button>
   );
@@ -136,6 +137,7 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
 
 function ChatLogButton() {
   const { toggleDialog } = useWindowManager();
+  const { locale } = useLocale();
 
   const handleClick = useCallback(() => {
     playSfxById(SfxId.ButtonClick);
@@ -146,7 +148,7 @@ function ChatLogButton() {
     <button
       type='button'
       class='btn btn-ghost btn-xs btn-circle opacity-60 hover:opacity-100'
-      aria-label='Chat log'
+      aria-label={locale.chatLogAriaLabel}
       onClick={handleClick}
     >
       <LuSearch size={13} />
@@ -157,6 +159,7 @@ function ChatLogButton() {
 function AddTabButton() {
   const client = useClient();
   const { dialog, splitChannelToNewTab } = useChatManager();
+  const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -193,7 +196,7 @@ function AddTabButton() {
       <button
         type='button'
         class='btn btn-ghost btn-xs btn-circle opacity-60 hover:opacity-100'
-        title='Open channel in new tab'
+        title={locale.chatOpenChannelInNewTab}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();

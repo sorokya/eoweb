@@ -6,7 +6,8 @@ import {
   useRef,
   useState,
 } from 'preact/hooks';
-import { useClient } from '@/ui/context';
+import { formatLocaleString } from '@/locale';
+import { useClient, useLocale } from '@/ui/context';
 import {
   type ChatChannel,
   ChatChannels,
@@ -47,6 +48,7 @@ export const ChatInput = forwardRef<HTMLInputElement, Props>(function ChatInput(
   forwardedRef,
 ) {
   const client = useClient();
+  const { locale } = useLocale();
   const [input, setInput] = useState('');
   const internalRef = useRef<HTMLInputElement>(null);
 
@@ -106,15 +108,17 @@ export const ChatInput = forwardRef<HTMLInputElement, Props>(function ChatInput(
   if (readOnly) {
     return (
       <div class='flex border-base-content/10 border-t px-2 py-1 text-xs italic opacity-40'>
-        Read-only channel
+        {locale.chatReadOnly}
       </div>
     );
   }
 
   const placeholder =
     sendChannel && isPMChannel(sendChannel)
-      ? `Send to ${pmChannelName(sendChannel)}...`
-      : 'Say something...';
+      ? formatLocaleString(locale.chatSendTo, {
+          name: pmChannelName(sendChannel),
+        })
+      : locale.chatSaySomething;
 
   return (
     <div class='flex rounded-b-large border-base-content/10 border-t'>

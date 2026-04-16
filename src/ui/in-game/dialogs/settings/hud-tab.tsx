@@ -139,7 +139,7 @@ export function HudTab() {
                 class='btn btn-xs btn-ghost p-0.5'
                 disabled={!canMoveUp}
                 onClick={() => moveOrder(w.id, -1)}
-                aria-label='Move up'
+                aria-label={locale.settingsMoveUp}
               >
                 <FaArrowUp size={10} />
               </button>
@@ -148,7 +148,7 @@ export function HudTab() {
                 class='btn btn-xs btn-ghost p-0.5'
                 disabled={!canMoveDown}
                 onClick={() => moveOrder(w.id, 1)}
-                aria-label='Move down'
+                aria-label={locale.settingsMoveDown}
               >
                 <FaArrowDown size={10} />
               </button>

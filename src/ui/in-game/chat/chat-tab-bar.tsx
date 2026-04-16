@@ -1,6 +1,8 @@
 import { flushSync } from 'preact/compat';
 import { useCallback } from 'preact/hooks';
 import { LuX } from 'react-icons/lu';
+import { formatLocaleString } from '@/locale';
+import { useLocale } from '@/ui/context';
 import type { ChatTabConfig } from './chat-manager';
 import { useChatManager } from './chat-manager';
 
@@ -13,6 +15,7 @@ type Props = {
 
 export function ChatTabBar({ tabs, activeTabId, onFocusInput }: Props) {
   const { setActiveTab, closeTab, unreadTabs } = useChatManager();
+  const { locale } = useLocale();
 
   const handleTabClick = useCallback(
     (e: MouseEvent, tabId: string) => {
@@ -68,7 +71,9 @@ export function ChatTabBar({ tabs, activeTabId, onFocusInput }: Props) {
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => handleCloseClick(e, tab.id)}
                 tabIndex={-1}
-                aria-label={`Close ${tab.name}`}
+                aria-label={formatLocaleString(locale.chatCloseTab, {
+                  name: tab.name,
+                })}
               >
                 <LuX size={10} />
               </button>

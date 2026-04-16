@@ -15,6 +15,7 @@ import {
   FaUserSlash,
   FaUsers,
 } from 'react-icons/fa6';
+import { formatLocaleString } from '@/locale';
 import { Tabs } from '@/ui/components';
 import { useClient, useLocale } from '@/ui/context';
 import { useChatManager } from '@/ui/in-game';
@@ -77,6 +78,7 @@ function PlayerMenu({ actions }: { actions: RowActions }) {
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
+  const { locale } = useLocale();
 
   function handleOpen(e: MouseEvent) {
     e.stopPropagation();
@@ -136,7 +138,7 @@ function PlayerMenu({ actions }: { actions: RowActions }) {
                     close();
                   }}
                 >
-                  Whisper
+                  {locale.socialWhisper}
                 </button>
               </li>
               <li>
@@ -149,7 +151,9 @@ function PlayerMenu({ actions }: { actions: RowActions }) {
                     close();
                   }}
                 >
-                  {actions.isFriend ? 'Remove Friend' : 'Add Friend'}
+                  {actions.isFriend
+                    ? locale.socialRemoveFriend
+                    : locale.socialAddFriend}
                 </button>
               </li>
               <li>
@@ -162,7 +166,9 @@ function PlayerMenu({ actions }: { actions: RowActions }) {
                     close();
                   }}
                 >
-                  {actions.isIgnored ? 'Unignore' : 'Ignore'}
+                  {actions.isIgnored
+                    ? locale.socialUnignore
+                    : locale.socialIgnore}
                 </button>
               </li>
             </ul>
@@ -381,6 +387,7 @@ function IgnoreTab({
 
 export function SocialDialog() {
   const client = useClient();
+  const { locale } = useLocale();
   const { openWhisper } = useChatManager();
 
   const [playerList, setPlayerList] = useState(
@@ -469,7 +476,9 @@ export function SocialDialog() {
         label: (
           <TabLabel
             icon={<FaEarthAmericas size={12} />}
-            text={`Online (${playerList.length})`}
+            text={formatLocaleString(locale.socialOnline, {
+              count: String(playerList.length),
+            })}
           />
         ),
       },
@@ -478,7 +487,9 @@ export function SocialDialog() {
         label: (
           <TabLabel
             icon={<FaUserCheck size={12} />}
-            text={`Friends (${onlineFriendCount})`}
+            text={formatLocaleString(locale.socialFriends, {
+              count: String(onlineFriendCount),
+            })}
           />
         ),
       },
@@ -487,7 +498,9 @@ export function SocialDialog() {
         label: (
           <TabLabel
             icon={<FaUsers size={12} />}
-            text={`Guild (${guildPlayers.length})`}
+            text={formatLocaleString(locale.socialGuild, {
+              count: String(guildPlayers.length),
+            })}
           />
         ),
       },
@@ -496,12 +509,15 @@ export function SocialDialog() {
         label: (
           <TabLabel
             icon={<FaUserSlash size={12} />}
-            text={`Ignored (${onlineIgnoreCount})`}
+            text={formatLocaleString(locale.socialIgnored, {
+              count: String(onlineIgnoreCount),
+            })}
           />
         ),
       },
     ],
     [
+      locale,
       playerList.length,
       onlineFriendCount,
       guildPlayers.length,
@@ -510,7 +526,7 @@ export function SocialDialog() {
   );
 
   return (
-    <DialogBase id='social' title='Social' size='md'>
+    <DialogBase id='social' title={locale.socialTitle} size='md'>
       <div class='flex flex-col'>
         <div class='overflow-x-auto'>
           <Tabs

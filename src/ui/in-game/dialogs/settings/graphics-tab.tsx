@@ -67,7 +67,7 @@ export function GraphicsTab() {
           type='button'
           class='btn btn-xs btn-ghost'
           onClick={zoomOut}
-          aria-label='Zoom out'
+          aria-label={locale.settingsZoomOut}
         >
           −
         </button>
@@ -78,7 +78,7 @@ export function GraphicsTab() {
           type='button'
           class='btn btn-xs btn-ghost'
           onClick={zoomIn}
-          aria-label='Zoom in'
+          aria-label={locale.settingsZoomIn}
         >
           +
         </button>
