@@ -169,8 +169,8 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
 
   return (
     <div
-      class='fixed inset-0 flex items-start justify-center pt-8'
-      style={{ zIndex: PALETTE_Z, background: 'rgba(0,0,0,0.5)' }}
+      class='fixed inset-0 flex items-start justify-center bg-black/50 pt-8'
+      style={{ zIndex: PALETTE_Z }}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

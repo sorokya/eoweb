@@ -96,12 +96,12 @@ export const CHANNEL_LABELS: Record<StaticChannel, string> = {
 };
 
 export const CHANNEL_COLORS: Record<StaticChannel, string> = {
-  local: 'text-white',
-  global: 'text-yellow-300',
-  party: 'text-green-400',
-  guild: 'text-cyan-400',
-  admin: 'text-red-400',
-  system: 'text-blue-300',
+  local: 'text-base-content',
+  global: 'text-warning',
+  party: 'text-success',
+  guild: 'text-info',
+  admin: 'text-error',
+  system: 'text-primary',
 };
 
 export function isPMChannel(ch: ChatChannel): ch is PMChannel {
@@ -118,8 +118,8 @@ export function channelLabel(ch: ChatChannel): string {
 }
 
 export function channelColor(ch: ChatChannel): string {
-  if (isPMChannel(ch)) return 'text-purple-400';
-  return CHANNEL_COLORS[ch as StaticChannel] ?? 'text-white';
+  if (isPMChannel(ch)) return 'text-secondary';
+  return CHANNEL_COLORS[ch as StaticChannel] ?? 'text-base-content';
 }
 
 export enum SlotType {

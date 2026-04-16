@@ -97,21 +97,16 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
           class='wrap-break-word text-xs leading-tight'
           style={{ opacity: msgOpacity(msg.timestampUtc, now) }}
         >
-          <span
-            class={`font-semibold ${channelColor(msg.channel)} drop-shadow-[0_1px_2px_rgba(0,0,0,1)]`}
-          >
+          <span class={`font-semibold ${channelColor(msg.channel)}`}>
             [{channelLabel(msg.channel)}]
           </span>
           {msg.name && (
-            <span class='drop-shadow-[0_1px_2px_rgba(0,0,0,1)]'>
+            <span>
               {' '}
               <span class='font-semibold'>{msg.name}:</span>
             </span>
           )}
-          <span class='drop-shadow-[0_1px_2px_rgba(0,0,0,1)]'>
-            {' '}
-            {msg.message}
-          </span>
+          <span> {msg.message}</span>
         </div>
       ))}
     </div>

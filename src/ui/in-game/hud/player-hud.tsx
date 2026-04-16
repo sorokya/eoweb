@@ -51,7 +51,7 @@ function HpWidget({ stats }: WidgetProps) {
       value={stats.hp}
       max={stats.maxHp}
       icon={
-        <span class='text-red-300'>
+        <span class='text-error'>
           <FaHeart size={12} />
         </span>
       }
@@ -70,7 +70,7 @@ function TpWidget({ stats }: WidgetProps) {
       value={stats.tp}
       max={stats.maxTp}
       icon={
-        <span class='text-blue-300'>
+        <span class='text-info'>
           <GrMagic size={12} />
         </span>
       }
@@ -91,7 +91,7 @@ function TnlWidget({ stats }: WidgetProps) {
       value={tnlProgress}
       max={tnlTotal}
       icon={
-        <span class='text-yellow-300'>
+        <span class='text-warning'>
           <BiSolidStar size={12} />
         </span>
       }
@@ -103,8 +103,10 @@ function TnlWidget({ stats }: WidgetProps) {
 
 function WeightWidget({ stats }: WidgetProps) {
   return (
-    <span class='flex items-center gap-0.5 text-[10px] text-accent leading-tight'>
-      <GiWeightLiftingUp size={12} />
+    <span class='flex items-center gap-0.5 text-[10px] text-base-content leading-tight'>
+      <span class='text-accent'>
+        <GiWeightLiftingUp size={12} />
+      </span>
       {stats.weight} / {stats.maxWeight}
     </span>
   );
@@ -113,8 +115,10 @@ function WeightWidget({ stats }: WidgetProps) {
 function GoldWidget({ stats }: WidgetProps) {
   const { locale } = useLocale();
   return (
-    <div class='flex items-center gap-0.5 text-[10px] text-warning leading-tight'>
-      <GiCoins size={12} />
+    <div class='flex items-center gap-0.5 text-[10px] text-base-content leading-tight'>
+      <span class='text-secondary'>
+        <GiCoins size={12} />
+      </span>
       {formatBigNumber(stats.gold)}
       <span class='hidden md:inline'>{locale.hudGold}</span>
     </div>
