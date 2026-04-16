@@ -390,11 +390,7 @@ export function CharacterDialog() {
   }, [info, client, locale]);
 
   return (
-    <DialogBase
-      id='character'
-      title={locale.charDialogTitle}
-      defaultWidth={360}
-    >
+    <DialogBase id='character' title={locale.charDialogTitle} size='md'>
       <div class='flex flex-col gap-3'>
         <Tabs
           items={TABS as unknown as { id: string; label: string }[]}

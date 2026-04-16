@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import { CHAT_Z } from '@/ui/consts';
+import { CHAT_Z, DIALOG_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import type { DialogId } from '@/ui/in-game';
 import {
@@ -8,6 +8,7 @@ import {
   ChatLogDialog,
   ChatManagerProvider,
   CommandPalette,
+  DialogArena,
   HotBar,
   HotbarProvider,
   InventoryDialog,
@@ -51,8 +52,6 @@ function DialogById({ id }: { id: DialogId }) {
   }
 }
 
-const DIALOG_Z = 20;
-
 function InGameContent() {
   const client = useClient();
   const { isOpen, getLayout, openDialog } = useWindowManager();
@@ -95,16 +94,12 @@ function InGameContent() {
       <TouchActionButtons />
 
       {autoCenter.length > 0 && (
-        <div
-          class='pointer-events-none absolute inset-0 flex flex-col items-center justify-center md:flex-row'
+        <DialogArena
+          ids={autoCenter}
+          renderDialog={(id) => <DialogById id={id} />}
+          class='pointer-events-none absolute inset-x-0 top-8 bottom-0 lg:right-14'
           style={{ zIndex: DIALOG_Z }}
-        >
-          <div class='pointer-events-auto flex flex-col items-center gap-3 md:flex-row md:items-start'>
-            {autoCenter.map((id) => (
-              <DialogById key={id} id={id} />
-            ))}
-          </div>
-        </div>
+        />
       )}
 
       {/* Desktop bottom bar: chat left | hotbar centered | spacer right */}

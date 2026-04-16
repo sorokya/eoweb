@@ -113,7 +113,7 @@ export function SettingsDialog() {
   ];
 
   return (
-    <DialogBase id='settings' title='Settings' defaultWidth={355}>
+    <DialogBase id='settings' title='Settings' size='lg'>
       <div class='flex flex-col'>
         <div class='overflow-x-auto'>
           <Tabs

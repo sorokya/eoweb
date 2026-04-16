@@ -268,7 +268,7 @@ export function ChatLogDialog() {
   const channelOptions = STATIC_CHANNEL_OPTIONS;
 
   return (
-    <DialogBase id='chat-log' title='Chat Log' defaultWidth={480}>
+    <DialogBase id='chat-log' title='Chat Log' size='lg'>
       {confirmClearAll && (
         <Confirm
           title='Clear Chat Log'

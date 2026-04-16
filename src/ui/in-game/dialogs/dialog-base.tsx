@@ -4,11 +4,19 @@ import { Button } from '@/ui/components';
 import { useLocale } from '@/ui/context';
 import { type DialogId, useWindowManager } from '@/ui/in-game';
 
+type DialogSize = 'sm' | 'md' | 'lg';
+
+const SIZE_WIDTH: Record<DialogSize, string> = {
+  sm: 'clamp(240px, 28vw, 300px)',
+  md: 'clamp(350px, 36vw, 420px)',
+  lg: 'clamp(380px, 48vw, 560px)',
+};
+
 type DialogBaseProps = {
   id: DialogId;
   title: string;
   children?: preact.ComponentChildren;
-  defaultWidth?: number;
+  size?: DialogSize;
   /** Replaces the title text with custom content (e.g. chat tabs). */
   titleContent?: preact.ComponentChildren;
   /** Hide layout/minimize/close controls (e.g. for the main chat dialog). */
@@ -27,7 +35,7 @@ export function DialogBase({
   id,
   title,
   children,
-  defaultWidth = 300,
+  size = 'md',
   titleContent,
   hideControls = false,
   noDrag = false,
@@ -101,19 +109,22 @@ export function DialogBase({
     [id, noDrag],
   );
 
+  const dialogWidth = SIZE_WIDTH[size];
   const posStyle = isManual
     ? {
         position: 'absolute' as const,
         left: manualPos?.x ?? 0,
         top: manualPos?.y ?? 0,
         zIndex: zIndexOf(id),
-        width: defaultWidth,
-        minWidth: 160,
+        width: dialogWidth,
+        maxWidth: '90vw',
+        maxHeight: '90vh',
         touchAction: 'none' as const,
       }
     : {
-        width: defaultWidth,
-        minWidth: 160,
+        width: dialogWidth,
+        maxWidth: '90vw',
+        maxHeight: '90vh',
         flexShrink: 0,
         touchAction: 'none' as const,
       };
@@ -124,7 +135,7 @@ export function DialogBase({
       role='presentation'
       data-chat-dialog={id.startsWith('chat-') ? id : undefined}
       class={
-        'flex flex-col overflow-visible rounded-lg border border-base-content/10 bg-base-300/80 shadow-sm backdrop-blur-sm'
+        'pointer-events-auto flex flex-col overflow-hidden rounded-lg border border-base-content/10 bg-base-300/80 shadow-sm backdrop-blur-sm'
       }
       style={posStyle}
       onClick={stopProp}
@@ -169,7 +180,11 @@ export function DialogBase({
         )}
       </div>
 
-      <div class={noPadding ? '' : 'px-1 pb-1'}>{children}</div>
+      <div
+        class={`${noPadding ? '' : 'px-1 pb-1'} min-h-0 flex-1 overflow-y-auto`}
+      >
+        {children}
+      </div>
     </div>
   );
 }

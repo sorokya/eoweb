@@ -10,6 +10,8 @@ export type {
 export { ChatManagerProvider, useChatManager } from './chat/chat-manager';
 // Command palette
 export { CommandPalette } from './command-palette/command-palette';
+// Dialog arena (JS-based layout engine)
+export { DialogArena } from './dialog-arena';
 // Dialog components
 export { CharacterDialog } from './dialogs/character-dialog';
 export { ChatLogDialog } from './dialogs/chat-log-dialog';
