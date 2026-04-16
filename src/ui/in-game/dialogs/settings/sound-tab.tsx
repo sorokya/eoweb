@@ -1,5 +1,6 @@
 import { useLocale } from '@/ui/context';
 import { useConfigSetting } from '@/ui/in-game';
+import { SettingRow } from './setting-row';
 import { SliderInput } from './slider-input';
 
 export function SoundTab() {
@@ -29,6 +30,12 @@ export function SoundTab() {
     (c, v) => c.setMusicVolume(v),
   );
 
+  const [forceMusicLoop, setForceMusicLoop] = useConfigSetting<boolean>(
+    'forceMusicLoop',
+    (c) => c.forceMusicLoop,
+    (c, v) => c.setForceMusicLoop(v),
+  );
+
   return (
     <div class='flex flex-col gap-3 p-2'>
       <SliderInput
@@ -54,6 +61,17 @@ export function SoundTab() {
         value={music}
         onChange={setMusic}
       />
+      <div class='divider my-0' />
+      <SettingRow label={locale.settingsMusicForceLoop} asLabel>
+        <input
+          type='checkbox'
+          class='checkbox checkbox-sm'
+          checked={forceMusicLoop}
+          onChange={(e) =>
+            setForceMusicLoop((e.target as HTMLInputElement).checked)
+          }
+        />
+      </SettingRow>
     </div>
   );
 }

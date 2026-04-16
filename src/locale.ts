@@ -142,6 +142,9 @@ export const locales = {
     settingsEffectVolume: 'Effect Volume',
     settingsAmbientVolume: 'Ambient Volume',
     settingsMusicVolume: 'Music Volume',
+    settingsMusicForceLoop: 'Always Loop Music',
+    settingsMusicForceLoopHint:
+      'Forces map music tracks to loop even when they are not set to loop.',
     // Social tab
     settingsWhispers: 'Whispers',
     settingsTradeRequests: 'Trade Requests',

@@ -35,6 +35,8 @@ export class AudioController {
   private gestureUnlocked = false;
   private queuedMusic: { mfxId: number; loop: boolean } | null = null;
 
+  private alwaysLoop = true;
+
   constructor(client: Client) {
     this.client = client;
 
@@ -48,6 +50,9 @@ export class AudioController {
       this.applyVolumeConfig(),
     );
     client.configController.subscribe('musicVolume', () =>
+      this.applyVolumeConfig(),
+    );
+    client.configController.subscribe('forceMusicLoop', () =>
       this.applyVolumeConfig(),
     );
     this.applyVolumeConfig();
@@ -91,6 +96,7 @@ export class AudioController {
     if (this.ambientHowl) {
       this.ambientHowl.volume(cfg.ambientVolume);
     }
+    this.alwaysLoop = cfg.forceMusicLoop;
     this.applyMusicVolume();
   }
 
@@ -238,11 +244,13 @@ export class AudioController {
           'songEnded',
           'audio-controller',
           () => {
-            this.currentMfxId = null;
             if (this.pendingMusic) {
               const { mfxId, loop } = this.pendingMusic;
+              this.currentMfxId = null;
               this.pendingMusic = null;
               this.playMusic(mfxId, loop);
+            } else if (this.alwaysLoop && this.currentMfxId !== null) {
+              this.playMusic(this.currentMfxId, true);
             }
           },
         );

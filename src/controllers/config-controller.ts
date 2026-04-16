@@ -28,6 +28,7 @@ type GlobalConfig = {
   effectVolume: number;
   ambientVolume: number;
   musicVolume: number;
+  forceMusicLoop: boolean;
   // Social
   whispers: SocialFilter;
   tradeRequests: SocialFilter;
@@ -69,6 +70,7 @@ const DEFAULTS: GlobalConfig = {
   effectVolume: 1,
   ambientVolume: 1,
   musicVolume: 1,
+  forceMusicLoop: true,
   whispers: 'all',
   tradeRequests: 'all',
   partyRequests: 'all',
@@ -242,6 +244,16 @@ export class ConfigController {
     this.global.musicVolume = value;
     this.saveGlobal();
     this.emit('musicVolume');
+  }
+
+  get forceMusicLoop(): boolean {
+    return this.global.forceMusicLoop;
+  }
+
+  setForceMusicLoop(value: boolean): void {
+    this.global.forceMusicLoop = value;
+    this.saveGlobal();
+    this.emit('forceMusicLoop');
   }
 
   // ── Social ──────────────────────────────────────────────────────────────────
