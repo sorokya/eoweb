@@ -1,5 +1,6 @@
 import { MapTileSpec } from 'eolib';
 import type { Client } from '@/client';
+import { setSfxVolume } from '@/sfx';
 import { getDistance, getVolumeFromDistance, padWithZeros } from '@/utils';
 import type { Vector2 } from '@/vector';
 
@@ -7,9 +8,38 @@ export class AudioController {
   private client: Client;
   ambientSound: AudioBufferSourceNode | null = null;
   ambientVolume: GainNode | null = null;
+  private masterGain: GainNode | null = null;
 
   constructor(client: Client) {
     this.client = client;
+
+    // Keep gain nodes in sync whenever volume settings change
+    client.configController.subscribe('masterVolume', () =>
+      this.applyVolumeConfig(),
+    );
+    client.configController.subscribe('ambientVolume', () =>
+      this.applyVolumeConfig(),
+    );
+    client.configController.subscribe('effectVolume', () =>
+      this.applyVolumeConfig(),
+    );
+    this.applyVolumeConfig();
+  }
+
+  private applyVolumeConfig(): void {
+    const cfg = this.client.configController;
+    setSfxVolume(cfg.masterVolume * cfg.effectVolume);
+    if (this.ambientSound && this.ambientVolume && this.masterGain) {
+      // masterGain handles master volume; ambientVolume handles per-source distance + ambient setting
+      this.masterGain.gain.value = cfg.masterVolume;
+      // Re-run distance-based ambient calc to pick up new ambientVolume multiplier
+      this.setAmbientVolume();
+    }
+  }
+
+  private effectiveAmbientGain(distanceGain: number): number {
+    const cfg = this.client.configController;
+    return distanceGain * cfg.ambientVolume * cfg.masterVolume;
   }
 
   setAmbientVolume(): void {
@@ -32,8 +62,8 @@ export class AudioController {
     sources.sort((a, b) => a.distance - b.distance);
     if (sources.length) {
       const distance = sources[0].distance;
-      const volume = getVolumeFromDistance(distance);
-      this.ambientVolume!.gain.value = volume;
+      const distanceGain = getVolumeFromDistance(distance);
+      this.ambientVolume!.gain.value = this.effectiveAmbientGain(distanceGain);
     }
   }
 
@@ -43,6 +73,10 @@ export class AudioController {
       this.ambientSound = null;
       this.ambientVolume.disconnect();
       this.ambientVolume = null;
+    }
+    if (this.masterGain) {
+      this.masterGain.disconnect();
+      this.masterGain = null;
     }
   }
 
@@ -58,10 +92,13 @@ export class AudioController {
       .then((buffer) => {
         this.ambientSound = context.createBufferSource();
         this.ambientVolume = context.createGain();
+        this.masterGain = context.createGain();
         this.ambientSound.connect(this.ambientVolume);
+        this.ambientVolume.connect(this.masterGain);
         this.ambientSound.buffer = buffer;
         this.ambientSound.loop = true;
-        this.ambientVolume.connect(context.destination);
+        this.masterGain.gain.value = this.client.configController.masterVolume;
+        this.masterGain.connect(context.destination);
         this.setAmbientVolume();
         this.ambientSound.start(0);
       });

@@ -45,7 +45,7 @@ export function Select({
   if (label) {
     return (
       <label class='flex flex-col gap-1'>
-        <span class='label text-xs'>{label}</span>
+        <span class='label-text text-xs'>{label}</span>
         <select
           class={`select ${variantClasses} ${className}`}
           value={value}

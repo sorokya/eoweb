@@ -27,7 +27,7 @@ export function CycleInput({
 
   return (
     <div class='flex items-center gap-2'>
-      <span class='label flex-1 text-sm'>{label}</span>
+      <span class='label-text flex-1 text-sm'>{label}</span>
       <div class='flex items-center gap-1'>
         <button type='button' class='btn btn-xs btn-ghost' onClick={prev}>
           {'<'}

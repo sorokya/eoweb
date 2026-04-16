@@ -104,15 +104,22 @@ export enum SfxId {
 const SFX: HTMLAudioElement[] = [];
 const pool: HTMLAudioElement[] = [];
 
+let sfxVolume = 1.0;
+
+export function setSfxVolume(v: number) {
+  sfxVolume = Math.max(0, Math.min(1, v));
+}
+
 export function playSfxById(id: SfxId, volume = 1.0) {
+  const effective = volume * sfxVolume;
   const sfx = SFX[id];
   if (!sfx) {
-    loadSfxById(id, true, volume);
+    loadSfxById(id, true, effective);
     return;
   }
 
   const dupe = sfx.cloneNode(true) as HTMLAudioElement;
-  dupe.volume = volume;
+  dupe.volume = effective;
   dupe.play();
 
   dupe.addEventListener('ended', () => {

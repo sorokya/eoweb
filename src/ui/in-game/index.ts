@@ -29,6 +29,7 @@ export { TouchJoystick } from './hud/touch-joystick';
 export type { DragDropResult, DragInfo } from './item-drag-context';
 // Drag
 export { ItemDragProvider, useItemDrag } from './item-drag-context';
+export { useConfigSetting } from './use-config-setting';
 export {
   clearAllDialogLayouts,
   type DialogLayout,

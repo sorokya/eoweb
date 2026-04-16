@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes:
-    dim --default,
-    light;
+  themes: all;
 }
 
 *:not(.select-text) {

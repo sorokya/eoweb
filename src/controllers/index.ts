@@ -8,6 +8,15 @@ export { ChatController } from './chat-controller';
 export { ChestController } from './chest-controller';
 export { CleanupController } from './cleanup-controller';
 export { CommandController } from './command-controller';
+export type {
+  FpsLimit,
+  HudPosition,
+  HudWidget,
+  HudWidgetId,
+  Language,
+  SocialFilter,
+} from './config-controller';
+export { ConfigController, DEFAULT_HUD_WIDGETS } from './config-controller';
 export { DrunkController } from './drunk-controller';
 export { GuildController } from './guild-controller';
 export { InventoryController } from './inventory-controller';

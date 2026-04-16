@@ -48,6 +48,7 @@ import {
   ChestController,
   CleanupController,
   CommandController,
+  ConfigController,
   DrunkController,
   GuildController,
   InventoryController,
@@ -224,6 +225,7 @@ export class Client {
   onlinePlayers: OnlinePlayer[] = [];
   playerTriggeredDisconnect = false;
   locale = locales[defaultLocale];
+  configController = new ConfigController();
 
   constructor() {
     registerAllHandlers(this);

@@ -37,7 +37,7 @@ export function ProgressBar({
       </div>
 
       {/* Full bar: shown on md+ screens only */}
-      <div class='hidden w-full min-w-0 max-w-30 items-center gap-1 md:flex'>
+      <div class='hidden w-28 items-center gap-1 md:flex'>
         <span class='flex w-5 shrink-0 items-center justify-end opacity-70'>
           {icon}
         </span>

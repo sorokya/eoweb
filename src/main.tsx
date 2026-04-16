@@ -20,6 +20,12 @@ applyUiScale();
 
 const client = new Client();
 
+// Apply persisted theme on startup
+(function applyTheme() {
+  const theme = client.configController.theme;
+  document.documentElement.dataset.theme = theme;
+})();
+
 // ── Render Loop ──────────────────────────────────────────────────────────
 
 let accumulator = 0;
@@ -28,13 +34,29 @@ const MAX_ACCUMULATOR = TICK * 10;
 window.addEventListener('DOMContentLoaded', async () => {
   await client.initPixi();
 
+  // Apply FPS limit from config
+  const applyFps = () => {
+    client.app.ticker.maxFPS = client.configController.fpsLimit;
+  };
+  applyFps();
+  window.addEventListener('eoweb:config-changed', (e) => {
+    if ((e as CustomEvent<{ key: string }>).detail.key === 'fpsLimit') {
+      applyFps();
+    }
+    if ((e as CustomEvent<{ key: string }>).detail.key === 'theme') {
+      document.documentElement.dataset.theme = client.configController.theme;
+    }
+  });
+
   client.app.ticker.add((ticker) => {
     accumulator = Math.min(accumulator + ticker.deltaMS, MAX_ACCUMULATOR);
     while (accumulator >= TICK) {
       client.tick();
       accumulator -= TICK;
     }
-    const interpolation = accumulator / TICK;
+    const interpolation = client.configController.interpolation
+      ? accumulator / TICK
+      : 1;
     client.render(interpolation);
   });
 

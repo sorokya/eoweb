@@ -788,6 +788,14 @@ export class MapRenderer {
       return;
     }
 
+    // Debug layer visibility
+    if (
+      entity.layer <= Layer.Overlay2 &&
+      !this.client.configController.layerVisible(entity.layer)
+    ) {
+      return;
+    }
+
     this._coordsBuffer.x = entity.x;
     this._coordsBuffer.y = entity.y;
 
