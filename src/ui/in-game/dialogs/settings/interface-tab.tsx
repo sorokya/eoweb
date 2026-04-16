@@ -5,6 +5,7 @@ import {
   UI_SCALE_OPTIONS,
   useConfigSetting,
   useRepositionMode,
+  useUiScale,
 } from '@/ui/in-game';
 import { SettingRow } from './setting-row';
 
@@ -60,11 +61,7 @@ export function InterfaceTab() {
   const { locale } = useLocale();
   const [repositionMode, setRepositionMode] = useRepositionMode();
 
-  const [scaleIndex, setScaleIndex] = useConfigSetting<number>(
-    'uiScaleIndex',
-    (c) => c.uiScaleIndex,
-    (c, v) => c.setUiScaleIndex(v),
-  );
+  const [scaleIndex, setScaleIndex] = useUiScale();
 
   const [theme, setTheme] = useConfigSetting<string>(
     'theme',
