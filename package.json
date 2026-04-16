@@ -15,6 +15,7 @@
     "@biomejs/biome": "2.4.10",
     "@preact/preset-vite": "^2.10.5",
     "@tailwindcss/vite": "^4.2.2",
+    "@types/howler": "^2.2.12",
     "@types/node": "^25.5.0",
     "daisyui": "^5.5.19",
     "knip": "^6.2.0",
@@ -25,6 +26,7 @@
   },
   "dependencies": {
     "eolib": "^2.0.1",
+    "howler": "^2.2.4",
     "idb": "^8.0.3",
     "mitt": "^3.0.1",
     "pixi.js": "^8.17.1",

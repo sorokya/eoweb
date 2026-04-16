@@ -72,7 +72,7 @@ export class MovementController {
     packet.walkAction.timestamp = timestamp;
     this.client.bus!.send(packet);
     this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
-    this.client.audioController.setAmbientVolume();
+    this.client.audioController.updateListenerPosition(coords);
   }
 
   attack(direction: Direction, timestamp: number): void {

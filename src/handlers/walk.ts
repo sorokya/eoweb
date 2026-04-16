@@ -13,7 +13,6 @@ import {
   EffectAnimation,
   EffectTargetCharacter,
 } from '@/render';
-import { playSfxById } from '@/sfx';
 import { getPrevCoords } from '@/utils';
 
 function handleWalkPlayer(client: Client, reader: EoReader) {
@@ -50,7 +49,7 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
 
   if (spec && spec.tileSpec === MapTileSpec.Water) {
     const metadata = client.getEffectMetadata(9);
-    playSfxById(metadata.sfx);
+    client.audioController.playAtPosition(metadata.sfx, packet.coords);
     client.animationController.effects.push(
       new EffectAnimation(
         9,

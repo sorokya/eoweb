@@ -81,7 +81,7 @@ import { defaultLocale, formatLocaleString, locales } from '@/locale';
 import { MapRenderer } from '@/map';
 import { MinimapRenderer } from '@/minimap';
 import { CharacterDeathAnimation, NpcDeathAnimation } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { playSfxById, SfxId, setAudioController } from '@/sfx';
 import type { ISlot } from '@/ui/enums';
 import type {
   EffectMetadata,
@@ -271,6 +271,7 @@ export class Client {
     this.movementController = new MovementController(this);
     this.keyboardController = new KeyboardController(this);
     this.audioController = new AudioController(this);
+    setAudioController(this.audioController);
     this.authenticationController = new AuthenticationController(this);
     this.bankController = new BankController(this);
     this.boardController = new BoardController(this);
@@ -602,6 +603,8 @@ export class Client {
       if (this.map.ambientSoundId) {
         this.audioController.startAmbientSound();
       }
+
+      this.audioController.updateListenerPosition(this.getPlayerCoords());
 
       if (!this.map.mapAvailable) {
         this.minimapEnabled = false;
