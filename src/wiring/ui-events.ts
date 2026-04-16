@@ -100,6 +100,7 @@ interface UiEventDeps {
   questDialog: { on(event: string, cb: EventCallback): void };
   shopDialog: { on(event: string, cb: EventCallback): void };
   bankDialog: { on(event: string, cb: EventCallback): void };
+  jukeboxDialog: { on(event: string, cb: EventCallback): void };
   lockerDialog: {
     getItemAmount(id: number): number;
   };
@@ -372,6 +373,11 @@ export function wireUiEvents(deps: UiEventDeps): void {
 
   // Bank dialog
   wireBankEvents(deps);
+
+  // Jukebox dialog
+  deps.jukeboxDialog.on('requestSong', ({ trackId }: { trackId: number }) => {
+    client.jukeboxController.requestSong(trackId);
+  });
 
   // Stats
   deps.stats.on('confirmTraining', () => {

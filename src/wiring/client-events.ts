@@ -60,6 +60,10 @@ interface ClientEventDeps {
   bankDialog: { show(): void };
   barberDialog: { show(): void };
   boardDialog: { setData(posts: unknown): void; show(): void };
+  jukeboxDialog: {
+    setRequestedBy(requestedBy: string | null): void;
+    show(): void;
+  };
   lockerDialog: { setItems(items: unknown): void; show(): void };
   skillMasterDialog: {
     setData(name: string, skills: unknown): void;
@@ -240,6 +244,15 @@ export function wireClientEvents(deps: ClientEventDeps): void {
   client.on('boardOpened', ({ posts }) => {
     deps.boardDialog.setData(posts);
     deps.boardDialog.show();
+  });
+
+  client.on('jukeboxOpened', ({ requestedBy }) => {
+    deps.jukeboxDialog.setRequestedBy(requestedBy);
+    deps.jukeboxDialog.show();
+  });
+
+  client.on('jukeboxUpdated', ({ requestedBy }) => {
+    deps.jukeboxDialog.setRequestedBy(requestedBy);
   });
 
   client.on('lockerOpened', ({ items }) => {

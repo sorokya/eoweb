@@ -217,6 +217,11 @@ export class MouseController {
           return;
         }
 
+        if (tileSpec === MapTileSpec.Jukebox) {
+          this.client.jukeboxController.open(this.client.mouseCoords);
+          return;
+        }
+
         if (
           this.client.mapController.isFacingChairAt(this.client.mouseCoords) &&
           !this.client.mapController.occupied(this.client.mouseCoords)

@@ -11,6 +11,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
   <title>EO Web Client</title>
+  <link rel="preload" href="/soundfonts/GeneralUser-GS.sf2" as="fetch" crossorigin>
+  <link rel="preload" href="/spessasynth_processor.min.js" as="script">
 </head>
 
 <body>
@@ -345,6 +347,12 @@
           <span class="balance"></span>
           <div class="item-list"></div>
           <button class="img-btn" type="button" data-id="ok"></button>
+        </div>
+
+        <div id="jukebox-dialog" class="hidden">
+          <span class="title"></span>
+          <div class="item-list"></div>
+          <button class="img-btn" type="button" data-id="cancel"></button>
         </div>
 
         <div id="locker" class="hidden">
