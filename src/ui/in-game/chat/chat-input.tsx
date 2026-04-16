@@ -1,5 +1,11 @@
 import { forwardRef } from 'preact/compat';
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'preact/hooks';
 import { useClient } from '@/ui/context';
 import {
   type ChatChannel,
@@ -33,10 +39,11 @@ type Props = {
   onDismiss?: () => void;
   /** Whether to auto-focus the input on mount / tab change. Default: true. */
   autoFocus?: boolean;
+  position: 'top' | 'bottom';
 };
 
 export const ChatInput = forwardRef<HTMLInputElement, Props>(function ChatInput(
-  { tab, onActivity, onDismiss, autoFocus = true },
+  { tab, onActivity, onDismiss, autoFocus = true, position },
   forwardedRef,
 ) {
   const client = useClient();
@@ -89,6 +96,13 @@ export const ChatInput = forwardRef<HTMLInputElement, Props>(function ChatInput(
     [handleSend, input, onDismiss],
   );
 
+  const borderStyles = useMemo(() => {
+    if (position === 'bottom') {
+      return 'rounded-t-none rounded-bl-none rounded-tr-md';
+    }
+    return 'rounded-b-none rounded-tl-md rounded-tr-none';
+  }, [position]);
+
   if (readOnly) {
     return (
       <div class='flex border-base-content/10 border-t px-2 py-1 text-xs italic opacity-40'>
@@ -114,7 +128,7 @@ export const ChatInput = forwardRef<HTMLInputElement, Props>(function ChatInput(
           }
         }}
         type='text'
-        class='input input-xs flex-1 rounded-t-none rounded-br-none rounded-bl-large bg-transparent text-xs focus:outline-none'
+        class={`input input-xs flex-1 ${borderStyles} bg-transparent text-xs focus:outline-none`}
         placeholder={placeholder}
         value={input}
         onInput={(e) => {

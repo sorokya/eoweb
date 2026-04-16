@@ -226,7 +226,7 @@ function AddTabButton() {
 
 export function ChatDialog() {
   const client = useClient();
-  const { dialog, messages } = useChatManager();
+  const { dialog, messages, openChatSignal } = useChatManager();
   const isMobile = useIsMobile();
   const { vw } = useViewport();
 
@@ -246,6 +246,25 @@ export function ChatDialog() {
     flushSync(() => setFocused(true));
     inputRef.current?.focus();
   }, []);
+
+  // External signal (e.g. whisper from social dialog) opens the chat.
+  // We must NOT call onFocus() here — flushSync inside useEffect breaks the
+  // blur-handler effect. Instead just set state; a separate effect focuses input.
+  const prevSignalRef = useRef(openChatSignal);
+  useEffect(() => {
+    if (openChatSignal !== prevSignalRef.current) {
+      prevSignalRef.current = openChatSignal;
+      setFocused(true);
+    }
+  }, [openChatSignal]);
+
+  // Focus the input whenever we enter the focused state (covers the signal path
+  // above where flushSync is not available).
+  useEffect(() => {
+    if (focused) {
+      inputRef.current?.focus();
+    }
+  }, [focused]);
 
   // Pressing Enter while preview is showing opens the chat
   useEffect(() => {
@@ -313,6 +332,13 @@ export function ChatDialog() {
           maxHeight: '45vh',
         }}
       >
+        <ChatInput
+          ref={inputRef}
+          tab={activeTab}
+          onActivity={onFocus}
+          onDismiss={() => setFocused(false)}
+          position='top'
+        />
         <div class='flex items-center gap-1 border-base-content/10 border-b bg-base-content/5 px-2 py-0.5'>
           <ChatTabBar
             tabs={tabs}
@@ -326,12 +352,6 @@ export function ChatDialog() {
           tab={activeTab}
           messages={tabMessages}
           heightClass='flex-1 min-h-0 overflow-y-auto'
-        />
-        <ChatInput
-          ref={inputRef}
-          tab={activeTab}
-          onActivity={onFocus}
-          onDismiss={() => setFocused(false)}
         />
       </div>
     );
@@ -380,6 +400,7 @@ export function ChatDialog() {
             tab={activeTab}
             onActivity={onFocus}
             onDismiss={() => setFocused(false)}
+            position='bottom'
           />
         </div>
       </div>

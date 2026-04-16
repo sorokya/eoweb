@@ -165,6 +165,10 @@ type ChatManagerContextValue = {
   /** Remove a tab from a dialog, repatriating its non-PM channels back to General/System. */
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
+  /** Open (or switch to) a private-message tab for the given player name. */
+  openWhisper: (name: string) => void;
+  /** Increments each time something external requests the chat be opened/focused. */
+  openChatSignal: number;
 };
 
 const ChatManagerContext = createContext<ChatManagerContextValue | null>(null);
@@ -368,6 +372,28 @@ export function ChatManagerProvider({
     [],
   );
 
+  const [openChatSignal, setOpenChatSignal] = useState(0);
+
+  const openWhisper = useCallback((name: string) => {
+    const channel = `pm:${name.toLowerCase()}` as ChatChannel;
+    const newTabId = `pm-${name.toLowerCase()}`;
+    setDialog((prev) => {
+      const existing = prev.tabs.find((t) => t.channels.includes(channel));
+      if (existing) {
+        return { ...prev, activeTabId: existing.id };
+      }
+      return {
+        ...prev,
+        tabs: [
+          ...prev.tabs,
+          { id: newTabId, name: capitalize(name), channels: [channel] },
+        ],
+        activeTabId: newTabId,
+      };
+    });
+    setOpenChatSignal((n) => n + 1);
+  }, []);
+
   return (
     <ChatManagerContext.Provider
       value={{
@@ -377,6 +403,8 @@ export function ChatManagerProvider({
         splitChannelToNewTab,
         closeTab,
         setActiveTab,
+        openWhisper,
+        openChatSignal,
       }}
     >
       {children}

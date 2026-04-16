@@ -559,7 +559,7 @@ export function InventoryGrid({ itemIds }: Props) {
                 </div>
               ))}
             </div>,
-            document.body,
+            document.getElementById('ui') ?? document.body,
           );
         })()}
 

@@ -169,6 +169,6 @@ export function InventoryContextMenu({ item, x, y, onClose }: Props) {
         ))}
       </div>
     </>,
-    document.body,
+    document.getElementById('ui') ?? document.body,
   );
 }
