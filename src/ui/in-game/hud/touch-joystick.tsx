@@ -34,10 +34,18 @@ export function TouchJoystick() {
   });
   const [repositionMode] = useRepositionMode();
 
-  const [pos, setPos] = usePosition('touch-joystick', () => ({
-    x: MARGIN_PX,
-    y: window.innerHeight - BASE_PX - MARGIN_PX,
-  }));
+  const [pos, setPos] = usePosition(
+    'touch-joystick',
+    () => {
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const hotbarClearance = isPortrait ? 64 : 0;
+      return {
+        x: MARGIN_PX,
+        y: window.innerHeight - BASE_PX - MARGIN_PX - hotbarClearance,
+      };
+    },
+    { resetOnOrientationChange: true },
+  );
 
   const [thumbOffset, setThumbOffset] = useState({ x: 0, y: 0 });
   const activePointer = useRef<number | null>(null);

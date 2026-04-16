@@ -114,10 +114,18 @@ export function TouchActionButtons() {
   });
   const [repositionMode] = useRepositionMode();
 
-  const [pos, setPos] = usePosition('touch-actions', () => ({
-    x: window.innerWidth - OUTER_W_PX - MARGIN_PX,
-    y: window.innerHeight - OUTER_H_PX - MARGIN_PX,
-  }));
+  const [pos, setPos] = usePosition(
+    'touch-actions',
+    () => {
+      const isPortrait = window.innerHeight > window.innerWidth;
+      const hotbarClearance = isPortrait ? 64 : 0;
+      return {
+        x: window.innerWidth - OUTER_W_PX - MARGIN_PX,
+        y: window.innerHeight - OUTER_H_PX - MARGIN_PX - hotbarClearance,
+      };
+    },
+    { resetOnOrientationChange: true },
+  );
 
   const [emotePickerOpen, setEmotePickerOpen] = useState(false);
   const [selectedEmote, setSelectedEmote] =

@@ -17,6 +17,8 @@ type DialogBaseProps = {
   title: string;
   children?: preact.ComponentChildren;
   size?: DialogSize;
+  /** Explicit pixel width override — bypasses the size-based clamp. */
+  width?: string | number;
   /** Replaces the title text with custom content (e.g. chat tabs). */
   titleContent?: preact.ComponentChildren;
   /** Hide layout/minimize/close controls (e.g. for the main chat dialog). */
@@ -36,6 +38,7 @@ export function DialogBase({
   title,
   children,
   size = 'md',
+  width,
   titleContent,
   hideControls = false,
   noDrag = false,
@@ -109,22 +112,27 @@ export function DialogBase({
     [id, noDrag],
   );
 
-  const dialogWidth = SIZE_WIDTH[size];
+  const dialogWidth =
+    width !== undefined
+      ? typeof width === 'number'
+        ? `${width}px`
+        : width
+      : SIZE_WIDTH[size];
   const posStyle = isManual
     ? {
-        position: 'absolute' as const,
+        position: 'fixed' as const,
         left: manualPos?.x ?? 0,
         top: manualPos?.y ?? 0,
         zIndex: zIndexOf(id),
         width: dialogWidth,
         maxWidth: '90vw',
-        maxHeight: '90vh',
+        maxHeight: '80vh',
         touchAction: 'none' as const,
       }
     : {
         width: dialogWidth,
         maxWidth: '90vw',
-        maxHeight: '90vh',
+        maxHeight: '80vh',
         flexShrink: 0,
         touchAction: 'none' as const,
       };

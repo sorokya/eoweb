@@ -1,4 +1,5 @@
 import { Item, ItemSize } from 'eolib';
+import { createPortal } from 'preact/compat';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
@@ -13,7 +14,10 @@ import { Tabs } from './tabs';
 const TABS = 2;
 const COLS = 15;
 const ROWS = 8;
-const CELL_SIZE = 23;
+const CELL_SIZE = 26;
+
+/** Width of the grid content area in pixels. Used by InventoryDialog to size itself. */
+export const INVENTORY_GRID_WIDTH = COLS * CELL_SIZE;
 
 type ItemSpan = { cols: number; rows: number };
 
@@ -136,7 +140,11 @@ export function InventoryGrid({ itemIds }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const [positions, setPositions] = useState<ItemPosition[]>([]);
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
-  const [touchTooltipId, setTouchTooltipId] = useState<number | null>(null);
+  const [tooltip, setTooltip] = useState<{
+    id: number;
+    x: number;
+    y: number;
+  } | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef(0);
   const suppressContextMenuUntilRef = useRef(0);
@@ -144,12 +152,12 @@ export function InventoryGrid({ itemIds }: Props) {
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
 
-  // Clear touch tooltip when touching outside an inventory item
+  // Clear tooltip when touching outside an inventory item
   useEffect(() => {
     const handlePointerDown = (e: PointerEvent) => {
       if (e.pointerType !== 'touch') return;
       if (!(e.target as HTMLElement).closest('[data-inventory-item]')) {
-        setTouchTooltipId(null);
+        setTooltip(null);
       }
     };
     window.addEventListener('pointerdown', handlePointerDown);
@@ -300,17 +308,20 @@ export function InventoryGrid({ itemIds }: Props) {
     // Long-press timer for context menu (mobile): cancel drag and show menu
     let longPressTimer: ReturnType<typeof setTimeout> | null = null;
     if (e.pointerType === 'touch') {
-      setTouchTooltipId(item.id);
+      const tooltipX = Math.min(rect.right + 4, window.innerWidth - 168);
+      const tooltipY = Math.max(4, rect.top);
+      setTooltip({ id: item.id, x: tooltipX, y: tooltipY });
       longPressTimer = setTimeout(() => {
         longPressTimer = null;
         if (Date.now() < suppressContextMenuUntilRef.current) return;
-        setTouchTooltipId(null);
+        setTooltip(null);
         cancelDrag();
         setContextMenu({ item, x: e.clientX, y: e.clientY });
       }, 700);
     }
 
     playSfxById(SfxId.InventoryPickup);
+    setTooltip(null);
 
     startDrag({
       info: {
@@ -483,7 +494,6 @@ export function InventoryGrid({ itemIds }: Props) {
           const itemIsDragging =
             currentDrag?.source === 'inventory' &&
             currentDrag?.itemId === item.id;
-          const tooltipLines = getTooltipLines(item);
 
           return (
             <div
@@ -494,7 +504,7 @@ export function InventoryGrid({ itemIds }: Props) {
               data-x={pos.x}
               data-y={pos.y}
               /* biome-ignore lint/nursery/useSortedClasses: Need space */
-              class={`group absolute flex cursor-grab items-center justify-center${itemIsDragging ? ' opacity-30' : ''}`}
+              class={`absolute flex cursor-grab items-center justify-center${itemIsDragging ? ' opacity-30' : ''}`}
               style={{
                 left: pos.x * CELL_SIZE,
                 top: pos.y * CELL_SIZE,
@@ -503,31 +513,55 @@ export function InventoryGrid({ itemIds }: Props) {
               }}
               onPointerDown={(e) => onPointerDown(e, item)}
               onContextMenu={(e) => onContextMenu(e, item)}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                const r = el.getBoundingClientRect();
+                const x =
+                  r.right + 4 + 160 > window.innerWidth
+                    ? r.left - 4 - 160
+                    : r.right + 4;
+                const y = Math.min(Math.max(r.top, 4), window.innerHeight - 80);
+                setTooltip({ id: item.id, x, y });
+              }}
+              onMouseLeave={() =>
+                setTooltip((t) => (t?.id === item.id ? null : t))
+              }
             >
               <ItemIcon
                 graphicId={record.graphicId}
                 alt={record.name}
                 class='pointer-events-none max-h-full max-w-full object-contain'
               />
-              {/* Multi-line tooltip: desktop hover or touch-activated */}
-              {tooltipLines.length > 0 && (
-                <div
-                  class={`pointer-events-none absolute top-0 left-full z-50 ml-1 w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg ${touchTooltipId === item.id ? 'block' : 'hidden group-hover:block'}`}
-                >
-                  {tooltipLines.map((line, i) => (
-                    <div
-                      key={i}
-                      class={i === 0 ? 'font-semibold' : 'opacity-70'}
-                    >
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           );
         })}
       </div>
+
+      {/* Fixed-position tooltip portal — avoids scroll/clip issues inside dialogs */}
+      {tooltip &&
+        (() => {
+          const item = getVisibleItems().find((i) => i.id === tooltip.id);
+          const lines = item ? getTooltipLines(item) : [];
+          if (!lines.length) return null;
+          return createPortal(
+            <div
+              class='pointer-events-none w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg'
+              style={{
+                position: 'fixed',
+                left: tooltip.x,
+                top: tooltip.y,
+                zIndex: 9999,
+              }}
+            >
+              {lines.map((line, i) => (
+                <div key={i} class={i === 0 ? 'font-semibold' : 'opacity-70'}>
+                  {line}
+                </div>
+              ))}
+            </div>,
+            document.body,
+          );
+        })()}
 
       {/* Context menu */}
       {contextMenu && (

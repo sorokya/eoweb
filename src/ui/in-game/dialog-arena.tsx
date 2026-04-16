@@ -131,6 +131,8 @@ function ArenaSlot({ pos, slotRef, children }: ArenaSlotProps) {
 
 export type DialogArenaProps = {
   ids: DialogId[];
+  /** Returns true for dialogs that use manual (fixed) positioning — excluded from layout. */
+  isManual: (id: DialogId) => boolean;
   style?: preact.JSX.CSSProperties;
   class?: string;
   renderDialog: (id: DialogId) => preact.ComponentChildren;
@@ -140,9 +142,12 @@ export type DialogArenaProps = {
  * Positions dialogs using JS-computed absolute coordinates.
  * Layout recalculates only when the dialog list changes or the window resizes
  * (debounced). Individual dialog height changes do not affect sibling positions.
+ * Manual-layout dialogs are rendered here (to preserve component state) but
+ * excluded from the layout algorithm — DialogBase positions them via `position: fixed`.
  */
 export function DialogArena({
   ids,
+  isManual,
   style,
   class: cls,
   renderDialog,
@@ -151,6 +156,8 @@ export function DialogArena({
   const slotElemsRef = useRef<Map<DialogId, HTMLDivElement>>(new Map());
   const [positions, setPositions] = useState<Map<DialogId, Pos>>(new Map());
 
+  const centerIds = ids.filter((id) => !isManual(id));
+
   const runLayout = useCallback(() => {
     const arena = arenaRef.current;
     if (!arena) return;
@@ -158,7 +165,7 @@ export function DialogArena({
     const arenaH = arena.clientHeight;
 
     const sizes = new Map<DialogId, Size>();
-    for (const id of ids) {
+    for (const id of centerIds) {
       const el = slotElemsRef.current.get(id);
       if (el) {
         const { width: w, height: h } = el.getBoundingClientRect();
@@ -166,7 +173,8 @@ export function DialogArena({
       }
     }
 
-    setPositions(computeLayout(ids, sizes, arenaW, arenaH));
+    setPositions(computeLayout(centerIds, sizes, arenaW, arenaH));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids]);
 
   // Wait one animation frame so newly opened dialogs have had a chance to
@@ -210,7 +218,15 @@ export function DialogArena({
   return (
     <div ref={arenaRef} class={cls} style={style}>
       {ids.map((id) => (
-        <ArenaSlot key={id} pos={positions.get(id)} slotRef={getSlotRefCb(id)}>
+        // Always use ArenaSlot so the wrapper element type never changes when
+        // a dialog transitions between center and manual layout. For manual
+        // dialogs the slot position is irrelevant — DialogBase uses
+        // position:fixed and escapes the arena container.
+        <ArenaSlot
+          key={id}
+          pos={isManual(id) ? { x: 0, y: 0 } : positions.get(id)}
+          slotRef={getSlotRefCb(id)}
+        >
           {renderDialog(id)}
         </ArenaSlot>
       ))}

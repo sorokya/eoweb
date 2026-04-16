@@ -1,31 +1,20 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
 
-const STORAGE_KEY = 'eoweb:reposition-mode';
 export const REPOSITION_EVENT = 'eoweb:reposition-mode-change';
 
-function readRepositionMode(): boolean {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === 'true';
-  } catch {
-    return false;
-  }
-}
+let _enabled = false;
 
 export function useRepositionMode(): [boolean, (enabled: boolean) => void] {
-  const [enabled, setEnabled] = useState(readRepositionMode);
+  const [enabled, setEnabled] = useState(() => _enabled);
 
   useEffect(() => {
-    const handler = () => setEnabled(readRepositionMode());
+    const handler = () => setEnabled(_enabled);
     window.addEventListener(REPOSITION_EVENT, handler);
     return () => window.removeEventListener(REPOSITION_EVENT, handler);
   }, []);
 
   const update = useCallback((next: boolean) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, String(next));
-    } catch {
-      // ignore
-    }
+    _enabled = next;
     setEnabled(next);
     window.dispatchEvent(new CustomEvent(REPOSITION_EVENT));
   }, []);
