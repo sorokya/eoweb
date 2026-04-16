@@ -1,9 +1,15 @@
 import { CharacterIcon, type OnlinePlayer } from 'eolib';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { FaUser, FaUserFriends } from 'react-icons/fa';
-import { FaUserSlash, FaUsers } from 'react-icons/fa6';
+import {
+  FaEarthAmericas,
+  FaUser,
+  FaUserCheck,
+  FaUserSlash,
+  FaUsers,
+} from 'react-icons/fa6';
 import { Tabs } from '@/ui/components';
 import { useClient, useLocale } from '@/ui/context';
+import { capitalize } from '@/utils';
 import { DialogBase } from './dialog-base';
 
 type SocialTabId = 'online' | 'friends' | 'ignore';
@@ -27,67 +33,86 @@ type TabProps = {
   players: OnlinePlayer[];
 };
 
-function PlayerIcon(icon: CharacterIcon): preact.ComponentChildren {
+function iconColor(icon: CharacterIcon): string {
   switch (icon) {
-    case CharacterIcon.Player:
-    case CharacterIcon.Gm:
     case CharacterIcon.Hgm:
-      return <FaUser size={16} />;
-    case CharacterIcon.Party:
-    case CharacterIcon.GmParty:
     case CharacterIcon.HgmParty:
-      return <FaUsers size={16} />;
+      return 'text-warning';
+    case CharacterIcon.Gm:
+    case CharacterIcon.GmParty:
+      return 'text-accent';
+    case CharacterIcon.Party:
+      return 'text-success';
+    default:
+      return 'text-base-content/40';
   }
 }
 
-function PlayerBadge(player: OnlinePlayer): preact.ComponentChildren | null {
+function isInParty(icon: CharacterIcon): boolean {
+  return (
+    icon === CharacterIcon.Party ||
+    icon === CharacterIcon.GmParty ||
+    icon === CharacterIcon.HgmParty
+  );
+}
+
+function PlayerRow({ player }: { player: OnlinePlayer }) {
   const client = useClient();
   const { locale } = useLocale();
 
-  const className = client.ecf?.classes[player.classId]?.name || null;
+  const className = client.ecf?.classes[player.classId - 1]?.name ?? null;
+  const isHgm =
+    player.icon === CharacterIcon.Hgm || player.icon === CharacterIcon.HgmParty;
+  const isGm =
+    player.icon === CharacterIcon.Gm || player.icon === CharacterIcon.GmParty;
+
+  const subtitle = [`${locale.hudLvl} ${player.level}`, className, player.title]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
-    <>
-      {player.icon === CharacterIcon.Gm ||
-      player.icon === CharacterIcon.GmParty ? (
-        <span class='badge badge-accent badge-xs'>
-          {locale.adminBadgeGameMaster}
+    <li>
+      <div class='flex items-center gap-2 rounded px-3 py-1.5'>
+        <span class={`shrink-0 ${iconColor(player.icon)}`}>
+          {isInParty(player.icon) ? (
+            <FaUsers size={13} />
+          ) : (
+            <FaUser size={13} />
+          )}
         </span>
-      ) : player.icon === CharacterIcon.Hgm ||
-        player.icon === CharacterIcon.HgmParty ? (
-        <span class='badge badge-accent badge-xs'>
-          {locale.adminBadgeHighGameMaster}
-        </span>
-      ) : null}
-
-      {player.guildTag && (
-        <span class='badge badge-primary badge-xs'>{player.guildTag}</span>
-      )}
-
-      <span class='badge badge-info badge-xs'>
-        {locale.hudLvl} {player.level}
-        {className ? ` ${className}` : ''}
-      </span>
-    </>
+        <div class='min-w-0 flex-1'>
+          <div class='flex flex-wrap items-center gap-1.5'>
+            <span class='font-semibold text-sm'>{capitalize(player.name)}</span>
+            {isHgm && (
+              <span class='badge badge-warning badge-xs shrink-0'>
+                {locale.adminBadgeHighGameMaster}
+              </span>
+            )}
+            {isGm && (
+              <span class='badge badge-accent badge-xs shrink-0'>
+                {locale.adminBadgeGameMaster}
+              </span>
+            )}
+            {player.guildTag?.trim() && (
+              <span class='badge badge-primary badge-xs shrink-0'>
+                {player.guildTag.trim()}
+              </span>
+            )}
+          </div>
+          {subtitle && (
+            <p class='truncate text-base-content/50 text-xs'>{subtitle}</p>
+          )}
+        </div>
+      </div>
+    </li>
   );
 }
 
 function OnlineTab({ players }: TabProps) {
   return (
-    <ul class='menu w-full'>
+    <ul class='flex flex-col py-1'>
       {players.map((p) => (
-        <li key={p.name}>
-          <div class='flex flex-col gap-1'>
-            <div class='flex items-center gap-2'>
-              {PlayerIcon(p.icon)}
-              <span>{p.name}</span>
-              {PlayerBadge(p)}
-            </div>
-            <div>
-              {p.title && <span class='text-xs opacity-70'>{p.title}</span>}
-            </div>
-          </div>
-        </li>
+        <PlayerRow key={p.name} player={p} />
       ))}
     </ul>
   );
@@ -115,6 +140,7 @@ export function SocialDialog() {
       setPlayerList(players);
     };
 
+    client.socialController.subscribePlayerList(handlePlayerListUpdate);
     client.socialController.requestOnlinePlayers();
 
     return () => {
@@ -128,18 +154,22 @@ export function SocialDialog() {
         id: 'online',
         label: (
           <TabLabel
-            icon={<FaUsers size={12} />}
+            icon={<FaEarthAmericas size={12} />}
             text={`Online (${playerList.length})`}
           />
         ),
       },
       {
         id: 'friends',
-        label: <TabLabel icon={<FaUserFriends size={12} />} text='Friends' />,
+        label: <TabLabel icon={<FaUserCheck size={12} />} text='Friends' />,
+      },
+      {
+        id: 'guild',
+        label: <TabLabel icon={<FaUsers size={12} />} text='Guild' />,
       },
       {
         id: 'ignore',
-        label: <TabLabel icon={<FaUserSlash size={12} />} text='Ignore' />,
+        label: <TabLabel icon={<FaUserSlash size={12} />} text='Ignored' />,
       },
     ],
     [playerList.length],

@@ -28,10 +28,26 @@ type PlayerListSubscriber = (players: OnlinePlayer[]) => void;
 export class SocialController {
   private client: Client;
   playerList: OnlinePlayer[] = [];
+  friendList: string[];
+  ignoreList: string[];
+
   private playerListSubscribers: PlayerListSubscriber[] = [];
+
+  private get FRIENDS_KEY() {
+    return `${this.client.name}-friends`;
+  }
+
+  private get IGNORE_KEY() {
+    return `${this.client.name}-ignore`;
+  }
 
   constructor(client: Client) {
     this.client = client;
+
+    this.friendList = JSON.parse(
+      localStorage.getItem(this.FRIENDS_KEY) || '[]',
+    );
+    this.ignoreList = JSON.parse(localStorage.getItem(this.IGNORE_KEY) || '[]');
   }
 
   private paperdollOpenedSubscribers: ((data: PaperdollOpenedData) => void)[] =
@@ -135,5 +151,33 @@ export class SocialController {
     for (const subscriber of this.playerListSubscribers) {
       subscriber(players);
     }
+  }
+
+  addFriend(playerName: string): void {
+    if (this.friendList.includes(playerName)) {
+      return;
+    }
+
+    this.friendList.push(playerName);
+    localStorage.setItem(this.FRIENDS_KEY, JSON.stringify(this.friendList));
+  }
+
+  removeFriend(playerName: string): void {
+    this.friendList = this.friendList.filter((name) => name !== playerName);
+    localStorage.setItem(this.FRIENDS_KEY, JSON.stringify(this.friendList));
+  }
+
+  addIgnore(playerName: string): void {
+    if (this.ignoreList.includes(playerName)) {
+      return;
+    }
+
+    this.ignoreList.push(playerName);
+    localStorage.setItem(this.IGNORE_KEY, JSON.stringify(this.ignoreList));
+  }
+
+  removeIgnore(playerName: string): void {
+    this.ignoreList = this.ignoreList.filter((name) => name !== playerName);
+    localStorage.setItem(this.IGNORE_KEY, JSON.stringify(this.ignoreList));
   }
 }
