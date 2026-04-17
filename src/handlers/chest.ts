@@ -15,16 +15,12 @@ function handleChestOpen(client: Client, reader: EoReader) {
   const packet = ChestOpenServerPacket.deserialize(reader);
 
   playSfxById(SfxId.TextBoxFocus);
-  client.emit('chestOpened', {
-    items: packet.items,
-  });
+  client.chestController.handleOpened(packet.items);
 }
 
 function handleChestAgree(client: Client, reader: EoReader) {
   const packet = ChestAgreeServerPacket.deserialize(reader);
-  client.emit('chestChanged', {
-    items: packet.items,
-  });
+  client.chestController.handleChanged(packet.items);
 }
 
 function handleChestGet(client: Client, reader: EoReader) {
@@ -42,9 +38,7 @@ function handleChestGet(client: Client, reader: EoReader) {
   }
 
   client.emit('inventoryChanged', undefined);
-  client.emit('chestChanged', {
-    items: packet.items,
-  });
+  client.chestController.handleChanged(packet.items);
 }
 
 function handleChestReply(client: Client, reader: EoReader) {
@@ -61,9 +55,7 @@ function handleChestReply(client: Client, reader: EoReader) {
   }
 
   client.emit('inventoryChanged', undefined);
-  client.emit('chestChanged', {
-    items: packet.items,
-  });
+  client.chestController.handleChanged(packet.items);
 }
 
 export function registerChestHandlers(client: Client) {

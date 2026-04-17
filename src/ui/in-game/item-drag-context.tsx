@@ -16,6 +16,7 @@ export type DragDropResult =
   | { type: 'tab'; tab: number }
   | { type: 'equip-slot'; slot: EquipmentSlot }
   | { type: 'hotbar-slot'; index: number }
+  | { type: 'chest' }
   | { type: 'ground' }
   | { type: 'cancelled' };
 
@@ -184,6 +185,14 @@ export function ItemDragProvider({
           resolve({ type: 'hotbar-slot', index });
           return;
         }
+      }
+
+      const chestEl = (target as HTMLElement).closest<HTMLElement>(
+        '[data-chest-drop]',
+      );
+      if (chestEl) {
+        resolve({ type: 'chest' });
+        return;
       }
 
       resolve({ type: 'ground' });

@@ -410,6 +410,26 @@ export function InventoryGrid({ itemIds }: Props) {
             } else {
               client.inventoryController.dropItem(item.id, 1, coords);
             }
+          } else if (result.type === 'chest') {
+            const itemName = client.getEifRecordById(item.id)?.name ?? '';
+            if (item.amount > 1) {
+              const title = client.getResourceString(
+                EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
+              );
+              client.alertController.showAmount(
+                title,
+                itemName,
+                item.amount,
+                locale.chestDeposit,
+                (amount) => {
+                  if (amount !== null && amount > 0) {
+                    client.chestController.addItem(item.id, amount);
+                  }
+                },
+              );
+            } else {
+              client.chestController.addItem(item.id, 1);
+            }
           }
         }
       },

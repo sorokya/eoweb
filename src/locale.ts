@@ -238,6 +238,11 @@ export const locales = {
     chatLogDeleteMessage: 'Delete message',
     chatLogNoMessagesShort: 'No messages',
     chatLogPagination: 'Page {page} of {totalPages} · {total} total',
+    // Chest dialog
+    chestTitle: 'Chest',
+    chestEmpty: 'The chest is empty',
+    chestDepositHow: 'How many to deposit?',
+    chestDeposit: 'Deposit',
     // Dialog titles
     inventoryTitle: 'Inventory',
     questsTitle: 'Quests',

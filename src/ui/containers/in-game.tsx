@@ -7,6 +7,7 @@ import {
   ChatDialog,
   ChatLogDialog,
   ChatManagerProvider,
+  ChestDialog,
   CommandPalette,
   DialogArena,
   HotBar,
@@ -37,6 +38,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'settings',
   'chat-log',
   'social',
+  'chest',
 ];
 
 function DialogById({ id }: { id: DialogId }) {
@@ -57,6 +59,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <ChatLogDialog />;
     case 'social':
       return <SocialDialog />;
+    case 'chest':
+      return <ChestDialog />;
   }
 }
 
@@ -81,6 +85,16 @@ function InGameContent() {
     client.jukeboxController.subscribeRequestSucceeded(() => {
       closeDialog('jukebox');
     });
+
+    const handleChestOpened = () => {
+      openDialog('chest');
+    };
+    client.chestController.subscribeOpened(handleChestOpened);
+
+    const handleWalked = () => {
+      closeDialog('chest');
+    };
+    client.movementController.subscribeWalked(handleWalked);
 
     client.on('toggleCommandPalette', () => {
       setCommandPaletteOpen((open) => {
