@@ -352,7 +352,6 @@ export function ChatDialog() {
           <ChatLogButton />
         </div>
         <ChatMessageList
-          tab={activeTab}
           messages={tabMessages}
           heightClass='flex-1 min-h-0 overflow-y-auto'
         />
@@ -393,11 +392,7 @@ export function ChatDialog() {
           </div>
         </div>
         <div class='flex flex-col overflow-hidden rounded-b-lg'>
-          <ChatMessageList
-            tab={activeTab}
-            messages={tabMessages}
-            heightClass='h-[22vh]'
-          />
+          <ChatMessageList messages={tabMessages} heightClass='h-[22vh]' />
           <ChatInput
             ref={inputRef}
             tab={activeTab}
