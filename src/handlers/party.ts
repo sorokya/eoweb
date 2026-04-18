@@ -18,7 +18,7 @@ import type { Client } from '@/client';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { Emote } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize } from '@/utils';
 
 function handlePartyReply(client: Client, reader: EoReader) {
@@ -27,48 +27,36 @@ function handlePartyReply(client: Client, reader: EoReader) {
     case PartyReplyCode.AlreadyInAnotherParty: {
       const data =
         packet.replyCodeData as PartyReplyServerPacket.ReplyCodeDataAlreadyInAnotherParty;
-      client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        `${capitalize(data.playerName)} ${client.getResourceString(
-          EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_IN_ANOTHER_PARTY,
-        )}`,
-      );
+      const message = `${capitalize(data.playerName)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_IN_ANOTHER_PARTY)}`;
+      client.toastController.showWarning(message);
       client.emit('chat', {
-        tab: ChatTab.System,
+        channel: ChatChannels.System,
         icon: ChatIcon.Error,
-        message: `${capitalize(data.playerName)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_IN_ANOTHER_PARTY)}`,
+        message,
       });
       return;
     }
     case PartyReplyCode.AlreadyInYourParty: {
       const data =
         packet.replyCodeData as PartyReplyServerPacket.ReplyCodeDataAlreadyInYourParty;
-      client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        `${capitalize(data.playerName)} ${client.getResourceString(
-          EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_MEMBER,
-        )}`,
-      );
+      const message = `${capitalize(data.playerName)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_MEMBER)}`;
+      client.toastController.showWarning(message);
       client.emit('chat', {
-        tab: ChatTab.System,
+        channel: ChatChannels.System,
         icon: ChatIcon.Error,
-        message: `${capitalize(data.playerName)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_MEMBER)}`,
+        message,
       });
       return;
     }
     case PartyReplyCode.PartyIsFull: {
-      client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        client.getResourceString(
-          EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL,
-        ),
+      const message = client.getResourceString(
+        EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL,
       );
+      client.toastController.showWarning(message);
       client.emit('chat', {
-        tab: ChatTab.System,
+        channel: ChatChannels.System,
         icon: ChatIcon.Error,
-        message: client.getResourceString(
-          EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL,
-        ),
+        message,
       });
       return;
     }
@@ -104,16 +92,14 @@ function handlePartyCreate(client: Client, reader: EoReader) {
   const packet = PartyCreateServerPacket.deserialize(reader);
   client.partyMembers = packet.members;
   playSfxById(SfxId.JoinParty);
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED),
+  const message = client.getResourceString(
+    EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED,
   );
+  client.toastController.show(message);
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.PlayerParty,
-    message: client.getResourceString(
-      EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED,
-    ),
+    message,
   });
   client.emit('partyUpdated', undefined);
 }
@@ -121,16 +107,12 @@ function handlePartyCreate(client: Client, reader: EoReader) {
 function handlePartyAdd(client: Client, reader: EoReader) {
   const packet = PartyAddServerPacket.deserialize(reader);
   client.partyMembers.push(packet.member);
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    `${capitalize(packet.member.name)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_JOINED_YOUR)}`,
-  );
+  const message = `${capitalize(packet.member.name)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_JOINED_YOUR)}`;
+  client.toastController.show(message);
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.PlayerParty,
-    message: `${capitalize(packet.member.name)} ${client.getResourceString(
-      EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED,
-    )}`,
+    message,
   });
   client.emit('partyUpdated', undefined);
 }
@@ -146,16 +128,12 @@ function handlePartyRemove(client: Client, reader: EoReader) {
 
   playSfxById(SfxId.MemberLeftParty);
 
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    `${capitalize(member.name)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_LEFT_YOUR)}`,
-  );
+  const message = `${capitalize(member.name)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_LEFT_YOUR)}`;
+  client.toastController.show(message);
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.PlayerParty,
-    message: `${capitalize(member.name)} ${client.getResourceString(
-      EOResourceID.STATUS_LABEL_PARTY_LEFT_YOUR,
-    )}`,
+    message,
   });
 
   client.partyMembers = client.partyMembers.filter(
@@ -198,19 +176,22 @@ function handlePartyTargetGroup(client: Client, reader: EoReader) {
   for (const gain of packet.gains) {
     if (gain.playerId === client.playerId) {
       client.experience += gain.experience;
-      client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-        `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain.experience} EXP`,
-      );
-      client.emit('chat', {
-        message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain.experience} EXP`,
-        icon: ChatIcon.Star,
-        tab: ChatTab.System,
-      });
-
       if (gain.levelUp) {
         client.level = gain.levelUp;
       }
+
+      const message = client.getExpShareMessage(
+        gain.experience,
+        !!gain.levelUp,
+      );
+
+      client.toastController.show(message);
+      client.emit('chat', {
+        message,
+        icon: ChatIcon.Star,
+        channel: ChatChannels.System,
+      });
+
       client.emit('statsUpdate', undefined);
     }
 

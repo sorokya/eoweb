@@ -14,10 +14,12 @@ import {
   type Esf,
   type EsfRecord,
   type FileType,
+  InitInitClientPacket,
   type Item,
   type ItemMapInfo,
   MapType,
   NearbyInfo,
+  type NpcKilledData,
   type NpcMapInfo,
   type NpcType,
   type OnlinePlayer,
@@ -29,14 +31,14 @@ import {
   Weight,
 } from 'eolib';
 import mitt, { type Emitter } from 'mitt';
-import { Notyf } from 'notyf';
 import { Application, Container } from 'pixi.js';
 import { Atlas } from '@/atlas';
-import type { PacketBus } from '@/bus';
+import { PacketBus } from '@/bus';
 import { clearRectangles } from '@/collision';
 import { getDefaultConfig, loadConfig } from '@/config';
-import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS } from '@/consts';
+import { HALF_TILE_HEIGHT, INITIAL_IDLE_TICKS, MAX_CHALLENGE } from '@/consts';
 import {
+  AlertController,
   AnimationController,
   AudioController,
   AuthenticationController,
@@ -46,10 +48,12 @@ import {
   ChestController,
   CleanupController,
   CommandController,
+  ConfigController,
   DrunkController,
   GuildController,
   InventoryController,
   ItemProtectionController,
+  JukeboxController,
   KeyboardController,
   LockerController,
   MapController,
@@ -63,20 +67,23 @@ import {
   SocialController,
   SpellController,
   StatSkillController,
+  ToastController,
   TradeController,
   UsageController,
   ViewportController,
 } from '@/controllers';
 import { getEcf, getEdf, getEif, getEmf, getEnf, getEsf } from '@/db';
-import { type DialogResourceID, type Edf, EOResourceID } from '@/edf';
+import { DialogResourceID, type Edf, EOResourceID } from '@/edf';
 import { Sans11Font } from '@/fonts';
 import { GameState } from '@/game-state';
+import { GfxLoader } from '@/gfx';
 import { registerAllHandlers } from '@/handlers';
+import { defaultLocale, formatLocaleString, locales } from '@/locale';
 import { MapRenderer } from '@/map';
 import { MinimapRenderer } from '@/minimap';
 import { CharacterDeathAnimation, NpcDeathAnimation } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
-import type { ISlot } from '@/ui/ui-types';
+import { playSfxById, SfxId, setAudioController } from '@/sfx';
+import type { ISlot } from '@/ui/enums';
 import type {
   EffectMetadata,
   NPCMetadata,
@@ -84,6 +91,7 @@ import type {
   WeaponMetadata,
 } from '@/utils';
 import {
+  capitalize,
   EffectAnimationType,
   getEffectMetaData,
   getHatMetadata,
@@ -92,6 +100,7 @@ import {
   getWeaponMetaData,
   HatMaskType,
   isoToScreen,
+  randomRange,
   screenToIso,
 } from '@/utils';
 import type { Vector2 } from '@/vector';
@@ -108,14 +117,17 @@ export class Client {
   height = 600;
   zoom = 1;
   tickCount = 0;
-  bus!: PacketBus;
+  bus = new PacketBus();
   config = getDefaultConfig();
   version: Version;
   challenge: number;
+  hdid = String(Math.floor(Math.random() * 2147483647));
   playerId = 0;
   characterId = 0;
   name = '';
   title = '';
+  home = '';
+  partner = '';
   guildName = '';
   guildTag = '';
   guildRank = 0;
@@ -142,6 +154,7 @@ export class Client {
   warpMapId = 0;
   warpQueued = false;
   state = GameState.Initial;
+  postConnectState?: GameState;
   sessionId = 0;
   serverSettings: ServerSettings | null = null;
   motd = '';
@@ -167,6 +180,7 @@ export class Client {
   chestController: ChestController;
   cleanupController: CleanupController;
   drunkController: DrunkController;
+  jukeboxController: JukeboxController;
   commandController: CommandController;
   inventoryController: InventoryController;
   lockerController: LockerController;
@@ -184,6 +198,8 @@ export class Client {
   usageController: UsageController;
   tradeController: TradeController;
   guildController: GuildController;
+  alertController: AlertController;
+  toastController: ToastController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, WeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
@@ -191,10 +207,6 @@ export class Client {
   hatMetadata = getHatMetadata();
   typing = false;
   reconnecting = false;
-  rememberMe = Boolean(localStorage.getItem('remember-me')) || false;
-  loginToken = localStorage.getItem('login-token');
-  lastCharacterId =
-    Number.parseInt(localStorage.getItem('last-character-id') ?? '', 10) || 0;
   edfs: {
     game1: Edf | null;
     game2: Edf | null;
@@ -204,13 +216,8 @@ export class Client {
     game2: null,
     jukebox: null,
   };
-  notyf = new Notyf({
-    position: {
-      x: 'right',
-      y: 'top',
-    },
-  });
   atlas: Atlas;
+  gfxLoader = new GfxLoader();
   hotbarSlots: ISlot[] = [];
   sans11: Sans11Font;
   menuPlayerId = 0;
@@ -218,8 +225,12 @@ export class Client {
   minimapEnabled = false;
   minimapRenderer: MinimapRenderer;
   onlinePlayers: OnlinePlayer[] = [];
+  playerTriggeredDisconnect = false;
+  locale = locales[defaultLocale];
+  configController = new ConfigController();
 
   constructor() {
+    registerAllHandlers(this);
     this.container = document.querySelector('#game-container')!;
     this.emitter = mitt<ClientEvents>();
     this.version = new Version();
@@ -244,6 +255,7 @@ export class Client {
     });
     getEdf(4).then((edf) => {
       this.edfs.jukebox = edf;
+      this.jukeboxController.loadTracks();
     });
     getEdf(5).then((edf) => {
       this.edfs.game1 = edf;
@@ -262,6 +274,7 @@ export class Client {
     this.movementController = new MovementController(this);
     this.keyboardController = new KeyboardController(this);
     this.audioController = new AudioController(this);
+    setAudioController(this.audioController);
     this.authenticationController = new AuthenticationController(this);
     this.bankController = new BankController(this);
     this.boardController = new BoardController(this);
@@ -272,6 +285,7 @@ export class Client {
     this.drunkController = new DrunkController(this);
     this.inventoryController = new InventoryController(this);
     this.itemProtectionController = new ItemProtectionController();
+    this.alertController = new AlertController();
     this.lockerController = new LockerController(this);
     this.mapController = new MapController(this);
     this.mouseController = new MouseController(this);
@@ -286,19 +300,21 @@ export class Client {
     this.usageController = new UsageController(this);
     this.tradeController = new TradeController(this);
     this.guildController = new GuildController(this);
+    this.toastController = new ToastController();
+    this.jukeboxController = new JukeboxController(this);
     loadConfig().then((config) => {
       this.config = config;
       const txtHost =
         document.querySelector<HTMLInputElement>('input[name="host"]')!;
-      if (this.config.staticHost) {
-        txtHost!.classList.add('hidden');
-      }
-      txtHost!.value = config.host;
-      document.title = config.title;
 
-      const mainMenuLogo =
-        document.querySelector<HTMLDivElement>('#main-menu-logo')!;
-      mainMenuLogo!.setAttribute('data-slogan', config.slogan);
+      if (txtHost) {
+        if (this.config.staticHost) {
+          txtHost!.classList.add('hidden');
+        }
+        txtHost!.value = config.host;
+      }
+
+      document.title = config.title;
     });
     this.atlas = new Atlas(this);
     this.sans11 = new Sans11Font(this.atlas);
@@ -571,6 +587,7 @@ export class Client {
     this.animationController.npcHealthBars.clear();
     this.animationController.characterHealthBars.clear();
     this.itemProtectionController.itemProtectionTimers.clear();
+    this.jukeboxController.reset();
     if (this.map) {
       clearRectangles();
       this.mapRenderer.buildCaches();
@@ -585,6 +602,12 @@ export class Client {
       if (this.map.ambientSoundId) {
         this.audioController.startAmbientSound();
       }
+
+      this.audioController.updateListenerPosition(this.getPlayerCoords());
+      this.audioController.handleMapMusic(
+        this.map.musicId,
+        this.map.musicControl,
+      );
 
       if (!this.map.mapAvailable) {
         this.minimapEnabled = false;
@@ -621,13 +644,11 @@ export class Client {
     this.emitter.on(event, handler);
   }
 
-  setBus(bus: PacketBus) {
-    this.bus = bus;
-    registerAllHandlers(this);
-  }
-
-  clearBus() {
-    this.bus = null!;
+  off<Event extends keyof ClientEvents>(
+    event: Event,
+    handler: (data: ClientEvents[Event]) => void,
+  ) {
+    this.emitter.off(event, handler);
   }
 
   setState(state: GameState) {
@@ -662,27 +683,55 @@ export class Client {
     this.onlinePlayers = [];
     this.inventoryController.equipmentSwap = null;
     this.itemProtectionController.itemProtectionTimers.clear();
+    this.emit('stateChanged', this.state);
+    this.audioController.handleStateChange(state);
+  }
+
+  connect(nextState: GameState) {
+    this.postConnectState = nextState;
+    this.bus
+      .connect(this.config.host, () => this.handleConnectionClose())
+      .then(() => {
+        this.beginHandshake();
+      })
+      .catch((err) => {
+        console.warn('Failed to connect to server', err);
+        const strings = this.getDialogStrings(
+          DialogResourceID.CONNECTION_SERVER_NOT_FOUND,
+        );
+        this.alertController.show(strings[0], strings[1]);
+        this.postConnectState = undefined;
+      });
+  }
+
+  private handleConnectionClose() {
+    if (this.playerTriggeredDisconnect) {
+      this.playerTriggeredDisconnect = false;
+      return;
+    }
+
+    const strings = this.getDialogStrings(
+      DialogResourceID.CONNECTION_LOST_CONNECTION,
+    );
+    this.alertController.show(strings[0], strings[1]);
+    this.setState(GameState.Initial);
+  }
+
+  private beginHandshake() {
+    const packet = new InitInitClientPacket();
+    packet.challenge = this.challenge = randomRange(1, MAX_CHALLENGE);
+    packet.hdid = this.hdid;
+    packet.version = this.version;
+    this.bus.send(packet);
   }
 
   disconnect() {
+    this.playerTriggeredDisconnect = true;
     this.setState(GameState.Initial);
-    this.clearSession();
+    this.authenticationController.clearSession();
     if (this.bus) {
       this.bus.disconnect();
     }
-  }
-
-  clearSession() {
-    this.loginToken = '';
-    this.lastCharacterId = 0;
-    localStorage.removeItem('login-token');
-    localStorage.removeItem('last-character-id');
-  }
-
-  setStatusLabel(type: EOResourceID, text: string) {
-    this.notyf.open({
-      message: `[ ${this.getResourceString(type)} ] ${text}`,
-    });
   }
 
   refresh() {
@@ -717,8 +766,7 @@ export class Client {
 
   toggleMinimap() {
     if (!this.map.mapAvailable) {
-      this.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      this.toastController.showWarning(
         this.getResourceString(EOResourceID.STATUS_LABEL_NO_MAP_OF_AREA),
       );
       return;
@@ -735,5 +783,76 @@ export class Client {
         ownerId,
       });
     }
+  }
+
+  getNpcKilledMessage(data: NpcKilledData, exp = 0, levelUp = false): string {
+    let killerName: string;
+    if (data.killerId === this.playerId) {
+      killerName = this.locale.wordYou;
+    } else {
+      const killer = this.nearby.characters.find(
+        (c) => c.playerId === data.killerId,
+      );
+      killerName = killer ? capitalize(killer.name) : this.locale.wordUnknown;
+    }
+
+    const npc = this.nearby.npcs.find((n) => n.index === data.npcIndex);
+    const record = npc ? this.getEnfRecordById(npc.id) : undefined;
+    const npcName = record ? record.name : this.locale.wordUnknown;
+
+    const messages = [
+      formatLocaleString(this.locale.killedNpc, {
+        killer: killerName,
+        npc: npcName,
+      }),
+    ];
+
+    if (data.killerId === this.playerId && exp > 0) {
+      messages.push(
+        formatLocaleString(this.locale.gainedExp, {
+          exp: exp.toLocaleString(),
+        }),
+      );
+    }
+
+    if (levelUp) {
+      messages.push(
+        formatLocaleString(this.locale.levelUp, {
+          level: this.level.toLocaleString(),
+        }),
+      );
+    }
+
+    if (data.dropId && data.dropAmount) {
+      const itemRecord = this.getEifRecordById(data.dropId);
+      const itemName = itemRecord ? itemRecord.name : this.locale.wordUnknown;
+      const amountText =
+        data.dropAmount > 1 ? `${data.dropAmount.toLocaleString()} ` : '';
+      messages.push(
+        formatLocaleString(this.locale.npcDrop, {
+          item: `${amountText}${itemName}`,
+        }),
+      );
+    }
+
+    return messages.join(' ');
+  }
+
+  getExpShareMessage(exp: number, levelUp = false): string {
+    const messages = [
+      formatLocaleString(this.locale.expShare, {
+        exp: exp.toLocaleString(),
+      }),
+    ];
+
+    if (levelUp) {
+      messages.push(
+        formatLocaleString(this.locale.levelUp, {
+          level: this.level.toLocaleString(),
+        }),
+      );
+    }
+
+    return messages.join(' ');
   }
 }

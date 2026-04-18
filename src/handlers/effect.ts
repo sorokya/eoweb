@@ -19,7 +19,7 @@ import {
   HealthBar,
 } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { getDistance, getVolumeFromDistance } from '@/utils';
+import { getDistance } from '@/utils';
 import type { Vector2 } from '@/vector';
 
 function handleEffectReport(client: Client) {
@@ -46,12 +46,7 @@ function handleEffectReport(client: Client) {
   });
 
   if (spikeTiles.length) {
-    const tile = spikeTiles[0];
-    const distance = getDistance(playerAt, tile);
-    const volume = getVolumeFromDistance(distance, 6);
-    if (volume) {
-      playSfxById(SfxId.Spikes, volume);
-    }
+    client.audioController.playAtPosition(SfxId.Spikes, spikeTiles[0]);
   }
 }
 
@@ -138,12 +133,7 @@ function handleEffectAdmin(client: Client, reader: EoReader) {
 
   character.hp -= packet.damage;
 
-  const playerAt = client.getPlayerCoords();
-  const distance = getDistance(playerAt, character.coords);
-  const volume = getVolumeFromDistance(distance, 14);
-  if (volume) {
-    playSfxById(SfxId.Spikes, volume);
-  }
+  client.audioController.playAtPosition(SfxId.Spikes, character.coords);
 
   client.animationController.characterHealthBars.set(
     packet.playerId,

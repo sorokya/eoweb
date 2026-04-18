@@ -28,16 +28,17 @@ cd eoweb
 
 ### 2. Prepare game data files
 
-You’ll need to copy the game’s `gfx`, `sfx`, and `maps` directories into the `public` folder.
-
-To convert the original `.egf` graphics files into web-friendly `.png` files, use [extract-egf-images](https://github.com/sorokya/extract-egf-images).
+You’ll need to copy the game’s `data`, `gfx`, `sfx`, `mfx`, `jbox`, and `maps` directories into the `public` folder.
 
 The resulting structure should look like this:
 
 ```
 public/
-├── gfx/gfx001/101.png
+├── data/dat001.edf
+├── gfx/gfx001.egf
 ├── sfx/sfx001.wav
+├── jbox/jbox001.mid
+├── mfx/mfx001.mid
 └── maps/00005.emf
 ```
 

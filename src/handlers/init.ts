@@ -5,7 +5,6 @@ import {
   Emf,
   Enf,
   EoReader,
-  EoWriter,
   Esf,
   InitBanType,
   InitInitServerPacket,
@@ -20,7 +19,7 @@ import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '@/db';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { GameState } from '@/game-state';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleInitInit(client: Client, reader: EoReader) {
   const packet = InitInitServerPacket.deserialize(reader);
@@ -102,7 +101,7 @@ function handleInitOk(
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_LOST_CONNECTION,
     );
-    client.showError(text[1], text[0]);
+    client.alertController.show(text[0], text[1]);
     client.disconnect();
     return;
   }
@@ -110,28 +109,31 @@ function handleInitOk(
   client.playerId = data.playerId;
   // Hack to keep pre-game UI stable
   client.nearby.characters[0].playerId = data.playerId;
-  const bus = client.bus;
-  if (!bus) {
-    throw new Error('Bus is null');
-  }
-
-  bus.setEncryption(
+  client.bus.setEncryption(
     data.clientEncryptionMultiple,
     data.serverEncryptionMultiple,
   );
-  bus.setSequence(InitSequenceStart.fromInitValues(data.seq1, data.seq2));
+  client.bus.setSequence(
+    InitSequenceStart.fromInitValues(data.seq1, data.seq2),
+  );
 
   const packet = new ConnectionAcceptClientPacket();
   packet.clientEncryptionMultiple = data.clientEncryptionMultiple;
   packet.serverEncryptionMultiple = data.serverEncryptionMultiple;
   packet.playerId = data.playerId;
-  bus.send(packet);
+  client.bus.send(packet);
   client.setState(GameState.Connected);
 
-  if (client.rememberMe && client.loginToken) {
-    const writer = new EoWriter();
-    writer.addString(client.loginToken);
-    bus.sendBuf(PacketFamily.Login, PacketAction.Use, writer.toByteArray());
+  if (
+    client.postConnectState === GameState.Login &&
+    client.authenticationController.autoLogin()
+  ) {
+    return;
+  }
+
+  if (client.postConnectState) {
+    client.setState(client.postConnectState);
+    client.postConnectState = undefined;
   }
 }
 
@@ -139,16 +141,21 @@ function handleInitPlayersList(
   client: Client,
   data: InitInitServerPacket.ReplyCodeDataPlayersList,
 ) {
-  data.playersList.players.sort((a, b) => a.name.localeCompare(b.name));
-  client.emit('playersListUpdated', data.playersList.players);
+  client.socialController.notifyPlayersList(data.playersList.players);
 }
 
 function handleInitOutOfDate(
   client: Client,
   data: InitInitServerPacket.ReplyCodeDataOutOfDate,
 ) {
-  client.version = data.version;
-  client.emit('reconnect', undefined);
+  const strings = client.getDialogStrings(
+    DialogResourceID.CONNECTION_CLIENT_OUT_OF_DATE,
+  );
+  client.alertController.show(
+    strings[0],
+    `${strings[1]} ${data.version.major}.${data.version.minor}.${data.version.patch}`,
+  );
+  client.disconnect();
 }
 
 function handleInitBanned(
@@ -159,14 +166,19 @@ function handleInitBanned(
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_IP_BAN_PERM,
     );
-    client.showError(text[1], text[0]);
+    client.alertController.show(text[0], text[1]);
+    client.disconnect();
     return;
   }
 
   const banData =
     data.banTypeData as InitInitServerPacket.ReplyCodeDataBanned.BanTypeData0;
   const text = client.getDialogStrings(DialogResourceID.CONNECTION_IP_BAN_TEMP);
-  client.showError(`${text[0]} ${banData.minutesRemaining} minutes`, text[1]);
+  client.alertController.show(
+    `${text[0]} ${banData.minutesRemaining} minutes`,
+    text[1],
+  );
+  client.disconnect();
 }
 
 function handleInitFileEcf(
@@ -272,13 +284,13 @@ function handleInitMapMutation(
   playSfxById(SfxId.MapMutation);
   const message = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${client.getResourceString(EOResourceID.SERVER_MESSAGE_MAP_MUTATION)}}`;
   client.emit('chat', {
-    tab: ChatTab.Local,
+    channel: ChatChannels.Local,
     icon: ChatIcon.Exclamation,
     message,
   });
 
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.Exclamation,
     message,
   });

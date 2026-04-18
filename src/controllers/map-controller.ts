@@ -61,6 +61,16 @@ export class MapController {
     );
   }
 
+  jukeboxAt(coords: Vector2): boolean {
+    return this.client.map!.tileSpecRows.some(
+      (r) =>
+        r.y === coords.y &&
+        r.tiles.some(
+          (t) => t.x === coords.x && t.tileSpec === MapTileSpec.Jukebox,
+        ),
+    );
+  }
+
   boardAt(coords: Vector2): MapTileSpec | undefined {
     for (const r of this.client.map!.tileSpecRows) {
       if (r.y !== coords.y) continue;
@@ -168,7 +178,7 @@ export class MapController {
           return false;
         }
 
-        return record.spec1 === door.key;
+        return record.type === ItemType.Key && record.spec1 === door.key;
       })
     ) {
       const keyName =
@@ -176,8 +186,7 @@ export class MapController {
           (i) => i.type === ItemType.Key && i.spec1 === door.key,
         )?.name || 'Unknown';
       playSfxById(SfxId.DoorOrChestLocked);
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_THE_DOOR_IS_LOCKED_EXCLAMATION)} - ${keyName}`,
       );
       return;
@@ -423,8 +432,7 @@ export class MapController {
     if (warp) {
       if (warp.warp.levelRequired > this.client.level) {
         if (!silent) {
-          this.client.setStatusLabel(
-            EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+          this.client.toastController.showWarning(
             `${this.client.getResourceString(EOResourceID.STATUS_LABEL_NOT_READY_TO_USE_ENTRANCE)} - LVL ${warp.warp.levelRequired}`,
           );
         }

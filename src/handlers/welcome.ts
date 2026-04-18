@@ -19,7 +19,7 @@ function handleWelcomeReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_SERVER_BUSY,
     );
-    client.showError(text[1], text[0]);
+    client.alertController.show(text[0], text[1]);
     return;
   }
 
@@ -153,6 +153,10 @@ function handleEnterGame(
   client.usageController.usageTicks = USAGE_TICKS;
   client.setState(GameState.InGame);
   client.emit('enterGame', { news: data.news });
+  client.audioController.handleMapMusic(
+    client.map.musicId,
+    client.map.musicControl,
+  );
   client.bus!.send(new GlobalOpenClientPacket());
   const diffMap = client.atlas.mapId !== client.mapId;
   client.atlas.reset();

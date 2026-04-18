@@ -53,7 +53,7 @@ function handleStatSkillReply(client: Client, reader: EoReader) {
       const strings = client.getDialogStrings(
         DialogResourceID.SKILL_RESET_CHARACTER_CLEAR_PAPERDOLL,
       );
-      client.showError(strings[1], strings[0]);
+      client.alertController.show(strings[0], strings[1]);
       return;
     }
     case SkillMasterReply.WrongClass: {
@@ -97,7 +97,7 @@ function handleStatSkillRemove(client: Client, reader: EoReader) {
   const strings = client.getDialogStrings(
     DialogResourceID.SKILL_FORGET_SUCCESS,
   );
-  client.showError(strings[1], strings[0]);
+  client.alertController.show(strings[0], strings[1]);
   client.emit('skillsChanged', undefined);
 }
 
@@ -129,7 +129,7 @@ function handleStatSkillJunk(client: Client, reader: EoReader) {
   const strings = client.getDialogStrings(
     DialogResourceID.SKILL_RESET_CHARACTER_COMPLETE,
   );
-  client.showError(strings[1], strings[0]);
+  client.alertController.show(strings[0], strings[1]);
 }
 
 export function registerStatSkillHandlers(client: Client) {

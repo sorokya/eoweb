@@ -25,6 +25,7 @@ const doorRectangles: CoordsRect[] = [];
 const signRectangles: CoordsRect[] = [];
 const lockerRectangles: CoordsRect[] = [];
 const boardRectangles: CoordsRect[] = [];
+const jukeboxRectangles: CoordsRect[] = [];
 
 function rectIntersect(a: Rectangle, b: Rectangle): boolean {
   return (
@@ -216,6 +217,31 @@ export function getBoardIntersecting(point: Vector2): Vector2 | null {
   return null;
 }
 
+export function setJukeboxRectangle(coords: Vector2, rectangle: Rectangle) {
+  const existing = jukeboxRectangles.find(
+    (r) => r.coords.x === coords.x && r.coords.y === coords.y,
+  );
+  if (existing) {
+    existing.rectangle = rectangle;
+    return;
+  }
+
+  jukeboxRectangles.push({
+    coords: { x: coords.x, y: coords.y },
+    rectangle,
+  });
+}
+
+export function getJukeboxIntersecting(point: Vector2): Vector2 | null {
+  for (const { coords, rectangle } of jukeboxRectangles) {
+    if (pointIntersectRect(point, rectangle)) {
+      return coords;
+    }
+  }
+
+  return null;
+}
+
 export function clearRectangles() {
   characterRectangles.clear();
   npcRectangles.clear();
@@ -223,4 +249,5 @@ export function clearRectangles() {
   signRectangles.splice(0, signRectangles.length);
   lockerRectangles.splice(0, lockerRectangles.length);
   boardRectangles.splice(0, boardRectangles.length);
+  jukeboxRectangles.splice(0, jukeboxRectangles.length);
 }

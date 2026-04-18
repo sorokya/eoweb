@@ -12,10 +12,13 @@ import type {
   SkillLearn,
   ThreeItem,
 } from 'eolib';
+import type { GameState } from '@/game-state';
 import type { SfxId } from '@/sfx';
-import type { ChatIcon, ChatTab } from '@/ui/ui-types';
+import type { ChatChannel, ChatIcon } from '@/ui/enums';
+import type { DialogId } from '@/ui/in-game';
 
 export type ClientEvents = {
+  stateChanged: GameState;
   error: { title: string; message: string };
   confirmation: {
     title: string;
@@ -30,7 +33,7 @@ export type ClientEvents = {
   selectCharacter: undefined;
   enterGame: { news: string[] };
   chat: {
-    tab: ChatTab;
+    channel: ChatChannel;
     message: string;
     icon?: ChatIcon | null;
     name?: string;
@@ -87,8 +90,6 @@ export type ClientEvents = {
   tradeUpdated: undefined;
   guildOpened: undefined;
   guildUpdated: undefined;
-  scrollMessage: { title: string; body: string };
-  statusMessage: { message: string };
   bankOpened: undefined;
   bankUpdated: undefined;
   boardOpened: { posts: BoardPostListing[] };
@@ -123,4 +124,6 @@ export type ClientEvents = {
   };
   reconnected: undefined;
   resize: undefined;
+  toggleDialog: { id: DialogId };
+  toggleCommandPalette: undefined;
 };

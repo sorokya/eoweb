@@ -27,7 +27,7 @@ import {
   HealthBar,
 } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleItemAdd(client: Client, reader: EoReader) {
   const packet = ItemAddServerPacket.deserialize(reader);
@@ -74,12 +74,11 @@ function handleItemGet(client: Client, reader: EoReader) {
   }
 
   const record = client.getEifRecordById(packet.takenItem.id);
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+  client.toastController.show(
     `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record!.name}`,
   );
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.UpArrow,
     message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record!.name}`,
   });
@@ -108,12 +107,11 @@ function handleItemDrop(client: Client, reader: EoReader) {
   }
 
   const record = client.getEifRecordById(packet.droppedItem.id);
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+  client.toastController.show(
     `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record!.name}`,
   );
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.DownArrow,
     message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record!.name}`,
   });
@@ -176,8 +174,7 @@ function handleItemReply(client: Client, reader: EoReader) {
         break;
       }
 
-      client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      client.toastController.showWarning(
         client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_USE_DRUNK),
       );
       client.drunkController.drunk = true;
@@ -359,12 +356,11 @@ function handleItemJunk(client: Client, reader: EoReader) {
   }
 
   const record = client.getEifRecordById(packet.junkedItem.id);
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+  client.toastController.show(
     `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record!.name}`,
   );
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.DownArrow,
     message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record!.name}`,
   });

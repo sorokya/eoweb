@@ -24,12 +24,28 @@ import { playSfxById, SfxId } from '@/sfx';
 import { randomRange } from '@/utils';
 import type { Vector2 } from '@/vector';
 
+type WalkedSubscriber = () => void;
+
 export class MovementController {
   private client: Client;
   autoWalkPath: Vector2[] = [];
 
+  private walkedSubscribers: WalkedSubscriber[] = [];
+
   constructor(client: Client) {
     this.client = client;
+  }
+
+  subscribeWalked(cb: WalkedSubscriber): void {
+    this.walkedSubscribers.push(cb);
+  }
+
+  unsubscribeWalked(cb: WalkedSubscriber): void {
+    this.walkedSubscribers = this.walkedSubscribers.filter((s) => s !== cb);
+  }
+
+  private notifyWalked(): void {
+    for (const cb of this.walkedSubscribers) cb();
   }
 
   face(direction: Direction): void {
@@ -72,7 +88,8 @@ export class MovementController {
     packet.walkAction.timestamp = timestamp;
     this.client.bus!.send(packet);
     this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
-    this.client.audioController.setAmbientVolume();
+    this.client.audioController.updateListenerPosition(coords);
+    this.notifyWalked();
   }
 
   attack(direction: Direction, timestamp: number): void {
@@ -112,6 +129,7 @@ export class MovementController {
   }
 
   sit(): void {
+    playSfxById(SfxId.Sit);
     const packet = new SitRequestClientPacket();
     packet.sitAction = SitAction.Sit;
     packet.sitActionData = new SitRequestClientPacket.SitActionDataSit();

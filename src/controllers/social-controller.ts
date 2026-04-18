@@ -1,24 +1,63 @@
 import {
   BookRequestClientPacket,
+  type CharacterDetails,
   EmoteReportClientPacket,
   type Emote as EmoteType,
+  type EquipmentPaperdoll,
+  type OnlinePlayer,
   PaperdollRequestClientPacket,
   PartyAcceptClientPacket,
   PartyRemoveClientPacket,
   PartyRequestClientPacket,
   PartyRequestType,
   PartyTakeClientPacket,
+  PlayersRequestClientPacket,
   TradeRequestClientPacket,
 } from 'eolib';
 
 import type { Client } from '@/client';
 import { Emote } from '@/render';
 
+type PaperdollOpenedData = {
+  details: CharacterDetails;
+  equipment: EquipmentPaperdoll;
+};
+
+type PlayerListSubscriber = (players: OnlinePlayer[]) => void;
+
+const FRIENDS_KEY = 'eoweb:social:friends';
+const IGNORE_KEY = 'eoweb:social:ignore';
+
 export class SocialController {
   private client: Client;
+  playerList: OnlinePlayer[] = [];
+  friendList: string[];
+  ignoreList: string[];
+
+  private playerListSubscribers: PlayerListSubscriber[] = [];
 
   constructor(client: Client) {
     this.client = client;
+
+    this.friendList = JSON.parse(localStorage.getItem(FRIENDS_KEY) || '[]');
+    this.ignoreList = JSON.parse(localStorage.getItem(IGNORE_KEY) || '[]');
+  }
+
+  private paperdollOpenedSubscribers: ((data: PaperdollOpenedData) => void)[] =
+    [];
+  subscribePaperdollOpened(callback: (data: PaperdollOpenedData) => void) {
+    this.paperdollOpenedSubscribers.push(callback);
+  }
+
+  notifyPaperdollOpened(data: PaperdollOpenedData) {
+    if (data.details.playerId === this.client.playerId) {
+      this.client.home = data.details.home;
+      this.client.partner = data.details.partner;
+    }
+
+    for (const subscriber of this.paperdollOpenedSubscribers) {
+      subscriber(data);
+    }
   }
 
   requestPaperdoll(playerId: number): void {
@@ -84,5 +123,54 @@ export class SocialController {
     const packet = new PartyTakeClientPacket();
     packet.membersCount = this.client.partyMembers.length;
     this.client.bus!.send(packet);
+  }
+
+  requestOnlinePlayers(): void {
+    this.client.bus!.send(new PlayersRequestClientPacket());
+  }
+
+  subscribePlayerList(callback: PlayerListSubscriber) {
+    this.playerListSubscribers.push(callback);
+  }
+
+  unsubscribePlayerList(callback: PlayerListSubscriber) {
+    this.playerListSubscribers = this.playerListSubscribers.filter(
+      (cb) => cb !== callback,
+    );
+  }
+
+  notifyPlayersList(players: OnlinePlayer[]) {
+    this.playerList = players;
+    for (const subscriber of this.playerListSubscribers) {
+      subscriber(players);
+    }
+  }
+
+  addFriend(playerName: string): void {
+    if (this.friendList.includes(playerName)) {
+      return;
+    }
+
+    this.friendList.push(playerName);
+    localStorage.setItem(FRIENDS_KEY, JSON.stringify(this.friendList));
+  }
+
+  removeFriend(playerName: string): void {
+    this.friendList = this.friendList.filter((name) => name !== playerName);
+    localStorage.setItem(FRIENDS_KEY, JSON.stringify(this.friendList));
+  }
+
+  addIgnore(playerName: string): void {
+    if (this.ignoreList.includes(playerName)) {
+      return;
+    }
+
+    this.ignoreList.push(playerName);
+    localStorage.setItem(IGNORE_KEY, JSON.stringify(this.ignoreList));
+  }
+
+  removeIgnore(playerName: string): void {
+    this.ignoreList = this.ignoreList.filter((name) => name !== playerName);
+    localStorage.setItem(IGNORE_KEY, JSON.stringify(this.ignoreList));
   }
 }

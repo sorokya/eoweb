@@ -19,6 +19,7 @@ import { registerFaceHandlers } from './face';
 import { registerGuildHandlers } from './guild';
 import { registerInitHandlers } from './init';
 import { registerItemHandlers } from './item';
+import { registerJukeboxHandlers } from './jukebox';
 import { registerLockerHandlers } from './locker';
 import { registerLoginHandlers } from './login';
 import { registerMessageHandlers } from './message';
@@ -83,4 +84,5 @@ export function registerAllHandlers(client: Client): void {
   registerTradeHandlers(client);
   registerBarberHandlers(client);
   registerGuildHandlers(client);
+  registerJukeboxHandlers(client);
 }

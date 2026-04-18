@@ -98,8 +98,7 @@ export class InventoryController {
     }
 
     if (record.type === ItemType.Teleport && !this.client.map!.canScroll) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_ACTION,
+      this.client.toastController.show(
         this.client.getResourceString(
           EOResourceID.STATUS_LABEL_NOTHING_HAPPENED,
         ),
@@ -168,17 +167,12 @@ export class InventoryController {
       return false;
     }
 
-    const equipment = this.getEquipmentArray();
-    if (equipment[slot]) {
-      if (equipment[slot] === itemId) {
-        return false;
-      }
+    const record = this.client.getEifRecordById(item.id);
+    if (!record) {
+      return false;
+    }
 
-      this.equipmentSwap = {
-        slot,
-        itemId,
-      };
-      this.unequipItem(slot);
+    if (!this.itemTypeValidForSlot(record.type, slot)) {
       return false;
     }
 
@@ -187,14 +181,8 @@ export class InventoryController {
       return false;
     }
 
-    const record = this.client.getEifRecordById(item.id);
-    if (!record) {
-      return false;
-    }
-
     if (record.type === ItemType.Armor && record.spec2 !== character.gender) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      this.client.toastController.showWarning(
         this.client.getResourceString(
           EOResourceID.STATUS_LABEL_ITEM_EQUIP_DOES_NOT_FIT_GENDER,
         ) ?? '',
@@ -207,8 +195,7 @@ export class InventoryController {
       record.classRequirement !== this.client.classId
     ) {
       const classRecord = this.client.getEcfRecordById(record.classRequirement);
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_CAN_ONLY_BE_USED_BY)} ${classRecord?.name || 'Unknown'}`,
       );
       return false;
@@ -249,8 +236,7 @@ export class InventoryController {
 
     for (const check of statChecks) {
       if (check.req > check.stat) {
-        this.client.setStatusLabel(
-          EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        this.client.toastController.showWarning(
           `${this.client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${check.req} ${check.label}`,
         );
         return false;
@@ -258,10 +244,23 @@ export class InventoryController {
     }
 
     if (record.levelRequirement > this.client.level) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} LVL ${record.levelRequirement}`,
       );
+      return false;
+    }
+
+    const equipment = this.getEquipmentArray();
+    if (equipment[slot]) {
+      if (equipment[slot] === itemId) {
+        return false;
+      }
+
+      this.equipmentSwap = {
+        slot,
+        itemId,
+      };
+      this.unequipItem(slot);
       return false;
     }
 
@@ -291,6 +290,38 @@ export class InventoryController {
       EquipmentSlot.Shield,
       EquipmentSlot.Weapon,
     ].includes(slot);
+  }
+
+  itemTypeValidForSlot(itemType: ItemType, slot: EquipmentSlot): boolean {
+    switch (slot) {
+      case EquipmentSlot.Hat:
+        return itemType === ItemType.Hat;
+      case EquipmentSlot.Armor:
+        return itemType === ItemType.Armor;
+      case EquipmentSlot.Weapon:
+        return itemType === ItemType.Weapon;
+      case EquipmentSlot.Shield:
+        return itemType === ItemType.Shield;
+      case EquipmentSlot.Boots:
+        return itemType === ItemType.Boots;
+      case EquipmentSlot.Gloves:
+        return itemType === ItemType.Gloves;
+      case EquipmentSlot.Belt:
+        return itemType === ItemType.Belt;
+      case EquipmentSlot.Necklace:
+        return itemType === ItemType.Necklace;
+      case EquipmentSlot.Accessory:
+        return itemType === ItemType.Accessory;
+      case EquipmentSlot.Ring1:
+      case EquipmentSlot.Ring2:
+        return itemType === ItemType.Ring;
+      case EquipmentSlot.Armlet1:
+      case EquipmentSlot.Armlet2:
+        return itemType === ItemType.Armlet;
+      case EquipmentSlot.Bracer1:
+      case EquipmentSlot.Bracer2:
+        return itemType === ItemType.Bracer;
+    }
   }
 
   setEquipmentSlot(slot: EquipmentSlot, itemId: number): void {

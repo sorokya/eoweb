@@ -5,13 +5,14 @@ import {
   TalkMsgClientPacket,
   TalkOpenClientPacket,
   TalkReportClientPacket,
+  TalkRequestClientPacket,
   TalkTellClientPacket,
 } from 'eolib';
 import type { Client } from '@/client';
 import { COLORS, MAX_CHAT_LENGTH } from '@/consts';
 import { ChatBubble } from '@/render';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize, makeDrunk } from '@/utils';
 
 export class ChatController {
@@ -46,19 +47,19 @@ export class ChatController {
       );
       this.client.emit('chat', {
         icon: ChatIcon.GlobalAnnounce,
-        tab: ChatTab.Local,
+        channel: ChatChannels.Local,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
       this.client.emit('chat', {
         icon: ChatIcon.GlobalAnnounce,
-        tab: ChatTab.Group,
+        channel: ChatChannels.Admin,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
       this.client.emit('chat', {
         icon: ChatIcon.GlobalAnnounce,
-        tab: ChatTab.Global,
+        channel: ChatChannels.Global,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
@@ -70,18 +71,19 @@ export class ChatController {
     if (trimmed.startsWith('!')) {
       const target = trimmed.substring(1).split(' ')[0];
       if (target.trim().length) {
-        const message = trimmed.substring(target.length + 2);
+        const msg = trimmed.substring(target.length + 2);
+        const pmChannel = `pm:${target.toLowerCase()}` as const;
 
         const packet = new TalkTellClientPacket();
         packet.name = target.toLowerCase();
-        packet.message = message;
+        packet.message = msg;
         this.client.bus!.send(packet);
 
         this.client.emit('chat', {
           icon: ChatIcon.Note,
-          tab: ChatTab.Local,
-          name: `${capitalize(this.client.name)}->${capitalize(target)}`,
-          message,
+          channel: pmChannel,
+          name: `${capitalize(this.client.name)}`,
+          message: msg,
         });
 
         return;
@@ -94,7 +96,7 @@ export class ChatController {
       this.client.bus!.send(packet);
 
       this.client.emit('chat', {
-        tab: ChatTab.Global,
+        channel: ChatChannels.Global,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
@@ -117,8 +119,22 @@ export class ChatController {
       );
 
       this.client.emit('chat', {
-        tab: ChatTab.Group,
+        channel: ChatChannels.Party,
         icon: ChatIcon.PlayerParty,
+        message: `${packet.message}`,
+        name: `${capitalize(this.client.name)}`,
+      });
+      return;
+    }
+
+    if (trimmed.startsWith('&')) {
+      const packet = new TalkRequestClientPacket();
+      packet.message = trimmed.substring(1);
+      this.client.bus!.send(packet);
+
+      this.client.emit('chat', {
+        channel: ChatChannels.Guild,
+        icon: ChatIcon.Guild,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
@@ -131,7 +147,7 @@ export class ChatController {
       this.client.bus!.send(packet);
 
       this.client.emit('chat', {
-        tab: ChatTab.Group,
+        channel: ChatChannels.Admin,
         icon: ChatIcon.GM,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
@@ -152,7 +168,7 @@ export class ChatController {
     );
 
     this.client.emit('chat', {
-      tab: ChatTab.Local,
+      channel: ChatChannels.Local,
       message: `${trimmed}`,
       name: `${capitalize(this.client.name)}`,
     });

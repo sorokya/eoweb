@@ -43,6 +43,10 @@ enum Input {
   Hotbar5 = 21,
   Tab = 22,
   Refresh = 23,
+  Hotbar6 = 24,
+  ViewCharacter = 25,
+  ViewInventory = 26,
+  ViewSpells = 27,
   Unknown = -1,
 }
 
@@ -62,7 +66,7 @@ function inputToDirection(input: Input): Direction | null {
 }
 
 const WALK_TICKS = WALK_ANIMATION_TICKS - 1;
-const DRAG_THRESHOLD = 30;
+//const DRAG_THRESHOLD = 30;
 
 export class KeyboardController {
   private client: Client;
@@ -73,16 +77,11 @@ export class KeyboardController {
   private hotbarTicks = HOTBAR_COOLDOWN_TICKS;
   private minimapTicks = WALK_TICKS;
   private refreshTicks = WALK_TICKS;
+  private dialogOpenTicks = WALK_TICKS;
   private frozen = false;
 
   private held: boolean[] = [];
   private lastInputHeld: Input[] = [];
-
-  private touchStartX: number | null = null;
-  private touchStartY: number | null = null;
-  private touchId: number | null = null;
-  private activeTouchDir: Input | null = null;
-  private inputVector = { x: 0, y: 0 };
 
   constructor(client: Client) {
     this.client = client;
@@ -93,10 +92,20 @@ export class KeyboardController {
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && ['=', '+', '-', '_'].includes(e.key)) {
         e.preventDefault();
-        if (e.key === '=' || e.key === '+')
+        if (e.key === '=' || e.key === '+') {
           this.client.viewportController.zoomIn();
-        else this.client.viewportController.zoomOut();
+        } else {
+          this.client.viewportController.zoomOut();
+        }
+        return;
       }
+
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyP') {
+        e.preventDefault();
+        this.client.emit('toggleCommandPalette', undefined);
+        return;
+      }
+
       switch (e.code) {
         case 'KeyW':
         case 'ArrowUp':
@@ -170,12 +179,25 @@ export class KeyboardController {
         case 'Digit5':
           this.updateInputHeld(Input.Hotbar5, true);
           break;
+        case 'Digit6':
+          this.updateInputHeld(Input.Hotbar6, true);
+          break;
         case 'Tab':
           this.updateInputHeld(Input.Tab, true);
-          if (!this.client.typing) e.preventDefault();
+          // TODO: Fix tab capturing later
+          //if (!this.client.typing) e.preventDefault();
           break;
         case 'KeyR':
           this.updateInputHeld(Input.Refresh, true);
+          break;
+        case 'KeyC':
+          this.updateInputHeld(Input.ViewCharacter, true);
+          break;
+        case 'KeyE':
+          this.updateInputHeld(Input.ViewInventory, true);
+          break;
+        case 'KeyP':
+          this.updateInputHeld(Input.ViewSpells, true);
           break;
       }
     });
@@ -254,11 +276,23 @@ export class KeyboardController {
         case 'Digit5':
           this.updateInputHeld(Input.Hotbar5, false);
           break;
+        case 'Digit6':
+          this.updateInputHeld(Input.Hotbar6, false);
+          break;
         case 'Tab':
           this.updateInputHeld(Input.Tab, false);
           break;
         case 'KeyR':
           this.updateInputHeld(Input.Refresh, false);
+          break;
+        case 'KeyC':
+          this.updateInputHeld(Input.ViewCharacter, false);
+          break;
+        case 'KeyE':
+          this.updateInputHeld(Input.ViewInventory, false);
+          break;
+        case 'KeyP':
+          this.updateInputHeld(Input.ViewSpells, false);
           break;
       }
     });
@@ -274,111 +308,21 @@ export class KeyboardController {
       },
       { passive: false },
     );
-
-    const joystickContainer = document.getElementById('joystick-container');
-    const thumb = document.getElementById('joystick-thumb');
-    const maxRadius = 40;
-
-    joystickContainer!.addEventListener('touchstart', (e) => {
-      const t = e.changedTouches[0];
-      this.touchStartX = t.clientX;
-      this.touchStartY = t.clientY;
-      this.touchId = t.identifier;
-      this.activeTouchDir = null;
-      this.handleTouchMove(e, joystickContainer!, thumb!, maxRadius);
-    });
-
-    joystickContainer!.addEventListener('touchmove', (e) => {
-      this.handleTouchMove(e, joystickContainer!, thumb!, maxRadius);
-      e.preventDefault();
-    });
-
-    joystickContainer!.addEventListener('touchend', () => {
-      this.inputVector = { x: 0, y: 0 };
-      thumb!.style.transform = 'translate(0px, 0px)';
-      if (this.activeTouchDir !== null) {
-        this.updateInputHeld(this.activeTouchDir, false);
-      }
-      this.touchStartX = this.touchStartY = null;
-      this.touchId = null;
-      this.activeTouchDir = null;
-    });
-
-    const btnAttack = document.getElementById('btn-attack');
-    btnAttack!.addEventListener('touchstart', () => {
-      this.updateInputHeld(Input.Attack, true);
-    });
-    btnAttack!.addEventListener('touchend', () => {
-      this.updateInputHeld(Input.Attack, false);
-    });
-
-    const btnSit = document.getElementById('btn-toggle-sit');
-    btnSit!.addEventListener('touchstart', () => {
-      this.updateInputHeld(Input.SitStand, true);
-    });
-    btnSit!.addEventListener('touchend', () => {
-      this.updateInputHeld(Input.SitStand, false);
-    });
   }
 
-  private handleTouchMove(
-    e: TouchEvent,
-    joystickContainer: HTMLElement,
-    thumb: HTMLElement,
-    maxRadius: number,
-  ) {
-    const rect = joystickContainer.getBoundingClientRect();
-    const touch = e.touches[0];
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    let dx = touch.clientX - centerX;
-    let dy = touch.clientY - centerY;
-
-    const distance = Math.min(Math.sqrt(dx * dx + dy * dy), maxRadius);
-
-    const angle = Math.atan2(dy, dx);
-    const clampedX = Math.cos(angle) * distance;
-    const clampedY = Math.sin(angle) * distance;
-
-    this.inputVector.x = clampedX / maxRadius;
-    this.inputVector.y = clampedY / maxRadius;
-
-    thumb.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
-
-    if (this.touchId === null) return;
-
-    const t = Array.from(e.changedTouches).find(
-      (c) => c.identifier === this.touchId,
-    );
-    if (!t || this.touchStartX === null || this.touchStartY === null) return;
-
-    dx = t.clientX - this.touchStartX;
-    dy = t.clientY - this.touchStartY;
-    const dist2 = dx * dx + dy * dy;
-
-    if (dist2 < DRAG_THRESHOLD * DRAG_THRESHOLD) {
-      if (this.activeTouchDir !== null) {
-        this.updateInputHeld(this.activeTouchDir, false);
-        this.activeTouchDir = null;
-      }
-      return;
-    }
-
-    const dir = this.swipedDir(dx, dy);
-    if (dir !== this.activeTouchDir) {
-      if (this.activeTouchDir !== null)
-        this.updateInputHeld(this.activeTouchDir, false);
-      this.updateInputHeld(dir, true);
-      this.activeTouchDir = dir;
-    }
+  setTouchDirection(direction: Direction | null): void {
+    this.updateInputHeld(Input.Up, direction === Direction.Up);
+    this.updateInputHeld(Input.Down, direction === Direction.Down);
+    this.updateInputHeld(Input.Left, direction === Direction.Left);
+    this.updateInputHeld(Input.Right, direction === Direction.Right);
   }
 
-  private swipedDir(dx: number, dy: number): Input {
-    if (Math.abs(dx) > Math.abs(dy)) {
-      return dx < 0 ? Input.Left : Input.Right;
-    }
-    return dy < 0 ? Input.Up : Input.Down;
+  setTouchAttack(held: boolean): void {
+    this.updateInputHeld(Input.Attack, held);
+  }
+
+  setTouchSitStand(held: boolean): void {
+    this.updateInputHeld(Input.SitStand, held);
   }
 
   private updateInputHeld(input: Input, down: boolean) {
@@ -432,6 +376,7 @@ export class KeyboardController {
     this.hotbarTicks = Math.max(this.hotbarTicks - 1, 0);
     this.minimapTicks = Math.max(this.minimapTicks - 1, 0);
     this.refreshTicks = Math.max(this.refreshTicks - 1, 0);
+    this.dialogOpenTicks = Math.max(this.dialogOpenTicks - 1, 0);
 
     if (
       this.frozen ||
@@ -462,6 +407,9 @@ export class KeyboardController {
     } else if (this.isOrWasInputHeld(Input.Hotbar5) && this.hotbarTicks === 0) {
       this.client.spellController.useHotbarSlot(4);
       this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
+    } else if (this.isOrWasInputHeld(Input.Hotbar6) && this.hotbarTicks === 0) {
+      this.client.spellController.useHotbarSlot(5);
+      this.hotbarTicks = HOTBAR_COOLDOWN_TICKS;
     }
 
     if (this.isOrWasInputHeld(Input.Tab) && this.minimapTicks === 0) {
@@ -473,6 +421,27 @@ export class KeyboardController {
     if (this.isOrWasInputHeld(Input.Refresh) && this.refreshTicks === 0) {
       this.client.refresh();
       this.refreshTicks = WALK_TICKS;
+    }
+
+    if (
+      this.isOrWasInputHeld(Input.ViewCharacter) &&
+      this.dialogOpenTicks === 0
+    ) {
+      this.client.emit('toggleDialog', { id: 'character' });
+      this.dialogOpenTicks = WALK_TICKS;
+    }
+
+    if (
+      this.isOrWasInputHeld(Input.ViewInventory) &&
+      this.dialogOpenTicks === 0
+    ) {
+      this.client.emit('toggleDialog', { id: 'inventory' });
+      this.dialogOpenTicks = WALK_TICKS;
+    }
+
+    if (this.isOrWasInputHeld(Input.ViewSpells) && this.dialogOpenTicks === 0) {
+      this.client.emit('toggleDialog', { id: 'spells' });
+      this.dialogOpenTicks = WALK_TICKS;
     }
 
     const animation = this.client.animationController.characterAnimations.get(
@@ -531,8 +500,7 @@ export class KeyboardController {
         const record = this.client.getEifRecordById(shield);
         if (!record || record.subtype !== ItemSubtype.Arrows) {
           playSfxById(SfxId.NoArrows);
-          this.client.setStatusLabel(
-            EOResourceID.STATUS_LABEL_TYPE_WARNING,
+          this.client.toastController.showWarning(
             this.client.getResourceString(
               EOResourceID.STATUS_LABEL_YOU_HAVE_NO_ARROWS,
             ),
@@ -614,6 +582,12 @@ export class KeyboardController {
         const boardSpec = this.client.mapController.boardAt(to);
         if (boardSpec !== undefined) {
           this.client.boardController.openBoard(boardSpec - MapTileSpec.Board1);
+          this.walkTicks = WALK_TICKS;
+          return;
+        }
+
+        if (this.client.mapController.jukeboxAt(to)) {
+          this.client.jukeboxController.openJukebox(to);
           this.walkTicks = WALK_TICKS;
           return;
         }

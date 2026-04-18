@@ -13,8 +13,8 @@ import { playSfxById, SfxId } from '@/sfx';
 
 function handlePaperdollReply(client: Client, reader: EoReader) {
   const packet = PaperdollReplyServerPacket.deserialize(reader);
-  client.emit('openPaperdoll', {
-    icon: packet.icon,
+
+  client.socialController.notifyPaperdollOpened({
     details: packet.details,
     equipment: packet.equipment,
   });
@@ -88,8 +88,6 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
     client.items.push(item);
   }
 
-  playSfxById(SfxId.InventoryPlace);
-
   client.emit('inventoryChanged', undefined);
 
   if (client.inventoryController.equipmentSwap) {
@@ -107,6 +105,8 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
       );
     }
     client.inventoryController.equipmentSwap = null;
+  } else {
+    playSfxById(SfxId.InventoryPlace);
   }
 }
 
@@ -166,6 +166,7 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
   }
 
   client.emit('inventoryChanged', undefined);
+  playSfxById(SfxId.InventoryPlace);
 }
 
 export function registerPaperdollHandlers(client: Client) {

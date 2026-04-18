@@ -22,6 +22,7 @@ import {
   setBoardRectangle,
   setCharacterRectangle,
   setDoorRectangle,
+  setJukeboxRectangle,
   setLockerRectangle,
   setNpcRectangle,
   setSignRectangle,
@@ -788,6 +789,14 @@ export class MapRenderer {
       return;
     }
 
+    // Debug layer visibility
+    if (
+      entity.layer <= Layer.Overlay2 &&
+      !this.client.configController.layerVisible(entity.layer)
+    ) {
+      return;
+    }
+
     this._coordsBuffer.x = entity.x;
     this._coordsBuffer.y = entity.y;
 
@@ -880,6 +889,11 @@ export class MapRenderer {
       );
     } else if (spec === MapTileSpec.BankVault) {
       setLockerRectangle(
+        this._coordsBuffer,
+        new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
+      );
+    } else if (spec === MapTileSpec.Jukebox) {
+      setJukeboxRectangle(
         this._coordsBuffer,
         new Rectangle({ x: screenX, y: screenY }, tile.w, tile.h),
       );

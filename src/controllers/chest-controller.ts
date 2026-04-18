@@ -12,12 +12,45 @@ import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
 
+type OpenedSubscriber = (items: ThreeItem[]) => void;
+type ChangedSubscriber = (items: ThreeItem[]) => void;
+
 export class ChestController {
   private client: Client;
   chestCoords = new Coords();
+  items: ThreeItem[] = [];
+
+  private openedSubscribers: OpenedSubscriber[] = [];
+  private changedSubscribers: ChangedSubscriber[] = [];
 
   constructor(client: Client) {
     this.client = client;
+  }
+
+  subscribeOpened(cb: OpenedSubscriber): void {
+    this.openedSubscribers.push(cb);
+  }
+
+  unsubscribeOpened(cb: OpenedSubscriber): void {
+    this.openedSubscribers = this.openedSubscribers.filter((s) => s !== cb);
+  }
+
+  subscribeChanged(cb: ChangedSubscriber): void {
+    this.changedSubscribers.push(cb);
+  }
+
+  unsubscribeChanged(cb: ChangedSubscriber): void {
+    this.changedSubscribers = this.changedSubscribers.filter((s) => s !== cb);
+  }
+
+  handleOpened(items: ThreeItem[]): void {
+    this.items = items;
+    for (const cb of this.openedSubscribers) cb(items);
+  }
+
+  handleChanged(items: ThreeItem[]): void {
+    this.items = items;
+    for (const cb of this.changedSubscribers) cb(items);
   }
 
   openChest(coords: { x: number; y: number }): void {
@@ -68,8 +101,7 @@ export class ChestController {
 
     if (!haveKeys) {
       playSfxById(SfxId.DoorOrChestLocked);
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_THE_CHEST_IS_LOCKED_EXCLAMATION)} - ${keyName}`,
       );
       return;

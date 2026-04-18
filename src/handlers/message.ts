@@ -7,7 +7,7 @@ import {
 import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleMessagePing(client: Client) {
   const delta = Date.now() - client.commandController.pingStart;
@@ -19,9 +19,9 @@ function handleMessagePing(client: Client) {
 
 function handleMessageOpen(client: Client, reader: EoReader) {
   const packet = MessageOpenServerPacket.deserialize(reader);
-  client.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, packet.message);
+  client.toastController.show(packet.message);
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.QuestMessage,
     message: packet.message,
   });
@@ -32,20 +32,20 @@ function handleMessageClose(client: Client) {
   const message = client.getResourceString(
     EOResourceID.REBOOT_SEQUENCE_STARTED,
   );
-  client.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, message!);
+  client.toastController.showWarning(message);
   const chatMessage = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${message}`;
   client.emit('chat', {
-    tab: ChatTab.Local,
+    channel: ChatChannels.Local,
     icon: ChatIcon.Exclamation,
     message: chatMessage,
   });
   client.emit('chat', {
-    tab: ChatTab.Global,
+    channel: ChatChannels.Global,
     icon: ChatIcon.Exclamation,
     message: chatMessage,
   });
   client.emit('chat', {
-    tab: ChatTab.System,
+    channel: ChatChannels.System,
     icon: ChatIcon.Exclamation,
     message: chatMessage,
   });
