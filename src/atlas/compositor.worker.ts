@@ -580,6 +580,40 @@ export type CompositeResult = {
   mirroredXOffset: number;
 };
 
+/**
+ * A request to compute the tight alpha bounding box of a sprite (or a crop
+ * region of a sprite sheet) entirely inside the worker, with no canvas API.
+ */
+export type BoundsRequest = {
+  /** Opaque caller key used to match results back to requests. */
+  key: string;
+  /** Raw RGBA pixel data for the full bitmap. */
+  pixels: Uint8ClampedArray;
+  width: number;
+  height: number;
+  /** Optional crop region (defaults to the full bitmap). */
+  cropX?: number;
+  cropY?: number;
+  cropW?: number;
+  cropH?: number;
+  /**
+   * When true, also count unique RGB colours and mark the result as blank
+   * when ≤2 unique colours are found (NPC / effect blank-frame detection).
+   */
+  detectBlank?: boolean;
+};
+
+export type BoundsResult = {
+  key: string;
+  /** True when the frame was empty or detected as blank. */
+  isBlank: boolean;
+  /** Tight bounds within the crop region (crop-relative coords). */
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
 type WorkerInitMessage = {
   type: 'INIT';
   hatMetadata: Record<number, number>;
@@ -593,7 +627,16 @@ type WorkerCompositeMessage = {
   characters: CompositeCharacterSpec[];
 };
 
-type WorkerMessage = WorkerInitMessage | WorkerCompositeMessage;
+type WorkerBoundsMessage = {
+  type: 'CALCULATE_BOUNDS';
+  requestId: number;
+  requests: BoundsRequest[];
+};
+
+type WorkerMessage =
+  | WorkerInitMessage
+  | WorkerCompositeMessage
+  | WorkerBoundsMessage;
 
 // ── Worker state ──────────────────────────────────────────────────────────────
 
@@ -1224,6 +1267,60 @@ async function compositeCharacter(
   return results;
 }
 
+// ── Bounds calculation ────────────────────────────────────────────────────────
+
+function calculateBoundsInWorker(req: BoundsRequest): BoundsResult {
+  const { pixels, width } = req;
+  const cropX = req.cropX ?? 0;
+  const cropY = req.cropY ?? 0;
+  const cropW = req.cropW ?? req.width;
+  const cropH = req.cropH ?? req.height;
+
+  let minX = cropW;
+  let minY = cropH;
+  let maxX = 0;
+  let maxY = 0;
+
+  const colors: Set<number> = req.detectBlank
+    ? new Set()
+    : (null as unknown as Set<number>);
+
+  for (let y = 0; y < cropH; ++y) {
+    const srcY = cropY + y;
+    for (let x = 0; x < cropW; ++x) {
+      const base = (srcY * width + (cropX + x)) * 4;
+      if (colors) {
+        colors.add(
+          (pixels[base] << 16) | (pixels[base + 1] << 8) | pixels[base + 2],
+        );
+      }
+      if (pixels[base + 3] !== 0) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  const isBlank = req.detectBlank
+    ? colors.size <= 2 || maxX === 0
+    : minX > maxX;
+
+  if (isBlank) {
+    return { key: req.key, isBlank: true, x: 0, y: 0, w: 0, h: 0 };
+  }
+
+  return {
+    key: req.key,
+    isBlank: false,
+    x: minX,
+    y: minY,
+    w: maxX - minX + 1,
+    h: maxY - minY + 1,
+  };
+}
+
 // ── Message handler ───────────────────────────────────────────────────────────
 
 self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
@@ -1255,6 +1352,17 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
         { type: 'COMPOSITE_RESULT', requestId, results: allResults },
         transferables,
       );
+      break;
+    }
+
+    case 'CALCULATE_BOUNDS': {
+      const { requestId, requests } = data;
+      const results: BoundsResult[] = requests.map(calculateBoundsInWorker);
+      (self as unknown as Worker).postMessage({
+        type: 'BOUNDS_RESULT',
+        requestId,
+        results,
+      });
       break;
     }
   }

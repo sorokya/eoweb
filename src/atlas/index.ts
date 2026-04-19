@@ -17,6 +17,8 @@ import { GfxType } from '@/gfx';
 import { LAYER_GFX_MAP } from '@/map';
 import { getItemGraphicId } from '@/utils';
 import type {
+  BoundsRequest,
+  BoundsResult,
   CompositeCharacterSpec,
   CompositeResult,
   RawPixels,
@@ -276,8 +278,6 @@ export class Atlas {
   private currentAtlasIndex = 0;
   private ctx: CanvasRenderingContext2D;
   private temporaryCharacterFrames: CharacterFrameImg[] = [];
-  private tmpCanvas: HTMLCanvasElement;
-  private tmpCtx: CanvasRenderingContext2D;
   private compositorClient: CompositorClient;
   private dirtyDynamicAtlasIndices: Set<number> = new Set();
 
@@ -294,10 +294,6 @@ export class Atlas {
     this.mapAtlas = new AtlasCanvas('atlas-map');
     this.atlases = [new AtlasCanvas('atlas-dynamic-0')];
     this.ctx = this.atlases[0].getContext();
-    this.tmpCanvas = document.createElement('canvas');
-    this.tmpCtx = this.tmpCanvas.getContext('2d', {
-      willReadFrequently: true,
-    })!;
     this.compositorClient = new CompositorClient(client.gfxLoader);
   }
 
@@ -1439,8 +1435,13 @@ export class Atlas {
         ? this.compositorClient.compositeCharacterFrames(compositorSpecs)
         : Promise.resolve<CompositeResult[]>([]);
 
-    this.calculateFrameSizes();
-    const compositeResults = await compositePromise;
+    // Run bounds calculation concurrently with character compositing.
+    const boundsPromise = this.calculateFrameSizes();
+
+    const [compositeResults] = await Promise.all([
+      compositePromise,
+      boundsPromise,
+    ]);
     this.applyCompositorResults(compositeResults);
 
     this.finishUpdatingAtlas();
@@ -2015,148 +2016,210 @@ export class Atlas {
       }
     }
   }
-  private calculateFrameSizes() {
-    for (const npc of this.npcs) {
-      this.calculateNpcFrameSizes(npc);
-    }
+  private async calculateFrameSizes(): Promise<void> {
+    const requests: BoundsRequest[] = [];
+    const applicators = new Map<string, (result: BoundsResult) => void>();
+    const postProcessors: Array<() => void> = [];
 
+    // ── Items ───────────────────────────────────────────────────────────────
     for (const item of this.items) {
-      this.calculateItemSize(item);
+      if (item.w !== -1) continue;
+      const raw = this.client.gfxLoader.getRawPixels(
+        GfxType.Items,
+        item.graphicId + 100,
+      );
+      if (!raw) continue;
+      const key = `item:${item.graphicId}`;
+      requests.push({
+        key,
+        pixels: raw.pixels,
+        width: raw.width,
+        height: raw.height,
+      });
+      applicators.set(key, (result) => {
+        if (result.isBlank) return;
+        item.xOffset = result.x - (raw.width >> 1);
+        item.yOffset = result.y - (raw.height >> 1);
+        item.x = result.x;
+        item.y = result.y;
+        item.w = result.w;
+        item.h = result.h;
+      });
     }
 
+    // ── NPCs ────────────────────────────────────────────────────────────────
+    for (const npc of this.npcs) {
+      const baseId = (npc.graphicId - 1) * 40;
+      const blankIndices: number[] = [];
+      for (const [index, frame] of npc.frames.entries()) {
+        if (!frame || frame.w !== -1) continue;
+        const raw = this.client.gfxLoader.getRawPixels(
+          GfxType.NPC,
+          baseId + index + 1 + 100,
+        );
+        if (!raw) continue;
+        const key = `npc:${npc.graphicId}:${index}`;
+        const capturedFrame = frame;
+        requests.push({
+          key,
+          pixels: raw.pixels,
+          width: raw.width,
+          height: raw.height,
+          detectBlank: true,
+        });
+        applicators.set(key, (result) => {
+          if (result.isBlank) {
+            blankIndices.push(index);
+            return;
+          }
+          capturedFrame.xOffset = result.x - (raw.width >> 1);
+          capturedFrame.yOffset = result.y - (raw.height - 23);
+          capturedFrame.mirroredXOffset =
+            (raw.width >> 1) - (result.x + result.w);
+          capturedFrame.x = result.x;
+          capturedFrame.y = result.y;
+          capturedFrame.w = result.w;
+          capturedFrame.h = result.h;
+        });
+      }
+      postProcessors.push(() => {
+        for (const i of blankIndices) {
+          npc.frames[i] = undefined;
+        }
+      });
+    }
+
+    // ── Tiles (sync, read width/height only) ────────────────────────────────
     for (const tile of this.tiles) {
       this.calculateTileSize(tile);
     }
 
+    // ── Static entries (sync, hardcoded regions) ────────────────────────────
     for (const [id, frame] of this.staticEntries) {
       this.calculateStaticSize(id, frame);
     }
 
-    for (const emote of this.emotes) {
-      this.calculateEmoteSize(emote);
+    // ── Emotes ──────────────────────────────────────────────────────────────
+    const emoteRaw = this.client.gfxLoader.getRawPixels(
+      GfxType.PostLoginUI,
+      38 + 100,
+    );
+    if (emoteRaw) {
+      for (const emote of this.emotes) {
+        for (const [frameIndex, frame] of emote.frames.entries()) {
+          if (frame.w !== -1) continue;
+          const key = `emote:${emote.emoteId}:${frameIndex}`;
+          // All emote requests share the same pixels object; structured clone
+          // deduplicates it so the buffer is only copied once per message.
+          requests.push({
+            key,
+            pixels: emoteRaw.pixels,
+            width: emoteRaw.width,
+            height: emoteRaw.height,
+            cropX: emote.emoteId * 200 + frameIndex * 50,
+            cropY: 0,
+            cropW: 50,
+            cropH: 50,
+          });
+          applicators.set(key, (result) => {
+            if (result.isBlank) return;
+            frame.xOffset = result.x - 25;
+            frame.yOffset = result.y - 25;
+            frame.x = emote.emoteId * 200 + frameIndex * 50 + result.x;
+            frame.y = result.y;
+            frame.w = result.w;
+            frame.h = result.h;
+          });
+        }
+      }
     }
 
+    // ── Effects ─────────────────────────────────────────────────────────────
     for (const effect of this.effects) {
-      this.calculateEffectSize(effect);
-    }
-  }
-
-  private calculateNpcFrameSizes(npc: NpcAtlasEntry) {
-    const blankIndexes = [];
-    for (const [index, frame] of npc.frames.entries()) {
-      if (!frame || frame.w !== -1) {
-        continue;
-      }
-
-      const baseId = (npc.graphicId - 1) * 40;
-      const bmp = this.getBmp(GfxType.NPC, baseId + index + 1);
-      if (!bmp) {
-        continue;
-      }
-
-      this.tmpCanvas.width = bmp.width;
-      this.tmpCanvas.height = bmp.height;
-      this.tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
-      this.tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
-
-      // Check if image is blank
-      const imgData = this.tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
-      const frameBounds = {
-        x: bmp.width,
-        y: bmp.height,
-        maxX: 0,
-        maxY: 0,
-      };
-      const colors: Set<number> = new Set();
-      for (let y = 0; y < bmp.height; ++y) {
-        for (let x = 0; x < bmp.width; ++x) {
-          const base = (y * bmp.width + x) * 4;
-          colors.add(
-            (imgData.data[base] << 16) |
-              (imgData.data[base + 1] << 8) |
-              imgData.data[base + 2],
-          );
-          const alpha = imgData.data[base + 3];
-          if (alpha !== 0) {
-            if (x < frameBounds.x) frameBounds.x = x;
-            if (y < frameBounds.y) frameBounds.y = y;
-            if (x > frameBounds.maxX) frameBounds.maxX = x;
-            if (y > frameBounds.maxY) frameBounds.maxY = y;
+      const meta = this.client.getEffectMetadata(effect.effectId);
+      let offset = 1;
+      for (const frameArray of [
+        effect.behindFrames,
+        effect.transparentFrames,
+        effect.frontFrames,
+      ]) {
+        const raw = this.client.gfxLoader.getRawPixels(
+          GfxType.Spells,
+          (effect.effectId - 1) * 3 + offset + 100,
+        );
+        if (raw) {
+          const frameWidth = Math.floor(raw.width / frameArray.length);
+          const blankIndices: number[] = [];
+          for (const [frameIndex, frame] of frameArray.entries()) {
+            if (!frame || frame.w !== -1) continue;
+            const key = `effect:${effect.effectId}:${offset}:${frameIndex}`;
+            const capturedFrame = frame;
+            const capturedFrameIndex = frameIndex;
+            requests.push({
+              key,
+              pixels: raw.pixels,
+              width: raw.width,
+              height: raw.height,
+              cropX: frameIndex * frameWidth,
+              cropY: 0,
+              cropW: frameWidth,
+              cropH: raw.height,
+              detectBlank: true,
+            });
+            applicators.set(key, (result) => {
+              if (result.isBlank) {
+                blankIndices.push(capturedFrameIndex);
+                return;
+              }
+              const halfFrameWidth = frameWidth >> 1;
+              const additionalOffset = { x: 0, y: 0 };
+              if (meta.positionOffsetMetadata) {
+                additionalOffset.x +=
+                  meta.positionOffsetMetadata.offsetByFrameX[
+                    capturedFrameIndex
+                  ];
+                additionalOffset.y +=
+                  meta.positionOffsetMetadata.offsetByFrameY[
+                    capturedFrameIndex
+                  ];
+              }
+              if (meta.verticalMetadata) {
+                additionalOffset.y +=
+                  meta.verticalMetadata.frameOffsetY * capturedFrameIndex;
+              }
+              capturedFrame.xOffset =
+                result.x - halfFrameWidth + additionalOffset.x + meta.offsetX;
+              capturedFrame.yOffset =
+                result.y -
+                (36 + Math.floor((raw.height - 100) >> 1)) +
+                additionalOffset.y +
+                meta.offsetY;
+              capturedFrame.x = result.x + capturedFrameIndex * frameWidth;
+              capturedFrame.y = result.y;
+              capturedFrame.w = result.w;
+              capturedFrame.h = result.h;
+            });
           }
+          postProcessors.push(() => {
+            for (const i of blankIndices) {
+              frameArray[i] = undefined!;
+            }
+          });
         }
-      }
-
-      if (colors.size <= 2 || !frameBounds.maxX) {
-        blankIndexes.push(index);
-        continue;
-      }
-
-      // Calculate width and height from min/max values
-      const w = frameBounds.maxX - frameBounds.x + 1;
-      const h = frameBounds.maxY - frameBounds.y + 1;
-
-      const halfBmpWidth = bmp.width >> 1;
-      frame.xOffset = frameBounds.x - halfBmpWidth;
-      frame.yOffset = frameBounds.y - (bmp.height - 23);
-      frame.mirroredXOffset = halfBmpWidth - (frameBounds.x + w);
-      frame.x = frameBounds.x;
-      frame.y = frameBounds.y;
-      frame.w = w;
-      frame.h = h;
-    }
-
-    // Mark blank frames as undefined
-    for (const i of blankIndexes) {
-      npc.frames[i] = undefined;
-    }
-  }
-
-  private calculateItemSize(item: ItemAtlasEntry) {
-    if (item.w !== -1) {
-      return;
-    }
-
-    const bmp = this.getBmp(GfxType.Items, item.graphicId);
-    if (!bmp) {
-      return;
-    }
-
-    this.tmpCanvas.width = bmp.width;
-    this.tmpCanvas.height = bmp.height;
-    this.tmpCtx.clearRect(0, 0, bmp.width, bmp.height);
-    this.tmpCtx.drawImage(bmp, 0, 0, bmp.width, bmp.height);
-
-    const imgData = this.tmpCtx.getImageData(0, 0, bmp.width, bmp.height);
-    const bounds = {
-      x: bmp.width,
-      y: bmp.height,
-      maxX: 0,
-      maxY: 0,
-    };
-
-    for (let y = 0; y < bmp.height; ++y) {
-      for (let x = 0; x < bmp.width; ++x) {
-        const base = (y * bmp.width + x) * 4;
-        const alpha = imgData.data[base + 3];
-        if (alpha !== 0) {
-          if (x < bounds.x) bounds.x = x;
-          if (y < bounds.y) bounds.y = y;
-          if (x > bounds.maxX) bounds.maxX = x;
-          if (y > bounds.maxY) bounds.maxY = y;
-        }
+        offset++;
       }
     }
 
-    // Calculate width and height from min/max values
-    const w = bounds.maxX - bounds.x + 1;
-    const h = bounds.maxY - bounds.y + 1;
-
-    item.xOffset = bounds.x - (bmp.width >> 1);
-    item.yOffset = bounds.y - (bmp.height >> 1);
-    item.x = bounds.x;
-    item.y = bounds.y;
-    item.w = w;
-    item.h = h;
+    // ── Dispatch to worker and apply results ─────────────────────────────────
+    if (requests.length > 0) {
+      const results = await this.compositorClient.calculateBounds(requests);
+      for (const result of results) {
+        applicators.get(result.key)?.(result);
+      }
+      for (const post of postProcessors) {
+        post();
+      }
+    }
   }
 
   private calculateTileSize(tile: TileAtlasEntry) {
@@ -2230,179 +2293,6 @@ export class Atlas {
         entry.w = bmp.width;
         entry.h = bmp.height;
         break;
-      }
-    }
-  }
-
-  private calculateEmoteSize(emote: EmoteAtlasEntry) {
-    this.tmpCanvas.width = 50;
-    this.tmpCanvas.height = 50;
-
-    const bmp = this.getBmp(GfxType.PostLoginUI, 38);
-    if (!bmp) {
-      return;
-    }
-
-    for (const [frameIndex, frame] of emote.frames.entries()) {
-      this.tmpCtx.clearRect(0, 0, this.tmpCanvas.width, this.tmpCanvas.height);
-      this.tmpCtx.drawImage(
-        bmp,
-        emote.emoteId * 200 + frameIndex * 50,
-        0,
-        50,
-        50,
-        0,
-        0,
-        50,
-        50,
-      );
-
-      const imgData = this.tmpCtx.getImageData(
-        0,
-        0,
-        this.tmpCanvas.width,
-        this.tmpCanvas.height,
-      );
-      const bounds = {
-        x: 50,
-        y: 50,
-        maxX: 0,
-        maxY: 0,
-      };
-
-      for (let y = 0; y < 50; ++y) {
-        for (let x = 0; x < 50; ++x) {
-          const base = (y * 50 + x) * 4;
-          const alpha = imgData.data[base + 3];
-          if (alpha !== 0) {
-            if (x < bounds.x) bounds.x = x;
-            if (y < bounds.y) bounds.y = y;
-            if (x > bounds.maxX) bounds.maxX = x;
-            if (y > bounds.maxY) bounds.maxY = y;
-          }
-        }
-      }
-
-      // Calculate width and height from min/max values
-      const w = bounds.maxX - bounds.x + 1;
-      const h = bounds.maxY - bounds.y + 1;
-
-      frame.xOffset = bounds.x - 25;
-      frame.yOffset = bounds.y - 25;
-      frame.x = emote.emoteId * 200 + frameIndex * 50 + bounds.x;
-      frame.y = bounds.y;
-      frame.w = w;
-      frame.h = h;
-    }
-  }
-
-  private calculateEffectSize(effect: EffectAtlasEntry) {
-    const meta = this.client.getEffectMetadata(effect.effectId);
-    let offset = 1;
-    for (const frameArray of [
-      effect.behindFrames,
-      effect.transparentFrames,
-      effect.frontFrames,
-    ]) {
-      const blankIndexes = [];
-      for (const [frameIndex, frame] of frameArray.entries()) {
-        if (!frame || frame.w !== -1) {
-          continue;
-        }
-
-        const bmp = this.getBmp(
-          GfxType.Spells,
-          (effect.effectId - 1) * 3 + offset,
-        );
-        if (!bmp) {
-          continue;
-        }
-
-        const frameWidth = Math.floor(bmp.width / frameArray.length);
-
-        this.tmpCanvas.width = frameWidth;
-        this.tmpCanvas.height = bmp.height;
-        this.tmpCtx.clearRect(0, 0, frameWidth, bmp.height);
-        this.tmpCtx.drawImage(
-          bmp,
-          frameIndex * frameWidth,
-          0,
-          frameWidth,
-          bmp.height,
-          0,
-          0,
-          frameWidth,
-          bmp.height,
-        );
-
-        const imgData = this.tmpCtx.getImageData(0, 0, frameWidth, bmp.height);
-        const bounds = {
-          x: frameWidth,
-          y: bmp.height,
-          maxX: 0,
-          maxY: 0,
-        };
-
-        const colors: Set<number> = new Set();
-        for (let y = 0; y < bmp.height; ++y) {
-          for (let x = 0; x < frameWidth; ++x) {
-            const base = (y * frameWidth + x) * 4;
-            colors.add(
-              (imgData.data[base] << 16) |
-                (imgData.data[base + 1] << 8) |
-                imgData.data[base + 2],
-            );
-            const alpha = imgData.data[base + 3];
-            if (alpha !== 0) {
-              if (x < bounds.x) bounds.x = x;
-              if (y < bounds.y) bounds.y = y;
-              if (x > bounds.maxX) bounds.maxX = x;
-              if (y > bounds.maxY) bounds.maxY = y;
-            }
-          }
-        }
-
-        if (colors.size <= 2 || !bounds.maxX) {
-          blankIndexes.push(frameIndex);
-          continue;
-        }
-
-        // Calculate width and height from min/max values
-        const w = bounds.maxX - bounds.x + 1;
-        const h = bounds.maxY - bounds.y + 1;
-
-        const halfFrameWidth = Math.floor(frameWidth >> 1);
-
-        const additionalOffset = { x: 0, y: 0 };
-        if (meta.positionOffsetMetadata) {
-          additionalOffset.x +=
-            meta.positionOffsetMetadata.offsetByFrameX[frameIndex];
-          additionalOffset.y +=
-            meta.positionOffsetMetadata.offsetByFrameY[frameIndex];
-        }
-
-        if (meta.verticalMetadata) {
-          additionalOffset.y += meta.verticalMetadata.frameOffsetY * frameIndex;
-        }
-
-        frame.xOffset =
-          bounds.x - halfFrameWidth + additionalOffset.x + meta.offsetX;
-        frame.yOffset =
-          bounds.y -
-          (36 + Math.floor((bmp.height - 100) >> 1)) +
-          additionalOffset.y +
-          meta.offsetY;
-
-        frame.x = bounds.x + frameIndex * frameWidth;
-        frame.y = bounds.y;
-        frame.w = w;
-        frame.h = h;
-      }
-      offset++;
-
-      // Mark blank frames as undefined
-      for (const i of blankIndexes) {
-        frameArray[i] = undefined!;
       }
     }
   }

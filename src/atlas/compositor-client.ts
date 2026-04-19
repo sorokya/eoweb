@@ -6,19 +6,29 @@
 import type { GfxLoader } from '@/gfx';
 import { getHatMetadata, getShieldMetaData, getWeaponMetaData } from '@/utils';
 import type {
+  BoundsRequest,
+  BoundsResult,
   CompositeCharacterSpec,
   CompositeResult,
   RawPixels,
 } from './compositor.worker';
+
+export type { BoundsRequest, BoundsResult };
 
 type PendingRequest = {
   resolve: (results: CompositeResult[]) => void;
   reject: (err: unknown) => void;
 };
 
+type PendingBoundsRequest = {
+  resolve: (results: BoundsResult[]) => void;
+  reject: (err: unknown) => void;
+};
+
 export class CompositorClient {
   private worker: Worker;
   private pending = new Map<number, PendingRequest>();
+  private pendingBounds = new Map<number, PendingBoundsRequest>();
   private nextRequestId = 0;
   private gfxLoader: GfxLoader;
 
@@ -37,6 +47,12 @@ export class CompositorClient {
           this.pending.delete(data.requestId);
           pending.resolve(data.results as CompositeResult[]);
         }
+      } else if (data.type === 'BOUNDS_RESULT') {
+        const pending = this.pendingBounds.get(data.requestId);
+        if (pending) {
+          this.pendingBounds.delete(data.requestId);
+          pending.resolve(data.results as BoundsResult[]);
+        }
       }
     };
 
@@ -45,6 +61,10 @@ export class CompositorClient {
       for (const [id, p] of this.pending) {
         p.reject(err);
         this.pending.delete(id);
+      }
+      for (const [id, p] of this.pendingBounds) {
+        p.reject(err);
+        this.pendingBounds.delete(id);
       }
     };
 
@@ -74,7 +94,6 @@ export class CompositorClient {
   }
 
   /**
-  /**
    * Composite character frames off the main thread.
    * @param specs  Characters to composite (resources must be pre-populated).
    */
@@ -90,6 +109,24 @@ export class CompositorClient {
         type: 'COMPOSITE',
         requestId,
         characters: specs,
+      });
+    });
+  }
+
+  /**
+   * Compute tight alpha bounding boxes off the main thread.
+   * Pixel data is cloned into the worker (the gfxLoader cache retains its copy).
+   */
+  calculateBounds(requests: BoundsRequest[]): Promise<BoundsResult[]> {
+    if (requests.length === 0) return Promise.resolve([]);
+
+    return new Promise((resolve, reject) => {
+      const requestId = this.nextRequestId++;
+      this.pendingBounds.set(requestId, { resolve, reject });
+      this.worker.postMessage({
+        type: 'CALCULATE_BOUNDS',
+        requestId,
+        requests,
       });
     });
   }
@@ -144,5 +181,6 @@ export class CompositorClient {
   destroy() {
     this.worker.terminate();
     this.pending.clear();
+    this.pendingBounds.clear();
   }
 }
