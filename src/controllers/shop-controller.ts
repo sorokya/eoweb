@@ -10,7 +10,9 @@ import {
 
 import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
+
 import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon } from '@/ui/enums';
 
 type OpenedSubscriber = (
   name: string,
@@ -86,6 +88,13 @@ export class ShopController {
     this.client.emit('itemBought', undefined);
     playSfxById(SfxId.BuySell);
     for (const cb of this.changedSubscribers) cb();
+
+    const name = this.client.getEifRecordById(boughtItem.id)?.name ?? '';
+    const msg = this.client.locale.shopBoughtMsg
+      .replace('{amount}', String(boughtItem.amount))
+      .replace('{name}', name);
+    this.client.toastController.show(msg);
+    this.client.emit('serverChat', { message: msg, icon: ChatIcon.Star });
   }
 
   notifySold(
@@ -95,6 +104,8 @@ export class ShopController {
   ): void {
     this.setGoldAmount(goldAmount);
 
+    const prevAmount =
+      this.client.items.find((i) => i.id === soldItem.id)?.amount ?? 0;
     if (soldItem.amount) {
       const item = this.client.items.find((i) => i.id === soldItem.id);
       if (item) item.amount = soldItem.amount;
@@ -107,6 +118,14 @@ export class ShopController {
     this.client.emit('itemSold', undefined);
     playSfxById(SfxId.BuySell);
     for (const cb of this.changedSubscribers) cb();
+
+    const soldAmount = prevAmount - (soldItem.amount ?? 0);
+    const name = this.client.getEifRecordById(soldItem.id)?.name ?? '';
+    const msg = this.client.locale.shopSoldMsg
+      .replace('{amount}', String(soldAmount > 0 ? soldAmount : 1))
+      .replace('{name}', name);
+    this.client.toastController.show(msg);
+    this.client.emit('serverChat', { message: msg, icon: ChatIcon.DownArrow });
   }
 
   notifyCrafted(
@@ -148,6 +167,11 @@ export class ShopController {
     this.client.emit('inventoryChanged', undefined);
     playSfxById(SfxId.Craft);
     for (const cb of this.changedSubscribers) cb();
+
+    const name = this.client.getEifRecordById(craftItemId)?.name ?? '';
+    const msg = this.client.locale.shopCraftedMsg.replace('{name}', name);
+    this.client.toastController.showSuccess(msg);
+    this.client.emit('serverChat', { message: msg, icon: ChatIcon.Trophy });
   }
 
   buyItem(itemId: number, maxAmount: number): void {

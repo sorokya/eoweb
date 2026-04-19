@@ -13,6 +13,7 @@ import {
 import type { Client } from '@/client';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon } from '@/ui/enums';
 import type { Vector2 } from '@/vector';
 
 type OpenedSubscriber = (items: ThreeItem[]) => void;
@@ -74,6 +75,13 @@ export class LockerController {
     this.client.emit('inventoryChanged', undefined);
     this.items = lockerItems;
     for (const cb of this.changedSubscribers) cb(lockerItems);
+
+    const name = this.client.getEifRecordById(takenItemId)?.name ?? '';
+    const msg = this.client.locale.lockerTookMsg
+      .replace('{amount}', String(takenItemAmount))
+      .replace('{name}', name);
+    this.client.toastController.show(msg);
+    this.client.emit('serverChat', { message: msg, icon: ChatIcon.DownArrow });
   }
 
   notifyLockerItemAdded(
@@ -87,6 +95,7 @@ export class LockerController {
     const existing = this.client.items.find((i) => i.id === depositedItemId);
     if (!existing) return;
 
+    const depositedAmount = existing.amount - depositedItemAmount;
     existing.amount = depositedItemAmount;
     if (existing.amount <= 0) {
       this.client.items = this.client.items.filter(
@@ -97,6 +106,14 @@ export class LockerController {
     this.client.emit('inventoryChanged', undefined);
     this.items = lockerItems;
     for (const cb of this.changedSubscribers) cb(lockerItems);
+
+    const name = this.client.getEifRecordById(depositedItemId)?.name ?? '';
+    const amount = depositedAmount > 0 ? depositedAmount : 1;
+    const msg = this.client.locale.lockerDepositedMsg
+      .replace('{amount}', String(amount))
+      .replace('{name}', name);
+    this.client.toastController.show(msg);
+    this.client.emit('serverChat', { message: msg, icon: ChatIcon.UpArrow });
   }
 
   notifyLockerUpgraded(goldAmount: number, lockerUpgrades: number): void {
@@ -107,6 +124,10 @@ export class LockerController {
     this.client.bankController.lockerUpgrades = lockerUpgrades;
     playSfxById(SfxId.BuySell);
     this.client.emit('inventoryChanged', undefined);
+
+    const msg = this.client.locale.lockerUpgradedMsg;
+    this.client.toastController.showSuccess(msg);
+    this.client.emit('serverChat', { message: msg, icon: ChatIcon.Star });
   }
 
   notifyLockerFull(maxItems: number): void {

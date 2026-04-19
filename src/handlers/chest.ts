@@ -9,7 +9,9 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '@/client';
+
 import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon } from '@/ui/enums';
 
 function handleChestOpen(client: Client, reader: EoReader) {
   const packet = ChestOpenServerPacket.deserialize(reader);
@@ -39,23 +41,38 @@ function handleChestGet(client: Client, reader: EoReader) {
 
   client.emit('inventoryChanged', undefined);
   client.chestController.handleChanged(packet.items);
+
+  const name = client.getEifRecordById(packet.takenItem.id)?.name ?? '';
+  const msg = client.locale.chestTookMsg
+    .replace('{amount}', String(packet.takenItem.amount))
+    .replace('{name}', name);
+  client.toastController.show(msg);
+  client.emit('serverChat', { message: msg, icon: ChatIcon.DownArrow });
 }
 
 function handleChestReply(client: Client, reader: EoReader) {
   const packet = ChestReplyServerPacket.deserialize(reader);
   client.weight.current = packet.weight.current;
 
+  const item = client.items.find((i) => i.id === packet.addedItemId);
+  const prevAmount = item?.amount ?? 0;
+
   if (packet.remainingAmount) {
-    const item = client.items.find((i) => i.id === packet.addedItemId);
-    if (item) {
-      item.amount = packet.remainingAmount;
-    }
+    if (item) item.amount = packet.remainingAmount;
   } else {
     client.items = client.items.filter((i) => i.id !== packet.addedItemId);
   }
 
   client.emit('inventoryChanged', undefined);
   client.chestController.handleChanged(packet.items);
+
+  const depositedAmount = prevAmount - (packet.remainingAmount ?? 0);
+  const name = client.getEifRecordById(packet.addedItemId)?.name ?? '';
+  const msg = client.locale.chestDepositedMsg
+    .replace('{amount}', String(depositedAmount > 0 ? depositedAmount : 1))
+    .replace('{name}', name);
+  client.toastController.show(msg);
+  client.emit('serverChat', { message: msg, icon: ChatIcon.UpArrow });
 }
 
 export function registerChestHandlers(client: Client) {

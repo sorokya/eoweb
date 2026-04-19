@@ -14,7 +14,9 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { DialogResourceID } from '@/edf';
+
 import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon } from '@/ui/enums';
 
 function handleStatSkillPlayer(client: Client, reader: EoReader) {
   const packet = StatSkillPlayerServerPacket.deserialize(reader);
@@ -88,10 +90,16 @@ function handleStatSkillTake(client: Client, reader: EoReader) {
   client.emit('skillsChanged', undefined);
   client.statSkillController.notifySkillsChanged();
   playSfxById(SfxId.LearnNewSpell);
+
+  const name = client.getEsfRecordById(packet.spellId)?.name ?? '';
+  const msg = client.locale.skillMasterLearnedMsg.replace('{name}', name);
+  client.toastController.showSuccess(msg);
+  client.emit('serverChat', { message: msg, icon: ChatIcon.Star });
 }
 
 function handleStatSkillRemove(client: Client, reader: EoReader) {
   const packet = StatSkillRemoveServerPacket.deserialize(reader);
+  const name = client.getEsfRecordById(packet.spellId)?.name ?? '';
   client.spells = client.spells.filter((s) => s.id !== packet.spellId);
   const strings = client.getDialogStrings(
     DialogResourceID.SKILL_FORGET_SUCCESS,
@@ -99,6 +107,10 @@ function handleStatSkillRemove(client: Client, reader: EoReader) {
   client.alertController.show(strings[0], strings[1]);
   client.emit('skillsChanged', undefined);
   client.statSkillController.notifySkillsChanged();
+
+  const msg = client.locale.skillMasterForgotMsg.replace('{name}', name);
+  client.toastController.show(msg);
+  client.emit('serverChat', { message: msg, icon: ChatIcon.DownArrow });
 }
 
 function handleStatSkillJunk(client: Client, reader: EoReader) {
@@ -131,6 +143,10 @@ function handleStatSkillJunk(client: Client, reader: EoReader) {
     DialogResourceID.SKILL_RESET_CHARACTER_COMPLETE,
   );
   client.alertController.show(strings[0], strings[1]);
+
+  const msg = client.locale.skillMasterResetMsg;
+  client.toastController.show(msg);
+  client.emit('serverChat', { message: msg, icon: ChatIcon.Information });
 }
 
 function handleStatSkillAccept(client: Client, reader: EoReader) {
@@ -143,6 +159,13 @@ function handleStatSkillAccept(client: Client, reader: EoReader) {
   client.emit('skillsChanged', undefined);
   client.statSkillController.notifySkillsChanged();
   playSfxById(SfxId.InventoryPickup);
+
+  const name = client.getEsfRecordById(packet.spell.id)?.name ?? '';
+  const msg = client.locale.spellTrainedMsg
+    .replace('{name}', name)
+    .replace('{level}', String(packet.spell.level));
+  client.toastController.show(msg);
+  client.emit('serverChat', { message: msg, icon: ChatIcon.UpArrow });
 }
 
 export function registerStatSkillHandlers(client: Client) {

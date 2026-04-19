@@ -12,7 +12,9 @@ import {
   MAX_LOCKER_UPGRADES,
 } from '@/consts';
 import { DialogResourceID, EOResourceID } from '@/edf';
+
 import { playSfxById, SfxId } from '@/sfx';
+import { ChatIcon } from '@/ui/enums';
 
 type OpenedSubscriber = (goldBank: number, lockerUpgrades: number) => void;
 type UpdatedSubscriber = (goldBank: number) => void;
@@ -57,6 +59,7 @@ export class BankController {
   }
 
   notifyBankUpdated(goldInventory: number, goldBank: number): void {
+    const previousGoldBank = this.goldBank;
     const gold = this.client.items.find((i) => i.id === 1);
     if (gold) {
       gold.amount = goldInventory;
@@ -65,6 +68,26 @@ export class BankController {
     playSfxById(SfxId.BuySell);
     this.client.emit('inventoryChanged', undefined);
     for (const cb of this.updatedSubscribers) cb(goldBank);
+
+    const diff = Math.abs(goldBank - previousGoldBank);
+    if (goldBank > previousGoldBank) {
+      const msg = this.client.locale.bankDepositedMsg.replace(
+        '{amount}',
+        diff.toLocaleString(),
+      );
+      this.client.toastController.show(msg);
+      this.client.emit('serverChat', { message: msg, icon: ChatIcon.UpArrow });
+    } else if (goldBank < previousGoldBank) {
+      const msg = this.client.locale.bankWithdrewMsg.replace(
+        '{amount}',
+        diff.toLocaleString(),
+      );
+      this.client.toastController.show(msg);
+      this.client.emit('serverChat', {
+        message: msg,
+        icon: ChatIcon.DownArrow,
+      });
+    }
   }
 
   getNextLockerUpgradeCost(): number | null {

@@ -283,6 +283,9 @@ export const locales = {
     shopCraftEmpty: 'This shop has no crafts.',
     shopIngredients: 'Ingredients',
     shopNoIngredients: 'No ingredients required.',
+    shopBoughtMsg: 'Bought {amount}x {name}',
+    shopSoldMsg: 'Sold {amount}x {name}',
+    shopCraftedMsg: 'Crafted {name}',
     // Skill master dialog
     skillMasterLearnTab: 'Learn',
     skillMasterForgetTab: 'Forget',
@@ -302,6 +305,21 @@ export const locales = {
     skillMasterStatCha: 'CHA',
     skillMasterGold: 'gold',
     skillMasterSkillReq: 'Requires',
+    skillMasterLearnedMsg: 'Learned {name}',
+    skillMasterForgotMsg: 'Forgot {name}',
+    skillMasterResetMsg: 'Character has been reset',
+    // Locker notifications
+    lockerDepositedMsg: 'Deposited {amount}x {name} to locker',
+    lockerTookMsg: 'Took {amount}x {name} from locker',
+    lockerUpgradedMsg: 'Locker upgraded!',
+    // Chest notifications
+    chestDepositedMsg: 'Added {amount}x {name} to chest',
+    chestTookMsg: 'Took {amount}x {name} from chest',
+    // Bank notifications
+    bankDepositedMsg: 'Deposited {amount} gold to bank',
+    bankWithdrewMsg: 'Withdrew {amount} gold from bank',
+    // Spell training
+    spellTrainedMsg: '{name} trained to level {level}',
     // Dialog titles
     inventoryTitle: 'Inventory',
     junkDropZone: 'Junk Item',

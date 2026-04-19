@@ -383,7 +383,7 @@ export class MouseController {
     if (signAt) {
       const sign = this.client.mapRenderer.getSign(signAt.x, signAt.y);
       if (sign) {
-        this.client.emit('smallAlert', sign);
+        this.client.alertController.show(sign.title, sign.message);
         return;
       }
     }
