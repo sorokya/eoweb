@@ -27,14 +27,15 @@ export class InventoryController {
     this.client = client;
   }
 
-  dropItem(id: number, amount: number, coords: Vector2): void {
+  dropItem(id: number, coords: Vector2): void {
     const item = this.client.items.find((i) => i.id === id);
     if (!item) {
       return;
     }
 
-    const actualAmount = Math.min(amount, item.amount);
-    if (actualAmount) {
+    const send = (amount: number) => {
+      const actualAmount = Math.min(amount, item.amount);
+      if (actualAmount <= 0) return;
       const packet = new ItemDropClientPacket();
       packet.item = new ThreeItem();
       packet.item.id = item.id;
@@ -43,15 +44,75 @@ export class InventoryController {
       packet.coords.x = coords.x + 1;
       packet.coords.y = coords.y + 1;
       this.client.bus!.send(packet);
+    };
+
+    if (item.amount > 1) {
+      const title = this.client.getResourceString(
+        EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
+      );
+      const itemName = this.client.getEifRecordById(id)?.name ?? '';
+      const actionLabel = this.client.getResourceString(
+        EOResourceID.DIALOG_TRANSFER_DROP,
+      );
+      this.client.alertController.showAmount(
+        title,
+        itemName,
+        item.amount,
+        actionLabel,
+        (amount) => {
+          if (amount !== null && amount > 0) {
+            send(amount);
+          }
+        },
+      );
+    } else {
+      send(1);
     }
   }
 
-  junkItem(id: number, amount: number): void {
-    const packet = new ItemJunkClientPacket();
-    packet.item = new Item();
-    packet.item.id = id;
-    packet.item.amount = amount;
-    this.client.bus!.send(packet);
+  junkItem(id: number): void {
+    const item = this.client.items.find((i) => i.id === id);
+    if (!item) return;
+
+    const send = (amount: number) => {
+      const packet = new ItemJunkClientPacket();
+      packet.item = new Item();
+      packet.item.id = id;
+      packet.item.amount = amount;
+      this.client.bus!.send(packet);
+    };
+
+    const itemName = this.client.getEifRecordById(id)?.name ?? '';
+
+    if (item.amount > 1) {
+      const title = this.client.getResourceString(
+        EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
+      );
+      const actionLabel = this.client.getResourceString(
+        EOResourceID.DIALOG_TRANSFER_JUNK,
+      );
+      this.client.alertController.showAmount(
+        title,
+        itemName,
+        item.amount,
+        actionLabel,
+        (amount) => {
+          if (amount !== null && amount > 0) send(amount);
+        },
+      );
+    } else {
+      const message = this.client.locale.junkConfirmMessage.replace(
+        '{name}',
+        itemName,
+      );
+      this.client.alertController.showConfirm(
+        this.client.locale.junkConfirmTitle,
+        message,
+        (confirmed) => {
+          if (confirmed) send(1);
+        },
+      );
+    }
   }
 
   useItem(id: number): void {

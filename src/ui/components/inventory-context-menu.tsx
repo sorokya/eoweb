@@ -1,8 +1,6 @@
 import type { Item } from 'eolib';
 import { createPortal } from 'preact/compat';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { EOResourceID } from '@/edf';
-import { formatLocaleString } from '@/locale';
 import { useClient, useLocale } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
 import { useHotbar } from '@/ui/in-game';
@@ -34,11 +32,6 @@ export function InventoryContextMenu({ item, x, y, onClose }: Props) {
     setPos({ left, top });
   }, [x, y]);
 
-  const record = client.getEifRecordById(item.id);
-  const name =
-    record?.name ??
-    formatLocaleString(locale.itemFallbackName, { id: String(item.id) });
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -63,60 +56,13 @@ export function InventoryContextMenu({ item, x, y, onClose }: Props) {
   const handleDrop = (e: MouseEvent) => {
     e.preventDefault();
     onClose();
-    if (item.amount > 1) {
-      const title = client.getResourceString(
-        EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
-      );
-      const actionLabel = client.getResourceString(
-        EOResourceID.DIALOG_TRANSFER_DROP,
-      );
-      client.alertController.showAmount(
-        title,
-        name,
-        item.amount,
-        actionLabel,
-        (amount) => {
-          if (amount !== null && amount > 0) {
-            client.inventoryController.dropItem(item.id, amount, getCoords());
-          }
-        },
-      );
-    } else {
-      client.inventoryController.dropItem(item.id, 1, getCoords());
-    }
+    client.inventoryController.dropItem(item.id, getCoords());
   };
 
   const handleJunk = (e: MouseEvent) => {
     e.preventDefault();
     onClose();
-    if (item.amount > 1) {
-      const title = client.getResourceString(
-        EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
-      );
-      const actionLabel = client.getResourceString(
-        EOResourceID.DIALOG_TRANSFER_JUNK,
-      );
-      client.alertController.showAmount(
-        title,
-        name,
-        item.amount,
-        actionLabel,
-        (amount) => {
-          if (amount !== null && amount > 0) {
-            client.inventoryController.junkItem(item.id, amount);
-          }
-        },
-      );
-    } else {
-      const message = locale.junkConfirmMessage.replace('{name}', name);
-      client.alertController.showConfirm(
-        locale.junkConfirmTitle,
-        message,
-        (confirmed) => {
-          if (confirmed) client.inventoryController.junkItem(item.id, 1);
-        },
-      );
-    }
+    client.inventoryController.junkItem(item.id);
   };
 
   const handleAssignSlot = (e: MouseEvent, slotIndex: number) => {

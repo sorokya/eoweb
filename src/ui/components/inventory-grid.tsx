@@ -1,7 +1,6 @@
 import { Item, ItemSize } from 'eolib';
 import { createPortal } from 'preact/compat';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
 import { useClient, useLocale } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
@@ -390,52 +389,9 @@ export function InventoryGrid({ itemIds }: Props) {
             if (!client.mapController.cursorInDropRange()) return;
             client.mouseController.setIgnoreNextClick();
             const coords = client.mouseCoords ?? getCoords();
-            const itemName = client.getEifRecordById(item.id)?.name ?? '';
-            if (item.amount > 1) {
-              const title = client.getResourceString(
-                EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
-              );
-              const actionLabel = client.getResourceString(
-                EOResourceID.DIALOG_TRANSFER_DROP,
-              );
-              client.alertController.showAmount(
-                title,
-                itemName,
-                item.amount,
-                actionLabel,
-                (amount) => {
-                  if (amount !== null && amount > 0) {
-                    client.inventoryController.dropItem(
-                      item.id,
-                      amount,
-                      coords,
-                    );
-                  }
-                },
-              );
-            } else {
-              client.inventoryController.dropItem(item.id, 1, coords);
-            }
+            client.inventoryController.dropItem(item.id, coords);
           } else if (result.type === 'chest') {
-            const itemName = client.getEifRecordById(item.id)?.name ?? '';
-            if (item.amount > 1) {
-              const title = client.getResourceString(
-                EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
-              );
-              client.alertController.showAmount(
-                title,
-                itemName,
-                item.amount,
-                locale.chestDeposit,
-                (amount) => {
-                  if (amount !== null && amount > 0) {
-                    client.chestController.addItem(item.id, amount);
-                  }
-                },
-              );
-            } else {
-              client.chestController.addItem(item.id, 1);
-            }
+            client.chestController.addItem(item.id);
           }
         }
       },

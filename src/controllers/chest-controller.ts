@@ -122,12 +122,35 @@ export class ChestController {
     this.client.bus!.send(packet);
   }
 
-  addItem(itemId: number, amount: number): void {
-    const packet = new ChestAddClientPacket();
-    packet.addItem = new ThreeItem();
-    packet.addItem.id = itemId;
-    packet.addItem.amount = amount;
-    packet.coords = this.chestCoords;
-    this.client.bus!.send(packet);
+  addItem(itemId: number): void {
+    const inventoryItem = this.client.items.find((i) => i.id === itemId);
+    if (!inventoryItem) return;
+
+    const send = (amount: number) => {
+      const packet = new ChestAddClientPacket();
+      packet.addItem = new ThreeItem();
+      packet.addItem.id = itemId;
+      packet.addItem.amount = amount;
+      packet.coords = this.chestCoords;
+      this.client.bus!.send(packet);
+    };
+
+    if (inventoryItem.amount > 1) {
+      const title = this.client.getResourceString(
+        EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
+      );
+      const itemName = this.client.getEifRecordById(itemId)?.name ?? '';
+      this.client.alertController.showAmount(
+        title,
+        itemName,
+        inventoryItem.amount,
+        this.client.locale.chestDeposit,
+        (amount) => {
+          if (amount !== null && amount > 0) send(amount);
+        },
+      );
+    } else {
+      send(1);
+    }
   }
 }
