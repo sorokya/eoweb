@@ -18,11 +18,12 @@ export type DragDropResult =
   | { type: 'hotbar-slot'; index: number }
   | { type: 'chest' }
   | { type: 'locker' }
+  | { type: 'junk' }
   | { type: 'ground' }
   | { type: 'cancelled' };
 
 export type DragInfo = {
-  source: 'inventory' | 'equipment';
+  source: 'inventory' | 'equipment' | 'spell';
   itemId: number;
   equipSlot?: EquipmentSlot;
   pointerId: number;
@@ -33,6 +34,7 @@ export type DragInfo = {
   graphicId: number;
   ghostWidth: number;
   ghostHeight: number;
+  ghostImageUrl?: string;
 };
 
 type StartDragOptions = {
@@ -206,6 +208,14 @@ export function ItemDragProvider({
         return;
       }
 
+      const junkEl = (target as HTMLElement).closest<HTMLElement>(
+        '[data-junk-drop]',
+      );
+      if (junkEl) {
+        resolve({ type: 'junk' });
+        return;
+      }
+
       resolve({ type: 'ground' });
     };
 
@@ -261,11 +271,20 @@ export function ItemDragProvider({
             height: currentDrag.ghostHeight,
           }}
         >
-          <ItemIcon
-            graphicId={currentDrag.graphicId}
-            alt=''
-            class='max-h-full max-w-full object-contain'
-          />
+          {currentDrag.ghostImageUrl ? (
+            <img
+              src={currentDrag.ghostImageUrl}
+              alt=''
+              class='max-h-full max-w-full object-contain'
+              draggable={false}
+            />
+          ) : (
+            <ItemIcon
+              graphicId={currentDrag.graphicId}
+              alt=''
+              class='max-h-full max-w-full object-contain'
+            />
+          )}
         </div>
       )}
     </ItemDragContext.Provider>

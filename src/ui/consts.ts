@@ -6,3 +6,5 @@ export const CHAT_Z = 15;
 export const SIDEMENU_Z = 35;
 /** z-index for moveable game dialogs (above HUD and chat, below alert modals). */
 export const DIALOG_Z = 20;
+/** z-index for the hotbar while an item/spell drag is active (above all dialogs). */
+export const DRAG_HOTBAR_Z = 50;

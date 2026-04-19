@@ -62,6 +62,14 @@ export class StatSkillController {
     this.client.bus!.send(packet);
   }
 
+  trainSkill(spellId: number): void {
+    const packet = new StatSkillAddClientPacket();
+    packet.actionType = TrainType.Skill;
+    packet.actionTypeData = new StatSkillAddClientPacket.ActionTypeDataSkill();
+    packet.actionTypeData.spellId = spellId;
+    this.client.bus!.send(packet);
+  }
+
   learnSkill(skillId: number): void {
     const packet = new StatSkillTakeClientPacket();
     packet.sessionId = this.client.sessionId;

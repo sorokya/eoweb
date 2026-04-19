@@ -25,6 +25,8 @@ type DialogBaseProps = {
   hideControls?: boolean;
   /** Disable drag handle on the title bar. */
   noDrag?: boolean;
+  /** When true, limits dialog height so it doesn't overlap the hotbar. */
+  avoidBottom?: boolean;
   /** When true, children are rendered without the default px-1 pb-1 padding wrapper. */
   noPadding?: boolean;
   /** Optional override for the close button action. Defaults to closeDialog(id). */
@@ -43,6 +45,7 @@ export function DialogBase({
   hideControls = false,
   noDrag = false,
   noPadding = false,
+  avoidBottom = false,
   onClose,
 }: DialogBaseProps) {
   const { locale } = useLocale();
@@ -118,6 +121,14 @@ export function DialogBase({
         ? `${width}px`
         : width
       : SIZE_WIDTH[size];
+
+  const topPx = isManual ? (manualPos?.y ?? 0) : 0;
+  const maxHeightValue = avoidBottom
+    ? isManual
+      ? `calc(100vh - ${topPx}px - var(--hotbar-h, 64px) - 8px)`
+      : 'calc(100vh - var(--hotbar-h, 64px) - 8px)'
+    : '80vh';
+
   const posStyle = isManual
     ? {
         position: 'fixed' as const,
@@ -126,13 +137,13 @@ export function DialogBase({
         zIndex: zIndexOf(id),
         width: dialogWidth,
         maxWidth: '90vw',
-        maxHeight: '80vh',
+        maxHeight: maxHeightValue,
         touchAction: 'none' as const,
       }
     : {
         width: dialogWidth,
         maxWidth: '90vw',
-        maxHeight: '80vh',
+        maxHeight: maxHeightValue,
         flexShrink: 0,
         touchAction: 'none' as const,
       };

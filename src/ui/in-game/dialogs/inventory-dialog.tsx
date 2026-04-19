@@ -9,6 +9,7 @@ export function InventoryDialog() {
       id='inventory'
       title={locale.inventoryTitle}
       width={INVENTORY_GRID_WIDTH + 10}
+      avoidBottom
     >
       <InventoryGrid />
     </DialogBase>

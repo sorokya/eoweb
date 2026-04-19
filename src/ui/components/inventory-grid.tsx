@@ -1,12 +1,12 @@
 import { Item, ItemSize } from 'eolib';
 import { createPortal } from 'preact/compat';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { FaTrash } from 'react-icons/fa';
 import { playSfxById, SfxId } from '@/sfx';
 import { useClient, useLocale } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
 import { useHotbar, useItemDrag } from '@/ui/in-game';
 import { getItemMeta } from '@/utils';
-import { InventoryContextMenu } from './inventory-context-menu';
 import { ItemIcon } from './item-icon';
 import { Tabs } from './tabs';
 
@@ -124,21 +124,36 @@ function loadPositions(
   return positions;
 }
 
-type ContextMenuState = { item: Item; x: number; y: number } | null;
-
 type Props = {
   /** If provided, only items with these IDs are shown. Defaults to all client items. */
   itemIds?: number[];
 };
 
+function JunkZone() {
+  const { currentDrag } = useItemDrag();
+  const { locale } = useLocale();
+  const [isOver, setIsOver] = useState(false);
+  if (currentDrag?.source !== 'inventory') return null;
+  return (
+    <div
+      data-junk-drop
+      class={`flex h-full cursor-pointer items-center gap-1 whitespace-nowrap rounded border-2 border-dashed px-2 py-0.5 text-xs transition-colors ${isOver ? 'border-error bg-error/20 text-error' : 'border-base-content/20 text-base-content/40'}`}
+      onPointerEnter={() => setIsOver(true)}
+      onPointerLeave={() => setIsOver(false)}
+    >
+      <FaTrash size={11} />
+      {locale.junkDropZone}
+    </div>
+  );
+}
+
 export function InventoryGrid({ itemIds }: Props) {
   const client = useClient();
   const { locale } = useLocale();
-  const { startDrag, cancelDrag, currentDrag } = useItemDrag();
+  const { startDrag, currentDrag } = useItemDrag();
   const { setSlot } = useHotbar();
   const [activeTab, setActiveTab] = useState(0);
   const [positions, setPositions] = useState<ItemPosition[]>([]);
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
   const [tooltip, setTooltip] = useState<{
     id: number;
     x: number;
@@ -146,7 +161,6 @@ export function InventoryGrid({ itemIds }: Props) {
   } | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef(0);
-  const suppressContextMenuUntilRef = useRef(0);
 
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
@@ -294,7 +308,6 @@ export function InventoryGrid({ itemIds }: Props) {
     const now = Date.now();
     if (now - lastTapRef.current < 250) {
       lastTapRef.current = 0;
-      suppressContextMenuUntilRef.current = now + 750;
       client.inventoryController.useItem(item.id);
       return;
     }
@@ -307,7 +320,6 @@ export function InventoryGrid({ itemIds }: Props) {
 
     const span = ITEM_SPAN[record.size];
 
-    // Long-press timer for context menu (mobile): cancel drag and show menu
     let longPressTimer: ReturnType<typeof setTimeout> | null = null;
     if (e.pointerType === 'touch') {
       const tooltipX = Math.min(rect.right + 4, window.innerWidth - 168);
@@ -315,10 +327,7 @@ export function InventoryGrid({ itemIds }: Props) {
       setTooltip({ id: item.id, x: tooltipX, y: tooltipY });
       longPressTimer = setTimeout(() => {
         longPressTimer = null;
-        if (Date.now() < suppressContextMenuUntilRef.current) return;
         setTooltip(null);
-        cancelDrag();
-        setContextMenu({ item, x: e.clientX, y: e.clientY });
       }, 700);
     }
 
@@ -347,6 +356,8 @@ export function InventoryGrid({ itemIds }: Props) {
           clearTimeout(longPressTimer);
           longPressTimer = null;
         }
+        // Hide tooltip once dragging starts
+        setTooltip(null);
         // Keep the game-world cursor in sync while dragging
         if (client.app) {
           const canvas = client.app.renderer.canvas;
@@ -390,6 +401,8 @@ export function InventoryGrid({ itemIds }: Props) {
             if (!client.mapController.cursorInDropRange()) return;
             const coords = client.mouseCoords ?? getCoords();
             client.inventoryController.dropItem(item.id, coords);
+          } else if (result.type === 'junk') {
+            client.inventoryController.junkItem(item.id);
           } else if (result.type === 'chest') {
             client.chestController.addItem(item.id);
           } else if (result.type === 'locker') {
@@ -398,12 +411,6 @@ export function InventoryGrid({ itemIds }: Props) {
         }
       },
     });
-  };
-
-  const onContextMenu = (e: MouseEvent, item: Item) => {
-    e.preventDefault();
-    if (Date.now() < suppressContextMenuUntilRef.current) return;
-    setContextMenu({ item, x: e.clientX, y: e.clientY });
   };
 
   const tabItems = positions.filter((p) => p.tab === activeTab);
@@ -426,18 +433,21 @@ export function InventoryGrid({ itemIds }: Props) {
 
   return (
     <div class='flex flex-col gap-1'>
-      {/* Tab bar */}
-      <Tabs
-        name='inventory-tabs'
-        items={TAB_LABELS.map((label, index) => ({
-          id: index.toString(),
-          label,
-        }))}
-        activeId={activeTab.toString()}
-        onSelect={(id) => setActiveTab(Number(id))}
-        style='border'
-        size='sm'
-      />
+      {/* Tab bar + junk zone */}
+      <div class='flex items-center gap-1'>
+        <Tabs
+          name='inventory-tabs'
+          items={TAB_LABELS.map((label, index) => ({
+            id: index.toString(),
+            label,
+          }))}
+          activeId={activeTab.toString()}
+          onSelect={(id) => setActiveTab(Number(id))}
+          style='border'
+          size='sm'
+        />
+        <JunkZone />
+      </div>
       {/* Grid */}
       <div
         ref={gridRef}
@@ -499,7 +509,6 @@ export function InventoryGrid({ itemIds }: Props) {
                 height: span.rows * CELL_SIZE,
               }}
               onPointerDown={(e) => onPointerDown(e, item)}
-              onContextMenu={(e) => onContextMenu(e, item)}
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLElement;
                 const r = el.getBoundingClientRect();
@@ -523,8 +532,7 @@ export function InventoryGrid({ itemIds }: Props) {
           );
         })}
       </div>
-
-      {/* Fixed-position tooltip portal — avoids scroll/clip issues inside dialogs */}
+      {/* Fixed-position tooltip portal — avoids scroll/clip issues inside dialogs */}{' '}
       {tooltip &&
         (() => {
           const item = visibleItems.find((i) => i.id === tooltip.id);
@@ -549,16 +557,6 @@ export function InventoryGrid({ itemIds }: Props) {
             document.getElementById('ui') ?? document.body,
           );
         })()}
-
-      {/* Context menu */}
-      {contextMenu && (
-        <InventoryContextMenu
-          item={contextMenu.item}
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onClose={() => setContextMenu(null)}
-        />
-      )}
     </div>
   );
 }

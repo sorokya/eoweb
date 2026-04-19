@@ -78,7 +78,7 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
 
   if (skills.length === 0) {
     return (
-      <p class='py-6 text-center text-sm text-base-content/50'>
+      <p class='py-6 text-center text-base-content/50 text-sm'>
         {locale.skillMasterNoSkillsToLearn}
       </p>
     );
@@ -234,7 +234,7 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
                       {locale.skillMasterCost}:
                     </span>
                     <span
-                      class={`tabular-nums text-xs font-medium ${goldOk ? 'text-success' : 'text-error'}`}
+                      class={`font-medium text-xs tabular-nums ${goldOk ? 'text-success' : 'text-error'}`}
                     >
                       {skill.cost.toLocaleString()} {locale.skillMasterGold}
                     </span>
@@ -342,7 +342,7 @@ function ForgetTab() {
   return (
     <div class='flex flex-col gap-2 p-2'>
       {spells.length === 0 ? (
-        <p class='py-6 text-center text-sm text-base-content/50'>
+        <p class='py-6 text-center text-base-content/50 text-sm'>
           {locale.skillMasterNoSkillsLearned}
         </p>
       ) : (
@@ -360,7 +360,7 @@ function ForgetTab() {
                 class='flex items-center gap-2 rounded border border-base-content/10 bg-base-200 px-2 py-1.5'
               >
                 <SpellIconDisplay iconId={iconId} size='sm' />
-                <span class='min-w-0 flex-1 truncate text-sm font-medium'>
+                <span class='min-w-0 flex-1 truncate font-medium text-sm'>
                   {name}
                 </span>
                 <Button
@@ -377,7 +377,7 @@ function ForgetTab() {
       )}
 
       {/* Reset character button */}
-      <div class='mt-2 border-t border-base-content/10 pt-2'>
+      <div class='mt-2 border-base-content/10 border-t pt-2'>
         <Button
           variant={['sm', 'warning', 'outline']}
           class='w-full'

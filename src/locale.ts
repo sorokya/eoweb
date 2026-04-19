@@ -304,10 +304,16 @@ export const locales = {
     skillMasterSkillReq: 'Requires',
     // Dialog titles
     inventoryTitle: 'Inventory',
+    junkDropZone: 'Junk Item',
     questsTitle: 'Quests',
     questsComingSoon: 'Quests coming soon',
     spellsTitle: 'Spells',
     spellsComingSoon: 'Spells coming soon',
+    spellsNoSpells: 'No spells learned yet',
+    spellsSkillPoints: 'Skill Points: {count}',
+    spellsLevel: 'Lv {level}',
+    spellsTrainBtn: 'Train',
+    spellsDragHint: 'Drag to hotbar',
     socialTitle: 'Social',
     settingsTitle: 'Settings',
     // Social dialog

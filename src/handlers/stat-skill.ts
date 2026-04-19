@@ -4,6 +4,7 @@ import {
   PacketFamily,
   SkillMasterReply,
   Spell,
+  StatSkillAcceptServerPacket,
   StatSkillJunkServerPacket,
   StatSkillOpenServerPacket,
   StatSkillPlayerServerPacket,
@@ -132,7 +133,26 @@ function handleStatSkillJunk(client: Client, reader: EoReader) {
   client.alertController.show(strings[0], strings[1]);
 }
 
+function handleStatSkillAccept(client: Client, reader: EoReader) {
+  const packet = StatSkillAcceptServerPacket.deserialize(reader);
+  client.skillPoints = packet.skillPoints;
+  const existing = client.spells.find((s) => s.id === packet.spell.id);
+  if (existing) {
+    existing.level = packet.spell.level;
+  }
+  client.emit('skillsChanged', undefined);
+  client.statSkillController.notifySkillsChanged();
+  playSfxById(SfxId.InventoryPickup);
+}
+
 export function registerStatSkillHandlers(client: Client) {
+  client.bus!.registerPacketHandler(
+    PacketFamily.StatSkill,
+    PacketAction.Accept,
+    (reader) => {
+      handleStatSkillAccept(client, reader);
+    },
+  );
   client.bus!.registerPacketHandler(
     PacketFamily.StatSkill,
     PacketAction.Player,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { playSfxById, SfxId } from '@/sfx';
-import { HUD_Z } from '@/ui/consts';
+import { DRAG_HOTBAR_Z, HUD_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
 import {
@@ -94,7 +94,9 @@ function HotBarSlot({ index, pillow }: SlotProps) {
     [client, slot.type, index, clearSlot],
   );
 
-  const isDropTarget = !!currentDrag && currentDrag.source === 'inventory';
+  const isDropTarget =
+    !!currentDrag &&
+    (currentDrag.source === 'inventory' || currentDrag.source === 'spell');
 
   return (
     <div
@@ -158,12 +160,29 @@ function HotBarSlot({ index, pillow }: SlotProps) {
 // ---------------------------------------------------------------------------
 export function HotBar() {
   const pillow = usePillowGfxUrl();
+  const { currentDrag } = useItemDrag();
+  const barRef = useRef<HTMLDivElement>(null);
+  const isDragging = currentDrag !== null;
+
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const update = () => {
+      const h = el.getBoundingClientRect().height;
+      document.documentElement.style.setProperty('--hotbar-h', `${h}px`);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <div
+      ref={barRef}
       role='presentation'
       class='flex gap-1'
-      style={{ zIndex: HUD_Z }}
+      style={{ zIndex: isDragging ? DRAG_HOTBAR_Z : HUD_Z }}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
       onContextMenu={(e) => e.stopPropagation()}

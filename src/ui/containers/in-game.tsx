@@ -1,6 +1,6 @@
 import type { SkillLearn } from 'eolib';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import { CHAT_Z, DIALOG_Z } from '@/ui/consts';
+import { CHAT_Z, DIALOG_Z, DRAG_HOTBAR_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import type { DialogId } from '@/ui/in-game';
 import {
@@ -30,6 +30,7 @@ import {
   StatusMessages,
   TouchActionButtons,
   TouchJoystick,
+  useItemDrag,
   useWindowManager,
   WindowManagerProvider,
 } from '@/ui/in-game';
@@ -84,7 +85,9 @@ function DialogById({ id }: { id: DialogId }) {
 function InGameContent() {
   const client = useClient();
   const { isOpen, getLayout, openDialog, closeDialog } = useWindowManager();
+  const { currentDrag } = useItemDrag();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const isDragging = currentDrag !== null;
 
   // Chat dialogs are always considered open — they manage their own visibility.
   const open = ALL_DIALOG_IDS.filter((id) => isOpen(id));
@@ -196,7 +199,7 @@ function InGameContent() {
       {/* Desktop bottom bar: chat left | hotbar centered | spacer right */}
       <div
         class='pointer-events-none absolute inset-x-0 bottom-0 hidden items-end px-2 pb-2 lg:flex'
-        style={{ zIndex: CHAT_Z }}
+        style={{ zIndex: isDragging ? DRAG_HOTBAR_Z : CHAT_Z }}
       >
         <div class='pointer-events-auto flex flex-1 items-end justify-start'>
           <ChatDialog />
@@ -222,7 +225,7 @@ function InGameContent() {
       {/* Mobile: hotbar at bottom center */}
       <div
         class='pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2 lg:hidden'
-        style={{ zIndex: CHAT_Z }}
+        style={{ zIndex: isDragging ? DRAG_HOTBAR_Z : CHAT_Z }}
       >
         <div class='pointer-events-auto'>
           <HotBar />
