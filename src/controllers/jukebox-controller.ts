@@ -169,4 +169,10 @@ export class JukeboxController {
   subscribeRequestSucceeded(cb: RequestSucceededSubscriber): void {
     this.requestSucceededSubscribers.push(cb);
   }
+
+  unsubscribeRequestSucceeded(cb: RequestSucceededSubscriber): void {
+    this.requestSucceededSubscribers = this.requestSucceededSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
 }

@@ -1,6 +1,6 @@
 import { Item, ItemSize } from 'eolib';
 import { createPortal } from 'preact/compat';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
 import { useClient, useLocale } from '@/ui/context';
@@ -178,9 +178,9 @@ export function InventoryGrid({ itemIds }: Props) {
     return items;
   };
 
-  const buildRecordMap = (): Map<number, ItemSpan> => {
+  const buildRecordMap = (items: Item[]): Map<number, ItemSpan> => {
     const map = new Map<number, ItemSpan>();
-    for (const item of getVisibleItems()) {
+    for (const item of items) {
       const record = client.getEifRecordById(item.id);
       if (record) map.set(item.id, ITEM_SPAN[record.size]);
     }
@@ -190,8 +190,9 @@ export function InventoryGrid({ itemIds }: Props) {
   const storageKey = `${client.name}-inventory`;
 
   const syncPositions = () => {
-    const records = buildRecordMap();
-    const synced = loadPositions(storageKey, getVisibleItems(), records);
+    const items = getVisibleItems();
+    const records = buildRecordMap(items);
+    const synced = loadPositions(storageKey, items, records);
     setPositions(synced);
   };
 
@@ -210,7 +211,8 @@ export function InventoryGrid({ itemIds }: Props) {
   };
 
   const tryMoveToCell = (itemId: number, tab: number, x: number, y: number) => {
-    const records = buildRecordMap();
+    const items = getVisibleItems();
+    const records = buildRecordMap(items);
     const span = records.get(itemId);
     if (!span) return;
 
@@ -257,7 +259,8 @@ export function InventoryGrid({ itemIds }: Props) {
   };
 
   const tryMoveToTab = (itemId: number, tab: number) => {
-    const records = buildRecordMap();
+    const items = getVisibleItems();
+    const records = buildRecordMap(items);
     const span = records.get(itemId);
     if (!span) return;
 
@@ -321,7 +324,10 @@ export function InventoryGrid({ itemIds }: Props) {
     }
 
     playSfxById(SfxId.InventoryPickup);
-    setTooltip(null);
+    // Don't clear the tooltip on touch — it was just set above so the user can see it
+    if (e.pointerType !== 'touch') {
+      setTooltip(null);
+    }
 
     startDrag({
       info: {
@@ -444,6 +450,9 @@ export function InventoryGrid({ itemIds }: Props) {
 
   const tabItems = positions.filter((p) => p.tab === activeTab);
 
+  // Compute once per render to avoid redundant scans of client.items in JSX
+  const visibleItems = useMemo(getVisibleItems, [positions]);
+
   const getTooltipLines = (item: Item): string[] => {
     const record = client.getEifRecordById(item.id);
     if (!record) return [];
@@ -505,7 +514,7 @@ export function InventoryGrid({ itemIds }: Props) {
 
         {/* Items */}
         {tabItems.map((pos) => {
-          const item = getVisibleItems().find((i) => i.id === pos.id);
+          const item = visibleItems.find((i) => i.id === pos.id);
           const record = item && client.getEifRecordById(item.id);
           if (!item || !record) return null;
 
@@ -560,7 +569,7 @@ export function InventoryGrid({ itemIds }: Props) {
       {/* Fixed-position tooltip portal — avoids scroll/clip issues inside dialogs */}
       {tooltip &&
         (() => {
-          const item = getVisibleItems().find((i) => i.id === tooltip.id);
+          const item = visibleItems.find((i) => i.id === tooltip.id);
           const lines = item ? getTooltipLines(item) : [];
           if (!lines.length) return null;
           return createPortal(

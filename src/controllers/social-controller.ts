@@ -49,6 +49,12 @@ export class SocialController {
     this.paperdollOpenedSubscribers.push(callback);
   }
 
+  unsubscribePaperdollOpened(callback: (data: PaperdollOpenedData) => void) {
+    this.paperdollOpenedSubscribers = this.paperdollOpenedSubscribers.filter(
+      (s) => s !== callback,
+    );
+  }
+
   notifyPaperdollOpened(data: PaperdollOpenedData) {
     if (data.details.playerId === this.client.playerId) {
       this.client.home = data.details.home;

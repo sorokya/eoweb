@@ -131,13 +131,16 @@ function HotBarSlot({ index, pillow }: SlotProps) {
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const CLEAR_THRESHOLD = 30; // px
 
-  const handlePointerDown = useCallback((e: PointerEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (slot.type === SlotType.Empty) return;
-    pointerStart.current = { x: e.clientX, y: e.clientY };
-    playSfxById(SfxId.InventoryPickup);
-  }, []);
+  const handlePointerDown = useCallback(
+    (e: PointerEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (slot.type === SlotType.Empty) return;
+      pointerStart.current = { x: e.clientX, y: e.clientY };
+      playSfxById(SfxId.InventoryPickup);
+    },
+    [slot],
+  );
 
   const handlePointerUp = useCallback(
     (e: PointerEvent) => {

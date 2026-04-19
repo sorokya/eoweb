@@ -4,6 +4,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { EOResourceID } from '@/edf';
 import { formatLocaleString } from '@/locale';
 import { useClient, useLocale } from '@/ui/context';
+import { SlotType } from '@/ui/enums';
+import { useHotbar } from '@/ui/in-game';
 
 type Props = {
   item: Item;
@@ -15,6 +17,7 @@ type Props = {
 export function InventoryContextMenu({ item, x, y, onClose }: Props) {
   const client = useClient();
   const { locale } = useLocale();
+  const { setSlot } = useHotbar();
   const menuRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ left: x, top: y });
 
@@ -116,17 +119,10 @@ export function InventoryContextMenu({ item, x, y, onClose }: Props) {
     }
   };
 
-  const handleAssignSlot = (e: MouseEvent, slot: number) => {
+  const handleAssignSlot = (e: MouseEvent, slotIndex: number) => {
     e.preventDefault();
     onClose();
-    const key = `${client.name}-hotbar`;
-    let slots: (number | null)[] = [null, null, null, null, null, null];
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw) slots = JSON.parse(raw) as (number | null)[];
-    } catch {}
-    slots[slot] = item.id;
-    localStorage.setItem(key, JSON.stringify(slots));
+    setSlot(slotIndex, { type: SlotType.Item, typeId: item.id });
   };
 
   return createPortal(

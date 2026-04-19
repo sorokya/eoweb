@@ -72,19 +72,23 @@ function InGameContent() {
   // Chat dialogs are always considered open — they manage their own visibility.
   const open = ALL_DIALOG_IDS.filter((id) => isOpen(id));
 
-  // TODO: This might be creating stale closures. Should return cleanup functions from the effect that unsubscribe from events
   useEffect(() => {
-    client.socialController.subscribePaperdollOpened(() => {
+    const onPaperdollOpened = () => {
       openDialog('character');
-    });
+    };
+    client.socialController.subscribePaperdollOpened(onPaperdollOpened);
 
-    client.jukeboxController.subscribeOpened(() => {
+    const onJukeboxOpened = () => {
       openDialog('jukebox');
-    });
+    };
+    client.jukeboxController.subscribeOpened(onJukeboxOpened);
 
-    client.jukeboxController.subscribeRequestSucceeded(() => {
+    const onJukeboxRequestSucceeded = () => {
       closeDialog('jukebox');
-    });
+    };
+    client.jukeboxController.subscribeRequestSucceeded(
+      onJukeboxRequestSucceeded,
+    );
 
     const handleChestOpened = () => {
       openDialog('chest');
@@ -96,7 +100,7 @@ function InGameContent() {
     };
     client.movementController.subscribeWalked(handleWalked);
 
-    client.on('toggleCommandPalette', () => {
+    const handleToggleCommandPalette = () => {
       setCommandPaletteOpen((open) => {
         if (!open) {
           client.typing = true;
@@ -104,8 +108,20 @@ function InGameContent() {
 
         return !open;
       });
-    });
-  }, [client, setCommandPaletteOpen]);
+    };
+    client.on('toggleCommandPalette', handleToggleCommandPalette);
+
+    return () => {
+      client.socialController.unsubscribePaperdollOpened(onPaperdollOpened);
+      client.jukeboxController.unsubscribeOpened(onJukeboxOpened);
+      client.jukeboxController.unsubscribeRequestSucceeded(
+        onJukeboxRequestSucceeded,
+      );
+      client.chestController.unsubscribeOpened(handleChestOpened);
+      client.movementController.unsubscribeWalked(handleWalked);
+      client.off('toggleCommandPalette', handleToggleCommandPalette);
+    };
+  }, [client, setCommandPaletteOpen, openDialog, closeDialog]);
 
   const onCommandPaletteClose = useCallback(() => {
     client.typing = false;
