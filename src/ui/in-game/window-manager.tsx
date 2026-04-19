@@ -23,7 +23,8 @@ export type DialogId =
   | 'chat-log'
   | 'social'
   | 'chest'
-  | 'locker';
+  | 'locker'
+  | 'skillMaster';
 
 type DialogMeta = {
   /** Saved layout preference (persisted to localStorage). */

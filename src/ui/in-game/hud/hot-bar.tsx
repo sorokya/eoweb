@@ -1,87 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { GfxType } from '@/gfx';
 import { playSfxById, SfxId } from '@/sfx';
 import { HUD_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
-import { useItemDrag, useItemGfxUrl, usePillowGfxUrl } from '@/ui/in-game';
+import {
+  useItemDrag,
+  useItemGfxUrl,
+  usePillowGfxUrl,
+  useSpellIconUrls,
+} from '@/ui/in-game';
 import { useHotbar } from './hotbar-context';
 
 const SLOT_COUNT = 6;
 const SLOT_SIZE = '3rem';
-
-// ---------------------------------------------------------------------------
-// Spell icon — sprite sheet with 2 frames (34×32 each): left=normal, right=active
-// ---------------------------------------------------------------------------
 const SPELL_FRAME_W = 34;
 const SPELL_FRAME_H = 32;
-
-type SpellIconUrls = { normal: string; active: string };
-const spellIconCache = new Map<number, SpellIconUrls>();
-
-async function loadSpellIconUrls(
-  gfxLoader: {
-    loadResource(fileId: number, resourceId: number): Promise<ImageBitmap>;
-  },
-  iconId: number,
-): Promise<SpellIconUrls> {
-  const cached = spellIconCache.get(iconId);
-  if (cached) return cached;
-
-  const bitmap = await gfxLoader.loadResource(GfxType.SpellIcons, iconId);
-
-  async function extractFrame(x: number): Promise<string> {
-    const canvas = new OffscreenCanvas(SPELL_FRAME_W, SPELL_FRAME_H);
-    const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(
-      bitmap,
-      x,
-      0,
-      SPELL_FRAME_W,
-      SPELL_FRAME_H,
-      0,
-      0,
-      SPELL_FRAME_W,
-      SPELL_FRAME_H,
-    );
-    const blob = await canvas.convertToBlob({ type: 'image/png' });
-    return URL.createObjectURL(blob);
-  }
-
-  const [normal, active] = await Promise.all([
-    extractFrame(0),
-    extractFrame(SPELL_FRAME_W),
-  ]);
-  const urls: SpellIconUrls = { normal, active };
-  spellIconCache.set(iconId, urls);
-  return urls;
-}
-
-function useSpellIconUrls(iconId: number | null): SpellIconUrls | null {
-  const client = useClient();
-  const [urls, setUrls] = useState<SpellIconUrls | null>(() =>
-    iconId !== null ? (spellIconCache.get(iconId) ?? null) : null,
-  );
-  useEffect(() => {
-    if (iconId === null) {
-      setUrls(null);
-      return;
-    }
-    const cached = spellIconCache.get(iconId);
-    if (cached) {
-      setUrls(cached);
-      return;
-    }
-    let cancelled = false;
-    loadSpellIconUrls(client.gfxLoader, iconId).then((u) => {
-      if (!cancelled) setUrls(u);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [client, iconId]);
-  return urls;
-}
 
 // ---------------------------------------------------------------------------
 // Individual slot

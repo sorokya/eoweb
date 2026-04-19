@@ -40,10 +40,7 @@ function handleStatSkillPlayer(client: Client, reader: EoReader) {
 function handleStatSkillOpen(client: Client, reader: EoReader) {
   const packet = StatSkillOpenServerPacket.deserialize(reader);
   client.sessionId = packet.sessionId;
-  client.emit('skillMasterOpened', {
-    name: packet.shopName,
-    skills: packet.skills,
-  });
+  client.statSkillController.notifyOpened(packet.shopName, packet.skills);
 }
 
 function handleStatSkillReply(client: Client, reader: EoReader) {
@@ -88,6 +85,7 @@ function handleStatSkillTake(client: Client, reader: EoReader) {
 
   client.emit('inventoryChanged', undefined);
   client.emit('skillsChanged', undefined);
+  client.statSkillController.notifySkillsChanged();
   playSfxById(SfxId.LearnNewSpell);
 }
 
@@ -99,6 +97,7 @@ function handleStatSkillRemove(client: Client, reader: EoReader) {
   );
   client.alertController.show(strings[0], strings[1]);
   client.emit('skillsChanged', undefined);
+  client.statSkillController.notifySkillsChanged();
 }
 
 function handleStatSkillJunk(client: Client, reader: EoReader) {
@@ -124,6 +123,7 @@ function handleStatSkillJunk(client: Client, reader: EoReader) {
   client.baseStats.cha = packet.stats.base.cha;
   client.emit('statsUpdate', undefined);
   client.emit('skillsChanged', undefined);
+  client.statSkillController.notifySkillsChanged();
   playSfxById(SfxId.LearnNewSpell);
 
   const strings = client.getDialogStrings(

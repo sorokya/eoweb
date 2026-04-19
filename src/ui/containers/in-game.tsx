@@ -1,3 +1,4 @@
+import type { SkillLearn } from 'eolib';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { CHAT_Z, DIALOG_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
@@ -23,6 +24,7 @@ import {
   QuestsDialog,
   SettingsDialog,
   ShopDialog,
+  SkillMasterDialog,
   SocialDialog,
   SpellsDialog,
   StatusMessages,
@@ -45,6 +47,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'social',
   'chest',
   'locker',
+  'skillMaster',
 ];
 
 function DialogById({ id }: { id: DialogId }) {
@@ -73,6 +76,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <ChestDialog />;
     case 'locker':
       return <LockerDialog />;
+    case 'skillMaster':
+      return <SkillMasterDialog />;
   }
 }
 
@@ -122,11 +127,17 @@ function InGameContent() {
     };
     client.shopController.subscribeOpened(handleShopOpened);
 
+    const handleSkillMasterOpened = (_name: string, _skills: SkillLearn[]) => {
+      openDialog('skillMaster');
+    };
+    client.statSkillController.subscribeOpened(handleSkillMasterOpened);
+
     const handleWalked = () => {
       closeDialog('bank');
       closeDialog('shop');
       closeDialog('chest');
       closeDialog('locker');
+      closeDialog('skillMaster');
     };
     client.movementController.subscribeWalked(handleWalked);
 
@@ -151,6 +162,7 @@ function InGameContent() {
       client.lockerController.unsubscribeOpened(handleLockerOpened);
       client.bankController.unsubscribeOpened(handleBankOpened);
       client.shopController.unsubscribeOpened(handleShopOpened);
+      client.statSkillController.unsubscribeOpened(handleSkillMasterOpened);
       client.movementController.unsubscribeWalked(handleWalked);
       client.off('toggleCommandPalette', handleToggleCommandPalette);
     };

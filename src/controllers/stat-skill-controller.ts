@@ -1,4 +1,5 @@
 import {
+  type SkillLearn,
   type StatId,
   StatSkillAddClientPacket,
   StatSkillJunkClientPacket,
@@ -9,11 +10,48 @@ import {
 
 import type { Client } from '@/client';
 
+type OpenedSubscriber = (name: string, skills: SkillLearn[]) => void;
+type SkillsChangedSubscriber = () => void;
+
 export class StatSkillController {
   private client: Client;
 
+  masterName = '';
+  availableSkills: SkillLearn[] = [];
+
+  private openedSubscribers: OpenedSubscriber[] = [];
+  private skillsChangedSubscribers: SkillsChangedSubscriber[] = [];
+
   constructor(client: Client) {
     this.client = client;
+  }
+
+  subscribeOpened(cb: OpenedSubscriber): void {
+    this.openedSubscribers.push(cb);
+  }
+
+  unsubscribeOpened(cb: OpenedSubscriber): void {
+    this.openedSubscribers = this.openedSubscribers.filter((s) => s !== cb);
+  }
+
+  subscribeSkillsChanged(cb: SkillsChangedSubscriber): void {
+    this.skillsChangedSubscribers.push(cb);
+  }
+
+  unsubscribeSkillsChanged(cb: SkillsChangedSubscriber): void {
+    this.skillsChangedSubscribers = this.skillsChangedSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  notifyOpened(name: string, skills: SkillLearn[]): void {
+    this.masterName = name;
+    this.availableSkills = skills;
+    for (const cb of this.openedSubscribers) cb(name, skills);
+  }
+
+  notifySkillsChanged(): void {
+    for (const cb of this.skillsChangedSubscribers) cb();
   }
 
   trainStat(statId: StatId): void {

@@ -24,6 +24,7 @@ export { LockerDialog } from './dialogs/locker-dialog';
 export { QuestsDialog } from './dialogs/quests-dialog';
 export { SettingsDialog } from './dialogs/settings-dialog';
 export { ShopDialog } from './dialogs/shop-dialog';
+export { SkillMasterDialog } from './dialogs/skill-master-dialog';
 export { SocialDialog } from './dialogs/social-dialog';
 export { SpellsDialog } from './dialogs/spells-dialog';
 // HUD components
@@ -59,6 +60,8 @@ export { usePlayerStats } from './use-player-stats';
 export type { Position } from './use-position';
 export { clearAllPositions, RESET_EVENT, usePosition } from './use-position';
 export { useRepositionMode } from './use-reposition-mode';
+export type { SpellIconUrls } from './use-spell-icon';
+export { useSpellIconUrls } from './use-spell-icon';
 export { applyUiScale, UI_SCALE_OPTIONS, useUiScale } from './use-ui-scale';
 export { useViewport } from './use-viewport';
 export type { DialogId } from './window-manager';
