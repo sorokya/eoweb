@@ -3,7 +3,6 @@ import {
   Coords,
   DoorOpenClientPacket,
   ItemType,
-  LockerOpenClientPacket,
   MapTileSpec,
   SitAction,
 } from 'eolib';
@@ -47,16 +46,6 @@ export class MapController {
         r.y === coords.y &&
         r.tiles.some(
           (t) => t.x === coords.x && t.tileSpec === MapTileSpec.Chest,
-        ),
-    );
-  }
-
-  lockerAt(coords: Vector2): boolean {
-    return this.client.map!.tileSpecRows.some(
-      (r) =>
-        r.y === coords.y &&
-        r.tiles.some(
-          (t) => t.x === coords.x && t.tileSpec === MapTileSpec.BankVault,
         ),
     );
   }
@@ -150,18 +139,6 @@ export class MapController {
     }
 
     return false;
-  }
-
-  openLocker(coords: Vector2): void {
-    if (!this.isAdjacentToSpec(MapTileSpec.BankVault)) {
-      return;
-    }
-
-    const packet = new LockerOpenClientPacket();
-    packet.lockerCoords = new Coords();
-    packet.lockerCoords.x = coords.x;
-    packet.lockerCoords.y = coords.y;
-    this.client.bus!.send(packet);
   }
 
   openDoor(coords: Vector2): void {

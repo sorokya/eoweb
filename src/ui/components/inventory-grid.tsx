@@ -392,6 +392,8 @@ export function InventoryGrid({ itemIds }: Props) {
             client.inventoryController.dropItem(item.id, coords);
           } else if (result.type === 'chest') {
             client.chestController.addItem(item.id);
+          } else if (result.type === 'locker') {
+            client.lockerController.addItem(item.id);
           }
         }
       },

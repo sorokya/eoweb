@@ -15,6 +15,7 @@ import {
   InventoryDialog,
   ItemDragProvider,
   JukeboxDialog,
+  LockerDialog,
   MobileNav,
   NavSidebar,
   PlayerHud,
@@ -39,6 +40,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'chat-log',
   'social',
   'chest',
+  'locker',
 ];
 
 function DialogById({ id }: { id: DialogId }) {
@@ -61,6 +63,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <SocialDialog />;
     case 'chest':
       return <ChestDialog />;
+    case 'locker':
+      return <LockerDialog />;
   }
 }
 
@@ -95,8 +99,14 @@ function InGameContent() {
     };
     client.chestController.subscribeOpened(handleChestOpened);
 
+    const handleLockerOpened = () => {
+      openDialog('locker');
+    };
+    client.lockerController.subscribeOpened(handleLockerOpened);
+
     const handleWalked = () => {
       closeDialog('chest');
+      closeDialog('locker');
     };
     client.movementController.subscribeWalked(handleWalked);
 
@@ -118,6 +128,7 @@ function InGameContent() {
         onJukeboxRequestSucceeded,
       );
       client.chestController.unsubscribeOpened(handleChestOpened);
+      client.lockerController.unsubscribeOpened(handleLockerOpened);
       client.movementController.unsubscribeWalked(handleWalked);
       client.off('toggleCommandPalette', handleToggleCommandPalette);
     };

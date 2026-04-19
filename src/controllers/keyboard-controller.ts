@@ -591,8 +591,8 @@ export class KeyboardController {
           return;
         }
 
-        if (this.client.mapController.lockerAt(to)) {
-          this.client.mapController.openLocker(to);
+        if (this.client.lockerController.lockerAt(to)) {
+          this.client.lockerController.openLocker(to);
           this.walkTicks = WALK_TICKS;
           return;
         }

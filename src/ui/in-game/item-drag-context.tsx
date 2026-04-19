@@ -17,6 +17,7 @@ export type DragDropResult =
   | { type: 'equip-slot'; slot: EquipmentSlot }
   | { type: 'hotbar-slot'; index: number }
   | { type: 'chest' }
+  | { type: 'locker' }
   | { type: 'ground' }
   | { type: 'cancelled' };
 
@@ -194,6 +195,14 @@ export function ItemDragProvider({
       );
       if (chestEl) {
         resolve({ type: 'chest' });
+        return;
+      }
+
+      const lockerEl = (target as HTMLElement).closest<HTMLElement>(
+        '[data-locker-drop]',
+      );
+      if (lockerEl) {
+        resolve({ type: 'locker' });
         return;
       }
 

@@ -19,6 +19,7 @@ export { ChestDialog } from './dialogs/chest-dialog';
 export { DialogBase } from './dialogs/dialog-base';
 export { InventoryDialog } from './dialogs/inventory-dialog';
 export { JukeboxDialog } from './dialogs/jukebox-dialog';
+export { LockerDialog } from './dialogs/locker-dialog';
 export { QuestsDialog } from './dialogs/quests-dialog';
 export { SettingsDialog } from './dialogs/settings-dialog';
 export { SocialDialog } from './dialogs/social-dialog';

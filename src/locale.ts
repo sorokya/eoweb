@@ -243,6 +243,18 @@ export const locales = {
     chestEmpty: 'The chest is empty',
     chestDepositHow: 'How many to deposit?',
     chestDeposit: 'Deposit',
+    // Locker dialog
+    lockerTitle: 'Bank Locker',
+    lockerEmpty: 'Your locker is empty',
+    lockerDeposit: 'Deposit',
+    lockerWithdraw: 'Withdraw',
+    lockerSearchPlaceholder: 'Search items…',
+    lockerFilterAll: 'All',
+    lockerFilterWeapon: 'Weapon',
+    lockerFilterArmor: 'Armor',
+    lockerFilterAccessory: 'Accessory',
+    lockerFilterConsumable: 'Consumable',
+    lockerFilterOther: 'Other',
     // Dialog titles
     inventoryTitle: 'Inventory',
     questsTitle: 'Quests',

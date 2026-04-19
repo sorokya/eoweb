@@ -20,7 +20,8 @@ export type DialogId =
   | 'settings'
   | 'chat-log'
   | 'social'
-  | 'chest';
+  | 'chest'
+  | 'locker';
 
 type DialogMeta = {
   /** Saved layout preference (persisted to localStorage). */

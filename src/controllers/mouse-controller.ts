@@ -375,7 +375,7 @@ export class MouseController {
 
     const lockerAt = getLockerIntersecting(this.client.mousePosition!);
     if (lockerAt) {
-      this.client.mapController.openLocker(lockerAt!);
+      this.client.lockerController.openLocker(lockerAt!);
       return;
     }
 

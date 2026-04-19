@@ -94,8 +94,6 @@ export type ClientEvents = {
   bankUpdated: undefined;
   boardOpened: { posts: BoardPostListing[] };
   postRead: { postId: number; body: string };
-  lockerOpened: { items: ThreeItem[] };
-  lockerChanged: { items: ThreeItem[] };
   skillMasterOpened: {
     name: string;
     skills: SkillLearn[];
