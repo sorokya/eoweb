@@ -255,6 +255,16 @@ export const locales = {
     lockerFilterAccessory: 'Accessory',
     lockerFilterConsumable: 'Consumable',
     lockerFilterOther: 'Other',
+    // Bank dialog
+    bankTitle: 'Bank',
+    bankBalance: 'Balance',
+    bankOnHand: 'On hand',
+    bankDeposit: 'Deposit',
+    bankWithdraw: 'Withdraw',
+    bankLockerUpgrades: 'Locker upgrades',
+    bankBuyUpgrade: 'Buy upgrade',
+    bankNextUpgradeCost: 'Next upgrade cost',
+    bankMaxLockerItems: 'Max locker items',
     // Dialog titles
     inventoryTitle: 'Inventory',
     questsTitle: 'Quests',

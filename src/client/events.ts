@@ -90,8 +90,6 @@ export type ClientEvents = {
   tradeUpdated: undefined;
   guildOpened: undefined;
   guildUpdated: undefined;
-  bankOpened: undefined;
-  bankUpdated: undefined;
   boardOpened: { posts: BoardPostListing[] };
   postRead: { postId: number; body: string };
   skillMasterOpened: {

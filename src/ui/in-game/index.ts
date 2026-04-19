@@ -12,6 +12,7 @@ export { ChatManagerProvider, useChatManager } from './chat/chat-manager';
 export { CommandPalette } from './command-palette/command-palette';
 // Dialog arena (JS-based layout engine)
 export { DialogArena } from './dialog-arena';
+export { BankDialog } from './dialogs/bank-dialog';
 // Dialog components
 export { CharacterDialog } from './dialogs/character-dialog';
 export { ChatLogDialog } from './dialogs/chat-log-dialog';

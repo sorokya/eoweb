@@ -3,6 +3,7 @@ import { CHAT_Z, DIALOG_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import type { DialogId } from '@/ui/in-game';
 import {
+  BankDialog,
   CharacterDialog,
   ChatDialog,
   ChatLogDialog,
@@ -31,6 +32,7 @@ import {
 } from '@/ui/in-game';
 
 const ALL_DIALOG_IDS: DialogId[] = [
+  'bank',
   'inventory',
   'spells',
   'character',
@@ -45,6 +47,8 @@ const ALL_DIALOG_IDS: DialogId[] = [
 
 function DialogById({ id }: { id: DialogId }) {
   switch (id) {
+    case 'bank':
+      return <BankDialog />;
     case 'inventory':
       return <InventoryDialog />;
     case 'spells':
@@ -104,7 +108,13 @@ function InGameContent() {
     };
     client.lockerController.subscribeOpened(handleLockerOpened);
 
+    const handleBankOpened = () => {
+      openDialog('bank');
+    };
+    client.bankController.subscribeOpened(handleBankOpened);
+
     const handleWalked = () => {
+      closeDialog('bank');
       closeDialog('chest');
       closeDialog('locker');
     };
@@ -129,6 +139,7 @@ function InGameContent() {
       );
       client.chestController.unsubscribeOpened(handleChestOpened);
       client.lockerController.unsubscribeOpened(handleLockerOpened);
+      client.bankController.unsubscribeOpened(handleBankOpened);
       client.movementController.unsubscribeWalked(handleWalked);
       client.off('toggleCommandPalette', handleToggleCommandPalette);
     };

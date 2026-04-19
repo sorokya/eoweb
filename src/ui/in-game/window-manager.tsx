@@ -12,6 +12,7 @@ import { RESET_EVENT } from './use-position';
 const BASE_Z_INDEX = 20;
 
 export type DialogId =
+  | 'bank'
   | 'inventory'
   | 'spells'
   | 'character'

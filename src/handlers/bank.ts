@@ -6,28 +6,22 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '@/client';
-import { playSfxById, SfxId } from '@/sfx';
 
 function handleBankOpen(client: Client, reader: EoReader) {
   const packet = BankOpenServerPacket.deserialize(reader);
-  client.sessionId = packet.sessionId;
-  client.bankController.goldBank = packet.goldBank;
-  client.bankController.lockerUpgrades = packet.lockerUpgrades;
-  client.emit('bankOpened', undefined);
+  client.bankController.handleOpened(
+    packet.sessionId,
+    packet.goldBank,
+    packet.lockerUpgrades,
+  );
 }
 
 function handleBankReply(client: Client, reader: EoReader) {
   const packet = BankReplyServerPacket.deserialize(reader);
-  const gold = client.items.find((i) => i.id === 1);
-  if (!gold) {
-    return;
-  }
-
-  gold.amount = packet.goldInventory;
-  client.bankController.goldBank = packet.goldBank;
-  playSfxById(SfxId.BuySell);
-  client.emit('bankUpdated', undefined);
-  client.emit('inventoryChanged', undefined);
+  client.bankController.notifyBankUpdated(
+    packet.goldInventory,
+    packet.goldBank,
+  );
 }
 
 export function registerBankHandlers(client: Client) {
