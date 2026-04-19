@@ -10,6 +10,7 @@ type AmountSubscriber = (
   max: number,
   actionLabel: string,
   callback: (amount: number | null) => void,
+  repeatActionLabel?: string,
 ) => void;
 
 export class AlertController {
@@ -51,9 +52,10 @@ export class AlertController {
     max: number,
     actionLabel: string,
     callback: (amount: number | null) => void,
+    repeatActionLabel?: string,
   ) {
     for (const subscriber of this.amountSubscribers) {
-      subscriber(title, message, max, actionLabel, callback);
+      subscriber(title, message, max, actionLabel, callback, repeatActionLabel);
     }
   }
 }

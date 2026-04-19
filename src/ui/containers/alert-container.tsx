@@ -19,6 +19,7 @@ type AmountState = {
   max: number;
   actionLabel: string;
   callback: (amount: number | null) => void;
+  repeatActionLabel?: string;
 };
 
 export function AlertContainer({ children }: AlertContainerProps) {
@@ -40,9 +41,16 @@ export function AlertContainer({ children }: AlertContainerProps) {
     });
 
     client.alertController.subscribeAmount(
-      (title, message, max, actionLabel, callback) => {
+      (title, message, max, actionLabel, callback, repeatActionLabel) => {
         returnFocusRef.current = document.activeElement;
-        setAmountState({ title, message, max, actionLabel, callback });
+        setAmountState({
+          title,
+          message,
+          max,
+          actionLabel,
+          callback,
+          repeatActionLabel,
+        });
       },
     );
   }, [client]);
@@ -76,6 +84,13 @@ export function AlertContainer({ children }: AlertContainerProps) {
     setAmountState(null);
     restoreFocus();
   }, [amountState]);
+
+  const handleAmountRepeat = useCallback(
+    (amount: number) => {
+      amountState?.callback(amount);
+    },
+    [amountState],
+  );
 
   useEffect(() => {
     if (!alert && !amountState) return;
@@ -118,7 +133,9 @@ export function AlertContainer({ children }: AlertContainerProps) {
             message={amountState.message}
             max={amountState.max}
             actionLabel={amountState.actionLabel}
+            repeatActionLabel={amountState.repeatActionLabel}
             onConfirm={handleAmountConfirm}
+            onRepeat={handleAmountRepeat}
             onCancel={handleAmountCancel}
           />
         </Backdrop>

@@ -22,6 +22,7 @@ import {
   PlayerHud,
   QuestsDialog,
   SettingsDialog,
+  ShopDialog,
   SocialDialog,
   SpellsDialog,
   StatusMessages,
@@ -33,6 +34,7 @@ import {
 
 const ALL_DIALOG_IDS: DialogId[] = [
   'bank',
+  'shop',
   'inventory',
   'spells',
   'character',
@@ -51,6 +53,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <BankDialog />;
     case 'inventory':
       return <InventoryDialog />;
+    case 'shop':
+      return <ShopDialog />;
     case 'spells':
       return <SpellsDialog />;
     case 'character':
@@ -113,8 +117,14 @@ function InGameContent() {
     };
     client.bankController.subscribeOpened(handleBankOpened);
 
+    const handleShopOpened = () => {
+      openDialog('shop');
+    };
+    client.shopController.subscribeOpened(handleShopOpened);
+
     const handleWalked = () => {
       closeDialog('bank');
+      closeDialog('shop');
       closeDialog('chest');
       closeDialog('locker');
     };
@@ -140,6 +150,7 @@ function InGameContent() {
       client.chestController.unsubscribeOpened(handleChestOpened);
       client.lockerController.unsubscribeOpened(handleLockerOpened);
       client.bankController.unsubscribeOpened(handleBankOpened);
+      client.shopController.unsubscribeOpened(handleShopOpened);
       client.movementController.unsubscribeWalked(handleWalked);
       client.off('toggleCommandPalette', handleToggleCommandPalette);
     };

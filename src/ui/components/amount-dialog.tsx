@@ -7,7 +7,9 @@ type AmountDialogProps = {
   message: string;
   max: number;
   actionLabel: string;
+  repeatActionLabel?: string;
   onConfirm: (amount: number) => void;
+  onRepeat: (amount: number) => void;
   onCancel: () => void;
 };
 
@@ -16,7 +18,9 @@ export function AmountDialog({
   message,
   max,
   actionLabel,
+  repeatActionLabel,
   onConfirm,
+  onRepeat,
   onCancel,
 }: AmountDialogProps) {
   const { locale } = useLocale();
@@ -54,6 +58,11 @@ export function AmountDialog({
           />
         </div>
         <div class='modal-action'>
+          {repeatActionLabel && (
+            <Button variant='secondary' onClick={() => onRepeat(amount)}>
+              {repeatActionLabel}
+            </Button>
+          )}
           <Button variant='primary' onClick={() => onConfirm(amount)}>
             {actionLabel}
           </Button>

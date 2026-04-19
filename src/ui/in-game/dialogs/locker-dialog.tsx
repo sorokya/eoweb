@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'preact/hooks';
+import { FaFilter, FaSearch } from 'react-icons/fa';
 import { playSfxById, SfxId } from '@/sfx';
 import { useClient, useLocale } from '@/ui/context';
 import { useItemDrag, useItemGfxUrl, usePillowGfxUrl } from '@/ui/in-game';
@@ -330,24 +331,30 @@ export function LockerDialog() {
     <DialogBase id='locker' title={locale.lockerTitle} size='md'>
       {/* Search + filter bar */}
       <div class='flex flex-col gap-1 border-base-content/10 border-b px-2 pt-1 pb-2'>
-        <input
-          type='search'
-          placeholder={locale.lockerSearchPlaceholder}
-          value={search}
-          onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
-          onKeyDown={(e) => e.stopPropagation()}
-          class='input input-xs input-bordered w-full'
-        />
-        <div class='flex flex-wrap gap-1'>
-          {FILTER_CATEGORIES.map((cat) => (
-            <FilterPill
-              key={cat}
-              category={cat}
-              active={filter === cat}
-              count={categoryCounts[cat]}
-              onClick={() => setFilter(cat)}
-            />
-          ))}
+        <label class='input input-xs input-bordered flex items-center gap-2'>
+          <FaSearch size={10} />
+          <input
+            type='search'
+            placeholder={locale.lockerSearchPlaceholder}
+            value={search}
+            onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
+            onKeyDown={(e) => e.stopPropagation()}
+            class='grow'
+          />
+        </label>
+        <div class='flex items-center gap-1'>
+          <FaFilter size={10} />
+          <div class='flex flex-wrap gap-1'>
+            {FILTER_CATEGORIES.map((cat) => (
+              <FilterPill
+                key={cat}
+                category={cat}
+                active={filter === cat}
+                count={categoryCounts[cat]}
+                onClick={() => setFilter(cat)}
+              />
+            ))}
+          </div>
         </div>
       </div>
 

@@ -36,6 +36,7 @@ type ButtonProps = {
   label?: string;
   variant?: ButtonVariant | ButtonVariant[];
   class?: string;
+  disabled?: boolean;
   onClick?: () => void;
 };
 
@@ -45,17 +46,19 @@ export function Button({
   variant = '',
   type = 'button',
   class: extraClass,
+  disabled = false,
   onClick,
 }: ButtonProps) {
   const clickHandler = useCallback(
     (e: MouseEvent) => {
       e.stopPropagation();
+      if (disabled) return;
       playSfxById(SfxId.ButtonClick);
       if (onClick) {
         onClick();
       }
     },
-    [onClick],
+    [disabled, onClick],
   );
 
   const variantClasses = (Array.isArray(variant) ? variant : [variant])
@@ -72,6 +75,7 @@ export function Button({
       onClick={clickHandler}
       aria-label={label}
       onPointerDown={(e) => e.stopPropagation()}
+      disabled={disabled}
     >
       {children}
     </button>

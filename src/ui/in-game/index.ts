@@ -23,6 +23,7 @@ export { JukeboxDialog } from './dialogs/jukebox-dialog';
 export { LockerDialog } from './dialogs/locker-dialog';
 export { QuestsDialog } from './dialogs/quests-dialog';
 export { SettingsDialog } from './dialogs/settings-dialog';
+export { ShopDialog } from './dialogs/shop-dialog';
 export { SocialDialog } from './dialogs/social-dialog';
 export { SpellsDialog } from './dialogs/spells-dialog';
 // HUD components
