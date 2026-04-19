@@ -9,8 +9,9 @@ import {
 } from 'preact/hooks';
 import { FaFilter, FaSearch } from 'react-icons/fa';
 import { playSfxById, SfxId } from '@/sfx';
+import { ItemIcon } from '@/ui/components';
 import { useClient, useLocale } from '@/ui/context';
-import { useItemDrag, useItemGfxUrl, usePillowGfxUrl } from '@/ui/in-game';
+import { useItemDrag } from '@/ui/in-game';
 import { getItemMeta } from '@/utils';
 import { DialogBase } from './dialog-base';
 
@@ -63,26 +64,20 @@ function getCategory(type: ItemType): FilterCategory {
   return 'other';
 }
 
-// Pillow is a ground tile: 64 wide x 32 tall (TILE_WIDTH x TILE_HEIGHT)
-const PILLOW_W = 64;
-const PILLOW_H = 32;
-
 // ---------------------------------------------------------------------------
-// Single locker item slot (grid cell: pillow bg + icon + amount)
+// Single locker item card (shop-style: icon + name + amount)
 // ---------------------------------------------------------------------------
 
 type LockerItemSlotProps = {
   item: ThreeItem;
-  pillow: string | null;
   onTake: (itemId: number) => void;
 };
 
-function LockerItemSlot({ item, pillow, onTake }: LockerItemSlotProps) {
+function LockerItemSlot({ item, onTake }: LockerItemSlotProps) {
   const client = useClient();
   const { locale } = useLocale();
   const record = client.getEifRecordById(item.id);
   const graphicId = record?.graphicId ?? null;
-  const iconUrl = useItemGfxUrl(graphicId, { shadow: true });
 
   const [tooltip, setTooltip] = useState<{ x: number; y: number } | null>(null);
   const slotRef = useRef<HTMLDivElement>(null);
@@ -139,46 +134,30 @@ function LockerItemSlot({ item, pillow, onTake }: LockerItemSlotProps) {
   return (
     <div
       ref={slotRef}
-      title={name}
-      class='group relative flex cursor-pointer select-none flex-col items-center rounded border border-base-content/10 bg-base-200 p-1 transition-colors hover:bg-base-content/10 active:bg-base-content/15'
-      style={{ width: PILLOW_W + 8, minHeight: PILLOW_H + 24 }}
+      class='flex cursor-pointer select-none flex-col items-center gap-2 rounded border border-base-content/10 bg-base-200 p-2 transition-colors hover:bg-base-content/10 active:bg-base-content/15'
       onPointerDown={handlePointerDown}
       onContextMenu={(e) => e.preventDefault()}
       onMouseEnter={showTooltip}
       onMouseLeave={() => setTooltip(null)}
     >
-      {/* Pillow + icon at native 64x32 tile aspect ratio */}
-      <div
-        class='relative shrink-0 overflow-hidden'
-        style={{ width: PILLOW_W, height: PILLOW_H }}
-      >
-        {pillow && (
-          <img
-            src={pillow}
-            alt=''
-            class='pointer-events-none absolute inset-0 h-full w-full object-fill'
-            draggable={false}
+      <div class='flex h-14 w-14 items-center justify-center overflow-hidden rounded border border-base-content/10 bg-base-300 p-1.5 lg:h-16 lg:w-16'>
+        {graphicId === null ? (
+          <div class='h-10 w-10 rounded bg-base-content/10' />
+        ) : (
+          <ItemIcon
+            graphicId={graphicId}
+            class='h-10 w-10 object-contain lg:h-12 lg:w-12'
           />
-        )}
-        {iconUrl && (
-          <img
-            src={iconUrl}
-            alt=''
-            class='pointer-events-none absolute inset-0 m-auto max-h-full max-w-full object-contain p-0.5'
-            draggable={false}
-          />
-        )}
-        {!iconUrl && (
-          <div class='absolute inset-0 flex items-center justify-center'>
-            <div class='skeleton h-6 w-6' />
-          </div>
         )}
       </div>
-
-      {/* Always show quantity */}
-      <span class='mt-0.5 w-full truncate text-center text-[10px] tabular-nums leading-none opacity-80'>
-        {item.amount.toLocaleString()}
-      </span>
+      <div class='flex w-full flex-col items-center gap-0.5'>
+        <span class='wrap-break-word line-clamp-2 w-full text-center font-medium text-xs leading-tight'>
+          {name}
+        </span>
+        <span class='text-[10px] tabular-nums opacity-60'>
+          x{item.amount.toLocaleString()}
+        </span>
+      </div>
 
       {/* Tooltip portal */}
       {tooltip &&
@@ -271,7 +250,6 @@ export function LockerDialog() {
   const client = useClient();
   const { locale } = useLocale();
   const { currentDrag } = useItemDrag();
-  const pillow = usePillowGfxUrl();
 
   const [items, setItems] = useState<ThreeItem[]>(
     () => client.lockerController.items,
@@ -372,14 +350,9 @@ export function LockerDialog() {
             {items.length === 0 ? locale.lockerEmpty : locale.lockerFilterAll}
           </p>
         ) : (
-          <div class='flex flex-wrap gap-1'>
+          <div class='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'>
             {filteredItems.map((item) => (
-              <LockerItemSlot
-                key={item.id}
-                item={item}
-                pillow={pillow}
-                onTake={handleTake}
-              />
+              <LockerItemSlot key={item.id} item={item} onTake={handleTake} />
             ))}
           </div>
         )}

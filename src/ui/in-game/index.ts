@@ -49,7 +49,11 @@ export {
   clearAllVisibilityOverrides,
   useHudVisibility,
 } from './use-hud-visibility';
-export { useItemGfxUrl, usePillowGfxUrl } from './use-item-gfx';
+export {
+  useItemGfxUrl,
+  usePillowGfxUrl,
+  useRawItemGfxUrl,
+} from './use-item-gfx';
 export type { PlayerStats } from './use-player-stats';
 export { usePlayerStats } from './use-player-stats';
 export type { Position } from './use-position';

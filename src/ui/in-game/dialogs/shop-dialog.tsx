@@ -190,7 +190,7 @@ export function ShopDialog() {
                           />
                         )}
                       </div>
-                      <p class='w-full truncate text-center font-semibold text-sm'>
+                      <p class='wrap-break-word line-clamp-2 w-full text-center font-semibold text-sm'>
                         {getDisplayName(client, tradeItem.itemId)}
                       </p>
                       <p class='w-full text-center text-base-content/60 text-xs'>
@@ -248,7 +248,7 @@ export function ShopDialog() {
                           />
                         )}
                       </div>
-                      <p class='w-full truncate text-center font-semibold text-sm'>
+                      <p class='wrap-break-word line-clamp-2 w-full text-center font-semibold text-sm'>
                         {getDisplayName(client, inventoryItem.id)}
                       </p>
                       <p class='w-full text-center text-base-content/60 text-xs'>

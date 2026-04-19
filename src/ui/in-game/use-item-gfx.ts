@@ -41,6 +41,60 @@ async function loadItemGfxUrl(
   return url;
 }
 
+// ---------------------------------------------------------------------------
+// Raw resource URL (loads GfxType.Items at an exact resource ID)
+// ---------------------------------------------------------------------------
+
+const rawItemUrlCache = new Map<number, string>();
+
+async function loadRawItemGfxUrl(
+  gfxLoader: {
+    loadResource(fileId: number, resourceId: number): Promise<ImageBitmap>;
+  },
+  resourceId: number,
+): Promise<string> {
+  const cached = rawItemUrlCache.get(resourceId);
+  if (cached) return cached;
+
+  const bitmap = await gfxLoader.loadResource(GfxType.Items, resourceId);
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(bitmap, 0, 0);
+  const blob = await canvas.convertToBlob({ type: 'image/png' });
+  const url = URL.createObjectURL(blob);
+  rawItemUrlCache.set(resourceId, url);
+  return url;
+}
+
+/** Returns an object URL for a raw GfxType.Items resource ID, or null while loading. */
+export function useRawItemGfxUrl(resourceId: number | null): string | null {
+  const client = useClient();
+  const [url, setUrl] = useState<string | null>(() =>
+    resourceId !== null ? (rawItemUrlCache.get(resourceId) ?? null) : null,
+  );
+
+  useEffect(() => {
+    if (resourceId === null) {
+      setUrl(null);
+      return;
+    }
+    const cached = rawItemUrlCache.get(resourceId);
+    if (cached) {
+      setUrl(cached);
+      return;
+    }
+    let cancelled = false;
+    loadRawItemGfxUrl(client.gfxLoader, resourceId).then((u) => {
+      if (!cancelled) setUrl(u);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, resourceId]);
+
+  return url;
+}
+
 type ItemGfxOptions = {
   /** Load the shadow/inventory frame instead of the main item frame. Default: false. */
   shadow?: boolean;

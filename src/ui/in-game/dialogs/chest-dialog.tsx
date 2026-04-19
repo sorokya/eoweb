@@ -1,27 +1,34 @@
 import type { ThreeItem } from 'eolib';
 import { createPortal } from 'preact/compat';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { ItemIcon } from '@/ui/components';
 import { useClient, useLocale } from '@/ui/context';
-import { useItemDrag, useItemGfxUrl, usePillowGfxUrl } from '@/ui/in-game';
-import { getItemMeta } from '@/utils';
+import { useItemDrag, useRawItemGfxUrl } from '@/ui/in-game';
+import { getItemGraphicId, getItemMeta } from '@/utils';
 import { DialogBase } from './dialog-base';
 
 // ---------------------------------------------------------------------------
-// Single chest item slot (pillow + shadow icon + name + amount)
+// Single chest item card (shop-style: icon + name + amount)
 // ---------------------------------------------------------------------------
 
 type ChestItemSlotProps = {
   item: ThreeItem;
-  pillow: string | null;
   onTake: (itemId: number) => void;
 };
 
-function ChestItemSlot({ item, pillow, onTake }: ChestItemSlotProps) {
+function ChestItemSlot({ item, onTake }: ChestItemSlotProps) {
   const client = useClient();
   const { locale } = useLocale();
   const record = client.getEifRecordById(item.id);
   const graphicId = record?.graphicId ?? null;
-  const iconUrl = useItemGfxUrl(graphicId, { shadow: true });
+
+  // Gold (item ID 1) uses the ground pile graphic that scales with amount
+  const isGold = item.id === 1;
+  const goldResourceId =
+    isGold && graphicId !== null
+      ? 100 + getItemGraphicId(1, graphicId, item.amount)
+      : null;
+  const goldUrl = useRawItemGfxUrl(goldResourceId);
 
   const [tooltip, setTooltip] = useState<{ x: number; y: number } | null>(null);
   const slotRef = useRef<HTMLDivElement>(null);
@@ -68,12 +75,11 @@ function ChestItemSlot({ item, pillow, onTake }: ChestItemSlotProps) {
 
   const name =
     record?.name ?? locale.itemFallbackName.replace('{id}', String(item.id));
-  const amountLabel = item.amount > 1 ? item.amount.toLocaleString() : '';
 
   return (
     <div
       ref={slotRef}
-      class='group relative flex cursor-pointer select-none items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-base-content/10 active:bg-base-content/15'
+      class='flex cursor-pointer select-none flex-col items-center gap-2 rounded border border-base-content/10 bg-base-200 p-2 transition-colors hover:bg-base-content/10 active:bg-base-content/15'
       onPointerDown={handlePointerDown}
       onContextMenu={(e) => e.preventDefault()}
       onMouseEnter={(e) => {
@@ -88,36 +94,36 @@ function ChestItemSlot({ item, pillow, onTake }: ChestItemSlotProps) {
       }}
       onMouseLeave={() => setTooltip(null)}
     >
-      {/* Icon slot with pillow bg */}
-      <div class='relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded border border-base-content/10 bg-base-200'>
-        {pillow && (
-          <img
-            src={pillow}
-            alt=''
-            class='pointer-events-none absolute inset-0 h-full w-full object-contain p-0.5'
-            draggable={false}
+      <div class='flex h-14 w-14 items-center justify-center overflow-hidden rounded border border-base-content/10 bg-base-300 p-1.5 lg:h-16 lg:w-16'>
+        {isGold ? (
+          goldUrl ? (
+            <img
+              src={goldUrl}
+              alt=''
+              class='h-10 w-10 object-contain lg:h-12 lg:w-12'
+            />
+          ) : (
+            <div class='h-10 w-10 rounded bg-base-content/10' />
+          )
+        ) : graphicId === null ? (
+          <div class='h-10 w-10 rounded bg-base-content/10' />
+        ) : (
+          <ItemIcon
+            graphicId={graphicId}
+            class='h-10 w-10 object-contain lg:h-12 lg:w-12'
           />
         )}
-        {iconUrl && (
-          <img
-            src={iconUrl}
-            alt=''
-            class='pointer-events-none relative z-10 max-h-full max-w-full object-contain p-0.5'
-            draggable={false}
-          />
-        )}
-        {!iconUrl && <div class='skeleton h-6 w-6' />}
       </div>
-
-      {/* Name */}
-      <span class='min-w-0 flex-1 truncate text-sm'>{name}</span>
-
-      {/* Amount badge */}
-      {amountLabel && (
-        <span class='shrink-0 rounded bg-base-content/10 px-1 text-xs tabular-nums'>
-          {amountLabel}
+      <div class='flex w-full flex-col items-center gap-0.5'>
+        <span class='wrap-break-word line-clamp-2 w-full text-center font-medium text-xs leading-tight'>
+          {name}
         </span>
-      )}
+        {item.amount > 1 && (
+          <span class='text-[10px] tabular-nums opacity-60'>
+            x{item.amount.toLocaleString()}
+          </span>
+        )}
+      </div>
 
       {/* Tooltip portal */}
       {tooltip &&
@@ -152,7 +158,6 @@ export function ChestDialog() {
   const client = useClient();
   const { locale } = useLocale();
   const { currentDrag } = useItemDrag();
-  const pillow = usePillowGfxUrl();
 
   const [items, setItems] = useState<ThreeItem[]>(
     () => client.chestController.items,
@@ -175,10 +180,10 @@ export function ChestDialog() {
   const isDragTarget = !!currentDrag && currentDrag.source === 'inventory';
 
   return (
-    <DialogBase id='chest' title={locale.chestTitle} size='sm'>
+    <DialogBase id='chest' title={locale.chestTitle} size='md'>
       <div
         data-chest-drop
-        class={`relative flex min-h-20 flex-col gap-0.5 py-1 transition-colors ${
+        class={`relative min-h-20 p-2 transition-colors ${
           isDragTarget
             ? 'bg-primary/10 outline-dashed outline-2 outline-primary/40'
             : ''
@@ -187,14 +192,11 @@ export function ChestDialog() {
         {items.length === 0 ? (
           <p class='py-4 text-center text-sm opacity-50'>{locale.chestEmpty}</p>
         ) : (
-          items.map((item) => (
-            <ChestItemSlot
-              key={item.id}
-              item={item}
-              pillow={pillow}
-              onTake={handleTake}
-            />
-          ))
+          <div class='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'>
+            {items.map((item) => (
+              <ChestItemSlot key={item.id} item={item} onTake={handleTake} />
+            ))}
+          </div>
         )}
 
         {isDragTarget && (
