@@ -35,6 +35,7 @@ export type DragInfo = {
 };
 
 type StartDragOptions = {
+  element: Element;
   info: DragInfo;
   onResolve: (result: DragDropResult) => void;
   onMove?: (x: number, y: number) => void;
@@ -78,7 +79,8 @@ export function ItemDragProvider({
   const onMoveRef = useRef<((x: number, y: number) => void) | null>(null);
 
   const startDrag = useCallback(
-    ({ info, onResolve, onMove }: StartDragOptions) => {
+    ({ element, info, onResolve, onMove }: StartDragOptions) => {
+      element.setPointerCapture(info.pointerId);
       dragRef.current = info; // synchronous — visible to listeners immediately
       hasMovedRef.current = false;
       setCurrentDrag(info);

@@ -329,6 +329,7 @@ export function InventoryGrid({ itemIds }: Props) {
     }
 
     startDrag({
+      element: e.currentTarget as Element,
       info: {
         source: 'inventory',
         itemId: item.id,
@@ -387,7 +388,6 @@ export function InventoryGrid({ itemIds }: Props) {
             }
           } else if (result.type === 'ground') {
             if (!client.mapController.cursorInDropRange()) return;
-            client.mouseController.setIgnoreNextClick();
             const coords = client.mouseCoords ?? getCoords();
             client.inventoryController.dropItem(item.id, coords);
           } else if (result.type === 'chest') {

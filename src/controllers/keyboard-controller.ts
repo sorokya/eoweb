@@ -89,6 +89,20 @@ export class KeyboardController {
   }
 
   private setupListeners() {
+    // Capture-phase listener: runs before stopPropagation on any child element.
+    // If a game-UI button has focus, preventDefault() suppresses native button
+    // activation (Space/Enter → click) and blur it so game inputs take over.
+    window.addEventListener(
+      'keydown',
+      (e) => {
+        if (document.activeElement instanceof HTMLButtonElement) {
+          e.preventDefault();
+          document.activeElement.blur();
+        }
+      },
+      { capture: true },
+    );
+
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && ['=', '+', '-', '_'].includes(e.key)) {
         e.preventDefault();
@@ -182,11 +196,15 @@ export class KeyboardController {
         case 'Digit6':
           this.updateInputHeld(Input.Hotbar6, true);
           break;
-        case 'Tab':
+        case 'Tab': {
           this.updateInputHeld(Input.Tab, true);
-          // TODO: Fix tab capturing later
-          //if (!this.client.typing) e.preventDefault();
+          const target = e.target as Element;
+          const isTyping =
+            target instanceof HTMLInputElement ||
+            target instanceof HTMLTextAreaElement;
+          if (!isTyping) e.preventDefault();
           break;
+        }
         case 'KeyR':
           this.updateInputHeld(Input.Refresh, true);
           break;

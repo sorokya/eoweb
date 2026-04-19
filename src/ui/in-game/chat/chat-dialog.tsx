@@ -64,7 +64,6 @@ type PreviewProps = {
 
 function ChatPreview({ messages, now, onFocus }: PreviewProps) {
   const isMobile = useIsMobile();
-  const client = useClient();
   const { locale } = useLocale();
   const { vw } = useViewport();
   const shown = messages
@@ -73,9 +72,8 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
 
   const handleFocus = useCallback(() => {
     playSfxById(SfxId.TextBoxFocus);
-    client.mouseController.setIgnoreNextClick();
     onFocus();
-  }, [onFocus, client]);
+  }, [onFocus]);
 
   const ghostInput = (
     <button
@@ -242,12 +240,20 @@ export function ChatDialog() {
     inputRef.current?.focus();
   }, []);
 
+  const focusedRef = useRef(false);
+
   const onFocus = useCallback(() => {
     // flushSync forces a synchronous render so the ChatInput is in the DOM
     // before we call focus() — required for iOS which only allows programmatic
     // focus inside a synchronous user-gesture call stack.
+    focusedRef.current = true;
     flushSync(() => setFocused(true));
     inputRef.current?.focus();
+  }, []);
+
+  const onDismiss = useCallback(() => {
+    focusedRef.current = false;
+    setFocused(false);
   }, []);
 
   // External signal (e.g. whisper from social dialog) opens the chat.
@@ -257,6 +263,7 @@ export function ChatDialog() {
   useEffect(() => {
     if (openChatSignal !== prevSignalRef.current) {
       prevSignalRef.current = openChatSignal;
+      focusedRef.current = true;
       setFocused(true);
     }
   }, [openChatSignal]);
@@ -269,12 +276,14 @@ export function ChatDialog() {
     }
   }, [focused]);
 
-  // Pressing Enter while preview is showing opens the chat
+  // Pressing Enter while preview is showing opens the chat.
+  // Guard with focusedRef so even if two handlers fire (e.g. Preact effect
+  // timing edge cases), the sound and open only happen once.
   useEffect(() => {
     if (focused) return;
 
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.repeat) {
+      if (e.key === 'Enter' && !e.repeat && !focusedRef.current) {
         playSfxById(SfxId.TextBoxFocus);
         onFocus();
       }
@@ -290,21 +299,26 @@ export function ChatDialog() {
     return () => clearInterval(timerId);
   }, [focused]);
 
-  // Unfocus when user clicks/taps outside the chat dialog
+  // Unfocus when user clicks/taps outside the chat dialog.
+  // Capture phase ensures we see the event even when child elements call
+  // stopPropagation (e.g. mobile nav dropdown, other dialogs).
   useEffect(() => {
     if (!focused) return;
     const handler = (e: PointerEvent) => {
+      if (!focusedRef.current) return;
       if (
         containerRef.current &&
         !containerRef.current.contains(e.target as Node)
       ) {
+        focusedRef.current = false;
         setFocused(false);
         client.mouseController.setIgnoreNextClick();
       }
     };
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [focused]);
+    document.addEventListener('pointerdown', handler, { capture: true });
+    return () =>
+      document.removeEventListener('pointerdown', handler, { capture: true });
+  }, [focused, client]);
 
   const tabs = dialog?.tabs ?? [];
   const activeTabId = dialog?.activeTabId ?? '';
@@ -339,7 +353,7 @@ export function ChatDialog() {
           ref={inputRef}
           tab={activeTab}
           onActivity={onFocus}
-          onDismiss={() => setFocused(false)}
+          onDismiss={onDismiss}
           position='top'
         />
         <div class='flex items-center gap-1 border-base-content/10 border-b bg-base-content/5 px-2 py-0.5'>
@@ -397,7 +411,7 @@ export function ChatDialog() {
             ref={inputRef}
             tab={activeTab}
             onActivity={onFocus}
-            onDismiss={() => setFocused(false)}
+            onDismiss={onDismiss}
             position='bottom'
           />
         </div>

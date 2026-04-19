@@ -79,6 +79,7 @@ function EquipSlot({ label, itemId, slot, gridColumn, gridRow }: SlotConfig) {
     playSfxById(SfxId.InventoryPickup);
 
     startDrag({
+      element: e.currentTarget as Element,
       info: {
         source: 'equipment',
         itemId,

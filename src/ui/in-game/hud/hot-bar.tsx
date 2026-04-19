@@ -147,15 +147,12 @@ function HotBarSlot({ index, pillow }: SlotProps) {
 
   const handlePointerUp = useCallback(
     (e: PointerEvent) => {
-      e.stopPropagation();
       e.preventDefault();
       const start = pointerStart.current;
       pointerStart.current = null;
       if (!start || slot.type === SlotType.Empty) return;
       const dist = Math.hypot(e.clientX - start.x, e.clientY - start.y);
       if (dist >= CLEAR_THRESHOLD) {
-        // Suppress the click that follows pointerup so it doesn't leak to the map.
-        client.mouseController.setIgnoreNextClick();
         clearSlot(index);
       } else {
         client.spellController.useHotbarSlot(index);

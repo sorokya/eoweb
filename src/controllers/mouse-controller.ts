@@ -144,8 +144,50 @@ export class MouseController {
       });
     });
 
-    window.addEventListener('click', (e) => {
-      this.handleClick(e);
+    let mouseDownPosition: { x: number; y: number } | null = null;
+
+    window.addEventListener(
+      'pointerdown',
+      (e) => {
+        if (e.pointerType !== 'mouse') return;
+        // Don't track drags that start inside the UI
+        if (isInUI(e.target)) {
+          mouseDownPosition = null;
+          return;
+        }
+        mouseDownPosition = { x: e.clientX, y: e.clientY };
+      },
+      { capture: true },
+    );
+
+    window.addEventListener('pointerup', (e) => {
+      if (e.pointerType !== 'mouse') return;
+
+      // Require a tracked pointerdown — if it started in UI or was blocked
+      // by stopPropagation, mouseDownPosition is null and we skip entirely.
+      if (!mouseDownPosition) return;
+
+      const dx = e.clientX - mouseDownPosition.x;
+      const dy = e.clientY - mouseDownPosition.y;
+      mouseDownPosition = null;
+      if (Math.sqrt(dx * dx + dy * dy) > 10) {
+        // Treat as a drag, not a click — also clear any pending ignore flag
+        this.ignoreNextClick = false;
+        return;
+      }
+
+      if (this.ignoreNextClick) {
+        this.ignoreNextClick = false;
+        return;
+      }
+
+      this.handleClick(e as unknown as MouseEvent);
+    });
+
+    window.addEventListener('pointercancel', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      mouseDownPosition = null;
+      this.ignoreNextClick = false;
     });
 
     window.addEventListener('contextmenu', (e) => {
