@@ -137,6 +137,9 @@ function HotBarSlot({ index, pillow }: SlotProps) {
       e.preventDefault();
       if (slot.type === SlotType.Empty) return;
       pointerStart.current = { x: e.clientX, y: e.clientY };
+      // Capture the pointer so pointerup fires on this element even if the
+      // user releases outside the slot (i.e. after dragging away).
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       playSfxById(SfxId.InventoryPickup);
     },
     [slot],
@@ -151,6 +154,8 @@ function HotBarSlot({ index, pillow }: SlotProps) {
       if (!start || slot.type === SlotType.Empty) return;
       const dist = Math.hypot(e.clientX - start.x, e.clientY - start.y);
       if (dist >= CLEAR_THRESHOLD) {
+        // Suppress the click that follows pointerup so it doesn't leak to the map.
+        client.mouseController.setIgnoreNextClick();
         clearSlot(index);
       } else {
         client.spellController.useHotbarSlot(index);
