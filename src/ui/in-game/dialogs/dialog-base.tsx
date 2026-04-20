@@ -166,7 +166,9 @@ export function DialogBase({
       >
         <div class='flex min-w-0 flex-1 items-center gap-1'>
           {titleContent ?? (
-            <span class='truncate px-1 font-semibold text-sm'>{title}</span>
+            <span class='truncate px-1 font-semibold text-primary text-sm'>
+              {title}
+            </span>
           )}
         </div>
 

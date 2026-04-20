@@ -150,7 +150,7 @@ export function ShopDialog() {
               items={tabs}
               activeId={activeTab}
               onSelect={(id) => setActiveTab(id as ShopTabId)}
-              style='box'
+              style='border'
               size='xs'
             />
           </div>

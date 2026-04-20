@@ -115,7 +115,7 @@ function EquipSlot({ label, itemId, slot, gridColumn, gridRow }: SlotConfig) {
     <div
       ref={slotRef}
       data-equip-slot={isOwnCharacter ? slot : undefined}
-      class={`group relative flex items-center justify-center rounded border border-base-300 bg-base-200${isOwnCharacter && itemId ? 'cursor-grab' : ''}`}
+      class={`group relative flex items-center justify-center rounded border bg-base-200 ${itemId ? 'border-primary/30 bg-primary/5' : 'border-base-300'}${isOwnCharacter && itemId ? ' cursor-grab' : ''}`}
       style={{ gridColumn, gridRow }}
       onPointerDown={onPointerDown}
       onContextMenu={onContextMenu}
@@ -306,7 +306,7 @@ function PaperdollTab() {
       <div class='flex min-w-0 flex-1 flex-col gap-0.5 text-sm'>
         {infoRows.map(([label, value]) => (
           <div key={label} class='flex justify-between gap-2'>
-            <span class='shrink-0 opacity-60'>{label}</span>
+            <span class='shrink-0 text-primary/60'>{label}</span>
             <span class='min-w-0 truncate font-medium'>{value}</span>
           </div>
         ))}
@@ -343,7 +343,7 @@ function StatsTab() {
       <div class='flex flex-1 flex-col gap-0.5'>
         {baseRows.map(([label, value]) => (
           <div key={label} class='flex justify-between'>
-            <span class='opacity-60'>{label}</span>
+            <span class='text-primary/60'>{label}</span>
             <span>{value.toLocaleString()}</span>
           </div>
         ))}
@@ -351,7 +351,7 @@ function StatsTab() {
       <div class='flex flex-1 flex-col gap-0.5'>
         {derivedRows.map(([label, value]) => (
           <div key={label} class='flex justify-between'>
-            <span class='opacity-60'>{label}</span>
+            <span class='text-primary/60'>{label}</span>
             <span>{value}</span>
           </div>
         ))}

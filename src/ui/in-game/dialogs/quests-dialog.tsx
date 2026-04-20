@@ -166,7 +166,7 @@ export function QuestsDialog() {
   ] as const;
 
   return (
-    <DialogBase id='quests' title={locale.questsTitle} size='sm'>
+    <DialogBase id='quests' title={locale.questsTitle} size='md'>
       <div class='flex flex-col gap-2 p-1'>
         <Tabs
           items={TABS as unknown as { id: string; label: string }[]}

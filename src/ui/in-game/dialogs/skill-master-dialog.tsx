@@ -214,7 +214,7 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
                   </span>
                 ) : (
                   <Button
-                    variant={['xs', canLearn ? 'accent' : 'disabled']}
+                    variant={['xs', canLearn ? 'primary' : 'disabled']}
                     class='w-full'
                     onClick={() => handleLearn(skill)}
                     disabled={!canLearn}
@@ -452,6 +452,7 @@ export function SkillMasterDialog() {
           items={tabs.map((t) => ({ id: t.id, label: t.label }))}
           activeId={activeTab}
           onSelect={(id) => setActiveTab(id as SkillMasterTab)}
+          style='border'
         />
       </div>
 

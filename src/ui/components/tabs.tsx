@@ -45,7 +45,7 @@ export function Tabs({
           name={`tab-${name}`}
           data-tab-index={index}
           /*biome-ignore lint/nursery/useSortedClasses: Need space */
-          class={`tab${item.id === activeId ? ' tab-active' : ''}`}
+          class={`tab${item.id === activeId ? ' tab-active text-primary' : ''}`}
           onClick={() => handleClick(item.id)}
         >
           {item.label}

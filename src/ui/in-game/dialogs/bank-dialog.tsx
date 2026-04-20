@@ -56,20 +56,26 @@ export function BankDialog() {
       <div class='space-y-2 p-2'>
         <div class='rounded border border-base-content/10 bg-base-200 p-2'>
           <div class='flex items-center justify-between text-sm'>
-            <span class='flex items-center gap-1 opacity-70'>
-              <FaCoins size={11} />
+            <span class='flex items-center gap-1 text-primary/60'>
+              <span class='text-warning'>
+                <FaCoins size={11} />
+              </span>
               {locale.bankBalance}
             </span>
-            <span class='font-semibold tabular-nums'>
+            <span class='font-semibold tabular-nums text-warning'>
               {goldBank.toLocaleString()}
             </span>
           </div>
-          <div class='mt-1 flex items-center justify-between text-xs opacity-80'>
+          <div class='mt-1 flex items-center justify-between text-xs text-primary/50'>
             <span class='flex items-center gap-1'>
-              <FaCoins size={10} />
+              <span class='text-warning/70'>
+                <FaCoins size={10} />
+              </span>
               {locale.bankOnHand}
             </span>
-            <span class='tabular-nums'>{goldOnHand.toLocaleString()}</span>
+            <span class='tabular-nums text-warning/70'>
+              {goldOnHand.toLocaleString()}
+            </span>
           </div>
         </div>
 
@@ -94,25 +100,29 @@ export function BankDialog() {
 
         <div class='rounded border border-base-content/10 bg-base-200 p-2'>
           <div class='flex items-center justify-between text-sm'>
-            <span class='flex items-center gap-1 opacity-70'>
-              <FaLock size={11} />
+            <span class='flex items-center gap-1 text-primary/60'>
+              <span class='text-primary'>
+                <FaLock size={11} />
+              </span>
               {locale.bankLockerUpgrades}
             </span>
             <span class='font-semibold tabular-nums'>
               {lockerUpgrades}/{MAX_LOCKER_UPGRADES}
             </span>
           </div>
-          <div class='mt-1 flex items-center justify-between text-xs opacity-80'>
+          <div class='mt-1 flex items-center justify-between text-xs text-primary/50'>
             <span>{locale.bankNextUpgradeCost}</span>
-            <span class='tabular-nums'>
+            <span class='tabular-nums text-base-content/70'>
               {nextUpgradeCost === null
                 ? 'MAX'
                 : nextUpgradeCost.toLocaleString()}
             </span>
           </div>
-          <div class='mt-1 flex items-center justify-between text-xs opacity-80'>
+          <div class='mt-1 flex items-center justify-between text-xs text-primary/50'>
             <span>{locale.bankMaxLockerItems}</span>
-            <span class='tabular-nums'>{LOCKER_MAX_ITEM_AMOUNT}</span>
+            <span class='tabular-nums text-base-content/70'>
+              {LOCKER_MAX_ITEM_AMOUNT}
+            </span>
           </div>
           <Button
             variant={['sm', maxedUpgrades ? 'disabled' : 'outline']}

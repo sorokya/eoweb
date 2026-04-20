@@ -121,7 +121,7 @@ export function SettingsDialog() {
             items={tabs}
             activeId={activeTab}
             onSelect={(id) => setActiveTab(id as SettingsTabId)}
-            style='box'
+            style='border'
             size='xs'
           />
         </div>

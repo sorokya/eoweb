@@ -102,7 +102,7 @@ function SpellCard({ spell, skillPoints }: SpellCardProps) {
       </p>
 
       {/* Level */}
-      <p class='text-base-content/60 text-xs'>{levelLabel}</p>
+      <p class='text-primary/60 text-xs'>{levelLabel}</p>
 
       {/* Train button */}
       <Button
@@ -156,7 +156,9 @@ export function SpellsDialog() {
     <DialogBase id='spells' title={locale.spellsTitle} size='md' avoidBottom>
       {/* Skill points header */}
       <div class='sticky top-0 z-10 border-base-content/10 border-b bg-base-300/90 px-3 py-1.5 backdrop-blur-sm'>
-        <p class='text-center font-medium text-sm'>{skillPointsLabel}</p>
+        <p class='text-center font-medium text-primary text-sm'>
+          {skillPointsLabel}
+        </p>
       </div>
 
       {spells.length === 0 ? (

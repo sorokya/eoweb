@@ -534,8 +534,7 @@ export function SocialDialog() {
             items={tabs}
             activeId={activeTab}
             onSelect={(id) => setActiveTab(id as SocialTabId)}
-            style='box'
-            size='xs'
+            style='border'
           />
         </div>
         <div class='max-h-96 overflow-y-auto'>

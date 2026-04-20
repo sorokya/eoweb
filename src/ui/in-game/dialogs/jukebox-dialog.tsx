@@ -67,7 +67,7 @@ export function JukeboxDialog() {
             </li>
           ))}
           {client.jukeboxController.tracks.length === 0 && (
-            <li class='menu-title text-center opacity-50'>
+            <li class='menu-title text-center text-primary/60'>
               {locale.jukeboxNoSongs}
             </li>
           )}
