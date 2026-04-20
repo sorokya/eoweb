@@ -2,6 +2,7 @@ import type { ThreeItem } from 'eolib';
 import { createPortal } from 'preact/compat';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { ItemIcon } from '@/ui/components';
+import { UI_ITEM_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { useItemDrag, useRawItemGfxUrl } from '@/ui/in-game';
 import { getItemGraphicId, getItemMeta } from '@/utils';
@@ -79,7 +80,7 @@ function ChestItemSlot({ item, onTake }: ChestItemSlotProps) {
   return (
     <div
       ref={slotRef}
-      class='flex cursor-pointer select-none flex-col items-center gap-2 rounded border border-base-content/10 bg-base-200 p-2 transition-colors hover:bg-base-content/10 active:bg-base-content/15'
+      class={`flex cursor-pointer select-none flex-col items-center gap-2 rounded border ${UI_PANEL_BORDER} ${UI_ITEM_BG} p-2 transition-colors hover:bg-base-content/10 active:bg-base-content/15`}
       onPointerDown={handlePointerDown}
       onContextMenu={(e) => e.preventDefault()}
       onMouseEnter={(e) => {
@@ -94,7 +95,9 @@ function ChestItemSlot({ item, onTake }: ChestItemSlotProps) {
       }}
       onMouseLeave={() => setTooltip(null)}
     >
-      <div class='flex h-14 w-14 items-center justify-center overflow-hidden rounded border border-base-content/10 bg-base-300 p-1.5 lg:h-16 lg:w-16'>
+      <div
+        class={`flex h-14 w-14 items-center justify-center overflow-hidden rounded border ${UI_PANEL_BORDER} bg-base-300 p-1.5 lg:h-16 lg:w-16`}
+      >
         {isGold ? (
           goldUrl ? (
             <img

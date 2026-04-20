@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { HUD_Z } from '@/ui/consts';
+import { HUD_Z, UI_GHOST_BG } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import type { ToastOptions } from '@/ui/types';
 
@@ -46,9 +46,7 @@ export function StatusMessages() {
       {messages.map((msg) => (
         <div
           key={msg.id}
-          class={
-            'alert pointer-events-auto rounded-full bg-base-200/50 px-2 py-1 text-shadow-lg text-xs shadow-lg'
-          }
+          class={`alert pointer-events-auto rounded-full ${UI_GHOST_BG} px-2 py-1 text-shadow-lg text-xs shadow-lg`}
         >
           <span>
             {msg.icon} {msg.message}

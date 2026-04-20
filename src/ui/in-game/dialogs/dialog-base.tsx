@@ -1,8 +1,9 @@
 import { useCallback, useRef } from 'preact/hooks';
 import { FaWindowClose, FaWindowRestore } from 'react-icons/fa';
 import { Button } from '@/ui/components';
+import { UI_HEADER_BG, UI_PANEL_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useLocale } from '@/ui/context';
-import { type DialogId, useWindowManager } from '@/ui/in-game';
+import { type DialogId, useBackdropBlur, useWindowManager } from '@/ui/in-game';
 
 type DialogSize = 'sm' | 'md' | 'lg';
 
@@ -58,6 +59,7 @@ export function DialogBase({
     getManualPos,
     bringToFront,
   } = useWindowManager();
+  const blur = useBackdropBlur();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<{
@@ -153,15 +155,13 @@ export function DialogBase({
       ref={containerRef}
       role='presentation'
       data-chat-dialog={id.startsWith('chat-') ? id : undefined}
-      class={
-        'pointer-events-auto flex flex-col overflow-hidden rounded-lg border border-base-content/10 bg-base-300/50 shadow-sm backdrop-blur-xs'
-      }
+      class={`pointer-events-auto flex flex-col overflow-hidden rounded-lg border ${UI_PANEL_BORDER} ${UI_PANEL_BG} shadow-sm ${blur}`}
       style={posStyle}
       onClick={stopProp}
       onContextMenu={stopProp}
     >
       <div
-        class={`flex items-center gap-1 rounded-t-lg bg-base-content/5 px-2 py-1.5 ${noDrag ? '' : 'cursor-move'}`}
+        class={`flex items-center gap-1 rounded-t-lg ${UI_HEADER_BG} px-2 py-1.5 ${noDrag ? '' : 'cursor-move'}`}
         onPointerDown={onDragPointerDown}
       >
         <div class='flex min-w-0 flex-1 items-center gap-1'>

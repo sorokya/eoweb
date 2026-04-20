@@ -131,6 +131,7 @@ export const locales = {
     settingsUiScale: 'UI Scale',
     settingsTheme: 'Theme',
     settingsLanguage: 'Language',
+    settingsBackdropBlur: 'Backdrop Blur',
     settingsTouchReposition: 'Reposition Touch Controls',
     settingsTouchRepositionHint:
       'Drag touch controls to reposition them on screen.',

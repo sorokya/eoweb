@@ -1,4 +1,5 @@
 import { Emote } from 'eolib';
+import { UI_GHOST_BG, UI_PANEL_BORDER } from '@/ui/consts';
 
 const EMOTES: { type: Emote; label: string; emoji: string }[] = [
   { type: Emote.Happy, label: 'Happy', emoji: '😊' },
@@ -96,7 +97,7 @@ export function EmoteRadialMenu({ onSelect, onClose }: Props) {
             <button
               key={type}
               type='button'
-              class='absolute flex flex-col items-center justify-center gap-0.5 rounded-full border border-base-content/30 bg-base-100/80 text-xs shadow active:bg-base-content/20'
+              class={`absolute flex flex-col items-center justify-center gap-0.5 rounded-full border ${UI_PANEL_BORDER} ${UI_GHOST_BG} text-xs shadow active:bg-base-content/20`}
               style={{
                 width: `${BUTTON_SIZE}px`,
                 height: `${BUTTON_SIZE}px`,
@@ -116,7 +117,7 @@ export function EmoteRadialMenu({ onSelect, onClose }: Props) {
 
         <button
           type='button'
-          class='absolute flex items-center justify-center rounded-full border border-base-content/30 bg-base-100/80 text-sm shadow active:bg-base-content/20'
+          class={`absolute flex items-center justify-center rounded-full border ${UI_PANEL_BORDER} ${UI_GHOST_BG} text-sm shadow active:bg-base-content/20`}
           style={{
             width: `${BUTTON_SIZE}px`,
             height: `${BUTTON_SIZE}px`,

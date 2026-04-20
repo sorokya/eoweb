@@ -12,9 +12,9 @@ import { LuLogOut, LuMenu } from 'react-icons/lu';
 import { DialogResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
 import { Button } from '@/ui/components';
-import { HUD_Z, SIDEMENU_Z } from '@/ui/consts';
+import { HUD_Z, SIDEMENU_Z, UI_PANEL_BORDER, UI_STICKY_BG } from '@/ui/consts';
 import { useClient } from '@/ui/context';
-import { type DialogId, useWindowManager } from '@/ui/in-game';
+import { type DialogId, useBackdropBlur, useWindowManager } from '@/ui/in-game';
 
 function useExitGame() {
   const client = useClient();
@@ -123,6 +123,7 @@ export function MobileNav() {
   const { openDialog: wmOpenDialog, closeDialog, isOpen } = useWindowManager();
   const exitGame = useExitGame();
   const [open, setOpen] = useState(false);
+  const blur = useBackdropBlur();
 
   const openDialog = useCallback(
     (id: DialogId) => {
@@ -177,7 +178,7 @@ export function MobileNav() {
 
         {open && (
           <ul
-            class='menu menu-sm absolute top-full right-0 z-50 mt-1 min-w-32 rounded-box border border-base-content/10 bg-base-300/90 p-1 shadow-xl backdrop-blur-sm'
+            class={`menu menu-sm absolute top-full right-0 z-50 mt-1 min-w-32 rounded-box border ${UI_PANEL_BORDER} ${UI_STICKY_BG} p-1 shadow-xl ${blur}`}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >

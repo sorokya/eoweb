@@ -1,6 +1,6 @@
 import { type Emote as EmoteType, SitState } from 'eolib';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { HUD_Z } from '@/ui/consts';
+import { HUD_Z, UI_GHOST_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import {
   useDrag,
@@ -213,7 +213,7 @@ export function TouchActionButtons() {
       {repositionMode ? (
         <div
           ref={dragHandleRef}
-          class='flex h-full w-full cursor-grab items-center justify-center rounded-2xl border-2 border-base-content/40 border-dashed bg-base-100/20 active:cursor-grabbing'
+          class={`flex h-full w-full cursor-grab items-center justify-center rounded-2xl border-2 ${UI_PANEL_BORDER} border-dashed ${UI_GHOST_BG} active:cursor-grabbing`}
           style={{ touchAction: 'none' }}
         >
           <span class='text-[0.625rem] text-base-content/60'>Move</span>
@@ -223,7 +223,7 @@ export function TouchActionButtons() {
           {/* Picker toggle — anchored above rotated emote pill's visual top */}
           <button
             type='button'
-            class='btn btn-ghost btn-xs absolute select-none bg-base-200/20 text-[0.6rem] opacity-70 active:opacity-100'
+            class={`btn btn-ghost btn-xs absolute select-none ${UI_GHOST_BG} text-[0.6rem] opacity-70 active:opacity-100`}
             style={{
               left: pickLeft,
               top: pickTop,
@@ -245,7 +245,7 @@ export function TouchActionButtons() {
           {/* Emote — rotated −60° to hug attack circle tangentially */}
           <button
             type='button'
-            class='btn btn-ghost absolute select-none rounded-xl border border-base-content/20 bg-base-200/20 text-sm'
+            class={`btn btn-ghost absolute select-none rounded-xl border ${UI_PANEL_BORDER} ${UI_GHOST_BG} text-sm`}
             style={{
               left: emoteLeft,
               top: emoteTop,
@@ -277,7 +277,7 @@ export function TouchActionButtons() {
           <button
             ref={sitStandRef}
             type='button'
-            class='btn btn-ghost absolute select-none rounded-xl border border-base-content/20 bg-base-200/20 text-sm'
+            class={`btn btn-ghost absolute select-none rounded-xl border ${UI_PANEL_BORDER} ${UI_GHOST_BG} text-sm`}
             style={{
               left: sitLeft,
               top: sitTop,
@@ -304,7 +304,7 @@ export function TouchActionButtons() {
           <button
             ref={attackRef}
             type='button'
-            class='btn btn-ghost btn-circle absolute select-none border border-base-content/20 bg-base-200/20 text-2xl'
+            class={`btn btn-ghost btn-circle absolute select-none border ${UI_PANEL_BORDER} ${UI_GHOST_BG} text-2xl`}
             style={{
               left: atkLeft,
               top: atkTop,

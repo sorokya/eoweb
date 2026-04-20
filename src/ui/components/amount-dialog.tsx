@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks';
+import { UI_BLUR, UI_MODAL_BG } from '@/ui/consts';
 import { useLocale } from '@/ui/context';
 import { Button } from './button';
 
@@ -32,7 +33,7 @@ export function AmountDialog({
 
   return (
     <dialog class='modal' open style={{ background: 'transparent' }}>
-      <div class='modal-box bg-base-100/80 backdrop-blur-sm'>
+      <div class={`modal-box ${UI_MODAL_BG} ${UI_BLUR}`}>
         <h3 class='font-bold text-lg'>{title}</h3>
         <p class='py-2'>{message}</p>
         <div class='flex flex-col gap-3 py-2'>

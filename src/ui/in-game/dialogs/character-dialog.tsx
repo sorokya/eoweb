@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { EquipmentSlot } from '@/equipment';
 import { playSfxById, SfxId } from '@/sfx';
 import { ItemIcon, QuestBookList, Tabs } from '@/ui/components';
+import { UI_PANEL_BORDER } from '@/ui/consts';
 import { useCharacterInfo, useClient, useLocale } from '@/ui/context';
 import { useItemDrag, usePlayerStats } from '@/ui/in-game';
 import { capitalize, getItemMeta } from '@/utils';
@@ -115,7 +116,7 @@ function EquipSlot({ label, itemId, slot, gridColumn, gridRow }: SlotConfig) {
     <div
       ref={slotRef}
       data-equip-slot={isOwnCharacter ? slot : undefined}
-      class={`group relative flex items-center justify-center rounded border ${itemId ? 'border-primary/30 bg-primary/5' : 'border-base-content/40'}${isOwnCharacter && itemId ? 'cursor-grab' : ''}`}
+      class={`group relative flex items-center justify-center rounded border ${itemId ? 'border-primary/30 bg-primary/5' : UI_PANEL_BORDER}${isOwnCharacter && itemId ? 'cursor-grab' : ''}`}
       style={{ gridColumn, gridRow }}
       onPointerDown={onPointerDown}
       onContextMenu={onContextMenu}

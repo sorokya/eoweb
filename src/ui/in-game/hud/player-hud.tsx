@@ -5,9 +5,9 @@ import { GiCoins, GiWeightLiftingUp } from 'react-icons/gi';
 import { GrMagic } from 'react-icons/gr';
 import type { HudWidget, HudWidgetId } from '@/controllers';
 import { ProgressBar } from '@/ui/components';
-import { HUD_Z } from '@/ui/consts';
+import { HUD_Z, UI_PANEL_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
-import { usePlayerStats } from '@/ui/in-game';
+import { useBackdropBlur, usePlayerStats } from '@/ui/in-game';
 import { capitalize, formatBigNumber, getExpForLevel } from '@/utils';
 
 const stopPropagation = (e: { stopPropagation(): void }) => e.stopPropagation();
@@ -158,6 +158,7 @@ export function PlayerHud() {
   const client = useClient();
   const cfg = client.configController;
   const stats = usePlayerStats();
+  const blur = useBackdropBlur();
 
   const [widgets, setWidgets] = useState<HudWidget[]>(() =>
     cfg.getHudWidgets(client.characterId),
@@ -178,7 +179,7 @@ export function PlayerHud() {
   return (
     <div
       role='presentation'
-      class='absolute top-0 right-0 left-0 flex h-8 flex-row items-center rounded-none border-base-content/10 border-b bg-base-200/80 px-2 shadow-md backdrop-blur-xs'
+      class={`absolute top-0 right-0 left-0 flex h-8 flex-row items-center rounded-none ${UI_PANEL_BORDER} border-b ${UI_PANEL_BG} px-2 shadow-md ${blur}`}
       style={{ zIndex: HUD_Z }}
       onClick={stopPropagation}
       onKeyDown={stopPropagation}

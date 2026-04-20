@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { useWindowManager } from '@/ui/in-game';
 import {
@@ -177,7 +178,7 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
       }}
     >
       <div
-        class='flex w-full max-w-md flex-col rounded-xl border border-base-content/10 bg-base-300 shadow-2xl'
+        class={`flex w-full max-w-md flex-col rounded-xl border ${UI_PANEL_BORDER} bg-base-300 shadow-2xl`}
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Search input */}

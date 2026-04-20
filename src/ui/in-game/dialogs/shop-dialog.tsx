@@ -8,7 +8,9 @@ import {
 } from 'react-icons/fa';
 import type { Client } from '@/client';
 import { Button, ItemIcon, Tabs } from '@/ui/components';
+import { UI_PANEL_BORDER, UI_STICKY_BG } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
+import { useBackdropBlur } from '@/ui/in-game';
 import { DialogBase } from './dialog-base';
 
 type ShopTabId = 'buy' | 'sell' | 'craft';
@@ -27,6 +29,7 @@ function getGraphicId(client: Client, itemId: number): number | null {
 export function ShopDialog() {
   const client = useClient();
   const { locale } = useLocale();
+  const blur = useBackdropBlur();
 
   const [activeTab, setActiveTab] = useState<ShopTabId>('buy');
   const [shopName, setShopName] = useState(
@@ -147,7 +150,9 @@ export function ShopDialog() {
   return (
     <DialogBase id='shop' title={title} size='lg'>
       <div class='flex flex-col'>
-        <div class='sticky top-0 z-10 border-base-content/10 border-b bg-base-300/90 px-2 pt-1 pb-1 backdrop-blur-sm'>
+        <div
+          class={`sticky top-0 z-10 ${UI_PANEL_BORDER} border-b ${UI_STICKY_BG} px-2 pt-1 pb-1 ${blur}`}
+        >
           <div class='overflow-x-auto'>
             <Tabs
               name='shop'

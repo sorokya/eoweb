@@ -23,6 +23,7 @@ type GlobalConfig = {
   uiScaleIndex: number;
   theme: string;
   language: Language;
+  backdropBlur: boolean;
   // Sound
   masterVolume: number;
   effectVolume: number;
@@ -66,6 +67,7 @@ const DEFAULTS: GlobalConfig = {
   uiScaleIndex: 2, // 1x
   theme: 'dim',
   language: 'en',
+  backdropBlur: true,
   masterVolume: 1,
   effectVolume: 1,
   ambientVolume: 1,
@@ -202,6 +204,16 @@ export class ConfigController {
     this.global.language = value;
     this.saveGlobal();
     this.emit('language');
+  }
+
+  get backdropBlur(): boolean {
+    return this.global.backdropBlur;
+  }
+
+  setBackdropBlur(value: boolean): void {
+    this.global.backdropBlur = value;
+    this.saveGlobal();
+    this.emit('backdropBlur');
   }
 
   // ── Sound ───────────────────────────────────────────────────────────────────

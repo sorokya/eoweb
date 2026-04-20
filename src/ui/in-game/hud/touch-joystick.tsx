@@ -1,6 +1,6 @@
 import { Direction } from 'eolib';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { HUD_Z } from '@/ui/consts';
+import { HUD_Z, UI_GHOST_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import {
   useDrag,
@@ -137,7 +137,7 @@ export function TouchJoystick() {
       {repositionMode ? (
         <div
           ref={dragHandleRef}
-          class='flex cursor-grab items-center justify-center rounded-full border-2 border-base-content/40 border-dashed bg-base-100/20 active:cursor-grabbing'
+          class={`flex cursor-grab items-center justify-center rounded-full border-2 ${UI_PANEL_BORDER} border-dashed ${UI_GHOST_BG} active:cursor-grabbing`}
           style={{
             width: `${BASE_REM}rem`,
             height: `${BASE_REM}rem`,
@@ -149,7 +149,7 @@ export function TouchJoystick() {
       ) : (
         <div
           ref={baseRef}
-          class='relative flex items-center justify-center rounded-full border border-base-content/20 bg-base-100/10'
+          class={`relative flex items-center justify-center rounded-full border ${UI_PANEL_BORDER} ${UI_GHOST_BG}`}
           style={{
             width: `${BASE_REM}rem`,
             height: `${BASE_REM}rem`,

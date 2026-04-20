@@ -10,7 +10,9 @@ import {
   FaMapMarkerAlt,
   FaSkull,
 } from 'react-icons/fa';
+import { UI_PANEL_BG } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
+import { useBackdropBlur } from '@/ui/in-game';
 
 function questIcon(icon: QuestRequirementIcon) {
   switch (icon) {
@@ -30,6 +32,7 @@ function questIcon(icon: QuestRequirementIcon) {
 export function QuestTracker() {
   const client = useClient();
   const { locale } = useLocale();
+  const blur = useBackdropBlur();
 
   const [trackedNames, setTrackedNames] = useState<string[]>(() => [
     ...client.questController.trackedQuestNames,
@@ -73,7 +76,7 @@ export function QuestTracker() {
 
   return (
     <div
-      class='flex flex-col gap-1.5 rounded-lg bg-base-300/50 px-2 py-1.5 backdrop-blur-xs'
+      class={`flex flex-col gap-1.5 rounded-lg ${UI_PANEL_BG} px-2 py-1.5 ${blur}`}
       style={{ minWidth: 140, maxWidth: 220 }}
     >
       <button

@@ -10,6 +10,7 @@ import {
 import { FaFilter, FaSearch } from 'react-icons/fa';
 import { playSfxById, SfxId } from '@/sfx';
 import { ItemIcon } from '@/ui/components';
+import { UI_ITEM_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { useItemDrag } from '@/ui/in-game';
 import { getItemMeta } from '@/utils';
@@ -134,13 +135,15 @@ function LockerItemSlot({ item, onTake }: LockerItemSlotProps) {
   return (
     <div
       ref={slotRef}
-      class='flex cursor-pointer select-none flex-col items-center gap-2 rounded border border-base-content/10 bg-base-200 p-2 transition-colors hover:bg-base-content/10 active:bg-base-content/15'
+      class={`flex cursor-pointer select-none flex-col items-center gap-2 rounded border ${UI_PANEL_BORDER} ${UI_ITEM_BG} p-2 transition-colors hover:bg-base-content/10 active:bg-base-content/15`}
       onPointerDown={handlePointerDown}
       onContextMenu={(e) => e.preventDefault()}
       onMouseEnter={showTooltip}
       onMouseLeave={() => setTooltip(null)}
     >
-      <div class='flex h-14 w-14 items-center justify-center overflow-hidden rounded border border-base-content/10 bg-base-300 p-1.5 lg:h-16 lg:w-16'>
+      <div
+        class={`flex h-14 w-14 items-center justify-center overflow-hidden rounded border ${UI_PANEL_BORDER} bg-base-300 p-1.5 lg:h-16 lg:w-16`}
+      >
         {graphicId === null ? (
           <div class='h-10 w-10 rounded bg-base-content/10' />
         ) : (
@@ -308,7 +311,9 @@ export function LockerDialog() {
   return (
     <DialogBase id='locker' title={locale.lockerTitle} size='md'>
       {/* Search + filter bar */}
-      <div class='flex flex-col gap-1 border-base-content/10 border-b px-2 pt-1 pb-2'>
+      <div
+        class={`flex flex-col gap-1 ${UI_PANEL_BORDER} border-b px-2 pt-1 pb-2`}
+      >
         <label class='input input-xs input-bordered flex items-center gap-2'>
           <FaSearch size={10} />
           <input

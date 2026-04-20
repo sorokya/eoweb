@@ -3,9 +3,15 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { FaArrowUp } from 'react-icons/fa';
 import { playSfxById, SfxId } from '@/sfx';
 import { Button } from '@/ui/components';
+import { UI_ITEM_BG, UI_PANEL_BORDER, UI_STICKY_BG } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
-import { useHotbar, useItemDrag, useSpellIconUrls } from '@/ui/in-game';
+import {
+  useBackdropBlur,
+  useHotbar,
+  useItemDrag,
+  useSpellIconUrls,
+} from '@/ui/in-game';
 import { DialogBase } from './dialog-base';
 
 // ---------------------------------------------------------------------------
@@ -78,12 +84,14 @@ function SpellCard({ spell, skillPoints }: SpellCardProps) {
   return (
     <div
       ref={cardRef}
-      class='flex cursor-grab flex-col items-center gap-1 rounded border border-base-content/10 bg-base-200 p-2 active:cursor-grabbing'
+      class={`flex cursor-grab flex-col items-center gap-1 rounded border ${UI_PANEL_BORDER} ${UI_ITEM_BG} p-2 active:cursor-grabbing`}
       style={{ touchAction: 'none' }}
       onPointerDown={handlePointerDown}
     >
       {/* Spell icon */}
-      <div class='flex h-12 w-12 items-center justify-center overflow-hidden rounded border border-base-content/10 bg-base-300'>
+      <div
+        class={`flex h-12 w-12 items-center justify-center overflow-hidden rounded border ${UI_PANEL_BORDER} bg-base-300`}
+      >
         {spellUrls ? (
           <img
             src={spellUrls.normal}
@@ -125,6 +133,7 @@ function SpellCard({ spell, skillPoints }: SpellCardProps) {
 export function SpellsDialog() {
   const client = useClient();
   const { locale } = useLocale();
+  const blur = useBackdropBlur();
 
   const [spells, setSpells] = useState<Spell[]>(() => [...client.spells]);
   const [skillPoints, setSkillPoints] = useState(() => client.skillPoints);
@@ -155,7 +164,9 @@ export function SpellsDialog() {
   return (
     <DialogBase id='spells' title={locale.spellsTitle} size='md' avoidBottom>
       {/* Skill points header */}
-      <div class='sticky top-0 z-10 border-base-content/10 border-b bg-base-300/90 px-3 py-1.5 backdrop-blur-sm'>
+      <div
+        class={`sticky top-0 z-10 ${UI_PANEL_BORDER} border-b ${UI_STICKY_BG} px-3 py-1.5 ${blur}`}
+      >
         <p class='text-center font-medium text-primary text-sm'>
           {skillPointsLabel}
         </p>

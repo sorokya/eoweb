@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { FaTrash } from 'react-icons/fa';
 import { GOLD_ITEM_ID } from '@/consts';
 import { playSfxById, SfxId } from '@/sfx';
+import { UI_ITEM_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
 import { useHotbar, useItemDrag } from '@/ui/in-game';
@@ -453,7 +454,7 @@ export function InventoryGrid({ itemIds }: Props) {
       {/* Grid */}
       <div
         ref={gridRef}
-        class='relative border border-base-300 bg-base-200/50'
+        class={`relative border ${UI_PANEL_BORDER} ${UI_ITEM_BG}`}
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${COLS}, ${CELL_SIZE}px)`,
@@ -471,7 +472,7 @@ export function InventoryGrid({ itemIds }: Props) {
               data-tab={activeTab}
               data-x={col}
               data-y={row}
-              class='border border-base-200/50'
+              class={`border ${UI_PANEL_BORDER}`}
               style={{
                 gridColumn: col + 1,
                 gridRow: row + 1,

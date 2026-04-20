@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fa6';
 import { formatLocaleString } from '@/locale';
 import { Tabs } from '@/ui/components';
+import { UI_ITEM_BG } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { useChatManager } from '@/ui/in-game';
 import { capitalize } from '@/utils';
@@ -126,7 +127,7 @@ function PlayerMenu({ actions }: { actions: RowActions }) {
             />
             <ul
               ref={menuRef}
-              class='menu menu-compact fixed z-10000 w-40 rounded-box bg-base-200 p-1 shadow-xl'
+              class={`menu menu-compact fixed z-10000 w-40 rounded-box ${UI_ITEM_BG} p-1 shadow-xl`}
               style={{ top: pos.top, left: pos.left }}
               onClick={(e) => e.stopPropagation()}
             >

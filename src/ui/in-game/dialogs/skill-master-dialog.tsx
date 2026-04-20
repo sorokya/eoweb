@@ -8,8 +8,9 @@ import {
 } from 'react-icons/fa';
 import { DialogResourceID } from '@/edf';
 import { Button, Tabs } from '@/ui/components';
+import { UI_ITEM_BG, UI_PANEL_BORDER, UI_STICKY_BG } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
-import { useSpellIconUrls } from '@/ui/in-game';
+import { useBackdropBlur, useSpellIconUrls } from '@/ui/in-game';
 import { DialogBase } from './dialog-base';
 
 // ---------------------------------------------------------------------------
@@ -38,7 +39,7 @@ function SpellIconDisplay({
   const { outer, inner } = sizeMap[size];
   return (
     <div
-      class={`flex ${outer} shrink-0 items-center justify-center overflow-hidden rounded border border-base-content/10 bg-base-300`}
+      class={`flex ${outer} shrink-0 items-center justify-center overflow-hidden rounded border ${UI_PANEL_BORDER} bg-base-300`}
     >
       {urls ? (
         <img
@@ -199,7 +200,7 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
         return (
           <div
             key={skill.id}
-            class='rounded border border-base-content/10 bg-base-200 p-2'
+            class={`rounded border ${UI_PANEL_BORDER} ${UI_ITEM_BG} p-2`}
           >
             <div class='grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3'>
               {/* Left: icon + name + button */}
@@ -243,7 +244,9 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
 
                 {/* Stat/level/class requirements */}
                 {reqs.length > 0 && (
-                  <table class='table-zebra table-xs table w-full rounded border border-base-content/10'>
+                  <table
+                    class={`table-zebra table-xs table w-full rounded border ${UI_PANEL_BORDER}`}
+                  >
                     <tbody>
                       {reqs.map((req) => (
                         <tr key={req.label}>
@@ -357,7 +360,7 @@ function ForgetTab() {
             return (
               <div
                 key={spell.id}
-                class='flex items-center gap-2 rounded border border-base-content/10 bg-base-200 px-2 py-1.5'
+                class={`flex items-center gap-2 rounded border ${UI_PANEL_BORDER} ${UI_ITEM_BG} px-2 py-1.5`}
               >
                 <SpellIconDisplay iconId={iconId} size='sm' />
                 <span class='min-w-0 flex-1 truncate font-medium text-sm'>
@@ -377,7 +380,7 @@ function ForgetTab() {
       )}
 
       {/* Reset character button */}
-      <div class='mt-2 border-base-content/10 border-t pt-2'>
+      <div class={`mt-2 ${UI_PANEL_BORDER} border-t pt-2`}>
         <Button
           variant={['sm', 'warning', 'outline']}
           class='w-full'
@@ -399,6 +402,7 @@ export function SkillMasterDialog() {
   const client = useClient();
   const { locale } = useLocale();
   const [activeTab, setActiveTab] = useState<SkillMasterTab>('learn');
+  const blur = useBackdropBlur();
   const [masterName, setMasterName] = useState(
     () => client.statSkillController.masterName,
   );
@@ -447,7 +451,9 @@ export function SkillMasterDialog() {
       title={masterName || locale.skillMasterLearnTab}
       size='md'
     >
-      <div class='sticky top-0 z-10 border-base-content/10 border-b bg-base-300/90 backdrop-blur-sm'>
+      <div
+        class={`sticky top-0 z-10 ${UI_PANEL_BORDER} border-b ${UI_STICKY_BG} ${blur}`}
+      >
         <Tabs
           items={tabs.map((t) => ({ id: t.id, label: t.label }))}
           activeId={activeTab}

@@ -75,6 +75,12 @@ export function InterfaceTab() {
     (c, v) => c.setLanguage(v),
   );
 
+  const [backdropBlur, setBackdropBlur] = useConfigSetting<boolean>(
+    'backdropBlur',
+    (c) => c.backdropBlur,
+    (c, v) => c.setBackdropBlur(v),
+  );
+
   const themeOptions = DAISYUI_THEMES.map((t) => ({ value: t, label: t }));
   const langOptions = LANGUAGES.map((l) => ({
     value: l.value,
@@ -113,6 +119,17 @@ export function InterfaceTab() {
         onChange={(v) => setLanguage(v as Language)}
         variant='sm'
       />
+      <div class='divider my-0' />
+      <SettingRow label={locale.settingsBackdropBlur} asLabel>
+        <input
+          type='checkbox'
+          class='checkbox checkbox-sm'
+          checked={backdropBlur}
+          onChange={(e) =>
+            setBackdropBlur((e.target as HTMLInputElement).checked)
+          }
+        />
+      </SettingRow>
       <div class='divider my-0' />
       <div>
         <p class='mb-1 text-xs opacity-50'>

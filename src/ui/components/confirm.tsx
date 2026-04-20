@@ -1,3 +1,4 @@
+import { UI_BLUR, UI_MODAL_BG } from '@/ui/consts';
 import { useLocale } from '@/ui/context';
 import { Button } from './button';
 
@@ -13,7 +14,7 @@ export function Confirm({ title, message, onYes, onNo }: ConfirmProps) {
 
   return (
     <dialog class='modal' open style={{ background: 'transparent' }}>
-      <div class='modal-box bg-base-100/80 backdrop-blur-sm'>
+      <div class={`modal-box ${UI_MODAL_BG} ${UI_BLUR}`}>
         <h3 class='font-bold text-lg'>{title}</h3>
         <p class='py-4'>{message}</p>
         <div class='modal-action'>

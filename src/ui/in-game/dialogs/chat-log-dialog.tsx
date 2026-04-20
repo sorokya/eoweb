@@ -16,6 +16,7 @@ import {
 } from '@/db';
 import { formatLocaleString } from '@/locale';
 import { Button, Confirm, Select } from '@/ui/components';
+import { UI_ITEM_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import {
   type ChatChannel,
@@ -143,7 +144,9 @@ function ExportDropdown({ onExport }: ExportDropdownProps) {
         {locale.chatLogExport}
       </Button>
       {open && (
-        <ul class='menu menu-xs absolute right-0 bottom-full z-50 mb-1 min-w-30 rounded border border-base-content/10 bg-base-300 p-1 shadow-lg'>
+        <ul
+          class={`menu menu-xs absolute right-0 bottom-full z-50 mb-1 min-w-30 rounded border ${UI_PANEL_BORDER} ${UI_ITEM_BG} p-1 shadow-lg`}
+        >
           <li>
             <button
               type='button'
@@ -328,7 +331,9 @@ export function ChatLogDialog() {
       </div>
 
       {/* Message list */}
-      <div class='mt-1 h-[52vh] overflow-y-auto rounded border border-base-content/10'>
+      <div
+        class={`mt-1 h-[52vh] overflow-y-auto rounded border ${UI_PANEL_BORDER}`}
+      >
         {loading && (
           <p class='py-4 text-center text-xs opacity-60'>
             {locale.chatLogLoading}
@@ -343,7 +348,7 @@ export function ChatLogDialog() {
           result.messages.map((msg) => (
             <div
               key={msg.id}
-              class='group flex items-start gap-1 border-base-content/5 border-b px-1.5 py-0.5 text-xs hover:bg-base-content/5'
+              class={`group flex items-start gap-1 ${UI_PANEL_BORDER} border-b px-1.5 py-0.5 text-xs hover:bg-base-content/5`}
             >
               <div class='flex flex-col'>
                 <span class='mt-0.5 shrink-0 tabular-nums opacity-50'>
@@ -405,7 +410,9 @@ export function ChatLogDialog() {
       </div>
 
       {/* Actions */}
-      <div class='flex items-center justify-between border-base-content/10 border-t pt-1'>
+      <div
+        class={`flex items-center justify-between ${UI_PANEL_BORDER} border-t pt-1`}
+      >
         <ExportDropdown onExport={handleExport} />
         <Button
           type='button'

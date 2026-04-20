@@ -41,6 +41,7 @@ export type { DragDropResult, DragInfo } from './item-drag-context';
 // Drag
 export { ItemDragProvider, useItemDrag } from './item-drag-context';
 export { JunkDropZone } from './junk-drop-zone';
+export { useBackdropBlur } from './use-backdrop-blur';
 export { useConfigSetting } from './use-config-setting';
 export {
   clearAllDialogLayouts,

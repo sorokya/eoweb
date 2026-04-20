@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { playSfxById, SfxId } from '@/sfx';
-import { DRAG_HOTBAR_Z, HUD_Z } from '@/ui/consts';
+import {
+  DRAG_HOTBAR_Z,
+  HUD_Z,
+  UI_GHOST_BG,
+  UI_PANEL_BORDER,
+} from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
 import {
@@ -100,7 +105,7 @@ function HotBarSlot({ index, pillow }: SlotProps) {
 
   return (
     <div
-      class={`relative flex items-center justify-center overflow-visible rounded border border-base-content/20 bg-base-200/20 transition-colors ${
+      class={`relative flex items-center justify-center overflow-visible rounded border ${UI_PANEL_BORDER} ${UI_GHOST_BG} transition-colors ${
         isDropTarget ? 'ring-2 ring-primary/60' : ''
       }`}
       style={{

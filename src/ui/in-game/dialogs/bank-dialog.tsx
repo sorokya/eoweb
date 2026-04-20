@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { FaArrowDown, FaArrowUp, FaCoins, FaLock } from 'react-icons/fa';
 import { LOCKER_MAX_ITEM_AMOUNT, MAX_LOCKER_UPGRADES } from '@/consts';
 import { Button } from '@/ui/components';
+import { UI_ITEM_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { DialogBase } from './dialog-base';
 
@@ -55,7 +56,7 @@ export function BankDialog() {
   return (
     <DialogBase id='bank' title={locale.bankTitle} size='sm'>
       <div class='space-y-2 p-2'>
-        <div class='rounded border border-base-content/10 bg-base-200 p-2'>
+        <div class={`rounded border ${UI_PANEL_BORDER} ${UI_ITEM_BG} p-2`}>
           <div class='flex items-center justify-between text-sm'>
             <span class='flex items-center gap-1 text-primary/60'>
               <span class='text-warning'>
@@ -99,7 +100,7 @@ export function BankDialog() {
           </Button>
         </div>
 
-        <div class='rounded border border-base-content/10 bg-base-200 p-2'>
+        <div class={`rounded border ${UI_PANEL_BORDER} ${UI_ITEM_BG} p-2`}>
           <div class='flex items-center justify-between text-sm'>
             <span class='flex items-center gap-1 text-primary/60'>
               <span class='text-primary'>
