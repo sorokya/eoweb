@@ -14,6 +14,7 @@ export { CommandPalette } from './command-palette/command-palette';
 export { DialogArena } from './dialog-arena';
 export { BankDialog } from './dialogs/bank-dialog';
 // Dialog components
+export { BoardDialog } from './dialogs/board-dialog';
 export { CharacterDialog } from './dialogs/character-dialog';
 export { ChatLogDialog } from './dialogs/chat-log-dialog';
 export { ChestDialog } from './dialogs/chest-dialog';

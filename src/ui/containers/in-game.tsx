@@ -5,6 +5,7 @@ import { useClient } from '@/ui/context';
 import type { DialogId } from '@/ui/in-game';
 import {
   BankDialog,
+  BoardDialog,
   CharacterDialog,
   ChatDialog,
   ChatLogDialog,
@@ -40,6 +41,7 @@ import {
 
 const ALL_DIALOG_IDS: DialogId[] = [
   'bank',
+  'board',
   'shop',
   'inventory',
   'spells',
@@ -60,6 +62,8 @@ function DialogById({ id }: { id: DialogId }) {
   switch (id) {
     case 'bank':
       return <BankDialog />;
+    case 'board':
+      return <BoardDialog />;
     case 'inventory':
       return <InventoryDialog />;
     case 'shop':
@@ -154,6 +158,11 @@ function InGameContent() {
     };
     client.innController.subscribeOpened(handleInnKeeperOpened);
 
+    const handleBoardOpened = () => {
+      openDialog('board');
+    };
+    client.boardController.subscribeBoardOpened(handleBoardOpened);
+
     const handleQuestDialogOpened = () => {
       openDialog('questNpc');
     };
@@ -161,6 +170,7 @@ function InGameContent() {
 
     const handleWalked = () => {
       closeDialog('bank');
+      closeDialog('board');
       closeDialog('shop');
       closeDialog('chest');
       closeDialog('locker');
@@ -194,6 +204,7 @@ function InGameContent() {
       client.shopController.unsubscribeOpened(handleShopOpened);
       client.statSkillController.unsubscribeOpened(handleSkillMasterOpened);
       client.innController.unsubscribeOpened(handleInnKeeperOpened);
+      client.boardController.unsubscribeBoardOpened(handleBoardOpened);
       client.questController.unsubscribeDialogOpened(handleQuestDialogOpened);
       client.movementController.unsubscribeWalked(handleWalked);
       client.off('toggleCommandPalette', handleToggleCommandPalette);

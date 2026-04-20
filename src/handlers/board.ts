@@ -9,14 +9,12 @@ import type { Client } from '@/client';
 
 function handleBoardOpen(client: Client, reader: EoReader) {
   const packet = BoardOpenServerPacket.deserialize(reader);
-  client.boardController.boardId = packet.boardId;
-  client.boardController.boardPosts = packet.posts;
-  client.emit('boardOpened', { posts: packet.posts });
+  client.boardController.handleBoardOpened(packet.boardId, packet.posts);
 }
 
 function handleBoardPlayer(client: Client, reader: EoReader) {
   const packet = BoardPlayerServerPacket.deserialize(reader);
-  client.emit('postRead', { postId: packet.postId, body: packet.postBody });
+  client.boardController.handlePostRead(packet.postId, packet.postBody);
 }
 
 export function registerBoardHandlers(client: Client) {

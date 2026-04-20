@@ -26,7 +26,8 @@ export type DialogId =
   | 'chest'
   | 'locker'
   | 'skillMaster'
-  | 'innKeeper';
+  | 'innKeeper'
+  | 'board';
 
 type DialogMeta = {
   /** Saved layout preference (persisted to localStorage). */

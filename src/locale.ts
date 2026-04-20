@@ -384,6 +384,19 @@ export const locales = {
     innKeeperConfirmGiveUpTitle: 'Give Up Citizenship',
     innKeeperConfirmGiveUpMsg:
       'Are you sure you want to give up your citizenship?',
+    // Board dialog
+    boardTitle: 'Town Board',
+    boardNewPost: 'New Post',
+    boardPostSubject: 'Subject',
+    boardPostBody: 'Body',
+    boardPostSubmit: 'Submit',
+    boardPostCancel: 'Cancel',
+    boardPostBack: 'Back',
+    boardDeletePost: 'Delete',
+    boardNoPosts: 'No posts yet.',
+    boardPostBy: 'by {author}',
+    boardDeleteConfirmTitle: 'Delete Post',
+    boardDeleteConfirmMsg: 'Are you sure you want to delete this post?',
   },
 } as const;
 
