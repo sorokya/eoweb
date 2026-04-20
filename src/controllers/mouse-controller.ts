@@ -150,6 +150,8 @@ export class MouseController {
       'pointerdown',
       (e) => {
         if (e.pointerType !== 'mouse') return;
+        // Only track left-click drags
+        if (e.button !== 0) return;
         // Don't track drags that start inside the UI
         if (isInUI(e.target)) {
           mouseDownPosition = null;
@@ -162,6 +164,8 @@ export class MouseController {
 
     window.addEventListener('pointerup', (e) => {
       if (e.pointerType !== 'mouse') return;
+      // Only handle left-click releases; right-click is handled via contextmenu
+      if (e.button !== 0) return;
 
       // Require a tracked pointerdown — if it started in UI or was blocked
       // by stopPropagation, mouseDownPosition is null and we skip entirely.
