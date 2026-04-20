@@ -185,7 +185,7 @@ export function BoardDialog() {
             </div>
 
             <div
-              class={`min-h-20 rounded border ${UI_PANEL_BORDER} bg-base-200 p-2 text-sm whitespace-pre-wrap`}
+              class={`min-h-20 rounded border ${UI_PANEL_BORDER} whitespace-pre-wrap bg-base-200 p-2 text-sm`}
             >
               {postView.body ?? '…'}
             </div>

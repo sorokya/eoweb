@@ -1,5 +1,6 @@
-import type { EifRecord } from 'eolib';
+import type { CharacterDetails, EifRecord } from 'eolib';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import type { CharacterTab } from '@/controllers';
 import { EquipmentSlot } from '@/equipment';
 import { playSfxById, SfxId } from '@/sfx';
 import { ItemIcon, QuestBookList, Tabs } from '@/ui/components';
@@ -10,8 +11,6 @@ import { capitalize, getItemMeta } from '@/utils';
 import { DialogBase } from './dialog-base';
 
 const EQUIP_CELL = 23;
-
-type CharacterTab = 'paperdoll' | 'stats' | 'book';
 
 function getEquipTooltipLines(record: EifRecord): string[] {
   return [record.name, ...getItemMeta(record)];
@@ -155,7 +154,7 @@ function PaperdollTab() {
     {
       key: 'hat',
       label: locale.slotHat,
-      itemId: info?.equipment.hat ?? 0,
+      itemId: info?.equipment?.hat ?? 0,
       slot: EquipmentSlot.Hat,
       gridColumn: '3 / span 2',
       gridRow: '1 / span 2',
@@ -163,7 +162,7 @@ function PaperdollTab() {
     {
       key: 'necklace',
       label: locale.slotNecklace,
-      itemId: info?.equipment.necklace ?? 0,
+      itemId: info?.equipment?.necklace ?? 0,
       slot: EquipmentSlot.Necklace,
       gridColumn: '5 / span 2',
       gridRow: '1 / span 2',
@@ -171,7 +170,7 @@ function PaperdollTab() {
     {
       key: 'weapon',
       label: locale.slotWeapon,
-      itemId: info?.equipment.weapon ?? 0,
+      itemId: info?.equipment?.weapon ?? 0,
       slot: EquipmentSlot.Weapon,
       gridColumn: '1 / span 2',
       gridRow: '3 / span 3',
@@ -179,7 +178,7 @@ function PaperdollTab() {
     {
       key: 'armor',
       label: locale.slotArmor,
-      itemId: info?.equipment.armor ?? 0,
+      itemId: info?.equipment?.armor ?? 0,
       slot: EquipmentSlot.Armor,
       gridColumn: '3 / span 2',
       gridRow: '3 / span 3',
@@ -187,7 +186,7 @@ function PaperdollTab() {
     {
       key: 'shield',
       label: locale.slotShield,
-      itemId: info?.equipment.shield ?? 0,
+      itemId: info?.equipment?.shield ?? 0,
       slot: EquipmentSlot.Shield,
       gridColumn: '5 / span 2',
       gridRow: '3 / span 3',
@@ -195,7 +194,7 @@ function PaperdollTab() {
     {
       key: 'gloves',
       label: locale.slotGloves,
-      itemId: info?.equipment.gloves ?? 0,
+      itemId: info?.equipment?.gloves ?? 0,
       slot: EquipmentSlot.Gloves,
       gridColumn: '1 / span 2',
       gridRow: '6 / span 2',
@@ -203,7 +202,7 @@ function PaperdollTab() {
     {
       key: 'belt',
       label: locale.slotBelt,
-      itemId: info?.equipment.belt ?? 0,
+      itemId: info?.equipment?.belt ?? 0,
       slot: EquipmentSlot.Belt,
       gridColumn: '3 / span 2',
       gridRow: '6',
@@ -211,7 +210,7 @@ function PaperdollTab() {
     {
       key: 'ring1',
       label: locale.slotRing1,
-      itemId: info?.equipment.ring[0] ?? 0,
+      itemId: info?.equipment?.ring[0] ?? 0,
       slot: EquipmentSlot.Ring1,
       gridColumn: '5',
       gridRow: '6',
@@ -219,7 +218,7 @@ function PaperdollTab() {
     {
       key: 'ring2',
       label: locale.slotRing2,
-      itemId: info?.equipment.ring[1] ?? 0,
+      itemId: info?.equipment?.ring[1] ?? 0,
       slot: EquipmentSlot.Ring2,
       gridColumn: '6',
       gridRow: '6',
@@ -227,7 +226,7 @@ function PaperdollTab() {
     {
       key: 'armlet1',
       label: locale.slotArmlet1,
-      itemId: info?.equipment.armlet[0] ?? 0,
+      itemId: info?.equipment?.armlet[0] ?? 0,
       slot: EquipmentSlot.Armlet1,
       gridColumn: '5',
       gridRow: '7',
@@ -235,7 +234,7 @@ function PaperdollTab() {
     {
       key: 'armlet2',
       label: locale.slotArmlet2,
-      itemId: info?.equipment.armlet[1] ?? 0,
+      itemId: info?.equipment?.armlet[1] ?? 0,
       slot: EquipmentSlot.Armlet2,
       gridColumn: '6',
       gridRow: '7',
@@ -243,7 +242,7 @@ function PaperdollTab() {
     {
       key: 'boots',
       label: locale.slotBoots,
-      itemId: info?.equipment.boots ?? 0,
+      itemId: info?.equipment?.boots ?? 0,
       slot: EquipmentSlot.Boots,
       gridColumn: '3 / span 2',
       gridRow: '7 / span 2',
@@ -251,7 +250,7 @@ function PaperdollTab() {
     {
       key: 'accessory',
       label: locale.slotAccessory,
-      itemId: info?.equipment.accessory ?? 0,
+      itemId: info?.equipment?.accessory ?? 0,
       slot: EquipmentSlot.Accessory,
       gridColumn: '2',
       gridRow: '8',
@@ -259,7 +258,7 @@ function PaperdollTab() {
     {
       key: 'bracer1',
       label: locale.slotBracer1,
-      itemId: info?.equipment.bracer[0] ?? 0,
+      itemId: info?.equipment?.bracer[0] ?? 0,
       slot: EquipmentSlot.Bracer1,
       gridColumn: '5',
       gridRow: '8',
@@ -267,7 +266,7 @@ function PaperdollTab() {
     {
       key: 'bracer2',
       label: locale.slotBracer2,
-      itemId: info?.equipment.bracer[1] ?? 0,
+      itemId: info?.equipment?.bracer[1] ?? 0,
       slot: EquipmentSlot.Bracer2,
       gridColumn: '6',
       gridRow: '8',
@@ -363,8 +362,6 @@ function StatsTab() {
 
 function BookTab() {
   const client = useClient();
-  const info = useCharacterInfo();
-  const isOwnCharacter = info?.details.playerId === client.playerId;
 
   const [questNames, setQuestNames] = useState<string[]>(
     () => client.questController.bookQuestNames,
@@ -375,25 +372,86 @@ function BookTab() {
       setQuestNames([...names]);
     };
     client.questController.subscribeBookOpened(handleBookOpened);
-
-    // Request book data when this tab is mounted and it's our own character
-    if (isOwnCharacter) {
-      client.socialController.requestBook(client.playerId);
-    }
-
     return () => {
       client.questController.unsubscribeBookOpened(handleBookOpened);
     };
-  }, [client, isOwnCharacter]);
+  }, [client]);
 
   return <QuestBookList questNames={questNames} />;
 }
 
 export function CharacterDialog() {
   const { locale } = useLocale();
-  const [activeTab, setActiveTab] = useState<CharacterTab>('paperdoll');
   const client = useClient();
   const info = useCharacterInfo();
+
+  // Read the pending tab set by socialController before dialog mounted.
+  const [activeTab, setActiveTab] = useState<CharacterTab>(
+    () => client.socialController.pendingCharacterTab ?? 'paperdoll',
+  );
+
+  // Track the last playerId for which each tab's data was fetched so we can
+  // detect staleness when switching tabs.
+  const lastFetchedBookRef = useRef<number | null>(
+    // If we opened via BookReply, the data is already fresh.
+    client.socialController.pendingCharacterTab === 'book'
+      ? (info?.details.playerId ?? null)
+      : null,
+  );
+  const lastFetchedPaperdollRef = useRef<number | null>(
+    // If we opened via PaperdollReply (pendingTab is null), data is fresh.
+    client.socialController.pendingCharacterTab === null
+      ? (info?.details.playerId ?? null)
+      : null,
+  );
+
+  // Clear the pending tab after we've consumed it.
+  useEffect(() => {
+    client.socialController.pendingCharacterTab = null;
+  }, [client]);
+
+  // When the dialog is already open and a BookReply arrives, switch to book tab.
+  useEffect(() => {
+    const onBookOpened = ({ details }: { details: CharacterDetails }) => {
+      lastFetchedBookRef.current = details.playerId;
+      setActiveTab('book');
+    };
+    client.socialController.subscribeBookOpened(onBookOpened);
+    return () => client.socialController.unsubscribeBookOpened(onBookOpened);
+  }, [client]);
+
+  // When the dialog is already open and a PaperdollReply arrives, switch to paperdoll tab.
+  useEffect(() => {
+    const onPaperdollOpened = ({
+      details,
+    }: {
+      details: { playerId: number };
+    }) => {
+      lastFetchedPaperdollRef.current = details.playerId;
+      setActiveTab('paperdoll');
+    };
+    client.socialController.subscribePaperdollOpened(onPaperdollOpened);
+    return () =>
+      client.socialController.unsubscribePaperdollOpened(onPaperdollOpened);
+  }, [client]);
+
+  const handleTabSelect = (tabId: CharacterTab) => {
+    const playerId = info?.details.playerId;
+    if (playerId !== undefined) {
+      if (
+        tabId === 'paperdoll' &&
+        (info?.equipment === undefined ||
+          lastFetchedPaperdollRef.current !== playerId)
+      ) {
+        client.socialController.requestPaperdoll(playerId);
+        lastFetchedPaperdollRef.current = playerId;
+      } else if (tabId === 'book' && lastFetchedBookRef.current !== playerId) {
+        client.socialController.requestBook(playerId);
+        lastFetchedBookRef.current = playerId;
+      }
+    }
+    setActiveTab(tabId);
+  };
 
   const TABS = useMemo(() => {
     if (info?.details.playerId === client.playerId) {
@@ -416,7 +474,7 @@ export function CharacterDialog() {
         <Tabs
           items={TABS as unknown as { id: string; label: string }[]}
           activeId={activeTab}
-          onSelect={(id) => setActiveTab(id as CharacterTab)}
+          onSelect={(id) => handleTabSelect(id as CharacterTab)}
           style='border'
           size='sm'
         />

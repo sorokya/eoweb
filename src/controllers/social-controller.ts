@@ -15,12 +15,18 @@ import {
   TradeRequestClientPacket,
 } from 'eolib';
 
+export type CharacterTab = 'paperdoll' | 'stats' | 'book';
+
 import type { Client } from '@/client';
 import { Emote } from '@/render';
 
 type PaperdollOpenedData = {
   details: CharacterDetails;
   equipment: EquipmentPaperdoll;
+};
+
+type BookOpenedData = {
+  details: CharacterDetails;
 };
 
 type PlayerListSubscriber = (players: OnlinePlayer[]) => void;
@@ -33,6 +39,10 @@ export class SocialController {
   playerList: OnlinePlayer[] = [];
   friendList: string[];
   ignoreList: string[];
+
+  // Tracks which tab should be shown when CharacterDialog mounts.
+  // Set before notifying subscribers so useState initializers can read it.
+  pendingCharacterTab: CharacterTab | null = null;
 
   private playerListSubscribers: PlayerListSubscriber[] = [];
 
@@ -56,6 +66,8 @@ export class SocialController {
   }
 
   notifyPaperdollOpened(data: PaperdollOpenedData) {
+    this.pendingCharacterTab = 'paperdoll';
+
     if (data.details.playerId === this.client.playerId) {
       this.client.home = data.details.home;
       this.client.partner = data.details.partner;
@@ -63,6 +75,25 @@ export class SocialController {
 
     for (const subscriber of this.paperdollOpenedSubscribers) {
       subscriber(data);
+    }
+  }
+
+  private bookOpenedSubscribers: ((data: BookOpenedData) => void)[] = [];
+
+  subscribeBookOpened(cb: (data: BookOpenedData) => void) {
+    this.bookOpenedSubscribers.push(cb);
+  }
+
+  unsubscribeBookOpened(cb: (data: BookOpenedData) => void) {
+    this.bookOpenedSubscribers = this.bookOpenedSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  notifyBookOpened(details: CharacterDetails): void {
+    this.pendingCharacterTab = 'book';
+    for (const subscriber of this.bookOpenedSubscribers) {
+      subscriber({ details });
     }
   }
 

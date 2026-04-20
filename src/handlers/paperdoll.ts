@@ -148,6 +148,7 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
 function handleBookReply(client: Client, reader: EoReader) {
   const packet = BookReplyServerPacket.deserialize(reader);
   client.questController.handleBookOpened(packet.questNames);
+  client.socialController.notifyBookOpened(packet.details);
 }
 
 export function registerPaperdollHandlers(client: Client) {

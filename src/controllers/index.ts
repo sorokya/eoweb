@@ -34,7 +34,7 @@ export type { QuestDialogState } from './quest-controller';
 export { QuestController } from './quest-controller';
 export { SessionController } from './session-controller';
 export { ShopController } from './shop-controller';
-export { SocialController } from './social-controller';
+export { type CharacterTab, SocialController } from './social-controller';
 export { SpellController } from './spell-controller';
 export { StatSkillController } from './stat-skill-controller';
 export { ToastController } from './toast-controller';

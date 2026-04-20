@@ -116,6 +116,11 @@ function InGameContent() {
     };
     client.socialController.subscribePaperdollOpened(onPaperdollOpened);
 
+    const onBookOpened = () => {
+      openDialog('character');
+    };
+    client.socialController.subscribeBookOpened(onBookOpened);
+
     const onJukeboxOpened = () => {
       openDialog('jukebox');
     };
@@ -194,6 +199,7 @@ function InGameContent() {
 
     return () => {
       client.socialController.unsubscribePaperdollOpened(onPaperdollOpened);
+      client.socialController.unsubscribeBookOpened(onBookOpened);
       client.jukeboxController.unsubscribeOpened(onJukeboxOpened);
       client.jukeboxController.unsubscribeRequestSucceeded(
         onJukeboxRequestSucceeded,

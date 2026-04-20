@@ -24,7 +24,7 @@ type ClientProviderProps = {
 
 type CharacterInfo = {
   details: CharacterDetails;
-  equipment: EquipmentPaperdoll;
+  equipment?: EquipmentPaperdoll;
   className: string;
 };
 
@@ -50,6 +50,18 @@ export function ClientProvider({ client, children }: ClientProviderProps) {
         });
       },
     );
+    client.socialController.subscribeBookOpened(({ details }) => {
+      setCharacterInfo((prev) => ({
+        details,
+        // Keep existing equipment if it's the same player, otherwise clear it
+        // so switching to paperdoll tab will trigger a fresh fetch.
+        equipment:
+          prev?.details.playerId === details.playerId
+            ? prev?.equipment
+            : undefined,
+        className: client.ecf?.classes[details.classId - 1]?.name ?? '',
+      }));
+    });
     client.on('equipmentChanged', () => {
       setCharacterInfo((prev) =>
         prev ? { ...prev, equipment: client.equipment } : prev,
