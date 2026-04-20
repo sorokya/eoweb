@@ -79,12 +79,14 @@ function handleCastSpec(client: Client, reader: EoReader) {
 
   const gain = packet.experience ? packet.experience - client.experience : 0;
   const message = client.getNpcKilledMessage(packet.npcKilledData, gain);
-  client.toastController.show(message);
-  client.emit('chat', {
-    message,
-    icon: ChatIcon.Star,
-    channel: ChatChannels.System,
-  });
+  if (message) {
+    client.toastController.show(message);
+    client.emit('chat', {
+      message,
+      icon: ChatIcon.Star,
+      channel: ChatChannels.System,
+    });
+  }
 
   if (packet.experience) {
     client.experience = packet.experience;
@@ -151,12 +153,14 @@ function handleCastAccept(client: Client, reader: EoReader) {
     gain,
     !!packet.levelUp,
   );
-  client.toastController.show(message);
-  client.emit('chat', {
-    message,
-    icon: ChatIcon.Star,
-    channel: ChatChannels.System,
-  });
+  if (message) {
+    client.toastController.show(message);
+    client.emit('chat', {
+      message,
+      icon: ChatIcon.Star,
+      channel: ChatChannels.System,
+    });
+  }
 
   if (packet.experience) {
     client.experience = packet.experience;

@@ -788,20 +788,33 @@ export class Client {
     }
   }
 
-  getNpcKilledMessage(data: NpcKilledData, exp = 0, levelUp = false): string {
-    let killerName: string;
+  getNpcKilledMessage(
+    data: NpcKilledData,
+    exp = 0,
+    levelUp = false,
+  ): string | null {
+    let killerName: string | undefined;
     if (data.killerId === this.playerId) {
       killerName = this.locale.wordYou;
     } else {
-      const killer = this.nearby.characters.find(
-        (c) => c.playerId === data.killerId,
-      );
-      killerName = killer ? capitalize(killer.name) : this.locale.wordUnknown;
+      killerName = this.partyMembers.find(
+        (m) => m.playerId === data.killerId,
+      )?.name;
     }
+
+    if (!killerName) {
+      return null;
+    }
+
+    killerName = capitalize(killerName);
 
     const npc = this.nearby.npcs.find((n) => n.index === data.npcIndex);
     const record = npc ? this.getEnfRecordById(npc.id) : undefined;
-    const npcName = record ? record.name : this.locale.wordUnknown;
+    const npcName = record?.name;
+
+    if (!npcName) {
+      return null;
+    }
 
     const messages = [
       formatLocaleString(this.locale.killedNpc, {
@@ -828,14 +841,16 @@ export class Client {
 
     if (data.dropId && data.dropAmount) {
       const itemRecord = this.getEifRecordById(data.dropId);
-      const itemName = itemRecord ? itemRecord.name : this.locale.wordUnknown;
-      const amountText =
-        data.dropAmount > 1 ? `${data.dropAmount.toLocaleString()} ` : '';
-      messages.push(
-        formatLocaleString(this.locale.npcDrop, {
-          item: `${amountText}${itemName}`,
-        }),
-      );
+      const itemName = itemRecord?.name ?? this.locale.wordUnknown;
+      if (itemName) {
+        const amountText =
+          data.dropAmount > 1 ? `${data.dropAmount.toLocaleString()} ` : '';
+        messages.push(
+          formatLocaleString(this.locale.npcDrop, {
+            item: `${amountText}${itemName}`,
+          }),
+        );
+      }
     }
 
     return messages.join(' ');
