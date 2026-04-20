@@ -3,8 +3,6 @@ import type {
   CharacterDetails,
   CharacterIcon,
   CharacterSelectionListEntry,
-  DialogEntry,
-  DialogQuestEntry,
   EquipmentPaperdoll,
   OnlinePlayer,
   ShopCraftItem,
@@ -46,22 +44,10 @@ export type ClientEvents = {
   statsUpdate: undefined;
   reconnect: undefined;
   playersListUpdated: OnlinePlayer[];
-  openQuestDialog: {
-    name: string;
-    dialogId: number;
-    questId: number;
-    quests: DialogQuestEntry[];
-    dialog: DialogEntry[];
-  };
   openPaperdoll: {
     icon: CharacterIcon;
     details: CharacterDetails;
     equipment: EquipmentPaperdoll;
-  };
-  openBook: {
-    icon: CharacterIcon;
-    details: CharacterDetails;
-    questNames: string[];
   };
   chestOpened: {
     items: ThreeItem[];

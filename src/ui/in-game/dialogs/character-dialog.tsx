@@ -2,7 +2,7 @@ import type { EifRecord } from 'eolib';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { EquipmentSlot } from '@/equipment';
 import { playSfxById, SfxId } from '@/sfx';
-import { ItemIcon, Tabs } from '@/ui/components';
+import { ItemIcon, QuestBookList, Tabs } from '@/ui/components';
 import { useCharacterInfo, useClient, useLocale } from '@/ui/context';
 import { useItemDrag, usePlayerStats } from '@/ui/in-game';
 import { capitalize, getItemMeta } from '@/utils';
@@ -361,12 +361,31 @@ function StatsTab() {
 }
 
 function BookTab() {
-  const { locale } = useLocale();
-  return (
-    <div class='py-4 text-center text-sm opacity-60'>
-      {locale.charQuestComingSoon}
-    </div>
+  const client = useClient();
+  const info = useCharacterInfo();
+  const isOwnCharacter = info?.details.playerId === client.playerId;
+
+  const [questNames, setQuestNames] = useState<string[]>(
+    () => client.questController.bookQuestNames,
   );
+
+  useEffect(() => {
+    const handleBookOpened = (names: string[]) => {
+      setQuestNames([...names]);
+    };
+    client.questController.subscribeBookOpened(handleBookOpened);
+
+    // Request book data when this tab is mounted and it's our own character
+    if (isOwnCharacter) {
+      client.socialController.requestBook(client.playerId);
+    }
+
+    return () => {
+      client.questController.unsubscribeBookOpened(handleBookOpened);
+    };
+  }, [client, isOwnCharacter]);
+
+  return <QuestBookList questNames={questNames} />;
 }
 
 export function CharacterDialog() {

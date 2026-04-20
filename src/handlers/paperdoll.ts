@@ -1,4 +1,5 @@
 import {
+  BookReplyServerPacket,
   type EoReader,
   Item,
   PacketAction,
@@ -169,6 +170,11 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
   playSfxById(SfxId.InventoryPlace);
 }
 
+function handleBookReply(client: Client, reader: EoReader) {
+  const packet = BookReplyServerPacket.deserialize(reader);
+  client.questController.handleBookOpened(packet.questNames);
+}
+
 export function registerPaperdollHandlers(client: Client) {
   client.bus!.registerPacketHandler(
     PacketFamily.Paperdoll,
@@ -184,5 +190,10 @@ export function registerPaperdollHandlers(client: Client) {
     PacketFamily.Paperdoll,
     PacketAction.Agree,
     (reader) => handlePaperdollAgree(client, reader),
+  );
+  client.bus!.registerPacketHandler(
+    PacketFamily.Book,
+    PacketAction.Reply,
+    (reader) => handleBookReply(client, reader),
   );
 }

@@ -46,7 +46,7 @@ export function ClientProvider({ client, children }: ClientProviderProps) {
         setCharacterInfo({
           details,
           equipment,
-          className: client.ecf?.classes[details.classId]?.name,
+          className: client.ecf?.classes[details.classId - 1]?.name,
         });
       },
     );

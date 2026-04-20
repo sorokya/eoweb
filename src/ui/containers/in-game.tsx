@@ -21,7 +21,9 @@ import {
   MobileNav,
   NavSidebar,
   PlayerHud,
+  QuestNpcDialog,
   QuestsDialog,
+  QuestTracker,
   SettingsDialog,
   ShopDialog,
   SkillMasterDialog,
@@ -42,6 +44,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'spells',
   'character',
   'quests',
+  'questNpc',
   'jukebox',
   'settings',
   'chat-log',
@@ -65,6 +68,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <CharacterDialog />;
     case 'quests':
       return <QuestsDialog />;
+    case 'questNpc':
+      return <QuestNpcDialog />;
     case 'jukebox':
       return <JukeboxDialog />;
     case 'settings':
@@ -91,6 +96,12 @@ function InGameContent() {
 
   // Chat dialogs are always considered open — they manage their own visibility.
   const open = ALL_DIALOG_IDS.filter((id) => isOpen(id));
+
+  // On mount: load per-character tracked quest and fetch initial progress
+  useEffect(() => {
+    client.questController.loadTrackedQuest();
+    client.questController.refreshQuestProgress();
+  }, [client]);
 
   useEffect(() => {
     const onPaperdollOpened = () => {
@@ -135,12 +146,19 @@ function InGameContent() {
     };
     client.statSkillController.subscribeOpened(handleSkillMasterOpened);
 
+    const handleQuestDialogOpened = () => {
+      openDialog('questNpc');
+    };
+    client.questController.subscribeDialogOpened(handleQuestDialogOpened);
+
     const handleWalked = () => {
       closeDialog('bank');
       closeDialog('shop');
       closeDialog('chest');
       closeDialog('locker');
       closeDialog('skillMaster');
+      closeDialog('questNpc');
+      client.questController.resetDialog();
     };
     client.movementController.subscribeWalked(handleWalked);
 
@@ -166,6 +184,7 @@ function InGameContent() {
       client.bankController.unsubscribeOpened(handleBankOpened);
       client.shopController.unsubscribeOpened(handleShopOpened);
       client.statSkillController.unsubscribeOpened(handleSkillMasterOpened);
+      client.questController.unsubscribeDialogOpened(handleQuestDialogOpened);
       client.movementController.unsubscribeWalked(handleWalked);
       client.off('toggleCommandPalette', handleToggleCommandPalette);
     };
@@ -183,6 +202,7 @@ function InGameContent() {
       <MobileNav />
       <NavSidebar />
       <StatusMessages />
+      <QuestTracker />
       <TouchJoystick />
       <TouchActionButtons />
 
