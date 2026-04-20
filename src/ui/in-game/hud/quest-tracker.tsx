@@ -1,18 +1,16 @@
 import type { QuestProgressEntry } from 'eolib';
 import { QuestPage, QuestRequirementIcon } from 'eolib';
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import {
   FaBoxOpen,
   FaCheckCircle,
+  FaChevronDown,
+  FaChevronUp,
   FaCommentDots,
   FaMapMarkerAlt,
   FaSkull,
 } from 'react-icons/fa';
-import { HUD_Z } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
-import { usePosition, useRepositionMode } from '@/ui/in-game';
-
-const POSITION_KEY = 'quest-tracker';
 
 function questIcon(icon: QuestRequirementIcon) {
   switch (icon) {
@@ -32,29 +30,23 @@ function questIcon(icon: QuestRequirementIcon) {
 export function QuestTracker() {
   const client = useClient();
   const { locale } = useLocale();
-  const repositionMode = useRepositionMode();
 
-  const [trackedName, setTrackedName] = useState<string | null>(
-    () => client.questController.trackedQuestName,
-  );
-  const [entry, setEntry] = useState<QuestProgressEntry | null>(() => {
-    const name = client.questController.trackedQuestName;
-    return (
-      client.questController.progressQuests.find((q) => q.name === name) ?? null
+  const [trackedNames, setTrackedNames] = useState<string[]>(() => [
+    ...client.questController.trackedQuestNames,
+  ]);
+  const [entries, setEntries] = useState<(QuestProgressEntry | null)[]>(() => {
+    const progress = client.questController.progressQuests;
+    return client.questController.trackedQuestNames.map(
+      (name) => progress.find((q) => q.name === name) ?? null,
     );
   });
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    const handleTrackedChanged = (name: string | null) => {
-      setTrackedName(name);
-      if (name === null) {
-        setEntry(null);
-      } else {
-        const found =
-          client.questController.progressQuests.find((q) => q.name === name) ??
-          null;
-        setEntry(found);
-      }
+    const handleTrackedChanged = (names: string[]) => {
+      setTrackedNames([...names]);
+      const progress = client.questController.progressQuests;
+      setEntries(names.map((n) => progress.find((q) => q.name === n) ?? null));
     };
 
     const handleQuestList = (
@@ -62,9 +54,8 @@ export function QuestTracker() {
       progress: QuestProgressEntry[],
     ) => {
       if (page !== QuestPage.Progress) return;
-      const currentName = client.questController.trackedQuestName;
-      if (!currentName) return;
-      setEntry(progress.find((q) => q.name === currentName) ?? null);
+      const names = client.questController.trackedQuestNames;
+      setEntries(names.map((n) => progress.find((q) => q.name === n) ?? null));
     };
 
     client.questController.subscribeTrackedQuestChanged(handleTrackedChanged);
@@ -78,98 +69,62 @@ export function QuestTracker() {
     };
   }, [client]);
 
-  const [pos, setPos] = usePosition(POSITION_KEY, () => ({
-    x: 8,
-    y: Math.max(40, window.innerHeight - 200),
-  }));
-
-  const dragStart = useRef<{
-    ptrX: number;
-    ptrY: number;
-    baseX: number;
-    baseY: number;
-  } | null>(null);
-
-  const onPointerDown = useCallback(
-    (e: PointerEvent) => {
-      if (!repositionMode || e.button !== 0) return;
-      e.preventDefault();
-      dragStart.current = {
-        ptrX: e.clientX,
-        ptrY: e.clientY,
-        baseX: pos.x,
-        baseY: pos.y,
-      };
-      const onMove = (me: PointerEvent) => {
-        if (!dragStart.current) return;
-        setPos({
-          x: dragStart.current.baseX + me.clientX - dragStart.current.ptrX,
-          y: dragStart.current.baseY + me.clientY - dragStart.current.ptrY,
-        });
-      };
-      const onUp = () => {
-        dragStart.current = null;
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('pointerup', onUp);
-      };
-      window.addEventListener('pointermove', onMove);
-      window.addEventListener('pointerup', onUp);
-    },
-    [repositionMode, pos, setPos],
-  );
-
-  if (!trackedName && !repositionMode) return null;
-
-  const hasProgress = entry !== null && entry.target > 0;
+  if (trackedNames.length === 0) return null;
 
   return (
     <div
-      role='presentation'
-      class={`pointer-events-auto fixed flex flex-col gap-0.5 rounded-lg border border-base-content/10 bg-base-300/80 px-2 py-1.5 shadow-sm backdrop-blur-sm ${repositionMode ? 'cursor-move ring-2 ring-primary/50' : ''}`}
-      style={{
-        left: pos.x,
-        top: pos.y,
-        zIndex: HUD_Z,
-        minWidth: 140,
-        maxWidth: 220,
-        touchAction: 'none',
-      }}
-      onPointerDown={onPointerDown}
+      class='flex flex-col gap-1.5 rounded-lg bg-base-300/50 px-2 py-1.5 backdrop-blur-xs'
+      style={{ minWidth: 140, maxWidth: 220 }}
     >
-      <p class='truncate font-semibold text-xs opacity-60'>
-        {locale.questTrackerTitle}
-      </p>
+      <button
+        type='button'
+        class='flex w-full cursor-pointer items-center justify-between gap-1 bg-transparent p-0 text-left'
+        onClick={() => setCollapsed((c) => !c)}
+      >
+        <span class='truncate font-semibold text-primary/80 text-xs'>
+          {locale.questTrackerTitle}
+        </span>
+        <span class='shrink-0 text-primary/60'>
+          {collapsed ? <FaChevronDown size={9} /> : <FaChevronUp size={9} />}
+        </span>
+      </button>
 
-      {trackedName ? (
-        <>
-          <div class='flex items-start gap-1.5'>
-            {entry && (
-              <span class='mt-0.5 shrink-0 text-primary'>
-                {questIcon(entry.icon)}
-              </span>
-            )}
-            <p class='font-medium text-xs leading-snug'>{trackedName}</p>
-          </div>
-          {entry?.description && (
-            <p class='text-[10px] leading-snug opacity-60'>
-              {entry.description}
-            </p>
-          )}
-          {hasProgress && (
-            <div class='flex items-center gap-1.5'>
-              <progress
-                class='progress progress-primary h-1 flex-1'
-                value={entry!.progress}
-                max={entry!.target}
-              />
-              <span class='shrink-0 text-[10px] opacity-60'>
-                {entry!.progress}/{entry!.target}
-              </span>
-            </div>
-          )}
-        </>
-      ) : (
-        <p class='text-xs opacity-40'>{locale.questNoActive}</p>
+      {!collapsed && (
+        <div class='flex flex-col gap-2'>
+          {trackedNames.map((name, i) => {
+            const entry = entries[i] ?? null;
+            const hasProgress = entry !== null && entry.target > 0;
+            return (
+              <div key={name} class='flex flex-col gap-0.5'>
+                <div class='flex items-start gap-1.5'>
+                  {entry && (
+                    <span class='mt-0.5 shrink-0 text-primary'>
+                      {questIcon(entry.icon)}
+                    </span>
+                  )}
+                  <p class='font-medium text-xs leading-snug'>{name}</p>
+                </div>
+                {entry?.description && (
+                  <p class='text-[10px] leading-snug opacity-70'>
+                    {entry.description}
+                  </p>
+                )}
+                {hasProgress && (
+                  <div class='flex items-center gap-1.5'>
+                    <progress
+                      class='progress progress-primary h-1 flex-1'
+                      value={entry!.progress}
+                      max={entry!.target}
+                    />
+                    <span class='shrink-0 text-[10px] opacity-70'>
+                      {entry!.progress}/{entry!.target}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

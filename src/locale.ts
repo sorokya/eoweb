@@ -330,7 +330,7 @@ export const locales = {
     questTrack: 'Track',
     questNoActive: 'No active quests',
     questNoHistory: 'No completed quests',
-    questTrackerTitle: 'Tracked Quest',
+    questTrackerTitle: 'Quest Tracker',
     questNpcOk: 'OK',
     questNpcSwitch: 'Switch Quest',
     spellsTitle: 'Spells',

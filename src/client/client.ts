@@ -683,6 +683,9 @@ export class Client {
     this.onlinePlayers = [];
     this.inventoryController.equipmentSwap = null;
     this.itemProtectionController.itemProtectionTimers.clear();
+    if (state === GameState.InGame) {
+      this.questController.loadTrackedQuest();
+    }
     this.emit('stateChanged', this.state);
     this.audioController.handleStateChange(state);
   }

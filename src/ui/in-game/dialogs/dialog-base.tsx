@@ -154,7 +154,7 @@ export function DialogBase({
       role='presentation'
       data-chat-dialog={id.startsWith('chat-') ? id : undefined}
       class={
-        'pointer-events-auto flex flex-col overflow-hidden rounded-lg border border-base-content/10 bg-base-300/80 shadow-sm backdrop-blur-sm'
+        'pointer-events-auto flex flex-col overflow-hidden rounded-lg border border-base-content/10 bg-base-300/50 shadow-sm backdrop-blur-xs'
       }
       style={posStyle}
       onClick={stopProp}

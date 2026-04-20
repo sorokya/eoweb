@@ -115,7 +115,7 @@ function EquipSlot({ label, itemId, slot, gridColumn, gridRow }: SlotConfig) {
     <div
       ref={slotRef}
       data-equip-slot={isOwnCharacter ? slot : undefined}
-      class={`group relative flex items-center justify-center rounded border bg-base-200 ${itemId ? 'border-primary/30 bg-primary/5' : 'border-base-300'}${isOwnCharacter && itemId ? ' cursor-grab' : ''}`}
+      class={`group relative flex items-center justify-center rounded border ${itemId ? 'border-primary/30 bg-primary/5' : 'border-base-content/40'}${isOwnCharacter && itemId ? ' cursor-grab' : ''}`}
       style={{ gridColumn, gridRow }}
       onPointerDown={onPointerDown}
       onContextMenu={onContextMenu}
@@ -294,7 +294,7 @@ function PaperdollTab() {
           display: 'grid',
           gridTemplateColumns: `repeat(6, ${EQUIP_CELL}px)`,
           gridTemplateRows: `repeat(8, ${EQUIP_CELL}px)`,
-          gap: 1,
+          gap: 2,
         }}
       >
         {slots.map(({ key, ...rest }) => (

@@ -35,8 +35,8 @@ function ActiveTab({
   onTrack,
 }: {
   entries: QuestProgressEntry[];
-  tracked: string | null;
-  onTrack: (name: string | null) => void;
+  tracked: string[];
+  onTrack: (name: string) => void;
 }) {
   const { locale } = useLocale();
 
@@ -49,7 +49,7 @@ function ActiveTab({
   return (
     <ul class='flex flex-col gap-2'>
       {entries.map((entry, i) => {
-        const isTracked = tracked === entry.name;
+        const isTracked = tracked.includes(entry.name);
         const hasProgress = entry.target > 0;
 
         return (
@@ -71,7 +71,7 @@ function ActiveTab({
                       type='checkbox'
                       class='checkbox checkbox-xs'
                       checked={isTracked}
-                      onChange={() => onTrack(isTracked ? null : entry.name)}
+                      onChange={() => onTrack(entry.name)}
                     />
                     {locale.questTrack}
                   </label>
@@ -113,8 +113,8 @@ export function QuestsDialog() {
   const [historyEntries, setHistoryEntries] = useState<string[]>(
     () => client.questController.historyQuests,
   );
-  const [tracked, setTracked] = useState<string | null>(
-    () => client.questController.trackedQuestName,
+  const [tracked, setTracked] = useState<string[]>(
+    () => client.questController.trackedQuestNames,
   );
 
   useEffect(() => {
@@ -129,8 +129,8 @@ export function QuestsDialog() {
         setHistoryEntries([...history]);
       }
     };
-    const handleTrackedChanged = (name: string | null) => {
-      setTracked(name);
+    const handleTrackedChanged = (names: string[]) => {
+      setTracked([...names]);
     };
 
     client.questController.subscribeQuestListReceived(handleQuestList);
@@ -156,8 +156,8 @@ export function QuestsDialog() {
     }
   };
 
-  const handleTrack = (name: string | null) => {
-    client.questController.setTrackedQuest(name);
+  const handleTrack = (name: string) => {
+    client.questController.toggleTrackedQuest(name);
   };
 
   const TABS = [

@@ -1,6 +1,6 @@
 import type { SkillLearn } from 'eolib';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import { CHAT_Z, DIALOG_Z, DRAG_HOTBAR_Z } from '@/ui/consts';
+import { CHAT_Z, DIALOG_Z, DRAG_HOTBAR_Z, HUD_Z } from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import type { DialogId } from '@/ui/in-game';
 import {
@@ -97,9 +97,8 @@ function InGameContent() {
   // Chat dialogs are always considered open — they manage their own visibility.
   const open = ALL_DIALOG_IDS.filter((id) => isOpen(id));
 
-  // On mount: load per-character tracked quest and fetch initial progress
+  // On mount: fetch initial quest progress
   useEffect(() => {
-    client.questController.loadTrackedQuest();
     client.questController.refreshQuestProgress();
   }, [client]);
 
@@ -202,7 +201,15 @@ function InGameContent() {
       <MobileNav />
       <NavSidebar />
       <StatusMessages />
-      <QuestTracker />
+      {/* Upper-right overlay region */}
+      <div
+        class='pointer-events-none absolute top-18 right-1 flex flex-col items-end lg:top-9'
+        style={{ zIndex: HUD_Z }}
+      >
+        <div class='pointer-events-auto'>
+          <QuestTracker />
+        </div>
+      </div>
       <TouchJoystick />
       <TouchActionButtons />
 

@@ -19,7 +19,7 @@ type QuestListSubscriber = (
   history: string[],
 ) => void;
 type BookOpenedSubscriber = (questNames: string[]) => void;
-type TrackedQuestChangedSubscriber = (name: string | null) => void;
+type TrackedQuestChangedSubscriber = (names: string[]) => void;
 
 export type QuestDialogState = {
   npcName: string;
@@ -52,8 +52,8 @@ export class QuestController {
   // Book (completed quests shown in character dialog)
   bookQuestNames: string[] = [];
 
-  // Tracked quest (persisted per character)
-  trackedQuestName: string | null = null;
+  // Tracked quests — up to 3, persisted per character (FIFO)
+  trackedQuestNames: string[] = [];
 
   private dialogOpenedSubscribers: DialogOpenedSubscriber[] = [];
   private dialogUpdatedSubscribers: DialogUpdatedSubscriber[] = [];
@@ -70,18 +70,32 @@ export class QuestController {
   loadTrackedQuest(): void {
     const key = trackedQuestKey(this.client.characterId);
     try {
-      this.trackedQuestName = localStorage.getItem(key) ?? null;
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        this.trackedQuestNames = Array.isArray(parsed) ? parsed : [parsed];
+      } else {
+        this.trackedQuestNames = [];
+      }
     } catch {
-      this.trackedQuestName = null;
+      this.trackedQuestNames = [];
     }
   }
 
-  setTrackedQuest(name: string | null): void {
-    this.trackedQuestName = name;
+  /** Toggle tracking for a quest. FIFO — oldest slot evicted when at max 3. */
+  toggleTrackedQuest(name: string): void {
+    const idx = this.trackedQuestNames.indexOf(name);
+    if (idx !== -1) {
+      this.trackedQuestNames = this.trackedQuestNames.filter((n) => n !== name);
+    } else {
+      const next = [...this.trackedQuestNames, name];
+      this.trackedQuestNames =
+        next.length > 3 ? next.slice(next.length - 3) : next;
+    }
     const key = trackedQuestKey(this.client.characterId);
     try {
-      if (name !== null) {
-        localStorage.setItem(key, name);
+      if (this.trackedQuestNames.length > 0) {
+        localStorage.setItem(key, JSON.stringify(this.trackedQuestNames));
       } else {
         localStorage.removeItem(key);
       }
@@ -89,7 +103,7 @@ export class QuestController {
       // ignore storage errors
     }
     for (const cb of this.trackedQuestChangedSubscribers) {
-      cb(name);
+      cb(this.trackedQuestNames);
     }
   }
 
@@ -111,7 +125,7 @@ export class QuestController {
       const alreadyTracked = this.progressQuests.some(
         (q) => q.name === data.npcName,
       );
-      if (!alreadyTracked && this.trackedQuestName === null) {
+      if (!alreadyTracked && this.trackedQuestNames.length < 3) {
         this._pendingAutoTrack = true;
       }
     }
@@ -156,10 +170,10 @@ export class QuestController {
       if (
         this._pendingAutoTrack &&
         progress.length > 0 &&
-        this.trackedQuestName === null
+        this.trackedQuestNames.length < 3
       ) {
         this._pendingAutoTrack = false;
-        this.setTrackedQuest(progress[0].name);
+        this.toggleTrackedQuest(progress[0].name);
       } else {
         this._pendingAutoTrack = false;
       }
