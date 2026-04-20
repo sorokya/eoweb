@@ -2,6 +2,7 @@ import { Item, ItemSize } from 'eolib';
 import { createPortal } from 'preact/compat';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { FaTrash } from 'react-icons/fa';
+import { GOLD_ITEM_ID } from '@/consts';
 import { playSfxById, SfxId } from '@/sfx';
 import { useClient, useLocale } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
@@ -95,7 +96,7 @@ function loadPositions(
     }
 
     positions = positions.filter(
-      (p) => p.id === 1 || items.some((i) => i.id === p.id),
+      (p) => p.id === GOLD_ITEM_ID || items.some((i) => i.id === p.id),
     );
 
     for (const item of items) {
@@ -179,12 +180,12 @@ export function InventoryGrid({ itemIds }: Props) {
 
   const getVisibleItems = (): Item[] => {
     const items = itemIds
-      ? client.items.filter((i) => itemIds.includes(i.id))
-      : client.items;
-    // Gold (id=1) is always shown even at 0 quantity
-    if (!items.some((i) => i.id === 1)) {
+      ? client.inventoryController.items.filter((i) => itemIds.includes(i.id))
+      : client.inventoryController.items;
+
+    if (!items.some((i) => i.id === GOLD_ITEM_ID)) {
       const gold = new Item();
-      gold.id = 1;
+      gold.id = GOLD_ITEM_ID;
       gold.amount = 0;
       return [gold, ...items];
     }
@@ -415,7 +416,7 @@ export function InventoryGrid({ itemIds }: Props) {
 
   const tabItems = positions.filter((p) => p.tab === activeTab);
 
-  // Compute once per render to avoid redundant scans of client.items in JSX
+  // Compute once per render to avoid redundant scans of client.inventoryController.items in JSX
   const visibleItems = useMemo(getVisibleItems, [positions]);
 
   const getTooltipLines = (item: Item): string[] => {

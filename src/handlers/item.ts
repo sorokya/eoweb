@@ -1,7 +1,6 @@
 import {
   Emote as EmoteType,
   type EoReader,
-  Item,
   ItemAcceptServerPacket,
   ItemAddServerPacket,
   ItemDropServerPacket,
@@ -63,15 +62,10 @@ function handleItemGet(client: Client, reader: EoReader) {
 
   client.weight = packet.weight;
 
-  const existingItem = client.items.find((i) => i.id === packet.takenItem.id);
-  if (existingItem) {
-    existingItem.amount += packet.takenItem.amount;
-  } else {
-    const item = new Item();
-    item.id = packet.takenItem.id;
-    item.amount = packet.takenItem.amount;
-    client.items.push(item);
-  }
+  client.inventoryController.addItem(
+    packet.takenItem.id,
+    packet.takenItem.amount,
+  );
 
   const record = client.getEifRecordById(packet.takenItem.id);
   client.toastController.show(
@@ -97,14 +91,10 @@ function handleItemDrop(client: Client, reader: EoReader) {
 
   client.weight = packet.weight;
 
-  if (packet.remainingAmount) {
-    const item = client.items.find((i) => i.id === packet.droppedItem.id);
-    if (item) {
-      item.amount = packet.remainingAmount;
-    }
-  } else {
-    client.items = client.items.filter((i) => i.id !== packet.droppedItem.id);
-  }
+  client.inventoryController.setItem(
+    packet.droppedItem.id,
+    packet.remainingAmount,
+  );
 
   const record = client.getEifRecordById(packet.droppedItem.id);
   client.toastController.show(
@@ -125,14 +115,10 @@ function handleItemReply(client: Client, reader: EoReader) {
 
   client.weight = packet.weight;
 
-  if (packet.usedItem.amount) {
-    const item = client.items.find((i) => i.id === packet.usedItem.id);
-    if (item) {
-      item.amount = packet.usedItem.amount;
-    }
-  } else {
-    client.items = client.items.filter((i) => i.id !== packet.usedItem.id);
-  }
+  client.inventoryController.setItem(
+    packet.usedItem.id,
+    packet.usedItem.amount,
+  );
 
   client.emit('inventoryChanged', undefined);
 
@@ -315,14 +301,18 @@ function handleItemReply(client: Client, reader: EoReader) {
 function handleItemKick(client: Client, reader: EoReader) {
   const packet = ItemKickServerPacket.deserialize(reader);
   client.weight.current = packet.currentWeight;
+  client.inventoryController.setItem(packet.item.id, packet.item.amount);
 
-  if (packet.item.amount) {
-    const item = client.items.find((i) => i.id === packet.item.id);
-    if (item) {
-      item.amount = packet.item.amount;
-    }
-  } else {
-    client.items = client.items.filter((i) => i.id !== packet.item.id);
+  const record = client.getEifRecordById(packet.item.id);
+  if (record) {
+    client.toastController.show(
+      `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.item.amount} ${record.name}`,
+    );
+    client.emit('chat', {
+      channel: ChatChannels.System,
+      icon: ChatIcon.UpArrow,
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.item.amount} ${record.name}`,
+    });
   }
 
   client.emit('inventoryChanged', undefined);
@@ -346,24 +336,22 @@ function handleItemJunk(client: Client, reader: EoReader) {
   const packet = ItemJunkServerPacket.deserialize(reader);
   client.weight.current = packet.weight.current;
 
-  if (packet.remainingAmount || packet.junkedItem.id === 1) {
-    const item = client.items.find((i) => i.id === packet.junkedItem.id);
-    if (item) {
-      item.amount = packet.remainingAmount;
-    }
-  } else {
-    client.items = client.items.filter((i) => i.id !== packet.junkedItem.id);
-  }
+  client.inventoryController.setItem(
+    packet.junkedItem.id,
+    packet.remainingAmount,
+  );
 
   const record = client.getEifRecordById(packet.junkedItem.id);
-  client.toastController.show(
-    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record!.name}`,
-  );
-  client.emit('chat', {
-    channel: ChatChannels.System,
-    icon: ChatIcon.DownArrow,
-    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record!.name}`,
-  });
+  if (record) {
+    client.toastController.show(
+      `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
+    );
+    client.emit('chat', {
+      channel: ChatChannels.System,
+      icon: ChatIcon.DownArrow,
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
+    });
+  }
 
   client.emit('inventoryChanged', undefined);
 }

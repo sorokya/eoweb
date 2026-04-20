@@ -5,7 +5,7 @@ import {
   MapTileSpec,
 } from 'eolib';
 import type { Client } from '@/client';
-import { JUKEBOX_COST } from '@/consts';
+import { GOLD_ITEM_ID, JUKEBOX_COST } from '@/consts';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { formatLocaleString } from '@/locale';
 import { playSfxById, SfxId } from '@/sfx';
@@ -42,9 +42,7 @@ export class JukeboxController {
   }
 
   private get hasSufficientGold(): boolean {
-    return (
-      (this.client.items.find((i) => i.id === 1)?.amount ?? 0) >= JUKEBOX_COST
-    );
+    return this.client.inventoryController.goldAmount >= JUKEBOX_COST;
   }
 
   reset(): void {
@@ -136,10 +134,7 @@ export class JukeboxController {
   }
 
   notifyRequestSucceeded(goldAmount: number): void {
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (gold) {
-      gold.amount = goldAmount;
-    }
+    this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
     playSfxById(SfxId.BuySell);
     this.client.emit('inventoryChanged', undefined);
 

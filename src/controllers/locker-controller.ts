@@ -1,6 +1,5 @@
 import {
   Coords,
-  Item,
   ItemType,
   LockerAddClientPacket,
   LockerBuyClientPacket,
@@ -11,6 +10,7 @@ import {
 } from 'eolib';
 
 import type { Client } from '@/client';
+import { GOLD_ITEM_ID } from '@/consts';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
 import { ChatIcon } from '@/ui/enums';
@@ -61,17 +61,7 @@ export class LockerController {
     weightCurrent: number,
   ): void {
     this.client.weight.current = weightCurrent;
-
-    const existing = this.client.items.find((i) => i.id === takenItemId);
-    if (existing) {
-      existing.amount += takenItemAmount;
-    } else {
-      const item = new Item();
-      item.id = takenItemId;
-      item.amount = takenItemAmount;
-      this.client.items.push(item);
-    }
-
+    this.client.inventoryController.addItem(takenItemId, takenItemAmount);
     this.client.emit('inventoryChanged', undefined);
     this.items = lockerItems;
     for (const cb of this.changedSubscribers) cb(lockerItems);
@@ -92,16 +82,10 @@ export class LockerController {
   ): void {
     this.client.weight.current = weightCurrent;
 
-    const existing = this.client.items.find((i) => i.id === depositedItemId);
-    if (!existing) return;
-
-    const depositedAmount = existing.amount - depositedItemAmount;
-    existing.amount = depositedItemAmount;
-    if (existing.amount <= 0) {
-      this.client.items = this.client.items.filter(
-        (i) => i.id !== depositedItemId,
-      );
-    }
+    const currentAmount =
+      this.client.inventoryController.getItemAmount(depositedItemId);
+    const depositedAmount = currentAmount - depositedItemAmount;
+    this.client.inventoryController.setItem(depositedItemId, depositedAmount);
 
     this.client.emit('inventoryChanged', undefined);
     this.items = lockerItems;
@@ -117,10 +101,7 @@ export class LockerController {
   }
 
   notifyLockerUpgraded(goldAmount: number, lockerUpgrades: number): void {
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (!gold) return;
-
-    gold.amount = goldAmount;
+    this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
     this.client.bankController.lockerUpgrades = lockerUpgrades;
     playSfxById(SfxId.BuySell);
     this.client.emit('inventoryChanged', undefined);
@@ -175,7 +156,7 @@ export class LockerController {
   }
 
   addItem(itemId: number): void {
-    const inventoryItem = this.client.items.find((i) => i.id === itemId);
+    const inventoryItem = this.client.inventoryController.getItemById(itemId);
     if (!inventoryItem) return;
 
     const record = this.client.getEifRecordById(itemId);

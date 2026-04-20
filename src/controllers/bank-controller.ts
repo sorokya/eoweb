@@ -6,6 +6,7 @@ import {
 
 import type { Client } from '@/client';
 import {
+  GOLD_ITEM_ID,
   LOCKER_MAX_ITEM_AMOUNT,
   LOCKER_UPGRADE_BASE_COST,
   LOCKER_UPGRADE_COST_STEP,
@@ -60,10 +61,7 @@ export class BankController {
 
   notifyBankUpdated(goldInventory: number, goldBank: number): void {
     const previousGoldBank = this.goldBank;
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (gold) {
-      gold.amount = goldInventory;
-    }
+    this.client.inventoryController.setItem(GOLD_ITEM_ID, goldInventory);
     this.goldBank = goldBank;
     playSfxById(SfxId.BuySell);
     this.client.emit('inventoryChanged', undefined);
@@ -112,8 +110,8 @@ export class BankController {
   }
 
   depositGold(): void {
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (!gold || gold.amount <= 0) {
+    const gold = this.client.inventoryController.getItemAmount(GOLD_ITEM_ID);
+    if (gold <= 0) {
       this.showDialogError(
         DialogResourceID.BANK_ACCOUNT_UNABLE_TO_DEPOSIT,
         'Bank',
@@ -134,12 +132,13 @@ export class BankController {
     this.client.alertController.showAmount(
       title,
       amountLabel,
-      gold.amount,
+      gold,
       actionLabel,
       (amount) => {
         if (!amount || amount <= 0) return;
         const currentGold =
-          this.client.items.find((i) => i.id === 1)?.amount ?? 0;
+          this.client.inventoryController.getItemAmount(GOLD_ITEM_ID);
+
         if (amount > currentGold) {
           this.showDialogError(
             DialogResourceID.BANK_ACCOUNT_UNABLE_TO_DEPOSIT,
@@ -202,9 +201,9 @@ export class BankController {
       return;
     }
 
-    const gold = this.client.items.find((i) => i.id === 1);
+    const gold = this.client.inventoryController.getItemAmount(GOLD_ITEM_ID);
     const upgradeCost = this.getNextLockerUpgradeCost();
-    if (!upgradeCost || !gold || gold.amount < upgradeCost) {
+    if (!upgradeCost || gold < upgradeCost) {
       const strings = this.client.getDialogStrings(
         DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
       );

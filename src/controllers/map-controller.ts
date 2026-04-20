@@ -149,7 +149,7 @@ export class MapController {
 
     if (
       door.key > 1 &&
-      !this.client.items.some((i) => {
+      !this.client.inventoryController.items.some((i) => {
         const record = this.client.getEifRecordById(i.id);
         if (!record) {
           return false;

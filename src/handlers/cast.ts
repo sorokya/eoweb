@@ -86,6 +86,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
     });
+    client.questController.refreshQuestProgress();
   }
 
   if (packet.experience) {
@@ -160,6 +161,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
     });
+    client.questController.refreshQuestProgress();
   }
 
   if (packet.experience) {

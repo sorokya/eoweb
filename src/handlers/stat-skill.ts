@@ -13,8 +13,8 @@ import {
   StatSkillTakeServerPacket,
 } from 'eolib';
 import type { Client } from '@/client';
+import { GOLD_ITEM_ID } from '@/consts';
 import { DialogResourceID } from '@/edf';
-
 import { playSfxById, SfxId } from '@/sfx';
 import { ChatIcon } from '@/ui/enums';
 
@@ -74,12 +74,8 @@ function handleStatSkillReply(client: Client, reader: EoReader) {
 
 function handleStatSkillTake(client: Client, reader: EoReader) {
   const packet = StatSkillTakeServerPacket.deserialize(reader);
-  const gold = client.items.find((i) => i.id === 1);
-  if (!gold) {
-    return;
-  }
 
-  gold.amount = packet.goldAmount;
+  client.inventoryController.setItem(GOLD_ITEM_ID, packet.goldAmount);
 
   const spell = new Spell();
   spell.id = packet.spellId;

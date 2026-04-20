@@ -9,8 +9,8 @@ import {
 } from 'eolib';
 
 import type { Client } from '@/client';
+import { GOLD_ITEM_ID } from '@/consts';
 import { EOResourceID } from '@/edf';
-
 import { playSfxById, SfxId } from '@/sfx';
 import { ChatIcon } from '@/ui/enums';
 
@@ -71,18 +71,8 @@ export class ShopController {
     boughtItem: Item,
     weightCurrent: number,
   ): void {
-    this.setGoldAmount(goldAmount);
-
-    const existingItem = this.client.items.find((i) => i.id === boughtItem.id);
-    if (existingItem) {
-      existingItem.amount += boughtItem.amount;
-    } else {
-      const item = new Item();
-      item.id = boughtItem.id;
-      item.amount = boughtItem.amount;
-      this.client.items.push(item);
-    }
-
+    this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
+    this.client.inventoryController.addItem(boughtItem.id, boughtItem.amount);
     this.client.weight.current = weightCurrent;
     this.client.emit('inventoryChanged', undefined);
     this.client.emit('itemBought', undefined);
@@ -102,17 +92,12 @@ export class ShopController {
     goldAmount: number,
     weightCurrent: number,
   ): void {
-    this.setGoldAmount(goldAmount);
+    this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
 
-    const prevAmount =
-      this.client.items.find((i) => i.id === soldItem.id)?.amount ?? 0;
-    if (soldItem.amount) {
-      const item = this.client.items.find((i) => i.id === soldItem.id);
-      if (item) item.amount = soldItem.amount;
-    } else {
-      this.client.items = this.client.items.filter((i) => i.id !== soldItem.id);
-    }
-
+    const prevAmount = this.client.inventoryController.getItemAmount(
+      soldItem.id,
+    );
+    this.client.inventoryController.setItem(soldItem.id, soldItem.amount);
     this.client.weight.current = weightCurrent;
     this.client.emit('inventoryChanged', undefined);
     this.client.emit('itemSold', undefined);
@@ -135,34 +120,10 @@ export class ShopController {
   ): void {
     for (const ingredient of ingredients) {
       if (!ingredient.id) continue;
-
-      if (ingredient.amount) {
-        const item = this.client.items.find((i) => i.id === ingredient.id);
-        if (item) {
-          item.amount = ingredient.amount;
-        } else {
-          const newItem = new Item();
-          newItem.id = ingredient.id;
-          newItem.amount = ingredient.amount;
-          this.client.items.push(newItem);
-        }
-      } else {
-        this.client.items = this.client.items.filter(
-          (i) => i.id !== ingredient.id,
-        );
-      }
+      this.client.inventoryController.setItem(ingredient.id, ingredient.amount);
     }
 
-    const craftedItem = this.client.items.find((i) => i.id === craftItemId);
-    if (craftedItem) {
-      craftedItem.amount += 1;
-    } else {
-      const item = new Item();
-      item.id = craftItemId;
-      item.amount = 1;
-      this.client.items.push(item);
-    }
-
+    this.client.inventoryController.addItem(craftItemId);
     this.client.weight.current = weightCurrent;
     this.client.emit('inventoryChanged', undefined);
     playSfxById(SfxId.Craft);
@@ -230,7 +191,7 @@ export class ShopController {
   }
 
   sellAllItem(itemId: number): void {
-    const amount = this.getInventoryAmount(itemId);
+    const amount = this.client.inventoryController.getItemAmount(itemId);
     if (amount <= 0) return;
     this.sendSellItem(itemId, amount);
   }
@@ -238,7 +199,10 @@ export class ShopController {
   canCraft(item: ShopCraftItem): boolean {
     for (const ingredient of item.ingredients) {
       if (!ingredient.id || ingredient.amount <= 0) continue;
-      if (this.getInventoryAmount(ingredient.id) < ingredient.amount) {
+      if (
+        this.client.inventoryController.getItemAmount(ingredient.id) <
+        ingredient.amount
+      ) {
         return false;
       }
     }
@@ -270,26 +234,9 @@ export class ShopController {
     this.client.bus!.send(packet);
   }
 
-  private setGoldAmount(goldAmount: number): void {
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (gold) {
-      gold.amount = goldAmount;
-      return;
-    }
-
-    const newGold = new Item();
-    newGold.id = 1;
-    newGold.amount = goldAmount;
-    this.client.items.push(newGold);
-  }
-
   private getItemName(itemId: number): string {
     const record = this.client.getEifRecordById(itemId);
     if (record?.name) return record.name;
     return this.client.locale.itemFallbackName.replace('{id}', String(itemId));
-  }
-
-  private getInventoryAmount(itemId: number): number {
-    return this.client.items.find((i) => i.id === itemId)?.amount ?? 0;
   }
 }

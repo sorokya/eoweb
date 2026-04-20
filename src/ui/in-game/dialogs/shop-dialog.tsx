@@ -79,7 +79,7 @@ export function ShopDialog() {
     };
   }, [client]);
 
-  const goldOnHand = client.items.find((item) => item.id === 1)?.amount ?? 0;
+  const goldOnHand = client.inventoryController.goldAmount;
 
   const tradeByItemId = useMemo(
     () => new Map(tradeItems.map((item) => [item.itemId, item])),
@@ -93,7 +93,7 @@ export function ShopDialog() {
 
   const sellItems = useMemo(
     () =>
-      client.items
+      client.inventoryController.items
         .filter(
           (inventoryItem) =>
             (tradeByItemId.get(inventoryItem.id)?.sellPrice ?? 0) > 0,
@@ -350,8 +350,9 @@ export function ShopDialog() {
                           <tbody>
                             {ingredients.map((ingredient, index) => {
                               const owned =
-                                client.items.find((i) => i.id === ingredient.id)
-                                  ?.amount ?? 0;
+                                client.inventoryController.getItemAmount(
+                                  ingredient.id,
+                                );
                               const ingredientGraphicId = getGraphicId(
                                 client,
                                 ingredient.id,

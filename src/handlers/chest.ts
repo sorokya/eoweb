@@ -4,7 +4,6 @@ import {
   ChestOpenServerPacket,
   ChestReplyServerPacket,
   type EoReader,
-  Item,
   PacketAction,
   PacketFamily,
 } from 'eolib';
@@ -29,15 +28,10 @@ function handleChestGet(client: Client, reader: EoReader) {
   const packet = ChestGetServerPacket.deserialize(reader);
   client.weight.current = packet.weight.current;
 
-  const existing = client.items.find((i) => i.id === packet.takenItem.id);
-  if (existing) {
-    existing.amount += packet.takenItem.amount;
-  } else {
-    const item = new Item();
-    item.id = packet.takenItem.id;
-    item.amount = packet.takenItem.amount;
-    client.items.push(item);
-  }
+  client.inventoryController.addItem(
+    packet.takenItem.id,
+    packet.takenItem.amount,
+  );
 
   client.emit('inventoryChanged', undefined);
   client.chestController.handleChanged(packet.items);
@@ -54,19 +48,18 @@ function handleChestReply(client: Client, reader: EoReader) {
   const packet = ChestReplyServerPacket.deserialize(reader);
   client.weight.current = packet.weight.current;
 
-  const item = client.items.find((i) => i.id === packet.addedItemId);
-  const prevAmount = item?.amount ?? 0;
-
-  if (packet.remainingAmount) {
-    if (item) item.amount = packet.remainingAmount;
-  } else {
-    client.items = client.items.filter((i) => i.id !== packet.addedItemId);
-  }
+  const prevAmount = client.inventoryController.getItemAmount(
+    packet.addedItemId,
+  );
+  client.inventoryController.setItem(
+    packet.addedItemId,
+    packet.remainingAmount,
+  );
 
   client.emit('inventoryChanged', undefined);
   client.chestController.handleChanged(packet.items);
 
-  const depositedAmount = prevAmount - (packet.remainingAmount ?? 0);
+  const depositedAmount = prevAmount - packet.remainingAmount;
   const name = client.getEifRecordById(packet.addedItemId)?.name ?? '';
   const msg = client.locale.chestDepositedMsg
     .replace('{amount}', String(depositedAmount > 0 ? depositedAmount : 1))

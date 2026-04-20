@@ -12,12 +12,29 @@ import {
 } from 'eolib';
 
 import type { Client } from '@/client';
+import { GOLD_ITEM_ID } from '@/consts';
 import { EOResourceID } from '@/edf';
 import { EquipmentSlot, getEquipmentSlotForItemType } from '@/equipment';
 import type { Vector2 } from '@/vector';
 
 export class InventoryController {
   private client: Client;
+  private _items: Item[];
+
+  get items(): Item[] {
+    return this._items;
+  }
+
+  set items(items: Item[]) {
+    this._items = items;
+    if (!this._items.some((i) => i.id === GOLD_ITEM_ID)) {
+      const gold = new Item();
+      gold.id = GOLD_ITEM_ID;
+      gold.amount = 0;
+      this._items.push(gold);
+    }
+  }
+
   equipmentSwap: {
     slot: EquipmentSlot;
     itemId: number;
@@ -25,10 +42,74 @@ export class InventoryController {
 
   constructor(client: Client) {
     this.client = client;
+    this._items = [];
+  }
+
+  getItemById(id: number): Item | undefined {
+    return this._items.find((i) => i.id === id);
+  }
+
+  get goldAmount(): number {
+    return this.getItemAmount(GOLD_ITEM_ID);
+  }
+
+  getItemAmount(id: number): number {
+    const item = this.getItemById(id);
+    return item ? item.amount : 0;
+  }
+
+  addItem(id: number, amount = 1): void {
+    const existing = this.getItemById(id);
+    if (existing) {
+      existing.amount += amount;
+    } else {
+      const item = new Item();
+      item.id = id;
+      item.amount = amount;
+      this._items.push(item);
+    }
+
+    this.client.questController.refreshQuestProgress();
+  }
+
+  setItem(id: number, amount: number): void {
+    if (!amount && id !== GOLD_ITEM_ID) {
+      this._items = this._items.filter((i) => i.id !== id);
+    } else {
+      const existing = this.getItemById(id);
+      if (existing) {
+        existing.amount = amount;
+      } else {
+        const item = new Item();
+        item.id = id;
+        item.amount = amount;
+        this._items.push(item);
+      }
+    }
+
+    this.client.questController.refreshQuestProgress();
+  }
+
+  removeItem(id: number, amount: number | undefined = undefined): void {
+    const existing = this.getItemById(id);
+    if (!existing) {
+      return;
+    }
+
+    if (
+      id !== GOLD_ITEM_ID &&
+      (amount === undefined || existing.amount <= amount)
+    ) {
+      this._items = this._items.filter((i) => i.id !== id);
+    } else if (amount !== undefined) {
+      existing.amount -= amount;
+    }
+
+    this.client.questController.refreshQuestProgress();
   }
 
   dropItem(id: number, coords: Vector2): void {
-    const item = this.client.items.find((i) => i.id === id);
+    const item = this.getItemById(id);
     if (!item) {
       return;
     }
@@ -71,7 +152,7 @@ export class InventoryController {
   }
 
   junkItem(id: number): void {
-    const item = this.client.items.find((i) => i.id === id);
+    const item = this.getItemById(id);
     if (!item) return;
 
     const send = (amount: number) => {
@@ -116,7 +197,7 @@ export class InventoryController {
   }
 
   useItem(id: number): void {
-    const item = this.client.items.find((i) => i.id === id);
+    const item = this.getItemById(id);
     if (!item) {
       return;
     }
@@ -223,8 +304,8 @@ export class InventoryController {
   }
 
   equipItem(slot: EquipmentSlot, itemId: number): boolean {
-    const item = this.client.items.find((i) => i.id === itemId && i.amount > 0);
-    if (!item) {
+    const item = this.getItemById(itemId);
+    if (!item || item.amount <= 0) {
       return false;
     }
 

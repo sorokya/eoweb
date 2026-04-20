@@ -101,7 +101,7 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
         const playerAgi = client.baseStats.agi;
         const playerCon = client.baseStats.con;
         const playerCha = client.baseStats.cha;
-        const gold = client.items.find((i) => i.id === 1)?.amount ?? 0;
+        const gold = client.inventoryController.goldAmount;
 
         const alreadyLearned = client.spells.some((s) => s.id === skill.id);
 

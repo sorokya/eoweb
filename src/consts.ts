@@ -101,3 +101,5 @@ export const GUILD_RANK_NEW_MEMBER = 9;
 export const GUILD_MAX_RANK = 9;
 
 export const JUKEBOX_COST = 25;
+
+export const GOLD_ITEM_ID = 1;

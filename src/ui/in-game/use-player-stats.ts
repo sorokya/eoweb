@@ -2,7 +2,7 @@ import type { CharacterBaseStats, CharacterSecondaryStats } from 'eolib';
 import { useEffect, useState } from 'preact/hooks';
 import { useClient } from '@/ui/context';
 
-const GOLD_ITEM_ID = 1;
+const _GOLD_ITEM_ID = 1;
 
 export type PlayerStats = {
   name: string;
@@ -36,7 +36,7 @@ function readStats(client: ReturnType<typeof useClient>): PlayerStats {
     experience: client.experience,
     weight: client.weight.current,
     maxWeight: client.weight.max,
-    gold: client.items.find((i) => i.id === GOLD_ITEM_ID)?.amount ?? 0,
+    gold: client.inventoryController.goldAmount,
     baseStats: client.baseStats,
     secondaryStats: client.secondaryStats,
   };

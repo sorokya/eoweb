@@ -1,7 +1,6 @@
 import {
   BookReplyServerPacket,
   type EoReader,
-  Item,
   PacketAction,
   PacketFamily,
   PaperdollAgreeServerPacket,
@@ -79,15 +78,7 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
   client.tp = Math.min(client.tp, client.maxTp);
   client.emit('statsUpdate', undefined);
 
-  let item = client.items.find((i) => i.id === packet.itemId);
-  if (item) {
-    item.amount += 1;
-  } else {
-    item = new Item();
-    item.id = packet.itemId;
-    item.amount = 1;
-    client.items.push(item);
-  }
+  client.inventoryController.addItem(packet.itemId, 1);
 
   client.emit('inventoryChanged', undefined);
 
@@ -152,19 +143,7 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
   client.tp = Math.min(client.tp, client.maxTp);
   client.emit('statsUpdate', undefined);
 
-  const item = client.items.find((i) => i.id === packet.itemId);
-  if (!item) {
-    return;
-  }
-
-  if (item.amount > 1) {
-    item.amount -= 1;
-  } else {
-    const index = client.items.indexOf(item);
-    if (index > -1) {
-      client.items.splice(index, 1);
-    }
-  }
+  client.inventoryController.removeItem(packet.itemId, 1);
 
   client.emit('inventoryChanged', undefined);
   playSfxById(SfxId.InventoryPlace);

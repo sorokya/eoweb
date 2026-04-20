@@ -8,6 +8,7 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '@/client';
+import { GOLD_ITEM_ID } from '@/consts';
 import { playSfxById, SfxId } from '@/sfx';
 
 function handleBarberOpen(client: Client, reader: EoReader) {
@@ -19,10 +20,7 @@ function handleBarberOpen(client: Client, reader: EoReader) {
 function handleBarberAgree(client: Client, reader: EoReader) {
   const packet = BarberAgreeServerPacket.deserialize(reader);
 
-  const gold = client.items.find((i) => i.id === 1);
-  if (gold) {
-    gold.amount = packet.goldAmount;
-  }
+  client.inventoryController.setItem(GOLD_ITEM_ID, packet.goldAmount);
 
   const character = client.getCharacterById(packet.change.playerId);
   if (character) {

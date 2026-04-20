@@ -15,7 +15,6 @@ import {
   type EsfRecord,
   type FileType,
   InitInitClientPacket,
-  type Item,
   type ItemMapInfo,
   MapType,
   NearbyInfo,
@@ -147,7 +146,6 @@ export class Client {
   baseStats = new CharacterBaseStats();
   secondaryStats = new CharacterSecondaryStats();
   equipment = new EquipmentPaperdoll();
-  items: Item[] = [];
   spells: Spell[] = [];
   weight = new Weight();
   mapId = 5;

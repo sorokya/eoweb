@@ -18,6 +18,7 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import {
+  GOLD_ITEM_ID,
   GUILD_MAX_RANK,
   GUILD_MIN_DEPOSIT,
   GUILD_RANK_LEADER,
@@ -111,12 +112,7 @@ export class GuildController {
     this.client.guildRankName = rankName;
     this.client.guildRank = GUILD_RANK_LEADER;
 
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (gold) {
-      gold.amount = goldAmount;
-      this.client.emit('inventoryChanged', undefined);
-    }
-
+    this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
     this.client.emit('guildUpdated', undefined);
   }
 
@@ -211,12 +207,10 @@ export class GuildController {
   }
 
   notifyBankUpdated(goldAmount: number) {
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (gold) {
-      this.cachedBankGold += gold.amount - goldAmount;
-      gold.amount = goldAmount;
-      this.client.emit('inventoryChanged', undefined);
-    }
+    const gold = this.client.inventoryController.getItemAmount(GOLD_ITEM_ID);
+    this.cachedBankGold += gold - goldAmount;
+    this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
+    this.client.emit('inventoryChanged', undefined);
     this.requestBankInfo();
   }
 
@@ -347,8 +341,8 @@ export class GuildController {
   }
 
   depositToBank(amount: number) {
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (!gold || gold.amount < amount || amount < GUILD_MIN_DEPOSIT) {
+    const gold = this.client.inventoryController.getItemAmount(GOLD_ITEM_ID);
+    if (gold < amount || amount < GUILD_MIN_DEPOSIT) {
       return;
     }
 

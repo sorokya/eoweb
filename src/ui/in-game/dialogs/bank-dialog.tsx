@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'preact/hooks';
 import { FaArrowDown, FaArrowUp, FaCoins, FaLock } from 'react-icons/fa';
-import type { Client } from '@/client';
 import { LOCKER_MAX_ITEM_AMOUNT, MAX_LOCKER_UPGRADES } from '@/consts';
 import { Button } from '@/ui/components';
 import { useClient, useLocale } from '@/ui/context';
 import { DialogBase } from './dialog-base';
-
-function readGoldOnHand(client: Client): number {
-  return client.items.find((item) => item.id === 1)?.amount ?? 0;
-}
 
 export function BankDialog() {
   const client = useClient();
@@ -17,7 +12,9 @@ export function BankDialog() {
   const [goldBank, setGoldBank] = useState(
     () => client.bankController.goldBank,
   );
-  const [goldOnHand, setGoldOnHand] = useState(() => readGoldOnHand(client));
+  const [goldOnHand, setGoldOnHand] = useState(
+    client.inventoryController.goldAmount,
+  );
   const [lockerUpgrades, setLockerUpgrades] = useState(
     () => client.bankController.lockerUpgrades,
   );
@@ -28,15 +25,15 @@ export function BankDialog() {
     const handleOpened = (newGoldBank: number, newLockerUpgrades: number) => {
       setGoldBank(newGoldBank);
       setLockerUpgrades(newLockerUpgrades);
-      setGoldOnHand(readGoldOnHand(client));
+      setGoldOnHand(client.inventoryController.goldAmount);
     };
     const handleUpdated = (newGoldBank: number) => {
       setGoldBank(newGoldBank);
-      setGoldOnHand(readGoldOnHand(client));
+      setGoldOnHand(client.inventoryController.goldAmount);
       setLockerUpgrades(client.bankController.lockerUpgrades);
     };
     const handleInventoryChanged = () => {
-      setGoldOnHand(readGoldOnHand(client));
+      setGoldOnHand(client.inventoryController.goldAmount);
       setLockerUpgrades(client.bankController.lockerUpgrades);
     };
 
@@ -62,18 +59,18 @@ export function BankDialog() {
               </span>
               {locale.bankBalance}
             </span>
-            <span class='font-semibold tabular-nums text-warning'>
+            <span class='font-semibold text-warning tabular-nums'>
               {goldBank.toLocaleString()}
             </span>
           </div>
-          <div class='mt-1 flex items-center justify-between text-xs text-primary/50'>
+          <div class='mt-1 flex items-center justify-between text-primary/50 text-xs'>
             <span class='flex items-center gap-1'>
               <span class='text-warning/70'>
                 <FaCoins size={10} />
               </span>
               {locale.bankOnHand}
             </span>
-            <span class='tabular-nums text-warning/70'>
+            <span class='text-warning/70 tabular-nums'>
               {goldOnHand.toLocaleString()}
             </span>
           </div>
@@ -110,17 +107,17 @@ export function BankDialog() {
               {lockerUpgrades}/{MAX_LOCKER_UPGRADES}
             </span>
           </div>
-          <div class='mt-1 flex items-center justify-between text-xs text-primary/50'>
+          <div class='mt-1 flex items-center justify-between text-primary/50 text-xs'>
             <span>{locale.bankNextUpgradeCost}</span>
-            <span class='tabular-nums text-base-content/70'>
+            <span class='text-base-content/70 tabular-nums'>
               {nextUpgradeCost === null
                 ? 'MAX'
                 : nextUpgradeCost.toLocaleString()}
             </span>
           </div>
-          <div class='mt-1 flex items-center justify-between text-xs text-primary/50'>
+          <div class='mt-1 flex items-center justify-between text-primary/50 text-xs'>
             <span>{locale.bankMaxLockerItems}</span>
-            <span class='tabular-nums text-base-content/70'>
+            <span class='text-base-content/70 tabular-nums'>
               {LOCKER_MAX_ITEM_AMOUNT}
             </span>
           </div>

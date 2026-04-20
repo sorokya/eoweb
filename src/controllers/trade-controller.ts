@@ -117,26 +117,14 @@ export class TradeController {
     // Remove items we gave away
     if (givenItems) {
       for (const item of givenItems) {
-        const existing = this.client.items.find((i) => i.id === item.id);
-        if (existing) {
-          existing.amount -= item.amount;
-          if (existing.amount <= 0) {
-            const idx = this.client.items.indexOf(existing);
-            if (idx >= 0) this.client.items.splice(idx, 1);
-          }
-        }
+        this.client.inventoryController.removeItem(item.id, item.amount);
       }
     }
 
     // Add items we received
     if (receivedItems) {
       for (const item of receivedItems) {
-        const existing = this.client.items.find((i) => i.id === item.id);
-        if (existing) {
-          existing.amount += item.amount;
-        } else {
-          this.client.items.push(item);
-        }
+        this.client.inventoryController.addItem(item.id, item.amount);
       }
     }
 

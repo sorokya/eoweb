@@ -71,7 +71,7 @@ export class ChestController {
     }
 
     const keys: number[] = [];
-    for (const item of this.client.items) {
+    for (const item of this.client.inventoryController.items) {
       const record = this.client.getEifRecordById(item.id);
       if (!record) {
         continue;
@@ -123,7 +123,7 @@ export class ChestController {
   }
 
   addItem(itemId: number): void {
-    const inventoryItem = this.client.items.find((i) => i.id === itemId);
+    const inventoryItem = this.client.inventoryController.getItemById(itemId);
     if (!inventoryItem) return;
 
     const send = (amount: number) => {

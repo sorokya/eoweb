@@ -2,7 +2,6 @@ import {
   type EoReader,
   FileType,
   GlobalOpenClientPacket,
-  Item,
   PacketAction,
   PacketFamily,
   WelcomeCode,
@@ -140,13 +139,7 @@ function handleEnterGame(
   data: WelcomeReplyServerPacket.WelcomeCodeDataEnterGame,
 ) {
   client.motd = data.news[0];
-  client.items = data.items;
-  if (!client.items.some((i) => i.id === 1)) {
-    const gold = new Item();
-    gold.id = 1;
-    gold.amount = 0;
-    client.items.push(gold);
-  }
+  client.inventoryController.items = data.items;
   client.spells = data.spells;
   client.weight = data.weight;
   client.nearby = data.nearby;

@@ -158,6 +158,7 @@ function handleNpcSpec(client: Client, reader: EoReader) {
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
     });
+    client.questController.refreshQuestProgress();
   }
 
   if (packet.experience) {
@@ -215,6 +216,7 @@ function handleNpcAccept(client: Client, reader: EoReader) {
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
     });
+    client.questController.refreshQuestProgress();
   }
 
   if (packet.experience) {
