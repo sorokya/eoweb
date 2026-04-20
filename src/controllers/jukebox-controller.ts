@@ -136,7 +136,6 @@ export class JukeboxController {
   notifyRequestSucceeded(goldAmount: number): void {
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
     playSfxById(SfxId.BuySell);
-    this.client.emit('inventoryChanged', undefined);
 
     for (const sub of this.requestSucceededSubscribers) {
       sub();

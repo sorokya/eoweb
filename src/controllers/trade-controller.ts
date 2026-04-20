@@ -128,7 +128,6 @@ export class TradeController {
       }
     }
 
-    this.client.emit('inventoryChanged', undefined);
     this.reset();
     playSfxById(SfxId.BuySell);
   }

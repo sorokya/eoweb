@@ -76,8 +76,6 @@ function handleItemGet(client: Client, reader: EoReader) {
     icon: ChatIcon.UpArrow,
     message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record!.name}`,
   });
-
-  client.emit('inventoryChanged', undefined);
 }
 
 function handleItemDrop(client: Client, reader: EoReader) {
@@ -105,8 +103,6 @@ function handleItemDrop(client: Client, reader: EoReader) {
     icon: ChatIcon.DownArrow,
     message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record!.name}`,
   });
-
-  client.emit('inventoryChanged', undefined);
   client.atlas.refresh();
 }
 
@@ -119,8 +115,6 @@ function handleItemReply(client: Client, reader: EoReader) {
     packet.usedItem.id,
     packet.usedItem.amount,
   );
-
-  client.emit('inventoryChanged', undefined);
 
   switch (packet.itemType) {
     case ItemType.Heal: {
@@ -314,8 +308,6 @@ function handleItemKick(client: Client, reader: EoReader) {
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.item.amount} ${record.name}`,
     });
   }
-
-  client.emit('inventoryChanged', undefined);
 }
 
 function handleItemAccept(client: Client, reader: EoReader) {
@@ -352,8 +344,6 @@ function handleItemJunk(client: Client, reader: EoReader) {
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
     });
   }
-
-  client.emit('inventoryChanged', undefined);
 }
 
 export function registerItemHandlers(client: Client) {

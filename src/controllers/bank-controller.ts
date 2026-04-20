@@ -64,7 +64,6 @@ export class BankController {
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldInventory);
     this.goldBank = goldBank;
     playSfxById(SfxId.BuySell);
-    this.client.emit('inventoryChanged', undefined);
     for (const cb of this.updatedSubscribers) cb(goldBank);
 
     const diff = Math.abs(goldBank - previousGoldBank);

@@ -80,8 +80,6 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
 
   client.inventoryController.addItem(packet.itemId, 1);
 
-  client.emit('inventoryChanged', undefined);
-
   if (client.inventoryController.equipmentSwap) {
     if (
       !client.inventoryController.equipItem(
@@ -144,8 +142,6 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
   client.emit('statsUpdate', undefined);
 
   client.inventoryController.removeItem(packet.itemId, 1);
-
-  client.emit('inventoryChanged', undefined);
   playSfxById(SfxId.InventoryPlace);
 }
 

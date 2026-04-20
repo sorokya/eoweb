@@ -82,7 +82,6 @@ function handleStatSkillTake(client: Client, reader: EoReader) {
   spell.level = 0;
   client.spells.push(spell);
 
-  client.emit('inventoryChanged', undefined);
   client.emit('skillsChanged', undefined);
   client.statSkillController.notifySkillsChanged();
   playSfxById(SfxId.LearnNewSpell);

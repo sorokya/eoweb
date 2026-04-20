@@ -42,7 +42,6 @@ function handleBarberAgree(client: Client, reader: EoReader) {
     client.atlas.refresh();
   }
 
-  client.emit('inventoryChanged', undefined);
   client.emit('barberPurchased', undefined);
   playSfxById(SfxId.BuySell);
 }

@@ -214,8 +214,9 @@ export function InventoryGrid({ itemIds }: Props) {
     syncPositions();
 
     const handler = () => syncPositions();
-    client.on('inventoryChanged', handler);
-    return () => client.off('inventoryChanged', handler);
+    client.inventoryController.subscribeInventoryChanged(handler);
+    return () =>
+      client.inventoryController.unsubscribeInventoryChanged(handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 

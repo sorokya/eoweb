@@ -210,7 +210,6 @@ export class GuildController {
     const gold = this.client.inventoryController.getItemAmount(GOLD_ITEM_ID);
     this.cachedBankGold += gold - goldAmount;
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
-    this.client.emit('inventoryChanged', undefined);
     this.requestBankInfo();
   }
 

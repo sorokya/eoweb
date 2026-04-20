@@ -62,7 +62,6 @@ export class LockerController {
   ): void {
     this.client.weight.current = weightCurrent;
     this.client.inventoryController.addItem(takenItemId, takenItemAmount);
-    this.client.emit('inventoryChanged', undefined);
     this.items = lockerItems;
     for (const cb of this.changedSubscribers) cb(lockerItems);
 
@@ -87,7 +86,6 @@ export class LockerController {
     const depositedAmount = currentAmount - depositedItemAmount;
     this.client.inventoryController.setItem(depositedItemId, depositedAmount);
 
-    this.client.emit('inventoryChanged', undefined);
     this.items = lockerItems;
     for (const cb of this.changedSubscribers) cb(lockerItems);
 
@@ -104,7 +102,6 @@ export class LockerController {
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
     this.client.bankController.lockerUpgrades = lockerUpgrades;
     playSfxById(SfxId.BuySell);
-    this.client.emit('inventoryChanged', undefined);
 
     const msg = this.client.locale.lockerUpgradedMsg;
     this.client.toastController.showSuccess(msg);

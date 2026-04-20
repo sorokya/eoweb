@@ -21,6 +21,30 @@ export class InventoryController {
   private client: Client;
   private _items: Item[];
 
+  private inventoryChangedSubscribers: (() => void)[] = [];
+  private inventoryChangeDebounce: number | null = null;
+
+  private inventoryUpdated(): void {
+    if (this.inventoryChangeDebounce) {
+      clearTimeout(this.inventoryChangeDebounce);
+    }
+    this.inventoryChangeDebounce = setTimeout(() => {
+      for (const cb of this.inventoryChangedSubscribers) cb();
+      this.client.questController.refreshQuestProgress();
+      this.inventoryChangeDebounce = null;
+    }, 100);
+  }
+
+  subscribeInventoryChanged(cb: () => void): void {
+    this.inventoryChangedSubscribers.push(cb);
+  }
+
+  unsubscribeInventoryChanged(cb: () => void): void {
+    this.inventoryChangedSubscribers = this.inventoryChangedSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
   get items(): Item[] {
     return this._items;
   }
@@ -69,7 +93,7 @@ export class InventoryController {
       this._items.push(item);
     }
 
-    this.client.questController.refreshQuestProgress();
+    this.inventoryUpdated();
   }
 
   setItem(id: number, amount: number): void {
@@ -87,7 +111,7 @@ export class InventoryController {
       }
     }
 
-    this.client.questController.refreshQuestProgress();
+    this.inventoryUpdated();
   }
 
   removeItem(id: number, amount: number | undefined = undefined): void {
@@ -105,7 +129,7 @@ export class InventoryController {
       existing.amount -= amount;
     }
 
-    this.client.questController.refreshQuestProgress();
+    this.inventoryUpdated();
   }
 
   dropItem(id: number, coords: Vector2): void {

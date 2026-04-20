@@ -39,7 +39,6 @@ export type ClientEvents = {
   serverChat: { message: string; sfxId?: SfxId | null; icon?: ChatIcon | null };
   accountCreated: undefined;
   passwordChanged: undefined;
-  inventoryChanged: undefined;
   equipmentChanged: undefined;
   statsUpdate: undefined;
   reconnect: undefined;

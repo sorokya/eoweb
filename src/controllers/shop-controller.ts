@@ -74,7 +74,6 @@ export class ShopController {
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
     this.client.inventoryController.addItem(boughtItem.id, boughtItem.amount);
     this.client.weight.current = weightCurrent;
-    this.client.emit('inventoryChanged', undefined);
     this.client.emit('itemBought', undefined);
     playSfxById(SfxId.BuySell);
     for (const cb of this.changedSubscribers) cb();
@@ -99,7 +98,6 @@ export class ShopController {
     );
     this.client.inventoryController.setItem(soldItem.id, soldItem.amount);
     this.client.weight.current = weightCurrent;
-    this.client.emit('inventoryChanged', undefined);
     this.client.emit('itemSold', undefined);
     playSfxById(SfxId.BuySell);
     for (const cb of this.changedSubscribers) cb();
@@ -125,7 +123,6 @@ export class ShopController {
 
     this.client.inventoryController.addItem(craftItemId);
     this.client.weight.current = weightCurrent;
-    this.client.emit('inventoryChanged', undefined);
     playSfxById(SfxId.Craft);
     for (const cb of this.changedSubscribers) cb();
 

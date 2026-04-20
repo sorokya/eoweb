@@ -70,12 +70,16 @@ export function ShopDialog() {
 
     client.shopController.subscribeOpened(handleOpened);
     client.shopController.subscribeChanged(handleChanged);
-    client.on('inventoryChanged', handleInventoryChanged);
+    client.inventoryController.subscribeInventoryChanged(
+      handleInventoryChanged,
+    );
 
     return () => {
       client.shopController.unsubscribeOpened(handleOpened);
       client.shopController.unsubscribeChanged(handleChanged);
-      client.off('inventoryChanged', handleInventoryChanged);
+      client.inventoryController.unsubscribeInventoryChanged(
+        handleInventoryChanged,
+      );
     };
   }, [client]);
 

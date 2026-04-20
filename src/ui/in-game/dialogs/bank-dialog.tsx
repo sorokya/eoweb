@@ -39,12 +39,16 @@ export function BankDialog() {
 
     client.bankController.subscribeOpened(handleOpened);
     client.bankController.subscribeUpdated(handleUpdated);
-    client.on('inventoryChanged', handleInventoryChanged);
+    client.inventoryController.subscribeInventoryChanged(
+      handleInventoryChanged,
+    );
 
     return () => {
       client.bankController.unsubscribeOpened(handleOpened);
       client.bankController.unsubscribeUpdated(handleUpdated);
-      client.off('inventoryChanged', handleInventoryChanged);
+      client.inventoryController.unsubscribeInventoryChanged(
+        handleInventoryChanged,
+      );
     };
   }, [client]);
 

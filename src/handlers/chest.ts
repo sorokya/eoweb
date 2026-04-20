@@ -33,7 +33,6 @@ function handleChestGet(client: Client, reader: EoReader) {
     packet.takenItem.amount,
   );
 
-  client.emit('inventoryChanged', undefined);
   client.chestController.handleChanged(packet.items);
 
   const name = client.getEifRecordById(packet.takenItem.id)?.name ?? '';
@@ -56,7 +55,6 @@ function handleChestReply(client: Client, reader: EoReader) {
     packet.remainingAmount,
   );
 
-  client.emit('inventoryChanged', undefined);
   client.chestController.handleChanged(packet.items);
 
   const depositedAmount = prevAmount - packet.remainingAmount;

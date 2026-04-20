@@ -49,11 +49,11 @@ export function usePlayerStats(): PlayerStats {
   useEffect(() => {
     const handler = () => setStats(readStats(client));
     client.on('statsUpdate', handler);
-    client.on('inventoryChanged', handler);
+    client.inventoryController.subscribeInventoryChanged(handler);
     client.on('equipmentChanged', handler);
     return () => {
       client.off('statsUpdate', handler);
-      client.off('inventoryChanged', handler);
+      client.inventoryController.unsubscribeInventoryChanged(handler);
       client.off('equipmentChanged', handler);
     };
   }, [client]);
