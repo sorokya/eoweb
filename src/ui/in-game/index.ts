@@ -18,6 +18,7 @@ export { CharacterDialog } from './dialogs/character-dialog';
 export { ChatLogDialog } from './dialogs/chat-log-dialog';
 export { ChestDialog } from './dialogs/chest-dialog';
 export { DialogBase } from './dialogs/dialog-base';
+export { InnKeeperDialog } from './dialogs/inn-keeper-dialog';
 export { InventoryDialog } from './dialogs/inventory-dialog';
 export { JukeboxDialog } from './dialogs/jukebox-dialog';
 export { LockerDialog } from './dialogs/locker-dialog';

@@ -50,6 +50,7 @@ import {
   ConfigController,
   DrunkController,
   GuildController,
+  InnController,
   InventoryController,
   ItemProtectionController,
   JukeboxController,
@@ -196,6 +197,7 @@ export class Client {
   usageController: UsageController;
   tradeController: TradeController;
   guildController: GuildController;
+  innController: InnController;
   alertController: AlertController;
   toastController: ToastController;
   npcMetadata = getNpcMetaData();
@@ -298,6 +300,7 @@ export class Client {
     this.usageController = new UsageController(this);
     this.tradeController = new TradeController(this);
     this.guildController = new GuildController(this);
+    this.innController = new InnController(this);
     this.toastController = new ToastController();
     this.jukeboxController = new JukeboxController(this);
     loadConfig().then((config) => {

@@ -369,6 +369,21 @@ export const locales = {
     cmdAll: 'Commands',
     // Inventory
     itemFallbackName: 'Item {id}',
+    // Inn keeper
+    innKeeperTitle: 'Inn',
+    innKeeperBecomeCitizen: 'Become Citizen',
+    innKeeperGiveUpCitizenship: 'Give Up Citizenship',
+    innKeeperSleep: 'Sleep',
+    innKeeperSubmitAnswers: 'Submit',
+    innKeeperBack: 'Back',
+    innKeeperBecameCitizenMsg: 'You are now a citizen!',
+    innKeeperWrongAnswersMsg: 'Some answers were wrong. Try again.',
+    innKeeperGaveUpCitizenshipMsg: 'You have given up your citizenship.',
+    innKeeperNotCitizenMsg: 'You are not a citizen here.',
+    innKeeperSleptMsg: 'You feel well rested.',
+    innKeeperConfirmGiveUpTitle: 'Give Up Citizenship',
+    innKeeperConfirmGiveUpMsg:
+      'Are you sure you want to give up your citizenship?',
   },
 } as const;
 

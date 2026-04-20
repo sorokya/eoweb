@@ -14,6 +14,7 @@ import {
   DialogArena,
   HotBar,
   HotbarProvider,
+  InnKeeperDialog,
   InventoryDialog,
   ItemDragProvider,
   JukeboxDialog,
@@ -52,6 +53,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'chest',
   'locker',
   'skillMaster',
+  'innKeeper',
 ];
 
 function DialogById({ id }: { id: DialogId }) {
@@ -84,6 +86,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <LockerDialog />;
     case 'skillMaster':
       return <SkillMasterDialog />;
+    case 'innKeeper':
+      return <InnKeeperDialog />;
   }
 }
 
@@ -145,6 +149,11 @@ function InGameContent() {
     };
     client.statSkillController.subscribeOpened(handleSkillMasterOpened);
 
+    const handleInnKeeperOpened = () => {
+      openDialog('innKeeper');
+    };
+    client.innController.subscribeOpened(handleInnKeeperOpened);
+
     const handleQuestDialogOpened = () => {
       openDialog('questNpc');
     };
@@ -156,6 +165,7 @@ function InGameContent() {
       closeDialog('chest');
       closeDialog('locker');
       closeDialog('skillMaster');
+      closeDialog('innKeeper');
       closeDialog('questNpc');
       client.questController.resetDialog();
     };
@@ -183,6 +193,7 @@ function InGameContent() {
       client.bankController.unsubscribeOpened(handleBankOpened);
       client.shopController.unsubscribeOpened(handleShopOpened);
       client.statSkillController.unsubscribeOpened(handleSkillMasterOpened);
+      client.innController.unsubscribeOpened(handleInnKeeperOpened);
       client.questController.unsubscribeDialogOpened(handleQuestDialogOpened);
       client.movementController.unsubscribeWalked(handleWalked);
       client.off('toggleCommandPalette', handleToggleCommandPalette);

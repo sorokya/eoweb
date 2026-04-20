@@ -11,6 +11,7 @@ import { registerCastHandlers } from './cast';
 import { registerChairHandlers } from './chair';
 import { registerCharacterHandlers } from './character';
 import { registerChestHandlers } from './chest';
+import { registerCitizenHandlers } from './citizen';
 import { registerConnectionHandlers } from './connection';
 import { registerDoorHandlers } from './door';
 import { registerEffectHandlers } from './effect';
@@ -84,5 +85,6 @@ export function registerAllHandlers(client: Client): void {
   registerTradeHandlers(client);
   registerBarberHandlers(client);
   registerGuildHandlers(client);
+  registerCitizenHandlers(client);
   registerJukeboxHandlers(client);
 }

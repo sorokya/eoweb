@@ -19,6 +19,7 @@ export type {
 export { ConfigController, DEFAULT_HUD_WIDGETS } from './config-controller';
 export { DrunkController } from './drunk-controller';
 export { GuildController } from './guild-controller';
+export { InnController } from './inn-controller';
 export { InventoryController } from './inventory-controller';
 export { ItemProtectionController } from './item-protection-controller';
 export { JukeboxController } from './jukebox-controller';
