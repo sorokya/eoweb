@@ -15,6 +15,7 @@ import {
   CommandPalette,
   DesktopEmoteButton,
   DialogArena,
+  GuildDialog,
   HotBar,
   HotbarProvider,
   InnKeeperDialog,
@@ -45,6 +46,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'bank',
   'barber',
   'board',
+  'guild',
   'shop',
   'inventory',
   'spells',
@@ -69,6 +71,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <BarberDialog />;
     case 'board':
       return <BoardDialog />;
+    case 'guild':
+      return <GuildDialog />;
     case 'inventory':
       return <InventoryDialog />;
     case 'shop':
@@ -183,6 +187,11 @@ function InGameContent() {
     };
     client.boardController.subscribeBoardOpened(handleBoardOpened);
 
+    const handleGuildOpened = () => {
+      openDialog('guild');
+    };
+    client.guildController.subscribeOpened(handleGuildOpened);
+
     const handleQuestDialogOpened = () => {
       openDialog('questNpc');
     };
@@ -192,6 +201,7 @@ function InGameContent() {
       closeDialog('bank');
       closeDialog('barber');
       closeDialog('board');
+      closeDialog('guild');
       closeDialog('shop');
       closeDialog('chest');
       closeDialog('locker');
@@ -229,6 +239,7 @@ function InGameContent() {
       client.statSkillController.unsubscribeOpened(handleSkillMasterOpened);
       client.innController.unsubscribeOpened(handleInnKeeperOpened);
       client.boardController.unsubscribeBoardOpened(handleBoardOpened);
+      client.guildController.unsubscribeOpened(handleGuildOpened);
       client.questController.unsubscribeDialogOpened(handleQuestDialogOpened);
       client.movementController.unsubscribeWalked(handleWalked);
       client.off('toggleCommandPalette', handleToggleCommandPalette);

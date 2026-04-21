@@ -79,7 +79,34 @@ export class GuildController {
   cachedRanks: string[] = [];
   cachedBankGold = 0;
 
+  private openedSubscribers: Set<() => void> = new Set();
+  private updatedSubscribers: Set<() => void> = new Set();
+
   constructor(private client: Client) {}
+
+  subscribeOpened(cb: () => void) {
+    this.openedSubscribers.add(cb);
+  }
+
+  unsubscribeOpened(cb: () => void) {
+    this.openedSubscribers.delete(cb);
+  }
+
+  subscribeUpdated(cb: () => void) {
+    this.updatedSubscribers.add(cb);
+  }
+
+  unsubscribeUpdated(cb: () => void) {
+    this.updatedSubscribers.delete(cb);
+  }
+
+  notifyOpened() {
+    for (const cb of this.openedSubscribers) cb();
+  }
+
+  private notifyUpdated() {
+    for (const cb of this.updatedSubscribers) cb();
+  }
 
   private clearGuild() {
     this.client.guildTag = '   ';
@@ -95,10 +122,7 @@ export class GuildController {
     const strings = dialogId
       ? this.client.getDialogStrings(dialogId)
       : ['Guild reply', `Code: ${GuildReply[code]}`];
-    this.client.emit('smallAlert', {
-      title: strings[0],
-      message: strings[1],
-    });
+    this.client.alertController.show(strings[0], strings[1]);
   }
 
   notifyCreated(
@@ -113,7 +137,7 @@ export class GuildController {
     this.client.guildRank = GUILD_RANK_LEADER;
 
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyJoined(guildTag: string, guildName: string, rankName: string) {
@@ -124,60 +148,59 @@ export class GuildController {
     playSfxById(SfxId.JoinGuild);
 
     this.state = GuildDialogState.None;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
 
     const strings = this.client.getDialogStrings(
       DialogResourceID.GUILD_YOU_HAVE_BEEN_ACCEPTED,
     );
-    this.client.emit('smallAlert', {
-      title: strings[0],
-      message: strings[1],
-    });
+    this.client.alertController.show(strings[0], strings[1]);
   }
 
   notifyKicked() {
     this.clearGuild();
     if (this.state !== GuildDialogState.None) {
       this.state = GuildDialogState.MainMenu;
-      this.client.emit('guildUpdated', undefined);
+      this.notifyUpdated();
     }
   }
 
   notifyRankUpdated(rank: number) {
     this.client.guildRank = rank;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyCreateBegin() {
     this.state = GuildDialogState.CreateWaiting;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyCreateAdd(name: string) {
     this.createMembers.push(capitalize(name));
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyCreateAddConfirm(name: string) {
     if (name) this.createMembers.push(capitalize(name));
     this.state = GuildDialogState.None;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
 
     playSfxById(SfxId.ServerMessage);
     const strings = this.client.getDialogStrings(
       DialogResourceID.GUILD_WILL_BE_CREATED,
     );
-    this.client.emit('confirmation', {
-      title: strings[0],
-      message: strings[1],
-      onConfirm: () => this.finalizeCreate(),
-    });
+    this.client.alertController.showConfirm(
+      strings[0],
+      strings[1],
+      (confirmed) => {
+        if (confirmed) this.finalizeCreate();
+      },
+    );
   }
 
   notifyInfoReceived(data: GuildInfoData) {
     this.cachedInfo = data;
     this.state = GuildDialogState.GuildInfo;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyMemberListReceived(
@@ -185,25 +208,25 @@ export class GuildController {
   ) {
     this.cachedMembers = members;
     this.state = GuildDialogState.GuildMembers;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyDescriptionReceived(description: string) {
     this.cachedDescription = description;
     this.state = GuildDialogState.EditDescription;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyRanksReceived(ranks: string[]) {
     this.cachedRanks = [...ranks];
     this.state = GuildDialogState.EditRanks;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyBankReceived(gold: number) {
     this.cachedBankGold = gold;
     this.state = GuildDialogState.Bank;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyBankUpdated(goldAmount: number) {
@@ -220,20 +243,24 @@ export class GuildController {
       const strings = this.client.getDialogStrings(
         DialogResourceID.GUILD_PLAYER_WANTS_TO_JOIN,
       );
-      this.client.emit('confirmation', {
-        title: strings[0],
-        message: `${name} ${strings[1]}`,
-        onConfirm: () => this.acceptJoinRequest(playerId),
-      });
+      this.client.alertController.showConfirm(
+        strings[0],
+        `${name} ${strings[1]}`,
+        (confirmed) => {
+          if (confirmed) this.acceptJoinRequest(playerId);
+        },
+      );
     } else {
       const strings = this.client.getDialogStrings(
         DialogResourceID.GUILD_INVITATION_INVITES_YOU,
       );
-      this.client.emit('confirmation', {
-        title: strings[0],
-        message: `${name} ${strings[1]}`,
-        onConfirm: () => this.acceptCreateInvite(playerId),
-      });
+      this.client.alertController.showConfirm(
+        strings[0],
+        `${name} ${strings[1]}`,
+        (confirmed) => {
+          if (confirmed) this.acceptCreateInvite(playerId);
+        },
+      );
     }
   }
 
@@ -373,7 +400,7 @@ export class GuildController {
     this.client.bus.send(packet);
     this.clearGuild();
     playSfxById(SfxId.LeaveGuild);
-    this.client.emit('guildOpened', undefined);
+    this.notifyOpened();
   }
 
   disbandGuild() {
@@ -382,6 +409,6 @@ export class GuildController {
     this.client.bus.send(packet);
     this.clearGuild();
     playSfxById(SfxId.LeaveGuild);
-    this.client.emit('guildOpened', undefined);
+    this.notifyOpened();
   }
 }
