@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import {
   FaArrowLeft,
   FaBuilding,
@@ -11,12 +11,7 @@ import {
   FaUserMinus,
   FaUserShield,
 } from 'react-icons/fa';
-import {
-  GOLD_ITEM_ID,
-  GUILD_MAX_RANK,
-  GUILD_MIN_DEPOSIT,
-  GUILD_RANK_LEADER,
-} from '@/consts';
+import { GOLD_ITEM_ID, GUILD_MIN_DEPOSIT } from '@/consts';
 import { GuildDialogState } from '@/game-state';
 import { Button, Tabs } from '@/ui/components';
 import { UI_PANEL_BORDER, UI_STICKY_BG } from '@/ui/consts';
@@ -138,24 +133,22 @@ function RegistrationTab() {
             <FaSignOutAlt size={12} />
             {locale.guildLeave}
           </Button>
-          {client.guildRank === GUILD_RANK_LEADER && (
-            <Button
-              variant={['sm', 'error']}
-              class='w-full'
-              onClick={() => {
-                client.alertController.showConfirm(
-                  locale.guildDisbandConfirmTitle,
-                  locale.guildDisbandConfirmMessage,
-                  (confirmed) => {
-                    if (confirmed) client.guildController.disbandGuild();
-                  },
-                );
-              }}
-            >
-              <FaTrash size={12} />
-              {locale.guildDisband}
-            </Button>
-          )}
+          <Button
+            variant={['sm', 'error']}
+            class='w-full'
+            onClick={() => {
+              client.alertController.showConfirm(
+                locale.guildDisbandConfirmTitle,
+                locale.guildDisbandConfirmMessage,
+                (confirmed) => {
+                  if (confirmed) client.guildController.disbandGuild();
+                },
+              );
+            }}
+          >
+            <FaTrash size={12} />
+            {locale.guildDisband}
+          </Button>
         </div>
       </div>
     );
@@ -267,6 +260,7 @@ function ManagementTab() {
   const [kickName, setKickName] = useState('');
   const [assignName, setAssignName] = useState('');
   const [assignRank, setAssignRank] = useState('');
+  const rankFetchIntentRef = useRef<'edit' | 'dropdown'>('edit');
 
   const [goldOnHand, setGoldOnHand] = useState(() =>
     client.inventoryController.getItemAmount(GOLD_ITEM_ID),
@@ -283,7 +277,10 @@ function ManagementTab() {
         setView('description');
       } else if (state === GuildDialogState.EditRanks) {
         setRanks([...ctrl.cachedRanks]);
-        setView('ranks');
+        if (rankFetchIntentRef.current === 'edit') {
+          setView('ranks');
+        }
+        // If intent was 'dropdown', stay in assignRank view — ranks loaded for select
       } else if (state === GuildDialogState.Bank) {
         setView('bank');
       }
@@ -503,9 +500,8 @@ function ManagementTab() {
   }
 
   if (view === 'assignRank') {
-    const rank = Number(assignRank);
-    const rankValid =
-      !Number.isNaN(rank) && rank >= 0 && rank <= GUILD_MAX_RANK;
+    const selectedRank = assignRank !== '' ? Number(assignRank) : -1;
+    const rankValid = selectedRank >= 0;
 
     return (
       <div class='flex flex-col gap-3 p-2'>
@@ -515,13 +511,35 @@ function ManagementTab() {
           value={assignName}
           onChange={setAssignName}
         />
-        <LabeledInput
-          id='guild-assign-rank'
-          label={locale.guildAssignRankValue}
-          value={assignRank}
-          type='number'
-          onChange={setAssignRank}
-        />
+        <div>
+          <label
+            for='guild-assign-rank'
+            class='mb-1 block text-base-content/70 text-xs'
+          >
+            {locale.guildAssignRankValue}
+          </label>
+          <select
+            id='guild-assign-rank'
+            class={`select select-sm select-bordered w-full border ${UI_PANEL_BORDER}`}
+            value={assignRank}
+            onChange={(e) =>
+              setAssignRank((e.target as HTMLSelectElement).value)
+            }
+          >
+            <option value=''>—</option>
+            {ranks.length > 0
+              ? ranks.map((name, i) => (
+                  <option key={i} value={String(i)}>
+                    {i}. {name}
+                  </option>
+                ))
+              : Array.from({ length: 10 }, (_, i) => (
+                  <option key={i} value={String(i)}>
+                    {i}
+                  </option>
+                ))}
+          </select>
+        </div>
         <div class='flex gap-2'>
           <Button
             variant={['sm', 'ghost']}
@@ -536,7 +554,7 @@ function ManagementTab() {
             class='flex-1'
             disabled={!assignName.trim() || !rankValid}
             onClick={() => {
-              client.guildController.changeMemberRank(assignName, rank);
+              client.guildController.changeMemberRank(assignName, selectedRank);
               setAssignName('');
               setAssignRank('');
               setView('menu');
@@ -564,7 +582,10 @@ function ManagementTab() {
       <Button
         variant={['sm', 'ghost']}
         class='flex h-auto flex-col items-center gap-1 py-3'
-        onClick={() => client.guildController.requestRanksInfo()}
+        onClick={() => {
+          rankFetchIntentRef.current = 'edit';
+          client.guildController.requestRanksInfo();
+        }}
       >
         <FaStar size={16} />
         <span class='text-xs'>{locale.guildManageRanks}</span>
@@ -588,7 +609,15 @@ function ManagementTab() {
       <Button
         variant={['sm', 'ghost']}
         class='col-span-2 flex h-auto flex-col items-center gap-1 py-3'
-        onClick={() => setView('assignRank')}
+        onClick={() => {
+          rankFetchIntentRef.current = 'dropdown';
+          if (client.guildController.cachedRanks.length === 0) {
+            client.guildController.requestRanksInfo();
+          } else {
+            setRanks([...client.guildController.cachedRanks]);
+          }
+          setView('assignRank');
+        }}
       >
         <FaUserShield size={16} />
         <span class='text-xs'>{locale.guildManageAssignRank}</span>
