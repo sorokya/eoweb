@@ -1,5 +1,6 @@
 import { BarberBuyClientPacket } from 'eolib';
 import type { Client } from '@/client';
+import { playSfxById, SfxId } from '@/sfx';
 
 type OpenedSubscriber = () => void;
 type PurchasedSubscriber = () => void;
@@ -21,6 +22,7 @@ export class BarberController {
   }
 
   notifyPurchased(): void {
+    playSfxById(SfxId.BuySell);
     for (const cb of this.purchasedSubscribers) cb();
   }
 
