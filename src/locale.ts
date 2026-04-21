@@ -135,6 +135,13 @@ export const locales = {
     settingsTouchReposition: 'Reposition Touch Controls',
     settingsTouchRepositionHint:
       'Drag touch controls to reposition them on screen.',
+    settingsMobileControls: 'Mobile Controls',
+    settingsMobileJoystick: 'Joystick',
+    settingsMobileActionButtons: 'Action Buttons',
+    settingsDesktopEmoteButton: 'Desktop Emote Button',
+    settingsVisibility_auto: 'Auto',
+    settingsVisibility_always: 'Always',
+    settingsVisibility_never: 'Never',
     settingsResetPositions: 'Reset UI Positions',
     settingsResetPositionsHint:
       'Reset all UI positions and layout settings back to defaults.',
@@ -202,6 +209,14 @@ export const locales = {
     // Jukebox dialog
     jukeboxNoSongs: 'No songs available',
     jukeboxNowPlaying: 'Now playing: {track}',
+    // Barber dialog
+    barberTitle: 'Barber',
+    barberHairStyle: 'Hair Style',
+    barberHairColor: 'Hair Color',
+    barberShowHat: 'Show Hat',
+    barberCost: 'Cost',
+    barberBuy: 'Buy',
+    barberBald: 'Bald',
     // Chat
     chatTapToChat: 'Tap to chat…',
     chatPressEnterToChat: 'Press enter to chat…',

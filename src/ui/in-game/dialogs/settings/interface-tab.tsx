@@ -2,8 +2,10 @@ import type { Language } from '@/controllers';
 import { CycleInput, Select } from '@/ui/components';
 import { useLocale } from '@/ui/context';
 import {
+  type HudVisibility,
   UI_SCALE_OPTIONS,
   useConfigSetting,
+  useHudVisibility,
   useRepositionMode,
   useUiScale,
 } from '@/ui/in-game';
@@ -56,6 +58,35 @@ const LANGUAGES: {
   { value: 'sv', labelKey: 'langSv' },
   { value: 'pt', labelKey: 'langPt' },
 ];
+
+const VIS_VALUES: HudVisibility[] = ['auto', 'always', 'never'];
+
+type VisibilityCycleProps = {
+  label: string;
+  visKey: string;
+  autoDefaults: { mobile: boolean; desktop: boolean };
+  formatLabel: (v: HudVisibility) => string;
+};
+
+function VisibilityCycle({
+  label,
+  visKey,
+  autoDefaults,
+  formatLabel,
+}: VisibilityCycleProps) {
+  const [, visibility, setVisibility] = useHudVisibility(visKey, autoDefaults);
+  const idx = VIS_VALUES.indexOf(visibility);
+  return (
+    <CycleInput
+      label={label}
+      value={idx < 0 ? 0 : idx}
+      min={0}
+      max={VIS_VALUES.length - 1}
+      format={(i) => formatLabel(VIS_VALUES[i])}
+      onChange={(i) => setVisibility(VIS_VALUES[i])}
+    />
+  );
+}
 
 export function InterfaceTab() {
   const { locale } = useLocale();
@@ -146,6 +177,37 @@ export function InterfaceTab() {
           />
         </SettingRow>
       </div>
+      <div class='divider my-0' />
+      <div class='flex flex-col gap-2'>
+        <p class='text-xs font-semibold opacity-70'>
+          {locale.settingsMobileControls}
+        </p>
+        <VisibilityCycle
+          label={locale.settingsMobileJoystick}
+          visKey='touch-joystick'
+          autoDefaults={{ mobile: true, desktop: false }}
+          formatLabel={(v) =>
+            locale[`settingsVisibility_${v}` as keyof typeof locale] as string
+          }
+        />
+        <VisibilityCycle
+          label={locale.settingsMobileActionButtons}
+          visKey='touch-actions'
+          autoDefaults={{ mobile: true, desktop: false }}
+          formatLabel={(v) =>
+            locale[`settingsVisibility_${v}` as keyof typeof locale] as string
+          }
+        />
+      </div>
+      <div class='divider my-0' />
+      <VisibilityCycle
+        label={locale.settingsDesktopEmoteButton}
+        visKey='desktop-emote'
+        autoDefaults={{ mobile: false, desktop: true }}
+        formatLabel={(v) =>
+          locale[`settingsVisibility_${v}` as keyof typeof locale] as string
+        }
+      />
     </div>
   );
 }

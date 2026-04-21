@@ -13,8 +13,7 @@ import { playSfxById, SfxId } from '@/sfx';
 
 function handleBarberOpen(client: Client, reader: EoReader) {
   const packet = BarberOpenServerPacket.deserialize(reader);
-  client.sessionId = packet.sessionId;
-  client.emit('barberOpened', undefined);
+  client.barberController.notifyOpened(packet.sessionId);
 }
 
 function handleBarberAgree(client: Client, reader: EoReader) {
@@ -43,6 +42,7 @@ function handleBarberAgree(client: Client, reader: EoReader) {
   }
 
   client.emit('barberPurchased', undefined);
+  client.barberController.notifyPurchased();
   playSfxById(SfxId.BuySell);
 }
 

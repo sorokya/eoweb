@@ -1,9 +1,18 @@
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 import { isMobile } from '@/utils';
 
 export type HudVisibility = 'auto' | 'always' | 'never';
 
 const STORAGE_PREFIX = 'eoweb:vis:';
+
+// Module-level subscriber map so all hook instances for the same key stay in sync.
+const subscribers = new Map<string, Set<(v: HudVisibility) => void>>();
+
+function notify(key: string, vis: HudVisibility): void {
+  subscribers.get(key)?.forEach((fn) => {
+    fn(vis);
+  });
+}
 
 function readVisibility(key: string): HudVisibility | null {
   try {
@@ -51,6 +60,7 @@ type HudAutoDefaults = {
  * `never` → always hidden regardless of screen size.
  *
  * Persisted in localStorage at `eoweb:vis:<key>`.
+ * All hook instances sharing the same key stay in sync without a page reload.
  */
 export function useHudVisibility(
   key: string,
@@ -60,10 +70,19 @@ export function useHudVisibility(
     () => readVisibility(key) ?? 'auto',
   );
 
+  // Register/unregister this instance as a subscriber for the key.
+  useEffect(() => {
+    if (!subscribers.has(key)) subscribers.set(key, new Set());
+    subscribers.get(key)!.add(setVisibility);
+    return () => {
+      subscribers.get(key)?.delete(setVisibility);
+    };
+  }, [key]);
+
   const updateVisibility = useCallback(
     (next: HudVisibility) => {
-      setVisibility(next);
       writeVisibility(key, next);
+      notify(key, next);
     },
     [key],
   );

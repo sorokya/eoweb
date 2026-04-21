@@ -14,6 +14,7 @@ export { CommandPalette } from './command-palette/command-palette';
 export { DialogArena } from './dialog-arena';
 export { BankDialog } from './dialogs/bank-dialog';
 // Dialog components
+export { BarberDialog } from './dialogs/barber-dialog';
 export { BoardDialog } from './dialogs/board-dialog';
 export { CharacterDialog } from './dialogs/character-dialog';
 export { ChatLogDialog } from './dialogs/chat-log-dialog';
@@ -31,6 +32,7 @@ export { SkillMasterDialog } from './dialogs/skill-master-dialog';
 export { SocialDialog } from './dialogs/social-dialog';
 export { SpellsDialog } from './dialogs/spells-dialog';
 // HUD components
+export { DesktopEmoteButton } from './hud/desktop-emote-button';
 export { HotBar } from './hud/hot-bar';
 export { HotbarProvider, useHotbar } from './hud/hotbar-context';
 export { MobileNav, NavSidebar } from './hud/nav-sidebar';

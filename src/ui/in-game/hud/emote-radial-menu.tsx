@@ -1,7 +1,7 @@
 import { Emote } from 'eolib';
 import { UI_GHOST_BG, UI_PANEL_BORDER } from '@/ui/consts';
 
-const EMOTES: { type: Emote; label: string; emoji: string }[] = [
+export const EMOTES: { type: Emote; label: string; emoji: string }[] = [
   { type: Emote.Happy, label: 'Happy', emoji: '😊' },
   { type: Emote.Depressed, label: 'Depressed', emoji: '😞' },
   { type: Emote.Sad, label: 'Sad', emoji: '😢' },

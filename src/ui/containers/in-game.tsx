@@ -5,6 +5,7 @@ import { useClient } from '@/ui/context';
 import type { DialogId } from '@/ui/in-game';
 import {
   BankDialog,
+  BarberDialog,
   BoardDialog,
   CharacterDialog,
   ChatDialog,
@@ -12,6 +13,7 @@ import {
   ChatManagerProvider,
   ChestDialog,
   CommandPalette,
+  DesktopEmoteButton,
   DialogArena,
   HotBar,
   HotbarProvider,
@@ -41,6 +43,7 @@ import {
 
 const ALL_DIALOG_IDS: DialogId[] = [
   'bank',
+  'barber',
   'board',
   'shop',
   'inventory',
@@ -62,6 +65,8 @@ function DialogById({ id }: { id: DialogId }) {
   switch (id) {
     case 'bank':
       return <BankDialog />;
+    case 'barber':
+      return <BarberDialog />;
     case 'board':
       return <BoardDialog />;
     case 'inventory':
@@ -148,6 +153,16 @@ function InGameContent() {
     };
     client.bankController.subscribeOpened(handleBankOpened);
 
+    const handleBarberOpened = () => {
+      openDialog('barber');
+    };
+    client.barberController.subscribeOpened(handleBarberOpened);
+
+    const handleBarberPurchased = () => {
+      closeDialog('barber');
+    };
+    client.barberController.subscribePurchased(handleBarberPurchased);
+
     const handleShopOpened = () => {
       openDialog('shop');
     };
@@ -175,6 +190,7 @@ function InGameContent() {
 
     const handleWalked = () => {
       closeDialog('bank');
+      closeDialog('barber');
       closeDialog('board');
       closeDialog('shop');
       closeDialog('chest');
@@ -207,6 +223,8 @@ function InGameContent() {
       client.chestController.unsubscribeOpened(handleChestOpened);
       client.lockerController.unsubscribeOpened(handleLockerOpened);
       client.bankController.unsubscribeOpened(handleBankOpened);
+      client.barberController.unsubscribeOpened(handleBarberOpened);
+      client.barberController.unsubscribePurchased(handleBarberPurchased);
       client.shopController.unsubscribeOpened(handleShopOpened);
       client.statSkillController.unsubscribeOpened(handleSkillMasterOpened);
       client.innController.unsubscribeOpened(handleInnKeeperOpened);
@@ -264,7 +282,9 @@ function InGameContent() {
             <HotBar />
           </div>
         </div>
-        <div class='flex-1' />
+        <div class='pointer-events-auto flex flex-1 items-end justify-start'>
+          <DesktopEmoteButton />
+        </div>
       </div>
 
       {/* Mobile: chat at top below HUD */}

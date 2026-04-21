@@ -27,6 +27,7 @@ export type DialogId =
   | 'locker'
   | 'skillMaster'
   | 'innKeeper'
+  | 'barber'
   | 'board';
 
 type DialogMeta = {
