@@ -5,6 +5,7 @@ import {
   FaCog,
   FaCoins,
   FaList,
+  FaPlus,
   FaSearch,
   FaSignOutAlt,
   FaStar,
@@ -21,7 +22,7 @@ import { useClient, useLocale } from '@/ui/context';
 import { useBackdropBlur } from '@/ui/in-game';
 import { DialogBase } from './dialog-base';
 
-type GuildTabId = 'registration' | 'management' | 'lookup';
+type GuildTabId = 'registration' | 'create' | 'management' | 'lookup';
 type ManageView =
   | 'menu'
   | 'description'
@@ -70,9 +71,6 @@ function RegistrationTab() {
   const [_tick, setTick] = useState(0);
   const [joinTag, setJoinTag] = useState('');
   const [joinRecruiter, setJoinRecruiter] = useState('');
-  const [createTag, setCreateTag] = useState('');
-  const [createName, setCreateName] = useState('');
-  const [createDescription, setCreateDescription] = useState('');
 
   useEffect(() => {
     const handleUpdated = () => setTick((t) => t + 1);
@@ -81,30 +79,6 @@ function RegistrationTab() {
   }, [client]);
 
   const isInGuild = client.guildTag.trim() !== '';
-  const state = client.guildController.state;
-
-  if (state === GuildDialogState.CreateWaiting) {
-    return (
-      <div class='flex flex-col gap-3 p-2'>
-        <p class='font-semibold text-sm'>{locale.guildCreatingTitle}</p>
-        <p class='text-base-content/70 text-xs'>
-          {locale.guildCreatingWaiting}
-        </p>
-        <div>
-          <p class='mb-1 font-medium text-base-content/70 text-xs'>
-            {locale.guildCreatingMembers}
-          </p>
-          <ul class='flex flex-col gap-1'>
-            {client.guildController.createMembers.map((m) => (
-              <li key={m} class='text-sm'>
-                {m}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    );
-  }
 
   if (isInGuild) {
     return (
@@ -135,22 +109,24 @@ function RegistrationTab() {
             <FaSignOutAlt size={12} />
             {locale.guildLeave}
           </Button>
-          <Button
-            variant={['sm', 'error']}
-            class='w-full'
-            onClick={() => {
-              client.alertController.showConfirm(
-                locale.guildDisbandConfirmTitle,
-                locale.guildDisbandConfirmMessage,
-                (confirmed) => {
-                  if (confirmed) client.guildController.disbandGuild();
-                },
-              );
-            }}
-          >
-            <FaTrash size={12} />
-            {locale.guildDisband}
-          </Button>
+          {client.guildRank === 0 && (
+            <Button
+              variant={['sm', 'error']}
+              class='w-full'
+              onClick={() => {
+                client.alertController.showConfirm(
+                  locale.guildDisbandConfirmTitle,
+                  locale.guildDisbandConfirmMessage,
+                  (confirmed) => {
+                    if (confirmed) client.guildController.disbandGuild();
+                  },
+                );
+              }}
+            >
+              <FaTrash size={12} />
+              {locale.guildDisband}
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -188,7 +164,50 @@ function RegistrationTab() {
           </Button>
         </div>
       </section>
+    </div>
+  );
+}
 
+function CreateTab() {
+  const client = useClient();
+  const { locale } = useLocale();
+
+  const [_tick, setTick] = useState(0);
+  const [createTag, setCreateTag] = useState('');
+  const [createName, setCreateName] = useState('');
+  const [createDescription, setCreateDescription] = useState('');
+
+  useEffect(() => {
+    const handleUpdated = () => setTick((t) => t + 1);
+    client.guildController.subscribeUpdated(handleUpdated);
+    return () => client.guildController.unsubscribeUpdated(handleUpdated);
+  }, [client]);
+
+  if (client.guildController.state === GuildDialogState.CreateWaiting) {
+    return (
+      <div class='flex flex-col gap-3 p-2'>
+        <p class='font-semibold text-sm'>{locale.guildCreatingTitle}</p>
+        <p class='text-base-content/70 text-xs'>
+          {locale.guildCreatingWaiting}
+        </p>
+        <div>
+          <p class='mb-1 font-medium text-base-content/70 text-xs'>
+            {locale.guildCreatingMembers}
+          </p>
+          <ul class='flex flex-col gap-1'>
+            {client.guildController.createMembers.map((m) => (
+              <li key={m} class='text-sm'>
+                {m}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div class='flex flex-col gap-4 p-2'>
       <section class={`rounded-lg border ${UI_PANEL_BORDER} p-3`}>
         <p class='mb-2 font-semibold text-sm'>{locale.guildCreateTitle}</p>
         <div class='flex flex-col gap-2'>
@@ -814,11 +833,27 @@ export function GuildDialog() {
   const { locale } = useLocale();
   const _blur = useBackdropBlur();
 
+  const [_tick, setTick] = useState(0);
   const [activeTab, setActiveTab] = useState<GuildTabId>('registration');
+
+  useEffect(() => {
+    const handleUpdated = () => setTick((t) => t + 1);
+    client.guildController.subscribeUpdated(handleUpdated);
+    return () => client.guildController.unsubscribeUpdated(handleUpdated);
+  }, [client]);
 
   const isInGuild = client.guildTag.trim() !== '';
 
-  const tabs = [
+  // Auto-switch away from tabs that are now hidden
+  useEffect(() => {
+    if (isInGuild && activeTab === 'create') {
+      setActiveTab('registration');
+    } else if (!isInGuild && activeTab === 'management') {
+      setActiveTab('registration');
+    }
+  }, [isInGuild, activeTab]);
+
+  const allTabs = [
     {
       id: 'registration' as GuildTabId,
       label: (
@@ -828,16 +863,32 @@ export function GuildDialog() {
         </span>
       ),
     },
-    {
-      id: 'management' as GuildTabId,
-      label: (
-        <span class='flex items-center gap-1'>
-          <FaCog size={11} />
-          {locale.guildTabManagement}
-        </span>
-      ),
-      disabled: !isInGuild,
-    },
+    ...(!isInGuild
+      ? [
+          {
+            id: 'create' as GuildTabId,
+            label: (
+              <span class='flex items-center gap-1'>
+                <FaPlus size={11} />
+                {locale.guildTabCreate}
+              </span>
+            ),
+          },
+        ]
+      : []),
+    ...(isInGuild
+      ? [
+          {
+            id: 'management' as GuildTabId,
+            label: (
+              <span class='flex items-center gap-1'>
+                <FaCog size={11} />
+                {locale.guildTabManagement}
+              </span>
+            ),
+          },
+        ]
+      : []),
     {
       id: 'lookup' as GuildTabId,
       label: (
@@ -852,12 +903,13 @@ export function GuildDialog() {
   return (
     <DialogBase id='guild' title={locale.guildTitle} size='md'>
       <Tabs
-        items={tabs}
+        items={allTabs}
         activeId={activeTab}
         onSelect={(id) => setActiveTab(id as GuildTabId)}
       />
       <div class='overflow-y-auto'>
         {activeTab === 'registration' && <RegistrationTab />}
+        {activeTab === 'create' && <CreateTab />}
         {activeTab === 'management' && <ManagementTab />}
         {activeTab === 'lookup' && <LookupTab />}
       </div>

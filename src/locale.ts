@@ -418,6 +418,7 @@ export const locales = {
     // Guild dialog
     guildTitle: 'Guild',
     guildTabRegistration: 'Registration',
+    guildTabCreate: 'Create',
     guildTabManagement: 'Management',
     guildTabLookup: 'Lookup',
     guildCreateTitle: 'Create Guild',
