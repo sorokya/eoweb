@@ -357,6 +357,7 @@ export class GuildController {
   }
 
   saveRanks(ranks: string[]) {
+    this.cachedRanks = [...ranks];
     const packet = new GuildAgreeClientPacket();
     packet.sessionId = this.client.sessionId;
     packet.infoType = GuildInfoType.Ranks;

@@ -674,11 +674,10 @@ function ManagementTab() {
         class='col-span-2 flex h-auto flex-col items-center gap-1 py-3'
         onClick={() => {
           fetchMembersForDropdown();
+          setRanks([...client.guildController.cachedRanks]);
           rankFetchIntentRef.current = 'dropdown';
           if (client.guildController.cachedRanks.length === 0) {
             client.guildController.requestRanksInfo();
-          } else {
-            setRanks([...client.guildController.cachedRanks]);
           }
           setView('assignRank');
         }}
