@@ -5,6 +5,7 @@ import {
   EquipmentMapInfo,
 } from 'eolib';
 import { useCallback, useEffect, useState } from 'preact/hooks';
+import { FaCut } from 'react-icons/fa';
 import {
   BARBER_BASE_COST,
   BARBER_COST_PER_LEVEL,
@@ -35,8 +36,8 @@ function makeBarberPreview(
   info.playerId = playerId;
   info.name = source.name;
   info.coords = new BigCoords();
-  info.coords.x = source.coords.x;
-  info.coords.y = source.coords.y;
+  info.coords.x = 200;
+  info.coords.y = 200;
   info.direction = source.direction;
   info.gender = source.gender;
   info.hairStyle = hairStyle;
@@ -126,8 +127,21 @@ export function BarberDialog() {
 
   const cost = BARBER_BASE_COST + BARBER_COST_PER_LEVEL * client.level;
 
+  const [goldOnHand, setGoldOnHand] = useState(
+    () => client.inventoryController.goldAmount,
+  );
+
+  useEffect(() => {
+    const handler = () => setGoldOnHand(client.inventoryController.goldAmount);
+    client.inventoryController.subscribeInventoryChanged(handler);
+    return () =>
+      client.inventoryController.unsubscribeInventoryChanged(handler);
+  }, [client]);
+
+  const canAfford = goldOnHand >= cost;
+
   const handleBuy = useCallback(() => {
-    client.barberController.buyHairStyle(hairStyle, hairColor);
+    client.barberController.confirmBuyHairStyle(hairStyle, hairColor);
   }, [client, hairStyle, hairColor]);
 
   return (
@@ -177,7 +191,12 @@ export function BarberDialog() {
             {locale.wordGold}
           </p>
 
-          <Button variant={['sm', 'primary']} onClick={handleBuy}>
+          <Button
+            variant={['sm', 'primary']}
+            onClick={handleBuy}
+            disabled={!canAfford}
+          >
+            <FaCut size={11} />
             {locale.barberBuy}
           </Button>
         </div>

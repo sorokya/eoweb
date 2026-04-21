@@ -217,6 +217,8 @@ export const locales = {
     barberCost: 'Cost',
     barberBuy: 'Buy',
     barberBald: 'Bald',
+    barberConfirmTitle: 'Change Hairstyle',
+    barberConfirmMessage: 'Are you sure you want to change your hairstyle?',
     // Chat
     chatTapToChat: 'Tap to chat…',
     chatPressEnterToChat: 'Press enter to chat…',

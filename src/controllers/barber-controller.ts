@@ -24,6 +24,17 @@ export class BarberController {
     for (const cb of this.purchasedSubscribers) cb();
   }
 
+  confirmBuyHairStyle(hairStyle: number, hairColor: number): void {
+    const locale = this.client.locale;
+    this.client.alertController.showConfirm(
+      locale.barberConfirmTitle,
+      locale.barberConfirmMessage,
+      (confirmed) => {
+        if (confirmed) this.buyHairStyle(hairStyle, hairColor);
+      },
+    );
+  }
+
   buyHairStyle(hairStyle: number, hairColor: number): void {
     const packet = new BarberBuyClientPacket();
     packet.hairStyle = hairStyle;
