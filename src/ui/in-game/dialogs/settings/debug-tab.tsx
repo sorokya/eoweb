@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'preact/hooks';
 import { useClient, useLocale } from '@/ui/context';
+import { useWindowManager } from '@/ui/in-game';
 import { SettingRow } from './setting-row';
 
 const LAYER_NAMES = [
@@ -18,6 +19,7 @@ export function DebugTab() {
   const { locale } = useLocale();
   const client = useClient();
   const cfg = client.configController;
+  const { toggleDialog } = useWindowManager();
 
   const [visibility, setVisibility] = useState<Record<number, boolean>>(() => ({
     ...cfg.layerVisibility,
@@ -50,9 +52,8 @@ export function DebugTab() {
       <div class='divider my-0' />
       <button
         type='button'
-        class='btn btn-sm btn-disabled w-full'
-        disabled
-        title={locale.settingsDebugPacketLogSoon}
+        class='btn btn-sm w-full'
+        onClick={() => toggleDialog('packet-log')}
       >
         {locale.settingsDebugPacketLog}
       </button>

@@ -179,7 +179,7 @@ export function InterfaceTab() {
       </div>
       <div class='divider my-0' />
       <div class='flex flex-col gap-2'>
-        <p class='text-xs font-semibold opacity-70'>
+        <p class='font-semibold text-xs opacity-70'>
           {locale.settingsMobileControls}
         </p>
         <VisibilityCycle

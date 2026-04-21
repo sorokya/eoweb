@@ -29,7 +29,8 @@ export type DialogId =
   | 'innKeeper'
   | 'barber'
   | 'board'
-  | 'guild';
+  | 'guild'
+  | 'packet-log';
 
 type DialogMeta = {
   /** Saved layout preference (persisted to localStorage). */

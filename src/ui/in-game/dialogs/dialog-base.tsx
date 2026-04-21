@@ -5,12 +5,13 @@ import { UI_HEADER_BG, UI_PANEL_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useLocale } from '@/ui/context';
 import { type DialogId, useBackdropBlur, useWindowManager } from '@/ui/in-game';
 
-type DialogSize = 'sm' | 'md' | 'lg';
+type DialogSize = 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZE_WIDTH: Record<DialogSize, string> = {
   sm: 'clamp(240px, 28vw, 300px)',
   md: 'clamp(350px, 36vw, 420px)',
   lg: 'clamp(380px, 48vw, 560px)',
+  xl: 'clamp(480px, 64vw, 720px)',
 };
 
 type DialogBaseProps = {

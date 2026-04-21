@@ -38,6 +38,12 @@ function toggleDialogAction(id: DialogId): Command['action'] {
 
 export const ALL_COMMANDS: Command[] = [
   {
+    id: 'toggle-packet-log',
+    label: 'Toggle Packet Log',
+    keywords: ['debug', 'packets', 'network', 'hex'],
+    action: toggleDialogAction('packet-log'),
+  },
+  {
     id: 'toggle-inventory',
     label: 'Toggle Inventory',
     keywords: ['bag', 'items'],

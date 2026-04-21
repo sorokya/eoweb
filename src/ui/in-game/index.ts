@@ -25,6 +25,7 @@ export { InnKeeperDialog } from './dialogs/inn-keeper-dialog';
 export { InventoryDialog } from './dialogs/inventory-dialog';
 export { JukeboxDialog } from './dialogs/jukebox-dialog';
 export { LockerDialog } from './dialogs/locker-dialog';
+export { PacketLogDialog } from './dialogs/packet-log-dialog';
 export { QuestNpcDialog } from './dialogs/quest-npc-dialog';
 export { QuestsDialog } from './dialogs/quests-dialog';
 export { SettingsDialog } from './dialogs/settings-dialog';

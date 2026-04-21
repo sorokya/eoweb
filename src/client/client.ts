@@ -82,6 +82,7 @@ import { registerAllHandlers } from '@/handlers';
 import { defaultLocale, formatLocaleString, locales } from '@/locale';
 import { MapRenderer } from '@/map';
 import { MinimapRenderer } from '@/minimap';
+import { PacketLogStore } from '@/packet-log';
 import { CharacterDeathAnimation, NpcDeathAnimation } from '@/render';
 import { playSfxById, SfxId, setAudioController } from '@/sfx';
 import type { ISlot } from '@/ui/enums';
@@ -119,6 +120,7 @@ export class Client {
   zoom = 1;
   tickCount = 0;
   bus = new PacketBus();
+  packetLogStore = new PacketLogStore();
   config = getDefaultConfig();
   version: Version;
   challenge: number;
@@ -233,6 +235,26 @@ export class Client {
 
   constructor() {
     registerAllHandlers(this);
+    this.bus.onPacketSent = (family, action, rawBytes, payload) => {
+      this.packetLogStore.addEntry({
+        source: 'client',
+        family,
+        action,
+        timestamp: new Date(),
+        rawBytes,
+        payload,
+      });
+    };
+    this.bus.onPacketReceived = (family, action, rawBytes, payload) => {
+      this.packetLogStore.addEntry({
+        source: 'server',
+        family,
+        action,
+        timestamp: new Date(),
+        rawBytes,
+        payload,
+      });
+    };
     this.container = document.querySelector('#game-container')!;
     this.emitter = mitt<ClientEvents>();
     this.version = new Version();

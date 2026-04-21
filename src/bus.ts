@@ -23,6 +23,20 @@ export class PacketBus {
     Map<PacketAction, (reader: EoReader) => void>
   > = new Map();
 
+  onPacketSent?: (
+    family: PacketFamily,
+    action: PacketAction,
+    rawBytes: Uint8Array,
+    payload: Uint8Array,
+  ) => void;
+
+  onPacketReceived?: (
+    family: PacketFamily,
+    action: PacketAction,
+    rawBytes: Uint8Array,
+    payload: Uint8Array,
+  ) => void;
+
   constructor() {
     this.sequencer = new PacketSequencer(SequenceStart.zero());
   }
@@ -109,6 +123,8 @@ export class PacketBus {
 
     const packetBuf = data.slice(2);
 
+    this.onPacketReceived?.(family, action, new Uint8Array(data), packetBuf);
+
     const reader = new EoReader(packetBuf);
     const familyHandlers = this.handlers.get(family);
     if (familyHandlers) {
@@ -147,6 +163,10 @@ export class PacketBus {
 
     data.unshift(family);
     data.unshift(action);
+
+    // Log pre-encryption: rawBytes includes action + family + seq + payload.
+    // payload (buf) is the clean serialized packet data without seq bytes.
+    this.onPacketSent?.(family, action, new Uint8Array(data), buf);
 
     const temp = new Uint8Array(data);
 

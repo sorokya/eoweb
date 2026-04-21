@@ -226,8 +226,8 @@ function CreateTab() {
             label={locale.guildCreateTag}
             value={createTag}
             maxLength={3}
-            filterRegex={/[A-Z]/}
-            onChange={setCreateTag}
+            filterRegex={/[a-zA-Z]/}
+            onChange={(v) => setCreateTag(v.toUpperCase())}
           />
           <LabeledInput
             id='guild-create-name'

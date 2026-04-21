@@ -24,7 +24,6 @@ type ButtonVariant =
   | 'sm'
   | 'md'
   | 'lg'
-  | 'xl'
   | 'wide'
   | 'block'
   | 'square'

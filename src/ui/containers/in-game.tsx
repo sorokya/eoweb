@@ -25,6 +25,7 @@ import {
   LockerDialog,
   MobileNav,
   NavSidebar,
+  PacketLogDialog,
   PlayerHud,
   QuestNpcDialog,
   QuestsDialog,
@@ -61,6 +62,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'locker',
   'skillMaster',
   'innKeeper',
+  'packet-log',
 ];
 
 function DialogById({ id }: { id: DialogId }) {
@@ -101,6 +103,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <SkillMasterDialog />;
     case 'innKeeper':
       return <InnKeeperDialog />;
+    case 'packet-log':
+      return <PacketLogDialog />;
   }
 }
 

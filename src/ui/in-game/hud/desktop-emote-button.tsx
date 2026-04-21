@@ -68,7 +68,7 @@ export function DesktopEmoteButton() {
         {/* Emote fire button */}
         <button
           type='button'
-          class='flex flex-1 items-center justify-center text-xl active:bg-base-content/10 hover:bg-base-content/5'
+          class='flex flex-1 items-center justify-center text-xl hover:bg-base-content/5 active:bg-base-content/10'
           onClick={(e) => {
             e.stopPropagation();
             handleEmoteUse();
@@ -85,7 +85,7 @@ export function DesktopEmoteButton() {
         {/* Picker toggle */}
         <button
           type='button'
-          class='flex w-5 items-center justify-center text-base-content/60 active:bg-base-content/10 hover:text-base-content'
+          class='flex w-5 items-center justify-center text-base-content/60 hover:text-base-content active:bg-base-content/10'
           onClick={(e) => {
             e.stopPropagation();
             setEmotePickerOpen((o) => !o);
