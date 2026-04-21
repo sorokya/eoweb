@@ -23,12 +23,14 @@ import {
   ChatChannels,
   channelColor,
   channelLabel,
+  isPMChannel,
 } from '@/ui/enums';
 import { DialogBase } from './dialog-base';
 
 const PAGE_SIZE = 200;
 
 const ALL_CHANNELS_VALUE = '__all__';
+const PM_CHANNELS_VALUE = '__pm__';
 
 type ChannelOption = { value: string; label: string };
 
@@ -40,6 +42,7 @@ function buildChannelOptions(locale: {
   chatLogGuild: string;
   chatLogAdmin: string;
   chatLogSystem: string;
+  chatLogPrivate: string;
 }): ChannelOption[] {
   return [
     { value: ALL_CHANNELS_VALUE, label: locale.chatLogAllChannels },
@@ -49,6 +52,7 @@ function buildChannelOptions(locale: {
     { value: ChatChannels.Guild, label: locale.chatLogGuild },
     { value: ChatChannels.Admin, label: locale.chatLogAdmin },
     { value: ChatChannels.System, label: locale.chatLogSystem },
+    { value: PM_CHANNELS_VALUE, label: locale.chatLogPrivate },
   ];
 }
 
@@ -202,7 +206,7 @@ export function ChatLogDialog() {
   });
   const [loading, setLoading] = useState(false);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   // Debounce search
   useEffect(() => {
@@ -227,18 +231,38 @@ export function ChatLogDialog() {
   // Load messages
   useEffect(() => {
     setLoading(true);
-    const ch: ChatChannel | null =
-      channel === ALL_CHANNELS_VALUE ? null : (channel as ChatChannel);
-    getPagedChatMessages(
-      characterId,
-      ch,
-      page,
-      PAGE_SIZE,
-      debouncedSearch,
-      sortDir,
-    )
-      .then(setResult)
-      .finally(() => setLoading(false));
+    const isPM = channel === PM_CHANNELS_VALUE;
+    if (isPM) {
+      getAllFilteredChatMessages(characterId, null, debouncedSearch, sortDir)
+        .then((all) => {
+          const filtered = all.filter((m) =>
+            isPMChannel(m.channel as ChatChannel),
+          );
+          const total = filtered.length;
+          const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+          const safePage = Math.min(Math.max(1, page), totalPages);
+          const start = (safePage - 1) * PAGE_SIZE;
+          setResult({
+            messages: filtered.slice(start, start + PAGE_SIZE),
+            total,
+            totalPages,
+          });
+        })
+        .finally(() => setLoading(false));
+    } else {
+      const ch: ChatChannel | null =
+        channel === ALL_CHANNELS_VALUE ? null : (channel as ChatChannel);
+      getPagedChatMessages(
+        characterId,
+        ch,
+        page,
+        PAGE_SIZE,
+        debouncedSearch,
+        sortDir,
+      )
+        .then(setResult)
+        .finally(() => setLoading(false));
+    }
   }, [characterId, channel, page, debouncedSearch, sortDir]);
 
   const handleDelete = useCallback(
@@ -246,17 +270,39 @@ export function ChatLogDialog() {
       if (id == null) return;
       await deleteChatMessage(id);
       // Reload current page
-      const ch: ChatChannel | null =
-        channel === ALL_CHANNELS_VALUE ? null : (channel as ChatChannel);
-      const updated = await getPagedChatMessages(
-        characterId,
-        ch,
-        page,
-        PAGE_SIZE,
-        debouncedSearch,
-        sortDir,
-      );
-      setResult(updated);
+      const isPM = channel === PM_CHANNELS_VALUE;
+      if (isPM) {
+        const all = await getAllFilteredChatMessages(
+          characterId,
+          null,
+          debouncedSearch,
+          sortDir,
+        );
+        const filtered = all.filter((m) =>
+          isPMChannel(m.channel as ChatChannel),
+        );
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        const safePage = Math.min(Math.max(1, page), totalPages);
+        const start = (safePage - 1) * PAGE_SIZE;
+        setResult({
+          messages: filtered.slice(start, start + PAGE_SIZE),
+          total,
+          totalPages,
+        });
+      } else {
+        const ch: ChatChannel | null =
+          channel === ALL_CHANNELS_VALUE ? null : (channel as ChatChannel);
+        const updated = await getPagedChatMessages(
+          characterId,
+          ch,
+          page,
+          PAGE_SIZE,
+          debouncedSearch,
+          sortDir,
+        );
+        setResult(updated);
+      }
     },
     [characterId, channel, page, debouncedSearch, sortDir],
   );
@@ -270,14 +316,20 @@ export function ChatLogDialog() {
 
   const handleExport = useCallback(
     async (format: 'text' | 'json' | 'csv') => {
+      const isPM = channel === PM_CHANNELS_VALUE;
       const ch: ChatChannel | null =
-        channel === ALL_CHANNELS_VALUE ? null : (channel as ChatChannel);
-      const all = await getAllFilteredChatMessages(
+        channel === ALL_CHANNELS_VALUE || isPM
+          ? null
+          : (channel as ChatChannel);
+      let all = await getAllFilteredChatMessages(
         characterId,
         ch,
         debouncedSearch,
         sortDir,
       );
+      if (isPM) {
+        all = all.filter((m) => isPMChannel(m.channel as ChatChannel));
+      }
       exportMessages(all, format);
     },
     [characterId, channel, debouncedSearch, sortDir],

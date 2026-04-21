@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { playSfxById, SfxId } from '@/sfx';
 import {
   DRAG_HOTBAR_Z,
+  HUD_TEXT_MUTED,
   HUD_Z,
   UI_GHOST_BG,
   UI_PANEL_BORDER,
@@ -122,7 +123,9 @@ function HotBarSlot({ index, pillow }: SlotProps) {
       onContextMenu={(e) => e.stopPropagation()}
     >
       {/* Key label */}
-      <span class='pointer-events-none absolute top-0.5 left-0.5 hidden select-none text-[0.5rem] leading-none opacity-50 lg:block'>
+      <span
+        class={`pointer-events-none absolute top-0.5 left-0.5 hidden select-none text-[0.5rem] leading-none lg:block ${HUD_TEXT_MUTED}`}
+      >
         {index + 1}
       </span>
 

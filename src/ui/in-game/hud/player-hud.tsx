@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'preact/hooks';
 import { BiSolidStar } from 'react-icons/bi';
-import { FaHeart } from 'react-icons/fa';
-import { GiCoins, GiWeightLiftingUp } from 'react-icons/gi';
+import { FaCoins, FaHeart } from 'react-icons/fa';
+import { GiWeightLiftingUp } from 'react-icons/gi';
 import { GrMagic } from 'react-icons/gr';
 import type { HudWidget, HudWidgetId } from '@/controllers';
 import { ProgressBar } from '@/ui/components';
-import { HUD_Z, UI_PANEL_BG, UI_PANEL_BORDER } from '@/ui/consts';
+import {
+  HUD_ICON_BG,
+  HUD_TEXT,
+  HUD_TEXT_MUTED,
+  HUD_Z,
+  UI_PANEL_BG,
+  UI_PANEL_BORDER,
+} from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { useBackdropBlur, usePlayerStats } from '@/ui/in-game';
 import { capitalize, formatBigNumber, getExpForLevel } from '@/utils';
@@ -32,10 +39,10 @@ function CharacterWidget({ stats }: WidgetProps) {
   const { locale } = useLocale();
   return (
     <div class='flex shrink-0 items-center gap-1'>
-      <span class='truncate font-bold text-base-content text-sm leading-tight'>
+      <span class={`truncate font-bold text-sm leading-tight ${HUD_TEXT}`}>
         {capitalize(stats.name)}
       </span>
-      <span class='text-[10px] text-base-content/50 leading-tight'>
+      <span class={`text-[10px] leading-tight ${HUD_TEXT_MUTED}`}>
         {locale.hudLvl} {stats.level}
       </span>
     </div>
@@ -51,7 +58,7 @@ function HpWidget({ stats }: WidgetProps) {
       value={stats.hp}
       max={stats.maxHp}
       icon={
-        <span class='text-error'>
+        <span class={`text-error ${HUD_ICON_BG}`}>
           <FaHeart size={12} />
         </span>
       }
@@ -70,7 +77,7 @@ function TpWidget({ stats }: WidgetProps) {
       value={stats.tp}
       max={stats.maxTp}
       icon={
-        <span class='text-info'>
+        <span class={`text-info ${HUD_ICON_BG}`}>
           <GrMagic size={12} />
         </span>
       }
@@ -91,7 +98,7 @@ function TnlWidget({ stats }: WidgetProps) {
       value={tnlProgress}
       max={tnlTotal}
       icon={
-        <span class='text-warning'>
+        <span class={`text-warning ${HUD_ICON_BG}`}>
           <BiSolidStar size={12} />
         </span>
       }
@@ -103,8 +110,10 @@ function TnlWidget({ stats }: WidgetProps) {
 
 function WeightWidget({ stats }: WidgetProps) {
   return (
-    <span class='flex items-center gap-0.5 text-[10px] text-base-content leading-tight'>
-      <span class='text-accent'>
+    <span
+      class={`flex items-center gap-0.5 text-[10px] leading-tight ${HUD_TEXT}`}
+    >
+      <span class={`text-sky-300 ${HUD_ICON_BG}`}>
         <GiWeightLiftingUp size={12} />
       </span>
       {stats.weight} / {stats.maxWeight}
@@ -115,9 +124,11 @@ function WeightWidget({ stats }: WidgetProps) {
 function GoldWidget({ stats }: WidgetProps) {
   const { locale } = useLocale();
   return (
-    <div class='flex items-center gap-0.5 text-[10px] text-base-content leading-tight'>
-      <span class='text-secondary'>
-        <GiCoins size={12} />
+    <div
+      class={`flex items-center gap-0.5 text-[10px] leading-tight ${HUD_TEXT}`}
+    >
+      <span class={`text-yellow-400 ${HUD_ICON_BG}`}>
+        <FaCoins size={12} />
       </span>
       {formatBigNumber(stats.gold)}
       <span class='hidden md:inline'>{locale.wordGold}</span>

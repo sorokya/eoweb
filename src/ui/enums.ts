@@ -113,7 +113,7 @@ export function pmChannelName(ch: PMChannel): string {
 }
 
 export function channelLabel(ch: ChatChannel): string {
-  if (isPMChannel(ch)) return 'Private';
+  if (isPMChannel(ch)) return `Private (${pmChannelName(ch)})`;
   return CHANNEL_LABELS[ch as StaticChannel] ?? ch;
 }
 

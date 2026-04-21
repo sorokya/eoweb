@@ -28,3 +28,15 @@ export const UI_ITEM_BG = 'bg-base-200';
 export const UI_GHOST_BG = 'bg-base-200/40';
 /** Canonical backdrop blur class — conditionally applied based on user setting. */
 export const UI_BLUR = 'backdrop-blur-xs';
+/** White text with a dark drop-shadow — readable on any HUD/canvas background. */
+export const HUD_TEXT =
+  'text-white [text-shadow:0_0_3px_rgba(0,0,0,0.9),1px_1px_0_rgba(0,0,0,0.7)]';
+/** Muted variant of HUD_TEXT for secondary/less-important labels. */
+export const HUD_TEXT_MUTED =
+  'text-white/60 [text-shadow:0_0_3px_rgba(0,0,0,0.9),1px_1px_0_rgba(0,0,0,0.7)]';
+/** Dark backing pill for HUD icons — keeps colors vivid on any theme. */
+export const HUD_ICON_BG =
+  'inline-flex items-center justify-center rounded bg-black/25 p-0.5';
+/** Ring + shadow for progress bar wrappers to separate them from the background. */
+export const HUD_BAR_RING =
+  'rounded shadow-sm ring-1 ring-black/30 overflow-hidden';

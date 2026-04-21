@@ -94,7 +94,7 @@ export function NavSidebar() {
         {NAV_BUTTONS.map(({ id, label, Icon }) => (
           <Button
             key={id}
-            variant={['xs', 'neutral']}
+            variant={['xs']}
             class='flex h-auto w-14 flex-col items-center gap-0.5 py-1.5'
             onClick={() => handleNavClick(id)}
             label={label}
@@ -104,7 +104,7 @@ export function NavSidebar() {
           </Button>
         ))}
         <Button
-          variant={['xs', 'neutral']}
+          variant={['xs']}
           class='mt-1 flex h-auto w-14 flex-col items-center gap-0.5 py-1.5'
           onClick={exitGame}
           label='Exit Game'
@@ -168,8 +168,8 @@ export function MobileNav() {
         onContextMenu={(e) => e.stopPropagation()}
       >
         <Button
-          variant={['xs', 'neutral']}
-          class='border border-base-content/40 bg-base-100/20 px-2 text-base-content/50'
+          variant={['xs']}
+          class='px-2'
           onClick={() => setOpen((o) => !o)}
           label='Menu'
         >

@@ -221,6 +221,7 @@ export const locales = {
     chatLogGuild: 'Guild',
     chatLogAdmin: 'Admin',
     chatLogSystem: 'System',
+    chatLogPrivate: 'Private Messages',
     chatLogExport: 'Export',
     chatLogPlainText: 'Plain Text',
     chatLogJson: 'JSON',
