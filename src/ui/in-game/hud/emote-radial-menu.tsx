@@ -62,13 +62,13 @@ export function EmoteRadialMenu({ onSelect, onClose }: Props) {
       {/* Backdrop — tap outside to close */}
       <div
         role='presentation'
-        class='fixed inset-0 z-[9998]'
+        class='fixed inset-0 z-9998'
         onPointerDown={onClose}
       />
       {/* Centered picker */}
       <div
         role='presentation'
-        class='pointer-events-auto fixed z-[9999]'
+        class='pointer-events-auto fixed z-9999'
         style={{
           top: '50%',
           left: '50%',

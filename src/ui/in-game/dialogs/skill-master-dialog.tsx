@@ -206,7 +206,7 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
               {/* Left: icon + name + button */}
               <div class='flex flex-col items-center gap-2'>
                 <SpellIconDisplay iconId={iconId} size='lg' />
-                <p class='line-clamp-2 w-full break-words text-center font-semibold text-sm leading-tight'>
+                <p class='wrap-break-word line-clamp-2 w-full text-center font-semibold text-sm leading-tight'>
                   {name}
                 </p>
                 {alreadyLearned ? (

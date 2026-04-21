@@ -75,7 +75,7 @@ export function InventoryContextMenu({ item, x, y, onClose }: Props) {
     <>
       {/* Transparent overlay — catches the outside click and stops it from reaching the map */}
       <div
-        class='fixed inset-0 z-[9999]'
+        class='fixed inset-0 z-9999'
         onClick={(e) => {
           e.stopPropagation();
           onClose();
@@ -83,7 +83,7 @@ export function InventoryContextMenu({ item, x, y, onClose }: Props) {
       />
       <div
         ref={menuRef}
-        class='menu menu-compact fixed z-[10000] w-36 rounded-box bg-base-200 p-1 shadow-xl'
+        class='menu menu-compact fixed z-10000 w-36 rounded-box bg-base-200 p-1 shadow-xl'
         style={{ left: pos.left, top: pos.top }}
         onClick={(e) => e.stopPropagation()}
       >
