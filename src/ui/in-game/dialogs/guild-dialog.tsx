@@ -256,11 +256,15 @@ function ManagementTab() {
   const [view, setView] = useState<ManageView>('menu');
   const [description, setDescription] = useState('');
   const [ranks, setRanks] = useState<string[]>([]);
+  const [members, setMembers] = useState<{ name: string; rankName: string }[]>(
+    [],
+  );
   const [depositAmount, setDepositAmount] = useState('');
   const [kickName, setKickName] = useState('');
   const [assignName, setAssignName] = useState('');
   const [assignRank, setAssignRank] = useState('');
   const rankFetchIntentRef = useRef<'edit' | 'dropdown'>('edit');
+  const memberFetchIntentRef = useRef<'lookup' | 'dropdown'>('lookup');
 
   const [goldOnHand, setGoldOnHand] = useState(() =>
     client.inventoryController.getItemAmount(GOLD_ITEM_ID),
@@ -280,9 +284,17 @@ function ManagementTab() {
         if (rankFetchIntentRef.current === 'edit') {
           setView('ranks');
         }
-        // If intent was 'dropdown', stay in assignRank view — ranks loaded for select
       } else if (state === GuildDialogState.Bank) {
         setView('bank');
+      } else if (state === GuildDialogState.GuildMembers) {
+        if (memberFetchIntentRef.current === 'dropdown') {
+          setMembers(
+            ctrl.cachedMembers.map((m) => ({
+              name: m.name,
+              rankName: m.rankName,
+            })),
+          );
+        }
       }
     };
 
@@ -299,6 +311,20 @@ function ManagementTab() {
   }, [client]);
 
   const isInGuild = client.guildTag.trim() !== '';
+
+  const fetchMembersForDropdown = () => {
+    memberFetchIntentRef.current = 'dropdown';
+    if (client.guildController.cachedMembers.length > 0) {
+      setMembers(
+        client.guildController.cachedMembers.map((m) => ({
+          name: m.name,
+          rankName: m.rankName,
+        })),
+      );
+    } else {
+      client.guildController.requestMemberList(client.guildTag.trim());
+    }
+  };
 
   if (!isInGuild) {
     return (
@@ -458,12 +484,27 @@ function ManagementTab() {
   if (view === 'kick') {
     return (
       <div class='flex flex-col gap-3 p-2'>
-        <LabeledInput
-          id='guild-kick-name'
-          label={locale.guildKickName}
-          value={kickName}
-          onChange={setKickName}
-        />
+        <div>
+          <label
+            for='guild-kick-name'
+            class='mb-1 block text-base-content/70 text-xs'
+          >
+            {locale.guildKickName}
+          </label>
+          <select
+            id='guild-kick-name'
+            class={`select select-sm select-bordered w-full border ${UI_PANEL_BORDER}`}
+            value={kickName}
+            onChange={(e) => setKickName((e.target as HTMLSelectElement).value)}
+          >
+            <option value=''>—</option>
+            {members.map((m) => (
+              <option key={m.name} value={m.name}>
+                {m.name} ({m.rankName})
+              </option>
+            ))}
+          </select>
+        </div>
         <div class='flex gap-2'>
           <Button
             variant={['sm', 'ghost']}
@@ -505,12 +546,29 @@ function ManagementTab() {
 
     return (
       <div class='flex flex-col gap-3 p-2'>
-        <LabeledInput
-          id='guild-assign-name'
-          label={locale.guildAssignRankName}
-          value={assignName}
-          onChange={setAssignName}
-        />
+        <div>
+          <label
+            for='guild-assign-name'
+            class='mb-1 block text-base-content/70 text-xs'
+          >
+            {locale.guildAssignRankName}
+          </label>
+          <select
+            id='guild-assign-name'
+            class={`select select-sm select-bordered w-full border ${UI_PANEL_BORDER}`}
+            value={assignName}
+            onChange={(e) =>
+              setAssignName((e.target as HTMLSelectElement).value)
+            }
+          >
+            <option value=''>—</option>
+            {members.map((m) => (
+              <option key={m.name} value={m.name}>
+                {m.name} ({m.rankName})
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <label
             for='guild-assign-rank'
@@ -601,7 +659,10 @@ function ManagementTab() {
       <Button
         variant={['sm', 'ghost']}
         class='flex h-auto flex-col items-center gap-1 py-3'
-        onClick={() => setView('kick')}
+        onClick={() => {
+          fetchMembersForDropdown();
+          setView('kick');
+        }}
       >
         <FaUserMinus size={16} />
         <span class='text-xs'>{locale.guildManageKick}</span>
@@ -610,6 +671,7 @@ function ManagementTab() {
         variant={['sm', 'ghost']}
         class='col-span-2 flex h-auto flex-col items-center gap-1 py-3'
         onClick={() => {
+          fetchMembersForDropdown();
           rankFetchIntentRef.current = 'dropdown';
           if (client.guildController.cachedRanks.length === 0) {
             client.guildController.requestRanksInfo();
