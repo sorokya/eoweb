@@ -1,9 +1,11 @@
 import { Direction } from 'eolib';
 import { CharacterFrame } from '@/atlas';
 import type { Client } from '@/client';
-import { CHARACTER_HEIGHT, CHARACTER_WIDTH } from '@/consts';
+import { CHARACTER_HEIGHT } from '@/consts';
 
-export const CHARACTER_PREVIEW_W = CHARACTER_WIDTH + 40;
+// Must be wide enough to match the compositor's 100px frame (HALF_CHARACTER_FRAME_SIZE = 50)
+// so that canvas.width >> 1 == 50 and xOffset/mirroredXOffset values are correct.
+export const CHARACTER_PREVIEW_W = 100;
 export const CHARACTER_PREVIEW_H = CHARACTER_HEIGHT + 40;
 
 export function drawCharacterPreview(
