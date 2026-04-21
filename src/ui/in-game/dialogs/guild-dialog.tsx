@@ -38,6 +38,7 @@ function LabeledInput({
   maxLength,
   onChange,
   type = 'text',
+  filterRegex,
 }: {
   id: string;
   label: string;
@@ -45,6 +46,7 @@ function LabeledInput({
   maxLength?: number;
   onChange: (v: string) => void;
   type?: string;
+  filterRegex?: RegExp;
 }) {
   return (
     <div>
@@ -58,7 +60,14 @@ function LabeledInput({
         value={value}
         maxLength={maxLength}
         onKeyDown={(e) => e.stopPropagation()}
-        onInput={(e) => onChange((e.target as HTMLInputElement).value)}
+        onInput={(e) => {
+          const el = e.target as HTMLInputElement;
+          const filtered = filterRegex
+            ? [...el.value].filter((c) => filterRegex.test(c)).join('')
+            : el.value;
+          el.value = filtered;
+          onChange(filtered);
+        }}
       />
     </div>
   );
@@ -142,6 +151,7 @@ function RegistrationTab() {
             label={locale.guildJoinTag}
             value={joinTag}
             maxLength={3}
+            filterRegex={/[A-Z]/}
             onChange={setJoinTag}
           />
           <LabeledInput
@@ -216,6 +226,7 @@ function CreateTab() {
             label={locale.guildCreateTag}
             value={createTag}
             maxLength={3}
+            filterRegex={/[A-Z]/}
             onChange={setCreateTag}
           />
           <LabeledInput
