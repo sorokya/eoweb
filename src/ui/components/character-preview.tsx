@@ -51,9 +51,7 @@ export function drawCharacterPreview(
     frame.y,
     frame.w,
     frame.h,
-    Math.floor(
-      (canvas.width >> 1) + (mirrored ? frame.mirroredXOffset : frame.xOffset),
-    ),
+    Math.floor((canvas.width >> 1) + frame.xOffset),
     canvas.height + frame.yOffset - 20,
     frame.w,
     frame.h,
