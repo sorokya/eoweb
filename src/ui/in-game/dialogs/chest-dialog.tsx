@@ -196,8 +196,12 @@ export function ChestDialog() {
           <p class='py-4 text-center text-sm opacity-50'>{locale.chestEmpty}</p>
         ) : (
           <div class='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'>
-            {items.map((item) => (
-              <ChestItemSlot key={item.id} item={item} onTake={handleTake} />
+            {items.map((item, i) => (
+              <ChestItemSlot
+                key={`${item.id}-${i}`}
+                item={item}
+                onTake={handleTake}
+              />
             ))}
           </div>
         )}
