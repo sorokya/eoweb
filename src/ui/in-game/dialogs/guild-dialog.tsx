@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import {
   FaArrowLeft,
   FaBuilding,
+  FaCog,
   FaCoins,
   FaList,
   FaSearch,
@@ -10,6 +11,7 @@ import {
   FaTrash,
   FaUserMinus,
   FaUserShield,
+  FaUsers,
 } from 'react-icons/fa';
 import { GOLD_ITEM_ID, GUILD_MIN_DEPOSIT } from '@/consts';
 import { GuildDialogState } from '@/game-state';
@@ -818,13 +820,34 @@ export function GuildDialog() {
   const isInGuild = client.guildTag.trim() !== '';
 
   const tabs = [
-    { id: 'registration' as GuildTabId, label: locale.guildTabRegistration },
+    {
+      id: 'registration' as GuildTabId,
+      label: (
+        <span class='flex items-center gap-1'>
+          <FaUsers size={11} />
+          {locale.guildTabRegistration}
+        </span>
+      ),
+    },
     {
       id: 'management' as GuildTabId,
-      label: locale.guildTabManagement,
+      label: (
+        <span class='flex items-center gap-1'>
+          <FaCog size={11} />
+          {locale.guildTabManagement}
+        </span>
+      ),
       disabled: !isInGuild,
     },
-    { id: 'lookup' as GuildTabId, label: locale.guildTabLookup },
+    {
+      id: 'lookup' as GuildTabId,
+      label: (
+        <span class='flex items-center gap-1'>
+          <FaSearch size={11} />
+          {locale.guildTabLookup}
+        </span>
+      ),
+    },
   ];
 
   return (
