@@ -33,7 +33,6 @@ const HALF_HALF_TILE_HEIGHT = 8;
 
 const FACE_EMOTE_WIDTH = 13;
 const FACE_EMOTE_HEIGHT = 14;
-const FACE_EMOTE_ROWS_PER_GENDER = 7;
 
 // Face patch destination in the 100×100 canvas, derived from the skin sprite
 // position. Skin (18×58) lands at (41, 21); face is horizontally centered on
@@ -548,10 +547,10 @@ const BACK_OFFSETS: Record<number, Record<number, { x: number; y: number }>> = {
     [CharacterFrame.WalkingUpLeft2]: { x: 0, y: -17 },
     [CharacterFrame.WalkingUpLeft3]: { x: 0, y: -17 },
     [CharacterFrame.WalkingUpLeft4]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackDownRight1]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackDownRight2]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackUpLeft1]: { x: 0, y: -17 },
-    [CharacterFrame.MeleeAttackUpLeft2]: { x: 0, y: -17 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: -17 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -2, y: -17 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: -17 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -2, y: -17 },
     [CharacterFrame.RaisedHandDownRight]: { x: 0, y: -15 },
     [CharacterFrame.RaisedHandUpLeft]: { x: 0, y: -15 },
     [CharacterFrame.ChairDownRight]: { x: 2, y: -16 },
@@ -1356,8 +1355,7 @@ function drawEmoteFace(
 ) {
   const sourceX = emoteColumnIndex * FACE_EMOTE_WIDTH;
   const sourceY =
-    (gender === Gender.Male ? FACE_EMOTE_ROWS_PER_GENDER : 0) *
-      FACE_EMOTE_HEIGHT +
+    (gender === Gender.Male ? 7 : 0) * FACE_EMOTE_HEIGHT +
     skin * FACE_EMOTE_HEIGHT;
   ctx.drawImage(
     faceSheetBitmap,
@@ -1366,7 +1364,7 @@ function drawEmoteFace(
     FACE_EMOTE_WIDTH,
     FACE_EMOTE_HEIGHT,
     FACE_EMOTE_DEST_X,
-    FACE_EMOTE_DEST_Y,
+    FACE_EMOTE_DEST_Y - (gender === Gender.Male ? 2 : 0),
     FACE_EMOTE_WIDTH,
     FACE_EMOTE_HEIGHT,
   );
@@ -1506,7 +1504,7 @@ async function compositeEmoteFace(
     w: FACE_CROP_W,
     h: FACE_CROP_H,
     xOffset: FACE_CROP_X_OFFSET,
-    yOffset: FACE_CROP_Y_OFFSET + (gender === Gender.Male ? 1 : 0),
+    yOffset: FACE_CROP_Y_OFFSET,
     mirroredXOffset: FACE_CROP_MIRRORED_X_OFFSET,
   };
 }

@@ -1400,7 +1400,7 @@ export class Atlas {
     // Expire face emote entries for characters no longer nearby
     for (let i = this.faceEmoteEntries.length - 1; i >= 0; --i) {
       const entry = this.faceEmoteEntries[i];
-      const stillNearby = this.client.nearby.characters.find(
+      const stillNearby = this.characters.some(
         (c) => c.playerId === entry.playerId,
       );
       if (!stillNearby) {

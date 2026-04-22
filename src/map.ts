@@ -7,7 +7,7 @@ import {
   MapTileSpec,
   SitState,
 } from 'eolib';
-import { Graphics, Sprite, type Texture } from 'pixi.js';
+import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import {
   CHARACTER_FRAME_OFFSETS,
   CharacterFrame,
@@ -202,6 +202,13 @@ export class MapRenderer {
   private readonly _seenUiGraphics = new Set<string>();
   private _worldOrder = 0;
   private _uiOrder = 0;
+  // Ghost container for the local player's second-pass render (alpha=0.4).
+  // Uses enableRenderGroup() so body + face emote composite to a texture first,
+  // then the single container alpha is applied — no double-blending on the face.
+  private _ghostContainer: Container | null = null;
+  private _ghostBody: Sprite | null = null;
+  private _ghostFace: Sprite | null = null;
+  private _ghostVisible = false;
 
   private labelSprite(sprite: Sprite, label: string) {
     sprite.label = label;
@@ -222,9 +229,13 @@ export class MapRenderer {
     this._seenUiGraphics.clear();
     this._worldOrder = 0;
     this._uiOrder = 0;
+    this._ghostVisible = false;
   }
 
   private endFrame() {
+    if (this._ghostContainer) {
+      this._ghostContainer.visible = this._ghostVisible;
+    }
     this.sweepSprites(
       this._worldSprites,
       this._seenWorldSprites,
@@ -254,6 +265,13 @@ export class MapRenderer {
     for (const graphics of this._uiGraphics.values()) {
       this.client.uiContainer.removeChild(graphics);
       graphics.destroy();
+    }
+    if (this._ghostContainer) {
+      this.client.worldContainer.removeChild(this._ghostContainer);
+      this._ghostContainer.destroy({ texture: false });
+      this._ghostContainer = null;
+      this._ghostBody = null;
+      this._ghostFace = null;
     }
     this._worldSprites.clear();
     this._uiSprites.clear();
@@ -1092,45 +1110,98 @@ export class MapRenderer {
       this.client.admin !== AdminLevel.Player;
 
     if (visible) {
-      const sprite = this.ensureWorldSprite(
-        `character:${character.playerId}:${justCharacter ? 'ghost' : 'main'}`,
-        `map:character${justCharacter ? '-ghost' : ''} id=${character.playerId}`,
-      );
-      sprite.texture = texture;
-      if (mirrored) {
-        // scale.x = -1 draws leftward from sprite.x, so place the right edge
-        // at screenX + mirroredXOffset + frame.w to get left edge at screenX + mirroredXOffset
-        sprite.scale.x = -1;
-        sprite.x = Math.floor(screenX + frame.mirroredXOffset + frame.w);
-      } else {
-        sprite.x = Math.floor(screenX + frame.xOffset);
-      }
-      sprite.y = screenY;
-      sprite.alpha = alpha;
+      if (justCharacter) {
+        if (!this._ghostContainer) {
+          const container = new Container();
+          container.label = 'map:character-ghost-container';
+          container.enableRenderGroup();
+          container.sortableChildren = false;
+          const body = new Sprite();
+          body.label = 'map:character-ghost-body';
+          body.eventMode = 'none';
+          const face = new Sprite();
+          face.label = 'map:character-ghost-face';
+          face.eventMode = 'none';
+          face.visible = false;
+          container.addChild(body);
+          container.addChild(face);
+          this.client.worldContainer.addChild(container);
+          this._ghostContainer = container;
+          this._ghostBody = body;
+          this._ghostFace = face;
+        }
 
-      // Render face emote in the main (depth-sorted) pass only so its zIndex
-      // sits directly above the character sprite. This ensures map entities
-      // that would cover the character also cover the face emote, and that the
-      // emote inherits the correct alpha (invisible, dying, etc.).
-      // The ghost sprite (local player, 40% alpha) renders afterwards at a higher
-      // zIndex and will slightly overlay the face area, but since the ghost uses
-      // the same skin/hair colors the visual difference is imperceptible.
-      if (downRight) {
-        const emote = this.client.animationController.characterEmotes.get(
-          character.playerId,
-        );
-        if (emote) {
-          this.addEmoteFaceSprite(
+        const ghostContainer = this._ghostContainer!;
+        const ghostBody = this._ghostBody!;
+        const ghostFace = this._ghostFace!;
+
+        ghostContainer.zIndex = this._worldOrder++;
+        ghostContainer.alpha = alpha;
+        this._ghostVisible = true;
+
+        ghostBody.texture = texture;
+        ghostBody.scale.x = mirrored ? -1 : 1;
+        if (mirrored) {
+          ghostBody.x = Math.floor(screenX + frame.mirroredXOffset + frame.w);
+        } else {
+          ghostBody.x = Math.floor(screenX + frame.xOffset);
+        }
+        ghostBody.y = screenY;
+
+        const ghostEmote = downRight
+          ? this.client.animationController.characterEmotes.get(
+              character.playerId,
+            )
+          : undefined;
+        if (ghostEmote) {
+          this.applyEmoteFaceToSprite(
+            ghostFace,
             character.playerId,
-            emote.type,
+            ghostEmote.type,
             tileCenterX,
             tileCenterY,
             frameOffset,
-            alpha,
             mirrored,
             characterFrame,
             character.gender,
           );
+        } else {
+          ghostFace.visible = false;
+        }
+      } else {
+        // Main pass: simple world sprite + face emote sprite, both at the same alpha.
+        const sprite = this.ensureWorldSprite(
+          `character:${character.playerId}:main`,
+          `map:character id=${character.playerId}`,
+        );
+        sprite.texture = texture;
+        if (mirrored) {
+          sprite.scale.x = -1;
+          sprite.x = Math.floor(screenX + frame.mirroredXOffset + frame.w);
+        } else {
+          sprite.scale.x = 1;
+          sprite.x = Math.floor(screenX + frame.xOffset);
+        }
+        sprite.y = screenY;
+        sprite.alpha = alpha;
+
+        if (downRight) {
+          const emote = this.client.animationController.characterEmotes.get(
+            character.playerId,
+          );
+          if (emote) {
+            this.addEmoteFaceSprite(
+              character.playerId,
+              emote.type,
+              tileCenterX,
+              tileCenterY,
+              frameOffset,
+              alpha,
+              mirrored,
+              characterFrame,
+              character.gender,
+            );
+          }
         }
       }
     }
@@ -1661,6 +1732,55 @@ export class MapRenderer {
     );
     sprite.texture = texture;
     sprite.alpha = alpha;
+
+    const baseX = tileCenterX + frameOffset.x;
+    const baseY = tileCenterY + frameOffset.y;
+
+    const standingHair = HAIR_OFFSETS[gender][CharacterFrame.StandingDownRight];
+    const currentHair = HAIR_OFFSETS[gender][characterFrame] ?? standingHair;
+    const hairDeltaX = currentHair.x - standingHair.x;
+    const hairDeltaY = currentHair.y - standingHair.y;
+
+    if (mirrored) {
+      sprite.scale.x = -1;
+      sprite.x = Math.floor(
+        baseX + frame.mirroredXOffset + frame.w - hairDeltaX,
+      );
+    } else {
+      sprite.scale.x = 1;
+      sprite.x = Math.floor(baseX + frame.xOffset + hairDeltaX);
+    }
+    sprite.y = Math.floor(baseY + frame.yOffset + hairDeltaY);
+  }
+
+  private applyEmoteFaceToSprite(
+    sprite: Sprite,
+    playerId: number,
+    emoteId: number,
+    tileCenterX: number,
+    tileCenterY: number,
+    frameOffset: { x: number; y: number },
+    mirrored: boolean,
+    characterFrame: CharacterFrame,
+    gender: number,
+  ) {
+    const frame = this.client.atlas.getFaceEmoteFrame(
+      playerId,
+      emoteId === EmoteType.Drunk ? EmoteType.Playful : emoteId,
+    );
+    if (!frame || frame.atlasIndex === -1) {
+      sprite.visible = false;
+      return;
+    }
+
+    const texture = this.client.atlas.getFrameTexture(frame);
+    if (!texture) {
+      sprite.visible = false;
+      return;
+    }
+
+    sprite.visible = true;
+    sprite.texture = texture;
 
     const baseX = tileCenterX + frameOffset.x;
     const baseY = tileCenterY + frameOffset.y;
