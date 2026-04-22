@@ -2,6 +2,7 @@ import {
   AdminLevel,
   Coords,
   Direction,
+  Emote as EmoteType,
   ItemSpecial,
   MapTileSpec,
   SitState,
@@ -1632,7 +1633,10 @@ export class MapRenderer {
     alpha: number,
     mirrored: boolean,
   ) {
-    const frame = this.client.atlas.getFaceEmoteFrame(playerId, emoteId);
+    const frame = this.client.atlas.getFaceEmoteFrame(
+      playerId,
+      emoteId === EmoteType.Drunk ? EmoteType.Playful : emoteId,
+    );
     if (!frame || frame.atlasIndex === -1) return;
 
     const texture = this.client.atlas.getFrameTexture(frame);

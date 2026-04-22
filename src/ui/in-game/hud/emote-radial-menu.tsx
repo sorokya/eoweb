@@ -12,6 +12,7 @@ export const EMOTES: { type: Emote; label: string; emoji: string }[] = [
   { type: Emote.Moon, label: 'Moon', emoji: '🌙' },
   { type: Emote.Suicidal, label: 'Suicidal', emoji: '😵' },
   { type: Emote.Embarrassed, label: 'Embarrassed', emoji: '😳' },
+  { type: Emote.Playful, label: 'Playful', emoji: '😜' },
 ];
 
 const STORAGE_KEY = 'eoweb:selected-emote';

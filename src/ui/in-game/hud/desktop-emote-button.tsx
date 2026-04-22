@@ -109,7 +109,7 @@ export function DesktopEmoteButton() {
       {emotePickerOpen && (
         <div
           class={`absolute bottom-full left-0 mb-1 grid gap-1 rounded border ${UI_PANEL_BORDER} ${UI_ITEM_BG} p-2 shadow-lg`}
-          style={{ zIndex: 9999, gridTemplateColumns: 'repeat(5, 2.5rem)' }}
+          style={{ zIndex: 9999, gridTemplateColumns: 'repeat(6, 2.5rem)' }}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
