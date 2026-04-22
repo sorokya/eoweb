@@ -1359,7 +1359,6 @@ function drawEmoteFace(
     (gender === Gender.Male ? FACE_EMOTE_ROWS_PER_GENDER : 0) *
       FACE_EMOTE_HEIGHT +
     skin * FACE_EMOTE_HEIGHT;
-  const yExtra = gender === Gender.Male ? -2 : 0;
   ctx.drawImage(
     faceSheetBitmap,
     sourceX,
@@ -1367,7 +1366,7 @@ function drawEmoteFace(
     FACE_EMOTE_WIDTH,
     FACE_EMOTE_HEIGHT,
     FACE_EMOTE_DEST_X,
-    FACE_EMOTE_DEST_Y + yExtra,
+    FACE_EMOTE_DEST_Y,
     FACE_EMOTE_WIDTH,
     FACE_EMOTE_HEIGHT,
   );

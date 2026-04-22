@@ -2572,6 +2572,60 @@ export class Atlas {
 function generateCharacterHash(character: CharacterMapInfo) {
   return `${character.skin}${character.gender}${character.hairStyle}${character.hairColor}${character.equipment.armor}${character.equipment.boots}${character.equipment.hat}${character.equipment.shield}${character.equipment.weapon}`;
 }
+export const HAIR_OFFSETS: Record<
+  number,
+  Record<number, { x: number; y: number }>
+> = {
+  [Gender.Female]: {
+    [CharacterFrame.StandingDownRight]: { x: -1, y: -14 },
+    [CharacterFrame.StandingUpLeft]: { x: -1, y: -14 },
+    [CharacterFrame.WalkingDownRight1]: { x: -1, y: -14 },
+    [CharacterFrame.WalkingDownRight2]: { x: -1, y: -14 },
+    [CharacterFrame.WalkingDownRight3]: { x: -1, y: -14 },
+    [CharacterFrame.WalkingDownRight4]: { x: -1, y: -14 },
+    [CharacterFrame.WalkingUpLeft1]: { x: -1, y: -14 },
+    [CharacterFrame.WalkingUpLeft2]: { x: -1, y: -14 },
+    [CharacterFrame.WalkingUpLeft3]: { x: -1, y: -14 },
+    [CharacterFrame.WalkingUpLeft4]: { x: -1, y: -14 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 0, y: -14 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -4, y: -9 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 0, y: -14 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -4, y: -13 },
+    [CharacterFrame.RaisedHandDownRight]: { x: -1, y: -12 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: -1, y: -12 },
+    [CharacterFrame.ChairDownRight]: { x: 1, y: -13 },
+    [CharacterFrame.ChairUpLeft]: { x: 2, y: -13 },
+    [CharacterFrame.FloorDownRight]: { x: 1, y: -8 },
+    [CharacterFrame.FloorUpLeft]: { x: 3, y: -8 },
+    [CharacterFrame.RangeAttackDownRight]: { x: 5, y: -15 },
+    [CharacterFrame.RangeAttackUpLeft]: { x: 3, y: -14 },
+  },
+  [Gender.Male]: {
+    [CharacterFrame.StandingDownRight]: { x: -1, y: -15 },
+    [CharacterFrame.StandingUpLeft]: { x: -1, y: -15 },
+    [CharacterFrame.WalkingDownRight1]: { x: 0, y: -15 },
+    [CharacterFrame.WalkingDownRight2]: { x: 0, y: -15 },
+    [CharacterFrame.WalkingDownRight3]: { x: 0, y: -15 },
+    [CharacterFrame.WalkingDownRight4]: { x: 0, y: -15 },
+    [CharacterFrame.WalkingUpLeft1]: { x: -1, y: -15 },
+    [CharacterFrame.WalkingUpLeft2]: { x: -1, y: -15 },
+    [CharacterFrame.WalkingUpLeft3]: { x: -1, y: -15 },
+    [CharacterFrame.WalkingUpLeft4]: { x: -1, y: -15 },
+    [CharacterFrame.MeleeAttackDownRight1]: { x: 1, y: -15 },
+    [CharacterFrame.MeleeAttackDownRight2]: { x: -5, y: -11 },
+    [CharacterFrame.MeleeAttackUpLeft1]: { x: 1, y: -15 },
+    [CharacterFrame.MeleeAttackUpLeft2]: { x: -3, y: -14 },
+    [CharacterFrame.RaisedHandDownRight]: { x: -1, y: -13 },
+    [CharacterFrame.RaisedHandUpLeft]: { x: -1, y: -13 },
+    [CharacterFrame.ChairDownRight]: { x: 2, y: -12 },
+    [CharacterFrame.ChairUpLeft]: { x: 2, y: -12 },
+    [CharacterFrame.FloorDownRight]: { x: 2, y: -7 },
+    [CharacterFrame.FloorUpLeft]: { x: 4, y: -7 },
+    [CharacterFrame.RangeAttackDownRight]: { x: 4, y: -15 },
+    [CharacterFrame.RangeAttackUpLeft]: { x: 2, y: -15 },
+  },
+};
+
 export const CHARACTER_FRAME_OFFSETS = {
   [Gender.Female]: {
     [CharacterFrame.StandingDownRight]: {

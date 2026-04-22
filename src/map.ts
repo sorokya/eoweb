@@ -11,6 +11,7 @@ import { Graphics, Sprite, type Texture } from 'pixi.js';
 import {
   CHARACTER_FRAME_OFFSETS,
   CharacterFrame,
+  HAIR_OFFSETS,
   NpcFrame,
   StaticAtlasEntryType,
 } from '@/atlas';
@@ -1107,8 +1108,14 @@ export class MapRenderer {
       sprite.y = screenY;
       sprite.alpha = alpha;
 
-      // Render face emote AFTER character sprite so it draws on top of the body
-      if (!justCharacter && downRight) {
+      // Render face emote in the main (depth-sorted) pass only so its zIndex
+      // sits directly above the character sprite. This ensures map entities
+      // that would cover the character also cover the face emote, and that the
+      // emote inherits the correct alpha (invisible, dying, etc.).
+      // The ghost sprite (local player, 40% alpha) renders afterwards at a higher
+      // zIndex and will slightly overlay the face area, but since the ghost uses
+      // the same skin/hair colors the visual difference is imperceptible.
+      if (downRight) {
         const emote = this.client.animationController.characterEmotes.get(
           character.playerId,
         );
@@ -1118,8 +1125,11 @@ export class MapRenderer {
             emote.type,
             tileCenterX,
             tileCenterY,
+            frameOffset,
             alpha,
             mirrored,
+            characterFrame,
+            character.gender,
           );
         }
       }
@@ -1630,8 +1640,11 @@ export class MapRenderer {
     emoteId: number,
     tileCenterX: number,
     tileCenterY: number,
+    frameOffset: { x: number; y: number },
     alpha: number,
     mirrored: boolean,
+    characterFrame: CharacterFrame,
+    gender: number,
   ) {
     const frame = this.client.atlas.getFaceEmoteFrame(
       playerId,
@@ -1649,14 +1662,24 @@ export class MapRenderer {
     sprite.texture = texture;
     sprite.alpha = alpha;
 
+    const baseX = tileCenterX + frameOffset.x;
+    const baseY = tileCenterY + frameOffset.y;
+
+    const standingHair = HAIR_OFFSETS[gender][CharacterFrame.StandingDownRight];
+    const currentHair = HAIR_OFFSETS[gender][characterFrame] ?? standingHair;
+    const hairDeltaX = currentHair.x - standingHair.x;
+    const hairDeltaY = currentHair.y - standingHair.y;
+
     if (mirrored) {
       sprite.scale.x = -1;
-      sprite.x = Math.floor(tileCenterX + frame.mirroredXOffset + frame.w);
+      sprite.x = Math.floor(
+        baseX + frame.mirroredXOffset + frame.w - hairDeltaX,
+      );
     } else {
       sprite.scale.x = 1;
-      sprite.x = Math.floor(tileCenterX + frame.xOffset);
+      sprite.x = Math.floor(baseX + frame.xOffset + hairDeltaX);
     }
-    sprite.y = Math.floor(tileCenterY + frame.yOffset);
+    sprite.y = Math.floor(baseY + frame.yOffset + hairDeltaY);
   }
 
   private addEffectBehindSprite(
