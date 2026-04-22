@@ -1033,21 +1033,15 @@ export class MapRenderer {
       >
     )[character.direction];
 
-    const screenX = Math.floor(
-      screenCoordsX -
-        playerScreen.x +
-        this._halfGameWidth +
-        walkOffset.x +
-        frameOffset.x,
-    );
-    const screenY = Math.floor(
-      screenCoordsY -
-        playerScreen.y +
-        this._halfGameHeight +
-        frame.yOffset +
-        walkOffset.y +
-        frameOffset.y,
-    );
+    // Tile-center in screen space (walk-adjusted, no frame-specific offsets).
+    // Used for overlays that must track the character tile rather than a specific frame.
+    const tileCenterX =
+      screenCoordsX - playerScreen.x + this._halfGameWidth + walkOffset.x;
+    const tileCenterY =
+      screenCoordsY - playerScreen.y + this._halfGameHeight + walkOffset.y;
+
+    const screenX = Math.floor(tileCenterX + frameOffset.x);
+    const screenY = Math.floor(tileCenterY + frame.yOffset + frameOffset.y);
 
     const rect = new Rectangle(
       {
@@ -1111,6 +1105,23 @@ export class MapRenderer {
       }
       sprite.y = screenY;
       sprite.alpha = alpha;
+
+      // Render face emote AFTER character sprite so it draws on top of the body
+      if (!justCharacter && downRight) {
+        const emote = this.client.animationController.characterEmotes.get(
+          character.playerId,
+        );
+        if (emote) {
+          this.addEmoteFaceSprite(
+            character.playerId,
+            emote.type,
+            tileCenterX,
+            tileCenterY,
+            alpha,
+            mirrored,
+          );
+        }
+      }
     }
 
     for (const effect of effects) {
@@ -1611,6 +1622,37 @@ export class MapRenderer {
       position.y + frame.yOffset - 25,
     );
     sprite.alpha = emote.ticks / EMOTE_ANIMATION_TICKS;
+  }
+
+  private addEmoteFaceSprite(
+    playerId: number,
+    emoteId: number,
+    tileCenterX: number,
+    tileCenterY: number,
+    alpha: number,
+    mirrored: boolean,
+  ) {
+    const frame = this.client.atlas.getFaceEmoteFrame(playerId, emoteId);
+    if (!frame || frame.atlasIndex === -1) return;
+
+    const texture = this.client.atlas.getFrameTexture(frame);
+    if (!texture) return;
+
+    const sprite = this.ensureWorldSprite(
+      `face-emote:${playerId}`,
+      `map:face-emote id=${playerId}`,
+    );
+    sprite.texture = texture;
+    sprite.alpha = alpha;
+
+    if (mirrored) {
+      sprite.scale.x = -1;
+      sprite.x = Math.floor(tileCenterX + frame.mirroredXOffset + frame.w);
+    } else {
+      sprite.scale.x = 1;
+      sprite.x = Math.floor(tileCenterX + frame.xOffset);
+    }
+    sprite.y = Math.floor(tileCenterY + frame.yOffset);
   }
 
   private addEffectBehindSprite(

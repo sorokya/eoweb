@@ -20,7 +20,9 @@ import type {
   BoundsRequest,
   BoundsResult,
   CompositeCharacterSpec,
+  CompositeFaceEmoteSpec,
   CompositeResult,
+  FaceEmoteCompositeResult,
   RawPixels,
 } from './compositor.worker';
 import { CompositorClient } from './compositor-client';
@@ -156,6 +158,14 @@ type Bmp = {
   loaded: boolean;
 };
 
+type FaceEmoteAtlasEntry = {
+  playerId: number;
+  emoteId: number;
+  characterHash: string;
+  frame: Frame;
+  pendingFrame?: Frame;
+};
+
 type CharacterFrameImg = {
   playerId: number;
   frameIndex: number;
@@ -173,6 +183,7 @@ enum FrameType {
   EffectBehind = 6,
   EffectTransparent = 7,
   EffectFront = 8,
+  FaceEmote = 9,
 }
 
 type PlaceableFrame = {
@@ -263,6 +274,7 @@ export class Atlas {
   private tiles: TileAtlasEntry[] = [];
   private emotes: EmoteAtlasEntry[] = [];
   private effects: EffectAtlasEntry[] = [];
+  private faceEmoteEntries: FaceEmoteAtlasEntry[] = [];
   private staticEntries: Map<StaticAtlasEntryType, TileAtlasEntry> = new Map();
   private client: Client;
   mapId = 0;
@@ -271,13 +283,18 @@ export class Atlas {
   private pendingBmpPromises: Promise<void>[] = [];
   private loading = false;
   private loadingPromise: Promise<void> | null = null;
-  private appended = true;
+  private appended = false;
   private staticAtlas: AtlasCanvas;
   private mapAtlas: AtlasCanvas;
   private atlases: AtlasCanvas[];
   private currentAtlasIndex = 0;
   private ctx: CanvasRenderingContext2D;
   private temporaryCharacterFrames: CharacterFrameImg[] = [];
+  private temporaryFaceEmoteFrames: Array<{
+    playerId: number;
+    emoteId: number;
+    img: ImageBitmap;
+  }> = [];
   private compositorClient: CompositorClient;
   private dirtyDynamicAtlasIndices: Set<number> = new Set();
 
@@ -370,6 +387,14 @@ export class Atlas {
     if (!emote) return undefined;
 
     return emote.frames[frameIndex];
+  }
+
+  getFaceEmoteFrame(playerId: number, emoteId: number): Frame | undefined {
+    const entry = this.faceEmoteEntries.find(
+      (e) => e.playerId === playerId && e.emoteId === emoteId,
+    );
+    if (!entry) return undefined;
+    return entry.pendingFrame ?? entry.frame;
   }
 
   private getEmoteSlot(emoteId: number): number {
@@ -784,6 +809,16 @@ export class Atlas {
       return this.loadingPromise;
     }
 
+    // If face emote entries need compositing (no new BMPs needed — face sheet is
+    // already cached after the first character composite cycle), trigger updateAtlas directly.
+    const hasPendingFaceEmotes = this.faceEmoteEntries.some(
+      (e) => (e.pendingFrame ?? e.frame).atlasIndex === -1,
+    );
+    if (hasPendingFaceEmotes) {
+      this.loadingPromise = Promise.resolve().then(() => this.updateAtlas());
+      return this.loadingPromise;
+    }
+
     this.loading = false;
     this.loadingPromise = null;
   }
@@ -835,6 +870,7 @@ export class Atlas {
     this.characters = [];
     this.npcs = [];
     this.items = [];
+    this.faceEmoteEntries = [];
     this.mapId = this.client.mapId;
 
     for (const atlas of this.atlases) {
@@ -1247,6 +1283,39 @@ export class Atlas {
           existing.neededGfx = neededGfx;
         }
 
+        // Pre-render face sheet so face emote frames are ready immediately
+        this.addBmpToLoad(GfxType.SkinSprites, 8);
+
+        // Pre-create / invalidate face emote entries for all 11 emote types
+        const FACE_EMOTE_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14];
+        for (const emoteId of FACE_EMOTE_IDS) {
+          const existingFace = this.faceEmoteEntries.find(
+            (e) => e.playerId === char.playerId && e.emoteId === emoteId,
+          );
+          const blankFrame = () => ({
+            atlasIndex: -1 as const,
+            x: -1,
+            y: -1,
+            w: -1,
+            h: -1,
+            xOffset: 0,
+            yOffset: 0,
+            mirroredXOffset: 0,
+          });
+          if (!existingFace) {
+            this.faceEmoteEntries.push({
+              playerId: char.playerId,
+              emoteId,
+              characterHash: hash,
+              frame: blankFrame(),
+            });
+          } else {
+            // Character appearance changed — re-composite all faces
+            existingFace.characterHash = hash;
+            existingFace.pendingFrame = blankFrame();
+          }
+        }
+
         const frames = [];
         for (let i = 0; i < 22; ++i) {
           if (
@@ -1325,6 +1394,17 @@ export class Atlas {
         )
       ) {
         this.characters.splice(i, 1);
+      }
+    }
+
+    // Expire face emote entries for characters no longer nearby
+    for (let i = this.faceEmoteEntries.length - 1; i >= 0; --i) {
+      const entry = this.faceEmoteEntries[i];
+      const stillNearby = this.client.nearby.characters.find(
+        (c) => c.playerId === entry.playerId,
+      );
+      if (!stillNearby) {
+        this.faceEmoteEntries.splice(i, 1);
       }
     }
   }
@@ -1435,14 +1515,23 @@ export class Atlas {
         ? this.compositorClient.compositeCharacterFrames(compositorSpecs)
         : Promise.resolve<CompositeResult[]>([]);
 
+    // Build face emote specs and composite concurrently
+    const faceEmoteSpecs = this.buildFaceEmoteSpecs();
+    const faceEmotePromise =
+      faceEmoteSpecs.length > 0
+        ? this.compositorClient.compositeFaceEmotes(faceEmoteSpecs)
+        : Promise.resolve<FaceEmoteCompositeResult[]>([]);
+
     // Run bounds calculation concurrently with character compositing.
     const boundsPromise = this.calculateFrameSizes();
 
-    const [compositeResults] = await Promise.all([
+    const [compositeResults, , faceEmoteResults] = await Promise.all([
       compositePromise,
       boundsPromise,
+      faceEmotePromise,
     ]);
     this.applyCompositorResults(compositeResults);
+    this.applyFaceEmoteResults(faceEmoteResults);
 
     this.finishUpdatingAtlas();
   }
@@ -1510,6 +1599,130 @@ export class Atlas {
     return specs;
   }
 
+  private buildFaceEmoteSpecs(): CompositeFaceEmoteSpec[] {
+    const specs: CompositeFaceEmoteSpec[] = [];
+
+    for (const entry of this.faceEmoteEntries) {
+      const activeFrame = entry.pendingFrame ?? entry.frame;
+      if (activeFrame.atlasIndex !== -1) continue;
+
+      const character = this.characters.find(
+        (c) => c.playerId === entry.playerId,
+      );
+      if (!character) continue;
+
+      const resources: Record<string, import('./compositor.worker').RawPixels> =
+        {};
+
+      // Face sheet
+      const faceSheetRaw = this.client.gfxLoader.getRawPixels(
+        GfxType.SkinSprites,
+        8 + 100,
+      );
+      if (!faceSheetRaw) continue;
+      resources[`${GfxType.SkinSprites}:8`] = faceSheetRaw;
+
+      // Hair resources (for hair behind + hair front)
+      if (character.hairStyle) {
+        const baseId = (character.hairStyle - 1) * 40 + character.hairColor * 4;
+        const gfxType =
+          character.gender === Gender.Female
+            ? GfxType.FemaleHair
+            : GfxType.MaleHair;
+        for (let i = 1; i <= 4; ++i) {
+          const key = `${gfxType}:${baseId + i}`;
+          if (!resources[key]) {
+            const raw = this.client.gfxLoader.getRawPixels(
+              gfxType,
+              baseId + i + 100,
+            );
+            if (raw) resources[key] = raw;
+          }
+        }
+      }
+
+      // Armor resource (StandingDownRight = frame 0 → graphicId = (armor-1)*50 + 1)
+      if (character.equipment.armor) {
+        const baseId = (character.equipment.armor - 1) * 50;
+        const gfxType =
+          character.gender === Gender.Female
+            ? GfxType.FemaleArmor
+            : GfxType.MaleArmor;
+        const graphicId = baseId + 1; // StandingDownRight frame
+        const key = `${gfxType}:${graphicId}`;
+        if (!resources[key]) {
+          const raw = this.client.gfxLoader.getRawPixels(
+            gfxType,
+            graphicId + 100,
+          );
+          if (raw) resources[key] = raw;
+        }
+      }
+
+      // Hat resource
+      if (character.equipment.hat) {
+        const baseId = (character.equipment.hat - 1) * 10;
+        const gfxType =
+          character.gender === Gender.Female
+            ? GfxType.FemaleHat
+            : GfxType.MaleHat;
+        for (const offset of [1, 3]) {
+          const key = `${gfxType}:${baseId + offset}`;
+          if (!resources[key]) {
+            const raw = this.client.gfxLoader.getRawPixels(
+              gfxType,
+              baseId + offset + 100,
+            );
+            if (raw) resources[key] = raw;
+          }
+        }
+      }
+
+      specs.push({
+        playerId: entry.playerId,
+        emoteId: entry.emoteId,
+        gender: character.gender,
+        skin: character.skin,
+        hairStyle: character.hairStyle,
+        hairColor: character.hairColor,
+        armor: character.equipment.armor,
+        hat: character.equipment.hat,
+        resources,
+      });
+    }
+
+    return specs;
+  }
+
+  private applyFaceEmoteResults(results: FaceEmoteCompositeResult[]) {
+    this.temporaryFaceEmoteFrames = [];
+
+    for (const result of results) {
+      const entry = this.faceEmoteEntries.find(
+        (e) => e.playerId === result.playerId && e.emoteId === result.emoteId,
+      );
+      if (!entry) {
+        result.bitmap.close();
+        continue;
+      }
+
+      const activeFrame = entry.pendingFrame ?? entry.frame;
+      activeFrame.x = result.x;
+      activeFrame.y = result.y;
+      activeFrame.w = result.w;
+      activeFrame.h = result.h;
+      activeFrame.xOffset = result.xOffset;
+      activeFrame.yOffset = result.yOffset;
+      activeFrame.mirroredXOffset = result.mirroredXOffset;
+
+      this.temporaryFaceEmoteFrames.push({
+        playerId: result.playerId,
+        emoteId: result.emoteId,
+        img: result.bitmap,
+      });
+    }
+  }
+
   private applyCompositorResults(results: CompositeResult[]) {
     this.temporaryCharacterFrames = [];
 
@@ -1549,12 +1762,21 @@ export class Atlas {
   private finishUpdatingAtlas() {
     this.placeFrames();
     this.temporaryCharacterFrames = [];
+    this.temporaryFaceEmoteFrames = [];
 
     // Swap pending frames → active now that compositing is complete
     for (const character of this.characters) {
       if (character.pendingFrames) {
         character.frames = character.pendingFrames;
         character.pendingFrames = undefined;
+      }
+    }
+
+    // Swap pending face emote frames
+    for (const entry of this.faceEmoteEntries) {
+      if (entry.pendingFrame) {
+        entry.frame = entry.pendingFrame;
+        entry.pendingFrame = undefined;
       }
     }
 
@@ -1912,6 +2134,21 @@ export class Atlas {
       });
     }
 
+    for (const entry of this.faceEmoteEntries) {
+      const activeFrame = entry.pendingFrame ?? entry.frame;
+      if (activeFrame.atlasIndex !== -1 || activeFrame.w === -1) {
+        continue;
+      }
+
+      placeableFrames.push({
+        type: FrameType.FaceEmote,
+        typeId: entry.playerId,
+        frameIndex: entry.emoteId,
+        w: activeFrame.w,
+        h: activeFrame.h,
+      });
+    }
+
     placeableFrames.sort((a, b) => b.h - a.h);
 
     for (const placeable of placeableFrames) {
@@ -1990,6 +2227,28 @@ export class Atlas {
           item.x = rect.x;
           item.y = rect.y;
           frameImg = bmp;
+          break;
+        }
+        case FrameType.FaceEmote: {
+          const entry = this.faceEmoteEntries.find(
+            (e) =>
+              e.playerId === placeable.typeId &&
+              e.emoteId === placeable.frameIndex,
+          );
+          if (!entry) continue;
+
+          const activeFrame = entry.pendingFrame ?? entry.frame;
+          const imgData = this.temporaryFaceEmoteFrames.find(
+            (f) => f.playerId === entry.playerId && f.emoteId === entry.emoteId,
+          );
+          if (!imgData) continue;
+
+          activeFrame.atlasIndex = this.currentAtlasIndex;
+          sourceX = activeFrame.x;
+          sourceY = activeFrame.y;
+          activeFrame.x = rect.x;
+          activeFrame.y = rect.y;
+          frameImg = imgData.img;
           break;
         }
       }

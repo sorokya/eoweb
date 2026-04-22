@@ -26,6 +26,52 @@ const CHARACTER_MELEE_ATTACK_WIDTH = 24;
 const CHARACTER_RANGE_ATTACK_WIDTH = 25;
 const HALF_CHARACTER_FRAME_SIZE_HEIGHT = HALF_CHARACTER_FRAME_SIZE;
 const NUMBER_OF_SLASHES = 9;
+const TILE_HEIGHT = 32;
+const HALF_HALF_TILE_HEIGHT = 8;
+
+// ── Face emote constants ──────────────────────────────────────────────────────
+
+const FACE_EMOTE_WIDTH = 13;
+const FACE_EMOTE_HEIGHT = 14;
+const FACE_EMOTE_ROWS_PER_GENDER = 7;
+
+// Face patch destination in the 100×100 canvas, derived from the skin sprite
+// position. Skin (18×58) lands at (41, 21); face is horizontally centered on
+// the skin and sits at the top of the head area (≈2 px from skin top).
+const FACE_EMOTE_DEST_X =
+  HALF_CHARACTER_FRAME_SIZE -
+  (CHARACTER_WIDTH >> 1) +
+  ((CHARACTER_WIDTH - FACE_EMOTE_WIDTH) >> 1); // 43
+const FACE_EMOTE_DEST_Y =
+  HALF_CHARACTER_FRAME_SIZE_HEIGHT - (CHARACTER_HEIGHT >> 1) + 2; // 23
+
+// Face crop region — a fixed rectangle around the face patch with padding.
+// Cropped from the composited 100×100 canvas so only the face area is stored.
+// +1 height to accommodate the extra 1px male y-offset.
+const FACE_CROP_X = FACE_EMOTE_DEST_X;
+const FACE_CROP_Y = FACE_EMOTE_DEST_Y;
+const FACE_CROP_W = FACE_EMOTE_WIDTH;
+const FACE_CROP_H = FACE_EMOTE_HEIGHT;
+// Pre-computed offsets for rendering the crop sprite in world space
+const FACE_CROP_X_OFFSET = FACE_CROP_X - HALF_CHARACTER_FRAME_SIZE; // -11
+const FACE_CROP_Y_OFFSET =
+  FACE_CROP_Y - CHARACTER_FRAME_SIZE + TILE_HEIGHT - HALF_HALF_TILE_HEIGHT; // -57
+const FACE_CROP_MIRRORED_X_OFFSET =
+  HALF_CHARACTER_FRAME_SIZE - (FACE_CROP_X + FACE_CROP_W); // -10
+// Only the 11 face emotes have entries; Trade, LevelUp, and Drunk have no face overlay.
+const FACE_EMOTE_COLUMN_MAP: Record<number, number> = {
+  1: 0, // Happy
+  2: 1, // Depressed
+  3: 2, // Sad
+  4: 3, // Angry
+  5: 4, // Confused
+  6: 5, // Surprised
+  7: 6, // Hearts
+  8: 7, // Moon
+  9: 8, // Suicidal
+  10: 9, // Embarrassed (Shy)
+  14: 10, // Playful (visually the "drunk face")
+};
 
 // CharacterFrame enum values (must stay in sync with atlas.ts)
 const CharacterFrame = {
@@ -614,6 +660,32 @@ export type BoundsResult = {
   h: number;
 };
 
+export type CompositeFaceEmoteSpec = {
+  playerId: number;
+  emoteId: number;
+  gender: number;
+  skin: number;
+  hairStyle: number;
+  hairColor: number;
+  armor: number;
+  hat: number;
+  /** keyed by "gfxType:graphicId" */
+  resources: Record<string, RawPixels>;
+};
+
+export type FaceEmoteCompositeResult = {
+  playerId: number;
+  emoteId: number;
+  bitmap: ImageBitmap;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  xOffset: number;
+  yOffset: number;
+  mirroredXOffset: number;
+};
+
 type WorkerInitMessage = {
   type: 'INIT';
   hatMetadata: Record<number, number>;
@@ -627,6 +699,12 @@ type WorkerCompositeMessage = {
   characters: CompositeCharacterSpec[];
 };
 
+type WorkerCompositeFaceEmoteMessage = {
+  type: 'COMPOSITE_FACE_EMOTE';
+  requestId: number;
+  specs: CompositeFaceEmoteSpec[];
+};
+
 type WorkerBoundsMessage = {
   type: 'CALCULATE_BOUNDS';
   requestId: number;
@@ -636,6 +714,7 @@ type WorkerBoundsMessage = {
 type WorkerMessage =
   | WorkerInitMessage
   | WorkerCompositeMessage
+  | WorkerCompositeFaceEmoteMessage
   | WorkerBoundsMessage;
 
 // ── Worker state ──────────────────────────────────────────────────────────────
@@ -655,6 +734,8 @@ const tmpBehindCanvas = new OffscreenCanvas(
   CHARACTER_FRAME_SIZE,
 );
 const tmpBehindCtx = tmpBehindCanvas.getContext('2d')!;
+const faceCropCanvas = new OffscreenCanvas(FACE_CROP_W, FACE_CROP_H);
+const faceCropCtx = faceCropCanvas.getContext('2d')!;
 
 // In-worker ImageBitmap cache to avoid recreating bitmaps for the same resource
 const bitmapCache = new Map<string, ImageBitmap>();
@@ -1110,9 +1191,6 @@ async function compositeCharacter(
     CharacterFrame.RangeAttackUpLeft,
   ]);
 
-  const TILE_HEIGHT = 32;
-  const HALF_HALF_TILE_HEIGHT = 8;
-
   for (const index of frameIndices) {
     tmpCtx.clearRect(0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
     tmpBehindCtx.clearRect(0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
@@ -1267,6 +1345,173 @@ async function compositeCharacter(
   return results;
 }
 
+// ── Face emote compositing ────────────────────────────────────────────────────
+
+function drawEmoteFace(
+  ctx: OffscreenCanvasRenderingContext2D,
+  faceSheetBitmap: ImageBitmap,
+  gender: number,
+  skin: number,
+  emoteColumnIndex: number,
+) {
+  const sourceX = emoteColumnIndex * FACE_EMOTE_WIDTH;
+  const sourceY =
+    (gender === Gender.Male ? FACE_EMOTE_ROWS_PER_GENDER : 0) *
+      FACE_EMOTE_HEIGHT +
+    skin * FACE_EMOTE_HEIGHT;
+  const yExtra = gender === Gender.Male ? -2 : 0;
+  ctx.drawImage(
+    faceSheetBitmap,
+    sourceX,
+    sourceY,
+    FACE_EMOTE_WIDTH,
+    FACE_EMOTE_HEIGHT,
+    FACE_EMOTE_DEST_X,
+    FACE_EMOTE_DEST_Y + yExtra,
+    FACE_EMOTE_WIDTH,
+    FACE_EMOTE_HEIGHT,
+  );
+}
+
+async function compositeEmoteFace(
+  spec: CompositeFaceEmoteSpec,
+): Promise<FaceEmoteCompositeResult | null> {
+  const {
+    playerId,
+    emoteId,
+    gender,
+    skin,
+    hairStyle,
+    hairColor,
+    armor,
+    hat,
+    resources,
+  } = spec;
+
+  const columnIndex = FACE_EMOTE_COLUMN_MAP[emoteId];
+  if (columnIndex === undefined) return null;
+
+  const resolvedBitmaps = new Map<string, ImageBitmap>();
+  const bitmapPromises: Promise<void>[] = [];
+  for (const [key, raw] of Object.entries(resources)) {
+    bitmapPromises.push(
+      getOrCreateBitmap(key, raw).then((bm) => {
+        resolvedBitmaps.set(key, bm);
+      }),
+    );
+  }
+  await Promise.all(bitmapPromises);
+
+  const faceSheetBitmap = resolvedBitmaps.get(`${GfxType.SkinSprites}:8`);
+  if (!faceSheetBitmap) return null;
+
+  tmpCtx.clearRect(0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
+  tmpBehindCtx.clearRect(0, 0, CHARACTER_FRAME_SIZE, CHARACTER_FRAME_SIZE);
+
+  const maskType: number = hatMetadata[hat] ?? HatMaskType.Standard;
+  const upLeft = false; // face emotes only show for DownRight direction
+
+  // Hair behind (to tmpBehindCtx)
+  if (maskType !== HatMaskType.HideHair && hairStyle) {
+    drawHairBehind(
+      resolvedBitmaps,
+      gender,
+      hairStyle,
+      hairColor,
+      upLeft,
+      CharacterFrame.StandingDownRight,
+    );
+  }
+
+  // Face patch drawn directly to tmpBehindCtx (on top of hair_behind) so that
+  // clipHair() — which erases pure-black pixels from tmpCtx — cannot destroy
+  // the expression's black outline/pupil pixels.
+  drawEmoteFace(tmpBehindCtx, faceSheetBitmap, gender, skin, columnIndex);
+
+  if (armor) {
+    drawArmor(resolvedBitmaps, gender, armor, CharacterFrame.StandingDownRight);
+  }
+
+  // Hat (face mask first pass)
+  if (maskType === HatMaskType.FaceMask && hat) {
+    drawHat(
+      resolvedBitmaps,
+      gender,
+      hat,
+      CharacterFrame.StandingDownRight,
+      upLeft,
+    );
+  }
+
+  // Hair front + hat drawn to tmpCtx so they sit above armor and face patch after merge
+  if (maskType !== HatMaskType.HideHair && hairStyle) {
+    drawHair(
+      resolvedBitmaps,
+      gender,
+      hairStyle,
+      hairColor,
+      upLeft,
+      CharacterFrame.StandingDownRight,
+    );
+  }
+
+  if (maskType !== HatMaskType.FaceMask && hat) {
+    drawHat(
+      resolvedBitmaps,
+      gender,
+      hat,
+      CharacterFrame.StandingDownRight,
+      upLeft,
+    );
+  }
+
+  clipHair(tmpCtx);
+
+  // Merge front canvas on top of behind canvas (same as compositeCharacter)
+  tmpBehindCtx.drawImage(
+    tmpCanvas,
+    0,
+    0,
+    CHARACTER_FRAME_SIZE,
+    CHARACTER_FRAME_SIZE,
+  );
+
+  // Slice the face region out of the composited 100×100 canvas
+  faceCropCtx.clearRect(0, 0, FACE_CROP_W, FACE_CROP_H);
+  faceCropCtx.drawImage(
+    tmpBehindCanvas,
+    FACE_CROP_X,
+    FACE_CROP_Y,
+    FACE_CROP_W,
+    FACE_CROP_H,
+    0,
+    0,
+    FACE_CROP_W,
+    FACE_CROP_H,
+  );
+
+  // Clear the work canvases for the next compositor call
+  tmpBehindCanvas.width = CHARACTER_FRAME_SIZE;
+  tmpBehindCanvas.height = CHARACTER_FRAME_SIZE;
+
+  const bitmap = faceCropCanvas.transferToImageBitmap();
+  faceCropCanvas.width = FACE_CROP_W;
+  faceCropCanvas.height = FACE_CROP_H;
+
+  return {
+    playerId,
+    emoteId,
+    bitmap,
+    x: 0,
+    y: 0,
+    w: FACE_CROP_W,
+    h: FACE_CROP_H,
+    xOffset: FACE_CROP_X_OFFSET,
+    yOffset: FACE_CROP_Y_OFFSET + (gender === Gender.Male ? 1 : 0),
+    mirroredXOffset: FACE_CROP_MIRRORED_X_OFFSET,
+  };
+}
+
 // ── Bounds calculation ────────────────────────────────────────────────────────
 
 function calculateBoundsInWorker(req: BoundsRequest): BoundsResult {
@@ -1350,6 +1595,27 @@ self.onmessage = async (event: MessageEvent<WorkerMessage>) => {
 
       (self as unknown as Worker).postMessage(
         { type: 'COMPOSITE_RESULT', requestId, results: allResults },
+        transferables,
+      );
+      break;
+    }
+
+    case 'COMPOSITE_FACE_EMOTE': {
+      const { requestId, specs } = data;
+
+      const allResults: FaceEmoteCompositeResult[] = [];
+      const transferables: Transferable[] = [];
+
+      for (const spec of specs) {
+        const result = await compositeEmoteFace(spec);
+        if (result) {
+          allResults.push(result);
+          transferables.push(result.bitmap);
+        }
+      }
+
+      (self as unknown as Worker).postMessage(
+        { type: 'FACE_EMOTE_RESULT', requestId, results: allResults },
         transferables,
       );
       break;

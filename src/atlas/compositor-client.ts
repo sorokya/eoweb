@@ -9,11 +9,18 @@ import type {
   BoundsRequest,
   BoundsResult,
   CompositeCharacterSpec,
+  CompositeFaceEmoteSpec,
   CompositeResult,
+  FaceEmoteCompositeResult,
   RawPixels,
 } from './compositor.worker';
 
-export type { BoundsRequest, BoundsResult };
+export type {
+  BoundsRequest,
+  BoundsResult,
+  CompositeFaceEmoteSpec,
+  FaceEmoteCompositeResult,
+};
 
 type PendingRequest = {
   resolve: (results: CompositeResult[]) => void;
@@ -25,10 +32,16 @@ type PendingBoundsRequest = {
   reject: (err: unknown) => void;
 };
 
+type PendingFaceEmoteRequest = {
+  resolve: (results: FaceEmoteCompositeResult[]) => void;
+  reject: (err: unknown) => void;
+};
+
 export class CompositorClient {
   private worker: Worker;
   private pending = new Map<number, PendingRequest>();
   private pendingBounds = new Map<number, PendingBoundsRequest>();
+  private pendingFaceEmotes = new Map<number, PendingFaceEmoteRequest>();
   private nextRequestId = 0;
   private gfxLoader: GfxLoader;
 
@@ -53,6 +66,12 @@ export class CompositorClient {
           this.pendingBounds.delete(data.requestId);
           pending.resolve(data.results as BoundsResult[]);
         }
+      } else if (data.type === 'FACE_EMOTE_RESULT') {
+        const pending = this.pendingFaceEmotes.get(data.requestId);
+        if (pending) {
+          this.pendingFaceEmotes.delete(data.requestId);
+          pending.resolve(data.results as FaceEmoteCompositeResult[]);
+        }
       }
     };
 
@@ -65,6 +84,10 @@ export class CompositorClient {
       for (const [id, p] of this.pendingBounds) {
         p.reject(err);
         this.pendingBounds.delete(id);
+      }
+      for (const [id, p] of this.pendingFaceEmotes) {
+        p.reject(err);
+        this.pendingFaceEmotes.delete(id);
       }
     };
 
@@ -176,6 +199,25 @@ export class CompositorClient {
       frameIndices: params.frameIndices,
       resources,
     };
+  }
+
+  /**
+   * Composite face-emote overlay tiles off the main thread.
+   */
+  compositeFaceEmotes(
+    specs: CompositeFaceEmoteSpec[],
+  ): Promise<FaceEmoteCompositeResult[]> {
+    if (specs.length === 0) return Promise.resolve([]);
+
+    return new Promise((resolve, reject) => {
+      const requestId = this.nextRequestId++;
+      this.pendingFaceEmotes.set(requestId, { resolve, reject });
+      this.worker.postMessage({
+        type: 'COMPOSITE_FACE_EMOTE',
+        requestId,
+        specs,
+      });
+    });
   }
 
   destroy() {
