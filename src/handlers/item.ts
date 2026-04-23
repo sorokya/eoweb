@@ -238,10 +238,10 @@ function handleItemReply(client: Client, reader: EoReader) {
             client.equipment.accessory = 0;
             break;
           case EquipmentSlot.Gloves:
-            client.equipment.boots = 0;
+            client.equipment.gloves = 0;
             break;
           case EquipmentSlot.Belt:
-            client.equipment.boots = 0;
+            client.equipment.belt = 0;
             break;
           case EquipmentSlot.Armor: {
             client.equipment.armor = 0;
@@ -285,6 +285,14 @@ function handleItemReply(client: Client, reader: EoReader) {
             client.equipment.bracer[1] = 0;
             break;
         }
+      }
+
+      if (
+        cursedEquipmentSlots.some((slot) =>
+          client.inventoryController.isVisibleEquipmentChange(slot),
+        )
+      ) {
+        client.atlas.refresh();
       }
 
       break;

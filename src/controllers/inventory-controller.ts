@@ -13,7 +13,7 @@ import {
 
 import type { Client } from '@/client';
 import { GOLD_ITEM_ID } from '@/consts';
-import { EOResourceID } from '@/edf';
+import { DialogResourceID, EOResourceID } from '@/edf';
 import { EquipmentSlot, getEquipmentSlotForItemType } from '@/equipment';
 import type { Vector2 } from '@/vector';
 
@@ -272,9 +272,29 @@ export class InventoryController {
       return;
     }
 
-    const packet = new ItemUseClientPacket();
-    packet.itemId = id;
-    this.client.bus!.send(packet);
+    const useItem = () => {
+      const packet = new ItemUseClientPacket();
+      packet.itemId = id;
+      this.client.bus!.send(packet);
+    };
+
+    if (record.type === ItemType.CureCurse) {
+      const strings = this.client.getDialogStrings(
+        DialogResourceID.ITEM_CURSE_REMOVE_PROMPT,
+      );
+      this.client.alertController.showConfirm(
+        strings[0],
+        strings[1],
+        (confirmed) => {
+          if (confirmed) {
+            useItem();
+          }
+        },
+      );
+      return;
+    }
+
+    useItem();
   }
 
   getEquipmentArray(): number[] {
@@ -307,6 +327,10 @@ export class InventoryController {
 
     const record = this.client.getEifRecordById(itemId);
     if (record!.special! === ItemSpecial.Cursed) {
+      const strings = this.client.getDialogStrings(
+        DialogResourceID.ITEM_IS_CURSED_ITEM,
+      );
+      this.client.toastController.showWarning(strings[1]);
       return;
     }
 
