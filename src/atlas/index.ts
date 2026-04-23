@@ -283,7 +283,7 @@ export class Atlas {
   private pendingBmpPromises: Promise<void>[] = [];
   private loading = false;
   private loadingPromise: Promise<void> | null = null;
-  private appended = true;
+  private appended = false;
   private staticAtlas: AtlasCanvas;
   private mapAtlas: AtlasCanvas;
   private atlases: AtlasCanvas[];
@@ -636,6 +636,22 @@ export class Atlas {
       }
     }
 
+    for (const entry of this.faceEmoteEntries) {
+      const frame = entry.pendingFrame ?? entry.frame;
+      if (frame.atlasIndex === -1) continue;
+
+      placeableFrames.push({
+        atlasIndex: frame.atlasIndex,
+        type: FrameType.FaceEmote,
+        typeId: entry.playerId,
+        frameIndex: entry.emoteId,
+        x: frame.x,
+        y: frame.y,
+        w: frame.w,
+        h: frame.h,
+      });
+    }
+
     for (const npc of this.npcs) {
       for (const [index, frame] of npc.frames.entries()) {
         if (!frame || frame.atlasIndex === -1) {
@@ -756,6 +772,20 @@ export class Atlas {
             item.atlasIndex = this.currentAtlasIndex;
             item.x = rect.x;
             item.y = rect.y;
+          }
+          break;
+        }
+        case FrameType.FaceEmote: {
+          const entry = this.faceEmoteEntries.find(
+            (e) =>
+              e.playerId === placeable.typeId &&
+              e.emoteId === placeable.frameIndex,
+          );
+          if (entry) {
+            const frame = entry.pendingFrame ?? entry.frame;
+            frame!.atlasIndex = this.currentAtlasIndex;
+            frame!.x = rect.x;
+            frame!.y = rect.y;
           }
           break;
         }
