@@ -61,6 +61,7 @@ import {
   MouseController,
   MovementController,
   NpcController,
+  PartyController,
   QuakeController,
   QuestController,
   SessionController,
@@ -204,6 +205,7 @@ export class Client {
   innController: InnController;
   alertController: AlertController;
   toastController: ToastController;
+  partyController: PartyController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, WeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
@@ -326,6 +328,7 @@ export class Client {
     this.tradeController = new TradeController(this);
     this.guildController = new GuildController(this);
     this.innController = new InnController(this);
+    this.partyController = new PartyController(this);
     this.toastController = new ToastController();
     this.jukeboxController = new JukeboxController(this);
     loadConfig().then((config) => {
@@ -711,6 +714,7 @@ export class Client {
     this.itemProtectionController.itemProtectionTimers.clear();
     if (state === GameState.InGame) {
       this.questController.loadTrackedQuest();
+      this.partyController.reset();
     }
     this.emit('stateChanged', this.state);
     this.audioController.handleStateChange(state);

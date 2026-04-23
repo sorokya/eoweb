@@ -6,11 +6,6 @@ import {
   type EquipmentPaperdoll,
   type OnlinePlayer,
   PaperdollRequestClientPacket,
-  PartyAcceptClientPacket,
-  PartyRemoveClientPacket,
-  PartyRequestClientPacket,
-  PartyRequestType,
-  PartyTakeClientPacket,
   PlayersRequestClientPacket,
   TradeRequestClientPacket,
 } from 'eolib';
@@ -119,46 +114,9 @@ export class SocialController {
     this.client.bus!.send(packet);
   }
 
-  requestToJoinParty(playerId: number): void {
-    const packet = new PartyRequestClientPacket();
-    packet.requestType = PartyRequestType.Join;
-    packet.playerId = playerId;
-    this.client.bus!.send(packet);
-  }
-
-  inviteToParty(playerId: number): void {
-    const packet = new PartyRequestClientPacket();
-    packet.requestType = PartyRequestType.Invite;
-    packet.playerId = playerId;
-    this.client.bus!.send(packet);
-  }
-
   requestTrade(playerId: number): void {
     const packet = new TradeRequestClientPacket();
     packet.playerId = playerId;
-    this.client.bus!.send(packet);
-  }
-
-  acceptPartyRequest(playerId: number, requestType: PartyRequestType): void {
-    const packet = new PartyAcceptClientPacket();
-    packet.inviterPlayerId = playerId;
-    packet.requestType = requestType;
-    this.client.bus!.send(packet);
-  }
-
-  removePartyMember(playerId: number): void {
-    const packet = new PartyRemoveClientPacket();
-    packet.playerId = playerId;
-    this.client.bus!.send(packet);
-  }
-
-  requestPartyList(): void {
-    if (this.client.partyMembers.length === 0) {
-      return;
-    }
-
-    const packet = new PartyTakeClientPacket();
-    packet.membersCount = this.client.partyMembers.length;
     this.client.bus!.send(packet);
   }
 

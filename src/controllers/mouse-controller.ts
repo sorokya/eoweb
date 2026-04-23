@@ -229,14 +229,10 @@ export class MouseController {
             break;
           }
           case PlayerMenuItem.Join:
-            this.client.socialController.requestToJoinParty(
-              this.client.menuPlayerId,
-            );
+            this.client.partyController.requestToJoin(this.client.menuPlayerId);
             break;
           case PlayerMenuItem.Invite:
-            this.client.socialController.inviteToParty(
-              this.client.menuPlayerId,
-            );
+            this.client.partyController.invite(this.client.menuPlayerId);
             break;
           case PlayerMenuItem.Trade:
             this.client.socialController.requestTrade(this.client.menuPlayerId);
