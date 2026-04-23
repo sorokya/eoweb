@@ -2,6 +2,7 @@ import {
   AttackUseClientPacket,
   Coords,
   Direction,
+  EmoteReportClientPacket,
   Emote as EmoteType,
   FacePlayerClientPacket,
   MapTileSpec,
@@ -13,7 +14,7 @@ import {
 } from 'eolib';
 
 import type { Client } from '@/client';
-import { INITIAL_IDLE_TICKS } from '@/consts';
+import { EMOTE_ANIMATION_TICKS, INITIAL_IDLE_TICKS } from '@/consts';
 import {
   CharacterWalkAnimation,
   EffectAnimation,
@@ -147,7 +148,24 @@ export class MovementController {
     this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
   }
 
+  private emoteTicks = EMOTE_ANIMATION_TICKS;
+  emote(type: EmoteType): void {
+    if (this.emoteTicks) {
+      return;
+    }
+
+    const packet = new EmoteReportClientPacket();
+    packet.emote = type;
+    this.client.animationController.characterEmotes.set(
+      this.client.playerId,
+      new Emote(type),
+    );
+    this.client.bus!.send(packet);
+    this.emoteTicks = EMOTE_ANIMATION_TICKS;
+  }
+
   tick(): void {
+    this.emoteTicks = Math.max(this.emoteTicks - 1, 0);
     if (!this.autoWalkPath.length) {
       return;
     }

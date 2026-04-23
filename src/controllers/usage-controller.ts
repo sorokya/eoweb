@@ -21,7 +21,7 @@ export class UsageController {
 
     this.idleTicks = Math.max(this.idleTicks - 1, 0);
     if (!this.idleTicks) {
-      this.client.socialController.emote(EmoteType.Moon);
+      this.client.movementController.emote(EmoteType.Moon);
       this.idleTicks = IDLE_TICKS;
     }
   }

@@ -660,57 +660,57 @@ export class KeyboardController {
     }
 
     if (this.isInputHeld(Input.EmotePlayful)) {
-      this.client.socialController.emote(Emote.Playful);
+      this.client.movementController.emote(Emote.Playful);
       return;
     }
 
     if (this.isInputHeld(Input.EmoteEmbarassed)) {
-      this.client.socialController.emote(Emote.Embarrassed);
+      this.client.movementController.emote(Emote.Embarrassed);
       return;
     }
 
     if (this.isInputHeld(Input.EmoteHappy)) {
-      this.client.socialController.emote(Emote.Happy);
+      this.client.movementController.emote(Emote.Happy);
       return;
     }
 
     if (this.isInputHeld(Input.EmoteDepressed)) {
-      this.client.socialController.emote(Emote.Depressed);
+      this.client.movementController.emote(Emote.Depressed);
       return;
     }
 
     if (this.isInputHeld(Input.EmoteSad)) {
-      this.client.socialController.emote(Emote.Sad);
+      this.client.movementController.emote(Emote.Sad);
       return;
     }
 
     if (this.isInputHeld(Input.EmoteAngry)) {
-      this.client.socialController.emote(Emote.Angry);
+      this.client.movementController.emote(Emote.Angry);
       return;
     }
 
     if (this.isInputHeld(Input.EmoteConfused)) {
-      this.client.socialController.emote(Emote.Confused);
+      this.client.movementController.emote(Emote.Confused);
       return;
     }
 
     if (this.isInputHeld(Input.EmoteSurprised)) {
-      this.client.socialController.emote(Emote.Surprised);
+      this.client.movementController.emote(Emote.Surprised);
       return;
     }
 
     if (this.isInputHeld(Input.EmoteHearts)) {
-      this.client.socialController.emote(Emote.Hearts);
+      this.client.movementController.emote(Emote.Hearts);
       return;
     }
 
     if (this.isInputHeld(Input.EmoteMoon)) {
-      this.client.socialController.emote(Emote.Moon);
+      this.client.movementController.emote(Emote.Moon);
       return;
     }
 
     if (this.isInputHeld(Input.EmoteSuicidal)) {
-      this.client.socialController.emote(Emote.Suicidal);
+      this.client.movementController.emote(Emote.Suicidal);
       return;
     }
   }

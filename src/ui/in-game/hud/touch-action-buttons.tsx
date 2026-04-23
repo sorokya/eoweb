@@ -167,13 +167,13 @@ export function TouchActionButtons() {
     (emote: EmoteType) => {
       setSelectedEmote(emote);
       writeSelectedEmote(emote);
-      client.socialController.emote(emote);
+      client.movementController.emote(emote);
     },
     [client],
   );
 
   const handleEmoteUse = useCallback(() => {
-    client.socialController.emote(selectedEmote);
+    client.movementController.emote(selectedEmote);
   }, [client, selectedEmote]);
 
   const character = client.getPlayerCharacter();

@@ -1,8 +1,6 @@
 import {
   BookRequestClientPacket,
   type CharacterDetails,
-  EmoteReportClientPacket,
-  type Emote as EmoteType,
   type EquipmentPaperdoll,
   type OnlinePlayer,
   PaperdollRequestClientPacket,
@@ -12,7 +10,6 @@ import {
 export type CharacterTab = 'paperdoll' | 'stats' | 'book';
 
 import type { Client } from '@/client';
-import { Emote } from '@/render';
 
 type PaperdollOpenedData = {
   details: CharacterDetails;
@@ -100,16 +97,6 @@ export class SocialController {
   requestBook(playerId: number): void {
     const packet = new BookRequestClientPacket();
     packet.playerId = playerId;
-    this.client.bus!.send(packet);
-  }
-
-  emote(type: EmoteType): void {
-    const packet = new EmoteReportClientPacket();
-    packet.emote = type;
-    this.client.animationController.characterEmotes.set(
-      this.client.playerId,
-      new Emote(type),
-    );
     this.client.bus!.send(packet);
   }
 
