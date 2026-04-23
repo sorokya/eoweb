@@ -283,7 +283,7 @@ export class Atlas {
   private pendingBmpPromises: Promise<void>[] = [];
   private loading = false;
   private loadingPromise: Promise<void> | null = null;
-  private appended = false;
+  private appended = true;
   private staticAtlas: AtlasCanvas;
   private mapAtlas: AtlasCanvas;
   private atlases: AtlasCanvas[];
