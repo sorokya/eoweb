@@ -66,9 +66,10 @@ type PreviewProps = {
   messages: ChatMessage[];
   now: number;
   onFocus: () => void;
+  position: 'top' | 'bottom';
 };
 
-function ChatPreview({ messages, now, onFocus }: PreviewProps) {
+function ChatPreview({ messages, now, onFocus, position }: PreviewProps) {
   const isMobile = useIsMobile();
   const { locale } = useLocale();
   const { vw } = useViewport();
@@ -124,7 +125,7 @@ function ChatPreview({ messages, now, onFocus }: PreviewProps) {
       style={{ width: Math.min(340, vw - 64) }}
       onPointerDown={onFocus}
     >
-      {isMobile ? (
+      {position === 'top' ? (
         <>
           {ghostInput}
           {messageList}
@@ -231,7 +232,11 @@ function AddTabButton() {
   );
 }
 
-export function ChatDialog() {
+type ChatDialogProps = {
+  position: 'top' | 'bottom';
+};
+
+export function ChatDialog({ position }: ChatDialogProps) {
   const client = useClient();
   const { dialog, messages, openChatSignal } = useChatManager();
   const isMobile = useIsMobile();
@@ -341,7 +346,14 @@ export function ChatDialog() {
 
   // Unfocused: chromeless preview
   if (!focused) {
-    return <ChatPreview messages={tabMessages} now={now} onFocus={onFocus} />;
+    return (
+      <ChatPreview
+        messages={tabMessages}
+        now={now}
+        onFocus={onFocus}
+        position={position}
+      />
+    );
   }
 
   // On mobile the main chat uses a full-width-ish panel layout instead of DialogBase

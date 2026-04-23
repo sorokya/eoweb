@@ -367,6 +367,9 @@ export const locales = {
     questNoActive: 'No active quests',
     questNoHistory: 'No completed quests',
     questTrackerTitle: 'Quest Tracker',
+    partyPanelTitle: 'Party',
+    partyPanelLeave: 'Leave party',
+    partyPanelKick: 'Kick from party',
     questNpcOk: 'OK',
     questNpcSwitch: 'Switch Quest',
     spellsTitle: 'Spells',
@@ -486,6 +489,7 @@ export const locales = {
     guildLookupRank: 'Rank',
     guildLookupMember: 'Member',
     guildNotMember: 'You are not in a guild.',
+    partyPanelLeader: 'Leader',
   },
 } as const;
 

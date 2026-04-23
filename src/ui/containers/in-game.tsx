@@ -1,6 +1,12 @@
 import type { SkillLearn } from 'eolib';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import { CHAT_Z, DIALOG_Z, DRAG_HOTBAR_Z, HUD_Z } from '@/ui/consts';
+import {
+  CHAT_Z,
+  DIALOG_Z,
+  DRAG_HOTBAR_Z,
+  HUD_Z,
+  PARTY_PANEL_Z,
+} from '@/ui/consts';
 import { useClient } from '@/ui/context';
 import type { DialogId } from '@/ui/in-game';
 import {
@@ -26,6 +32,7 @@ import {
   MobileNav,
   NavSidebar,
   PacketLogDialog,
+  PartyPanel,
   PlayerHud,
   QuestNpcDialog,
   QuestsDialog,
@@ -262,6 +269,15 @@ function InGameContent() {
       <MobileNav />
       <NavSidebar />
       <StatusMessages />
+      {/* Upper-left overlay region */}
+      <div
+        class='pointer-events-none absolute top-9 left-1 flex flex-col items-start lg:top-9'
+        style={{ zIndex: PARTY_PANEL_Z }}
+      >
+        <div class='pointer-events-auto'>
+          <PartyPanel />
+        </div>
+      </div>
       {/* Upper-right overlay region */}
       <div
         class='pointer-events-none absolute top-18 right-1 flex flex-col items-end lg:top-9'
@@ -290,7 +306,7 @@ function InGameContent() {
         style={{ zIndex: isDragging ? DRAG_HOTBAR_Z : CHAT_Z }}
       >
         <div class='pointer-events-auto flex flex-1 items-end justify-start'>
-          <ChatDialog />
+          <ChatDialog position='bottom' />
         </div>
         <div class='pointer-events-none flex flex-1 justify-center'>
           <div class='pointer-events-auto'>
@@ -302,13 +318,13 @@ function InGameContent() {
         </div>
       </div>
 
-      {/* Mobile: chat at top below HUD */}
+      {/* Mobile: chat at top below HUD — centered to avoid overlapping side panels */}
       <div
-        class='pointer-events-none absolute inset-x-0 top-0 flex justify-start pt-10 lg:hidden'
+        class='pointer-events-none absolute inset-x-0 top-0 flex justify-center pt-10 lg:hidden'
         style={{ zIndex: CHAT_Z }}
       >
         <div class='pointer-events-auto'>
-          <ChatDialog />
+          <ChatDialog position='top' />
         </div>
       </div>
 

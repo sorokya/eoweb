@@ -38,6 +38,7 @@ export { DesktopEmoteButton } from './hud/desktop-emote-button';
 export { HotBar } from './hud/hot-bar';
 export { HotbarProvider, useHotbar } from './hud/hotbar-context';
 export { MobileNav, NavSidebar } from './hud/nav-sidebar';
+export { PartyPanel } from './hud/party-panel';
 export { PlayerHud } from './hud/player-hud';
 export { QuestTracker } from './hud/quest-tracker';
 export { StatusMessages } from './hud/status-messages';
