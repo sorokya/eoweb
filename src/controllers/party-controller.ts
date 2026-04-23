@@ -24,10 +24,19 @@ export class PartyController {
     }
   }
 
+  subscribe(cb: () => void) {
+    this.partySubscribers.push(cb);
+  }
+
+  unsubscribe(cb: () => void) {
+    this.partySubscribers = this.partySubscribers.filter((s) => s !== cb);
+  }
+
   constructor(private client: Client) {}
 
   reset() {
     this.members = [];
+    this.notifySubscribers();
   }
 
   requestToJoin(playerId: number): void {

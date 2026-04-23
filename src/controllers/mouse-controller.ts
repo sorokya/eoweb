@@ -235,7 +235,7 @@ export class MouseController {
             this.client.partyController.invite(this.client.menuPlayerId);
             break;
           case PlayerMenuItem.Trade:
-            this.client.socialController.requestTrade(this.client.menuPlayerId);
+            this.client.tradeController.request(this.client.menuPlayerId);
             break;
         }
         this.client.menuPlayerId = 0;

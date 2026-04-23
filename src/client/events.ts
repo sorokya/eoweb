@@ -72,7 +72,6 @@ export type ClientEvents = {
   citizenSlept: undefined;
   citizenSubscribeResult: { questionsWrong: number };
   citizenUnsubscribeResult: { success: boolean };
-  tradeUpdated: undefined;
   guildOpened: undefined;
   guildUpdated: undefined;
   boardOpened: { posts: BoardPostListing[] };
@@ -84,7 +83,6 @@ export type ClientEvents = {
   skillsChanged: undefined;
   spellQueued: undefined;
   setChat: string;
-  partyUpdated: undefined;
   showItemInfo: { itemId: number };
   showNpcInfo: { npcId: number };
   showSearchResults: {

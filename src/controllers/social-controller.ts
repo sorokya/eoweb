@@ -7,7 +7,6 @@ import {
   type OnlinePlayer,
   PaperdollRequestClientPacket,
   PlayersRequestClientPacket,
-  TradeRequestClientPacket,
 } from 'eolib';
 
 export type CharacterTab = 'paperdoll' | 'stats' | 'book';
@@ -111,12 +110,6 @@ export class SocialController {
       this.client.playerId,
       new Emote(type),
     );
-    this.client.bus!.send(packet);
-  }
-
-  requestTrade(playerId: number): void {
-    const packet = new TradeRequestClientPacket();
-    packet.playerId = playerId;
     this.client.bus!.send(packet);
   }
 
