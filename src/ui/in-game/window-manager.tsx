@@ -30,6 +30,7 @@ export type DialogId =
   | 'barber'
   | 'board'
   | 'guild'
+  | 'law'
   | 'packet-log'
   | 'trade';
 

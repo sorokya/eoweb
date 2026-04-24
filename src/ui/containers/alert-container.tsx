@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { Alert, AmountDialog, Backdrop, Confirm } from '@/ui/components';
+import {
+  Alert,
+  AmountDialog,
+  Backdrop,
+  Confirm,
+  InputDialog,
+} from '@/ui/components';
 import { useClient } from '@/ui/context';
 
 type AlertContainerProps = {
@@ -22,10 +28,17 @@ type AmountState = {
   repeatActionLabel?: string;
 };
 
+type InputState = {
+  title: string;
+  message: string;
+  callback: (input: string | null) => void;
+};
+
 export function AlertContainer({ children }: AlertContainerProps) {
   const client = useClient();
   const [alert, setAlert] = useState<AlertState | null>(null);
   const [amountState, setAmountState] = useState<AmountState | null>(null);
+  const [inputState, setInputState] = useState<InputState | null>(null);
 
   const returnFocusRef = useRef<Element | null>(null);
 
@@ -53,6 +66,16 @@ export function AlertContainer({ children }: AlertContainerProps) {
         });
       },
     );
+
+    client.alertController.subscribeInput((title, message, callback) => {
+      returnFocusRef.current = document.activeElement;
+
+      setInputState({
+        title,
+        message,
+        callback,
+      });
+    });
   }, [client]);
 
   const restoreFocus = () => {
@@ -85,6 +108,12 @@ export function AlertContainer({ children }: AlertContainerProps) {
     restoreFocus();
   }, [amountState]);
 
+  const handleInputCancel = useCallback(() => {
+    inputState?.callback(null);
+    setInputState(null);
+    restoreFocus();
+  }, [inputState]);
+
   const handleAmountRepeat = useCallback(
     (amount: number) => {
       amountState?.callback(amount);
@@ -92,19 +121,36 @@ export function AlertContainer({ children }: AlertContainerProps) {
     [amountState],
   );
 
+  const handleInputConfirm = useCallback(
+    (input: string) => {
+      inputState?.callback(input);
+      setInputState(null);
+      restoreFocus();
+    },
+    [inputState],
+  );
+
   useEffect(() => {
-    if (!alert && !amountState) return;
+    if (!alert && !amountState && !inputState) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (amountState) handleAmountCancel();
+        else if (inputState) handleInputCancel();
         else handleClose();
       }
     };
 
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [alert, amountState, handleClose, handleAmountCancel]);
+  }, [
+    alert,
+    amountState,
+    inputState,
+    handleClose,
+    handleAmountCancel,
+    handleInputCancel,
+  ]);
 
   return (
     <>
@@ -137,6 +183,16 @@ export function AlertContainer({ children }: AlertContainerProps) {
             onConfirm={handleAmountConfirm}
             onRepeat={handleAmountRepeat}
             onCancel={handleAmountCancel}
+          />
+        </Backdrop>
+      )}
+      {inputState && (
+        <Backdrop>
+          <InputDialog
+            title={inputState.title}
+            message={inputState.message}
+            onConfirm={handleInputConfirm}
+            onCancel={handleInputCancel}
           />
         </Backdrop>
       )}

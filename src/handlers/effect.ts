@@ -119,18 +119,18 @@ function handleEffectPlayer(client: Client, reader: EoReader) {
     );
 
     if (!meta.sfx) {
-      return;
+      continue;
     }
 
     if (effect.playerId === client.playerId) {
       client.audioController.playById(meta.sfx);
-      return;
+      continue;
     }
 
     const coords = client.getCharacterById(effect.playerId)?.coords;
     if (coords) {
       client.audioController.playAtPosition(meta.sfx, coords);
-      return;
+      continue;
     }
 
     client.audioController.playById(meta.sfx);

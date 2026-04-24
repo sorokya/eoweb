@@ -4,6 +4,7 @@ import {
   MarriageRequestType,
   PriestAcceptClientPacket,
   PriestReply,
+  PriestRequestClientPacket,
   PriestUseClientPacket,
 } from 'eolib';
 import type { Client } from '@/client';
@@ -39,42 +40,80 @@ export class MarriageController {
   constructor(private client: Client) {}
 
   private sessionId = 0;
+  npcName = '';
 
-  private lawyerOpenSubscribers: (() => void)[] = [];
-  private priestOpenSubscribers: (() => void)[] = [];
+  private lawyerOpenSubscribers: ((name: string) => void)[] = [];
+  private weddingApprovalSubscribers: (() => void)[] = [];
 
-  subscribeLawyerOpen(cb: () => void) {
+  subscribeLawyerOpen(cb: (name: string) => void) {
     this.lawyerOpenSubscribers.push(cb);
   }
 
-  unsubscribeLawyerOpen(cb: () => void) {
+  unsubscribeLawyerOpen(cb: (name: string) => void) {
     this.lawyerOpenSubscribers = this.lawyerOpenSubscribers.filter(
       (s) => s !== cb,
     );
   }
 
-  subscribePriestOpen(cb: () => void) {
-    this.priestOpenSubscribers.push(cb);
+  subscribeWeddingApproval(cb: () => void) {
+    this.weddingApprovalSubscribers.push(cb);
   }
 
-  unsubscribePriestOpen(cb: () => void) {
-    this.priestOpenSubscribers = this.priestOpenSubscribers.filter(
+  unsubscribeWeddingApproval(cb: () => void) {
+    this.weddingApprovalSubscribers = this.weddingApprovalSubscribers.filter(
       (s) => s !== cb,
     );
   }
 
   notifyLawyerOpened(sessionId: number) {
     this.sessionId = sessionId;
+    const npc = this.client.getNpcByIndex(
+      this.client.npcController.interactNpcIndex,
+    );
+    const record = npc ? this.client.getEnfRecordById(npc.id) : null;
+    this.npcName = record?.name ?? '';
     for (const cb of this.lawyerOpenSubscribers) {
-      cb();
+      cb(this.npcName);
     }
   }
 
   notifyPriestOpened(sessionId: number) {
     this.sessionId = sessionId;
-    for (const cb of this.priestOpenSubscribers) {
-      cb();
-    }
+
+    const strings = this.client.getDialogStrings(
+      DialogResourceID.WEDDING_PRIEST_CAN_PERFORM,
+    );
+    this.client.alertController.showConfirm(
+      strings[0],
+      strings[1],
+      (confirmed) => {
+        if (confirmed) {
+          this.askForPartnerName();
+        }
+      },
+    );
+  }
+
+  private askForPartnerName() {
+    const strings = this.client.getDialogStrings(
+      DialogResourceID.WEDDING_PRIEST_CAN_PERFORM,
+    );
+    this.client.alertController.showInput(
+      strings[0],
+      this.client.getResourceString(EOResourceID.WEDDING_PLEASE_ENTER_NAME),
+      (name) => {
+        if (name?.trim()) {
+          this.requestMarriage(name.trim());
+        }
+      },
+    );
+  }
+
+  private requestMarriage(name: string) {
+    const packet = new PriestRequestClientPacket();
+    packet.sessionId = this.sessionId;
+    packet.name = name;
+    this.client.bus!.send(packet);
   }
 
   notifyMarriageApproved(goldAmount: number) {
@@ -83,6 +122,10 @@ export class MarriageController {
       DialogResourceID.WEDDING_REGISTRATION_COMPLETE,
     );
     this.client.alertController.show(strings[0], strings[1]);
+
+    for (const cb of this.weddingApprovalSubscribers) {
+      cb();
+    }
   }
 
   notifyMarriageReply(replyCode: MarriageReply) {

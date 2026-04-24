@@ -426,8 +426,8 @@ export const locales = {
     innKeeperBecomeCitizen: 'Become Citizen',
     innKeeperGiveUpCitizenship: 'Give Up Citizenship',
     innKeeperSleep: 'Sleep',
-    innKeeperSubmitAnswers: 'Submit',
-    innKeeperBack: 'Back',
+    wordSubmit: 'Submit',
+    wordBack: 'Back',
     innKeeperBecameCitizenMsg: 'You are now a citizen!',
     innKeeperWrongAnswersMsg: 'Some answers were wrong. Try again.',
     innKeeperGaveUpCitizenshipMsg: 'You have given up your citizenship.',
@@ -436,6 +436,8 @@ export const locales = {
     innKeeperConfirmGiveUpTitle: 'Give Up Citizenship',
     innKeeperConfirmGiveUpMsg:
       'Are you sure you want to give up your citizenship?',
+    // Law dialog
+    lawTitle: 'Lawyer',
     // Board dialog
     boardTitle: 'Town Board',
     boardNewPost: 'New Post',

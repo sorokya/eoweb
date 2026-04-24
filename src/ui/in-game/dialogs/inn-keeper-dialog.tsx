@@ -130,14 +130,14 @@ export function InnKeeperDialog() {
                 class='flex-1'
                 onClick={() => setView('main')}
               >
-                {locale.innKeeperBack}
+                {locale.wordBack}
               </Button>
               <Button
                 variant={['sm', 'primary']}
                 class='flex-1'
                 onClick={handleSubmitAnswers}
               >
-                {locale.innKeeperSubmitAnswers}
+                {locale.wordSubmit}
               </Button>
             </div>
           </>

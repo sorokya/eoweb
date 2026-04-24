@@ -12,6 +12,7 @@ export { Checkbox } from './checkbox';
 export { Confirm } from './confirm';
 export { CycleInput } from './cycle-input';
 export { Input } from './input';
+export { InputDialog } from './input-dialog';
 export { InventoryContextMenu } from './inventory-context-menu';
 export { INVENTORY_GRID_WIDTH, InventoryGrid } from './inventory-grid';
 export { ItemIcon } from './item-icon';

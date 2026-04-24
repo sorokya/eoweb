@@ -106,4 +106,7 @@ export const GUILD_MAX_RANK = 9;
 
 export const JUKEBOX_COST = 25;
 
+export const MARRIAGE_APPROVAL_COST = 500;
+export const DIVORCE_COST = 10000;
+
 export const GOLD_ITEM_ID = 1;

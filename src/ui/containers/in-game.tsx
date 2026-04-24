@@ -29,6 +29,7 @@ import {
   InventoryDialog,
   ItemDragProvider,
   JukeboxDialog,
+  LawDialog,
   LockerDialog,
   MobileNav,
   NavSidebar,
@@ -71,6 +72,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'locker',
   'skillMaster',
   'innKeeper',
+  'law',
   'packet-log',
   'trade',
 ];
@@ -113,6 +115,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <SkillMasterDialog />;
     case 'innKeeper':
       return <InnKeeperDialog />;
+    case 'law':
+      return <LawDialog />;
     case 'packet-log':
       return <PacketLogDialog />;
     case 'trade':
@@ -198,6 +202,11 @@ function InGameContent() {
     };
     client.innController.subscribeOpened(handleInnKeeperOpened);
 
+    const handleLawyerOpened = () => {
+      openDialog('law');
+    };
+    client.marriageController.subscribeLawyerOpen(handleLawyerOpened);
+
     const handleBoardOpened = () => {
       openDialog('board');
     };
@@ -232,6 +241,7 @@ function InGameContent() {
       closeDialog('locker');
       closeDialog('skillMaster');
       closeDialog('innKeeper');
+      closeDialog('law');
       closeDialog('questNpc');
       client.questController.resetDialog();
       closeDialog('trade');
@@ -264,6 +274,7 @@ function InGameContent() {
       client.shopController.unsubscribeOpened(handleShopOpened);
       client.statSkillController.unsubscribeOpened(handleSkillMasterOpened);
       client.innController.unsubscribeOpened(handleInnKeeperOpened);
+      client.marriageController.unsubscribeLawyerOpen(handleLawyerOpened);
       client.boardController.unsubscribeBoardOpened(handleBoardOpened);
       client.guildController.unsubscribeOpened(handleGuildOpened);
       client.questController.unsubscribeDialogOpened(handleQuestDialogOpened);
