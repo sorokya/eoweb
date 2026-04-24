@@ -727,12 +727,14 @@ const tmpCanvas = new OffscreenCanvas(
   CHARACTER_FRAME_SIZE,
   CHARACTER_FRAME_SIZE,
 );
-const tmpCtx = tmpCanvas.getContext('2d')!;
+const tmpCtx = tmpCanvas.getContext('2d', { willReadFrequently: true })!;
 const tmpBehindCanvas = new OffscreenCanvas(
   CHARACTER_FRAME_SIZE,
   CHARACTER_FRAME_SIZE,
 );
-const tmpBehindCtx = tmpBehindCanvas.getContext('2d')!;
+const tmpBehindCtx = tmpBehindCanvas.getContext('2d', {
+  willReadFrequently: true,
+})!;
 const faceCropCanvas = new OffscreenCanvas(FACE_CROP_W, FACE_CROP_H);
 const faceCropCtx = faceCropCanvas.getContext('2d')!;
 
