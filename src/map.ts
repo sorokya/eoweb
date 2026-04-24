@@ -459,7 +459,10 @@ export class MapRenderer {
   }
 
   getTileSpecAt(position: Vector2): MapTileSpec | undefined {
-    return this.tileSpecCache[position.y]?.[position.x] || undefined;
+    const spec = this.tileSpecCache[position.y]?.[position.x];
+    if (spec !== null) {
+      return spec;
+    }
   }
 
   tick() {

@@ -333,6 +333,35 @@ export class MapController {
       return true;
     }
 
+    const spec = this.client.mapRenderer.getTileSpecAt(coords);
+    if (
+      spec !== undefined &&
+      [
+        MapTileSpec.Wall,
+        MapTileSpec.ChairDown,
+        MapTileSpec.ChairLeft,
+        MapTileSpec.ChairRight,
+        MapTileSpec.ChairUp,
+        MapTileSpec.ChairDownRight,
+        MapTileSpec.ChairUpLeft,
+        MapTileSpec.ChairAll,
+        MapTileSpec.Chest,
+        MapTileSpec.BankVault,
+        MapTileSpec.Edge,
+        MapTileSpec.Board1,
+        MapTileSpec.Board2,
+        MapTileSpec.Board3,
+        MapTileSpec.Board4,
+        MapTileSpec.Board5,
+        MapTileSpec.Board6,
+        MapTileSpec.Board7,
+        MapTileSpec.Board8,
+        MapTileSpec.Jukebox,
+      ].includes(spec)
+    ) {
+      return false;
+    }
+
     const npc = this.client.nearby.npcs.find(
       (n) => n.coords.x === coords.x && n.coords.y === coords.y,
     );
@@ -358,35 +387,6 @@ export class MapController {
       }
 
       // TODO: Ghost
-      return false;
-    }
-
-    const spec = this.client.mapRenderer.getTileSpecAt(coords);
-    if (
-      spec &&
-      [
-        MapTileSpec.Wall,
-        MapTileSpec.ChairDown,
-        MapTileSpec.ChairLeft,
-        MapTileSpec.ChairRight,
-        MapTileSpec.ChairUp,
-        MapTileSpec.ChairDownRight,
-        MapTileSpec.ChairUpLeft,
-        MapTileSpec.ChairAll,
-        MapTileSpec.Chest,
-        MapTileSpec.BankVault,
-        MapTileSpec.Edge,
-        MapTileSpec.Board1,
-        MapTileSpec.Board2,
-        MapTileSpec.Board3,
-        MapTileSpec.Board4,
-        MapTileSpec.Board5,
-        MapTileSpec.Board6,
-        MapTileSpec.Board7,
-        MapTileSpec.Board8,
-        MapTileSpec.Jukebox,
-      ].includes(spec)
-    ) {
       return false;
     }
 

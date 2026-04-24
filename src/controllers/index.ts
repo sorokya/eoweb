@@ -32,6 +32,7 @@ export { MouseController } from './mouse-controller';
 export { MovementController } from './movement-controller';
 export { NpcController } from './npc-controller';
 export { PartyController } from './party-controller';
+export { PingController } from './ping-controller';
 export { QuakeController } from './quake-controller';
 export type { QuestDialogState } from './quest-controller';
 export { QuestController } from './quest-controller';

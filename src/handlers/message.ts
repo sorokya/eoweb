@@ -10,11 +10,7 @@ import { SfxId } from '@/sfx';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleMessagePing(client: Client) {
-  const delta = Date.now() - client.commandController.pingStart;
-
-  client.emit('serverChat', {
-    message: `${delta}ms ping`,
-  });
+  client.pingController.notifyPong();
 }
 
 function handleMessageOpen(client: Client, reader: EoReader) {

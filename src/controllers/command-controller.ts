@@ -1,8 +1,4 @@
-import {
-  AdminLevel,
-  MessagePingClientPacket,
-  PlayersAcceptClientPacket,
-} from 'eolib';
+import { AdminLevel, PlayersAcceptClientPacket } from 'eolib';
 
 import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
@@ -10,7 +6,6 @@ import { SfxId } from '@/sfx';
 
 export class CommandController {
   private client: Client;
-  pingStart = 0;
   nowall = false;
 
   constructor(client: Client) {
@@ -20,12 +15,6 @@ export class CommandController {
   handleCommand(input: string): boolean {
     const args = input.split(' ');
     switch (args[0]) {
-      case '#ping': {
-        this.pingStart = Date.now();
-        this.client.bus!.send(new MessagePingClientPacket());
-        return true;
-      }
-
       case '#find': {
         const packet = new PlayersAcceptClientPacket();
         packet.name = args[1] || '';

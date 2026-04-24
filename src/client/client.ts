@@ -62,6 +62,7 @@ import {
   MovementController,
   NpcController,
   PartyController,
+  PingController,
   QuakeController,
   QuestController,
   SessionController,
@@ -207,6 +208,7 @@ export class Client {
   toastController: ToastController;
   partyController: PartyController;
   marriageController: MarriageController;
+  pingController: PingController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, WeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
@@ -332,6 +334,7 @@ export class Client {
     this.partyController = new PartyController(this);
     this.toastController = new ToastController();
     this.jukeboxController = new JukeboxController(this);
+    this.pingController = new PingController(this);
     loadConfig().then((config) => {
       this.config = config;
       const txtHost =
@@ -588,6 +591,7 @@ export class Client {
       this.cleanupController.tick();
       this.spellController.tick();
       this.npcController.tick();
+      this.pingController.tick();
 
       const { playerWalking, playerDying } = this.animationController.tick(
         activeCharIds,
