@@ -555,7 +555,7 @@ export class MapRenderer {
     const gameWidth = this._gameWidth;
     const gameHeight = this._halfGameHeight * 2;
     const range =
-      Math.ceil((gameWidth / TILE_WIDTH + gameHeight / TILE_HEIGHT) / 2) + 2;
+      Math.ceil((gameWidth / TILE_WIDTH + gameHeight / TILE_HEIGHT) / 2) + 6;
     const rangeX = Math.min(this.client.map.width, range);
     const rangeY = Math.min(this.client.map.height, range);
 
