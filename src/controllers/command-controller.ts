@@ -2,7 +2,6 @@ import {
   AdminLevel,
   MessagePingClientPacket,
   PlayersAcceptClientPacket,
-  TalkReportClientPacket,
 } from 'eolib';
 
 import type { Client } from '@/client';
@@ -40,29 +39,45 @@ export class CommandController {
 
       case '#loc': {
         const coords = this.client.getPlayerCoords();
+        const message = `${this.client.getResourceString(EOResourceID.STATUS_LABEL_YOUR_LOCATION_IS_AT)} ${this.client.mapId} x:${coords.x} y:${coords.y}`;
+        playSfxById(SfxId.ServerMessage);
         this.client.emit('serverChat', {
-          message: `${this.client.getResourceString(EOResourceID.STATUS_LABEL_YOUR_LOCATION_IS_AT)} ${this.client.mapId} x:${coords.x} y:${coords.y}`,
+          message,
         });
+        this.client.toastController.show(message);
         return true;
       }
 
       case '#engine': {
+        const messages = [
+          `eoweb client version: ${this.client.version.major}.${this.client.version.minor}.${this.client.version.patch}`,
+          'render engine: canvas',
+        ];
+
+        playSfxById(SfxId.ServerMessage);
+
         this.client.emit('serverChat', {
-          message: `eoweb client version: ${this.client.version.major}.${this.client.version.minor}.${this.client.version.patch}`,
+          message: messages[0],
         });
         this.client.emit('serverChat', {
-          message: 'render engine: canvas',
+          message: messages[1],
         });
+
+        this.client.toastController.show(messages.join('\n'));
+
         return true;
       }
 
       case '#usage': {
+        playSfxById(SfxId.ServerMessage);
         const hours = Math.floor(this.client.usageController.usage / 60);
         const minutes = this.client.usageController.usage - hours * 60;
+        const message = hours
+          ? `usage: ${hours}hrs. ${minutes}min.`
+          : `usage: ${minutes}min.`;
+        this.client.toastController.show(message);
         this.client.emit('serverChat', {
-          message: hours
-            ? `usage: ${hours}hrs. ${minutes}min.`
-            : `usage: ${minutes}min.`,
+          message,
         });
         return true;
       }
@@ -74,13 +89,6 @@ export class CommandController {
 
         this.nowall = !this.nowall;
         playSfxById(SfxId.TextBoxFocus);
-        return true;
-      }
-
-      case '#guild': {
-        const packet = new TalkReportClientPacket();
-        packet.message = input;
-        this.client.bus!.send(packet);
         return true;
       }
     }
