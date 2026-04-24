@@ -12,8 +12,14 @@ export class PingController {
   avgPing = 0;
   private packet = new MessagePingClientPacket();
   private ticks = 0;
+  private listeners = new Set<() => void>();
 
   constructor(private client: Client) {}
+
+  subscribe(cb: () => void): () => void {
+    this.listeners.add(cb);
+    return () => this.listeners.delete(cb);
+  }
 
   tick() {
     this.ticks = Math.max(0, this.ticks - 1);
@@ -39,5 +45,6 @@ export class PingController {
     this.avgPing = Math.floor(
       this.pingHistory.reduce((a, b) => a + b, 0) / this.pingHistory.length,
     );
+    for (const cb of this.listeners) cb();
   }
 }

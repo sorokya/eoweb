@@ -32,6 +32,7 @@ export type DialogId =
   | 'guild'
   | 'law'
   | 'packet-log'
+  | 'ping'
   | 'trade';
 
 type DialogMeta = {

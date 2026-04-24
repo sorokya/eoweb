@@ -506,6 +506,13 @@ export const locales = {
     guildLookupMember: 'Member',
     guildNotMember: 'You are not in a guild.',
     partyPanelLeader: 'Leader',
+    settingsHudWidgetPing: 'Ping',
+    pingDialogTitle: 'Ping',
+    pingDialogMin: 'Min',
+    pingDialogMax: 'Max',
+    pingDialogAvg: 'Avg',
+    pingMs: 'ms',
+    pingDialogNoData: 'Waiting for data...',
   },
 } as const;
 

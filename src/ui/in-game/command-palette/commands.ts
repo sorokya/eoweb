@@ -68,6 +68,12 @@ export const ALL_COMMANDS: Command[] = [
     action: toggleDialogAction('chat-log'),
   },
   {
+    id: 'toggle-ping-dialog',
+    label: 'Toggle Ping Log',
+    keywords: ['ping', 'latency', 'lag'],
+    action: toggleDialogAction('ping'),
+  },
+  {
     id: 'refresh',
     label: 'Refresh',
     keywords: ['reload', 'resync'],

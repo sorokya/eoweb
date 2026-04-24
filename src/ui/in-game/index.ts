@@ -27,6 +27,7 @@ export { JukeboxDialog } from './dialogs/jukebox-dialog';
 export { LawDialog } from './dialogs/law-dialog';
 export { LockerDialog } from './dialogs/locker-dialog';
 export { PacketLogDialog } from './dialogs/packet-log-dialog';
+export { PingDialog } from './dialogs/ping-dialog';
 export { QuestNpcDialog } from './dialogs/quest-npc-dialog';
 export { QuestsDialog } from './dialogs/quests-dialog';
 export { SettingsDialog } from './dialogs/settings-dialog';

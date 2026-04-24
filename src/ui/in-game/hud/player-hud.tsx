@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { BiSolidStar } from 'react-icons/bi';
-import { FaCoins, FaHeart } from 'react-icons/fa';
+import { FaCoins, FaHeart, FaSignal } from 'react-icons/fa';
 import { GiWeightLiftingUp } from 'react-icons/gi';
 import { GrMagic } from 'react-icons/gr';
 import type { HudWidget, HudWidgetId } from '@/controllers';
@@ -14,7 +14,11 @@ import {
   UI_PANEL_BORDER,
 } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
-import { useBackdropBlur, usePlayerStats } from '@/ui/in-game';
+import {
+  useBackdropBlur,
+  usePlayerStats,
+  useWindowManager,
+} from '@/ui/in-game';
 import { capitalize, formatBigNumber, getExpForLevel } from '@/utils';
 
 const stopPropagation = (e: { stopPropagation(): void }) => e.stopPropagation();
@@ -28,6 +32,12 @@ function hpColor(pct: number): 'success' | 'warning' | 'error' {
 function tpColor(pct: number): 'info' | 'warning' | 'error' {
   if (pct >= 50) return 'info';
   if (pct >= 25) return 'warning';
+  return 'error';
+}
+
+function pingColor(ms: number): 'success' | 'warning' | 'error' {
+  if (ms <= 100) return 'success';
+  if (ms <= 250) return 'warning';
   return 'error';
 }
 
@@ -136,6 +146,49 @@ function GoldWidget({ stats }: WidgetProps) {
   );
 }
 
+function PingWidget() {
+  const client = useClient();
+  const { locale } = useLocale();
+  const { openDialog } = useWindowManager();
+  const [ping, setPing] = useState<number | null>(() => {
+    const h = client.pingController.pingHistory;
+    return h.length > 0 ? h[h.length - 1] : null;
+  });
+
+  useEffect(() => {
+    return client.pingController.subscribe(() => {
+      const h = client.pingController.pingHistory;
+      setPing(h.length > 0 ? h[h.length - 1] : null);
+    });
+  }, [client.pingController]);
+
+  const color = ping !== null ? pingColor(ping) : null;
+  const colorClass =
+    color === 'success'
+      ? 'text-success'
+      : color === 'warning'
+        ? 'text-warning'
+        : color === 'error'
+          ? 'text-error'
+          : HUD_TEXT;
+
+  return (
+    <button
+      type='button'
+      class={`flex cursor-pointer items-center gap-0.5 bg-transparent text-[10px] leading-tight ${HUD_TEXT}`}
+      onClick={() => openDialog('ping')}
+    >
+      <span class={`${colorClass} ${HUD_ICON_BG}`}>
+        <FaSignal size={12} />
+      </span>
+      <span class={colorClass}>
+        {ping !== null ? ping : '---'}
+        {locale.pingMs}
+      </span>
+    </button>
+  );
+}
+
 function renderWidget(
   id: HudWidgetId,
   stats: ReturnType<typeof usePlayerStats>,
@@ -153,6 +206,8 @@ function renderWidget(
       return <WeightWidget stats={stats} />;
     case 'gold':
       return <GoldWidget stats={stats} />;
+    case 'ping':
+      return <PingWidget />;
   }
 }
 

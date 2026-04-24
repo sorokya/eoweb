@@ -35,6 +35,7 @@ import {
   NavSidebar,
   PacketLogDialog,
   PartyPanel,
+  PingDialog,
   PlayerHud,
   QuestNpcDialog,
   QuestsDialog,
@@ -74,6 +75,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'innKeeper',
   'law',
   'packet-log',
+  'ping',
   'trade',
 ];
 
@@ -119,6 +121,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <LawDialog />;
     case 'packet-log':
       return <PacketLogDialog />;
+    case 'ping':
+      return <PingDialog />;
     case 'trade':
       return <TradeDialog />;
   }

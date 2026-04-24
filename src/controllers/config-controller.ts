@@ -4,7 +4,14 @@ const CONFIG_CHANGED_EVENT = 'eoweb:config-changed';
 
 export type FpsLimit = 20 | 30 | 60 | 0; // 0 = unlimited
 export type SocialFilter = 'all' | 'friends' | 'none';
-export type HudWidgetId = 'character' | 'hp' | 'tp' | 'tnl' | 'weight' | 'gold';
+export type HudWidgetId =
+  | 'character'
+  | 'hp'
+  | 'tp'
+  | 'tnl'
+  | 'weight'
+  | 'gold'
+  | 'ping';
 export type HudPosition = 'left' | 'center' | 'right';
 export type Language = 'en' | 'nl' | 'sv' | 'pt';
 
@@ -47,6 +54,7 @@ export const DEFAULT_HUD_WIDGETS: HudWidget[] = [
   { id: 'tnl', visible: true, position: 'center', order: 2 },
   { id: 'weight', visible: true, position: 'right', order: 0 },
   { id: 'gold', visible: true, position: 'right', order: 1 },
+  { id: 'ping', visible: true, position: 'right', order: 2 },
 ];
 
 const DEFAULT_LAYER_VISIBILITY: Record<number, boolean> = {
