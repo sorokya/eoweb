@@ -85,7 +85,7 @@ import { MapRenderer } from '@/map';
 import { MinimapRenderer } from '@/minimap';
 import { PacketLogStore } from '@/packet-log';
 import { CharacterDeathAnimation, NpcDeathAnimation } from '@/render';
-import { playSfxById, SfxId, setAudioController } from '@/sfx';
+import { SfxId, setAudioController } from '@/sfx';
 import type { ISlot } from '@/ui/enums';
 import type {
   EffectMetadata,
@@ -624,7 +624,7 @@ export class Client {
       this.mapController.loadDoors();
 
       if (this.map.type === MapType.Pk) {
-        playSfxById(SfxId.EnterPkMap);
+        this.audioController.playById(SfxId.EnterPkMap);
       }
 
       this.audioController.stopAmbientSound();

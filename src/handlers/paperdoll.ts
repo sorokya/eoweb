@@ -9,7 +9,7 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { EquipmentSlot, getEquipmentSlotForItemType } from '@/equipment';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 function handlePaperdollReply(client: Client, reader: EoReader) {
   const packet = PaperdollReplyServerPacket.deserialize(reader);
@@ -96,7 +96,7 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
     }
     client.inventoryController.equipmentSwap = null;
   } else {
-    playSfxById(SfxId.InventoryPlace);
+    client.audioController.playById(SfxId.InventoryPlace);
   }
 }
 
@@ -142,7 +142,7 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
   client.emit('statsUpdate', undefined);
 
   client.inventoryController.removeItem(packet.itemId, 1);
-  playSfxById(SfxId.InventoryPlace);
+  client.audioController.playById(SfxId.InventoryPlace);
 }
 
 function handleBookReply(client: Client, reader: EoReader) {

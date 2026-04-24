@@ -8,7 +8,7 @@ import type { Client } from '@/client';
 import { GOLD_ITEM_ID, JUKEBOX_COST } from '@/consts';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { formatLocaleString } from '@/locale';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import type { Vector2 } from '@/vector';
 
 type OpenedSubscriber = (player: string) => void;
@@ -135,7 +135,7 @@ export class JukeboxController {
 
   notifyRequestSucceeded(goldAmount: number): void {
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
-    playSfxById(SfxId.BuySell);
+    this.client.audioController.playById(SfxId.BuySell);
 
     for (const sub of this.requestSucceededSubscribers) {
       sub();

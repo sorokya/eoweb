@@ -9,7 +9,7 @@ import {
 import type { Client } from '@/client';
 import { Door } from '@/door';
 import { EOResourceID } from '@/edf';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import type { Vector2 } from '@/vector';
 
 export class MapController {
@@ -41,39 +41,20 @@ export class MapController {
   }
 
   chestAt(coords: Vector2): boolean {
-    return this.client.map!.tileSpecRows.some(
-      (r) =>
-        r.y === coords.y &&
-        r.tiles.some(
-          (t) => t.x === coords.x && t.tileSpec === MapTileSpec.Chest,
-        ),
-    );
+    return this.client.mapRenderer.getTileSpecAt(coords) === MapTileSpec.Chest;
   }
 
   jukeboxAt(coords: Vector2): boolean {
-    return this.client.map!.tileSpecRows.some(
-      (r) =>
-        r.y === coords.y &&
-        r.tiles.some(
-          (t) => t.x === coords.x && t.tileSpec === MapTileSpec.Jukebox,
-        ),
+    return (
+      this.client.mapRenderer.getTileSpecAt(coords) === MapTileSpec.Jukebox
     );
   }
 
   boardAt(coords: Vector2): MapTileSpec | undefined {
-    for (const r of this.client.map!.tileSpecRows) {
-      if (r.y !== coords.y) continue;
-      for (const t of r.tiles) {
-        if (
-          t.x === coords.x &&
-          t.tileSpec >= MapTileSpec.Board1 &&
-          t.tileSpec <= MapTileSpec.Board8
-        ) {
-          return t.tileSpec;
-        }
-      }
+    const spec = this.client.mapRenderer.getTileSpecAt(coords);
+    if (spec && spec >= MapTileSpec.Board1 && spec <= MapTileSpec.Board8) {
+      return spec;
     }
-    return undefined;
   }
 
   isAdjacentToSpec(spec: MapTileSpec): boolean {
@@ -87,11 +68,9 @@ export class MapController {
     ];
 
     for (const coords of adjacentTiles) {
-      const tileSpec = this.client
-        .map!.tileSpecRows.find((r) => r.y === coords.y)
-        ?.tiles.find((t) => t.x === coords.x);
+      const tileSpec = this.client.mapRenderer.getTileSpecAt(coords);
 
-      if (tileSpec && tileSpec.tileSpec === spec) {
+      if (tileSpec && tileSpec === spec) {
         return true;
       }
     }
@@ -100,9 +79,7 @@ export class MapController {
   }
 
   isFacingChairAt(coords: Vector2): boolean {
-    const spec = this.client
-      .map!.tileSpecRows.find((r) => r.y === coords.y)
-      ?.tiles.find((t) => t.x === coords.x);
+    const spec = this.client.mapRenderer.getTileSpecAt(coords);
 
     if (!spec) {
       return false;
@@ -110,7 +87,7 @@ export class MapController {
 
     const playerAt = this.client.getPlayerCoords();
 
-    switch (spec.tileSpec) {
+    switch (spec) {
       case MapTileSpec.ChairAll:
         return [
           { x: coords.x + 1, y: coords.y },
@@ -162,7 +139,7 @@ export class MapController {
         this.client.eif!.items.find(
           (i) => i.type === ItemType.Key && i.spec1 === door.key,
         )?.name || 'Unknown';
-      playSfxById(SfxId.DoorOrChestLocked);
+      this.client.audioController.playById(SfxId.DoorOrChestLocked);
       this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_THE_DOOR_IS_LOCKED_EXCLAMATION)} - ${keyName}`,
       );
@@ -372,9 +349,7 @@ export class MapController {
       return false;
     }
 
-    const spec = this.client
-      .map!.tileSpecRows.find((r) => r.y === coords.y)
-      ?.tiles.find((t) => t.x === coords.x);
+    const spec = this.client.mapRenderer.getTileSpecAt(coords);
     if (
       spec &&
       [
@@ -398,7 +373,7 @@ export class MapController {
         MapTileSpec.Board7,
         MapTileSpec.Board8,
         MapTileSpec.Jukebox,
-      ].includes(spec.tileSpec)
+      ].includes(spec)
     ) {
       return false;
     }
@@ -425,9 +400,7 @@ export class MapController {
       return false;
     }
 
-    const spec = this.client
-      .map!.tileSpecRows.find((r) => r.y === this.client.mouseCoords!.y)
-      ?.tiles.find((t) => t.x === this.client.mouseCoords!.x);
+    const spec = this.client.mapRenderer.getTileSpecAt(this.client.mouseCoords);
     if (
       spec &&
       [
@@ -451,7 +424,7 @@ export class MapController {
         MapTileSpec.Board7,
         MapTileSpec.Board8,
         MapTileSpec.Jukebox,
-      ].includes(spec.tileSpec)
+      ].includes(spec)
     ) {
       return false;
     }
@@ -489,7 +462,7 @@ export class MapController {
       door.openTicks = Math.max(door.openTicks - 1, 0);
       if (!door.openTicks) {
         door.open = false;
-        playSfxById(SfxId.DoorClose);
+        this.client.audioController.playById(SfxId.DoorClose);
       }
     }
   }

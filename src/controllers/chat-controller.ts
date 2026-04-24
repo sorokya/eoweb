@@ -11,7 +11,7 @@ import {
 import type { Client } from '@/client';
 import { COLORS, MAX_CHAT_LENGTH } from '@/consts';
 import { ChatBubble } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize, makeDrunk } from '@/utils';
 
@@ -63,7 +63,7 @@ export class ChatController {
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
-      playSfxById(SfxId.AdminAnnounceReceived);
+      this.client.audioController.playById(SfxId.AdminAnnounceReceived);
       this.client.bus!.send(packet);
       return;
     }
@@ -153,7 +153,7 @@ export class ChatController {
         name: `${capitalize(this.client.name)}`,
       });
 
-      playSfxById(SfxId.AdminChatSent);
+      this.client.audioController.playById(SfxId.AdminChatSent);
 
       return;
     }

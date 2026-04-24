@@ -181,9 +181,8 @@ export class MapRenderer {
   private tileSpecCache: (MapTileSpec | null)[][] = [];
   private signCache: ({ title: string; message: string } | null)[][] = [];
   private interpolation = 0;
-  // Viewport-cached sorted static entities — only rebuilt when player moves
+  // Pre-sorted static entities — built once in buildCaches(), filtered by viewport during render
   private cachedStaticEntities: Entity[] = [];
-  private cachedViewportKey = '';
   // Per-frame render caches — updated once at the top of render() to avoid repeated lookups
   private _halfGameWidth = 0;
   private _halfGameHeight = 0;
@@ -192,7 +191,7 @@ export class MapRenderer {
   private readonly _coordsBuffer = new Coords();
   // Per-frame effects maps — built once to avoid O(entities × effects) filter calls
   private readonly _tileEffects: EffectAnimation[] = [];
-  private readonly _charEffects = new Map<number, EffectAnimation[]>();
+  private readonly _characterEffects = new Map<number, EffectAnimation[]>();
   private readonly _npcEffects = new Map<number, EffectAnimation[]>();
   private readonly _worldSprites = new Map<string, Sprite>();
   private readonly _uiSprites = new Map<string, Sprite>();
@@ -209,6 +208,8 @@ export class MapRenderer {
   private _ghostBody: Sprite | null = null;
   private _ghostFace: Sprite | null = null;
   private _ghostVisible = false;
+
+  hasChairs = false;
 
   private labelSprite(sprite: Sprite, label: string) {
     sprite.label = label;
@@ -413,8 +414,18 @@ export class MapRenderer {
     this.tileSpecCache = Array.from({ length: h + 1 }, () =>
       new Array<MapTileSpec | null>(w + 1).fill(null),
     );
-    for (const row of this.client.map!.tileSpecRows)
-      for (const t of row.tiles) this.tileSpecCache[row.y][t.x] = t.tileSpec;
+    for (const row of this.client.map!.tileSpecRows) {
+      for (const t of row.tiles) {
+        this.tileSpecCache[row.y][t.x] = t.tileSpec;
+        if (
+          !this.hasChairs &&
+          t.tileSpec >= MapTileSpec.ChairDown &&
+          t.tileSpec <= MapTileSpec.ChairAll
+        ) {
+          this.hasChairs = true;
+        }
+      }
+    }
 
     this.signCache = Array.from({ length: h + 1 }, () =>
       new Array<{ title: string; message: string } | null>(w + 1).fill(null),
@@ -425,36 +436,30 @@ export class MapRenderer {
       this.signCache[sign.coords.y][sign.coords.x] = { title, message };
     }
 
-    this.buildingCache = false;
-    this.cachedViewportKey = ''; // Invalidate viewport cache on map change
-    this.clearSceneNodes();
-  }
-
-  getRequiredTileIds(): { gfxType: GfxType; graphicId: number }[] {
-    const seen = new Set<string>();
-    const result: { gfxType: GfxType; graphicId: number }[] = [];
-    for (const row of this.staticTileGrid) {
-      for (const cell of row) {
-        for (const tile of cell) {
-          if (tile.bmpId === 0) continue; // Ground fill with id 0 is not rendered
-          const gfxType = LAYER_GFX_MAP[tile.layer];
-          const key = `${gfxType}:${tile.bmpId}`;
-          if (!seen.has(key)) {
-            seen.add(key);
-            result.push({ gfxType, graphicId: tile.bmpId });
-          }
-          // Door tiles (DownWall/RightWall) render bmpId+1 when open
-          if (tile.layer === Layer.DownWall || tile.layer === Layer.RightWall) {
-            const openKey = `${gfxType}:${tile.bmpId + 1}`;
-            if (!seen.has(openKey)) {
-              seen.add(openKey);
-              result.push({ gfxType, graphicId: tile.bmpId + 1 });
-            }
-          }
+    // Pre-build and sort the full static entity list once per map load
+    this.cachedStaticEntities = [];
+    for (let y = 0; y <= h; y++) {
+      for (let x = 0; x <= w; x++) {
+        for (const t of this.staticTileGrid[y][x]) {
+          this.cachedStaticEntities.push({
+            x,
+            y,
+            type: EntityType.Tile,
+            typeId: t.bmpId,
+            layer: t.layer,
+            depth: t.depth,
+          });
         }
       }
     }
-    return result;
+    this.cachedStaticEntities.sort((a, b) => a.depth - b.depth);
+
+    this.buildingCache = false;
+    this.clearSceneNodes();
+  }
+
+  getTileSpecAt(position: Vector2): MapTileSpec | undefined {
+    return this.tileSpecCache[position.y]?.[position.x] || undefined;
   }
 
   tick() {
@@ -472,7 +477,7 @@ export class MapRenderer {
     }
   }
 
-  calculateDepth(layer: number, x: number, y: number): number {
+  private calculateDepth(layer: number, x: number, y: number): number {
     return layerDepth[layer] + y * RDG + x * layerDepth.length * TDG;
   }
 
@@ -504,15 +509,15 @@ export class MapRenderer {
 
     // Build per-frame effects maps
     this._tileEffects.length = 0;
-    this._charEffects.clear();
+    this._characterEffects.clear();
     this._npcEffects.clear();
     for (const effect of this.client.animationController.effects) {
       if (effect.target instanceof EffectTargetCharacter) {
-        const arr = this._charEffects.get(effect.target.playerId);
+        const arr = this._characterEffects.get(effect.target.playerId);
         if (arr) {
           arr.push(effect);
         } else {
-          this._charEffects.set(effect.target.playerId, [effect]);
+          this._characterEffects.set(effect.target.playerId, [effect]);
         }
       } else if (effect.target instanceof EffectTargetNpc) {
         const arr = this._npcEffects.get(effect.target.index);
@@ -559,30 +564,10 @@ export class MapRenderer {
     const rangeX = Math.min(this.client.map.width, range);
     const rangeY = Math.min(this.client.map.height, range);
 
-    const viewportKey = `${player.x},${player.y},${rangeX},${rangeY}`;
-    if (viewportKey !== this.cachedViewportKey) {
-      this.cachedStaticEntities.length = 0;
-      for (let y = player.y - rangeY; y <= player.y + rangeY; y++) {
-        if (y < 0 || y > this.client.map.height) continue;
-        for (let x = player.x - rangeX; x <= player.x + rangeX; x++) {
-          if (x < 0 || x > this.client.map.width) continue;
-          if (!this.staticTileGrid[y]?.[x]) continue;
-          for (const t of this.staticTileGrid[y][x]) {
-            const entity: Entity = {
-              x,
-              y,
-              type: EntityType.Tile,
-              typeId: t.bmpId,
-              layer: t.layer,
-              depth: t.depth,
-            };
-            this.cachedStaticEntities.push(entity);
-          }
-        }
-      }
-      this.cachedStaticEntities.sort((a, b) => a.depth - b.depth);
-      this.cachedViewportKey = viewportKey;
-    }
+    const viewportMinX = player.x - rangeX;
+    const viewportMaxX = player.x + rangeX;
+    const viewportMinY = player.y - rangeY;
+    const viewportMaxY = player.y + rangeY;
 
     // Collect dynamic entities
     const dynamics: Entity[] = [];
@@ -726,12 +711,24 @@ export class MapRenderer {
     let dynamicIndex = 0;
     const statics = this.cachedStaticEntities;
     while (staticIndex < statics.length || dynamicIndex < dynamics.length) {
+      // Skip static tiles outside the current viewport
+      while (
+        staticIndex < statics.length &&
+        (statics[staticIndex].x < viewportMinX ||
+          statics[staticIndex].x > viewportMaxX ||
+          statics[staticIndex].y < viewportMinY ||
+          statics[staticIndex].y > viewportMaxY)
+      ) {
+        staticIndex++;
+      }
+
       let entity: Entity;
       if (
         dynamicIndex >= dynamics.length ||
         (staticIndex < statics.length &&
           statics[staticIndex].depth <= dynamics[dynamicIndex].depth)
       ) {
+        if (staticIndex >= statics.length) break;
         entity = statics[staticIndex++];
       } else {
         entity = dynamics[dynamicIndex++];
@@ -1075,7 +1072,7 @@ export class MapRenderer {
 
     const effects = justCharacter
       ? []
-      : (this._charEffects.get(character.playerId) ?? []);
+      : (this._characterEffects.get(character.playerId) ?? []);
 
     for (const effect of effects) {
       const effectKeyBase = `char-effect:${character.playerId}:${effect.instanceId}`;

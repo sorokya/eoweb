@@ -7,7 +7,7 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '@/client';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatIcon } from '@/ui/enums';
 
 function handleArenaUse(client: Client, reader: EoReader) {
@@ -36,7 +36,7 @@ function handleArenaSpec(client: Client, reader: EoReader) {
         ? `${message}, ${packet.killerName} killed ${packet.killsCount} player(s)`
         : message,
   });
-  playSfxById(SfxId.ServerMessage);
+  client.audioController.playById(SfxId.ServerMessage);
 }
 
 function handleArenaDrop(client: Client) {

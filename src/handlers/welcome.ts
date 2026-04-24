@@ -146,6 +146,7 @@ function handleEnterGame(
   client.usageController.usageTicks = USAGE_TICKS;
   client.setState(GameState.InGame);
   client.emit('enterGame', { news: data.news });
+  client.audioController.updateListenerPosition(client.getPlayerCoords());
   client.audioController.handleMapMusic(
     client.map.musicId,
     client.map.musicControl,

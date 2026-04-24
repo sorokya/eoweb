@@ -18,7 +18,7 @@ import type { Client } from '@/client';
 import { saveEcf, saveEif, saveEmf, saveEnf, saveEsf } from '@/db';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { GameState } from '@/game-state';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleInitInit(client: Client, reader: EoReader) {
@@ -281,7 +281,7 @@ function handleInitMapMutation(
   client.setMap(map);
   client.atlas.mapId = 0; // Force atlas to reload map data
   client.refresh();
-  playSfxById(SfxId.MapMutation);
+  client.audioController.playById(SfxId.MapMutation);
   const message = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${client.getResourceString(EOResourceID.SERVER_MESSAGE_MAP_MUTATION)}}`;
   client.emit('chat', {
     channel: ChatChannels.Local,

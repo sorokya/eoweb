@@ -8,10 +8,11 @@ import {
   WarpType,
 } from 'eolib';
 import type { Client } from '@/client';
+import { ADMIN_WARP_LEAVE_EFFECT_ID } from '@/consts';
 import { getEmf } from '@/db';
 import { EOResourceID } from '@/edf';
 import { EffectAnimation, EffectTargetCharacter } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleWarpRequest(client: Client, reader: EoReader) {
@@ -52,11 +53,11 @@ function handleWarpAgree(client: Client, reader: EoReader) {
     packet.warpTypeData instanceof WarpAgreeServerPacket.WarpTypeDataMapSwitch
   ) {
     if (packet.warpTypeData.warpEffect === WarpEffect.Admin) {
-      const metadata = client.getEffectMetadata(4);
-      playSfxById(SfxId.AdminWarp);
+      const metadata = client.getEffectMetadata(ADMIN_WARP_LEAVE_EFFECT_ID);
+      client.audioController.playById(SfxId.AdminWarp);
       client.animationController.effects.push(
         new EffectAnimation(
-          4,
+          ADMIN_WARP_LEAVE_EFFECT_ID,
           new EffectTargetCharacter(client.playerId),
           metadata,
         ),

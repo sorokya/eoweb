@@ -25,7 +25,7 @@ import {
   Emote,
   HealthBar,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleItemAdd(client: Client, reader: EoReader) {
@@ -137,7 +137,7 @@ function handleItemReply(client: Client, reader: EoReader) {
         packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataEffectPotion;
       const metadata = client.getEffectMetadata(data.effectId + 1);
       if (metadata.sfx) {
-        playSfxById(metadata.sfx);
+        client.audioController.playById(metadata.sfx);
       }
       client.animationController.effects.push(
         new EffectAnimation(
@@ -181,7 +181,7 @@ function handleItemReply(client: Client, reader: EoReader) {
           client.playerId,
           new Emote(EmoteType.LevelUp),
         );
-        playSfxById(SfxId.LevelUp);
+        client.audioController.playById(SfxId.LevelUp);
         client.level = data.levelUp;
         client.maxHp = data.maxHp;
         client.maxTp = data.maxTp;
@@ -329,7 +329,7 @@ function handleItemAccept(client: Client, reader: EoReader) {
     packet.playerId,
     new Emote(EmoteType.LevelUp),
   );
-  playSfxById(SfxId.LevelUp);
+  client.audioController.playAtPosition(SfxId.LevelUp, character.coords);
 }
 
 function handleItemJunk(client: Client, reader: EoReader) {

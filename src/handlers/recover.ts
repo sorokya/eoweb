@@ -11,7 +11,7 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { Emote, HealthBar } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 function handleRecoverPlayer(client: Client, reader: EoReader) {
   const packet = RecoverPlayerServerPacket.deserialize(reader);
@@ -78,7 +78,7 @@ function handleRecoverReply(client: Client, reader: EoReader) {
       client.playerId,
       new Emote(EmoteType.LevelUp),
     );
-    playSfxById(SfxId.LevelUp);
+    client.audioController.playById(SfxId.LevelUp);
     client.level = packet.levelUp;
     client.statPoints = packet.statPoints!;
     client.skillPoints = packet.skillPoints!;

@@ -8,9 +8,10 @@ import {
   WarpEffect,
 } from 'eolib';
 import type { Client } from '@/client';
+import { ADMIN_WARP_ENTER_EFFECT_ID } from '@/consts';
 import { EOResourceID } from '@/edf';
 import { EffectAnimation, EffectTargetCharacter } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 function handlePlayersAgree(client: Client, reader: EoReader) {
   const packet = PlayersAgreeServerPacket.deserialize(reader);
@@ -21,19 +22,25 @@ function handlePlayersAgree(client: Client, reader: EoReader) {
 
     switch (character.warpEffect) {
       case WarpEffect.Admin: {
-        const metadata = client.getEffectMetadata(4);
+        const metadata = client.getEffectMetadata(ADMIN_WARP_ENTER_EFFECT_ID);
         client.animationController.effects.push(
           new EffectAnimation(
-            4,
+            ADMIN_WARP_ENTER_EFFECT_ID,
             new EffectTargetCharacter(character.playerId),
             metadata,
           ),
         );
-        playSfxById(SfxId.AdminWarp);
+        client.audioController.playAtPosition(
+          SfxId.AdminWarp,
+          character.coords,
+        );
         break;
       }
       case WarpEffect.Scroll:
-        playSfxById(SfxId.ScrollTeleport);
+        client.audioController.playAtPosition(
+          SfxId.ScrollTeleport,
+          character.coords,
+        );
         break;
     }
 

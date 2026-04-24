@@ -14,7 +14,7 @@ import {
 } from '@/consts';
 import { DialogResourceID, EOResourceID } from '@/edf';
 
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatIcon } from '@/ui/enums';
 
 type OpenedSubscriber = (goldBank: number, lockerUpgrades: number) => void;
@@ -63,7 +63,7 @@ export class BankController {
     const previousGoldBank = this.goldBank;
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldInventory);
     this.goldBank = goldBank;
-    playSfxById(SfxId.BuySell);
+    this.client.audioController.playById(SfxId.BuySell);
     for (const cb of this.updatedSubscribers) cb(goldBank);
 
     const diff = Math.abs(goldBank - previousGoldBank);

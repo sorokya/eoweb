@@ -26,7 +26,7 @@ import {
 } from '@/consts';
 import { DialogResourceID } from '@/edf';
 import { GuildDialogState } from '@/game-state';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { capitalize } from '@/utils';
 
 const REPLY_DIALOG_IDS: Partial<Record<GuildReply, DialogResourceID>> = {
@@ -145,7 +145,7 @@ export class GuildController {
     this.client.guildName = guildName;
     this.client.guildRankName = rankName;
     this.client.guildRank = GUILD_RANK_NEW_MEMBER;
-    playSfxById(SfxId.JoinGuild);
+    this.client.audioController.playById(SfxId.JoinGuild);
 
     this.state = GuildDialogState.None;
     this.notifyUpdated();
@@ -184,7 +184,7 @@ export class GuildController {
     this.state = GuildDialogState.None;
     this.notifyUpdated();
 
-    playSfxById(SfxId.ServerMessage);
+    this.client.audioController.playById(SfxId.ServerMessage);
     const strings = this.client.getDialogStrings(
       DialogResourceID.GUILD_WILL_BE_CREATED,
     );
@@ -237,7 +237,7 @@ export class GuildController {
   }
 
   notifyPendingInvite(playerId: number, type: 'create' | 'join', name: string) {
-    playSfxById(SfxId.ServerMessage);
+    this.client.audioController.playById(SfxId.ServerMessage);
 
     if (type === 'join') {
       const strings = this.client.getDialogStrings(
@@ -377,7 +377,7 @@ export class GuildController {
     packet.sessionId = this.client.sessionId;
     packet.goldAmount = amount;
     this.client.bus.send(packet);
-    playSfxById(SfxId.BuySell);
+    this.client.audioController.playById(SfxId.BuySell);
   }
 
   kickMember(name: string) {
@@ -400,7 +400,7 @@ export class GuildController {
     packet.sessionId = this.client.sessionId;
     this.client.bus.send(packet);
     this.clearGuild();
-    playSfxById(SfxId.LeaveGuild);
+    this.client.audioController.playById(SfxId.LeaveGuild);
     this.notifyOpened();
   }
 
@@ -409,7 +409,7 @@ export class GuildController {
     packet.sessionId = this.client.sessionId;
     this.client.bus.send(packet);
     this.clearGuild();
-    playSfxById(SfxId.LeaveGuild);
+    this.client.audioController.playById(SfxId.LeaveGuild);
     this.notifyOpened();
   }
 }

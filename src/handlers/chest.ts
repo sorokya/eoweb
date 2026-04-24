@@ -9,13 +9,13 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatIcon } from '@/ui/enums';
 
 function handleChestOpen(client: Client, reader: EoReader) {
   const packet = ChestOpenServerPacket.deserialize(reader);
 
-  playSfxById(SfxId.TextBoxFocus);
+  client.audioController.playById(SfxId.TextBoxFocus);
   client.chestController.handleOpened(packet.items);
 }
 

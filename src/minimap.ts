@@ -201,17 +201,13 @@ export class MinimapRenderer {
           continue;
         }
 
-        const spec = this.client
-          .map!.tileSpecRows.find((r) => r.y === y)
-          ?.tiles.find((t) => t.x === x);
+        const spec = this.client.mapRenderer.getTileSpecAt({ x, y });
 
         const hasWarp = this.client.map!.warpRows.some(
           (r) => r.y === y && r.tiles.find((t) => t.x === x),
         );
 
-        const icon = hasWarp
-          ? MiniMapIcon.Interactable
-          : getIconForTile(spec?.tileSpec);
+        const icon = hasWarp ? MiniMapIcon.Interactable : getIconForTile(spec);
 
         if (icon === undefined) continue;
 

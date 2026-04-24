@@ -24,7 +24,7 @@ import {
   NpcAttackAnimation,
   NpcWalkAnimation,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize, getPrevCoords } from '@/utils';
 
@@ -53,7 +53,6 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     );
   }
 
-  let someoneKilled = false;
   for (const attack of packet.attacks) {
     if (attack.playerId === client.playerId) {
       client.hp = Math.max(client.hp - attack.damage, 0);
@@ -67,7 +66,7 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     }
 
     npc.direction = attack.direction;
-    playSfxById(SfxId.PunchAttack);
+    client.audioController.playAtPosition(SfxId.PunchAttack, npc.coords);
     client.animationController.pendingNpcAnimations.set(
       npc.index,
       new NpcAttackAnimation(),
@@ -79,12 +78,15 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
 
     if (attack.killed === PlayerKilledState.Killed) {
       client.setCharacterDeathAnimation(attack.playerId);
-      someoneKilled = true;
+      if (attack.playerId === client.playerId) {
+        client.audioController.playById(SfxId.Dead);
+      } else {
+        const character = client.getCharacterById(attack.playerId);
+        if (character) {
+          client.audioController.playAtPosition(SfxId.Dead, character.coords);
+        }
+      }
     }
-  }
-
-  if (someoneKilled) {
-    playSfxById(SfxId.Dead);
   }
 
   for (const chat of packet.chats) {
@@ -193,7 +195,18 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     packet.npcKilledData.killerId,
     new Emote(EmoteType.LevelUp),
   );
-  playSfxById(SfxId.LevelUp);
+
+  if (packet.npcKilledData.killerId === client.playerId) {
+    client.audioController.playById(SfxId.LevelUp);
+  } else {
+    const coords = client.getCharacterById(
+      packet.npcKilledData.killerId,
+    )?.coords;
+    if (coords) {
+      client.audioController.playAtPosition(SfxId.LevelUp, coords);
+    }
+  }
+
   if (packet.levelUp) {
     client.level = packet.levelUp.level;
     client.maxHp = packet.levelUp.maxHp;

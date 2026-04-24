@@ -6,7 +6,7 @@ import {
 
 import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 export class CommandController {
   private client: Client;
@@ -40,7 +40,7 @@ export class CommandController {
       case '#loc': {
         const coords = this.client.getPlayerCoords();
         const message = `${this.client.getResourceString(EOResourceID.STATUS_LABEL_YOUR_LOCATION_IS_AT)} ${this.client.mapId} x:${coords.x} y:${coords.y}`;
-        playSfxById(SfxId.ServerMessage);
+        this.client.audioController.playById(SfxId.ServerMessage);
         this.client.emit('serverChat', {
           message,
         });
@@ -54,7 +54,7 @@ export class CommandController {
           'render engine: canvas',
         ];
 
-        playSfxById(SfxId.ServerMessage);
+        this.client.audioController.playById(SfxId.ServerMessage);
 
         this.client.emit('serverChat', {
           message: messages[0],
@@ -69,7 +69,7 @@ export class CommandController {
       }
 
       case '#usage': {
-        playSfxById(SfxId.ServerMessage);
+        this.client.audioController.playById(SfxId.ServerMessage);
         const hours = Math.floor(this.client.usageController.usage / 60);
         const minutes = this.client.usageController.usage - hours * 60;
         const message = hours
@@ -88,7 +88,7 @@ export class CommandController {
         }
 
         this.nowall = !this.nowall;
-        playSfxById(SfxId.TextBoxFocus);
+        this.client.audioController.playById(SfxId.TextBoxFocus);
         return true;
       }
     }

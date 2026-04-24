@@ -11,7 +11,7 @@ import {
 import type { Client } from '@/client';
 import { GOLD_ITEM_ID } from '@/consts';
 import { EOResourceID } from '@/edf';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatIcon } from '@/ui/enums';
 
 type OpenedSubscriber = (
@@ -75,7 +75,7 @@ export class ShopController {
     this.client.inventoryController.addItem(boughtItem.id, boughtItem.amount);
     this.client.weight.current = weightCurrent;
     this.client.emit('itemBought', undefined);
-    playSfxById(SfxId.BuySell);
+    this.client.audioController.playById(SfxId.BuySell);
     for (const cb of this.changedSubscribers) cb();
 
     const name = this.client.getEifRecordById(boughtItem.id)?.name ?? '';
@@ -99,7 +99,7 @@ export class ShopController {
     this.client.inventoryController.setItem(soldItem.id, soldItem.amount);
     this.client.weight.current = weightCurrent;
     this.client.emit('itemSold', undefined);
-    playSfxById(SfxId.BuySell);
+    this.client.audioController.playById(SfxId.BuySell);
     for (const cb of this.changedSubscribers) cb();
 
     const soldAmount = prevAmount - (soldItem.amount ?? 0);
@@ -123,7 +123,7 @@ export class ShopController {
 
     this.client.inventoryController.addItem(craftItemId);
     this.client.weight.current = weightCurrent;
-    playSfxById(SfxId.Craft);
+    this.client.audioController.playById(SfxId.Craft);
     for (const cb of this.changedSubscribers) cb();
 
     const name = this.client.getEifRecordById(craftItemId)?.name ?? '';

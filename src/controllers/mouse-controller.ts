@@ -18,7 +18,7 @@ import {
 import { EOResourceID } from '@/edf';
 import { GameState, PlayerMenuItem } from '@/game-state';
 import { CursorClickAnimation } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { capitalize } from '@/utils';
 import type { Vector2 } from '@/vector';
 
@@ -209,7 +209,7 @@ export class MouseController {
     if (this.client.menuPlayerId) {
       const hovered = this.getHoveredPlayerMenuItem();
       if (hovered !== undefined) {
-        playSfxById(SfxId.ButtonClick);
+        this.client.audioController.playById(SfxId.ButtonClick);
         switch (hovered) {
           case PlayerMenuItem.Paperdoll:
             this.client.socialController.requestPaperdoll(
@@ -325,9 +325,9 @@ export class MouseController {
       }
 
       // Check tile specs for chests and chairs
-      const tileSpec = this.client
-        .map!.tileSpecRows.find((r) => r.y === this.client.mouseCoords!.y)
-        ?.tiles.find((t) => t.x === this.client.mouseCoords!.x)?.tileSpec;
+      const tileSpec = this.client.mapRenderer.getTileSpecAt(
+        this.client.mouseCoords,
+      );
 
       if (tileSpec !== undefined) {
         if (tileSpec === MapTileSpec.Chest) {

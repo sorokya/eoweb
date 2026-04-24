@@ -6,7 +6,7 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleMessagePing(client: Client) {
@@ -28,7 +28,7 @@ function handleMessageOpen(client: Client, reader: EoReader) {
 }
 
 function handleMessageClose(client: Client) {
-  playSfxById(SfxId.Reboot);
+  client.audioController.playById(SfxId.Reboot);
   const message = client.getResourceString(
     EOResourceID.REBOOT_SEQUENCE_STARTED,
   );

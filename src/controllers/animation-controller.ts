@@ -1,5 +1,5 @@
 import type { Client } from '@/client';
-import { SPELL_COOLDOWN_TICKS } from '@/consts';
+import { SPELL_COOLDOWN_TICKS, SPLOOSHIE_EFFECT_ID } from '@/consts';
 import type { ChatBubble } from '@/render';
 import {
   type Animation,
@@ -7,12 +7,15 @@ import {
   CharacterSpellChantAnimation,
   CharacterWalkAnimation,
   type CursorClickAnimation,
-  type EffectAnimation,
+  EffectAnimation,
+  EffectTargetCharacter,
   type Emote,
   type HealthBar,
   NpcDeathAnimation,
   NpcWalkAnimation,
 } from '@/render';
+import { SfxId } from '@/sfx';
+import type { EffectMetadata } from '@/utils';
 
 export class AnimationController {
   private client: Client;
@@ -28,8 +31,39 @@ export class AnimationController {
   effects: EffectAnimation[] = [];
   cursorClickAnimation: CursorClickAnimation | undefined;
 
+  private splooshiMetadata: EffectMetadata | undefined;
+
   constructor(client: Client) {
     this.client = client;
+  }
+
+  playSplooshieEffect(playerId: number): void {
+    if (!this.splooshiMetadata) {
+      this.splooshiMetadata =
+        this.client.getEffectMetadata(SPLOOSHIE_EFFECT_ID);
+    }
+
+    this.effects.push(
+      new EffectAnimation(
+        SPLOOSHIE_EFFECT_ID,
+        new EffectTargetCharacter(playerId),
+        this.splooshiMetadata,
+      ),
+    );
+
+    if (!this.splooshiMetadata.sfx) {
+      return;
+    }
+
+    if (playerId === this.client.playerId) {
+      this.client.audioController.playById(this.splooshiMetadata.sfx);
+      return;
+    }
+
+    const position = this.client.getCharacterById(playerId)?.coords;
+    if (position) {
+      this.client.audioController.playAtPosition(SfxId.Water, position);
+    }
   }
 
   tick(

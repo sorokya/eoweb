@@ -10,7 +10,7 @@ import {
 
 import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 type OpenedSubscriber = (items: ThreeItem[]) => void;
 type ChangedSubscriber = (items: ThreeItem[]) => void;
@@ -100,7 +100,7 @@ export class ChestController {
     });
 
     if (!haveKeys) {
-      playSfxById(SfxId.DoorOrChestLocked);
+      this.client.audioController.playById(SfxId.DoorOrChestLocked);
       this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_THE_CHEST_IS_LOCKED_EXCLAMATION)} - ${keyName}`,
       );

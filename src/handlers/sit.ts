@@ -11,8 +11,7 @@ import {
   SitState,
 } from 'eolib';
 import type { Client } from '@/client';
-import { EffectAnimation, EffectTargetCharacter } from '@/render';
-import { playSfxById } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 function handleSitPlayer(client: Client, reader: EoReader) {
   const packet = SitPlayerServerPacket.deserialize(reader);
@@ -33,20 +32,11 @@ function handleSitPlayer(client: Client, reader: EoReader) {
     return;
   }
 
-  const spec = client!
-    .map!.tileSpecRows.find((r) => r.y === packet.coords.y)
-    ?.tiles.find((t) => t.x === packet.coords.x);
+  client.audioController.playAtPosition(SfxId.Sit, character.coords);
 
-  if (spec && spec.tileSpec === MapTileSpec.Water) {
-    const metadata = client.getEffectMetadata(9);
-    playSfxById(metadata.sfx);
-    client.animationController.effects.push(
-      new EffectAnimation(
-        9,
-        new EffectTargetCharacter(packet.playerId),
-        metadata,
-      ),
-    );
+  const spec = client.mapRenderer.getTileSpecAt(character.coords);
+  if (spec && spec === MapTileSpec.Water) {
+    client.animationController.playSplooshieEffect(packet.playerId);
   }
 }
 
@@ -95,20 +85,11 @@ function handleSitReply(client: Client, reader: EoReader) {
   character.direction = packet.direction;
   character.sitState = SitState.Floor;
 
-  const spec = client!
-    .map!.tileSpecRows.find((r) => r.y === packet.coords.y)
-    ?.tiles.find((t) => t.x === packet.coords.x);
+  client.audioController.playById(SfxId.Sit);
 
-  if (spec && spec.tileSpec === MapTileSpec.Water) {
-    const metadata = client.getEffectMetadata(9);
-    playSfxById(metadata.sfx);
-    client.animationController.effects.push(
-      new EffectAnimation(
-        9,
-        new EffectTargetCharacter(client.playerId),
-        metadata,
-      ),
-    );
+  const spec = client.mapRenderer.getTileSpecAt(character.coords);
+  if (spec && spec === MapTileSpec.Water) {
+    client.animationController.playSplooshieEffect(packet.playerId);
   }
 }
 

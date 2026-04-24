@@ -14,6 +14,9 @@ const SPATIAL_PANNER: PannerAttributes = {
   refDistance: 0,
   maxDistance: 25,
   rolloffFactor: 1,
+  coneInnerAngle: 360,
+  coneOuterAngle: 0,
+  coneOuterGain: 0,
 };
 
 export class AudioController {

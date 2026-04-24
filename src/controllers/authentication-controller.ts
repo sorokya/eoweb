@@ -26,7 +26,7 @@ import type { Client } from '@/client';
 import { MAX_CHARACTER_NAME_LENGTH, MIN_CHARACTER_NAME_LENGTH } from '@/consts';
 import { DialogResourceID } from '@/edf';
 import { GameState } from '@/game-state';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 type AccountCreateData = {
   username: string;
@@ -202,7 +202,7 @@ export class AuthenticationController {
 
   private notifyCharacterDeleted(characters: CharacterSelectionListEntry[]) {
     this.notifyCharactersChanged(characters).then(() => {
-      playSfxById(SfxId.DeleteCharacter);
+      this.client.audioController.playById(SfxId.DeleteCharacter);
     });
   }
 
@@ -218,7 +218,7 @@ export class AuthenticationController {
 
   notifyLoggedIn(characters: CharacterSelectionListEntry[]): void {
     this.notifyCharactersChanged(characters).then(() => {
-      playSfxById(SfxId.Login);
+      this.client.audioController.playById(SfxId.Login);
       this.client.setState(GameState.CharacterSelect);
     });
   }

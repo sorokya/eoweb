@@ -9,7 +9,7 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { GOLD_ITEM_ID } from '@/consts';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 function handleBarberOpen(client: Client, reader: EoReader) {
   const packet = BarberOpenServerPacket.deserialize(reader);
@@ -43,7 +43,7 @@ function handleBarberAgree(client: Client, reader: EoReader) {
 
   client.emit('barberPurchased', undefined);
   client.barberController.notifyPurchased();
-  playSfxById(SfxId.BuySell);
+  client.audioController.playById(SfxId.BuySell);
 }
 
 export function registerBarberHandlers(client: Client) {

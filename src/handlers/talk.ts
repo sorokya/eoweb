@@ -18,7 +18,7 @@ import type { Client } from '@/client';
 import { COLORS } from '@/consts';
 import { EOResourceID } from '@/edf';
 import { ChatBubble } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize } from '@/utils';
 
@@ -51,7 +51,7 @@ function handleTalkServer(client: Client, reader: EoReader) {
   client.toastController.show(
     `${client.locale.packetLogServer}: ${packet.message}`,
   );
-  playSfxById(SfxId.ServerMessage);
+  client.audioController.playById(SfxId.ServerMessage);
 }
 
 function handleTalkMsg(client: Client, reader: EoReader) {
@@ -72,7 +72,7 @@ function handleTalkAdmin(client: Client, reader: EoReader) {
     message: packet.message,
     channel: ChatChannels.Admin,
   });
-  playSfxById(SfxId.AdminChatReceived);
+  client.audioController.playById(SfxId.AdminChatReceived);
 }
 
 function handleTalkTell(client: Client, reader: EoReader) {
@@ -84,7 +84,7 @@ function handleTalkTell(client: Client, reader: EoReader) {
     message: packet.message,
     channel: pmChannel,
   });
-  playSfxById(SfxId.PrivateMessageReceived);
+  client.audioController.playById(SfxId.PrivateMessageReceived);
 }
 
 function handleTalkAnnounce(client: Client, reader: EoReader) {
@@ -111,7 +111,7 @@ function handleTalkAnnounce(client: Client, reader: EoReader) {
     message: packet.message,
     icon: ChatIcon.GlobalAnnounce,
   });
-  playSfxById(SfxId.AdminAnnounceReceived);
+  client.audioController.playById(SfxId.AdminAnnounceReceived);
 }
 
 function handleTalkOpen(client: Client, reader: EoReader) {
@@ -148,7 +148,7 @@ function handleTalkOpen(client: Client, reader: EoReader) {
     );
   }
 
-  playSfxById(SfxId.GroupChatReceived);
+  client.audioController.playById(SfxId.GroupChatReceived);
 }
 
 function handleTalkRequest(client: Client, reader: EoReader) {
@@ -170,7 +170,7 @@ function handleTalkReply(client: Client, reader: EoReader) {
       message: `${capitalize(packet.name)} ${client.getResourceString(EOResourceID.SYS_CHAT_PM_PLAYER_COULD_NOT_BE_FOUND)}`,
       channel: pmChannel,
     });
-    playSfxById(SfxId.PrivateMessageSent);
+    client.audioController.playById(SfxId.PrivateMessageSent);
   }
 }
 

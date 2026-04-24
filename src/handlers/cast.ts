@@ -11,7 +11,7 @@ import {
 import type { Client } from '@/client';
 import { ITEM_PROTECT_TICKS_NPC } from '@/consts';
 import { EffectTargetNpc, Emote, HealthBar } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleCastReply(client: Client, reader: EoReader) {
@@ -138,7 +138,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
     packet.npcKilledData.killerId,
     new Emote(EmoteType.LevelUp),
   );
-  playSfxById(SfxId.LevelUp);
+  client.audioController.playById(SfxId.LevelUp);
   if (packet.levelUp) {
     client.level = packet.levelUp.level;
     client.maxHp = packet.levelUp.maxHp;

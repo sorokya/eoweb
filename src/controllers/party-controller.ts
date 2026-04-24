@@ -11,7 +11,7 @@ import {
 import type { Client } from '@/client';
 import { DialogResourceID, EOResourceID } from '@/edf';
 import { Emote } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize } from '@/utils';
 
@@ -136,7 +136,7 @@ export class PartyController {
 
   notifyJoinedParty(members: PartyMember[]) {
     this.members = members;
-    playSfxById(SfxId.JoinParty);
+    this.client.audioController.playById(SfxId.JoinParty);
     const message = this.client.getResourceString(
       EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED,
     );
@@ -167,7 +167,7 @@ export class PartyController {
       return;
     }
 
-    playSfxById(SfxId.MemberLeftParty);
+    this.client.audioController.playById(SfxId.MemberLeftParty);
 
     const message = `${capitalize(name)} ${this.client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_LEFT_THE_PARTY)}`;
     this.client.toastController.show(message);

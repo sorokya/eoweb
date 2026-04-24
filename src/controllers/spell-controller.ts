@@ -18,9 +18,12 @@ import {
   CharacterSpellChantAnimation,
   EffectAnimation,
   type EffectTarget,
+  EffectTargetCharacter,
+  EffectTargetNpc,
+  EffectTargetTile,
   NpcDeathAnimation,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { SlotType } from '@/ui/enums';
 import { getTimestamp } from './movement-controller';
 
@@ -97,7 +100,7 @@ export class SpellController {
 
       this.selectedSpellId = slot.typeId;
       this.client.emit('spellQueued', undefined);
-      playSfxById(SfxId.SpellActivate);
+      this.client.audioController.playById(SfxId.SpellActivate);
     }
   }
 
@@ -244,9 +247,37 @@ export class SpellController {
       new EffectAnimation(record.graphicId, target, metadata),
     );
 
-    if (metadata.sfx) {
-      playSfxById(metadata.sfx);
+    if (!metadata.sfx) {
+      return;
     }
+
+    if (target instanceof EffectTargetCharacter) {
+      if (target.playerId === this.client.playerId) {
+        this.client.audioController.playById(metadata.sfx);
+        return;
+      }
+
+      const position = this.client.getCharacterById(target.playerId)?.coords;
+      if (position) {
+        this.client.audioController.playAtPosition(metadata.sfx, position);
+        return;
+      }
+    }
+
+    if (target instanceof EffectTargetNpc) {
+      const position = this.client.getNpcByIndex(target.index)?.coords;
+      if (position) {
+        this.client.audioController.playAtPosition(metadata.sfx, position);
+        return;
+      }
+    }
+
+    if (target instanceof EffectTargetTile) {
+      this.client.audioController.playAtPosition(metadata.sfx, target.coords);
+      return;
+    }
+
+    this.client.audioController.playById(metadata.sfx);
   }
 
   tick(): void {

@@ -15,7 +15,7 @@ import {
 import type { Client } from '@/client';
 import { GOLD_ITEM_ID } from '@/consts';
 import { DialogResourceID } from '@/edf';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatIcon } from '@/ui/enums';
 
 function handleStatSkillPlayer(client: Client, reader: EoReader) {
@@ -37,7 +37,7 @@ function handleStatSkillPlayer(client: Client, reader: EoReader) {
   client.secondaryStats.armor = packet.stats.secondaryStats.armor;
   client.secondaryStats.evade = packet.stats.secondaryStats.evade;
   client.emit('statsUpdate', undefined);
-  playSfxById(SfxId.InventoryPickup);
+  client.audioController.playById(SfxId.InventoryPickup);
 }
 
 function handleStatSkillOpen(client: Client, reader: EoReader) {
@@ -84,7 +84,7 @@ function handleStatSkillTake(client: Client, reader: EoReader) {
 
   client.emit('skillsChanged', undefined);
   client.statSkillController.notifySkillsChanged();
-  playSfxById(SfxId.LearnNewSpell);
+  client.audioController.playById(SfxId.LearnNewSpell);
 
   const name = client.getEsfRecordById(packet.spellId)?.name ?? '';
   const msg = client.locale.skillMasterLearnedMsg.replace('{name}', name);
@@ -132,7 +132,7 @@ function handleStatSkillJunk(client: Client, reader: EoReader) {
   client.emit('statsUpdate', undefined);
   client.emit('skillsChanged', undefined);
   client.statSkillController.notifySkillsChanged();
-  playSfxById(SfxId.LearnNewSpell);
+  client.audioController.playById(SfxId.LearnNewSpell);
 
   const strings = client.getDialogStrings(
     DialogResourceID.SKILL_RESET_CHARACTER_COMPLETE,
@@ -153,7 +153,7 @@ function handleStatSkillAccept(client: Client, reader: EoReader) {
   }
   client.emit('skillsChanged', undefined);
   client.statSkillController.notifySkillsChanged();
-  playSfxById(SfxId.InventoryPickup);
+  client.audioController.playById(SfxId.InventoryPickup);
 
   const name = client.getEsfRecordById(packet.spell.id)?.name ?? '';
   const msg = client.locale.spellTrainedMsg

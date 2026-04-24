@@ -4,7 +4,6 @@ import {
   Emote,
   type EquipmentMapInfo,
   Gender,
-  MapTileSpec,
 } from 'eolib';
 import { CanvasSource, Rectangle, Texture } from 'pixi.js';
 import type { Client } from '@/client';
@@ -278,7 +277,6 @@ export class Atlas {
   private staticEntries: Map<StaticAtlasEntryType, TileAtlasEntry> = new Map();
   private client: Client;
   mapId = 0;
-  private mapHasChairs = false;
   private bmpsToLoad: Bmp[] = [];
   private pendingBmpPromises: Promise<void>[] = [];
   private loading = false;
@@ -912,19 +910,6 @@ export class Atlas {
     this.currentAtlasIndex = 0;
     this.ctx = this.atlases[0].getContext();
 
-    const chairSpecs = [
-      MapTileSpec.ChairAll,
-      MapTileSpec.ChairDown,
-      MapTileSpec.ChairLeft,
-      MapTileSpec.ChairRight,
-      MapTileSpec.ChairUp,
-      MapTileSpec.ChairDownRight,
-      MapTileSpec.ChairUpLeft,
-    ];
-    this.mapHasChairs = this.client.map!.tileSpecRows.some((r) =>
-      r.tiles.some((t) => chairSpecs.includes(t.tileSpec)),
-    );
-
     this.loadMapGraphicLayers();
     this.loadStaticEntries();
     this.loadEmoteEntries();
@@ -1353,7 +1338,7 @@ export class Atlas {
               CharacterFrame.ChairDownRight,
               CharacterFrame.ChairUpLeft,
             ].includes(i as CharacterFrame) &&
-            !this.mapHasChairs
+            !this.client.mapRenderer.hasChairs
           ) {
             frames.push(undefined);
             continue;

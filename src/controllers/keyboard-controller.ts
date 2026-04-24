@@ -14,7 +14,7 @@ import {
   CharacterRangedAttackAnimation,
   CharacterWalkAnimation,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { bigCoordsToCoords, getNextCoords } from '@/utils';
 import { getTimestamp } from './movement-controller';
 
@@ -431,7 +431,7 @@ export class KeyboardController {
     }
 
     if (this.isOrWasInputHeld(Input.Tab) && this.minimapTicks === 0) {
-      playSfxById(SfxId.ButtonClick);
+      this.client.audioController.playById(SfxId.ButtonClick);
       this.client.toggleMinimap();
       this.minimapTicks = WALK_TICKS;
     }
@@ -517,7 +517,7 @@ export class KeyboardController {
         const shield = this.client.equipment.shield;
         const record = this.client.getEifRecordById(shield);
         if (!record || record.subtype !== ItemSubtype.Arrows) {
-          playSfxById(SfxId.NoArrows);
+          this.client.audioController.playById(SfxId.NoArrows);
           this.client.toastController.showWarning(
             this.client.getResourceString(
               EOResourceID.STATUS_LABEL_YOU_HAVE_NO_ARROWS,

@@ -12,7 +12,7 @@ import {
 import type { Client } from '@/client';
 import { GOLD_ITEM_ID } from '@/consts';
 import { DialogResourceID, EOResourceID } from '@/edf';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { ChatIcon } from '@/ui/enums';
 import type { Vector2 } from '@/vector';
 
@@ -48,7 +48,7 @@ export class LockerController {
   }
 
   handleOpened(coords: Coords, items: ThreeItem[]): void {
-    playSfxById(SfxId.ChestOpen);
+    this.client.audioController.playById(SfxId.ChestOpen);
     this.lockerCoords = coords;
     this.items = items;
     for (const cb of this.openedSubscribers) cb(items);
@@ -101,7 +101,7 @@ export class LockerController {
   notifyLockerUpgraded(goldAmount: number, lockerUpgrades: number): void {
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
     this.client.bankController.lockerUpgrades = lockerUpgrades;
-    playSfxById(SfxId.BuySell);
+    this.client.audioController.playById(SfxId.BuySell);
 
     const msg = this.client.locale.lockerUpgradedMsg;
     this.client.toastController.showSuccess(msg);
@@ -119,12 +119,8 @@ export class LockerController {
   }
 
   lockerAt(coords: Vector2): boolean {
-    return this.client.map!.tileSpecRows.some(
-      (r) =>
-        r.y === coords.y &&
-        r.tiles.some(
-          (t) => t.x === coords.x && t.tileSpec === MapTileSpec.BankVault,
-        ),
+    return (
+      this.client.mapRenderer.getTileSpecAt(coords) === MapTileSpec.BankVault
     );
   }
 

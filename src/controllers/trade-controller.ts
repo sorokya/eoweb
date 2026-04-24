@@ -11,7 +11,7 @@ import {
 import type { Client } from '@/client';
 import { DialogResourceID } from '@/edf';
 import { TradeState } from '@/game-state';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { capitalize } from '@/utils';
 
 export class TradeController {
@@ -107,13 +107,17 @@ export class TradeController {
   }
 
   notifyPlayerAgreed(agreed: boolean) {
-    playSfxById(agreed ? SfxId.TradeAccepted : SfxId.TradeItemOfferChanged);
+    this.client.audioController.playById(
+      agreed ? SfxId.TradeAccepted : SfxId.TradeItemOfferChanged,
+    );
     this.playerAgreed = agreed;
     this.notifySubscribers();
   }
 
   notifyPartnerAgreed(agreed: boolean) {
-    playSfxById(agreed ? SfxId.TradeAccepted : SfxId.TradeItemOfferChanged);
+    this.client.audioController.playById(
+      agreed ? SfxId.TradeAccepted : SfxId.TradeItemOfferChanged,
+    );
     this.partnerAgreed = agreed;
     this.notifySubscribers();
   }
@@ -135,7 +139,7 @@ export class TradeController {
       data.find((d) => d.playerId === this.client.playerId)?.items ?? [];
     this.partnerItems =
       data.find((d) => d.playerId === this.partnerId)?.items ?? [];
-    playSfxById(SfxId.TradeItemOfferChanged);
+    this.client.audioController.playById(SfxId.TradeItemOfferChanged);
     this.scam = scam;
     this.playerAgreed = false;
     this.partnerAgreed = false;
@@ -165,6 +169,6 @@ export class TradeController {
     }
 
     this.notifyClosed();
-    playSfxById(SfxId.BuySell);
+    this.client.audioController.playById(SfxId.BuySell);
   }
 }

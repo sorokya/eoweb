@@ -15,13 +15,8 @@ import {
 
 import type { Client } from '@/client';
 import { EMOTE_ANIMATION_TICKS, INITIAL_IDLE_TICKS } from '@/consts';
-import {
-  CharacterWalkAnimation,
-  EffectAnimation,
-  EffectTargetCharacter,
-  Emote,
-} from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { CharacterWalkAnimation, Emote } from '@/render';
+import { SfxId } from '@/sfx';
 import { randomRange } from '@/utils';
 import type { Vector2 } from '@/vector';
 
@@ -62,23 +57,12 @@ export class MovementController {
       : new WalkPlayerClientPacket();
 
     if (this.client.commandController.nowall) {
-      playSfxById(SfxId.GhostPlayer);
+      this.client.audioController.playById(SfxId.GhostPlayer);
     }
 
-    const spec = this.client
-      .map!.tileSpecRows.find((r) => r.y === coords.y)
-      ?.tiles.find((t) => t.x === coords.x);
-
-    if (spec && spec.tileSpec === MapTileSpec.Water) {
-      const metadata = this.client.getEffectMetadata(9);
-      playSfxById(metadata.sfx);
-      this.client.animationController.effects.push(
-        new EffectAnimation(
-          9,
-          new EffectTargetCharacter(this.client.playerId),
-          metadata,
-        ),
-      );
+    const spec = this.client.mapRenderer.getTileSpecAt(coords);
+    if (spec && spec === MapTileSpec.Water) {
+      this.client.animationController.playSplooshieEffect(this.client.playerId);
     }
 
     packet.walkAction = new WalkAction();
@@ -102,7 +86,7 @@ export class MovementController {
     const player = this.client.getPlayerCharacter();
     const metadata = this.client.getWeaponMetadata(player!.equipment.weapon!);
     const index = randomRange(0, metadata.sfx.length - 1);
-    playSfxById(metadata.sfx[index]);
+    this.client.audioController.playById(metadata.sfx[index]);
 
     if (metadata.sfx[0] === SfxId.Harp1 || metadata.sfx[0] === SfxId.Guitar1) {
       this.client.animationController.characterEmotes.set(
@@ -111,26 +95,15 @@ export class MovementController {
       );
     }
 
-    const spec = this.client
-      .map!.tileSpecRows.find((r) => r.y === player!.coords.y!)
-      ?.tiles.find((t) => t.x === player!.coords.x!);
-
-    if (spec && spec.tileSpec === MapTileSpec.Water) {
-      const metadata = this.client.getEffectMetadata(9);
-      playSfxById(metadata.sfx);
-      this.client.animationController.effects.push(
-        new EffectAnimation(
-          9,
-          new EffectTargetCharacter(this.client.playerId),
-          metadata,
-        ),
-      );
+    const coords = this.client.getPlayerCoords();
+    const spec = this.client.mapRenderer.getTileSpecAt(coords);
+    if (spec && spec === MapTileSpec.Water) {
+      this.client.animationController.playSplooshieEffect(this.client.playerId);
     }
     this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
   }
 
   sit(): void {
-    playSfxById(SfxId.Sit);
     const packet = new SitRequestClientPacket();
     packet.sitAction = SitAction.Sit;
     packet.sitActionData = new SitRequestClientPacket.SitActionDataSit();

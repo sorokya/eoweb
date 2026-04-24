@@ -64,6 +64,10 @@ export const PLAYER_MENU_ITEM_HEIGHT = 15;
 export const PLAYER_MENU_OFFSET_Y = 10;
 
 export const NUMBER_OF_EFFECTS = 34;
+export const SPLOOSHIE_EFFECT_ID = 9;
+export const ADMIN_HIDE_EFFECT_ID = 25;
+export const ADMIN_WARP_LEAVE_EFFECT_ID = 3;
+export const ADMIN_WARP_ENTER_EFFECT_ID = 4;
 export const NUMBER_OF_SLASHES = 9;
 
 export const ITEM_PROTECT_TICKS_NPC = 250;
