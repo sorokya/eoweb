@@ -246,10 +246,10 @@ export async function getEdf(id: number): Promise<Edf | null> {
 
     db.put('edfs', buf, id);
 
-    return Edf.deserialize(new Uint8Array(data));
+    return Edf.deserialize(id, new Uint8Array(data));
   }
 
-  return Edf.deserialize(buf);
+  return Edf.deserialize(id, buf);
 }
 
 export async function getEif(): Promise<Eif | null> {

@@ -11,7 +11,7 @@ export class Edf {
     return this.lines[index];
   }
 
-  static deserialize(buf: Uint8Array): Edf {
+  static deserialize(id: number, buf: Uint8Array): Edf {
     const edf = new Edf();
     edf.lines = [];
 
@@ -20,14 +20,21 @@ export class Edf {
     const content = decoder.decode(buf);
     let pos = 0;
     while (true) {
-      const eol = content.indexOf('\r\n', pos);
-      if (eol === -1) {
+      let eol = content.indexOf('\r\n', pos);
+      if (eol === -1 && pos > 0) {
         break;
       }
+
+      if (eol === -1) {
+        eol = content.length;
+      }
+
       const line = content.substring(pos, eol);
       const lineBuf = encoder.encode(line);
       deinterleave(lineBuf);
-      swapMultiples(lineBuf, 7);
+      if (id !== 3) {
+        swapMultiples(lineBuf, 7);
+      }
       edf.lines.push(decoder.decode(lineBuf));
       pos += line.length + 2;
     }

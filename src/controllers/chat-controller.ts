@@ -27,9 +27,11 @@ export class ChatController {
       return;
     }
 
-    const trimmed = (
-      this.client.drunkController.drunk ? makeDrunk(message) : message
-    ).substring(0, MAX_CHAT_LENGTH);
+    const trimmed = this.client.socialController
+      .filterNaughtyWords(
+        this.client.drunkController.drunk ? makeDrunk(message) : message,
+      )
+      .substring(0, MAX_CHAT_LENGTH);
 
     if (
       trimmed.startsWith('#') &&

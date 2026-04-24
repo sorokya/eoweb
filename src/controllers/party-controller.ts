@@ -101,9 +101,13 @@ export class PartyController {
     });
   }
 
-  notifyInvitation(playerId: number, type: PartyRequestType) {
-    const name = this.client.getCharacterById(playerId)?.name;
-    if (!name) {
+  notifyInvitation(playerId: number, name: string, type: PartyRequestType) {
+    if (
+      this.client.configController.partyRequests === 'none' ||
+      (this.client.configController.partyRequests === 'friends' &&
+        !this.client.socialController.isFriend(name)) ||
+      this.client.socialController.isIgnored(name)
+    ) {
       return;
     }
 

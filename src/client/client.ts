@@ -281,6 +281,13 @@ export class Client {
     getEsf().then((esf) => {
       this.esf = esf!;
     });
+    getEdf(3).then((edf) => {
+      this.socialController.naughtyWords =
+        edf
+          ?.getLine(0)
+          ?.split(':')
+          .filter((word) => word.length > 0) || [];
+    });
     getEdf(4).then((edf) => {
       this.edfs.jukebox = edf;
       this.jukeboxController.loadTracks();

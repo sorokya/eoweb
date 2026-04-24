@@ -75,6 +75,15 @@ export class TradeController {
   }
 
   notifyTradeRequested(playerId: number, playerName: string) {
+    if (
+      this.client.configController.tradeRequests === 'none' ||
+      (this.client.configController.tradeRequests === 'friends' &&
+        !this.client.socialController.isFriend(playerName)) ||
+      this.client.socialController.isIgnored(playerName)
+    ) {
+      return;
+    }
+
     this.partnerId = playerId;
     this.partnerName = capitalize(playerName);
     this.state = TradeState.Pending;

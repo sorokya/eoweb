@@ -27,6 +27,7 @@ const IGNORE_KEY = 'eoweb:social:ignore';
 
 export class SocialController {
   private client: Client;
+  naughtyWords: string[] = [];
   playerList: OnlinePlayer[] = [];
   friendList: string[];
   ignoreList: string[];
@@ -147,5 +148,29 @@ export class SocialController {
   removeIgnore(playerName: string): void {
     this.ignoreList = this.ignoreList.filter((name) => name !== playerName);
     localStorage.setItem(IGNORE_KEY, JSON.stringify(this.ignoreList));
+  }
+
+  isFriend(playerName: string): boolean {
+    return this.friendList.includes(playerName);
+  }
+
+  isIgnored(playerName: string): boolean {
+    return this.ignoreList.includes(playerName);
+  }
+
+  filterNaughtyWords(message: string): string {
+    if (
+      !this.client.configController.profanityFilter ||
+      this.naughtyWords.length === 0
+    ) {
+      return message;
+    }
+
+    let filteredMessage = message;
+    for (const word of this.naughtyWords) {
+      const regex = new RegExp(word, 'gi');
+      filteredMessage = filteredMessage.replace(regex, '*'.repeat(word.length));
+    }
+    return filteredMessage;
   }
 }

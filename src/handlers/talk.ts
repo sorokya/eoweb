@@ -31,15 +31,16 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
     return;
   }
 
+  const message = client.socialController.filterNaughtyWords(packet.message);
   client.animationController.characterChats.set(
     character.playerId,
-    new ChatBubble(client.sans11!, packet.message),
+    new ChatBubble(client.sans11!, message),
   );
 
   client.emit('chat', {
     channel: ChatChannels.Local,
     name: capitalize(character.name),
-    message: packet.message,
+    message: message,
   });
 }
 
@@ -59,7 +60,7 @@ function handleTalkMsg(client: Client, reader: EoReader) {
   client.emit('chat', {
     icon: ChatIcon.GlobalAnnounce,
     name: capitalize(packet.playerName),
-    message: packet.message,
+    message: client.socialController.filterNaughtyWords(packet.message),
     channel: ChatChannels.Global,
   });
 }
@@ -69,7 +70,7 @@ function handleTalkAdmin(client: Client, reader: EoReader) {
   client.emit('chat', {
     icon: ChatIcon.GM,
     name: capitalize(packet.playerName),
-    message: packet.message,
+    message: client.socialController.filterNaughtyWords(packet.message),
     channel: ChatChannels.Admin,
   });
   client.audioController.playById(SfxId.AdminChatReceived);
@@ -77,11 +78,20 @@ function handleTalkAdmin(client: Client, reader: EoReader) {
 
 function handleTalkTell(client: Client, reader: EoReader) {
   const packet = TalkTellServerPacket.deserialize(reader);
+  if (
+    client.configController.whispers === 'none' ||
+    (client.configController.whispers === 'friends' &&
+      !client.socialController.isFriend(packet.playerName)) ||
+    client.socialController.isIgnored(packet.playerName)
+  ) {
+    return;
+  }
+
   const pmChannel = `pm:${packet.playerName.toLowerCase()}` as const;
   client.emit('chat', {
     icon: ChatIcon.Note,
     name: capitalize(packet.playerName),
-    message: packet.message,
+    message: client.socialController.filterNaughtyWords(packet.message),
     channel: pmChannel,
   });
   client.audioController.playById(SfxId.PrivateMessageReceived);
@@ -89,26 +99,27 @@ function handleTalkTell(client: Client, reader: EoReader) {
 
 function handleTalkAnnounce(client: Client, reader: EoReader) {
   const packet = TalkAnnounceServerPacket.deserialize(reader);
+  const message = client.socialController.filterNaughtyWords(packet.message);
   client.animationController.characterChats.set(
     client.playerId,
-    new ChatBubble(client.sans11!, packet.message),
+    new ChatBubble(client.sans11!, message),
   );
   client.emit('chat', {
     channel: ChatChannels.Local,
     name: capitalize(packet.playerName),
-    message: packet.message,
+    message: message,
     icon: ChatIcon.GlobalAnnounce,
   });
   client.emit('chat', {
     channel: ChatChannels.Admin,
     name: capitalize(packet.playerName),
-    message: packet.message,
+    message: message,
     icon: ChatIcon.GlobalAnnounce,
   });
   client.emit('chat', {
     channel: ChatChannels.Global,
     name: capitalize(packet.playerName),
-    message: packet.message,
+    message: message,
     icon: ChatIcon.GlobalAnnounce,
   });
   client.audioController.playById(SfxId.AdminAnnounceReceived);
@@ -123,10 +134,12 @@ function handleTalkOpen(client: Client, reader: EoReader) {
     return;
   }
 
+  const message = client.socialController.filterNaughtyWords(packet.message);
+
   client.emit('chat', {
     channel: ChatChannels.Party,
     name: capitalize(player.name),
-    message: packet.message,
+    message,
     icon: ChatIcon.PlayerParty,
   });
 
@@ -141,7 +154,7 @@ function handleTalkOpen(client: Client, reader: EoReader) {
       packet.playerId,
       new ChatBubble(
         client.sans11!,
-        packet.message,
+        message,
         COLORS.ChatBubble,
         COLORS.ChatBubbleBackgroundParty,
       ),
@@ -156,7 +169,7 @@ function handleTalkRequest(client: Client, reader: EoReader) {
   client.emit('chat', {
     icon: ChatIcon.Guild,
     name: capitalize(packet.playerName),
-    message: packet.message,
+    message: client.socialController.filterNaughtyWords(packet.message),
     channel: ChatChannels.Guild,
   });
 }

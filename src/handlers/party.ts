@@ -40,6 +40,7 @@ function handlePartyRequest(client: Client, reader: EoReader) {
   const packet = PartyRequestServerPacket.deserialize(reader);
   client.partyController.notifyInvitation(
     packet.inviterPlayerId,
+    packet.playerName,
     packet.requestType,
   );
 }
