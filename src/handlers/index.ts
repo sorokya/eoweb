@@ -23,12 +23,14 @@ import { registerItemHandlers } from './item';
 import { registerJukeboxHandlers } from './jukebox';
 import { registerLockerHandlers } from './locker';
 import { registerLoginHandlers } from './login';
+import { registerMarriageHandlers } from './marriage';
 import { registerMessageHandlers } from './message';
 import { registerMusicHandlers } from './music';
 import { registerNpcHandlers } from './npc';
 import { registerPaperdollHandlers } from './paperdoll';
 import { registerPartyHandlers } from './party';
 import { registerPlayersHandlers } from './players';
+import { registerPriestHandlers } from './priest';
 import { registerQuestHandlers } from './quest';
 import { registerRangeHandlers } from './range';
 import { registerRecoverHandlers } from './recover';
@@ -87,4 +89,6 @@ export function registerAllHandlers(client: Client): void {
   registerGuildHandlers(client);
   registerCitizenHandlers(client);
   registerJukeboxHandlers(client);
+  registerMarriageHandlers(client);
+  registerPriestHandlers(client);
 }

@@ -27,6 +27,7 @@ export { JukeboxController } from './jukebox-controller';
 export { KeyboardController } from './keyboard-controller';
 export { LockerController } from './locker-controller';
 export { MapController } from './map-controller';
+export { MarriageController } from './marriage-controller';
 export { MouseController } from './mouse-controller';
 export { MovementController } from './movement-controller';
 export { NpcController } from './npc-controller';

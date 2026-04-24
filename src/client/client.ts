@@ -57,6 +57,7 @@ import {
   KeyboardController,
   LockerController,
   MapController,
+  MarriageController,
   MouseController,
   MovementController,
   NpcController,
@@ -205,6 +206,7 @@ export class Client {
   alertController: AlertController;
   toastController: ToastController;
   partyController: PartyController;
+  marriageController: MarriageController;
   npcMetadata = getNpcMetaData();
   weaponMetadata: Map<number, WeaponMetadata> = new Map();
   shieldMetadata = getShieldMetaData();
@@ -326,6 +328,7 @@ export class Client {
     this.tradeController = new TradeController(this);
     this.guildController = new GuildController(this);
     this.innController = new InnController(this);
+    this.marriageController = new MarriageController(this);
     this.partyController = new PartyController(this);
     this.toastController = new ToastController();
     this.jukeboxController = new JukeboxController(this);
