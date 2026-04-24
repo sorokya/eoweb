@@ -1,5 +1,6 @@
 import type { SkillLearn } from 'eolib';
 import { useCallback, useEffect, useState } from 'preact/hooks';
+import { TradeState } from '@/game-state';
 import {
   CHAT_Z,
   DIALOG_Z,
@@ -45,6 +46,7 @@ import {
   StatusMessages,
   TouchActionButtons,
   TouchJoystick,
+  TradeDialog,
   useItemDrag,
   useWindowManager,
   WindowManagerProvider,
@@ -70,6 +72,7 @@ const ALL_DIALOG_IDS: DialogId[] = [
   'skillMaster',
   'innKeeper',
   'packet-log',
+  'trade',
 ];
 
 function DialogById({ id }: { id: DialogId }) {
@@ -112,6 +115,8 @@ function DialogById({ id }: { id: DialogId }) {
       return <InnKeeperDialog />;
     case 'packet-log':
       return <PacketLogDialog />;
+    case 'trade':
+      return <TradeDialog />;
   }
 }
 
@@ -203,6 +208,15 @@ function InGameContent() {
     };
     client.guildController.subscribeOpened(handleGuildOpened);
 
+    const handleTradeOpened = () => {
+      if (client.tradeController.state === TradeState.Open) {
+        openDialog('trade');
+      } else if (client.tradeController.state === TradeState.None) {
+        closeDialog('trade');
+      }
+    };
+    client.tradeController.subscribe(handleTradeOpened);
+
     const handleQuestDialogOpened = () => {
       openDialog('questNpc');
     };
@@ -220,6 +234,7 @@ function InGameContent() {
       closeDialog('innKeeper');
       closeDialog('questNpc');
       client.questController.resetDialog();
+      closeDialog('trade');
     };
     client.movementController.subscribeWalked(handleWalked);
 
@@ -252,6 +267,7 @@ function InGameContent() {
       client.boardController.unsubscribeBoardOpened(handleBoardOpened);
       client.guildController.unsubscribeOpened(handleGuildOpened);
       client.questController.unsubscribeDialogOpened(handleQuestDialogOpened);
+      client.tradeController.unsubscribe(handleTradeOpened);
       client.movementController.unsubscribeWalked(handleWalked);
       client.off('toggleCommandPalette', handleToggleCommandPalette);
     };

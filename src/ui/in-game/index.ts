@@ -33,6 +33,7 @@ export { ShopDialog } from './dialogs/shop-dialog';
 export { SkillMasterDialog } from './dialogs/skill-master-dialog';
 export { SocialDialog } from './dialogs/social-dialog';
 export { SpellsDialog } from './dialogs/spells-dialog';
+export { TradeDialog } from './dialogs/trade-dialog';
 // HUD components
 export { DesktopEmoteButton } from './hud/desktop-emote-button';
 export { HotBar } from './hud/hot-bar';

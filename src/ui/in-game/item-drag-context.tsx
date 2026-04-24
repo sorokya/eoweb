@@ -18,6 +18,7 @@ export type DragDropResult =
   | { type: 'hotbar-slot'; index: number }
   | { type: 'chest' }
   | { type: 'locker' }
+  | { type: 'trade' }
   | { type: 'junk' }
   | { type: 'ground' }
   | { type: 'cancelled' };
@@ -205,6 +206,14 @@ export function ItemDragProvider({
       );
       if (lockerEl) {
         resolve({ type: 'locker' });
+        return;
+      }
+
+      const tradeEl = (target as HTMLElement).closest<HTMLElement>(
+        '[data-trade-drop]',
+      );
+      if (tradeEl) {
+        resolve({ type: 'trade' });
         return;
       }
 

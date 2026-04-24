@@ -30,7 +30,8 @@ export type DialogId =
   | 'barber'
   | 'board'
   | 'guild'
-  | 'packet-log';
+  | 'packet-log'
+  | 'trade';
 
 type DialogMeta = {
   /** Saved layout preference (persisted to localStorage). */

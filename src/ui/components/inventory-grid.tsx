@@ -410,6 +410,26 @@ export function InventoryGrid({ itemIds }: Props) {
             client.chestController.addItem(item.id);
           } else if (result.type === 'locker') {
             client.lockerController.addItem(item.id);
+          } else if (result.type === 'trade') {
+            const invItem = client.inventoryController.getItemById(item.id);
+            if (!invItem) return;
+            if (invItem.amount > 1) {
+              const itemName =
+                client.getEifRecordById(item.id)?.name ?? String(item.id);
+              client.alertController.showAmount(
+                locale.tradeDropHowMany,
+                itemName,
+                invItem.amount,
+                locale.tradeDrop,
+                (amount) => {
+                  if (amount !== null && amount > 0) {
+                    client.tradeController.addItem(item.id, amount);
+                  }
+                },
+              );
+            } else {
+              client.tradeController.addItem(item.id, 1);
+            }
           }
         }
       },
