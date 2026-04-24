@@ -158,8 +158,24 @@ export function ChatMessageList({ messages, heightClass = 'max-h-40' }: Props) {
 
   useEffect(() => {
     const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages.length]);
+    if (!el) return;
+
+    el.scrollTop = el.scrollHeight;
+
+    let rafId: number;
+    const observer = new MutationObserver(() => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+      });
+    });
+
+    observer.observe(el, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   const rows = buildRows(messages);
 
