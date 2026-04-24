@@ -226,7 +226,17 @@ export class QuestController {
     this.refreshQuestProgress();
   }
 
+  private _refreshDebounce?: number;
   refreshQuestProgress(): void {
+    if (this._refreshDebounce !== undefined) {
+      clearTimeout(this._refreshDebounce);
+    }
+    this._refreshDebounce = setTimeout(() => {
+      this.sendRefreshProgressPacket();
+    }, 100);
+  }
+
+  private sendRefreshProgressPacket(): void {
     const packet = new QuestListClientPacket();
     packet.page = QuestPage.Progress;
     this.client.bus!.send(packet);

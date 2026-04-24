@@ -25,6 +25,7 @@ function handleMessageOpen(client: Client, reader: EoReader) {
     icon: ChatIcon.QuestMessage,
     message: packet.message,
   });
+  client.questController.refreshQuestProgress();
 }
 
 function handleMessageClose(client: Client) {
