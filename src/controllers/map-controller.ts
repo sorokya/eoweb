@@ -9,6 +9,7 @@ import {
 import type { Client } from '@/client';
 import { Door } from '@/door';
 import { EOResourceID } from '@/edf';
+import { CharacterDeathAnimation, NpcDeathAnimation } from '@/render';
 import { SfxId } from '@/sfx';
 import type { Vector2 } from '@/vector';
 
@@ -332,19 +333,30 @@ export class MapController {
       return true;
     }
 
-    if (
-      this.client.nearby.npcs.some(
-        (n) => n.coords.x === coords.x && n.coords.y === coords.y,
-      )
-    ) {
+    const npc = this.client.nearby.npcs.find(
+      (n) => n.coords.x === coords.x && n.coords.y === coords.y,
+    );
+    if (npc) {
+      const animation = this.client.animationController.npcAnimations.get(
+        npc.index,
+      );
+      if (animation instanceof NpcDeathAnimation) {
+        return true;
+      }
       return false;
     }
 
-    if (
-      this.client.nearby.characters.some(
-        (c) => c.coords.x === coords.x && c.coords.y === coords.y,
-      )
-    ) {
+    const character = this.client.nearby.characters.find(
+      (c) => c.coords.x === coords.x && c.coords.y === coords.y,
+    );
+    if (character) {
+      const animation = this.client.animationController.characterAnimations.get(
+        character.playerId,
+      );
+      if (animation instanceof CharacterDeathAnimation) {
+        return true;
+      }
+
       // TODO: Ghost
       return false;
     }
