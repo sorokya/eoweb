@@ -112,6 +112,7 @@ function buildRows(messages: ChatMessage[]): RowItem[] {
   let lastGroupTs = Number.NEGATIVE_INFINITY;
   let currentGroup: GroupItem | null = null;
 
+  let groupCount = 0;
   for (const msg of messages) {
     if (msg.timestampUtc - lastTs > SEPARATOR_THRESHOLD_MS) {
       rows.push({
@@ -137,7 +138,7 @@ function buildRows(messages: ChatMessage[]): RowItem[] {
     } else {
       currentGroup = {
         type: 'group',
-        key: `group-${msg.timestampUtc}`,
+        key: `group-${msg.timestampUtc}-${groupCount++}`,
         header: msg,
         continuations: [],
       };
