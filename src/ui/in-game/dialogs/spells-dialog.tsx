@@ -177,7 +177,7 @@ export function SpellsDialog() {
           {locale.spellsNoSpells}
         </p>
       ) : (
-        <div class='grid grid-cols-2 gap-2 p-2 sm:grid-cols-3'>
+        <div class='grid max-h-80 grid-cols-2 gap-2 overflow-y-auto p-2 sm:grid-cols-3'>
           {spells.map((spell) => (
             <SpellCard key={spell.id} spell={spell} skillPoints={skillPoints} />
           ))}

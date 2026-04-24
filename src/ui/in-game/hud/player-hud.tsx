@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 import { BiSolidStar } from 'react-icons/bi';
 import { FaCoins, FaHeart, FaSignal } from 'react-icons/fa';
 import { GiWeightLiftingUp } from 'react-icons/gi';
 import { GrMagic } from 'react-icons/gr';
 import type { HudWidget, HudWidgetId } from '@/controllers';
+import { playSfxById, SfxId } from '@/sfx';
 import { ProgressBar } from '@/ui/components';
 import {
   HUD_ICON_BG,
@@ -149,7 +150,7 @@ function GoldWidget({ stats }: WidgetProps) {
 function PingWidget() {
   const client = useClient();
   const { locale } = useLocale();
-  const { openDialog } = useWindowManager();
+  const { toggleDialog } = useWindowManager();
   const [ping, setPing] = useState<number | null>(() => {
     const h = client.pingController.pingHistory;
     return h.length > 0 ? h[h.length - 1] : null;
@@ -161,6 +162,15 @@ function PingWidget() {
       setPing(h.length > 0 ? h[h.length - 1] : null);
     });
   }, [client.pingController]);
+
+  const handleClick = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      playSfxById(SfxId.ButtonClick);
+      toggleDialog('ping');
+    },
+    [toggleDialog],
+  );
 
   const color = ping !== null ? pingColor(ping) : null;
   const colorClass =
@@ -176,7 +186,7 @@ function PingWidget() {
     <button
       type='button'
       class={`flex cursor-pointer items-center gap-0.5 bg-transparent text-[10px] leading-tight ${HUD_TEXT}`}
-      onClick={() => openDialog('ping')}
+      onClick={handleClick}
     >
       <span class={`${colorClass} ${HUD_ICON_BG}`}>
         <FaSignal size={12} />

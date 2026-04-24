@@ -167,7 +167,7 @@ export function QuestsDialog() {
 
   return (
     <DialogBase id='quests' title={locale.questsTitle} size='md'>
-      <div class='flex flex-col gap-2 p-1'>
+      <div class='flex flex-col gap-2 p-1 max-h-80 overflow-y-auto'>
         <Tabs
           items={TABS as unknown as { id: string; label: string }[]}
           activeId={activeTab}
