@@ -103,7 +103,7 @@ export class ChatController {
       return;
     }
 
-    if (trimmed.startsWith("'") && this.client.partyMembers.length) {
+    if (trimmed.startsWith("'") && this.client.partyController.members.length) {
       const packet = new TalkOpenClientPacket();
       packet.message = trimmed.substring(1);
       this.client.bus!.send(packet);

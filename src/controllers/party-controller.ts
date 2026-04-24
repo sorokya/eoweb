@@ -60,12 +60,12 @@ export class PartyController {
   }
 
   refresh(): void {
-    if (this.client.partyMembers.length === 0) {
+    if (this.members.length === 0) {
       return;
     }
 
     const packet = new PartyTakeClientPacket();
-    packet.membersCount = this.client.partyMembers.length;
+    packet.membersCount = this.members.length;
     this.client.bus!.send(packet);
   }
 
@@ -248,9 +248,7 @@ export class PartyController {
           );
         }
 
-        const member = this.client.partyMembers.find(
-          (m) => m.playerId === gain.playerId,
-        );
+        const member = this.members.find((m) => m.playerId === gain.playerId);
 
         if (member) {
           member.level = gain.levelUp;

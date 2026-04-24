@@ -76,7 +76,7 @@ export class SpellController {
 
       if (
         record.targetType === SkillTargetType.Group &&
-        !this.client.partyMembers.length
+        !this.client.partyController.members.length
       ) {
         return;
       }

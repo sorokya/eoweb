@@ -22,7 +22,6 @@ import {
   type NpcMapInfo,
   type NpcType,
   type OnlinePlayer,
-  type PartyMember,
   RefreshRequestClientPacket,
   type ServerSettings,
   type Spell,
@@ -227,7 +226,6 @@ export class Client {
   hotbarSlots: ISlot[] = [];
   sans11: Sans11Font;
   menuPlayerId = 0;
-  partyMembers: PartyMember[] = [];
   minimapEnabled = false;
   minimapRenderer: MinimapRenderer;
   onlinePlayers: OnlinePlayer[] = [];
@@ -827,7 +825,7 @@ export class Client {
     if (data.killerId === this.playerId) {
       killerName = this.locale.wordYou;
     } else {
-      killerName = this.partyMembers.find(
+      killerName = this.partyController.members.find(
         (m) => m.playerId === data.killerId,
       )?.name;
     }

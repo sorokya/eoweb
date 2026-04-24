@@ -145,13 +145,7 @@ export function PartyPanel() {
 
   useEffect(() => {
     const cb = () => {
-      setMembers([
-        ...client.partyController.members,
-        ...client.partyController.members,
-        ...client.partyController.members,
-        ...client.partyController.members,
-        ...client.partyController.members,
-      ]);
+      setMembers([...client.partyController.members]);
     };
     client.partyController.subscribe(cb);
     return () => client.partyController.unsubscribe(cb);

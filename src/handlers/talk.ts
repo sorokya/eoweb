@@ -48,6 +48,10 @@ function handleTalkServer(client: Client, reader: EoReader) {
   client.emit('serverChat', {
     message: packet.message,
   });
+  client.toastController.show(
+    `${client.locale.packetLogServer}: ${packet.message}`,
+  );
+  playSfxById(SfxId.ServerMessage);
 }
 
 function handleTalkMsg(client: Client, reader: EoReader) {
@@ -112,7 +116,7 @@ function handleTalkAnnounce(client: Client, reader: EoReader) {
 
 function handleTalkOpen(client: Client, reader: EoReader) {
   const packet = TalkOpenServerPacket.deserialize(reader);
-  const player = client.partyMembers.find(
+  const player = client.partyController.members.find(
     (m) => m.playerId === packet.playerId,
   );
   if (!player) {
