@@ -94,6 +94,10 @@ export class QuestController {
       this.trackedQuestNames =
         next.length > 3 ? next.slice(next.length - 3) : next;
     }
+    this._persistAndNotifyTracked();
+  }
+
+  private _persistAndNotifyTracked(): void {
     const key = trackedQuestKey(this.client.characterId);
     try {
       if (this.trackedQuestNames.length > 0) {
@@ -126,14 +130,10 @@ export class QuestController {
       this.pendingQuests = data.quests;
     }
 
-    // Auto-track when we first see dialog content for a new quest
-    if (data.dialogEntries.length > 0) {
-      const alreadyTracked = this.progressQuests.some(
-        (q) => q.name === data.npcName,
-      );
-      if (!alreadyTracked && this.trackedQuestNames.length < 3) {
-        this._pendingAutoTrack = true;
-      }
+    // Auto-track when we first see dialog content that may accept a new quest
+    if (data.dialogEntries.length > 0 && this.trackedQuestNames.length < 3) {
+      this._pendingAutoTrack = true;
+      this._autoTrackProgressSnapshot = this.progressQuests.map((q) => q.name);
     }
 
     const full: QuestDialogState = {
@@ -148,6 +148,7 @@ export class QuestController {
   }
 
   private _pendingAutoTrack = false;
+  private _autoTrackProgressSnapshot: string[] = [];
 
   handleDialogUpdated(data: Omit<QuestDialogState, 'pendingQuests'>): void {
     this.questId = data.questId;
@@ -172,17 +173,29 @@ export class QuestController {
     if (page === QuestPage.Progress) {
       this.progressQuests = progress;
 
-      // Auto-track the first new quest if pending
-      if (
-        this._pendingAutoTrack &&
-        progress.length > 0 &&
-        this.trackedQuestNames.length < 3
-      ) {
-        this._pendingAutoTrack = false;
-        this.toggleTrackedQuest(progress[0].name);
-      } else {
-        this._pendingAutoTrack = false;
+      // Remove tracked quests that no longer appear in progress (e.g. aborted)
+      const progressNames = new Set(progress.map((q) => q.name));
+      const stillTracked = this.trackedQuestNames.filter((n) =>
+        progressNames.has(n),
+      );
+      if (stillTracked.length !== this.trackedQuestNames.length) {
+        this.trackedQuestNames = stillTracked;
+        this._persistAndNotifyTracked();
       }
+
+      // Auto-track the first brand-new quest if pending
+      if (this._pendingAutoTrack && this.trackedQuestNames.length < 3) {
+        const snapshot = this._autoTrackProgressSnapshot;
+        const newQuest = progress.find(
+          (q) =>
+            !snapshot.includes(q.name) &&
+            !this.trackedQuestNames.includes(q.name),
+        );
+        if (newQuest) {
+          this.toggleTrackedQuest(newQuest.name);
+        }
+      }
+      this._pendingAutoTrack = false;
     } else {
       this.historyQuests = history;
     }
