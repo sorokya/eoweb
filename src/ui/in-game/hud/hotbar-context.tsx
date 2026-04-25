@@ -1,5 +1,11 @@
 import { createContext } from 'preact';
-import { useCallback, useContext, useEffect, useState } from 'preact/hooks';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'preact/hooks';
 import { playSfxById, SfxId } from '@/sfx';
 import { useClient } from '@/ui/context';
 import { type ISlot, SlotType } from '@/ui/enums';
@@ -84,9 +90,12 @@ export function HotbarProvider({
     playSfxById(SfxId.InventoryPlace);
   }, []);
 
+  const value = useMemo(
+    () => ({ slots, setSlot, clearSlot }),
+    [slots, setSlot, clearSlot],
+  );
+
   return (
-    <HotbarContext.Provider value={{ slots, setSlot, clearSlot }}>
-      {children}
-    </HotbarContext.Provider>
+    <HotbarContext.Provider value={value}>{children}</HotbarContext.Provider>
   );
 }

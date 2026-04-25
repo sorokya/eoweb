@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'preact/hooks';
@@ -259,13 +260,16 @@ export function ItemDragProvider({
     };
   }, []); // run once — always active; uses refs so no deps needed
 
-  const ctxValue: ItemDragContextValue = {
-    currentDrag,
-    liveX: ghostPos.x,
-    liveY: ghostPos.y,
-    startDrag,
-    cancelDrag,
-  };
+  const ctxValue = useMemo<ItemDragContextValue>(
+    () => ({
+      currentDrag,
+      liveX: ghostPos.x,
+      liveY: ghostPos.y,
+      startDrag,
+      cancelDrag,
+    }),
+    [currentDrag, ghostPos.x, ghostPos.y, startDrag, cancelDrag],
+  );
 
   return (
     <ItemDragContext.Provider value={ctxValue}>

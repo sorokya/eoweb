@@ -1,5 +1,5 @@
 import { createContext } from 'preact';
-import { useContext, useState } from 'preact/hooks';
+import { useContext, useMemo, useState } from 'preact/hooks';
 import { defaultLocale, type LocaleKey, locales } from '@/locale';
 
 type LocaleContextProps = {
@@ -17,12 +17,13 @@ type LocaleProviderProps = {
 export function LocaleProvider({ children }: LocaleProviderProps) {
   const [localeKey, setLocaleKey] = useState<LocaleKey>(defaultLocale);
 
+  const value = useMemo(
+    () => ({ localeKey, locale: locales[localeKey], setLocaleKey }),
+    [localeKey],
+  );
+
   return (
-    <LocaleContext.Provider
-      value={{ localeKey, locale: locales[localeKey], setLocaleKey }}
-    >
-      {children}
-    </LocaleContext.Provider>
+    <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
   );
 }
 
