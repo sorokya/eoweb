@@ -515,6 +515,17 @@ export const locales = {
     pingDialogAvg: 'Avg',
     pingMs: 'ms',
     pingDialogNoData: 'Waiting for data...',
+    nav: {
+      inventory: 'Inventory',
+      map: 'Map',
+      spells: 'Spells',
+      character: 'Character',
+      quests: 'Quests',
+      social: 'Social',
+      settings: 'Settings',
+      refresh: 'Refresh',
+      exit: 'Exit',
+    },
   },
 } as const;
 
