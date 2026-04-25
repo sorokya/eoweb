@@ -267,17 +267,17 @@ export enum StaticAtlasEntryType {
 }
 
 export class Atlas {
-  private characters: CharacterAtlasEntry[] = [];
-  private npcs: NpcAtlasEntry[] = [];
-  private items: ItemAtlasEntry[] = [];
-  private tiles: TileAtlasEntry[] = [];
-  private emotes: EmoteAtlasEntry[] = [];
-  private effects: EffectAtlasEntry[] = [];
-  private faceEmoteEntries: FaceEmoteAtlasEntry[] = [];
+  private characters = new Map<number, CharacterAtlasEntry>();
+  private npcs = new Map<number, NpcAtlasEntry>();
+  private items = new Map<number, ItemAtlasEntry>();
+  private tiles = new Map<string, TileAtlasEntry>();
+  private emotes = new Map<number, EmoteAtlasEntry>();
+  private effects = new Map<number, EffectAtlasEntry>();
+  private faceEmoteEntries = new Map<string, FaceEmoteAtlasEntry>();
   private staticEntries: Map<StaticAtlasEntryType, TileAtlasEntry> = new Map();
   private client: Client;
   mapId = 0;
-  private bmpsToLoad: Bmp[] = [];
+  private bmpsToLoad = new Map<string, Bmp>();
   private pendingBmpPromises: Promise<void>[] = [];
   private loading = false;
   private loadingPromise: Promise<void> | null = null;
@@ -287,12 +287,11 @@ export class Atlas {
   private atlases: AtlasCanvas[];
   private currentAtlasIndex = 0;
   private ctx: CanvasRenderingContext2D;
-  private temporaryCharacterFrames: CharacterFrameImg[] = [];
-  private temporaryFaceEmoteFrames: Array<{
-    playerId: number;
-    emoteId: number;
-    img: ImageBitmap;
-  }> = [];
+  private temporaryCharacterFrames = new Map<string, CharacterFrameImg>();
+  private temporaryFaceEmoteFrames = new Map<
+    string,
+    { playerId: number; emoteId: number; img: ImageBitmap }
+  >();
   private compositorClient: CompositorClient;
   private dirtyDynamicAtlasIndices: Set<number> = new Set();
 
@@ -344,35 +343,22 @@ export class Atlas {
   }
 
   getItem(graphicId: number): ItemAtlasEntry | undefined {
-    const item = this.items.find((i) => i.graphicId === graphicId);
-    if (!item) return undefined;
-
-    return item;
+    return this.items.get(graphicId);
   }
 
   getTile(gfxType: GfxType, graphicId: number): TileAtlasEntry | undefined {
-    const tile = this.tiles.find(
-      (t) => t.gfxType === gfxType && t.graphicId === graphicId,
-    );
-    if (!tile) return undefined;
-
-    return tile;
+    return this.tiles.get(`${gfxType}:${graphicId}`);
   }
 
   getNpcFrame(graphicId: number, frame: number): Frame | undefined {
-    const npc = this.npcs.find((n) => n.graphicId === graphicId);
-    if (!npc) return undefined;
-
-    return npc.frames[frame];
+    return this.npcs.get(graphicId)?.frames[frame];
   }
 
   getCharacterFrame(
     playerId: number,
     frame: CharacterFrame,
   ): Frame | undefined {
-    const character = this.characters.find((c) => c.playerId === playerId);
-    if (!character) return undefined;
-    return character.frames[frame];
+    return this.characters.get(playerId)?.frames[frame];
   }
 
   getStaticEntry(type: StaticAtlasEntryType): TileAtlasEntry | undefined {
@@ -381,16 +367,11 @@ export class Atlas {
 
   getEmoteFrame(emoteId: number, frameIndex: number): Frame | undefined {
     const slot = this.getEmoteSlot(emoteId);
-    const emote = this.emotes.find((e) => e.emoteId === slot);
-    if (!emote) return undefined;
-
-    return emote.frames[frameIndex];
+    return this.emotes.get(slot)?.frames[frameIndex];
   }
 
   getFaceEmoteFrame(playerId: number, emoteId: number): Frame | undefined {
-    const entry = this.faceEmoteEntries.find(
-      (e) => e.playerId === playerId && e.emoteId === emoteId,
-    );
+    const entry = this.faceEmoteEntries.get(`${playerId}:${emoteId}`);
     if (!entry) return undefined;
     return entry.pendingFrame ?? entry.frame;
   }
@@ -436,27 +417,18 @@ export class Atlas {
     effectId: number,
     frameIndex: number,
   ): Frame | undefined {
-    const effect = this.effects.find((e) => e.effectId === effectId);
-    if (!effect) return undefined;
-
-    return effect.behindFrames[frameIndex];
+    return this.effects.get(effectId)?.behindFrames[frameIndex];
   }
 
   getEffectTransparentFrame(
     effectId: number,
     frameIndex: number,
   ): Frame | undefined {
-    const effect = this.effects.find((e) => e.effectId === effectId);
-    if (!effect) return undefined;
-
-    return effect.transparentFrames[frameIndex];
+    return this.effects.get(effectId)?.transparentFrames[frameIndex];
   }
 
   getEffectFrontFrame(effectId: number, frameIndex: number): Frame | undefined {
-    const effect = this.effects.find((e) => e.effectId === effectId);
-    if (!effect) return undefined;
-
-    return effect.frontFrames[frameIndex];
+    return this.effects.get(effectId)?.frontFrames[frameIndex];
   }
 
   insert(w: number, h: number): Rect {
@@ -617,7 +589,7 @@ export class Atlas {
       h: number;
     }[] = [];
 
-    for (const character of this.characters) {
+    for (const character of this.characters.values()) {
       for (const [index, frame] of character.frames.entries()) {
         if (!frame || frame.atlasIndex === -1) continue;
 
@@ -634,7 +606,7 @@ export class Atlas {
       }
     }
 
-    for (const entry of this.faceEmoteEntries) {
+    for (const entry of this.faceEmoteEntries.values()) {
       const frame = entry.pendingFrame ?? entry.frame;
       if (frame.atlasIndex === -1) continue;
 
@@ -650,7 +622,7 @@ export class Atlas {
       });
     }
 
-    for (const npc of this.npcs) {
+    for (const npc of this.npcs.values()) {
       for (const [index, frame] of npc.frames.entries()) {
         if (!frame || frame.atlasIndex === -1) {
           continue;
@@ -669,7 +641,7 @@ export class Atlas {
       }
     }
 
-    for (const item of this.items) {
+    for (const item of this.items.values()) {
       if (item.atlasIndex === -1) {
         continue;
       }
@@ -742,9 +714,7 @@ export class Atlas {
 
       switch (placeable.type) {
         case FrameType.Character: {
-          const character = this.characters.find(
-            (c) => c.playerId === placeable.typeId,
-          );
+          const character = this.characters.get(placeable.typeId);
           if (character) {
             const frame = character.frames[placeable.frameIndex];
             frame!.atlasIndex = this.currentAtlasIndex;
@@ -754,7 +724,7 @@ export class Atlas {
           break;
         }
         case FrameType.Npc: {
-          const npc = this.npcs.find((n) => n.graphicId === placeable.typeId);
+          const npc = this.npcs.get(placeable.typeId);
           if (npc) {
             const frame = npc.frames[placeable.frameIndex];
             frame!.atlasIndex = this.currentAtlasIndex;
@@ -764,7 +734,7 @@ export class Atlas {
           break;
         }
         case FrameType.Item: {
-          const item = this.items.find((i) => i.graphicId === placeable.typeId);
+          const item = this.items.get(placeable.typeId);
 
           if (item) {
             item.atlasIndex = this.currentAtlasIndex;
@@ -774,10 +744,8 @@ export class Atlas {
           break;
         }
         case FrameType.FaceEmote: {
-          const entry = this.faceEmoteEntries.find(
-            (e) =>
-              e.playerId === placeable.typeId &&
-              e.emoteId === placeable.frameIndex,
+          const entry = this.faceEmoteEntries.get(
+            `${placeable.typeId}:${placeable.frameIndex}`,
           );
           if (entry) {
             const frame = entry.pendingFrame ?? entry.frame;
@@ -803,11 +771,11 @@ export class Atlas {
     if (this.loading) return this.loadingPromise ?? undefined;
     this.loading = true;
 
-    this.bmpsToLoad = [];
+    this.bmpsToLoad.clear();
     this.pendingBmpPromises = [];
 
     if (this.mapId !== this.client.mapId) {
-      this.tiles = [];
+      this.tiles.clear();
       const ctx = this.mapAtlas.getContext();
       ctx.clearRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
       this.mapAtlas.skyline = [{ x: 0, y: 0, w: ATLAS_SIZE }];
@@ -820,7 +788,7 @@ export class Atlas {
     this.refreshItems();
 
     if (
-      this.characters.some((c) => {
+      [...this.characters.values()].some((c) => {
         const f = c.pendingFrames || c.frames;
         return f.some((f) => f && f.atlasIndex === -1);
       })
@@ -830,7 +798,7 @@ export class Atlas {
       }
     }
 
-    if (this.bmpsToLoad.length) {
+    if (this.bmpsToLoad.size) {
       this.loadingPromise = Promise.all(this.pendingBmpPromises).then(() =>
         this.updateAtlas(),
       );
@@ -839,7 +807,7 @@ export class Atlas {
 
     // If face emote entries need compositing (no new BMPs needed — face sheet is
     // already cached after the first character composite cycle), trigger updateAtlas directly.
-    const hasPendingFaceEmotes = this.faceEmoteEntries.some(
+    const hasPendingFaceEmotes = [...this.faceEmoteEntries.values()].some(
       (e) => (e.pendingFrame ?? e.frame).atlasIndex === -1,
     );
     if (hasPendingFaceEmotes) {
@@ -852,11 +820,10 @@ export class Atlas {
   }
 
   private addBmpToLoad(gfxType: GfxType, id: number) {
-    if (
-      !this.bmpsToLoad.find((bmp) => bmp.gfxType === gfxType && bmp.id === id)
-    ) {
+    const key = `g:${gfxType}:${id}`;
+    if (!this.bmpsToLoad.has(key)) {
       const bmp: Bmp = { gfxType, id, img: null, loaded: false };
-      this.bmpsToLoad.push(bmp);
+      this.bmpsToLoad.set(key, bmp);
 
       this.pendingBmpPromises.push(
         this.client.gfxLoader
@@ -874,9 +841,10 @@ export class Atlas {
   }
 
   private addBmpToLoadByPath(path: string) {
-    if (!this.bmpsToLoad.find((bmp) => bmp.path === path)) {
+    const key = `p:${path}`;
+    if (!this.bmpsToLoad.has(key)) {
       const bmp: Bmp = { path, img: null, loaded: false };
-      this.bmpsToLoad.push(bmp);
+      this.bmpsToLoad.set(key, bmp);
 
       this.pendingBmpPromises.push(
         fetch(path)
@@ -895,10 +863,10 @@ export class Atlas {
   }
 
   reset() {
-    this.characters = [];
-    this.npcs = [];
-    this.items = [];
-    this.faceEmoteEntries = [];
+    this.characters.clear();
+    this.npcs.clear();
+    this.items.clear();
+    this.faceEmoteEntries.clear();
     this.mapId = this.client.mapId;
 
     for (const atlas of this.atlases) {
@@ -917,13 +885,14 @@ export class Atlas {
   }
 
   private loadMapGraphicLayers() {
-    if (this.tiles.length) {
+    if (this.tiles.size) {
       return;
     }
 
     if (this.client.map!.fillTile > 0) {
       this.addBmpToLoad(GfxType.MapTiles, this.client.map!.fillTile);
-      this.tiles.push({
+      const fillKey = `${GfxType.MapTiles}:${this.client.map!.fillTile}`;
+      this.tiles.set(fillKey, {
         gfxType: GfxType.MapTiles,
         graphicId: this.client.map!.fillTile,
         atlasIndex: -1,
@@ -944,12 +913,10 @@ export class Atlas {
           }
 
           const gfxType = LAYER_GFX_MAP[index];
-          const existing = this.bmpsToLoad.find(
-            (t) => t.gfxType === gfxType && t.id === tile.graphic,
-          );
-          if (!existing) {
+          const tileKey = `${gfxType}:${tile.graphic}`;
+          if (!this.tiles.has(tileKey)) {
             this.addBmpToLoad(gfxType, tile.graphic);
-            this.tiles.push({
+            this.tiles.set(tileKey, {
               gfxType,
               graphicId: tile.graphic,
               atlasIndex: -1,
@@ -965,18 +932,21 @@ export class Atlas {
               gfxType === GfxType.MapWalls &&
               this.client.mapController.getDoor({ x: tile.x, y: row.y })
             ) {
-              this.addBmpToLoad(gfxType, tile.graphic + 1);
-              this.tiles.push({
-                gfxType,
-                graphicId: tile.graphic + 1,
-                atlasIndex: -1,
-                x: -1,
-                y: -1,
-                w: -1,
-                h: -1,
-                xOffset: 0,
-                yOffset: 0,
-              });
+              const doorKey = `${gfxType}:${tile.graphic + 1}`;
+              if (!this.tiles.has(doorKey)) {
+                this.addBmpToLoad(gfxType, tile.graphic + 1);
+                this.tiles.set(doorKey, {
+                  gfxType,
+                  graphicId: tile.graphic + 1,
+                  atlasIndex: -1,
+                  x: -1,
+                  y: -1,
+                  w: -1,
+                  h: -1,
+                  xOffset: 0,
+                  yOffset: 0,
+                });
+              }
             }
           }
         }
@@ -989,8 +959,7 @@ export class Atlas {
         continue;
       }
 
-      const existing = this.npcs.find((n) => n.graphicId === record.graphicId);
-      if (existing) {
+      if (this.npcs.has(record.graphicId)) {
         continue;
       }
 
@@ -1026,7 +995,7 @@ export class Atlas {
         });
       }
 
-      this.npcs.push(npc);
+      this.npcs.set(npc.graphicId, npc);
     }
   }
 
@@ -1109,7 +1078,7 @@ export class Atlas {
   }
 
   private loadEmoteEntries() {
-    if (this.emotes.length > 0) {
+    if (this.emotes.size > 0) {
       return;
     }
 
@@ -1128,7 +1097,7 @@ export class Atlas {
           mirroredXOffset: 0,
         });
       }
-      this.emotes.push({
+      this.emotes.set(i, {
         emoteId: i,
         frames,
       });
@@ -1136,7 +1105,7 @@ export class Atlas {
   }
 
   private loadEffectEntries() {
-    if (this.effects.length > 0) {
+    if (this.effects.size > 0) {
       return;
     }
 
@@ -1163,7 +1132,7 @@ export class Atlas {
         return frames;
       };
 
-      this.effects.push({
+      this.effects.set(i, {
         effectId: i,
         behindFrames: meta.hasBehindLayer ? makeFrames() : [],
         transparentFrames: meta.hasTransparentLayer ? makeFrames() : [],
@@ -1187,9 +1156,7 @@ export class Atlas {
   private refreshCharacters() {
     for (const char of this.client.nearby.characters) {
       const hash = generateCharacterHash(char);
-      const existing = this.characters.find(
-        (c) => c.playerId === char.playerId,
-      );
+      const existing = this.characters.get(char.playerId);
 
       if (existing) {
         existing.tickCount = this.client.tickCount;
@@ -1304,9 +1271,8 @@ export class Atlas {
         // Pre-create / invalidate face emote entries for all 11 emote types
         const FACE_EMOTE_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14];
         for (const emoteId of FACE_EMOTE_IDS) {
-          const existingFace = this.faceEmoteEntries.find(
-            (e) => e.playerId === char.playerId && e.emoteId === emoteId,
-          );
+          const faceKey = `${char.playerId}:${emoteId}`;
+          const existingFace = this.faceEmoteEntries.get(faceKey);
           const blankFrame = () => ({
             atlasIndex: -1 as const,
             x: -1,
@@ -1318,7 +1284,7 @@ export class Atlas {
             mirroredXOffset: 0,
           });
           if (!existingFace) {
-            this.faceEmoteEntries.push({
+            this.faceEmoteEntries.set(faceKey, {
               playerId: char.playerId,
               emoteId,
               characterHash: hash,
@@ -1383,7 +1349,7 @@ export class Atlas {
         if (existing) {
           existing.pendingFrames = frames;
         } else {
-          this.characters.push({
+          this.characters.set(char.playerId, {
             playerId: char.playerId,
             gender: char.gender,
             skin: char.skin,
@@ -1399,27 +1365,20 @@ export class Atlas {
       }
     }
 
-    for (let i = this.characters.length - 1; i >= 0; --i) {
-      const character = this.characters[i];
+    for (const [playerId, character] of this.characters) {
       const ticksSinceSeen = this.client.tickCount - character.tickCount;
       if (
         ticksSinceSeen > ATLAS_EXPIRY_TICKS &&
-        !this.client.nearby.characters.find(
-          (c) => c.playerId === character.playerId,
-        )
+        !this.client.nearby.characters.some((c) => c.playerId === playerId)
       ) {
-        this.characters.splice(i, 1);
+        this.characters.delete(playerId);
       }
     }
 
     // Expire face emote entries for characters no longer nearby
-    for (let i = this.faceEmoteEntries.length - 1; i >= 0; --i) {
-      const entry = this.faceEmoteEntries[i];
-      const stillNearby = this.characters.some(
-        (c) => c.playerId === entry.playerId,
-      );
-      if (!stillNearby) {
-        this.faceEmoteEntries.splice(i, 1);
+    for (const [key, entry] of this.faceEmoteEntries) {
+      if (!this.characters.has(entry.playerId)) {
+        this.faceEmoteEntries.delete(key);
       }
     }
   }
@@ -1431,7 +1390,7 @@ export class Atlas {
         continue;
       }
 
-      const existing = this.npcs.find((n) => n.graphicId === record.graphicId);
+      const existing = this.npcs.get(record.graphicId);
       if (!existing) {
         const npc = {
           graphicId: record.graphicId,
@@ -1456,21 +1415,20 @@ export class Atlas {
           });
         }
 
-        this.npcs.push(npc);
+        this.npcs.set(npc.graphicId, npc);
       } else {
         existing.tickCount = this.client.tickCount;
       }
     }
 
-    for (let i = this.npcs.length - 1; i >= 0; --i) {
-      const npc = this.npcs[i];
+    for (const [graphicId, npc] of this.npcs) {
       if (npc.keep) {
         continue;
       }
 
       const ticksSinceSeen = this.client.tickCount - npc.tickCount;
-      if (ticksSinceSeen > ATLAS_EXPIRY_TICKS && !npc.keep) {
-        this.npcs.splice(i, 1);
+      if (ticksSinceSeen > ATLAS_EXPIRY_TICKS) {
+        this.npcs.delete(graphicId);
       }
     }
   }
@@ -1483,9 +1441,8 @@ export class Atlas {
       }
 
       const gfxId = getItemGraphicId(item.id, record.graphicId, item.amount);
-      const existing = this.items.find((i) => i.graphicId === gfxId);
-      if (!existing) {
-        this.items.push({
+      if (!this.items.has(gfxId)) {
+        this.items.set(gfxId, {
           graphicId: gfxId,
           atlasIndex: -1,
           x: -1,
@@ -1500,20 +1457,16 @@ export class Atlas {
       }
     }
 
-    for (let i = this.items.length - 1; i >= 0; --i) {
-      const item = this.items[i];
-      if (
-        !this.client.nearby.items.find((it) => {
-          const record = this.client.getEifRecordById(it.id);
-          if (!record) {
-            return false;
-          }
-
-          const gfxId = getItemGraphicId(it.id, record.graphicId, it.amount);
-          return gfxId === item.graphicId;
-        })
-      ) {
-        this.items.splice(i, 1);
+    const activeGfxIds = new Set<number>();
+    for (const it of this.client.nearby.items) {
+      const record = this.client.getEifRecordById(it.id);
+      if (record) {
+        activeGfxIds.add(getItemGraphicId(it.id, record.graphicId, it.amount));
+      }
+    }
+    for (const [graphicId] of this.items) {
+      if (!activeGfxIds.has(graphicId)) {
+        this.items.delete(graphicId);
       }
     }
   }
@@ -1554,7 +1507,7 @@ export class Atlas {
   private buildCompositorSpecs(): CompositeCharacterSpec[] {
     const specs: CompositeCharacterSpec[] = [];
 
-    for (const character of this.characters) {
+    for (const character of this.characters.values()) {
       const activeFrames = character.pendingFrames || character.frames;
       if (!activeFrames.some((f) => f && f.atlasIndex === -1)) {
         continue;
@@ -1617,13 +1570,11 @@ export class Atlas {
   private buildFaceEmoteSpecs(): CompositeFaceEmoteSpec[] {
     const specs: CompositeFaceEmoteSpec[] = [];
 
-    for (const entry of this.faceEmoteEntries) {
+    for (const entry of this.faceEmoteEntries.values()) {
       const activeFrame = entry.pendingFrame ?? entry.frame;
       if (activeFrame.atlasIndex !== -1) continue;
 
-      const character = this.characters.find(
-        (c) => c.playerId === entry.playerId,
-      );
+      const character = this.characters.get(entry.playerId);
       if (!character) continue;
 
       const resources: Record<string, import('./compositor.worker').RawPixels> =
@@ -1710,11 +1661,11 @@ export class Atlas {
   }
 
   private applyFaceEmoteResults(results: FaceEmoteCompositeResult[]) {
-    this.temporaryFaceEmoteFrames = [];
+    this.temporaryFaceEmoteFrames.clear();
 
     for (const result of results) {
-      const entry = this.faceEmoteEntries.find(
-        (e) => e.playerId === result.playerId && e.emoteId === result.emoteId,
+      const entry = this.faceEmoteEntries.get(
+        `${result.playerId}:${result.emoteId}`,
       );
       if (!entry) {
         result.bitmap.close();
@@ -1730,21 +1681,22 @@ export class Atlas {
       activeFrame.yOffset = result.yOffset;
       activeFrame.mirroredXOffset = result.mirroredXOffset;
 
-      this.temporaryFaceEmoteFrames.push({
-        playerId: result.playerId,
-        emoteId: result.emoteId,
-        img: result.bitmap,
-      });
+      this.temporaryFaceEmoteFrames.set(
+        `${result.playerId}:${result.emoteId}`,
+        {
+          playerId: result.playerId,
+          emoteId: result.emoteId,
+          img: result.bitmap,
+        },
+      );
     }
   }
 
   private applyCompositorResults(results: CompositeResult[]) {
-    this.temporaryCharacterFrames = [];
+    this.temporaryCharacterFrames.clear();
 
     for (const result of results) {
-      const character = this.characters.find(
-        (c) => c.playerId === result.playerId,
-      );
+      const character = this.characters.get(result.playerId);
       if (!character) {
         result.bitmap.close();
         continue;
@@ -1765,22 +1717,25 @@ export class Atlas {
       frame.yOffset = result.yOffset;
       frame.mirroredXOffset = result.mirroredXOffset;
 
-      this.temporaryCharacterFrames.push({
-        playerId: result.playerId,
-        frameIndex: result.frameIndex,
-        img: result.bitmap,
-        loaded: true,
-      });
+      this.temporaryCharacterFrames.set(
+        `${result.playerId}:${result.frameIndex}`,
+        {
+          playerId: result.playerId,
+          frameIndex: result.frameIndex,
+          img: result.bitmap,
+          loaded: true,
+        },
+      );
     }
   }
 
   private finishUpdatingAtlas() {
     this.placeFrames();
-    this.temporaryCharacterFrames = [];
-    this.temporaryFaceEmoteFrames = [];
+    this.temporaryCharacterFrames.clear();
+    this.temporaryFaceEmoteFrames.clear();
 
     // Swap pending frames → active now that compositing is complete
-    for (const character of this.characters) {
+    for (const character of this.characters.values()) {
       if (character.pendingFrames) {
         character.frames = character.pendingFrames;
         character.pendingFrames = undefined;
@@ -1788,7 +1743,7 @@ export class Atlas {
     }
 
     // Swap pending face emote frames
-    for (const entry of this.faceEmoteEntries) {
+    for (const entry of this.faceEmoteEntries.values()) {
       if (entry.pendingFrame) {
         entry.frame = entry.pendingFrame;
         entry.pendingFrame = undefined;
@@ -1833,7 +1788,7 @@ export class Atlas {
 
     this.loading = false;
     this.loadingPromise = null;
-    this.bmpsToLoad = [];
+    this.bmpsToLoad.clear();
   }
 
   private placeFrames() {
@@ -1855,7 +1810,7 @@ export class Atlas {
       });
     }
 
-    for (const emote of this.emotes) {
+    for (const emote of this.emotes.values()) {
       for (const [index, frame] of emote.frames.entries()) {
         if (frame.atlasIndex !== -1) {
           continue;
@@ -1871,7 +1826,7 @@ export class Atlas {
       }
     }
 
-    for (const effect of this.effects) {
+    for (const effect of this.effects.values()) {
       for (const [index, frame] of effect.behindFrames.entries()) {
         if (!frame || frame.atlasIndex !== -1) {
           continue;
@@ -1951,7 +1906,7 @@ export class Atlas {
           break;
         }
         case FrameType.Emote: {
-          const emote = this.emotes.find((e) => e.emoteId === placeable.typeId);
+          const emote = this.emotes.get(placeable.typeId);
 
           if (!emote) {
             continue;
@@ -1975,9 +1930,7 @@ export class Atlas {
         case FrameType.EffectBehind:
         case FrameType.EffectTransparent:
         case FrameType.EffectFront: {
-          const effect = this.effects.find(
-            (e) => e.effectId === placeable.typeId,
-          );
+          const effect = this.effects.get(placeable.typeId);
 
           if (!effect) {
             continue;
@@ -2039,7 +1992,7 @@ export class Atlas {
 
     placeableFrames.splice(0, placeableFrames.length);
 
-    for (const tile of this.tiles) {
+    for (const tile of this.tiles.values()) {
       if (tile.atlasIndex !== -1) {
         continue;
       }
@@ -2061,10 +2014,8 @@ export class Atlas {
 
     for (const placeable of placeableFrames) {
       const rect = this.insert(placeable.w, placeable.h);
-      const tile = this.tiles.find(
-        (t) =>
-          t.gfxType === placeable.typeId &&
-          t.graphicId === placeable.frameIndex,
+      const tile = this.tiles.get(
+        `${placeable.typeId}:${placeable.frameIndex}`,
       );
       if (!tile) {
         continue;
@@ -2102,7 +2053,7 @@ export class Atlas {
     this.currentAtlasIndex = 0;
     this.ctx = this.atlases[0].getContext();
 
-    for (const character of this.characters) {
+    for (const character of this.characters.values()) {
       const activeFrames = character.pendingFrames || character.frames;
       for (const [index, frame] of activeFrames.entries()) {
         if (!frame || frame.atlasIndex !== -1) {
@@ -2119,7 +2070,7 @@ export class Atlas {
       }
     }
 
-    for (const npc of this.npcs) {
+    for (const npc of this.npcs.values()) {
       for (const [index, frame] of npc.frames.entries()) {
         if (!frame || frame.atlasIndex !== -1) {
           continue;
@@ -2135,7 +2086,7 @@ export class Atlas {
       }
     }
 
-    for (const item of this.items) {
+    for (const item of this.items.values()) {
       if (item.atlasIndex !== -1) {
         continue;
       }
@@ -2149,7 +2100,7 @@ export class Atlas {
       });
     }
 
-    for (const entry of this.faceEmoteEntries) {
+    for (const entry of this.faceEmoteEntries.values()) {
       const activeFrame = entry.pendingFrame ?? entry.frame;
       if (activeFrame.atlasIndex !== -1 || activeFrame.w === -1) {
         continue;
@@ -2172,9 +2123,7 @@ export class Atlas {
 
       switch (placeable.type) {
         case FrameType.Character: {
-          const character = this.characters.find(
-            (c) => c.playerId === placeable.typeId,
-          );
+          const character = this.characters.get(placeable.typeId);
 
           if (!character) {
             continue;
@@ -2182,10 +2131,8 @@ export class Atlas {
 
           const activeFrames = character.pendingFrames || character.frames;
           const frame = activeFrames[placeable.frameIndex];
-          const imgData = this.temporaryCharacterFrames.find(
-            (f) =>
-              f.playerId === character.playerId &&
-              f.frameIndex === placeable.frameIndex,
+          const imgData = this.temporaryCharacterFrames.get(
+            `${character.playerId}:${placeable.frameIndex}`,
           );
 
           if (!imgData) {
@@ -2201,7 +2148,7 @@ export class Atlas {
           break;
         }
         case FrameType.Npc: {
-          const npc = this.npcs.find((n) => n.graphicId === placeable.typeId);
+          const npc = this.npcs.get(placeable.typeId);
 
           if (!npc) {
             continue;
@@ -2226,7 +2173,7 @@ export class Atlas {
           break;
         }
         case FrameType.Item: {
-          const item = this.items.find((i) => i.graphicId === placeable.typeId);
+          const item = this.items.get(placeable.typeId);
           if (!item) {
             continue;
           }
@@ -2245,16 +2192,14 @@ export class Atlas {
           break;
         }
         case FrameType.FaceEmote: {
-          const entry = this.faceEmoteEntries.find(
-            (e) =>
-              e.playerId === placeable.typeId &&
-              e.emoteId === placeable.frameIndex,
+          const entry = this.faceEmoteEntries.get(
+            `${placeable.typeId}:${placeable.frameIndex}`,
           );
           if (!entry) continue;
 
           const activeFrame = entry.pendingFrame ?? entry.frame;
-          const imgData = this.temporaryFaceEmoteFrames.find(
-            (f) => f.playerId === entry.playerId && f.emoteId === entry.emoteId,
+          const imgData = this.temporaryFaceEmoteFrames.get(
+            `${entry.playerId}:${entry.emoteId}`,
           );
           if (!imgData) continue;
 
@@ -2296,7 +2241,7 @@ export class Atlas {
     const postProcessors: Array<() => void> = [];
 
     // ── Items ───────────────────────────────────────────────────────────────
-    for (const item of this.items) {
+    for (const item of this.items.values()) {
       if (item.w !== -1) continue;
       const raw = this.client.gfxLoader.getRawPixels(
         GfxType.Items,
@@ -2322,7 +2267,7 @@ export class Atlas {
     }
 
     // ── NPCs ────────────────────────────────────────────────────────────────
-    for (const npc of this.npcs) {
+    for (const npc of this.npcs.values()) {
       const baseId = (npc.graphicId - 1) * 40;
       const blankIndices: number[] = [];
       for (const [index, frame] of npc.frames.entries()) {
@@ -2364,7 +2309,7 @@ export class Atlas {
     }
 
     // ── Tiles (sync, read width/height only) ────────────────────────────────
-    for (const tile of this.tiles) {
+    for (const tile of this.tiles.values()) {
       this.calculateTileSize(tile);
     }
 
@@ -2379,7 +2324,7 @@ export class Atlas {
       38 + 100,
     );
     if (emoteRaw) {
-      for (const emote of this.emotes) {
+      for (const emote of this.emotes.values()) {
         for (const [frameIndex, frame] of emote.frames.entries()) {
           if (frame.w !== -1) continue;
           const key = `emote:${emote.emoteId}:${frameIndex}`;
@@ -2409,7 +2354,7 @@ export class Atlas {
     }
 
     // ── Effects ─────────────────────────────────────────────────────────────
-    for (const effect of this.effects) {
+    for (const effect of this.effects.values()) {
       const meta = this.client.getEffectMetadata(effect.effectId);
       let offset = 1;
       for (const frameArray of [
@@ -2572,15 +2517,11 @@ export class Atlas {
   }
 
   private getBmp(gfxType: GfxType, graphicId: number): ImageBitmap | undefined {
-    return (
-      this.bmpsToLoad.find(
-        (bmp) => bmp.gfxType === gfxType && bmp.id === graphicId,
-      )?.img ?? undefined
-    );
+    return this.bmpsToLoad.get(`g:${gfxType}:${graphicId}`)?.img ?? undefined;
   }
 
   private getBmpByPath(path: string): ImageBitmap | undefined {
-    return this.bmpsToLoad.find((bmp) => bmp.path === path)?.img ?? undefined;
+    return this.bmpsToLoad.get(`p:${path}`)?.img ?? undefined;
   }
 }
 
