@@ -22,6 +22,7 @@ export function QuestNpcDialog() {
   }));
 
   const [showQuestList, setShowQuestList] = useState(false);
+  const [dialogIndex, setDialogIndex] = useState(0);
 
   useEffect(() => {
     const handleOpened = (data: QuestDialogState) => {
@@ -31,6 +32,7 @@ export function QuestNpcDialog() {
       }
       setState({ ...data });
       setShowQuestList(false);
+      setDialogIndex(0);
     };
     const handleUpdated = (data: QuestDialogState) => {
       if (closeTimerRef.current !== null) {
@@ -39,6 +41,7 @@ export function QuestNpcDialog() {
       }
       setState({ ...data });
       setShowQuestList(false);
+      setDialogIndex(0);
     };
     client.questController.subscribeDialogOpened(handleOpened);
     client.questController.subscribeDialogUpdated(handleUpdated);
@@ -58,9 +61,35 @@ export function QuestNpcDialog() {
     }, 200);
   };
 
+  // Group entries into pages: each text entry starts a new page and collects
+  // any immediately following link entries onto the same page.
+  const pages = state.dialogEntries.reduce<(typeof state.dialogEntries)[]>(
+    (acc, entry) => {
+      if (entry.entryType !== DialogEntryType.Link) {
+        acc.push([entry]);
+      } else {
+        if (acc.length === 0) acc.push([]);
+        acc[acc.length - 1].push(entry);
+      }
+      return acc;
+    },
+    [],
+  );
+
+  const isLastPage = dialogIndex >= pages.length - 1;
+  const currentPage = pages[dialogIndex] ?? [];
+
   const handleOk = () => {
+    if (!isLastPage) {
+      setDialogIndex((i) => i + 1);
+      return;
+    }
     client.questController.questReply(state.questId, state.dialogId, null);
     scheduleClose();
+  };
+
+  const handleBack = () => {
+    setDialogIndex((i) => Math.max(0, i - 1));
   };
 
   const handleLink = (linkId: number) => {
@@ -94,9 +123,9 @@ export function QuestNpcDialog() {
             ))}
           </ul>
         ) : (
-          // Dialog entries from the server — text paragraphs and clickable links
+          // Current page: one text entry plus any following link entries
           <div class='flex flex-col gap-1.5'>
-            {state.dialogEntries.map((entry, i) => {
+            {currentPage.map((entry, i) => {
               if (entry.entryType === DialogEntryType.Link) {
                 const linkData = entry.entryTypeData as { linkId: number };
                 return (
@@ -120,7 +149,15 @@ export function QuestNpcDialog() {
         )}
 
         <div class='flex items-center justify-between pt-1'>
-          {canSwitch && !showQuestList ? (
+          {!showQuestList && dialogIndex > 0 ? (
+            <Button
+              type='button'
+              class='btn btn-ghost btn-sm'
+              onClick={handleBack}
+            >
+              {locale.wordBack}
+            </Button>
+          ) : canSwitch && !showQuestList ? (
             <Button
               type='button'
               class='btn btn-ghost btn-sm'
