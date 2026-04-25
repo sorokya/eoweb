@@ -76,6 +76,8 @@ export const locales = {
     statsLabelAccuracy: 'Accuracy',
     statsLabelEvade: 'Evade',
     statsLabelArmor: 'Armor',
+    statsStatPoints: 'Stat Points: {count}',
+    statsTrainBtn: '+',
     slotHat: 'Hat',
     slotNecklace: 'Necklace',
     slotArmor: 'Armor',

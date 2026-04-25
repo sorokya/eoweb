@@ -1,12 +1,20 @@
 import type { CharacterDetails, EifRecord } from 'eolib';
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { StatId } from 'eolib';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'preact/hooks';
+import { FaArrowUp } from 'react-icons/fa';
 import type { CharacterTab } from '@/controllers';
 import { EquipmentSlot } from '@/equipment';
 import { playSfxById, SfxId } from '@/sfx';
-import { ItemIcon, QuestBookList, Tabs } from '@/ui/components';
-import { UI_PANEL_BORDER } from '@/ui/consts';
+import { Button, ItemIcon, QuestBookList, Tabs } from '@/ui/components';
+import { UI_PANEL_BORDER, UI_STICKY_BG } from '@/ui/consts';
 import { useCharacterInfo, useClient, useLocale } from '@/ui/context';
-import { useItemDrag, usePlayerStats } from '@/ui/in-game';
+import { useBackdropBlur, useItemDrag, usePlayerStats } from '@/ui/in-game';
 import { capitalize, getItemMeta } from '@/utils';
 import { DialogBase } from './dialog-base';
 
@@ -316,16 +324,38 @@ function PaperdollTab() {
 }
 
 function StatsTab() {
+  const client = useClient();
   const { locale } = useLocale();
-  const { baseStats: base, secondaryStats: secondary } = usePlayerStats();
+  const info = useCharacterInfo();
+  const blur = useBackdropBlur();
+  const {
+    baseStats: base,
+    secondaryStats: secondary,
+    statPoints,
+  } = usePlayerStats();
 
-  const baseRows: [string, number][] = [
-    [locale.statsLabelStr, base.str],
-    [locale.statsLabelInt, base.intl],
-    [locale.statsLabelWis, base.wis],
-    [locale.statsLabelAgi, base.agi],
-    [locale.statsLabelCon, base.con],
-    [locale.statsLabelCha, base.cha],
+  const isOwnCharacter = info?.details.playerId === client.playerId;
+  const canTrain = isOwnCharacter && statPoints > 0;
+
+  const handleTrain = useCallback(
+    (statId: StatId) => {
+      client.statSkillController.trainStat(statId);
+    },
+    [client],
+  );
+
+  const statPointsLabel = locale.statsStatPoints.replace(
+    '{count}',
+    String(statPoints),
+  );
+
+  const baseRows: [string, number, StatId][] = [
+    [locale.statsLabelStr, base.str, StatId.Str],
+    [locale.statsLabelInt, base.intl, StatId.Int],
+    [locale.statsLabelWis, base.wis, StatId.Wis],
+    [locale.statsLabelAgi, base.agi, StatId.Agi],
+    [locale.statsLabelCon, base.con, StatId.Con],
+    [locale.statsLabelCha, base.cha, StatId.Cha],
   ];
 
   const derivedRows: [string, string][] = [
@@ -339,22 +369,42 @@ function StatsTab() {
   ];
 
   return (
-    <div class='flex gap-4 text-sm'>
-      <div class='flex flex-1 flex-col gap-0.5'>
-        {baseRows.map(([label, value]) => (
-          <div key={label} class='flex justify-between'>
-            <span class='text-primary/60'>{label}</span>
-            <span>{value.toLocaleString()}</span>
-          </div>
-        ))}
-      </div>
-      <div class='flex flex-1 flex-col gap-0.5'>
-        {derivedRows.map(([label, value]) => (
-          <div key={label} class='flex justify-between'>
-            <span class='text-primary/60'>{label}</span>
-            <span>{value}</span>
-          </div>
-        ))}
+    <div class='flex flex-col gap-2 text-sm'>
+      {isOwnCharacter && (
+        <div
+          class={`sticky top-0 z-10 ${UI_PANEL_BORDER} border-b ${UI_STICKY_BG} px-3 py-1.5 ${blur}`}
+        >
+          <p class='text-center font-medium text-primary text-sm'>
+            {statPointsLabel}
+          </p>
+        </div>
+      )}
+      <div class='flex gap-4'>
+        <div class='flex flex-1 flex-col gap-0.5'>
+          {baseRows.map(([label, value, statId]) => (
+            <div key={label} class='flex items-center justify-between gap-1'>
+              <span class='text-primary/60'>{label}</span>
+              <span class='flex-1 text-right'>{value.toLocaleString()}</span>
+              {isOwnCharacter && (
+                <Button
+                  variant={['xs', canTrain ? 'primary' : 'disabled']}
+                  disabled={!canTrain}
+                  onClick={() => handleTrain(statId)}
+                >
+                  <FaArrowUp size={8} />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+        <div class='flex flex-1 flex-col gap-0.5'>
+          {derivedRows.map(([label, value]) => (
+            <div key={label} class='flex justify-between'>
+              <span class='text-primary/60'>{label}</span>
+              <span>{value}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

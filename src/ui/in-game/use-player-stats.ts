@@ -18,6 +18,7 @@ type PlayerStats = {
   weight: number;
   maxWeight: number;
   gold: number;
+  statPoints: number;
   baseStats: CharacterBaseStats;
   secondaryStats: CharacterSecondaryStats;
 };
@@ -37,6 +38,7 @@ function readStats(client: ReturnType<typeof useClient>): PlayerStats {
     weight: client.weight.current,
     maxWeight: client.weight.max,
     gold: client.inventoryController.goldAmount,
+    statPoints: client.statPoints,
     baseStats: client.baseStats,
     secondaryStats: client.secondaryStats,
   };
