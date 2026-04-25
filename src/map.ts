@@ -208,6 +208,8 @@ export class MapRenderer {
   private _ghostBody: Sprite | null = null;
   private _ghostFace: Sprite | null = null;
   private _ghostVisible = false;
+  private readonly _dynamics: Entity[] = [];
+  private readonly _colorCache = new Map<string, number>();
 
   hasChairs = false;
 
@@ -573,7 +575,8 @@ export class MapRenderer {
     const viewportMaxY = player.y + rangeY;
 
     // Collect dynamic entities
-    const dynamics: Entity[] = [];
+    const dynamics = this._dynamics;
+    dynamics.length = 0;
     const inGame = this.client.state === GameState.InGame;
     if (inGame) {
       const minX = Math.max(player.x - rangeX, 0);
@@ -2032,15 +2035,18 @@ export class MapRenderer {
     if (!name) {
       if (!this.client.mouseCoords) return;
 
-      const items = this.client.nearby.items.filter(
-        (i) =>
+      let topItem: (typeof this.client.nearby.items)[0] | undefined;
+      for (const i of this.client.nearby.items) {
+        if (
           i.coords.x === this.client.mouseCoords!.x &&
-          i.coords.y === this.client.mouseCoords!.y,
-      );
-      if (!items.length) return;
-
-      items.sort((a, b) => b.uid - a.uid);
-      const item = items[0];
+          i.coords.y === this.client.mouseCoords!.y &&
+          (topItem === undefined || i.uid > topItem.uid)
+        ) {
+          topItem = i;
+        }
+      }
+      if (!topItem) return;
+      const item = topItem;
       const data = this.client.getEifRecordById(item.id);
       if (!data) return;
 
@@ -2211,14 +2217,20 @@ export class MapRenderer {
   }
 
   private parseCssHexColor(value: string): number {
-    const hex = value.startsWith('#') ? value.slice(1) : value;
-    if (hex.length === 3) {
-      return Number.parseInt(
-        `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`,
-        16,
-      );
+    let cached = this._colorCache.get(value);
+    if (cached === undefined) {
+      const hex = value.startsWith('#') ? value.slice(1) : value;
+      if (hex.length === 3) {
+        cached = Number.parseInt(
+          `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`,
+          16,
+        );
+      } else {
+        cached = Number.parseInt(hex, 16);
+      }
+      this._colorCache.set(value, cached);
     }
-    return Number.parseInt(hex, 16);
+    return cached;
   }
 
   private addPlayerMenuSprites() {
