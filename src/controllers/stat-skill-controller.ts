@@ -1,4 +1,5 @@
 import {
+  type SkillLearn,
   type StatId,
   StatSkillAddClientPacket,
   StatSkillJunkClientPacket,
@@ -9,11 +10,48 @@ import {
 
 import type { Client } from '@/client';
 
+type OpenedSubscriber = (name: string, skills: SkillLearn[]) => void;
+type SkillsChangedSubscriber = () => void;
+
 export class StatSkillController {
   private client: Client;
 
+  masterName = '';
+  availableSkills: SkillLearn[] = [];
+
+  private openedSubscribers: OpenedSubscriber[] = [];
+  private skillsChangedSubscribers: SkillsChangedSubscriber[] = [];
+
   constructor(client: Client) {
     this.client = client;
+  }
+
+  subscribeOpened(cb: OpenedSubscriber): void {
+    this.openedSubscribers.push(cb);
+  }
+
+  unsubscribeOpened(cb: OpenedSubscriber): void {
+    this.openedSubscribers = this.openedSubscribers.filter((s) => s !== cb);
+  }
+
+  subscribeSkillsChanged(cb: SkillsChangedSubscriber): void {
+    this.skillsChangedSubscribers.push(cb);
+  }
+
+  unsubscribeSkillsChanged(cb: SkillsChangedSubscriber): void {
+    this.skillsChangedSubscribers = this.skillsChangedSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  notifyOpened(name: string, skills: SkillLearn[]): void {
+    this.masterName = name;
+    this.availableSkills = skills;
+    for (const cb of this.openedSubscribers) cb(name, skills);
+  }
+
+  notifySkillsChanged(): void {
+    for (const cb of this.skillsChangedSubscribers) cb();
   }
 
   trainStat(statId: StatId): void {
@@ -21,6 +59,14 @@ export class StatSkillController {
     packet.actionType = TrainType.Stat;
     packet.actionTypeData = new StatSkillAddClientPacket.ActionTypeDataStat();
     packet.actionTypeData.statId = statId;
+    this.client.bus!.send(packet);
+  }
+
+  trainSkill(spellId: number): void {
+    const packet = new StatSkillAddClientPacket();
+    packet.actionType = TrainType.Skill;
+    packet.actionTypeData = new StatSkillAddClientPacket.ActionTypeDataSkill();
+    packet.actionTypeData.spellId = spellId;
     this.client.bus!.send(packet);
   }
 

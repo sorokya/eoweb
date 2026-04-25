@@ -18,8 +18,8 @@ import {
   EffectTargetTile,
   HealthBar,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
-import { getDistance, getVolumeFromDistance } from '@/utils';
+import { SfxId } from '@/sfx';
+import { getDistance } from '@/utils';
 import type { Vector2 } from '@/vector';
 
 function handleEffectReport(client: Client) {
@@ -30,15 +30,14 @@ function handleEffectReport(client: Client) {
     if (x < 0 || x > client!.map!.width) continue;
     for (let y = playerAt.y - 6; y < playerAt.y + 6; ++y) {
       if (y < 0 || y > client!.map!.height) continue;
-      const spec = client!
-        .map!.tileSpecRows.find((r) => r.y === y)
-        ?.tiles.find((t) => t.x === x);
-      if (spec && spec.tileSpec === MapTileSpec.TimedSpikes) {
+      const spec = client!.mapRenderer.getTileSpecAt({ x, y });
+      if (spec && spec === MapTileSpec.TimedSpikes) {
         spikeTiles.push({ x, y });
       }
     }
   }
 
+  // TODO: Move to audio-controller playNearbySpikes
   spikeTiles.sort((a, b) => {
     const distA = getDistance(playerAt, a);
     const distB = getDistance(playerAt, b);
@@ -46,12 +45,7 @@ function handleEffectReport(client: Client) {
   });
 
   if (spikeTiles.length) {
-    const tile = spikeTiles[0];
-    const distance = getDistance(playerAt, tile);
-    const volume = getVolumeFromDistance(distance, 6);
-    if (volume) {
-      playSfxById(SfxId.Spikes, volume);
-    }
+    client.audioController.playAtPosition(SfxId.Spikes, spikeTiles[0]);
   }
 }
 
@@ -61,8 +55,8 @@ function handleEffectSpec(client: Client, reader: EoReader) {
     const data =
       packet.mapDamageTypeData as EffectSpecServerPacket.MapDamageTypeDataTpDrain;
     client.tp = data.tp;
-    playSfxById(SfxId.MapEffectTPDrain);
-    client.emit('statsUpdate', undefined);
+    client.audioController.playById(SfxId.MapEffectTPDrain);
+    client.statsController.notifyStatsUpdated();
     return;
   }
 
@@ -70,17 +64,17 @@ function handleEffectSpec(client: Client, reader: EoReader) {
     packet.mapDamageTypeData as EffectSpecServerPacket.MapDamageTypeDataSpikes;
   const damage = client.hp - data.hp;
   client.hp = data.hp;
-  playSfxById(SfxId.Spikes);
+  client.audioController.playById(SfxId.Spikes);
 
   client.animationController.characterHealthBars.set(
     client.playerId,
     new HealthBar(Math.floor((client.hp / client.maxHp) * 100), damage),
   );
-  client.emit('statsUpdate', undefined);
+  client.statsController.notifyStatsUpdated();
 
   if (!data.hp) {
     client.setCharacterDeathAnimation(client.playerId);
-    playSfxById(SfxId.Dead);
+    client.audioController.playById(SfxId.Dead);
   }
 }
 
@@ -91,7 +85,7 @@ function handleEffectUse(client: Client, reader: EoReader) {
     client.quakeController.quakeTicks = 3 * data.quakeStrength + 10;
     client.quakeController.quakePower = 4 * data.quakeStrength + 10;
     client.quakeController.quakeOffset = 0;
-    playSfxById(SfxId.Earthquake);
+    client.audioController.playById(SfxId.Earthquake);
   }
 }
 
@@ -100,7 +94,7 @@ function handleEffectAgree(client: Client, reader: EoReader) {
   for (const effect of packet.effects) {
     const meta = client.getEffectMetadata(effect.effectId + 1);
     if (meta.sfx) {
-      playSfxById(meta.sfx);
+      client.audioController.playAtPosition(meta.sfx, effect.coords);
     }
     client.animationController.effects.push(
       new EffectAnimation(
@@ -116,9 +110,6 @@ function handleEffectPlayer(client: Client, reader: EoReader) {
   const packet = EffectPlayerServerPacket.deserialize(reader);
   for (const effect of packet.effects) {
     const meta = client.getEffectMetadata(effect.effectId + 1);
-    if (meta.sfx) {
-      playSfxById(meta.sfx);
-    }
     client.animationController.effects.push(
       new EffectAnimation(
         effect.effectId + 1,
@@ -126,6 +117,23 @@ function handleEffectPlayer(client: Client, reader: EoReader) {
         meta,
       ),
     );
+
+    if (!meta.sfx) {
+      continue;
+    }
+
+    if (effect.playerId === client.playerId) {
+      client.audioController.playById(meta.sfx);
+      continue;
+    }
+
+    const coords = client.getCharacterById(effect.playerId)?.coords;
+    if (coords) {
+      client.audioController.playAtPosition(meta.sfx, coords);
+      continue;
+    }
+
+    client.audioController.playById(meta.sfx);
   }
 }
 
@@ -138,12 +146,7 @@ function handleEffectAdmin(client: Client, reader: EoReader) {
 
   character.hp -= packet.damage;
 
-  const playerAt = client.getPlayerCoords();
-  const distance = getDistance(playerAt, character.coords);
-  const volume = getVolumeFromDistance(distance, 14);
-  if (volume) {
-    playSfxById(SfxId.Spikes, volume);
-  }
+  client.audioController.playAtPosition(SfxId.Spikes, character.coords);
 
   client.animationController.characterHealthBars.set(
     packet.playerId,
@@ -152,7 +155,7 @@ function handleEffectAdmin(client: Client, reader: EoReader) {
 
   if (packet.died) {
     client.setCharacterDeathAnimation(packet.playerId);
-    playSfxById(SfxId.Dead);
+    client.audioController.playAtPosition(SfxId.Dead, character.coords);
   }
 }
 

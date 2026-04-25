@@ -10,14 +10,47 @@ import {
 
 import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
+
+type OpenedSubscriber = (items: ThreeItem[]) => void;
+type ChangedSubscriber = (items: ThreeItem[]) => void;
 
 export class ChestController {
   private client: Client;
   chestCoords = new Coords();
+  items: ThreeItem[] = [];
+
+  private openedSubscribers: OpenedSubscriber[] = [];
+  private changedSubscribers: ChangedSubscriber[] = [];
 
   constructor(client: Client) {
     this.client = client;
+  }
+
+  subscribeOpened(cb: OpenedSubscriber): void {
+    this.openedSubscribers.push(cb);
+  }
+
+  unsubscribeOpened(cb: OpenedSubscriber): void {
+    this.openedSubscribers = this.openedSubscribers.filter((s) => s !== cb);
+  }
+
+  subscribeChanged(cb: ChangedSubscriber): void {
+    this.changedSubscribers.push(cb);
+  }
+
+  unsubscribeChanged(cb: ChangedSubscriber): void {
+    this.changedSubscribers = this.changedSubscribers.filter((s) => s !== cb);
+  }
+
+  handleOpened(items: ThreeItem[]): void {
+    this.items = items;
+    for (const cb of this.openedSubscribers) cb(items);
+  }
+
+  handleChanged(items: ThreeItem[]): void {
+    this.items = items;
+    for (const cb of this.changedSubscribers) cb(items);
   }
 
   openChest(coords: { x: number; y: number }): void {
@@ -38,7 +71,7 @@ export class ChestController {
     }
 
     const keys: number[] = [];
-    for (const item of this.client.items) {
+    for (const item of this.client.inventoryController.items) {
       const record = this.client.getEifRecordById(item.id);
       if (!record) {
         continue;
@@ -67,9 +100,8 @@ export class ChestController {
     });
 
     if (!haveKeys) {
-      playSfxById(SfxId.DoorOrChestLocked);
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      this.client.audioController.playById(SfxId.DoorOrChestLocked);
+      this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_THE_CHEST_IS_LOCKED_EXCLAMATION)} - ${keyName}`,
       );
       return;
@@ -90,12 +122,35 @@ export class ChestController {
     this.client.bus!.send(packet);
   }
 
-  addItem(itemId: number, amount: number): void {
-    const packet = new ChestAddClientPacket();
-    packet.addItem = new ThreeItem();
-    packet.addItem.id = itemId;
-    packet.addItem.amount = amount;
-    packet.coords = this.chestCoords;
-    this.client.bus!.send(packet);
+  addItem(itemId: number): void {
+    const inventoryItem = this.client.inventoryController.getItemById(itemId);
+    if (!inventoryItem) return;
+
+    const send = (amount: number) => {
+      const packet = new ChestAddClientPacket();
+      packet.addItem = new ThreeItem();
+      packet.addItem.id = itemId;
+      packet.addItem.amount = amount;
+      packet.coords = this.chestCoords;
+      this.client.bus!.send(packet);
+    };
+
+    if (inventoryItem.amount > 1) {
+      const title = this.client.getResourceString(
+        EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
+      );
+      const itemName = this.client.getEifRecordById(itemId)?.name ?? '';
+      this.client.alertController.showAmount(
+        title,
+        itemName,
+        inventoryItem.amount,
+        this.client.locale.chestDeposit,
+        (amount) => {
+          if (amount !== null && amount > 0) send(amount);
+        },
+      );
+    } else {
+      send(1);
+    }
   }
 }

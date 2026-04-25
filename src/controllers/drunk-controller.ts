@@ -19,7 +19,7 @@ export class DrunkController {
 
     this.drunkEmoteTicks = Math.max(this.drunkEmoteTicks - 1, 0);
     if (!this.drunkEmoteTicks) {
-      this.client.socialController.emote(EmoteType.Drunk);
+      this.client.movementController.emote(EmoteType.Drunk);
       this.drunkEmoteTicks = 10 + randomRange(0, 8) * 5;
     }
 

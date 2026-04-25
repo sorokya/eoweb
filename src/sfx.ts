@@ -1,5 +1,3 @@
-import { padWithZeros } from '@/utils';
-
 export enum SfxId {
   LayeredTechIntro = 1,
   ButtonClick = 2,
@@ -101,41 +99,16 @@ export enum SfxId {
   MapAmbientNoiseLavaBubbles2 = 81,
 }
 
-const SFX: HTMLAudioElement[] = [];
-const pool: HTMLAudioElement[] = [];
-
-export function playSfxById(id: SfxId, volume = 1.0) {
-  const sfx = SFX[id];
-  if (!sfx) {
-    loadSfxById(id, true, volume);
-    return;
-  }
-
-  const dupe = sfx.cloneNode(true) as HTMLAudioElement;
-  dupe.volume = volume;
-  dupe.play();
-
-  dupe.addEventListener('ended', () => {
-    const i = pool.indexOf(dupe);
-    if (i !== -1) pool.splice(i, 1);
-    dupe.src = '';
-  });
-
-  pool.push(dupe);
+interface SfxPlayer {
+  playById(id: SfxId, volume?: number): void;
 }
 
-function loadSfxById(id: SfxId, play = true, volume = 1.0) {
-  if (SFX[id]) {
-    return;
-  }
+let _player: SfxPlayer | null = null;
 
-  const sfx = new Audio();
-  sfx.src = `/sfx/sfx${padWithZeros(id, 3)}.wav`;
-  sfx.addEventListener('loadeddata', () => {
-    if (play) {
-      sfx.volume = volume;
-      sfx.play();
-    }
-    SFX[id] = sfx;
-  });
+export function setAudioController(ac: SfxPlayer): void {
+  _player = ac;
+}
+
+export function playSfxById(id: SfxId, volume = 1.0): void {
+  _player?.playById(id, volume);
 }

@@ -24,8 +24,8 @@ import {
   NpcAttackAnimation,
   NpcWalkAnimation,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { SfxId } from '@/sfx';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize, getPrevCoords } from '@/utils';
 
 function handleNpcPlayer(client: Client, reader: EoReader) {
@@ -53,11 +53,10 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     );
   }
 
-  let someoneKilled = false;
   for (const attack of packet.attacks) {
     if (attack.playerId === client.playerId) {
       client.hp = Math.max(client.hp - attack.damage, 0);
-      client.emit('statsUpdate', undefined);
+      client.statsController.notifyStatsUpdated();
     }
 
     const npc = client.nearby.npcs.find((n) => attack.npcIndex === n.index);
@@ -67,7 +66,7 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
     }
 
     npc.direction = attack.direction;
-    playSfxById(SfxId.PunchAttack);
+    client.audioController.playAtPosition(SfxId.PunchAttack, npc.coords);
     client.animationController.pendingNpcAnimations.set(
       npc.index,
       new NpcAttackAnimation(),
@@ -79,12 +78,15 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
 
     if (attack.killed === PlayerKilledState.Killed) {
       client.setCharacterDeathAnimation(attack.playerId);
-      someoneKilled = true;
+      if (attack.playerId === client.playerId) {
+        client.audioController.playById(SfxId.Dead);
+      } else {
+        const character = client.getCharacterById(attack.playerId);
+        if (character) {
+          client.audioController.playAtPosition(SfxId.Dead, character.coords);
+        }
+      }
     }
-  }
-
-  if (someoneKilled) {
-    playSfxById(SfxId.Dead);
   }
 
   for (const chat of packet.chats) {
@@ -146,28 +148,24 @@ function handleNpcSpec(client: Client, reader: EoReader) {
       packet.npcKilledData.killerId,
     );
     client.atlas.refresh();
+  }
 
-    const record = client.getEifRecordById(item.id);
-    client.emit('chat', {
-      tab: ChatTab.System,
-      icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
+  const gain = packet.experience ? packet.experience - client.experience : 0;
+  const message = client.getNpcKilledMessage(packet.npcKilledData, gain);
+  if (message) {
+    client.toastController.show(message);
+
+    client.chatController.notifyChat({
+      message,
+      icon: ChatIcon.Star,
+      channel: ChatChannels.System,
     });
+    client.questController.refreshQuestProgress();
   }
 
   if (packet.experience) {
-    const gain = packet.experience - client.experience;
     client.experience = packet.experience;
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-      `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
-    );
-    client.emit('chat', {
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
-      icon: ChatIcon.Star,
-      tab: ChatTab.System,
-    });
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 }
 
@@ -191,20 +189,24 @@ function handleNpcAccept(client: Client, reader: EoReader) {
       packet.npcKilledData.killerId,
     );
     client.atlas.refresh();
-
-    const record = client.getEifRecordById(item.id);
-    client.emit('chat', {
-      tab: ChatTab.System,
-      icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
-    });
   }
 
   client.animationController.characterEmotes.set(
     packet.npcKilledData.killerId,
     new Emote(EmoteType.LevelUp),
   );
-  playSfxById(SfxId.LevelUp);
+
+  if (packet.npcKilledData.killerId === client.playerId) {
+    client.audioController.playById(SfxId.LevelUp);
+  } else {
+    const coords = client.getCharacterById(
+      packet.npcKilledData.killerId,
+    )?.coords;
+    if (coords) {
+      client.audioController.playAtPosition(SfxId.LevelUp, coords);
+    }
+  }
+
   if (packet.levelUp) {
     client.level = packet.levelUp.level;
     client.maxHp = packet.levelUp.maxHp;
@@ -214,19 +216,25 @@ function handleNpcAccept(client: Client, reader: EoReader) {
     client.skillPoints = packet.levelUp.skillPoints;
   }
 
-  if (packet.experience) {
-    const gain = packet.experience - client.experience;
-    client.experience = packet.experience;
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-      `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
-    );
-    client.emit('chat', {
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
+  const gain = packet.experience ? packet.experience - client.experience : 0;
+  const message = client.getNpcKilledMessage(
+    packet.npcKilledData,
+    gain,
+    !!packet.levelUp,
+  );
+  if (message) {
+    client.toastController.show(message);
+    client.chatController.notifyChat({
+      message: message,
       icon: ChatIcon.Star,
-      tab: ChatTab.System,
+      channel: ChatChannels.System,
     });
-    client.emit('statsUpdate', undefined);
+    client.questController.refreshQuestProgress();
+  }
+
+  if (packet.experience) {
+    client.experience = packet.experience;
+    client.statsController.notifyStatsUpdated();
   }
 }
 
@@ -260,8 +268,8 @@ function handleNpcDialog(client: Client, reader: EoReader) {
     npc.index,
     new ChatBubble(client.sans11!, packet.message),
   );
-  client.emit('chat', {
-    tab: ChatTab.Local,
+  client.chatController.notifyChat({
+    channel: ChatChannels.Local,
     message: `${packet.message}`,
     name: `${capitalize(record.name)}`,
   });
@@ -288,8 +296,7 @@ function handleNpcReply(client: Client, reader: EoReader) {
     packet.playerId === client.playerId &&
     packet.killStealProtection === NpcKillStealProtectionState.Protected
   ) {
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+    client.toastController.showWarning(
       client.getResourceString(EOResourceID.STATUS_LABEL_UNABLE_TO_ATTACK),
     );
   }

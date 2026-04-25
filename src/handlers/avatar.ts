@@ -11,6 +11,7 @@ import {
   WarpEffect,
 } from 'eolib';
 import type { Client } from '@/client';
+import { ADMIN_WARP_LEAVE_EFFECT_ID } from '@/consts';
 import {
   CharacterDeathAnimation,
   EffectAnimation,
@@ -18,7 +19,7 @@ import {
   EffectTargetTile,
   HealthBar,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 function handleAvatarRemove(client: Client, reader: EoReader) {
   const packet = AvatarRemoveServerPacket.deserialize(reader);
@@ -33,19 +34,22 @@ function handleAvatarRemove(client: Client, reader: EoReader) {
 
   switch (packet.warpEffect) {
     case WarpEffect.Admin: {
-      const metadata = client.getEffectMetadata(3);
+      const metadata = client.getEffectMetadata(ADMIN_WARP_LEAVE_EFFECT_ID);
       client.animationController.effects.push(
         new EffectAnimation(
-          3,
+          ADMIN_WARP_LEAVE_EFFECT_ID,
           new EffectTargetTile(character.coords),
           metadata,
         ),
       );
-      playSfxById(SfxId.AdminWarp);
+      client.audioController.playAtPosition(SfxId.AdminWarp, character.coords);
       break;
     }
     case WarpEffect.Scroll:
-      playSfxById(SfxId.ScrollTeleport);
+      client.audioController.playAtPosition(
+        SfxId.ScrollTeleport,
+        character.coords,
+      );
       break;
   }
 
@@ -105,7 +109,7 @@ function handleAvatarReply(client: Client, reader: EoReader) {
 
   if (packet.victimId === client.playerId) {
     client.hp = Math.max(client.hp - packet.damage, 0);
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   const victim = client.getCharacterById(packet.victimId);
@@ -121,7 +125,7 @@ function handleAvatarReply(client: Client, reader: EoReader) {
 
   if (packet.dead) {
     client.setCharacterDeathAnimation(packet.victimId);
-    playSfxById(SfxId.Dead);
+    client.audioController.playAtPosition(SfxId.Dead, victim.coords);
   }
 }
 
@@ -133,7 +137,7 @@ function handleAvatarAdmin(client: Client, reader: EoReader) {
     packet.casterId !== client.playerId
   ) {
     client.hp = Math.max(client.hp - packet.damage, 0);
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   const victim = client.getCharacterById(packet.victimId);
@@ -149,7 +153,7 @@ function handleAvatarAdmin(client: Client, reader: EoReader) {
 
   if (packet.victimDied) {
     client.setCharacterDeathAnimation(packet.victimId);
-    playSfxById(SfxId.Dead);
+    client.audioController.playAtPosition(SfxId.Dead, victim.coords);
   }
 
   const record = client.getEsfRecordById(packet.spellId);
@@ -159,7 +163,7 @@ function handleAvatarAdmin(client: Client, reader: EoReader) {
 
   const meta = client.getEffectMetadata(record.graphicId);
   if (meta.sfx) {
-    playSfxById(meta.sfx);
+    client.audioController.playAtPosition(meta.sfx, victim.coords);
   }
 
   client.animationController.effects.push(

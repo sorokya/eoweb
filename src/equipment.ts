@@ -18,45 +18,6 @@ export enum EquipmentSlot {
   Bracer2 = 14,
 }
 
-export function getEquipmentSlotFromString(
-  slot: string,
-): EquipmentSlot | undefined {
-  switch (slot) {
-    case 'boots':
-      return EquipmentSlot.Boots;
-    case 'accessory':
-      return EquipmentSlot.Accessory;
-    case 'gloves':
-      return EquipmentSlot.Gloves;
-    case 'belt':
-      return EquipmentSlot.Belt;
-    case 'armor':
-      return EquipmentSlot.Armor;
-    case 'necklace':
-      return EquipmentSlot.Necklace;
-    case 'hat':
-      return EquipmentSlot.Hat;
-    case 'shield':
-      return EquipmentSlot.Shield;
-    case 'weapon':
-      return EquipmentSlot.Weapon;
-    case 'ring-1':
-      return EquipmentSlot.Ring1;
-    case 'ring-2':
-      return EquipmentSlot.Ring2;
-    case 'armlet-1':
-      return EquipmentSlot.Armlet1;
-    case 'armlet-2':
-      return EquipmentSlot.Armlet2;
-    case 'bracer-1':
-      return EquipmentSlot.Bracer1;
-    case 'bracer-2':
-      return EquipmentSlot.Bracer2;
-    default:
-      return undefined;
-  }
-}
-
 export function getEquipmentSlotForItemType(
   type: ItemType,
   subLoc = 0,

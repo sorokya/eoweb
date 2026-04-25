@@ -10,10 +10,9 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { ITEM_PROTECT_TICKS_NPC } from '@/consts';
-import { EOResourceID } from '@/edf';
 import { EffectTargetNpc, Emote, HealthBar } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { SfxId } from '@/sfx';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleCastReply(client: Client, reader: EoReader) {
   const packet = CastReplyServerPacket.deserialize(reader);
@@ -25,7 +24,7 @@ function handleCastReply(client: Client, reader: EoReader) {
 
   if (packet.casterTp) {
     client.tp = packet.casterTp;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   client.animationController.npcHealthBars.set(
@@ -49,7 +48,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
 
   if (packet.casterTp) {
     client.tp = packet.casterTp;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   client.animationController.npcHealthBars.set(
@@ -76,28 +75,23 @@ function handleCastSpec(client: Client, reader: EoReader) {
       packet.npcKilledData.killerId,
     );
     client.atlas.refresh();
+  }
 
-    const record = client.getEifRecordById(item.id);
-    client.emit('chat', {
-      tab: ChatTab.System,
-      icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
+  const gain = packet.experience ? packet.experience - client.experience : 0;
+  const message = client.getNpcKilledMessage(packet.npcKilledData, gain);
+  if (message) {
+    client.toastController.show(message);
+    client.chatController.notifyChat({
+      message,
+      icon: ChatIcon.Star,
+      channel: ChatChannels.System,
     });
+    client.questController.refreshQuestProgress();
   }
 
   if (packet.experience) {
-    const gain = packet.experience - client.experience;
     client.experience = packet.experience;
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-      `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
-    );
-    client.emit('chat', {
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
-      icon: ChatIcon.Star,
-      tab: ChatTab.System,
-    });
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 }
 
@@ -111,7 +105,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
 
   if (packet.casterTp) {
     client.tp = packet.casterTp;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   client.animationController.npcHealthBars.set(
@@ -138,20 +132,13 @@ function handleCastAccept(client: Client, reader: EoReader) {
       packet.npcKilledData.killerId,
     );
     client.atlas.refresh();
-
-    const record = client.getEifRecordById(item.id);
-    client.emit('chat', {
-      tab: ChatTab.System,
-      icon: ChatIcon.DownArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_THE_NPC_DROPPED)} ${item.amount} ${record!.name}`,
-    });
   }
 
   client.animationController.characterEmotes.set(
     packet.npcKilledData.killerId,
     new Emote(EmoteType.LevelUp),
   );
-  playSfxById(SfxId.LevelUp);
+  client.audioController.playById(SfxId.LevelUp);
   if (packet.levelUp) {
     client.level = packet.levelUp.level;
     client.maxHp = packet.levelUp.maxHp;
@@ -161,19 +148,25 @@ function handleCastAccept(client: Client, reader: EoReader) {
     client.skillPoints = packet.levelUp.skillPoints;
   }
 
-  if (packet.experience) {
-    const gain = packet.experience - client.experience;
-    client.experience = packet.experience;
-    client.setStatusLabel(
-      EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-      `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
-    );
-    client.emit('chat', {
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain} EXP`,
+  const gain = packet.experience ? packet.experience - client.experience : 0;
+  const message = client.getNpcKilledMessage(
+    packet.npcKilledData,
+    gain,
+    !!packet.levelUp,
+  );
+  if (message) {
+    client.toastController.show(message);
+    client.chatController.notifyChat({
+      message,
       icon: ChatIcon.Star,
-      tab: ChatTab.System,
+      channel: ChatChannels.System,
     });
-    client.emit('statsUpdate', undefined);
+    client.questController.refreshQuestProgress();
+  }
+
+  if (packet.experience) {
+    client.experience = packet.experience;
+    client.statsController.notifyStatsUpdated();
   }
 }
 

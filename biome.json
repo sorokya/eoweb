@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -54,6 +54,14 @@
                 "message": "Import from '@/wiring' barrel instead of a deep path"
               },
               {
+                "group": ["@/atlas/**"],
+                "message": "Import from '@/atlas' barrel instead of a deep path"
+              },
+              {
+                "group": ["@/client/**"],
+                "message": "Import from '@/client' barrel instead of a deep path"
+              },
+              {
                 "group": ["@/ui/*/**"],
                 "message": "Import from the UI module's barrel (e.g. '@/ui/chat' instead of '@/ui/chat/chat')"
               }
@@ -78,13 +86,32 @@
       },
       "a11y": {
         "useAltText": "off",
-        "useButtonType": "off"
+        "useButtonType": "off",
+        "noStaticElementInteractions": "off",
+        "useKeyWithClickEvents": "off"
+      },
+      "nursery": {
+        "useSortedClasses": "on"
       }
     }
   },
   "javascript": {
     "formatter": {
-      "quoteStyle": "single"
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "single"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
     }
   }
 }

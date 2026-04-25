@@ -1,24 +1,10 @@
-export const GAME_FPS = 1000 / 20;
-//export const HOST = 'ws://localhost:8077';
 export const HOST = 'wss://ws.reoserv.net';
 export const TILE_WIDTH = 64;
 export const TILE_HEIGHT = 32;
 export const HALF_TILE_WIDTH = TILE_WIDTH >> 1;
 export const HALF_TILE_HEIGHT = TILE_HEIGHT >> 1;
-export const HALF_HALF_TILE_HEIGHT = HALF_TILE_HEIGHT >> 1;
-
-export const CHARACTER_WIDTH = 18;
-export const CHARACTER_WALKING_WIDTH = 26;
-export const CHARACTER_MELEE_ATTACK_WIDTH = 24;
-export const CHARACTER_SIT_GROUND_WIDTH = 24;
-export const CHARACTER_SIT_CHAIR_WIDTH = 24;
-export const CHARACTER_RANGE_ATTACK_WIDTH = 25;
 
 export const CHARACTER_HEIGHT = 58;
-export const CHARACTER_WALKING_HEIGHT = 61;
-export const CHARACTER_RAISED_HAND_HEIGHT = 62;
-export const CHARACTER_SIT_GROUND_HEIGHT = 43;
-export const CHARACTER_SIT_CHAIR_HEIGHT = 52;
 
 export const WALK_WIDTH_FACTOR = HALF_TILE_WIDTH / 4;
 export const WALK_HEIGHT_FACTOR = HALF_TILE_HEIGHT / 4;
@@ -30,8 +16,11 @@ export const RANGED_ATTACK_TICKS = 4;
 export const DEATH_TICKS = 6;
 export const ANIMATION_TICKS = 6;
 export const MAX_CHALLENGE = 11_092_110;
+export const MIN_USERNAME_LENGTH = 4;
 export const MAX_USERNAME_LENGTH = 16;
+export const MIN_PASSWORD_LENGTH = 6;
 export const MAX_PASSWORD_LENGTH = 12;
+export const MIN_CHARACTER_NAME_LENGTH = 4;
 export const MAX_CHARACTER_NAME_LENGTH = 12;
 export const NPC_IDLE_ANIMATION_TICKS = 2;
 export const DOOR_OPEN_TICKS = 25;
@@ -44,13 +33,11 @@ export const NUMBER_OF_EMOTES = 15;
 export const EMOTE_ANIMATION_TICKS = 8;
 export const INITIAL_IDLE_TICKS = 2500;
 export const IDLE_TICKS = 250;
-export const MAX_PLAYER_POSTS = 3;
 export const MAX_LOCKER_UPGRADES = 7;
 export const LOCKER_UPGRADE_BASE_COST = 1000;
 export const LOCKER_UPGRADE_COST_STEP = 1000;
 export const LOCKER_MAX_ITEM_AMOUNT = 200;
 
-export const HOTBAR_SLOTS = 5;
 export const HOTBAR_COOLDOWN_TICKS = 2;
 export const TICKS_PER_CAST_TIME = 4;
 export const SPELL_COOLDOWN_TICKS = 5;
@@ -61,8 +48,10 @@ export const PLAYER_MENU_ITEM_HEIGHT = 15;
 export const PLAYER_MENU_OFFSET_Y = 10;
 
 export const NUMBER_OF_EFFECTS = 34;
-export const NUMBER_OF_SLASHES = 9;
-
+export const SPLOOSHIE_EFFECT_ID = 9;
+export const ADMIN_HIDE_EFFECT_ID = 25;
+export const ADMIN_WARP_LEAVE_EFFECT_ID = 3;
+export const ADMIN_WARP_ENTER_EFFECT_ID = 4;
 export const ITEM_PROTECT_TICKS_NPC = 250;
 export const ITEM_PROTECT_TICKS_PLAYER = 42; // It's actually 41.66666.. but it doesn't divide by 120ms
 
@@ -79,10 +68,14 @@ export const COLORS = {
   ChatBubbleBackgroundParty: '#dcc8aa',
 };
 
-export const MAX_GENDER = 2;
 export const MAX_HAIR_STYLE = 20;
+export const MIN_HAIR_STYLE = 1;
 export const MAX_HAIR_COLOR = 10;
+export const MIN_HAIR_COLOR = 0;
 export const MAX_SKIN = 4;
+export const MIN_SKIN = 0;
+export const CREATE_CHARACTER_PREVIEW_PLAYER_ID = 4;
+export const MAX_CHARACTERS = 3;
 
 export const BARBER_BASE_COST = 200;
 export const BARBER_COST_PER_LEVEL = 200;
@@ -91,3 +84,10 @@ export const GUILD_MIN_DEPOSIT = 1000;
 export const GUILD_RANK_LEADER = 0;
 export const GUILD_RANK_NEW_MEMBER = 9;
 export const GUILD_MAX_RANK = 9;
+
+export const JUKEBOX_COST = 25;
+
+export const MARRIAGE_APPROVAL_COST = 500;
+export const DIVORCE_COST = 10000;
+
+export const GOLD_ITEM_ID = 1;

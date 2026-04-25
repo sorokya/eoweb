@@ -12,12 +12,68 @@ import {
 } from 'eolib';
 
 import type { Client } from '@/client';
-import { EOResourceID } from '@/edf';
+import { GOLD_ITEM_ID } from '@/consts';
+import { DialogResourceID, EOResourceID } from '@/edf';
 import { EquipmentSlot, getEquipmentSlotForItemType } from '@/equipment';
 import type { Vector2 } from '@/vector';
 
 export class InventoryController {
   private client: Client;
+  private _items: Item[];
+
+  private inventoryChangedSubscribers: (() => void)[] = [];
+  private equipmentChangedSubscribers: (() => void)[] = [];
+  private inventoryChangeDebounce: number | null = null;
+
+  private inventoryUpdated(): void {
+    if (this.inventoryChangeDebounce) {
+      clearTimeout(this.inventoryChangeDebounce);
+    }
+    this.inventoryChangeDebounce = setTimeout(() => {
+      for (const cb of this.inventoryChangedSubscribers) cb();
+      this.client.questController.refreshQuestProgress();
+      this.inventoryChangeDebounce = null;
+    }, 100);
+  }
+
+  subscribeInventoryChanged(cb: () => void): void {
+    this.inventoryChangedSubscribers.push(cb);
+  }
+
+  unsubscribeInventoryChanged(cb: () => void): void {
+    this.inventoryChangedSubscribers = this.inventoryChangedSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  subscribeEquipmentChanged(cb: () => void): void {
+    this.equipmentChangedSubscribers.push(cb);
+  }
+
+  unsubscribeEquipmentChanged(cb: () => void): void {
+    this.equipmentChangedSubscribers = this.equipmentChangedSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  notifyEquipmentChanged(): void {
+    for (const cb of this.equipmentChangedSubscribers) cb();
+  }
+
+  get items(): Item[] {
+    return this._items;
+  }
+
+  set items(items: Item[]) {
+    this._items = items;
+    if (!this._items.some((i) => i.id === GOLD_ITEM_ID)) {
+      const gold = new Item();
+      gold.id = GOLD_ITEM_ID;
+      gold.amount = 0;
+      this._items.push(gold);
+    }
+  }
+
   equipmentSwap: {
     slot: EquipmentSlot;
     itemId: number;
@@ -25,16 +81,81 @@ export class InventoryController {
 
   constructor(client: Client) {
     this.client = client;
+    this._items = [];
   }
 
-  dropItem(id: number, amount: number, coords: Vector2): void {
-    const item = this.client.items.find((i) => i.id === id);
+  getItemById(id: number): Item | undefined {
+    return this._items.find((i) => i.id === id);
+  }
+
+  get goldAmount(): number {
+    return this.getItemAmount(GOLD_ITEM_ID);
+  }
+
+  getItemAmount(id: number): number {
+    const item = this.getItemById(id);
+    return item ? item.amount : 0;
+  }
+
+  addItem(id: number, amount = 1): void {
+    const existing = this.getItemById(id);
+    if (existing) {
+      existing.amount += amount;
+    } else {
+      const item = new Item();
+      item.id = id;
+      item.amount = amount;
+      this._items.push(item);
+    }
+
+    this.inventoryUpdated();
+  }
+
+  setItem(id: number, amount: number): void {
+    if (!amount && id !== GOLD_ITEM_ID) {
+      this._items = this._items.filter((i) => i.id !== id);
+    } else {
+      const existing = this.getItemById(id);
+      if (existing) {
+        existing.amount = amount;
+      } else {
+        const item = new Item();
+        item.id = id;
+        item.amount = amount;
+        this._items.push(item);
+      }
+    }
+
+    this.inventoryUpdated();
+  }
+
+  removeItem(id: number, amount: number | undefined = undefined): void {
+    const existing = this.getItemById(id);
+    if (!existing) {
+      return;
+    }
+
+    if (
+      id !== GOLD_ITEM_ID &&
+      (amount === undefined || existing.amount <= amount)
+    ) {
+      this._items = this._items.filter((i) => i.id !== id);
+    } else if (amount !== undefined) {
+      existing.amount -= amount;
+    }
+
+    this.inventoryUpdated();
+  }
+
+  dropItem(id: number, coords: Vector2): void {
+    const item = this.getItemById(id);
     if (!item) {
       return;
     }
 
-    const actualAmount = Math.min(amount, item.amount);
-    if (actualAmount) {
+    const send = (amount: number) => {
+      const actualAmount = Math.min(amount, item.amount);
+      if (actualAmount <= 0) return;
       const packet = new ItemDropClientPacket();
       packet.item = new ThreeItem();
       packet.item.id = item.id;
@@ -43,19 +164,79 @@ export class InventoryController {
       packet.coords.x = coords.x + 1;
       packet.coords.y = coords.y + 1;
       this.client.bus!.send(packet);
+    };
+
+    if (item.amount > 1) {
+      const title = this.client.getResourceString(
+        EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
+      );
+      const itemName = this.client.getEifRecordById(id)?.name ?? '';
+      const actionLabel = this.client.getResourceString(
+        EOResourceID.DIALOG_TRANSFER_DROP,
+      );
+      this.client.alertController.showAmount(
+        title,
+        itemName,
+        item.amount,
+        actionLabel,
+        (amount) => {
+          if (amount !== null && amount > 0) {
+            send(amount);
+          }
+        },
+      );
+    } else {
+      send(1);
     }
   }
 
-  junkItem(id: number, amount: number): void {
-    const packet = new ItemJunkClientPacket();
-    packet.item = new Item();
-    packet.item.id = id;
-    packet.item.amount = amount;
-    this.client.bus!.send(packet);
+  junkItem(id: number): void {
+    const item = this.getItemById(id);
+    if (!item) return;
+
+    const send = (amount: number) => {
+      const packet = new ItemJunkClientPacket();
+      packet.item = new Item();
+      packet.item.id = id;
+      packet.item.amount = amount;
+      this.client.bus!.send(packet);
+    };
+
+    const itemName = this.client.getEifRecordById(id)?.name ?? '';
+
+    if (item.amount > 1) {
+      const title = this.client.getResourceString(
+        EOResourceID.DIALOG_TRANSFER_HOW_MUCH,
+      );
+      const actionLabel = this.client.getResourceString(
+        EOResourceID.DIALOG_TRANSFER_JUNK,
+      );
+      this.client.alertController.showAmount(
+        title,
+        itemName,
+        item.amount,
+        actionLabel,
+        (amount) => {
+          if (amount !== null && amount > 0) send(amount);
+        },
+      );
+    } else {
+      const message = this.client.locale.junkConfirmMessage.replace(
+        '{name}',
+        itemName,
+      );
+      this.client.alertController.showConfirm(
+        this.client.locale.junkConfirmTitle,
+        message,
+        (confirmed) => {
+          if (confirmed) send(1);
+        },
+      );
+    }
   }
 
   useItem(id: number): void {
-    const item = this.client.items.find((i) => i.id === id);
+    const item = this.getItemById(id);
     if (!item) {
       return;
     }
@@ -98,8 +279,7 @@ export class InventoryController {
     }
 
     if (record.type === ItemType.Teleport && !this.client.map!.canScroll) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_ACTION,
+      this.client.toastController.show(
         this.client.getResourceString(
           EOResourceID.STATUS_LABEL_NOTHING_HAPPENED,
         ),
@@ -107,9 +287,29 @@ export class InventoryController {
       return;
     }
 
-    const packet = new ItemUseClientPacket();
-    packet.itemId = id;
-    this.client.bus!.send(packet);
+    const useItem = () => {
+      const packet = new ItemUseClientPacket();
+      packet.itemId = id;
+      this.client.bus!.send(packet);
+    };
+
+    if (record.type === ItemType.CureCurse) {
+      const strings = this.client.getDialogStrings(
+        DialogResourceID.ITEM_CURSE_REMOVE_PROMPT,
+      );
+      this.client.alertController.showConfirm(
+        strings[0],
+        strings[1],
+        (confirmed) => {
+          if (confirmed) {
+            useItem();
+          }
+        },
+      );
+      return;
+    }
+
+    useItem();
   }
 
   getEquipmentArray(): number[] {
@@ -142,6 +342,10 @@ export class InventoryController {
 
     const record = this.client.getEifRecordById(itemId);
     if (record!.special! === ItemSpecial.Cursed) {
+      const strings = this.client.getDialogStrings(
+        DialogResourceID.ITEM_IS_CURSED_ITEM,
+      );
+      this.client.toastController.showWarning(strings[1]);
       return;
     }
 
@@ -163,27 +367,8 @@ export class InventoryController {
   }
 
   equipItem(slot: EquipmentSlot, itemId: number): boolean {
-    const item = this.client.items.find((i) => i.id === itemId && i.amount > 0);
-    if (!item) {
-      return false;
-    }
-
-    const equipment = this.getEquipmentArray();
-    if (equipment[slot]) {
-      if (equipment[slot] === itemId) {
-        return false;
-      }
-
-      this.equipmentSwap = {
-        slot,
-        itemId,
-      };
-      this.unequipItem(slot);
-      return false;
-    }
-
-    const character = this.client.getPlayerCharacter();
-    if (!character) {
+    const item = this.getItemById(itemId);
+    if (!item || item.amount <= 0) {
       return false;
     }
 
@@ -192,9 +377,17 @@ export class InventoryController {
       return false;
     }
 
+    if (!this.itemTypeValidForSlot(record.type, slot)) {
+      return false;
+    }
+
+    const character = this.client.getPlayerCharacter();
+    if (!character) {
+      return false;
+    }
+
     if (record.type === ItemType.Armor && record.spec2 !== character.gender) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      this.client.toastController.showWarning(
         this.client.getResourceString(
           EOResourceID.STATUS_LABEL_ITEM_EQUIP_DOES_NOT_FIT_GENDER,
         ) ?? '',
@@ -207,8 +400,7 @@ export class InventoryController {
       record.classRequirement !== this.client.classId
     ) {
       const classRecord = this.client.getEcfRecordById(record.classRequirement);
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_CAN_ONLY_BE_USED_BY)} ${classRecord?.name || 'Unknown'}`,
       );
       return false;
@@ -249,8 +441,7 @@ export class InventoryController {
 
     for (const check of statChecks) {
       if (check.req > check.stat) {
-        this.client.setStatusLabel(
-          EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+        this.client.toastController.showWarning(
           `${this.client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} ${check.req} ${check.label}`,
         );
         return false;
@@ -258,10 +449,23 @@ export class InventoryController {
     }
 
     if (record.levelRequirement > this.client.level) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+      this.client.toastController.showWarning(
         `${this.client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_EQUIP_THIS_ITEM_REQUIRES)} LVL ${record.levelRequirement}`,
       );
+      return false;
+    }
+
+    const equipment = this.getEquipmentArray();
+    if (equipment[slot]) {
+      if (equipment[slot] === itemId) {
+        return false;
+      }
+
+      this.equipmentSwap = {
+        slot,
+        itemId,
+      };
+      this.unequipItem(slot);
       return false;
     }
 
@@ -291,6 +495,38 @@ export class InventoryController {
       EquipmentSlot.Shield,
       EquipmentSlot.Weapon,
     ].includes(slot);
+  }
+
+  itemTypeValidForSlot(itemType: ItemType, slot: EquipmentSlot): boolean {
+    switch (slot) {
+      case EquipmentSlot.Hat:
+        return itemType === ItemType.Hat;
+      case EquipmentSlot.Armor:
+        return itemType === ItemType.Armor;
+      case EquipmentSlot.Weapon:
+        return itemType === ItemType.Weapon;
+      case EquipmentSlot.Shield:
+        return itemType === ItemType.Shield;
+      case EquipmentSlot.Boots:
+        return itemType === ItemType.Boots;
+      case EquipmentSlot.Gloves:
+        return itemType === ItemType.Gloves;
+      case EquipmentSlot.Belt:
+        return itemType === ItemType.Belt;
+      case EquipmentSlot.Necklace:
+        return itemType === ItemType.Necklace;
+      case EquipmentSlot.Accessory:
+        return itemType === ItemType.Accessory;
+      case EquipmentSlot.Ring1:
+      case EquipmentSlot.Ring2:
+        return itemType === ItemType.Ring;
+      case EquipmentSlot.Armlet1:
+      case EquipmentSlot.Armlet2:
+        return itemType === ItemType.Armlet;
+      case EquipmentSlot.Bracer1:
+      case EquipmentSlot.Bracer2:
+        return itemType === ItemType.Bracer;
+    }
   }
 
   setEquipmentSlot(slot: EquipmentSlot, itemId: number): void {

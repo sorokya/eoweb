@@ -1,0 +1,36 @@
+import { createContext } from 'preact';
+import { useContext, useMemo, useState } from 'preact/hooks';
+import { defaultLocale, type LocaleKey, locales } from '@/locale';
+
+type LocaleContextProps = {
+  localeKey: LocaleKey;
+  locale: (typeof locales)[LocaleKey];
+  setLocaleKey: (localeKey: LocaleKey) => void;
+};
+
+const LocaleContext = createContext<LocaleContextProps | null>(null);
+
+type LocaleProviderProps = {
+  children: preact.ComponentChildren;
+};
+
+export function LocaleProvider({ children }: LocaleProviderProps) {
+  const [localeKey, setLocaleKey] = useState<LocaleKey>(defaultLocale);
+
+  const value = useMemo(
+    () => ({ localeKey, locale: locales[localeKey], setLocaleKey }),
+    [localeKey],
+  );
+
+  return (
+    <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
+  );
+}
+
+export function useLocale() {
+  const localeContext = useContext(LocaleContext);
+  if (!localeContext) {
+    throw new Error('useLocale must be used within a LocaleProvider');
+  }
+  return localeContext;
+}

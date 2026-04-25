@@ -6,46 +6,43 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { EOResourceID } from '@/edf';
-import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { SfxId } from '@/sfx';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleMessagePing(client: Client) {
-  const delta = Date.now() - client.commandController.pingStart;
-
-  client.emit('serverChat', {
-    message: `${delta}ms ping`,
-  });
+  client.pingController.notifyPong();
 }
 
 function handleMessageOpen(client: Client, reader: EoReader) {
   const packet = MessageOpenServerPacket.deserialize(reader);
-  client.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, packet.message);
-  client.emit('chat', {
-    tab: ChatTab.System,
+  client.toastController.show(packet.message);
+  client.chatController.notifyChat({
+    channel: ChatChannels.System,
     icon: ChatIcon.QuestMessage,
     message: packet.message,
   });
+  client.questController.refreshQuestProgress();
 }
 
 function handleMessageClose(client: Client) {
-  playSfxById(SfxId.Reboot);
+  client.audioController.playById(SfxId.Reboot);
   const message = client.getResourceString(
     EOResourceID.REBOOT_SEQUENCE_STARTED,
   );
-  client.setStatusLabel(EOResourceID.STATUS_LABEL_TYPE_WARNING, message!);
+  client.toastController.showWarning(message);
   const chatMessage = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${message}`;
-  client.emit('chat', {
-    tab: ChatTab.Local,
+  client.chatController.notifyChat({
+    channel: ChatChannels.Local,
     icon: ChatIcon.Exclamation,
     message: chatMessage,
   });
-  client.emit('chat', {
-    tab: ChatTab.Global,
+  client.chatController.notifyChat({
+    channel: ChatChannels.Global,
     icon: ChatIcon.Exclamation,
     message: chatMessage,
   });
-  client.emit('chat', {
-    tab: ChatTab.System,
+  client.chatController.notifyChat({
+    channel: ChatChannels.System,
     icon: ChatIcon.Exclamation,
     message: chatMessage,
   });

@@ -5,20 +5,79 @@ import {
   TalkMsgClientPacket,
   TalkOpenClientPacket,
   TalkReportClientPacket,
+  TalkRequestClientPacket,
   TalkTellClientPacket,
 } from 'eolib';
 import type { Client } from '@/client';
 import { COLORS, MAX_CHAT_LENGTH } from '@/consts';
 import { ChatBubble } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { SfxId } from '@/sfx';
+import type { ChatChannel } from '@/ui/enums';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize, makeDrunk } from '@/utils';
+
+type ChatMessage = {
+  channel: ChatChannel;
+  message: string;
+  icon?: ChatIcon | null;
+  name?: string;
+};
+
+type ServerChatMessage = {
+  message: string;
+  sfxId?: SfxId | null;
+  icon?: ChatIcon | null;
+};
+
+type ChatSubscriber = (msg: ChatMessage) => void;
+type ServerChatSubscriber = (msg: ServerChatMessage) => void;
 
 export class ChatController {
   private client: Client;
+  private chatSubscribers: ChatSubscriber[] = [];
+  private serverChatSubscribers: ServerChatSubscriber[] = [];
+  private setChatSubscribers: ((text: string) => void)[] = [];
 
   constructor(client: Client) {
     this.client = client;
+  }
+
+  subscribeChat(cb: ChatSubscriber): void {
+    this.chatSubscribers.push(cb);
+  }
+
+  unsubscribeChat(cb: ChatSubscriber): void {
+    this.chatSubscribers = this.chatSubscribers.filter((s) => s !== cb);
+  }
+
+  notifyChat(msg: ChatMessage): void {
+    for (const cb of this.chatSubscribers) cb(msg);
+  }
+
+  subscribeServerChat(cb: ServerChatSubscriber): void {
+    this.serverChatSubscribers.push(cb);
+  }
+
+  unsubscribeServerChat(cb: ServerChatSubscriber): void {
+    this.serverChatSubscribers = this.serverChatSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  notifyServerChat(msg: ServerChatMessage): void {
+    for (const cb of this.serverChatSubscribers) cb(msg);
+  }
+
+  subscribeSetChat(cb: (text: string) => void): void {
+    this.setChatSubscribers.push(cb);
+  }
+
+  unsubscribeSetChat(cb: (text: string) => void): void {
+    this.setChatSubscribers = this.setChatSubscribers.filter((s) => s !== cb);
+  }
+
+  notifySetChat(text: string): void {
+    for (const cb of this.setChatSubscribers) cb(text);
   }
 
   chat(message: string): void {
@@ -26,9 +85,11 @@ export class ChatController {
       return;
     }
 
-    const trimmed = (
-      this.client.drunkController.drunk ? makeDrunk(message) : message
-    ).substring(0, MAX_CHAT_LENGTH);
+    const trimmed = this.client.socialController
+      .filterNaughtyWords(
+        this.client.drunkController.drunk ? makeDrunk(message) : message,
+      )
+      .substring(0, MAX_CHAT_LENGTH);
 
     if (
       trimmed.startsWith('#') &&
@@ -44,25 +105,25 @@ export class ChatController {
         this.client.playerId,
         new ChatBubble(this.client.sans11, packet.message),
       );
-      this.client.emit('chat', {
+      this.notifyChat({
         icon: ChatIcon.GlobalAnnounce,
-        tab: ChatTab.Local,
+        channel: ChatChannels.Local,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
-      this.client.emit('chat', {
+      this.notifyChat({
         icon: ChatIcon.GlobalAnnounce,
-        tab: ChatTab.Group,
+        channel: ChatChannels.Admin,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
-      this.client.emit('chat', {
+      this.notifyChat({
         icon: ChatIcon.GlobalAnnounce,
-        tab: ChatTab.Global,
+        channel: ChatChannels.Global,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
-      playSfxById(SfxId.AdminAnnounceReceived);
+      this.client.audioController.playById(SfxId.AdminAnnounceReceived);
       this.client.bus!.send(packet);
       return;
     }
@@ -70,18 +131,19 @@ export class ChatController {
     if (trimmed.startsWith('!')) {
       const target = trimmed.substring(1).split(' ')[0];
       if (target.trim().length) {
-        const message = trimmed.substring(target.length + 2);
+        const msg = trimmed.substring(target.length + 2);
+        const pmChannel = `pm:${target.toLowerCase()}` as const;
 
         const packet = new TalkTellClientPacket();
         packet.name = target.toLowerCase();
-        packet.message = message;
+        packet.message = msg;
         this.client.bus!.send(packet);
 
-        this.client.emit('chat', {
+        this.notifyChat({
           icon: ChatIcon.Note,
-          tab: ChatTab.Local,
-          name: `${capitalize(this.client.name)}->${capitalize(target)}`,
-          message,
+          channel: pmChannel,
+          name: `${capitalize(this.client.name)}`,
+          message: msg,
         });
 
         return;
@@ -93,15 +155,15 @@ export class ChatController {
       packet.message = trimmed.substring(1);
       this.client.bus!.send(packet);
 
-      this.client.emit('chat', {
-        tab: ChatTab.Global,
+      this.notifyChat({
+        channel: ChatChannels.Global,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
       return;
     }
 
-    if (trimmed.startsWith("'") && this.client.partyMembers.length) {
+    if (trimmed.startsWith("'") && this.client.partyController.members.length) {
       const packet = new TalkOpenClientPacket();
       packet.message = trimmed.substring(1);
       this.client.bus!.send(packet);
@@ -116,9 +178,23 @@ export class ChatController {
         ),
       );
 
-      this.client.emit('chat', {
-        tab: ChatTab.Group,
+      this.notifyChat({
+        channel: ChatChannels.Party,
         icon: ChatIcon.PlayerParty,
+        message: `${packet.message}`,
+        name: `${capitalize(this.client.name)}`,
+      });
+      return;
+    }
+
+    if (trimmed.startsWith('&')) {
+      const packet = new TalkRequestClientPacket();
+      packet.message = trimmed.substring(1);
+      this.client.bus!.send(packet);
+
+      this.notifyChat({
+        channel: ChatChannels.Guild,
+        icon: ChatIcon.Guild,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
@@ -130,14 +206,14 @@ export class ChatController {
       packet.message = trimmed.substring(1);
       this.client.bus!.send(packet);
 
-      this.client.emit('chat', {
-        tab: ChatTab.Group,
+      this.notifyChat({
+        channel: ChatChannels.Admin,
         icon: ChatIcon.GM,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
 
-      playSfxById(SfxId.AdminChatSent);
+      this.client.audioController.playById(SfxId.AdminChatSent);
 
       return;
     }
@@ -151,8 +227,8 @@ export class ChatController {
       new ChatBubble(this.client.sans11, trimmed),
     );
 
-    this.client.emit('chat', {
-      tab: ChatTab.Local,
+    this.notifyChat({
+      channel: ChatChannels.Local,
       message: `${trimmed}`,
       name: `${capitalize(this.client.name)}`,
     });

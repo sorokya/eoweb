@@ -2,7 +2,6 @@ import {
   type EoReader,
   FileType,
   GlobalOpenClientPacket,
-  Item,
   PacketAction,
   PacketFamily,
   WelcomeCode,
@@ -19,7 +18,7 @@ function handleWelcomeReply(client: Client, reader: EoReader) {
     const text = client.getDialogStrings(
       DialogResourceID.CONNECTION_SERVER_BUSY,
     );
-    client.showError(text[1], text[0]);
+    client.alertController.show(text[0], text[1]);
     return;
   }
 
@@ -81,7 +80,6 @@ function handleSelectCharacter(
   client.equipment.ring = data.equipment.ring;
   client.equipment.armlet = data.equipment.armlet;
   client.equipment.bracer = data.equipment.bracer;
-  client.emit('selectCharacter', undefined);
 
   if (
     !client.ecf ||
@@ -140,19 +138,17 @@ function handleEnterGame(
   data: WelcomeReplyServerPacket.WelcomeCodeDataEnterGame,
 ) {
   client.motd = data.news[0];
-  client.items = data.items;
-  if (!client.items.some((i) => i.id === 1)) {
-    const gold = new Item();
-    gold.id = 1;
-    gold.amount = 0;
-    client.items.push(gold);
-  }
+  client.inventoryController.items = data.items;
   client.spells = data.spells;
   client.weight = data.weight;
   client.nearby = data.nearby;
   client.usageController.usageTicks = USAGE_TICKS;
   client.setState(GameState.InGame);
-  client.emit('enterGame', { news: data.news });
+  client.audioController.updateListenerPosition(client.getPlayerCoords());
+  client.audioController.handleMapMusic(
+    client.map.musicId,
+    client.map.musicControl,
+  );
   client.bus!.send(new GlobalOpenClientPacket());
   const diffMap = client.atlas.mapId !== client.mapId;
   client.atlas.reset();

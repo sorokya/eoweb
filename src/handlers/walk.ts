@@ -8,12 +8,7 @@ import {
   WalkReplyServerPacket,
 } from 'eolib';
 import type { Client } from '@/client';
-import {
-  CharacterWalkAnimation,
-  EffectAnimation,
-  EffectTargetCharacter,
-} from '@/render';
-import { playSfxById } from '@/sfx';
+import { CharacterWalkAnimation } from '@/render';
 import { getPrevCoords } from '@/utils';
 
 function handleWalkPlayer(client: Client, reader: EoReader) {
@@ -44,20 +39,9 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
     return;
   }
 
-  const spec = client!
-    .map!.tileSpecRows.find((r) => r.y === packet.coords.y)
-    ?.tiles.find((t) => t.x === packet.coords.x);
-
-  if (spec && spec.tileSpec === MapTileSpec.Water) {
-    const metadata = client.getEffectMetadata(9);
-    playSfxById(metadata.sfx);
-    client.animationController.effects.push(
-      new EffectAnimation(
-        9,
-        new EffectTargetCharacter(packet.playerId),
-        metadata,
-      ),
-    );
+  const spec = client.mapRenderer.getTileSpecAt(packet.coords);
+  if (spec && spec === MapTileSpec.Water) {
+    client.animationController.playSplooshieEffect(packet.playerId);
   }
 }
 

@@ -10,11 +10,9 @@ import type { Client } from '@/client';
 import {
   CharacterAttackAnimation,
   CharacterRangedAttackAnimation,
-  EffectAnimation,
-  EffectTargetCharacter,
   Emote,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { randomRange } from '@/utils';
 
 function handleAttackPlayer(client: Client, reader: EoReader) {
@@ -38,7 +36,7 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
   );
 
   const index = randomRange(0, metadata.sfx.length - 1);
-  playSfxById(metadata.sfx[index]);
+  client.audioController.playAtPosition(metadata.sfx[index], character.coords);
 
   if (metadata.sfx[0] === SfxId.Harp1 || metadata.sfx[0] === SfxId.Guitar1) {
     client.animationController.characterEmotes.set(
@@ -47,20 +45,9 @@ function handleAttackPlayer(client: Client, reader: EoReader) {
     );
   }
 
-  const spec = client!
-    .map!.tileSpecRows.find((r) => r.y === character.coords.y)
-    ?.tiles.find((t) => t.x === character.coords.x);
-
-  if (spec && spec.tileSpec === MapTileSpec.Water) {
-    const metadata = client.getEffectMetadata(9);
-    playSfxById(metadata.sfx);
-    client.animationController.effects.push(
-      new EffectAnimation(
-        9,
-        new EffectTargetCharacter(packet.playerId),
-        metadata,
-      ),
-    );
+  const spec = client!.mapRenderer.getTileSpecAt(character.coords);
+  if (spec && spec === MapTileSpec.Water) {
+    client.animationController.playSplooshieEffect(packet.playerId);
   }
 }
 

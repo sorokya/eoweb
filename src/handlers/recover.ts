@@ -11,7 +11,7 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { Emote, HealthBar } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 function handleRecoverPlayer(client: Client, reader: EoReader) {
   const packet = RecoverPlayerServerPacket.deserialize(reader);
@@ -27,7 +27,7 @@ function handleRecoverPlayer(client: Client, reader: EoReader) {
   }
 
   client.tp = packet.tp;
-  client.emit('statsUpdate', undefined);
+  client.statsController.notifyStatsUpdated();
 }
 
 function handleRecoverAgree(client: Client, reader: EoReader) {
@@ -65,7 +65,7 @@ function handleRecoverList(client: Client, reader: EoReader) {
   client.weight.max = packet.stats.maxWeight;
   client.hp = Math.min(client.hp, client.maxHp);
   client.tp = Math.min(client.tp, client.maxTp);
-  client.emit('statsUpdate', undefined);
+  client.statsController.notifyStatsUpdated();
 }
 
 function handleRecoverReply(client: Client, reader: EoReader) {
@@ -78,7 +78,7 @@ function handleRecoverReply(client: Client, reader: EoReader) {
       client.playerId,
       new Emote(EmoteType.LevelUp),
     );
-    playSfxById(SfxId.LevelUp);
+    client.audioController.playById(SfxId.LevelUp);
     client.level = packet.levelUp;
     client.statPoints = packet.statPoints!;
     client.skillPoints = packet.skillPoints!;
@@ -92,7 +92,7 @@ function handleRecoverTargetGroup(client: Client, reader: EoReader) {
   client.maxSp = packet.maxSp;
   client.statPoints = packet.statPoints;
   client.skillPoints = packet.skillPoints;
-  client.emit('statsUpdate', undefined);
+  client.statsController.notifyStatsUpdated();
 }
 
 export function registerRecoverHandlers(client: Client) {

@@ -25,6 +25,7 @@ const doorRectangles: CoordsRect[] = [];
 const signRectangles: CoordsRect[] = [];
 const lockerRectangles: CoordsRect[] = [];
 const boardRectangles: CoordsRect[] = [];
+const jukeboxRectangles: CoordsRect[] = [];
 
 function rectIntersect(a: Rectangle, b: Rectangle): boolean {
   return (
@@ -45,13 +46,13 @@ function pointIntersectRect(point: Vector2, rectangle: Rectangle): boolean {
 }
 
 export function setCharacterRectangle(playerId: number, rectangle: Rectangle) {
-  const belowIds = [];
+  let depth = 0;
   characterRectangles.forEach((other, id) => {
     if (id !== playerId && rectIntersect(other, rectangle)) {
-      belowIds.push(id);
+      depth++;
     }
   });
-  rectangle.depth = belowIds.length;
+  rectangle.depth = depth;
   characterRectangles.set(playerId, rectangle);
 }
 
@@ -83,14 +84,18 @@ export function getCharacterIntersecting(point: Vector2): EntityRect | null {
 }
 
 export function setNpcRectangle(index: number, rectangle: Rectangle) {
-  const belowIds = [];
+  let depth = 0;
   npcRectangles.forEach((other, id) => {
     if (id !== index && rectIntersect(other, rectangle)) {
-      belowIds.push(id);
+      depth++;
     }
   });
-  rectangle.depth = belowIds.length;
+  rectangle.depth = depth;
   npcRectangles.set(index, rectangle);
+}
+
+export function getNpcRectangle(index: number): Rectangle | undefined {
+  return npcRectangles.get(index);
 }
 
 export function getNpcIntersecting(point: Vector2): EntityRect | null {
@@ -216,6 +221,31 @@ export function getBoardIntersecting(point: Vector2): Vector2 | null {
   return null;
 }
 
+export function setJukeboxRectangle(coords: Vector2, rectangle: Rectangle) {
+  const existing = jukeboxRectangles.find(
+    (r) => r.coords.x === coords.x && r.coords.y === coords.y,
+  );
+  if (existing) {
+    existing.rectangle = rectangle;
+    return;
+  }
+
+  jukeboxRectangles.push({
+    coords: { x: coords.x, y: coords.y },
+    rectangle,
+  });
+}
+
+export function getJukeboxIntersecting(point: Vector2): Vector2 | null {
+  for (const { coords, rectangle } of jukeboxRectangles) {
+    if (pointIntersectRect(point, rectangle)) {
+      return coords;
+    }
+  }
+
+  return null;
+}
+
 export function clearRectangles() {
   characterRectangles.clear();
   npcRectangles.clear();
@@ -223,4 +253,5 @@ export function clearRectangles() {
   signRectangles.splice(0, signRectangles.length);
   lockerRectangles.splice(0, lockerRectangles.length);
   boardRectangles.splice(0, boardRectangles.length);
+  jukeboxRectangles.splice(0, jukeboxRectangles.length);
 }

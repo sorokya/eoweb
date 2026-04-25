@@ -3,11 +3,15 @@ import { deinterleave, swapMultiples } from 'eolib';
 export class Edf {
   private lines!: string[];
 
+  getCount(): number {
+    return this.lines.length;
+  }
+
   getLine(index: number): string | undefined {
     return this.lines[index];
   }
 
-  static deserialize(buf: Uint8Array): Edf {
+  static deserialize(id: number, buf: Uint8Array): Edf {
     const edf = new Edf();
     edf.lines = [];
 
@@ -16,14 +20,21 @@ export class Edf {
     const content = decoder.decode(buf);
     let pos = 0;
     while (true) {
-      const eol = content.indexOf('\r\n', pos);
-      if (eol === -1) {
+      let eol = content.indexOf('\r\n', pos);
+      if (eol === -1 && pos > 0) {
         break;
       }
+
+      if (eol === -1) {
+        eol = content.length;
+      }
+
       const line = content.substring(pos, eol);
       const lineBuf = encoder.encode(line);
       deinterleave(lineBuf);
-      swapMultiples(lineBuf, 7);
+      if (id !== 3) {
+        swapMultiples(lineBuf, 7);
+      }
       edf.lines.push(decoder.decode(lineBuf));
       pos += line.length + 2;
     }
@@ -200,7 +211,7 @@ export enum EOResourceID {
   STATUS_LABEL_PARTY_JOINED_YOUR = 34,
   STATUS_LABEL_PARTY_IS_ALREADY_IN_ANOTHER_PARTY = 35,
 
-  STATUS_LABEL_PARTY_LEFT_YOUR = 36,
+  STATUS_LABEL_PARTY_LEFT_THE_PARTY = 36,
   STATUS_LABEL_TYPE_BUTTON = 37,
   STATUS_LABEL_TYPE_ACTION = 38,
   STATUS_LABEL_TYPE_WARNING = 39,

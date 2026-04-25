@@ -7,19 +7,19 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '@/client';
-import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon } from '@/ui/ui-types';
+import { SfxId } from '@/sfx';
+import { ChatIcon } from '@/ui/enums';
 
 function handleArenaUse(client: Client, reader: EoReader) {
   const packet = ArenaUseServerPacket.deserialize(reader);
-  client.emit('serverChat', {
+  client.chatController.notifyServerChat({
     message: `${packet.playersCount} player(s) were launched, now fight! -server`,
   });
 }
 
 function handleArenaAccept(client: Client, reader: EoReader) {
   const packet = ArenaAcceptServerPacket.deserialize(reader);
-  client.emit('serverChat', {
+  client.chatController.notifyServerChat({
     message: `${packet.killerName} won the arena event! -server`,
     sfxId: SfxId.ArenaWin,
     icon: ChatIcon.Trophy,
@@ -29,18 +29,18 @@ function handleArenaAccept(client: Client, reader: EoReader) {
 function handleArenaSpec(client: Client, reader: EoReader) {
   const packet = ArenaSpecServerPacket.deserialize(reader);
   const message = `${packet.victimName} was eliminated by ${packet.killerName}`;
-  client.emit('serverChat', {
+  client.chatController.notifyServerChat({
     icon: ChatIcon.Skeleton,
     message:
       packet.killsCount > 1
         ? `${message}, ${packet.killerName} killed ${packet.killsCount} player(s)`
         : message,
   });
-  playSfxById(SfxId.ServerMessage);
+  client.audioController.playById(SfxId.ServerMessage);
 }
 
 function handleArenaDrop(client: Client) {
-  client.emit('serverChat', {
+  client.chatController.notifyServerChat({
     message: 'New round is delayed, there are still players inside the arena',
     sfxId: SfxId.ArenaTickSound,
   });

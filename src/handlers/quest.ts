@@ -4,6 +4,8 @@ import {
   PacketAction,
   PacketFamily,
   QuestDialogServerPacket,
+  QuestListServerPacket,
+  QuestPage,
   QuestReportServerPacket,
 } from 'eolib';
 import type { Client } from '@/client';
@@ -18,15 +20,45 @@ function handleQuestDialog(client: Client, reader: EoReader) {
     return;
   }
 
-  client.sessionId = packet.sessionId;
+  client.questController.handleDialogOpened(
+    {
+      npcName: record.name,
+      dialogId: packet.dialogId,
+      questId: packet.questId,
+      quests: packet.questEntries,
+      dialogEntries: packet.dialogEntries,
+    },
+    packet.sessionId,
+  );
+}
 
-  client.emit('openQuestDialog', {
-    name: record.name,
-    dialogId: packet.dialogId,
-    questId: packet.questId,
-    quests: packet.questEntries,
-    dialog: packet.dialogEntries,
-  });
+function handleQuestList(client: Client, reader: EoReader) {
+  const packet = QuestListServerPacket.deserialize(reader);
+  if (packet.page === QuestPage.Progress) {
+    const entries =
+      (
+        packet.pageData as InstanceType<
+          typeof QuestListServerPacket.PageDataProgress
+        >
+      ).questProgressEntries ?? [];
+    client.questController.handleQuestListReceived(
+      QuestPage.Progress,
+      entries,
+      [],
+    );
+  } else {
+    const names =
+      (
+        packet.pageData as InstanceType<
+          typeof QuestListServerPacket.PageDataHistory
+        >
+      ).completedQuests ?? [];
+    client.questController.handleQuestListReceived(
+      QuestPage.History,
+      [],
+      names,
+    );
+  }
 }
 
 function handleQuestReport(client: Client, reader: EoReader) {
@@ -39,6 +71,12 @@ export function registerQuestHandlers(client: Client) {
     PacketFamily.Quest,
     PacketAction.Dialog,
     (reader) => handleQuestDialog(client, reader),
+  );
+
+  client.bus!.registerPacketHandler(
+    PacketFamily.Quest,
+    PacketAction.List,
+    (reader) => handleQuestList(client, reader),
   );
 
   client.bus!.registerPacketHandler(

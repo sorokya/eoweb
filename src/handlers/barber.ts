@@ -8,21 +8,18 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '@/client';
-import { playSfxById, SfxId } from '@/sfx';
+import { GOLD_ITEM_ID } from '@/consts';
+import { SfxId } from '@/sfx';
 
 function handleBarberOpen(client: Client, reader: EoReader) {
   const packet = BarberOpenServerPacket.deserialize(reader);
-  client.sessionId = packet.sessionId;
-  client.emit('barberOpened', undefined);
+  client.barberController.notifyOpened(packet.sessionId);
 }
 
 function handleBarberAgree(client: Client, reader: EoReader) {
   const packet = BarberAgreeServerPacket.deserialize(reader);
 
-  const gold = client.items.find((i) => i.id === 1);
-  if (gold) {
-    gold.amount = packet.goldAmount;
-  }
+  client.inventoryController.setItem(GOLD_ITEM_ID, packet.goldAmount);
 
   const character = client.getCharacterById(packet.change.playerId);
   if (character) {
@@ -44,9 +41,8 @@ function handleBarberAgree(client: Client, reader: EoReader) {
     client.atlas.refresh();
   }
 
-  client.emit('inventoryChanged', undefined);
-  client.emit('barberPurchased', undefined);
-  playSfxById(SfxId.BuySell);
+  client.barberController.notifyPurchased();
+  client.audioController.playById(SfxId.BuySell);
 }
 
 export function registerBarberHandlers(client: Client) {

@@ -1,7 +1,6 @@
 import {
   Emote as EmoteType,
   type EoReader,
-  Item,
   ItemAcceptServerPacket,
   ItemAddServerPacket,
   ItemDropServerPacket,
@@ -26,8 +25,8 @@ import {
   Emote,
   HealthBar,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { SfxId } from '@/sfx';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 
 function handleItemAdd(client: Client, reader: EoReader) {
   const packet = ItemAddServerPacket.deserialize(reader);
@@ -63,28 +62,20 @@ function handleItemGet(client: Client, reader: EoReader) {
 
   client.weight = packet.weight;
 
-  const existingItem = client.items.find((i) => i.id === packet.takenItem.id);
-  if (existingItem) {
-    existingItem.amount += packet.takenItem.amount;
-  } else {
-    const item = new Item();
-    item.id = packet.takenItem.id;
-    item.amount = packet.takenItem.amount;
-    client.items.push(item);
-  }
+  client.inventoryController.addItem(
+    packet.takenItem.id,
+    packet.takenItem.amount,
+  );
 
   const record = client.getEifRecordById(packet.takenItem.id);
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+  client.toastController.show(
     `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record!.name}`,
   );
-  client.emit('chat', {
-    tab: ChatTab.System,
+  client.chatController.notifyChat({
+    channel: ChatChannels.System,
     icon: ChatIcon.UpArrow,
     message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record!.name}`,
   });
-
-  client.emit('inventoryChanged', undefined);
 }
 
 function handleItemDrop(client: Client, reader: EoReader) {
@@ -98,27 +89,20 @@ function handleItemDrop(client: Client, reader: EoReader) {
 
   client.weight = packet.weight;
 
-  if (packet.remainingAmount) {
-    const item = client.items.find((i) => i.id === packet.droppedItem.id);
-    if (item) {
-      item.amount = packet.remainingAmount;
-    }
-  } else {
-    client.items = client.items.filter((i) => i.id !== packet.droppedItem.id);
-  }
+  client.inventoryController.setItem(
+    packet.droppedItem.id,
+    packet.remainingAmount,
+  );
 
   const record = client.getEifRecordById(packet.droppedItem.id);
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
+  client.toastController.show(
     `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record!.name}`,
   );
-  client.emit('chat', {
-    tab: ChatTab.System,
+  client.chatController.notifyChat({
+    channel: ChatChannels.System,
     icon: ChatIcon.DownArrow,
     message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record!.name}`,
   });
-
-  client.emit('inventoryChanged', undefined);
   client.atlas.refresh();
 }
 
@@ -127,16 +111,10 @@ function handleItemReply(client: Client, reader: EoReader) {
 
   client.weight = packet.weight;
 
-  if (packet.usedItem.amount) {
-    const item = client.items.find((i) => i.id === packet.usedItem.id);
-    if (item) {
-      item.amount = packet.usedItem.amount;
-    }
-  } else {
-    client.items = client.items.filter((i) => i.id !== packet.usedItem.id);
-  }
-
-  client.emit('inventoryChanged', undefined);
+  client.inventoryController.setItem(
+    packet.usedItem.id,
+    packet.usedItem.amount,
+  );
 
   switch (packet.itemType) {
     case ItemType.Heal: {
@@ -151,7 +129,7 @@ function handleItemReply(client: Client, reader: EoReader) {
           new HealthBar(percent, 0, data.hpGain),
         );
       }
-      client.emit('statsUpdate', undefined);
+      client.statsController.notifyStatsUpdated();
       break;
     }
     case ItemType.EffectPotion: {
@@ -159,7 +137,7 @@ function handleItemReply(client: Client, reader: EoReader) {
         packet.itemTypeData as ItemReplyServerPacket.ItemTypeDataEffectPotion;
       const metadata = client.getEffectMetadata(data.effectId + 1);
       if (metadata.sfx) {
-        playSfxById(metadata.sfx);
+        client.audioController.playById(metadata.sfx);
       }
       client.animationController.effects.push(
         new EffectAnimation(
@@ -176,8 +154,7 @@ function handleItemReply(client: Client, reader: EoReader) {
         break;
       }
 
-      client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      client.toastController.showWarning(
         client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_USE_DRUNK),
       );
       client.drunkController.drunk = true;
@@ -204,7 +181,7 @@ function handleItemReply(client: Client, reader: EoReader) {
           client.playerId,
           new Emote(EmoteType.LevelUp),
         );
-        playSfxById(SfxId.LevelUp);
+        client.audioController.playById(SfxId.LevelUp);
         client.level = data.levelUp;
         client.maxHp = data.maxHp;
         client.maxTp = data.maxTp;
@@ -213,7 +190,7 @@ function handleItemReply(client: Client, reader: EoReader) {
         client.skillPoints = data.skillPoints;
       }
 
-      client.emit('statsUpdate', undefined);
+      client.statsController.notifyStatsUpdated();
       break;
     }
     case ItemType.CureCurse: {
@@ -234,7 +211,7 @@ function handleItemReply(client: Client, reader: EoReader) {
       client.maxTp = data.stats.maxTp;
       client.hp = Math.min(client.hp, client.maxHp);
       client.tp = Math.min(client.tp, client.maxTp);
-      client.emit('statsUpdate', undefined);
+      client.statsController.notifyStatsUpdated();
 
       const cursedEquipmentSlots: EquipmentSlot[] = [];
       const equipmentArray = client.inventoryController.getEquipmentArray();
@@ -261,10 +238,10 @@ function handleItemReply(client: Client, reader: EoReader) {
             client.equipment.accessory = 0;
             break;
           case EquipmentSlot.Gloves:
-            client.equipment.boots = 0;
+            client.equipment.gloves = 0;
             break;
           case EquipmentSlot.Belt:
-            client.equipment.boots = 0;
+            client.equipment.belt = 0;
             break;
           case EquipmentSlot.Armor: {
             client.equipment.armor = 0;
@@ -310,6 +287,14 @@ function handleItemReply(client: Client, reader: EoReader) {
         }
       }
 
+      if (
+        cursedEquipmentSlots.some((slot) =>
+          client.inventoryController.isVisibleEquipmentChange(slot),
+        )
+      ) {
+        client.atlas.refresh();
+      }
+
       break;
     }
   }
@@ -319,16 +304,30 @@ function handleItemKick(client: Client, reader: EoReader) {
   const packet = ItemKickServerPacket.deserialize(reader);
   client.weight.current = packet.currentWeight;
 
-  if (packet.item.amount) {
-    const item = client.items.find((i) => i.id === packet.item.id);
-    if (item) {
-      item.amount = packet.item.amount;
-    }
-  } else {
-    client.items = client.items.filter((i) => i.id !== packet.item.id);
-  }
+  const current = client.inventoryController.getItemAmount(packet.item.id);
+  const diff = current - packet.item.amount;
 
-  client.emit('inventoryChanged', undefined);
+  client.inventoryController.setItem(packet.item.id, packet.item.amount);
+
+  const record = client.getEifRecordById(packet.item.id);
+  if (record) {
+    const message = `${
+      diff > 0
+        ? client.getResourceString(
+            EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED,
+          )
+        : client.getResourceString(
+            EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP,
+          )
+    } ${Math.abs(diff)} ${record.name}`;
+
+    client.toastController.show(message);
+    client.chatController.notifyChat({
+      channel: ChatChannels.System,
+      icon: ChatIcon.UpArrow,
+      message,
+    });
+  }
 }
 
 function handleItemAccept(client: Client, reader: EoReader) {
@@ -342,34 +341,29 @@ function handleItemAccept(client: Client, reader: EoReader) {
     packet.playerId,
     new Emote(EmoteType.LevelUp),
   );
-  playSfxById(SfxId.LevelUp);
+  client.audioController.playAtPosition(SfxId.LevelUp, character.coords);
 }
 
 function handleItemJunk(client: Client, reader: EoReader) {
   const packet = ItemJunkServerPacket.deserialize(reader);
   client.weight.current = packet.weight.current;
 
-  if (packet.remainingAmount || packet.junkedItem.id === 1) {
-    const item = client.items.find((i) => i.id === packet.junkedItem.id);
-    if (item) {
-      item.amount = packet.remainingAmount;
-    }
-  } else {
-    client.items = client.items.filter((i) => i.id !== packet.junkedItem.id);
-  }
+  client.inventoryController.setItem(
+    packet.junkedItem.id,
+    packet.remainingAmount,
+  );
 
   const record = client.getEifRecordById(packet.junkedItem.id);
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record!.name}`,
-  );
-  client.emit('chat', {
-    tab: ChatTab.System,
-    icon: ChatIcon.DownArrow,
-    message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record!.name}`,
-  });
-
-  client.emit('inventoryChanged', undefined);
+  if (record) {
+    client.toastController.show(
+      `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
+    );
+    client.chatController.notifyChat({
+      channel: ChatChannels.System,
+      icon: ChatIcon.DownArrow,
+      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
+    });
+  }
 }
 
 export function registerItemHandlers(client: Client) {

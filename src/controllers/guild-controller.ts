@@ -18,6 +18,7 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import {
+  GOLD_ITEM_ID,
   GUILD_MAX_RANK,
   GUILD_MIN_DEPOSIT,
   GUILD_RANK_LEADER,
@@ -25,7 +26,7 @@ import {
 } from '@/consts';
 import { DialogResourceID } from '@/edf';
 import { GuildDialogState } from '@/game-state';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 import { capitalize } from '@/utils';
 
 const REPLY_DIALOG_IDS: Partial<Record<GuildReply, DialogResourceID>> = {
@@ -78,7 +79,34 @@ export class GuildController {
   cachedRanks: string[] = [];
   cachedBankGold = 0;
 
+  private openedSubscribers: Set<() => void> = new Set();
+  private updatedSubscribers: Set<() => void> = new Set();
+
   constructor(private client: Client) {}
+
+  subscribeOpened(cb: () => void) {
+    this.openedSubscribers.add(cb);
+  }
+
+  unsubscribeOpened(cb: () => void) {
+    this.openedSubscribers.delete(cb);
+  }
+
+  subscribeUpdated(cb: () => void) {
+    this.updatedSubscribers.add(cb);
+  }
+
+  unsubscribeUpdated(cb: () => void) {
+    this.updatedSubscribers.delete(cb);
+  }
+
+  notifyOpened() {
+    for (const cb of this.openedSubscribers) cb();
+  }
+
+  private notifyUpdated() {
+    for (const cb of this.updatedSubscribers) cb();
+  }
 
   private clearGuild() {
     this.client.guildTag = '   ';
@@ -94,10 +122,7 @@ export class GuildController {
     const strings = dialogId
       ? this.client.getDialogStrings(dialogId)
       : ['Guild reply', `Code: ${GuildReply[code]}`];
-    this.client.emit('smallAlert', {
-      title: strings[0],
-      message: strings[1],
-    });
+    this.client.alertController.show(strings[0], strings[1]);
   }
 
   notifyCreated(
@@ -111,13 +136,8 @@ export class GuildController {
     this.client.guildRankName = rankName;
     this.client.guildRank = GUILD_RANK_LEADER;
 
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (gold) {
-      gold.amount = goldAmount;
-      this.client.emit('inventoryChanged', undefined);
-    }
-
-    this.client.emit('guildUpdated', undefined);
+    this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
+    this.notifyUpdated();
   }
 
   notifyJoined(guildTag: string, guildName: string, rankName: string) {
@@ -125,63 +145,62 @@ export class GuildController {
     this.client.guildName = guildName;
     this.client.guildRankName = rankName;
     this.client.guildRank = GUILD_RANK_NEW_MEMBER;
-    playSfxById(SfxId.JoinGuild);
+    this.client.audioController.playById(SfxId.JoinGuild);
 
     this.state = GuildDialogState.None;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
 
     const strings = this.client.getDialogStrings(
       DialogResourceID.GUILD_YOU_HAVE_BEEN_ACCEPTED,
     );
-    this.client.emit('smallAlert', {
-      title: strings[0],
-      message: strings[1],
-    });
+    this.client.alertController.show(strings[0], strings[1]);
   }
 
   notifyKicked() {
     this.clearGuild();
     if (this.state !== GuildDialogState.None) {
       this.state = GuildDialogState.MainMenu;
-      this.client.emit('guildUpdated', undefined);
+      this.notifyUpdated();
     }
   }
 
   notifyRankUpdated(rank: number) {
     this.client.guildRank = rank;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyCreateBegin() {
     this.state = GuildDialogState.CreateWaiting;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyCreateAdd(name: string) {
     this.createMembers.push(capitalize(name));
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyCreateAddConfirm(name: string) {
     if (name) this.createMembers.push(capitalize(name));
     this.state = GuildDialogState.None;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
 
-    playSfxById(SfxId.ServerMessage);
+    this.client.audioController.playById(SfxId.ServerMessage);
     const strings = this.client.getDialogStrings(
       DialogResourceID.GUILD_WILL_BE_CREATED,
     );
-    this.client.emit('confirmation', {
-      title: strings[0],
-      message: strings[1],
-      onConfirm: () => this.finalizeCreate(),
-    });
+    this.client.alertController.showConfirm(
+      strings[0],
+      strings[1],
+      (confirmed) => {
+        if (confirmed) this.finalizeCreate();
+      },
+    );
   }
 
   notifyInfoReceived(data: GuildInfoData) {
     this.cachedInfo = data;
     this.state = GuildDialogState.GuildInfo;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyMemberListReceived(
@@ -189,58 +208,59 @@ export class GuildController {
   ) {
     this.cachedMembers = members;
     this.state = GuildDialogState.GuildMembers;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyDescriptionReceived(description: string) {
     this.cachedDescription = description;
     this.state = GuildDialogState.EditDescription;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyRanksReceived(ranks: string[]) {
     this.cachedRanks = [...ranks];
     this.state = GuildDialogState.EditRanks;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyBankReceived(gold: number) {
     this.cachedBankGold = gold;
     this.state = GuildDialogState.Bank;
-    this.client.emit('guildUpdated', undefined);
+    this.notifyUpdated();
   }
 
   notifyBankUpdated(goldAmount: number) {
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (gold) {
-      this.cachedBankGold += gold.amount - goldAmount;
-      gold.amount = goldAmount;
-      this.client.emit('inventoryChanged', undefined);
-    }
+    const gold = this.client.inventoryController.getItemAmount(GOLD_ITEM_ID);
+    this.cachedBankGold += gold - goldAmount;
+    this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
     this.requestBankInfo();
   }
 
   notifyPendingInvite(playerId: number, type: 'create' | 'join', name: string) {
-    playSfxById(SfxId.ServerMessage);
+    this.client.audioController.playById(SfxId.ServerMessage);
 
     if (type === 'join') {
       const strings = this.client.getDialogStrings(
         DialogResourceID.GUILD_PLAYER_WANTS_TO_JOIN,
       );
-      this.client.emit('confirmation', {
-        title: strings[0],
-        message: `${name} ${strings[1]}`,
-        onConfirm: () => this.acceptJoinRequest(playerId),
-      });
+      this.client.alertController.showConfirm(
+        strings[0],
+        `${name} ${strings[1]}`,
+        (confirmed) => {
+          if (confirmed) this.acceptJoinRequest(playerId);
+        },
+      );
     } else {
       const strings = this.client.getDialogStrings(
         DialogResourceID.GUILD_INVITATION_INVITES_YOU,
       );
-      this.client.emit('confirmation', {
-        title: strings[0],
-        message: `${name} ${strings[1]}`,
-        onConfirm: () => this.acceptCreateInvite(playerId),
-      });
+      this.client.alertController.showConfirm(
+        strings[0],
+        `${name} ${strings[1]}`,
+        (confirmed) => {
+          if (confirmed) this.acceptCreateInvite(playerId);
+        },
+      );
     }
   }
 
@@ -337,6 +357,7 @@ export class GuildController {
   }
 
   saveRanks(ranks: string[]) {
+    this.cachedRanks = [...ranks];
     const packet = new GuildAgreeClientPacket();
     packet.sessionId = this.client.sessionId;
     packet.infoType = GuildInfoType.Ranks;
@@ -347,8 +368,8 @@ export class GuildController {
   }
 
   depositToBank(amount: number) {
-    const gold = this.client.items.find((i) => i.id === 1);
-    if (!gold || gold.amount < amount || amount < GUILD_MIN_DEPOSIT) {
+    const gold = this.client.inventoryController.getItemAmount(GOLD_ITEM_ID);
+    if (gold < amount || amount < GUILD_MIN_DEPOSIT) {
       return;
     }
 
@@ -356,7 +377,7 @@ export class GuildController {
     packet.sessionId = this.client.sessionId;
     packet.goldAmount = amount;
     this.client.bus.send(packet);
-    playSfxById(SfxId.BuySell);
+    this.client.audioController.playById(SfxId.BuySell);
   }
 
   kickMember(name: string) {
@@ -379,8 +400,8 @@ export class GuildController {
     packet.sessionId = this.client.sessionId;
     this.client.bus.send(packet);
     this.clearGuild();
-    playSfxById(SfxId.LeaveGuild);
-    this.client.emit('guildOpened', undefined);
+    this.client.audioController.playById(SfxId.LeaveGuild);
+    this.notifyOpened();
   }
 
   disbandGuild() {
@@ -388,7 +409,7 @@ export class GuildController {
     packet.sessionId = this.client.sessionId;
     this.client.bus.send(packet);
     this.clearGuild();
-    playSfxById(SfxId.LeaveGuild);
-    this.client.emit('guildOpened', undefined);
+    this.client.audioController.playById(SfxId.LeaveGuild);
+    this.notifyOpened();
   }
 }

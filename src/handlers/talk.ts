@@ -10,6 +10,7 @@ import {
   TalkPlayerServerPacket,
   TalkReply,
   TalkReplyServerPacket,
+  TalkRequestServerPacket,
   TalkServerServerPacket,
   TalkTellServerPacket,
 } from 'eolib';
@@ -17,8 +18,8 @@ import type { Client } from '@/client';
 import { COLORS } from '@/consts';
 import { EOResourceID } from '@/edf';
 import { ChatBubble } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
+import { SfxId } from '@/sfx';
+import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize } from '@/utils';
 
 function handleTalkPlayer(client: Client, reader: EoReader) {
@@ -30,97 +31,115 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
     return;
   }
 
+  const message = client.socialController.filterNaughtyWords(packet.message);
   client.animationController.characterChats.set(
     character.playerId,
-    new ChatBubble(client.sans11!, packet.message),
+    new ChatBubble(client.sans11!, message),
   );
 
-  client.emit('chat', {
-    tab: ChatTab.Local,
+  client.chatController.notifyChat({
+    channel: ChatChannels.Local,
     name: capitalize(character.name),
-    message: packet.message,
+    message: message,
   });
 }
 
 function handleTalkServer(client: Client, reader: EoReader) {
   const packet = TalkServerServerPacket.deserialize(reader);
-  client.emit('serverChat', {
+  client.chatController.notifyServerChat({
     message: packet.message,
   });
+  client.toastController.show(
+    `${client.locale.packetLogServer}: ${packet.message}`,
+  );
+  client.audioController.playById(SfxId.ServerMessage);
 }
 
 function handleTalkMsg(client: Client, reader: EoReader) {
   const packet = TalkMsgServerPacket.deserialize(reader);
-  client.emit('chat', {
+  client.chatController.notifyChat({
     icon: ChatIcon.GlobalAnnounce,
     name: capitalize(packet.playerName),
-    message: packet.message,
-    tab: ChatTab.Global,
+    message: client.socialController.filterNaughtyWords(packet.message),
+    channel: ChatChannels.Global,
   });
 }
 
 function handleTalkAdmin(client: Client, reader: EoReader) {
   const packet = TalkAdminServerPacket.deserialize(reader);
-  client.emit('chat', {
+  client.chatController.notifyChat({
     icon: ChatIcon.GM,
     name: capitalize(packet.playerName),
-    message: packet.message,
-    tab: ChatTab.Group,
+    message: client.socialController.filterNaughtyWords(packet.message),
+    channel: ChatChannels.Admin,
   });
-  playSfxById(SfxId.AdminChatReceived);
+  client.audioController.playById(SfxId.AdminChatReceived);
 }
 
 function handleTalkTell(client: Client, reader: EoReader) {
   const packet = TalkTellServerPacket.deserialize(reader);
-  client.emit('chat', {
+  if (
+    client.configController.whispers === 'none' ||
+    (client.configController.whispers === 'friends' &&
+      !client.socialController.isFriend(packet.playerName)) ||
+    client.socialController.isIgnored(packet.playerName)
+  ) {
+    return;
+  }
+
+  const pmChannel = `pm:${packet.playerName.toLowerCase()}` as const;
+  client.chatController.notifyChat({
     icon: ChatIcon.Note,
-    name: `${capitalize(packet.playerName)}->${capitalize(client.name)}`,
-    message: packet.message,
-    tab: ChatTab.Local,
+    name: capitalize(packet.playerName),
+    message: client.socialController.filterNaughtyWords(packet.message),
+    channel: pmChannel,
   });
-  playSfxById(SfxId.PrivateMessageReceived);
+  client.audioController.playById(SfxId.PrivateMessageReceived);
 }
 
 function handleTalkAnnounce(client: Client, reader: EoReader) {
   const packet = TalkAnnounceServerPacket.deserialize(reader);
+  const message = client.socialController.filterNaughtyWords(packet.message);
   client.animationController.characterChats.set(
     client.playerId,
-    new ChatBubble(client.sans11!, packet.message),
+    new ChatBubble(client.sans11!, message),
   );
-  client.emit('chat', {
-    tab: ChatTab.Local,
+  client.chatController.notifyChat({
+    channel: ChatChannels.Local,
     name: capitalize(packet.playerName),
-    message: packet.message,
+    message: message,
     icon: ChatIcon.GlobalAnnounce,
   });
-  client.emit('chat', {
-    tab: ChatTab.Group,
+  client.chatController.notifyChat({
+    channel: ChatChannels.Admin,
     name: capitalize(packet.playerName),
-    message: packet.message,
+    message: message,
     icon: ChatIcon.GlobalAnnounce,
   });
-  client.emit('chat', {
-    tab: ChatTab.Global,
+  client.chatController.notifyChat({
+    channel: ChatChannels.Global,
     name: capitalize(packet.playerName),
-    message: packet.message,
+    message: message,
     icon: ChatIcon.GlobalAnnounce,
   });
-  playSfxById(SfxId.AdminAnnounceReceived);
+  client.audioController.playById(SfxId.AdminAnnounceReceived);
 }
 
 function handleTalkOpen(client: Client, reader: EoReader) {
   const packet = TalkOpenServerPacket.deserialize(reader);
-  const player = client.partyMembers.find(
+  const player = client.partyController.members.find(
     (m) => m.playerId === packet.playerId,
   );
   if (!player) {
     return;
   }
 
-  client.emit('chat', {
-    tab: ChatTab.Group,
+  const message = client.socialController.filterNaughtyWords(packet.message);
+
+  client.chatController.notifyChat({
+    channel: ChatChannels.Party,
     name: capitalize(player.name),
-    message: packet.message,
+    message,
     icon: ChatIcon.PlayerParty,
   });
 
@@ -135,25 +154,36 @@ function handleTalkOpen(client: Client, reader: EoReader) {
       packet.playerId,
       new ChatBubble(
         client.sans11!,
-        packet.message,
+        message,
         COLORS.ChatBubble,
         COLORS.ChatBubbleBackgroundParty,
       ),
     );
   }
 
-  playSfxById(SfxId.GroupChatReceived);
+  client.audioController.playById(SfxId.GroupChatReceived);
+}
+
+function handleTalkRequest(client: Client, reader: EoReader) {
+  const packet = TalkRequestServerPacket.deserialize(reader);
+  client.chatController.notifyChat({
+    icon: ChatIcon.Guild,
+    name: capitalize(packet.playerName),
+    message: client.socialController.filterNaughtyWords(packet.message),
+    channel: ChatChannels.Guild,
+  });
 }
 
 function handleTalkReply(client: Client, reader: EoReader) {
   const packet = TalkReplyServerPacket.deserialize(reader);
   if (packet.replyCode === TalkReply.NotFound) {
-    client.emit('chat', {
+    const pmChannel = `pm:${packet.name.toLowerCase()}` as const;
+    client.chatController.notifyChat({
       icon: ChatIcon.Error,
       message: `${capitalize(packet.name)} ${client.getResourceString(EOResourceID.SYS_CHAT_PM_PLAYER_COULD_NOT_BE_FOUND)}`,
-      tab: ChatTab.Local,
+      channel: pmChannel,
     });
-    playSfxById(SfxId.PrivateMessageSent);
+    client.audioController.playById(SfxId.PrivateMessageSent);
   }
 }
 
@@ -192,6 +222,11 @@ export function registerTalkHandlers(client: Client) {
     PacketFamily.Talk,
     PacketAction.Open,
     (reader) => handleTalkOpen(client, reader),
+  );
+  client.bus!.registerPacketHandler(
+    PacketFamily.Talk,
+    PacketAction.Request,
+    (reader) => handleTalkRequest(client, reader),
   );
   client.bus!.registerPacketHandler(
     PacketFamily.Talk,

@@ -49,7 +49,7 @@ function handleSpellTargetSelf(client: Client, reader: EoReader) {
   }
 
   if (packet.hp || packet.tp) {
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   const character = client.getCharacterById(packet.playerId);
@@ -73,7 +73,7 @@ function handleSpellTargetOther(client: Client, reader: EoReader) {
   const packet = SpellTargetOtherServerPacket.deserialize(reader);
   if (packet.hp) {
     client.hp = packet.hp;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   const caster = client.getCharacterById(packet.casterId);
@@ -133,7 +133,7 @@ function handleSpellTargetGroup(client: Client, reader: EoReader) {
   }
 
   if (statsUpdate) {
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 }
 

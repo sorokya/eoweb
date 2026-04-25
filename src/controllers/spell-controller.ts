@@ -18,10 +18,13 @@ import {
   CharacterSpellChantAnimation,
   EffectAnimation,
   type EffectTarget,
+  EffectTargetCharacter,
+  EffectTargetNpc,
+  EffectTargetTile,
   NpcDeathAnimation,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
-import { SlotType } from '@/ui/ui-types';
+import { SfxId } from '@/sfx';
+import { SlotType } from '@/ui/enums';
 import { getTimestamp } from './movement-controller';
 
 enum SpellState {
@@ -40,8 +43,24 @@ export class SpellController {
   spellTargetId = 0;
   spellCooldownTicks = 0;
 
+  private spellQueuedSubscribers: (() => void)[] = [];
+
   constructor(client: Client) {
     this.client = client;
+  }
+
+  subscribeSpellQueued(cb: () => void): void {
+    this.spellQueuedSubscribers.push(cb);
+  }
+
+  unsubscribeSpellQueued(cb: () => void): void {
+    this.spellQueuedSubscribers = this.spellQueuedSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  private notifySpellQueued(): void {
+    for (const cb of this.spellQueuedSubscribers) cb();
   }
 
   useHotbarSlot(index: number): void {
@@ -76,7 +95,7 @@ export class SpellController {
 
       if (
         record.targetType === SkillTargetType.Group &&
-        !this.client.partyMembers.length
+        !this.client.partyController.members.length
       ) {
         return;
       }
@@ -96,8 +115,8 @@ export class SpellController {
       }
 
       this.selectedSpellId = slot.typeId;
-      this.client.emit('spellQueued', undefined);
-      playSfxById(SfxId.SpellActivate);
+      this.notifySpellQueued();
+      this.client.audioController.playById(SfxId.SpellActivate);
     }
   }
 
@@ -108,8 +127,7 @@ export class SpellController {
     }
 
     if (this.client.tp < record.tpCost) {
-      this.client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
+      this.client.toastController.showWarning(
         this.client.getResourceString(EOResourceID.ATTACK_YOU_ARE_EXHAUSTED_TP),
       );
       this.queuedSpellId = 0;
@@ -245,9 +263,37 @@ export class SpellController {
       new EffectAnimation(record.graphicId, target, metadata),
     );
 
-    if (metadata.sfx) {
-      playSfxById(metadata.sfx);
+    if (!metadata.sfx) {
+      return;
     }
+
+    if (target instanceof EffectTargetCharacter) {
+      if (target.playerId === this.client.playerId) {
+        this.client.audioController.playById(metadata.sfx);
+        return;
+      }
+
+      const position = this.client.getCharacterById(target.playerId)?.coords;
+      if (position) {
+        this.client.audioController.playAtPosition(metadata.sfx, position);
+        return;
+      }
+    }
+
+    if (target instanceof EffectTargetNpc) {
+      const position = this.client.getNpcByIndex(target.index)?.coords;
+      if (position) {
+        this.client.audioController.playAtPosition(metadata.sfx, position);
+        return;
+      }
+    }
+
+    if (target instanceof EffectTargetTile) {
+      this.client.audioController.playAtPosition(metadata.sfx, target.coords);
+      return;
+    }
+
+    this.client.audioController.playById(metadata.sfx);
   }
 
   tick(): void {

@@ -4,8 +4,8 @@ type Config = {
   host: string;
   staticHost: boolean;
   title: string;
-  slogan: string;
   creditsUrl: string;
+  soundFont: string;
 };
 
 export function getDefaultConfig(): Config {
@@ -13,8 +13,8 @@ export function getDefaultConfig(): Config {
     host: HOST,
     staticHost: false,
     title: 'EO Web Client',
-    slogan: 'Web Edition!',
     creditsUrl: 'https://github.com/sorokya/eoweb',
+    soundFont: 'TimGM6mb.sf2',
   };
 }
 

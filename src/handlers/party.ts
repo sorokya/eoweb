@@ -1,5 +1,4 @@
 import {
-  Emote as EmoteType,
   type EoReader,
   PacketAction,
   PacketFamily,
@@ -11,15 +10,9 @@ import {
   PartyReplyCode,
   PartyReplyServerPacket,
   PartyRequestServerPacket,
-  PartyRequestType,
   PartyTargetGroupServerPacket,
 } from 'eolib';
 import type { Client } from '@/client';
-import { DialogResourceID, EOResourceID } from '@/edf';
-import { Emote } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
-import { ChatIcon, ChatTab } from '@/ui/ui-types';
-import { capitalize } from '@/utils';
 
 function handlePartyReply(client: Client, reader: EoReader) {
   const packet = PartyReplyServerPacket.deserialize(reader);
@@ -27,49 +20,17 @@ function handlePartyReply(client: Client, reader: EoReader) {
     case PartyReplyCode.AlreadyInAnotherParty: {
       const data =
         packet.replyCodeData as PartyReplyServerPacket.ReplyCodeDataAlreadyInAnotherParty;
-      client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        `${capitalize(data.playerName)} ${client.getResourceString(
-          EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_IN_ANOTHER_PARTY,
-        )}`,
-      );
-      client.emit('chat', {
-        tab: ChatTab.System,
-        icon: ChatIcon.Error,
-        message: `${capitalize(data.playerName)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_IN_ANOTHER_PARTY)}`,
-      });
+      client.partyController.notifyAlreadyInAnotherParty(data.playerName);
       return;
     }
     case PartyReplyCode.AlreadyInYourParty: {
       const data =
         packet.replyCodeData as PartyReplyServerPacket.ReplyCodeDataAlreadyInYourParty;
-      client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        `${capitalize(data.playerName)} ${client.getResourceString(
-          EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_MEMBER,
-        )}`,
-      );
-      client.emit('chat', {
-        tab: ChatTab.System,
-        icon: ChatIcon.Error,
-        message: `${capitalize(data.playerName)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_MEMBER)}`,
-      });
+      client.partyController.notifyAlreadyInYourParty(data.playerName);
       return;
     }
     case PartyReplyCode.PartyIsFull: {
-      client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_WARNING,
-        client.getResourceString(
-          EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL,
-        ),
-      );
-      client.emit('chat', {
-        tab: ChatTab.System,
-        icon: ChatIcon.Error,
-        message: client.getResourceString(
-          EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL,
-        ),
-      });
+      client.partyController.notifyPartyIsFull();
       return;
     }
   }
@@ -77,164 +38,48 @@ function handlePartyReply(client: Client, reader: EoReader) {
 
 function handlePartyRequest(client: Client, reader: EoReader) {
   const packet = PartyRequestServerPacket.deserialize(reader);
-  const inviter = client.getCharacterById(packet.inviterPlayerId);
-  if (!inviter) {
-    client.sessionController.requestCharacterRange([packet.inviterPlayerId]);
-  }
-
-  const strings = client.getDialogStrings(
-    packet.requestType === PartyRequestType.Invite
-      ? DialogResourceID.PARTY_GROUP_SEND_INVITATION
-      : DialogResourceID.PARTY_GROUP_REQUEST_TO_JOIN,
-  );
-
-  client.showConfirmation(
-    `${capitalize(packet.playerName)} ${strings[1]}`,
-    strings[0],
-    () => {
-      client.socialController.acceptPartyRequest(
-        packet.inviterPlayerId,
-        packet.requestType,
-      );
-    },
+  client.partyController.notifyInvitation(
+    packet.inviterPlayerId,
+    packet.playerName,
+    packet.requestType,
   );
 }
 
 function handlePartyCreate(client: Client, reader: EoReader) {
   const packet = PartyCreateServerPacket.deserialize(reader);
-  client.partyMembers = packet.members;
-  playSfxById(SfxId.JoinParty);
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED),
-  );
-  client.emit('chat', {
-    tab: ChatTab.System,
-    icon: ChatIcon.PlayerParty,
-    message: client.getResourceString(
-      EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED,
-    ),
-  });
-  client.emit('partyUpdated', undefined);
+  client.partyController.notifyJoinedParty(packet.members);
 }
 
 function handlePartyAdd(client: Client, reader: EoReader) {
   const packet = PartyAddServerPacket.deserialize(reader);
-  client.partyMembers.push(packet.member);
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    `${capitalize(packet.member.name)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_JOINED_YOUR)}`,
-  );
-  client.emit('chat', {
-    tab: ChatTab.System,
-    icon: ChatIcon.PlayerParty,
-    message: `${capitalize(packet.member.name)} ${client.getResourceString(
-      EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED,
-    )}`,
-  });
-  client.emit('partyUpdated', undefined);
+  client.partyController.notifyMemberJoined(packet.member);
 }
 
 function handlePartyRemove(client: Client, reader: EoReader) {
   const packet = PartyRemoveServerPacket.deserialize(reader);
-  const member = client.partyMembers.find(
-    (m) => m.playerId === packet.playerId,
-  );
-  if (!member) {
-    return;
-  }
-
-  playSfxById(SfxId.MemberLeftParty);
-
-  client.setStatusLabel(
-    EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-    `${capitalize(member.name)} ${client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_LEFT_YOUR)}`,
-  );
-  client.emit('chat', {
-    tab: ChatTab.System,
-    icon: ChatIcon.PlayerParty,
-    message: `${capitalize(member.name)} ${client.getResourceString(
-      EOResourceID.STATUS_LABEL_PARTY_LEFT_YOUR,
-    )}`,
-  });
-
-  client.partyMembers = client.partyMembers.filter(
-    (m) => m.playerId !== packet.playerId,
-  );
-
-  if (client.partyMembers.length === 1) {
-    client.partyMembers = [];
-  }
-
-  client.emit('partyUpdated', undefined);
+  client.partyController.notifyMemberLeft(packet.playerId);
 }
 
 function handlePartyClose(client: Client) {
-  client.partyMembers = [];
-  client.emit('partyUpdated', undefined);
+  client.partyController.notifyLeftParty();
 }
 
 function handlePartyList(client: Client, reader: EoReader) {
   const packet = PartyListServerPacket.deserialize(reader);
-  client.partyMembers = packet.members;
-  client.emit('partyUpdated', undefined);
+  client.partyController.notifyMembersUpdated(packet.members);
 }
 
 function handlePartyAgree(client: Client, reader: EoReader) {
   const packet = PartyAgreeServerPacket.deserialize(reader);
-  const member = client.partyMembers.find(
-    (m) => m.playerId === packet.playerId,
+  client.partyController.notifyMemberHpUpdated(
+    packet.playerId,
+    packet.hpPercentage,
   );
-  if (!member) {
-    return;
-  }
-
-  member.hpPercentage = packet.hpPercentage;
-  client.emit('partyUpdated', undefined);
 }
 
 function handlePartyTargetGroup(client: Client, reader: EoReader) {
   const packet = PartyTargetGroupServerPacket.deserialize(reader);
-  for (const gain of packet.gains) {
-    if (gain.playerId === client.playerId) {
-      client.experience += gain.experience;
-      client.setStatusLabel(
-        EOResourceID.STATUS_LABEL_TYPE_INFORMATION,
-        `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain.experience} EXP`,
-      );
-      client.emit('chat', {
-        message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_GAINED_EXP)} ${gain.experience} EXP`,
-        icon: ChatIcon.Star,
-        tab: ChatTab.System,
-      });
-
-      if (gain.levelUp) {
-        client.level = gain.levelUp;
-      }
-      client.emit('statsUpdate', undefined);
-    }
-
-    if (gain.levelUp) {
-      const memberCharacter = client.getCharacterById(gain.playerId);
-      if (memberCharacter) {
-        playSfxById(SfxId.LevelUp);
-        client.animationController.characterEmotes.set(
-          gain.playerId,
-          new Emote(EmoteType.LevelUp),
-        );
-      }
-
-      const member = client.partyMembers.find(
-        (m) => m.playerId === gain.playerId,
-      );
-
-      if (member) {
-        member.level = gain.levelUp;
-      }
-    }
-  }
-
-  client.emit('partyUpdated', undefined);
+  client.partyController.notifyExperienceGains(packet.gains);
 }
 
 export function registerPartyHandlers(client: Client) {

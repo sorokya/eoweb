@@ -1,6 +1,6 @@
 import {
+  BookReplyServerPacket,
   type EoReader,
-  Item,
   PacketAction,
   PacketFamily,
   PaperdollAgreeServerPacket,
@@ -9,12 +9,12 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { EquipmentSlot, getEquipmentSlotForItemType } from '@/equipment';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 function handlePaperdollReply(client: Client, reader: EoReader) {
   const packet = PaperdollReplyServerPacket.deserialize(reader);
-  client.emit('openPaperdoll', {
-    icon: packet.icon,
+
+  client.socialController.notifyPaperdollOpened({
     details: packet.details,
     equipment: packet.equipment,
   });
@@ -49,7 +49,7 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
   }
 
   client.inventoryController.setEquipmentSlot(slot, 0);
-  client.emit('equipmentChanged', undefined);
+  client.inventoryController.notifyEquipmentChanged();
 
   const isVisibleChange =
     client.inventoryController.isVisibleEquipmentChange(slot);
@@ -76,21 +76,9 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
   client.maxTp = packet.stats.maxTp;
   client.hp = Math.min(client.hp, client.maxHp);
   client.tp = Math.min(client.tp, client.maxTp);
-  client.emit('statsUpdate', undefined);
+  client.statsController.notifyStatsUpdated();
 
-  let item = client.items.find((i) => i.id === packet.itemId);
-  if (item) {
-    item.amount += 1;
-  } else {
-    item = new Item();
-    item.id = packet.itemId;
-    item.amount = 1;
-    client.items.push(item);
-  }
-
-  playSfxById(SfxId.InventoryPlace);
-
-  client.emit('inventoryChanged', undefined);
+  client.inventoryController.addItem(packet.itemId, 1);
 
   if (client.inventoryController.equipmentSwap) {
     if (
@@ -107,6 +95,8 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
       );
     }
     client.inventoryController.equipmentSwap = null;
+  } else {
+    client.audioController.playById(SfxId.InventoryPlace);
   }
 }
 
@@ -124,7 +114,7 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
   }
 
   client.inventoryController.setEquipmentSlot(slot!, packet.itemId);
-  client.emit('equipmentChanged', undefined);
+  client.inventoryController.notifyEquipmentChanged();
 
   if (client.inventoryController.isVisibleEquipmentChange(slot!)) {
     client.inventoryController.setNearbyCharacterEquipment(
@@ -149,23 +139,16 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
   client.maxTp = packet.stats.maxTp;
   client.hp = Math.min(client.hp, client.maxHp);
   client.tp = Math.min(client.tp, client.maxTp);
-  client.emit('statsUpdate', undefined);
+  client.statsController.notifyStatsUpdated();
 
-  const item = client.items.find((i) => i.id === packet.itemId);
-  if (!item) {
-    return;
-  }
+  client.inventoryController.removeItem(packet.itemId, 1);
+  client.audioController.playById(SfxId.InventoryPlace);
+}
 
-  if (item.amount > 1) {
-    item.amount -= 1;
-  } else {
-    const index = client.items.indexOf(item);
-    if (index > -1) {
-      client.items.splice(index, 1);
-    }
-  }
-
-  client.emit('inventoryChanged', undefined);
+function handleBookReply(client: Client, reader: EoReader) {
+  const packet = BookReplyServerPacket.deserialize(reader);
+  client.questController.handleBookOpened(packet.questNames);
+  client.socialController.notifyBookOpened(packet.details);
 }
 
 export function registerPaperdollHandlers(client: Client) {
@@ -183,5 +166,10 @@ export function registerPaperdollHandlers(client: Client) {
     PacketFamily.Paperdoll,
     PacketAction.Agree,
     (reader) => handlePaperdollAgree(client, reader),
+  );
+  client.bus!.registerPacketHandler(
+    PacketFamily.Book,
+    PacketAction.Reply,
+    (reader) => handleBookReply(client, reader),
   );
 }

@@ -1,0 +1,537 @@
+import type { CharacterDetails, EifRecord } from 'eolib';
+import { StatId } from 'eolib';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'preact/hooks';
+import { FaArrowUp } from 'react-icons/fa';
+import type { CharacterTab } from '@/controllers';
+import { EquipmentSlot } from '@/equipment';
+import { playSfxById, SfxId } from '@/sfx';
+import { Button, ItemIcon, QuestBookList, Tabs } from '@/ui/components';
+import { UI_PANEL_BORDER, UI_STICKY_BG } from '@/ui/consts';
+import { useCharacterInfo, useClient, useLocale } from '@/ui/context';
+import { useBackdropBlur, useItemDrag, usePlayerStats } from '@/ui/in-game';
+import { capitalize, getItemMeta } from '@/utils';
+import { DialogBase } from './dialog-base';
+
+const EQUIP_CELL = 23;
+
+function getEquipTooltipLines(record: EifRecord): string[] {
+  return [record.name, ...getItemMeta(record)];
+}
+
+type SlotConfig = {
+  key: string;
+  label: string;
+  itemId: number;
+  slot: EquipmentSlot;
+  gridColumn: string;
+  gridRow: string;
+};
+
+function EquipSlot({ label, itemId, slot, gridColumn, gridRow }: SlotConfig) {
+  const client = useClient();
+  const info = useCharacterInfo();
+  const { startDrag, cancelDrag } = useItemDrag();
+  const record = itemId ? client.getEifRecordById(itemId) : null;
+  const tooltipLines = record ? getEquipTooltipLines(record) : null;
+  const isOwnCharacter = info?.details.playerId === client.playerId;
+  const [touchTooltip, setTouchTooltip] = useState(false);
+  const slotRef = useRef<HTMLDivElement>(null);
+
+  // Clear touch tooltip when touching outside this slot
+  useEffect(() => {
+    const handler = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      if (!slotRef.current?.contains(e.target as Node)) {
+        setTouchTooltip(false);
+      }
+    };
+    window.addEventListener('pointerdown', handler);
+    return () => window.removeEventListener('pointerdown', handler);
+  }, []);
+
+  const doUnequip = () => {
+    client.inventoryController.unequipItem(slot);
+  };
+
+  const onPointerDown = (e: PointerEvent) => {
+    if (!record || !itemId) return;
+    if (e.button !== 0 && e.pointerType !== 'touch') return;
+    e.preventDefault();
+
+    if (e.pointerType === 'touch') {
+      setTouchTooltip(true);
+    }
+
+    if (!isOwnCharacter) return;
+
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+
+    // Long-press on touch: cancel drag and unequip
+    let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+    if (e.pointerType === 'touch') {
+      longPressTimer = setTimeout(() => {
+        longPressTimer = null;
+        cancelDrag();
+        setTouchTooltip(false);
+        doUnequip();
+      }, 700);
+    }
+
+    playSfxById(SfxId.InventoryPickup);
+
+    startDrag({
+      element: e.currentTarget as Element,
+      info: {
+        source: 'equipment',
+        itemId,
+        equipSlot: slot,
+        pointerId: e.pointerId,
+        ghostX: e.clientX,
+        ghostY: e.clientY,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top,
+        graphicId: record.graphicId,
+        ghostWidth: rect.width,
+        ghostHeight: rect.height,
+      },
+      onResolve: (result) => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        if (result.type !== 'cancelled') {
+          doUnequip();
+        }
+      },
+    });
+  };
+
+  const onContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+    if (!record || !itemId || !isOwnCharacter) return;
+    doUnequip();
+  };
+
+  return (
+    <div
+      ref={slotRef}
+      data-equip-slot={isOwnCharacter ? slot : undefined}
+      class={`group relative flex items-center justify-center rounded border ${itemId ? 'border-primary/30 bg-primary/5' : UI_PANEL_BORDER}${isOwnCharacter && itemId ? 'cursor-grab' : ''}`}
+      style={{ gridColumn, gridRow }}
+      onPointerDown={onPointerDown}
+      onContextMenu={onContextMenu}
+    >
+      {record ? (
+        <ItemIcon
+          graphicId={record.graphicId}
+          alt={record.name}
+          class='pointer-events-none h-full w-full object-contain'
+        />
+      ) : (
+        <span class='pointer-events-none text-center text-[7px] text-base-content/40 leading-tight'>
+          {label}
+        </span>
+      )}
+      {tooltipLines && tooltipLines.length > 0 && (
+        <div
+          class={`pointer-events-none absolute top-0 left-full z-50 ml-1 w-max max-w-40 rounded bg-base-300 px-2 py-1 text-xs shadow-lg ${touchTooltip ? 'block' : 'hidden group-hover:block'}`}
+        >
+          {tooltipLines.map((line, i) => (
+            <div key={i} class={i === 0 ? 'font-semibold' : 'opacity-70'}>
+              {line}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PaperdollTab() {
+  const info = useCharacterInfo();
+  const { locale } = useLocale();
+
+  const slots: SlotConfig[] = [
+    {
+      key: 'hat',
+      label: locale.slotHat,
+      itemId: info?.equipment?.hat ?? 0,
+      slot: EquipmentSlot.Hat,
+      gridColumn: '3 / span 2',
+      gridRow: '1 / span 2',
+    },
+    {
+      key: 'necklace',
+      label: locale.slotNecklace,
+      itemId: info?.equipment?.necklace ?? 0,
+      slot: EquipmentSlot.Necklace,
+      gridColumn: '5 / span 2',
+      gridRow: '1 / span 2',
+    },
+    {
+      key: 'weapon',
+      label: locale.slotWeapon,
+      itemId: info?.equipment?.weapon ?? 0,
+      slot: EquipmentSlot.Weapon,
+      gridColumn: '1 / span 2',
+      gridRow: '3 / span 3',
+    },
+    {
+      key: 'armor',
+      label: locale.slotArmor,
+      itemId: info?.equipment?.armor ?? 0,
+      slot: EquipmentSlot.Armor,
+      gridColumn: '3 / span 2',
+      gridRow: '3 / span 3',
+    },
+    {
+      key: 'shield',
+      label: locale.slotShield,
+      itemId: info?.equipment?.shield ?? 0,
+      slot: EquipmentSlot.Shield,
+      gridColumn: '5 / span 2',
+      gridRow: '3 / span 3',
+    },
+    {
+      key: 'gloves',
+      label: locale.slotGloves,
+      itemId: info?.equipment?.gloves ?? 0,
+      slot: EquipmentSlot.Gloves,
+      gridColumn: '1 / span 2',
+      gridRow: '6 / span 2',
+    },
+    {
+      key: 'belt',
+      label: locale.slotBelt,
+      itemId: info?.equipment?.belt ?? 0,
+      slot: EquipmentSlot.Belt,
+      gridColumn: '3 / span 2',
+      gridRow: '6',
+    },
+    {
+      key: 'ring1',
+      label: locale.slotRing1,
+      itemId: info?.equipment?.ring[0] ?? 0,
+      slot: EquipmentSlot.Ring1,
+      gridColumn: '5',
+      gridRow: '6',
+    },
+    {
+      key: 'ring2',
+      label: locale.slotRing2,
+      itemId: info?.equipment?.ring[1] ?? 0,
+      slot: EquipmentSlot.Ring2,
+      gridColumn: '6',
+      gridRow: '6',
+    },
+    {
+      key: 'armlet1',
+      label: locale.slotArmlet1,
+      itemId: info?.equipment?.armlet[0] ?? 0,
+      slot: EquipmentSlot.Armlet1,
+      gridColumn: '5',
+      gridRow: '7',
+    },
+    {
+      key: 'armlet2',
+      label: locale.slotArmlet2,
+      itemId: info?.equipment?.armlet[1] ?? 0,
+      slot: EquipmentSlot.Armlet2,
+      gridColumn: '6',
+      gridRow: '7',
+    },
+    {
+      key: 'boots',
+      label: locale.slotBoots,
+      itemId: info?.equipment?.boots ?? 0,
+      slot: EquipmentSlot.Boots,
+      gridColumn: '3 / span 2',
+      gridRow: '7 / span 2',
+    },
+    {
+      key: 'accessory',
+      label: locale.slotAccessory,
+      itemId: info?.equipment?.accessory ?? 0,
+      slot: EquipmentSlot.Accessory,
+      gridColumn: '2',
+      gridRow: '8',
+    },
+    {
+      key: 'bracer1',
+      label: locale.slotBracer1,
+      itemId: info?.equipment?.bracer[0] ?? 0,
+      slot: EquipmentSlot.Bracer1,
+      gridColumn: '5',
+      gridRow: '8',
+    },
+    {
+      key: 'bracer2',
+      label: locale.slotBracer2,
+      itemId: info?.equipment?.bracer[1] ?? 0,
+      slot: EquipmentSlot.Bracer2,
+      gridColumn: '6',
+      gridRow: '8',
+    },
+  ];
+
+  const infoRows: [string, string][] = [
+    [locale.charLabelName, info ? capitalize(info.details.name) : '—'],
+    [locale.charLabelHome, info ? info.details.home : '—'],
+    [locale.charLabelClass, info ? info.className : '—'],
+    [
+      locale.charLabelPartner,
+      info?.details.partner ? capitalize(info.details.partner) : '—',
+    ],
+    [locale.charLabelTitle, info?.details.title || '—'],
+    [locale.charLabelGuild, info?.details.guild || '—'],
+    [locale.charLabelRank, info?.details.guildRank || '—'],
+  ];
+
+  return (
+    <div class='flex gap-3'>
+      {/* Equipment grid (left) */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(6, ${EQUIP_CELL}px)`,
+          gridTemplateRows: `repeat(8, ${EQUIP_CELL}px)`,
+          gap: 2,
+        }}
+      >
+        {slots.map(({ key, ...rest }) => (
+          <EquipSlot key={key} {...rest} />
+        ))}
+      </div>
+
+      {/* Character info (right) */}
+      <div class='flex min-w-0 flex-1 flex-col gap-0.5 text-sm'>
+        {infoRows.map(([label, value]) => (
+          <div key={label} class='flex justify-between gap-2'>
+            <span class='shrink-0 text-primary/60'>{label}</span>
+            <span class='min-w-0 truncate font-medium'>{value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StatsTab() {
+  const client = useClient();
+  const { locale } = useLocale();
+  const info = useCharacterInfo();
+  const blur = useBackdropBlur();
+  const {
+    baseStats: base,
+    secondaryStats: secondary,
+    statPoints,
+  } = usePlayerStats();
+
+  const isOwnCharacter = info?.details.playerId === client.playerId;
+  const canTrain = isOwnCharacter && statPoints > 0;
+
+  const handleTrain = useCallback(
+    (statId: StatId) => {
+      client.statSkillController.trainStat(statId);
+    },
+    [client],
+  );
+
+  const statPointsLabel = locale.statsStatPoints.replace(
+    '{count}',
+    String(statPoints),
+  );
+
+  const baseRows: [string, number, StatId][] = [
+    [locale.statsLabelStr, base.str, StatId.Str],
+    [locale.statsLabelInt, base.intl, StatId.Int],
+    [locale.statsLabelWis, base.wis, StatId.Wis],
+    [locale.statsLabelAgi, base.agi, StatId.Agi],
+    [locale.statsLabelCon, base.con, StatId.Con],
+    [locale.statsLabelCha, base.cha, StatId.Cha],
+  ];
+
+  const derivedRows: [string, string][] = [
+    [
+      locale.statsLabelDmg,
+      `${secondary.minDamage.toLocaleString()} - ${secondary.maxDamage.toLocaleString()}`,
+    ],
+    [locale.statsLabelAccuracy, secondary.accuracy.toLocaleString()],
+    [locale.statsLabelEvade, secondary.evade.toLocaleString()],
+    [locale.statsLabelArmor, secondary.armor.toLocaleString()],
+  ];
+
+  return (
+    <div class='flex flex-col gap-2 text-sm'>
+      {isOwnCharacter && (
+        <div
+          class={`sticky top-0 z-10 ${UI_PANEL_BORDER} border-b ${UI_STICKY_BG} px-3 py-1.5 ${blur}`}
+        >
+          <p class='text-center font-medium text-primary text-sm'>
+            {statPointsLabel}
+          </p>
+        </div>
+      )}
+      <div class='flex gap-4'>
+        <div class='flex flex-1 flex-col gap-0.5'>
+          {baseRows.map(([label, value, statId]) => (
+            <div key={label} class='flex items-center justify-between gap-1'>
+              <span class='text-primary/60'>{label}</span>
+              <span class='flex-1 text-right'>{value.toLocaleString()}</span>
+              {isOwnCharacter && (
+                <Button
+                  variant={['xs', canTrain ? 'primary' : 'disabled']}
+                  disabled={!canTrain}
+                  onClick={() => handleTrain(statId)}
+                >
+                  <FaArrowUp size={8} />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+        <div class='flex flex-1 flex-col gap-0.5'>
+          {derivedRows.map(([label, value]) => (
+            <div key={label} class='flex justify-between'>
+              <span class='text-primary/60'>{label}</span>
+              <span>{value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BookTab() {
+  const client = useClient();
+
+  const [questNames, setQuestNames] = useState<string[]>(
+    () => client.questController.bookQuestNames,
+  );
+
+  useEffect(() => {
+    const handleBookOpened = (names: string[]) => {
+      setQuestNames([...names]);
+    };
+    client.questController.subscribeBookOpened(handleBookOpened);
+    return () => {
+      client.questController.unsubscribeBookOpened(handleBookOpened);
+    };
+  }, [client]);
+
+  return <QuestBookList questNames={questNames} />;
+}
+
+export function CharacterDialog() {
+  const { locale } = useLocale();
+  const client = useClient();
+  const info = useCharacterInfo();
+
+  // Read the pending tab set by socialController before dialog mounted.
+  const [activeTab, setActiveTab] = useState<CharacterTab>(
+    () => client.socialController.pendingCharacterTab ?? 'paperdoll',
+  );
+
+  // Track the last playerId for which each tab's data was fetched so we can
+  // detect staleness when switching tabs.
+  const lastFetchedBookRef = useRef<number | null>(
+    // If we opened via BookReply, the data is already fresh.
+    client.socialController.pendingCharacterTab === 'book'
+      ? (info?.details.playerId ?? null)
+      : null,
+  );
+  const lastFetchedPaperdollRef = useRef<number | null>(
+    // If we opened via PaperdollReply (pendingTab is null), data is fresh.
+    client.socialController.pendingCharacterTab === null
+      ? (info?.details.playerId ?? null)
+      : null,
+  );
+
+  // Clear the pending tab after we've consumed it.
+  useEffect(() => {
+    client.socialController.pendingCharacterTab = null;
+  }, [client]);
+
+  // When the dialog is already open and a BookReply arrives, switch to book tab.
+  useEffect(() => {
+    const onBookOpened = ({ details }: { details: CharacterDetails }) => {
+      lastFetchedBookRef.current = details.playerId;
+      setActiveTab('book');
+    };
+    client.socialController.subscribeBookOpened(onBookOpened);
+    return () => client.socialController.unsubscribeBookOpened(onBookOpened);
+  }, [client]);
+
+  // When the dialog is already open and a PaperdollReply arrives, switch to paperdoll tab.
+  useEffect(() => {
+    const onPaperdollOpened = ({
+      details,
+    }: {
+      details: { playerId: number };
+    }) => {
+      lastFetchedPaperdollRef.current = details.playerId;
+      setActiveTab('paperdoll');
+    };
+    client.socialController.subscribePaperdollOpened(onPaperdollOpened);
+    return () =>
+      client.socialController.unsubscribePaperdollOpened(onPaperdollOpened);
+  }, [client]);
+
+  const handleTabSelect = (tabId: CharacterTab) => {
+    const playerId = info?.details.playerId;
+    if (playerId !== undefined) {
+      if (
+        tabId === 'paperdoll' &&
+        (info?.equipment === undefined ||
+          lastFetchedPaperdollRef.current !== playerId)
+      ) {
+        client.socialController.requestPaperdoll(playerId);
+        lastFetchedPaperdollRef.current = playerId;
+      } else if (tabId === 'book' && lastFetchedBookRef.current !== playerId) {
+        client.socialController.requestBook(playerId);
+        lastFetchedBookRef.current = playerId;
+      }
+    }
+    setActiveTab(tabId);
+  };
+
+  const TABS = useMemo(() => {
+    if (info?.details.playerId === client.playerId) {
+      return [
+        { id: 'paperdoll', label: locale.charTabPaperdoll },
+        { id: 'stats', label: locale.charTabStats },
+        { id: 'book', label: locale.charTabBook },
+      ] as const;
+    }
+
+    return [
+      { id: 'paperdoll', label: locale.charTabPaperdoll },
+      { id: 'book', label: locale.charTabBook },
+    ] as const;
+  }, [info, client, locale]);
+
+  return (
+    <DialogBase id='character' title={locale.charDialogTitle} size='md'>
+      <div class='flex flex-col gap-3'>
+        <Tabs
+          items={TABS as unknown as { id: string; label: string }[]}
+          activeId={activeTab}
+          onSelect={(id) => handleTabSelect(id as CharacterTab)}
+          style='border'
+          size='sm'
+        />
+        {activeTab === 'paperdoll' && <PaperdollTab />}
+        {activeTab === 'stats' && <StatsTab />}
+        {activeTab === 'book' && <BookTab />}
+      </div>
+    </DialogBase>
+  );
+}

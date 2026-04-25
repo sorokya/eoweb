@@ -1,24 +1,92 @@
 import {
   BookRequestClientPacket,
-  EmoteReportClientPacket,
-  type Emote as EmoteType,
+  type CharacterDetails,
+  type EquipmentPaperdoll,
+  type OnlinePlayer,
   PaperdollRequestClientPacket,
-  PartyAcceptClientPacket,
-  PartyRemoveClientPacket,
-  PartyRequestClientPacket,
-  PartyRequestType,
-  PartyTakeClientPacket,
-  TradeRequestClientPacket,
+  PlayersRequestClientPacket,
 } from 'eolib';
 
+export type CharacterTab = 'paperdoll' | 'stats' | 'book';
+
 import type { Client } from '@/client';
-import { Emote } from '@/render';
+
+type PaperdollOpenedData = {
+  details: CharacterDetails;
+  equipment: EquipmentPaperdoll;
+};
+
+type BookOpenedData = {
+  details: CharacterDetails;
+};
+
+type PlayerListSubscriber = (players: OnlinePlayer[]) => void;
+
+const FRIENDS_KEY = 'eoweb:social:friends';
+const IGNORE_KEY = 'eoweb:social:ignore';
 
 export class SocialController {
   private client: Client;
+  naughtyWords: string[] = [];
+  playerList: OnlinePlayer[] = [];
+  friendList: string[];
+  ignoreList: string[];
+
+  // Tracks which tab should be shown when CharacterDialog mounts.
+  // Set before notifying subscribers so useState initializers can read it.
+  pendingCharacterTab: CharacterTab | null = null;
+
+  private playerListSubscribers: PlayerListSubscriber[] = [];
 
   constructor(client: Client) {
     this.client = client;
+
+    this.friendList = JSON.parse(localStorage.getItem(FRIENDS_KEY) || '[]');
+    this.ignoreList = JSON.parse(localStorage.getItem(IGNORE_KEY) || '[]');
+  }
+
+  private paperdollOpenedSubscribers: ((data: PaperdollOpenedData) => void)[] =
+    [];
+  subscribePaperdollOpened(callback: (data: PaperdollOpenedData) => void) {
+    this.paperdollOpenedSubscribers.push(callback);
+  }
+
+  unsubscribePaperdollOpened(callback: (data: PaperdollOpenedData) => void) {
+    this.paperdollOpenedSubscribers = this.paperdollOpenedSubscribers.filter(
+      (s) => s !== callback,
+    );
+  }
+
+  notifyPaperdollOpened(data: PaperdollOpenedData) {
+    this.pendingCharacterTab = 'paperdoll';
+
+    if (data.details.playerId === this.client.playerId) {
+      this.client.home = data.details.home;
+      this.client.partner = data.details.partner;
+    }
+
+    for (const subscriber of this.paperdollOpenedSubscribers) {
+      subscriber(data);
+    }
+  }
+
+  private bookOpenedSubscribers: ((data: BookOpenedData) => void)[] = [];
+
+  subscribeBookOpened(cb: (data: BookOpenedData) => void) {
+    this.bookOpenedSubscribers.push(cb);
+  }
+
+  unsubscribeBookOpened(cb: (data: BookOpenedData) => void) {
+    this.bookOpenedSubscribers = this.bookOpenedSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  notifyBookOpened(details: CharacterDetails): void {
+    this.pendingCharacterTab = 'book';
+    for (const subscriber of this.bookOpenedSubscribers) {
+      subscriber({ details });
+    }
   }
 
   requestPaperdoll(playerId: number): void {
@@ -33,56 +101,76 @@ export class SocialController {
     this.client.bus!.send(packet);
   }
 
-  emote(type: EmoteType): void {
-    const packet = new EmoteReportClientPacket();
-    packet.emote = type;
-    this.client.animationController.characterEmotes.set(
-      this.client.playerId,
-      new Emote(type),
+  requestOnlinePlayers(): void {
+    this.client.bus!.send(new PlayersRequestClientPacket());
+  }
+
+  subscribePlayerList(callback: PlayerListSubscriber) {
+    this.playerListSubscribers.push(callback);
+  }
+
+  unsubscribePlayerList(callback: PlayerListSubscriber) {
+    this.playerListSubscribers = this.playerListSubscribers.filter(
+      (cb) => cb !== callback,
     );
-    this.client.bus!.send(packet);
   }
 
-  requestToJoinParty(playerId: number): void {
-    const packet = new PartyRequestClientPacket();
-    packet.requestType = PartyRequestType.Join;
-    packet.playerId = playerId;
-    this.client.bus!.send(packet);
+  notifyPlayersList(players: OnlinePlayer[]) {
+    this.playerList = players;
+    for (const subscriber of this.playerListSubscribers) {
+      subscriber(players);
+    }
   }
 
-  inviteToParty(playerId: number): void {
-    const packet = new PartyRequestClientPacket();
-    packet.requestType = PartyRequestType.Invite;
-    packet.playerId = playerId;
-    this.client.bus!.send(packet);
-  }
-
-  requestTrade(playerId: number): void {
-    const packet = new TradeRequestClientPacket();
-    packet.playerId = playerId;
-    this.client.bus!.send(packet);
-  }
-
-  acceptPartyRequest(playerId: number, requestType: PartyRequestType): void {
-    const packet = new PartyAcceptClientPacket();
-    packet.inviterPlayerId = playerId;
-    packet.requestType = requestType;
-    this.client.bus!.send(packet);
-  }
-
-  removePartyMember(playerId: number): void {
-    const packet = new PartyRemoveClientPacket();
-    packet.playerId = playerId;
-    this.client.bus!.send(packet);
-  }
-
-  requestPartyList(): void {
-    if (this.client.partyMembers.length === 0) {
+  addFriend(playerName: string): void {
+    if (this.friendList.includes(playerName)) {
       return;
     }
 
-    const packet = new PartyTakeClientPacket();
-    packet.membersCount = this.client.partyMembers.length;
-    this.client.bus!.send(packet);
+    this.friendList.push(playerName);
+    localStorage.setItem(FRIENDS_KEY, JSON.stringify(this.friendList));
+  }
+
+  removeFriend(playerName: string): void {
+    this.friendList = this.friendList.filter((name) => name !== playerName);
+    localStorage.setItem(FRIENDS_KEY, JSON.stringify(this.friendList));
+  }
+
+  addIgnore(playerName: string): void {
+    if (this.ignoreList.includes(playerName)) {
+      return;
+    }
+
+    this.ignoreList.push(playerName);
+    localStorage.setItem(IGNORE_KEY, JSON.stringify(this.ignoreList));
+  }
+
+  removeIgnore(playerName: string): void {
+    this.ignoreList = this.ignoreList.filter((name) => name !== playerName);
+    localStorage.setItem(IGNORE_KEY, JSON.stringify(this.ignoreList));
+  }
+
+  isFriend(playerName: string): boolean {
+    return this.friendList.includes(playerName);
+  }
+
+  isIgnored(playerName: string): boolean {
+    return this.ignoreList.includes(playerName);
+  }
+
+  filterNaughtyWords(message: string): string {
+    if (
+      !this.client.configController.profanityFilter ||
+      this.naughtyWords.length === 0
+    ) {
+      return message;
+    }
+
+    let filteredMessage = message;
+    for (const word of this.naughtyWords) {
+      const regex = new RegExp(word, 'gi');
+      filteredMessage = filteredMessage.replace(regex, '*'.repeat(word.length));
+    }
+    return filteredMessage;
   }
 }

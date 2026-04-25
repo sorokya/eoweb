@@ -31,6 +31,11 @@ export class GfxLoader {
 
   // LRU in-memory cache: key = "fileID:resourceID"
   private bitmapCache: Map<string, ImageBitmap> = new Map();
+  // Raw pixel cache for compositor worker (same LRU key space)
+  private pixelCache: Map<
+    string,
+    { pixels: Uint8ClampedArray; width: number; height: number }
+  > = new Map();
 
   private batchPromises: Map<number, PendingPromise<void>> = new Map();
   private batchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -206,22 +211,32 @@ export class GfxLoader {
     cacheKey: string,
     result: { pixels: ArrayBuffer; width: number; height: number },
   ): Promise<ImageBitmap> {
-    const imageData = new ImageData(
-      new Uint8ClampedArray(result.pixels),
-      result.width,
-      result.height,
-    );
+    const pixels = new Uint8ClampedArray(result.pixels);
+    const imageData = new ImageData(pixels, result.width, result.height);
     const bm = await createImageBitmap(imageData);
 
-    // LRU eviction
+    // LRU eviction — evict from both caches together
     if (this.bitmapCache.size >= LRU_MAX_SIZE) {
       const firstKey = this.bitmapCache.keys().next().value as string;
       this.bitmapCache.get(firstKey)?.close();
       this.bitmapCache.delete(firstKey);
+      this.pixelCache.delete(firstKey);
     }
 
     this.bitmapCache.set(cacheKey, bm);
+    this.pixelCache.set(cacheKey, {
+      pixels,
+      width: result.width,
+      height: result.height,
+    });
     return bm;
+  }
+
+  getRawPixels(
+    fileID: number,
+    resourceID: number,
+  ): { pixels: Uint8ClampedArray; width: number; height: number } | undefined {
+    return this.pixelCache.get(`${fileID}:${resourceID}`);
   }
 
   destroy() {
@@ -234,6 +249,7 @@ export class GfxLoader {
       bm.close();
     }
     this.bitmapCache.clear();
+    this.pixelCache.clear();
     this.egfs.clear();
     this.pendingEGFs.clear();
     this.pendingResources.clear();

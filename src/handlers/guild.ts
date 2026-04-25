@@ -21,7 +21,7 @@ import type { Client } from '@/client';
 function handleGuildOpen(client: Client, reader: EoReader) {
   const packet = GuildOpenServerPacket.deserialize(reader);
   client.sessionId = packet.sessionId;
-  client.emit('guildOpened', undefined);
+  client.guildController.notifyOpened();
 }
 
 function handleGuildReply(client: Client, reader: EoReader) {

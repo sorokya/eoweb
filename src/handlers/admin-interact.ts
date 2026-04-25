@@ -6,24 +6,28 @@ import {
   PacketFamily,
 } from 'eolib';
 import type { Client } from '@/client';
+import { ADMIN_HIDE_EFFECT_ID } from '@/consts';
 import {
   EffectAnimation,
   EffectTargetCharacter,
   EffectTargetTile,
 } from '@/render';
-import { playSfxById, SfxId } from '@/sfx';
+import { SfxId } from '@/sfx';
 
 function handleAdminInteractRemove(client: Client, reader: EoReader) {
   const packet = AdminInteractRemoveServerPacket.deserialize(reader);
 
-  // TODO: Hide animation
   const character = client.getCharacterById(packet.playerId);
   if (character) {
-    const metadata = client.getEffectMetadata(25);
+    const metadata = client.getEffectMetadata(ADMIN_HIDE_EFFECT_ID);
     client.animationController.effects.push(
-      new EffectAnimation(25, new EffectTargetTile(character.coords), metadata),
+      new EffectAnimation(
+        ADMIN_HIDE_EFFECT_ID,
+        new EffectTargetTile(character.coords),
+        metadata,
+      ),
     );
-    playSfxById(SfxId.AdminHide);
+    client.audioController.playAtPosition(SfxId.AdminHide, character.coords);
     character.invisible = true;
   }
 }
@@ -31,18 +35,17 @@ function handleAdminInteractRemove(client: Client, reader: EoReader) {
 function handleAdminInteractAgree(client: Client, reader: EoReader) {
   const packet = AdminInteractAgreeServerPacket.deserialize(reader);
 
-  // TODO: Hide animation
   const character = client.getCharacterById(packet.playerId);
   if (character) {
-    const metadata = client.getEffectMetadata(25);
+    const metadata = client.getEffectMetadata(ADMIN_HIDE_EFFECT_ID);
     client.animationController.effects.push(
       new EffectAnimation(
-        25,
+        ADMIN_HIDE_EFFECT_ID,
         new EffectTargetCharacter(character.playerId),
         metadata,
       ),
     );
-    playSfxById(SfxId.AdminHide);
+    client.audioController.playAtPosition(SfxId.AdminHide, character.coords);
     character.invisible = false;
   }
 }
