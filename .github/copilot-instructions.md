@@ -31,7 +31,7 @@ WebSocket → PacketBus → handlers/ → client state / emit events → UI / Pi
 - **`src/bus.ts` (`PacketBus`)** — manages the WebSocket connection and dispatches incoming packets by `PacketFamily + PacketAction` to registered handler functions.
 - **`src/handlers/`** — one file per packet family. Each exports a `registerXxxHandlers(client: Client)` function that calls `client.bus.registerPacketHandler(family, action, fn)`. All are registered at startup via `registerAllHandlers(client)`.
 - **`src/controllers/`** — encapsulate client-side logic for sending packets and managing related state (e.g., `MovementController`, `InventoryController`). Each takes `Client` in its constructor.
-- **`src/client/events.ts`** — typed `ClientEvents` map used by the mitt emitter on `Client`. Most handlers still call `client.emit(...)` and UI subscribes via `client.on(...)`, but newer controllers expose typed `subscribe*` methods (e.g. `subscribeConfirm`, `subscribePaperdollOpened`) as part of an ongoing refactor away from `ClientEvents`.
+- Controllers expose typed `subscribe*` methods (e.g. `subscribeConfirm`, `subscribePaperdollOpened`) to notify subscribers of events.
 
 ### Persistence
 
