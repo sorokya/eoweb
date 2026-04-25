@@ -91,3 +91,5 @@ export const MARRIAGE_APPROVAL_COST = 500;
 export const DIVORCE_COST = 10000;
 
 export const GOLD_ITEM_ID = 1;
+
+export const DEFRAG_FILL_THRESHOLD = 0.85;

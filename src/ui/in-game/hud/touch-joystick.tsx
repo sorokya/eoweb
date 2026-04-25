@@ -16,7 +16,7 @@ const THUMB_REM = 3.25;
 const BASE_PX = BASE_REM * 16;
 const THUMB_PX = THUMB_REM * 16;
 const MAX_RADIUS = (BASE_PX - THUMB_PX) / 2;
-const DEAD_ZONE = 20; // px — intentionally coarse
+const DEAD_ZONE = 15; // px — intentionally coarse
 const MARGIN_PX = 12;
 
 function angleToDirection(dx: number, dy: number): Direction {

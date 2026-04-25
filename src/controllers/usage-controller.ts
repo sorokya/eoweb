@@ -8,6 +8,10 @@ export class UsageController {
   usage = 0;
   idleTicks = INITIAL_IDLE_TICKS;
 
+  get idle(): boolean {
+    return !this.idleTicks;
+  }
+
   constructor(client: Client) {
     this.client = client;
   }

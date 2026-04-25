@@ -509,6 +509,8 @@ export class MapRenderer {
       this.npcIdleAnimationFrame = (this.npcIdleAnimationFrame + 1) % 2;
       this.npcIdleAnimationTicks = NPC_IDLE_ANIMATION_TICKS;
     }
+
+    this.client.atlas.maybeDefrag();
   }
 
   private calculateDepth(layer: number, x: number, y: number): number {

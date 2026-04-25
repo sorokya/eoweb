@@ -8,12 +8,12 @@ import {
   GiSwordman,
   GiThreeFriends,
 } from 'react-icons/gi';
-import { LuLogOut, LuMenu } from 'react-icons/lu';
+import { LuLogOut, LuMenu, LuRefreshCcw } from 'react-icons/lu';
 import { DialogResourceID } from '@/edf';
 import { playSfxById, SfxId } from '@/sfx';
 import { Button } from '@/ui/components';
 import { HUD_Z, SIDEMENU_Z, UI_PANEL_BORDER, UI_STICKY_BG } from '@/ui/consts';
-import { useClient } from '@/ui/context';
+import { useClient, useLocale } from '@/ui/context';
 import { type DialogId, useBackdropBlur, useWindowManager } from '@/ui/in-game';
 
 function useExitGame() {
@@ -30,22 +30,24 @@ function useExitGame() {
 
 type NavDialogButton = {
   id: string;
-  label: string;
   Icon: preact.ComponentType<{ size?: number }>;
 };
 
 const NAV_BUTTONS: NavDialogButton[] = [
-  { id: 'inventory', label: 'Inventory', Icon: GiBackpack },
-  { id: 'map', label: 'Map', Icon: GiCompass },
-  { id: 'spells', label: 'Spells', Icon: GiSpellBook },
-  { id: 'character', label: 'Character', Icon: GiSwordman },
-  { id: 'quests', label: 'Quests', Icon: GiScrollUnfurled },
-  { id: 'social', label: 'Social', Icon: GiThreeFriends },
-  { id: 'settings', label: 'Settings', Icon: GiGears },
+  { id: 'inventory', Icon: GiBackpack },
+  { id: 'map', Icon: GiCompass },
+  { id: 'spells', Icon: GiSpellBook },
+  { id: 'character', Icon: GiSwordman },
+  { id: 'quests', Icon: GiScrollUnfurled },
+  { id: 'social', Icon: GiThreeFriends },
+  { id: 'settings', Icon: GiGears },
+  { id: 'refresh', Icon: LuRefreshCcw },
+  { id: 'exit', Icon: LuLogOut },
 ];
 
 export function NavSidebar() {
   const client = useClient();
+  const { locale } = useLocale();
   const { openDialog: wmOpenDialog, closeDialog, isOpen } = useWindowManager();
   const exitGame = useExitGame();
 
@@ -66,6 +68,16 @@ export function NavSidebar() {
       playSfxById(SfxId.ButtonClick);
       if (id === 'map') {
         client.toggleMinimap();
+        return;
+      }
+
+      if (id === 'exit') {
+        exitGame();
+        return;
+      }
+
+      if (id === 'refresh') {
+        client.refresh();
         return;
       }
 
@@ -91,27 +103,20 @@ export function NavSidebar() {
         onKeyDown={(e) => e.stopPropagation()}
         onContextMenu={(e) => e.stopPropagation()}
       >
-        {NAV_BUTTONS.map(({ id, label, Icon }) => (
+        {NAV_BUTTONS.map(({ id, Icon }) => (
           <Button
             key={id}
             variant={['xs']}
             class='flex h-auto w-14 flex-col items-center gap-0.5 py-1.5'
             onClick={() => handleNavClick(id)}
-            label={label}
+            label={locale.nav[id as keyof typeof locale.nav]}
           >
             <Icon size={16} />
-            <span class='text-[9px] leading-none'>{label}</span>
+            <span class='text-[9px] leading-none'>
+              {locale.nav[id as keyof typeof locale.nav]}
+            </span>
           </Button>
         ))}
-        <Button
-          variant={['xs']}
-          class='mt-1 flex h-auto w-14 flex-col items-center gap-0.5 py-1.5'
-          onClick={exitGame}
-          label='Exit Game'
-        >
-          <LuLogOut size={16} />
-          <span class='text-[9px] leading-none'>Exit</span>
-        </Button>
       </div>
     </div>
   );
@@ -120,6 +125,7 @@ export function NavSidebar() {
 /** Mobile-only floating hamburger menu (below HUD strip, right edge). */
 export function MobileNav() {
   const client = useClient();
+  const { locale } = useLocale();
   const { openDialog: wmOpenDialog, closeDialog, isOpen } = useWindowManager();
   const exitGame = useExitGame();
   const [open, setOpen] = useState(false);
@@ -142,6 +148,16 @@ export function MobileNav() {
       playSfxById(SfxId.ButtonClick);
       if (id === 'map') {
         client.toggleMinimap();
+        return;
+      }
+
+      if (id === 'exit') {
+        exitGame();
+        return;
+      }
+
+      if (id === 'refresh') {
+        client.refresh();
         return;
       }
 
@@ -182,7 +198,7 @@ export function MobileNav() {
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
           >
-            {NAV_BUTTONS.map(({ id, label, Icon }) => (
+            {NAV_BUTTONS.map(({ id, Icon }) => (
               <li key={id}>
                 <button
                   type='button'
@@ -192,26 +208,10 @@ export function MobileNav() {
                   }}
                 >
                   <Icon size={13} />
-                  {label}
+                  {locale.nav[id as keyof typeof locale.nav]}
                 </button>
               </li>
             ))}
-            <li>
-              <div class='divider my-0' />
-            </li>
-            <li>
-              <button
-                type='button'
-                class='text-error'
-                onClick={() => {
-                  setOpen(false);
-                  exitGame();
-                }}
-              >
-                <LuLogOut size={13} />
-                Exit Game
-              </button>
-            </li>
           </ul>
         )}
       </div>
