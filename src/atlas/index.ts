@@ -9,6 +9,7 @@ import { CanvasSource, Rectangle, Texture } from 'pixi.js';
 import type { Client } from '@/client';
 import {
   ATLAS_EXPIRY_TICKS,
+  DEFRAG_FILL_THRESHOLD,
   NUMBER_OF_EFFECTS,
   NUMBER_OF_EMOTES,
 } from '@/consts';
@@ -294,6 +295,7 @@ export class Atlas {
   >();
   private compositorClient: CompositorClient;
   private dirtyDynamicAtlasIndices: Set<number> = new Set();
+  pendingDefrag = false;
 
   offsetFrame: HTMLSelectElement =
     document.querySelector<HTMLSelectElement>('#offset-frame')!;
@@ -574,6 +576,25 @@ export class Atlas {
         atlas.skyline.splice(i + 1, 1);
         i--;
       }
+    }
+  }
+
+  private maxDynamicFillRatio(): number {
+    let max = 0;
+    for (const atlas of this.atlases) {
+      const watermark = atlas.skyline.reduce(
+        (m, node) => Math.max(m, node.y),
+        0,
+      );
+      max = Math.max(max, watermark / ATLAS_SIZE);
+    }
+    return max;
+  }
+
+  maybeDefrag(): void {
+    if (this.pendingDefrag && this.client.usageController.idle) {
+      this.defragmentAtlases();
+      this.pendingDefrag = false;
     }
   }
 
@@ -1473,7 +1494,12 @@ export class Atlas {
 
   private async updateAtlas(): Promise<void> {
     this.dirtyDynamicAtlasIndices = new Set();
-    this.defragmentAtlases();
+    if (this.maxDynamicFillRatio() >= DEFRAG_FILL_THRESHOLD) {
+      this.defragmentAtlases();
+      this.pendingDefrag = false;
+    } else {
+      this.pendingDefrag = true;
+    }
 
     // Build compositor specs and kick off compositing in the worker thread
     // before the main-thread frame-size calculations so they run in parallel.
