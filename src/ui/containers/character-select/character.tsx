@@ -8,6 +8,7 @@ import {
   drawCharacterPreview,
 } from '@/ui/components';
 import { useClient, useLocale } from '@/ui/context';
+import { capitalize } from '@/utils';
 
 type AdminBadgeColor =
   | 'badge-ghost'
@@ -120,7 +121,7 @@ export function Character({ character }: CharacterProps) {
   return (
     <div class='card flex min-h-0 flex-1 flex-col bg-base-200 p-4'>
       <div class='flex shrink-0 items-center justify-center gap-2'>
-        <span class='font-semibold text-sm'>{character.name}</span>
+        <span class='font-semibold text-sm'>{capitalize(character.name)}</span>
         <span class='text-base-content/60 text-xs'>Lvl {character.level}</span>
         {adminBadge && (
           <span class={`badge badge-xs ${adminBadge.color}`}>
