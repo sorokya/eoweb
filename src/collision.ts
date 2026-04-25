@@ -46,13 +46,13 @@ function pointIntersectRect(point: Vector2, rectangle: Rectangle): boolean {
 }
 
 export function setCharacterRectangle(playerId: number, rectangle: Rectangle) {
-  const belowIds = [];
+  let depth = 0;
   characterRectangles.forEach((other, id) => {
     if (id !== playerId && rectIntersect(other, rectangle)) {
-      belowIds.push(id);
+      depth++;
     }
   });
-  rectangle.depth = belowIds.length;
+  rectangle.depth = depth;
   characterRectangles.set(playerId, rectangle);
 }
 
@@ -84,14 +84,18 @@ export function getCharacterIntersecting(point: Vector2): EntityRect | null {
 }
 
 export function setNpcRectangle(index: number, rectangle: Rectangle) {
-  const belowIds = [];
+  let depth = 0;
   npcRectangles.forEach((other, id) => {
     if (id !== index && rectIntersect(other, rectangle)) {
-      belowIds.push(id);
+      depth++;
     }
   });
-  rectangle.depth = belowIds.length;
+  rectangle.depth = depth;
   npcRectangles.set(index, rectangle);
+}
+
+export function getNpcRectangle(index: number): Rectangle | undefined {
+  return npcRectangles.get(index);
 }
 
 export function getNpcIntersecting(point: Vector2): EntityRect | null {

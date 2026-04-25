@@ -236,6 +236,9 @@ export class Client {
   playerTriggeredDisconnect = false;
   locale = locales[defaultLocale];
   configController = new ConfigController();
+  // Persistent Sets reused each tick to avoid per-tick allocation
+  private readonly _activeCharIds = new Set<number>();
+  private readonly _activeNpcIds = new Set<number>();
 
   constructor() {
     registerAllHandlers(this);
@@ -586,11 +589,14 @@ export class Client {
     this.mapRenderer.tick();
 
     if (this.state === GameState.InGame) {
-      // Build lookup Sets once per tick — O(n) total instead of O(n) per .some() call
-      const activeCharIds = new Set(
-        this.nearby.characters.map((c) => c.playerId),
-      );
-      const activeNpcIds = new Set(this.nearby.npcs.map((n) => n.index));
+      // Rebuild persistent Sets to avoid per-tick allocation
+      this._activeCharIds.clear();
+      for (const c of this.nearby.characters)
+        this._activeCharIds.add(c.playerId);
+      this._activeNpcIds.clear();
+      for (const n of this.nearby.npcs) this._activeNpcIds.add(n.index);
+      const activeCharIds = this._activeCharIds;
+      const activeNpcIds = this._activeNpcIds;
 
       this.usageController.tick();
       this.itemProtectionController.tick();

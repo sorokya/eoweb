@@ -20,6 +20,7 @@ import {
   getCharacterIntersecting,
   getCharacterRectangle,
   getNpcIntersecting,
+  getNpcRectangle,
   Rectangle,
   setBoardRectangle,
   setCharacterRectangle,
@@ -104,6 +105,28 @@ enum Layer {
   Npc = 11,
   Item = 12,
 }
+
+// Pre-built Set for O(1) interactive-tile lookup (replaces inline array + .includes() per frame)
+const INTERACTIVE_TILE_SPECS = new Set([
+  MapTileSpec.Chest,
+  MapTileSpec.ChairAll,
+  MapTileSpec.ChairDown,
+  MapTileSpec.ChairDownRight,
+  MapTileSpec.ChairLeft,
+  MapTileSpec.ChairRight,
+  MapTileSpec.ChairUp,
+  MapTileSpec.ChairUpLeft,
+  MapTileSpec.BankVault,
+  MapTileSpec.Jukebox,
+  MapTileSpec.Board1,
+  MapTileSpec.Board2,
+  MapTileSpec.Board3,
+  MapTileSpec.Board4,
+  MapTileSpec.Board5,
+  MapTileSpec.Board6,
+  MapTileSpec.Board7,
+  MapTileSpec.Board8,
+]);
 
 const TDG = 0.00000001; // gap between depth of each tile on a layer
 const RDG = 0.001; // gap between depth of each row of tiles
@@ -210,6 +233,12 @@ export class MapRenderer {
   private _ghostVisible = false;
   private readonly _dynamics: Entity[] = [];
   private readonly _colorCache = new Map<string, number>();
+  // Reusable walk-offset buffer — avoids allocating a new {x,y} per walking entity per frame
+  private readonly _walkOffsetBuffer = { x: 0, y: 0 };
+  // Per-frame coord sets for O(1) cursor entity detection
+  private readonly _characterCoordSet = new Set<number>();
+  private readonly _npcCoordSet = new Set<number>();
+  private readonly _itemCoordSet = new Set<number>();
 
   hasChairs = false;
 
@@ -487,18 +516,17 @@ export class MapRenderer {
   }
 
   private interpolateWalkOffset(frame: number, direction: Direction): Vector2 {
-    const prevOffset =
-      frame > 0 ? WALK_OFFSETS[frame - 1][direction] : { x: 0, y: 0 };
+    const prevOffset = frame > 0 ? WALK_OFFSETS[frame - 1][direction] : null;
     const walkOffset = WALK_OFFSETS[frame][direction];
-
-    return {
-      x: Math.floor(
-        prevOffset.x + (walkOffset.x - prevOffset.x) * this.interpolation,
-      ),
-      y: Math.floor(
-        prevOffset.y + (walkOffset.y - prevOffset.y) * this.interpolation,
-      ),
-    };
+    const prevX = prevOffset ? prevOffset.x : 0;
+    const prevY = prevOffset ? prevOffset.y : 0;
+    this._walkOffsetBuffer.x = Math.floor(
+      prevX + (walkOffset.x - prevX) * this.interpolation,
+    );
+    this._walkOffsetBuffer.y = Math.floor(
+      prevY + (walkOffset.y - prevY) * this.interpolation,
+    );
+    return this._walkOffsetBuffer;
   }
 
   update(interpolation: number) {
@@ -578,6 +606,9 @@ export class MapRenderer {
     const dynamics = this._dynamics;
     dynamics.length = 0;
     const inGame = this.client.state === GameState.InGame;
+    this._characterCoordSet.clear();
+    this._npcCoordSet.clear();
+    this._itemCoordSet.clear();
     if (inGame) {
       const minX = Math.max(player.x - rangeX, 0);
       const maxX = Math.min(player.x + rangeX, this.client.map.width);
@@ -595,6 +626,7 @@ export class MapRenderer {
           layer: Layer.Character,
           depth: this.calculateDepth(Layer.Character, x, y),
         });
+        this._characterCoordSet.add(x | (y << 16));
       }
 
       for (const npc of this.client.nearby.npcs) {
@@ -608,6 +640,7 @@ export class MapRenderer {
           layer: Layer.Npc,
           depth: this.calculateDepth(Layer.Npc, x, y),
         });
+        this._npcCoordSet.add(x | (y << 16));
       }
 
       for (const item of this.client.nearby.items) {
@@ -621,6 +654,7 @@ export class MapRenderer {
           layer: Layer.Item,
           depth: this.calculateDepth(Layer.Item, x, y),
         });
+        this._itemCoordSet.add(x | (y << 16));
       }
     }
 
@@ -651,46 +685,14 @@ export class MapRenderer {
         ![MapTileSpec.Wall, MapTileSpec.Edge].includes(spec)
       ) {
         let typeId = 0;
+        const coordKey = renderMouseCoords.x | (renderMouseCoords.y << 16);
         if (
-          [
-            MapTileSpec.Chest,
-            MapTileSpec.ChairAll,
-            MapTileSpec.ChairDown,
-            MapTileSpec.ChairDownRight,
-            MapTileSpec.ChairLeft,
-            MapTileSpec.ChairRight,
-            MapTileSpec.ChairUp,
-            MapTileSpec.ChairUpLeft,
-            MapTileSpec.BankVault,
-            MapTileSpec.Jukebox,
-            MapTileSpec.Board1,
-            MapTileSpec.Board2,
-            MapTileSpec.Board3,
-            MapTileSpec.Board4,
-            MapTileSpec.Board5,
-            MapTileSpec.Board6,
-            MapTileSpec.Board7,
-            MapTileSpec.Board8,
-          ].includes(spec!) ||
-          this.client.nearby.characters.some(
-            (c) =>
-              c.coords.x === renderMouseCoords!.x &&
-              c.coords.y === renderMouseCoords!.y,
-          ) ||
-          this.client.nearby.npcs.some(
-            (n) =>
-              n.coords.x === renderMouseCoords!.x &&
-              n.coords.y === renderMouseCoords!.y,
-          )
+          INTERACTIVE_TILE_SPECS.has(spec!) ||
+          this._characterCoordSet.has(coordKey) ||
+          this._npcCoordSet.has(coordKey)
         ) {
           typeId = 1;
-        } else if (
-          this.client.nearby.items.some(
-            (i) =>
-              i.coords.x === renderMouseCoords!.x &&
-              i.coords.y === renderMouseCoords!.y,
-          )
-        ) {
+        } else if (this._itemCoordSet.has(coordKey)) {
           typeId = 2;
         }
 
@@ -769,24 +771,22 @@ export class MapRenderer {
       const tileScreenX = (target.coords.x - target.coords.y) * HALF_TILE_WIDTH;
       const tileScreenY =
         (target.coords.x + target.coords.y) * HALF_TILE_HEIGHT;
-      effect.target.rect = new Rectangle(
-        {
-          x: Math.floor(
-            tileScreenX -
-              HALF_TILE_WIDTH -
-              playerScreen.x +
-              this._halfGameWidth,
-          ),
-          y: Math.floor(
-            tileScreenY -
-              HALF_TILE_HEIGHT -
-              playerScreen.y +
-              this._halfGameHeight,
-          ),
-        },
-        TILE_WIDTH,
-        TILE_HEIGHT,
+      const tileRectX = Math.floor(
+        tileScreenX - HALF_TILE_WIDTH - playerScreen.x + this._halfGameWidth,
       );
+      const tileRectY = Math.floor(
+        tileScreenY - HALF_TILE_HEIGHT - playerScreen.y + this._halfGameHeight,
+      );
+      if (!effect.target.rect) {
+        effect.target.rect = new Rectangle(
+          { x: tileRectX, y: tileRectY },
+          TILE_WIDTH,
+          TILE_HEIGHT,
+        );
+      } else {
+        effect.target.rect.position.x = tileRectX;
+        effect.target.rect.position.y = tileRectY;
+      }
       effect.renderedFirstFrame = true;
       this.addEffectBehindSprite(effect, effectKeyBase);
       this.addEffectTransparentSprite(effect, effectKeyBase);
@@ -1066,38 +1066,46 @@ export class MapRenderer {
     const screenX = Math.floor(tileCenterX + frameOffset.x);
     const screenY = Math.floor(tileCenterY + frame.yOffset + frameOffset.y);
 
-    const rect = new Rectangle(
-      {
-        x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
-        y: screenY,
-      },
-      frame.w,
-      frame.h,
-    );
+    const rectX = screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset);
+    let rect = getCharacterRectangle(character.playerId);
+    if (rect) {
+      rect.position.x = rectX;
+      rect.position.y = screenY;
+      rect.width = frame.w;
+      rect.height = frame.h;
+    } else {
+      rect = new Rectangle({ x: rectX, y: screenY }, frame.w, frame.h);
+    }
     setCharacterRectangle(character.playerId, rect);
 
     const effects = justCharacter
-      ? []
-      : (this._characterEffects.get(character.playerId) ?? []);
+      ? null
+      : this._characterEffects.get(character.playerId);
 
-    for (const effect of effects) {
-      const effectKeyBase = `char-effect:${character.playerId}:${effect.instanceId}`;
-      effect.target.rect = {
-        position: {
-          x:
-            screenCoordsX -
-            playerScreen.x +
-            this._halfGameWidth -
-            HALF_TILE_WIDTH +
-            walkOffset.x,
-          y: rect.position.y,
-        },
-        width: TILE_WIDTH,
-        height: rect.height,
-        depth: 0,
-      };
-      effect.renderedFirstFrame = true;
-      this.addEffectBehindSprite(effect, effectKeyBase);
+    if (effects) {
+      for (const effect of effects) {
+        const effectKeyBase = `char-effect:${character.playerId}:${effect.instanceId}`;
+        const effectX =
+          screenCoordsX -
+          playerScreen.x +
+          this._halfGameWidth -
+          HALF_TILE_WIDTH +
+          walkOffset.x;
+        if (!effect.target.rect) {
+          effect.target.rect = new Rectangle(
+            { x: effectX, y: rect.position.y },
+            TILE_WIDTH,
+            rect.height,
+          );
+        } else {
+          effect.target.rect.position.x = effectX;
+          effect.target.rect.position.y = rect.position.y;
+          effect.target.rect.width = TILE_WIDTH;
+          effect.target.rect.height = rect.height;
+        }
+        effect.renderedFirstFrame = true;
+        this.addEffectBehindSprite(effect, effectKeyBase);
+      }
     }
 
     let alpha = alphaOverride ?? 1;
@@ -1209,10 +1217,12 @@ export class MapRenderer {
       }
     }
 
-    for (const effect of effects) {
-      const effectKeyBase = `char-effect:${character.playerId}:${effect.instanceId}`;
-      this.addEffectTransparentSprite(effect, effectKeyBase);
-      this.addEffectFrontSprite(effect, effectKeyBase);
+    if (effects) {
+      for (const effect of effects) {
+        const effectKeyBase = `char-effect:${character.playerId}:${effect.instanceId}`;
+        this.addEffectTransparentSprite(effect, effectKeyBase);
+        this.addEffectFrontSprite(effect, effectKeyBase);
+      }
     }
 
     if (
@@ -1363,35 +1373,43 @@ export class MapRenderer {
         additionalOffset.y,
     );
 
-    const rect = new Rectangle(
-      {
-        x: screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset),
-        y: screenY,
-      },
-      frame.w,
-      frame.h,
-    );
+    const rectX = screenX + (mirrored ? frame.mirroredXOffset : frame.xOffset);
+    let rect = getNpcRectangle(npc.index);
+    if (rect) {
+      rect.position.x = rectX;
+      rect.position.y = screenY;
+      rect.width = frame.w;
+      rect.height = frame.h;
+    } else {
+      rect = new Rectangle({ x: rectX, y: screenY }, frame.w, frame.h);
+    }
     setNpcRectangle(npc.index, rect);
 
-    const effects = this._npcEffects.get(npc.index) ?? [];
-    for (const effect of effects) {
-      const effectKeyBase = `npc-effect:${npc.index}:${effect.instanceId}`;
-      effect.target.rect = {
-        position: {
-          x:
-            screenCoordsX -
-            playerScreen.x +
-            this._halfGameWidth -
-            HALF_TILE_WIDTH +
-            walkOffset.x,
-          y: rect.position.y,
-        },
-        width: TILE_WIDTH,
-        height: rect.height,
-        depth: 0,
-      };
-      effect.renderedFirstFrame = true;
-      this.addEffectBehindSprite(effect, effectKeyBase);
+    const effects = this._npcEffects.get(npc.index);
+    if (effects) {
+      for (const effect of effects) {
+        const effectKeyBase = `npc-effect:${npc.index}:${effect.instanceId}`;
+        const effectX =
+          screenCoordsX -
+          playerScreen.x +
+          this._halfGameWidth -
+          HALF_TILE_WIDTH +
+          walkOffset.x;
+        if (!effect.target.rect) {
+          effect.target.rect = new Rectangle(
+            { x: effectX, y: rect.position.y },
+            TILE_WIDTH,
+            rect.height,
+          );
+        } else {
+          effect.target.rect.position.x = effectX;
+          effect.target.rect.position.y = rect.position.y;
+          effect.target.rect.width = TILE_WIDTH;
+          effect.target.rect.height = rect.height;
+        }
+        effect.renderedFirstFrame = true;
+        this.addEffectBehindSprite(effect, effectKeyBase);
+      }
     }
 
     let alpha = 1;
@@ -1416,10 +1434,12 @@ export class MapRenderer {
     sprite.y = screenY;
     sprite.alpha = alpha;
 
-    for (const effect of effects) {
-      const effectKeyBase = `npc-effect:${npc.index}:${effect.instanceId}`;
-      this.addEffectTransparentSprite(effect, effectKeyBase);
-      this.addEffectFrontSprite(effect, effectKeyBase);
+    if (effects) {
+      for (const effect of effects) {
+        const effectKeyBase = `npc-effect:${npc.index}:${effect.instanceId}`;
+        this.addEffectTransparentSprite(effect, effectKeyBase);
+        this.addEffectFrontSprite(effect, effectKeyBase);
+      }
     }
 
     const bubble = this.client.animationController.npcChats.get(npc.index);
@@ -1655,14 +1675,13 @@ export class MapRenderer {
     );
     if (!numbersFrame) return;
     const amountAsText = amount.toString();
-    const chars = amountAsText.split('');
     const digitWidth = 9;
-    const totalWidth = chars.length * digitWidth;
+    const totalWidth = amountAsText.length * digitWidth;
     const y = position.y - 35 + healthBar.ticks;
     let x = position.x - totalWidth / 2;
 
-    for (const [index, char] of chars.entries()) {
-      const number = Number.parseInt(char, 10);
+    for (let index = 0; index < amountAsText.length; index++) {
+      const number = amountAsText.charCodeAt(index) - 48; // '0'.charCodeAt(0) === 48
       const digitTexture = this.client.atlas.getFrameTexture({
         atlasIndex: numbersFrame.atlasIndex,
         x: numbersFrame.x + number * digitWidth,
@@ -1676,7 +1695,7 @@ export class MapRenderer {
       }
       const dnSprite = this.ensureUiSprite(
         `${nodeKey}:digit:${index}`,
-        `ui:healthbar-digit value=${char}`,
+        `ui:healthbar-digit value=${number}`,
       );
       dnSprite.texture = digitTexture;
       dnSprite.position.set(x, y);
@@ -2182,9 +2201,10 @@ export class MapRenderer {
     alignHorizontal = true,
     alignVertical = true,
   ) {
-    const chars = text
-      .split('')
-      .map((char) => this.client.sans11.getCharacter(char.charCodeAt(0)));
+    const chars = [];
+    for (let i = 0; i < text.length; i++) {
+      chars.push(this.client.sans11.getCharacter(text.charCodeAt(i)));
+    }
     if (!chars.length) return;
 
     const { width, height } = this.client.sans11.measureTextChars(chars);
