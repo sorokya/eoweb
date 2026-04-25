@@ -21,7 +21,7 @@ import { isMobile } from '@/utils';
 import { ChatInput } from './chat-input';
 import type { ChatMessage } from './chat-manager';
 import { useChatManager } from './chat-manager';
-import { ChatMessageList } from './chat-message-list';
+import { ChatMessageList, getChannelIcon } from './chat-message-list';
 import { ChatTabBar } from './chat-tab-bar';
 
 function useIsMobile() {
@@ -103,9 +103,15 @@ function ChatPreview({ messages, now, onFocus, position }: PreviewProps) {
           class='wrap-break-word text-xs leading-tight'
           style={{ opacity: msgOpacity(msg.timestampUtc, now) }}
         >
-          <span class={`font-semibold ${channelColor(msg.channel)}`}>
-            [{channelLabel(msg.channel)}]
-          </span>
+          {(() => {
+            const Icon = getChannelIcon(msg.channel);
+            return (
+              <Icon
+                size={10}
+                class={`mr-0.5 inline-block align-middle ${channelColor(msg.channel)}`}
+              />
+            );
+          })()}
           {msg.name && (
             <span>
               {' '}

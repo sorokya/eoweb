@@ -51,7 +51,7 @@ const CHANNEL_ICONS: Record<string, IconComponent> = {
   system: LuInfo,
 };
 
-function getChannelIcon(ch: ChatChannel): IconComponent {
+export function getChannelIcon(ch: ChatChannel): IconComponent {
   if (isPMChannel(ch)) return LuMail;
   return CHANNEL_ICONS[ch] ?? LuInfo;
 }
