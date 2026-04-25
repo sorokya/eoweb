@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import { BiSolidStar } from 'react-icons/bi';
 import { FaCoins, FaHeart, FaSignal } from 'react-icons/fa';
 import { GiWeightLiftingUp } from 'react-icons/gi';
@@ -120,6 +120,12 @@ function TnlWidget({ stats }: WidgetProps) {
 }
 
 function WeightWidget({ stats }: WidgetProps) {
+  const percent = useMemo(() => {
+    return stats.maxWeight > 0
+      ? Math.round((stats.weight / stats.maxWeight) * 100)
+      : 0;
+  }, [stats.weight, stats.maxWeight]);
+
   return (
     <span
       class={`flex items-center gap-0.5 text-[10px] leading-tight ${HUD_TEXT}`}
@@ -127,7 +133,10 @@ function WeightWidget({ stats }: WidgetProps) {
       <span class={`text-sky-300 ${HUD_ICON_BG}`}>
         <GiWeightLiftingUp size={12} />
       </span>
-      {stats.weight} / {stats.maxWeight}
+      <span class='hidden md:inline'>
+        {stats.weight} / {stats.maxWeight}
+      </span>
+      <span class='inline md:hidden'>{percent}%</span>
     </span>
   );
 }
