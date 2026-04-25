@@ -12,17 +12,17 @@
     "knip": "knip"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.11",
+    "@biomejs/biome": "2.4.13",
     "@preact/preset-vite": "^2.10.5",
     "@tailwindcss/vite": "^4.2.2",
     "@types/howler": "^2.2.12",
-    "@types/node": "^25.5.2",
+    "@types/node": "^25.6.0",
     "daisyui": "^5.5.19",
-    "knip": "^6.3.1",
-    "lefthook": "^2.1.5",
+    "knip": "^6.6.3",
+    "lefthook": "^2.1.6",
     "tailwindcss": "^4.2.2",
     "typescript": "~6.0.2",
-    "vite": "^8.0.8"
+    "vite": "^8.0.10"
   },
   "dependencies": {
     "eolib": "^2.0.1",

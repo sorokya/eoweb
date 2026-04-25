@@ -3,7 +3,7 @@ import type { Client } from '@/client';
 import { playSfxById, SfxId } from '@/sfx';
 import type { DialogId } from '@/ui/in-game';
 
-export type CommandContext = {
+type CommandContext = {
   client: Client;
   isDialogOpen: (id: DialogId) => boolean;
   toggleDialog: (id: DialogId) => void;

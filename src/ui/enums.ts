@@ -27,14 +27,14 @@ export enum ChatIcon {
 }
 
 // New channel system — string-based to support dynamic PM channels
-export type StaticChannel =
+type StaticChannel =
   | 'local'
   | 'global'
   | 'party'
   | 'guild'
   | 'admin'
   | 'system';
-export type PMChannel = `pm:${string}`;
+type PMChannel = `pm:${string}`;
 export type ChatChannel = StaticChannel | PMChannel;
 
 export const ChatChannels = {
