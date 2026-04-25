@@ -303,17 +303,29 @@ function handleItemReply(client: Client, reader: EoReader) {
 function handleItemKick(client: Client, reader: EoReader) {
   const packet = ItemKickServerPacket.deserialize(reader);
   client.weight.current = packet.currentWeight;
+
+  const current = client.inventoryController.getItemAmount(packet.item.id);
+  const diff = current - packet.item.amount;
+
   client.inventoryController.setItem(packet.item.id, packet.item.amount);
 
   const record = client.getEifRecordById(packet.item.id);
   if (record) {
-    client.toastController.show(
-      `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.item.amount} ${record.name}`,
-    );
+    const message = `${
+      diff > 0
+        ? client.getResourceString(
+            EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED,
+          )
+        : client.getResourceString(
+            EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP,
+          )
+    } ${Math.abs(diff)} ${record.name}`;
+
+    client.toastController.show(message);
     client.chatController.notifyChat({
       channel: ChatChannels.System,
       icon: ChatIcon.UpArrow,
-      message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.item.amount} ${record.name}`,
+      message,
     });
   }
 }
