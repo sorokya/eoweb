@@ -12,14 +12,72 @@ import type { Client } from '@/client';
 import { COLORS, MAX_CHAT_LENGTH } from '@/consts';
 import { ChatBubble } from '@/render';
 import { SfxId } from '@/sfx';
+import type { ChatChannel } from '@/ui/enums';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize, makeDrunk } from '@/utils';
 
+export type ChatMessage = {
+  channel: ChatChannel;
+  message: string;
+  icon?: ChatIcon | null;
+  name?: string;
+};
+
+export type ServerChatMessage = {
+  message: string;
+  sfxId?: SfxId | null;
+  icon?: ChatIcon | null;
+};
+
+type ChatSubscriber = (msg: ChatMessage) => void;
+type ServerChatSubscriber = (msg: ServerChatMessage) => void;
+
 export class ChatController {
   private client: Client;
+  private chatSubscribers: ChatSubscriber[] = [];
+  private serverChatSubscribers: ServerChatSubscriber[] = [];
+  private setChatSubscribers: ((text: string) => void)[] = [];
 
   constructor(client: Client) {
     this.client = client;
+  }
+
+  subscribeChat(cb: ChatSubscriber): void {
+    this.chatSubscribers.push(cb);
+  }
+
+  unsubscribeChat(cb: ChatSubscriber): void {
+    this.chatSubscribers = this.chatSubscribers.filter((s) => s !== cb);
+  }
+
+  notifyChat(msg: ChatMessage): void {
+    for (const cb of this.chatSubscribers) cb(msg);
+  }
+
+  subscribeServerChat(cb: ServerChatSubscriber): void {
+    this.serverChatSubscribers.push(cb);
+  }
+
+  unsubscribeServerChat(cb: ServerChatSubscriber): void {
+    this.serverChatSubscribers = this.serverChatSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  notifyServerChat(msg: ServerChatMessage): void {
+    for (const cb of this.serverChatSubscribers) cb(msg);
+  }
+
+  subscribeSetChat(cb: (text: string) => void): void {
+    this.setChatSubscribers.push(cb);
+  }
+
+  unsubscribeSetChat(cb: (text: string) => void): void {
+    this.setChatSubscribers = this.setChatSubscribers.filter((s) => s !== cb);
+  }
+
+  notifySetChat(text: string): void {
+    for (const cb of this.setChatSubscribers) cb(text);
   }
 
   chat(message: string): void {
@@ -47,19 +105,19 @@ export class ChatController {
         this.client.playerId,
         new ChatBubble(this.client.sans11, packet.message),
       );
-      this.client.emit('chat', {
+      this.notifyChat({
         icon: ChatIcon.GlobalAnnounce,
         channel: ChatChannels.Local,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
-      this.client.emit('chat', {
+      this.notifyChat({
         icon: ChatIcon.GlobalAnnounce,
         channel: ChatChannels.Admin,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
       });
-      this.client.emit('chat', {
+      this.notifyChat({
         icon: ChatIcon.GlobalAnnounce,
         channel: ChatChannels.Global,
         message: `${packet.message}`,
@@ -81,7 +139,7 @@ export class ChatController {
         packet.message = msg;
         this.client.bus!.send(packet);
 
-        this.client.emit('chat', {
+        this.notifyChat({
           icon: ChatIcon.Note,
           channel: pmChannel,
           name: `${capitalize(this.client.name)}`,
@@ -97,7 +155,7 @@ export class ChatController {
       packet.message = trimmed.substring(1);
       this.client.bus!.send(packet);
 
-      this.client.emit('chat', {
+      this.notifyChat({
         channel: ChatChannels.Global,
         message: `${packet.message}`,
         name: `${capitalize(this.client.name)}`,
@@ -120,7 +178,7 @@ export class ChatController {
         ),
       );
 
-      this.client.emit('chat', {
+      this.notifyChat({
         channel: ChatChannels.Party,
         icon: ChatIcon.PlayerParty,
         message: `${packet.message}`,
@@ -134,7 +192,7 @@ export class ChatController {
       packet.message = trimmed.substring(1);
       this.client.bus!.send(packet);
 
-      this.client.emit('chat', {
+      this.notifyChat({
         channel: ChatChannels.Guild,
         icon: ChatIcon.Guild,
         message: `${packet.message}`,
@@ -148,7 +206,7 @@ export class ChatController {
       packet.message = trimmed.substring(1);
       this.client.bus!.send(packet);
 
-      this.client.emit('chat', {
+      this.notifyChat({
         channel: ChatChannels.Admin,
         icon: ChatIcon.GM,
         message: `${packet.message}`,
@@ -169,7 +227,7 @@ export class ChatController {
       new ChatBubble(this.client.sans11, trimmed),
     );
 
-    this.client.emit('chat', {
+    this.notifyChat({
       channel: ChatChannels.Local,
       message: `${trimmed}`,
       name: `${capitalize(this.client.name)}`,

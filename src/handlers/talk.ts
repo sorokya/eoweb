@@ -37,7 +37,7 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
     new ChatBubble(client.sans11!, message),
   );
 
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.Local,
     name: capitalize(character.name),
     message: message,
@@ -46,7 +46,7 @@ function handleTalkPlayer(client: Client, reader: EoReader) {
 
 function handleTalkServer(client: Client, reader: EoReader) {
   const packet = TalkServerServerPacket.deserialize(reader);
-  client.emit('serverChat', {
+  client.chatController.notifyServerChat({
     message: packet.message,
   });
   client.toastController.show(
@@ -57,7 +57,7 @@ function handleTalkServer(client: Client, reader: EoReader) {
 
 function handleTalkMsg(client: Client, reader: EoReader) {
   const packet = TalkMsgServerPacket.deserialize(reader);
-  client.emit('chat', {
+  client.chatController.notifyChat({
     icon: ChatIcon.GlobalAnnounce,
     name: capitalize(packet.playerName),
     message: client.socialController.filterNaughtyWords(packet.message),
@@ -67,7 +67,7 @@ function handleTalkMsg(client: Client, reader: EoReader) {
 
 function handleTalkAdmin(client: Client, reader: EoReader) {
   const packet = TalkAdminServerPacket.deserialize(reader);
-  client.emit('chat', {
+  client.chatController.notifyChat({
     icon: ChatIcon.GM,
     name: capitalize(packet.playerName),
     message: client.socialController.filterNaughtyWords(packet.message),
@@ -88,7 +88,7 @@ function handleTalkTell(client: Client, reader: EoReader) {
   }
 
   const pmChannel = `pm:${packet.playerName.toLowerCase()}` as const;
-  client.emit('chat', {
+  client.chatController.notifyChat({
     icon: ChatIcon.Note,
     name: capitalize(packet.playerName),
     message: client.socialController.filterNaughtyWords(packet.message),
@@ -104,19 +104,19 @@ function handleTalkAnnounce(client: Client, reader: EoReader) {
     client.playerId,
     new ChatBubble(client.sans11!, message),
   );
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.Local,
     name: capitalize(packet.playerName),
     message: message,
     icon: ChatIcon.GlobalAnnounce,
   });
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.Admin,
     name: capitalize(packet.playerName),
     message: message,
     icon: ChatIcon.GlobalAnnounce,
   });
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.Global,
     name: capitalize(packet.playerName),
     message: message,
@@ -136,7 +136,7 @@ function handleTalkOpen(client: Client, reader: EoReader) {
 
   const message = client.socialController.filterNaughtyWords(packet.message);
 
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.Party,
     name: capitalize(player.name),
     message,
@@ -166,7 +166,7 @@ function handleTalkOpen(client: Client, reader: EoReader) {
 
 function handleTalkRequest(client: Client, reader: EoReader) {
   const packet = TalkRequestServerPacket.deserialize(reader);
-  client.emit('chat', {
+  client.chatController.notifyChat({
     icon: ChatIcon.Guild,
     name: capitalize(packet.playerName),
     message: client.socialController.filterNaughtyWords(packet.message),
@@ -178,7 +178,7 @@ function handleTalkReply(client: Client, reader: EoReader) {
   const packet = TalkReplyServerPacket.deserialize(reader);
   if (packet.replyCode === TalkReply.NotFound) {
     const pmChannel = `pm:${packet.name.toLowerCase()}` as const;
-    client.emit('chat', {
+    client.chatController.notifyChat({
       icon: ChatIcon.Error,
       message: `${capitalize(packet.name)} ${client.getResourceString(EOResourceID.SYS_CHAT_PM_PLAYER_COULD_NOT_BE_FOUND)}`,
       channel: pmChannel,

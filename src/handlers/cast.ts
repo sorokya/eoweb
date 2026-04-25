@@ -24,7 +24,7 @@ function handleCastReply(client: Client, reader: EoReader) {
 
   if (packet.casterTp) {
     client.tp = packet.casterTp;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   client.animationController.npcHealthBars.set(
@@ -48,7 +48,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
 
   if (packet.casterTp) {
     client.tp = packet.casterTp;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   client.animationController.npcHealthBars.set(
@@ -81,7 +81,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
   const message = client.getNpcKilledMessage(packet.npcKilledData, gain);
   if (message) {
     client.toastController.show(message);
-    client.emit('chat', {
+    client.chatController.notifyChat({
       message,
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
@@ -91,7 +91,7 @@ function handleCastSpec(client: Client, reader: EoReader) {
 
   if (packet.experience) {
     client.experience = packet.experience;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 }
 
@@ -105,7 +105,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
 
   if (packet.casterTp) {
     client.tp = packet.casterTp;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   client.animationController.npcHealthBars.set(
@@ -156,7 +156,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
   );
   if (message) {
     client.toastController.show(message);
-    client.emit('chat', {
+    client.chatController.notifyChat({
       message,
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
@@ -166,7 +166,7 @@ function handleCastAccept(client: Client, reader: EoReader) {
 
   if (packet.experience) {
     client.experience = packet.experience;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 }
 

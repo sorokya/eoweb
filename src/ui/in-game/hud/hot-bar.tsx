@@ -58,11 +58,10 @@ function HotBarSlot({ index, pillow }: SlotProps) {
     }
     const update = () =>
       setIsSpellActive(client.spellController.selectedSpellId === slot.typeId);
-    // Poll on spellQueued events
-    client.on('spellQueued', update);
+    client.spellController.subscribeSpellQueued(update);
     update();
     return () => {
-      client.off('spellQueued', update);
+      client.spellController.unsubscribeSpellQueued(update);
     };
   }, [client, isSkill, slot.typeId]);
 

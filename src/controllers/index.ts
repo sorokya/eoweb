@@ -5,7 +5,11 @@ export { AuthenticationController } from './authentication-controller';
 export { BankController } from './bank-controller';
 export { BarberController } from './barber-controller';
 export { BoardController } from './board-controller';
-export { ChatController } from './chat-controller';
+export {
+  ChatController,
+  type ChatMessage,
+  type ServerChatMessage,
+} from './chat-controller';
 export { ChestController } from './chest-controller';
 export { CleanupController } from './cleanup-controller';
 export { CommandController } from './command-controller';
@@ -41,6 +45,7 @@ export { ShopController } from './shop-controller';
 export { type CharacterTab, SocialController } from './social-controller';
 export { SpellController } from './spell-controller';
 export { StatSkillController } from './stat-skill-controller';
+export { StatsController } from './stats-controller';
 export { ToastController } from './toast-controller';
 export { TradeController } from './trade-controller';
 export { UsageController } from './usage-controller';

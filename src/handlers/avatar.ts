@@ -109,7 +109,7 @@ function handleAvatarReply(client: Client, reader: EoReader) {
 
   if (packet.victimId === client.playerId) {
     client.hp = Math.max(client.hp - packet.damage, 0);
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   const victim = client.getCharacterById(packet.victimId);
@@ -137,7 +137,7 @@ function handleAvatarAdmin(client: Client, reader: EoReader) {
     packet.casterId !== client.playerId
   ) {
     client.hp = Math.max(client.hp - packet.damage, 0);
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 
   const victim = client.getCharacterById(packet.victimId);

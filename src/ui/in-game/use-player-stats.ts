@@ -48,13 +48,13 @@ export function usePlayerStats(): PlayerStats {
 
   useEffect(() => {
     const handler = () => setStats(readStats(client));
-    client.on('statsUpdate', handler);
+    client.statsController.subscribeStatsUpdated(handler);
     client.inventoryController.subscribeInventoryChanged(handler);
-    client.on('equipmentChanged', handler);
+    client.inventoryController.subscribeEquipmentChanged(handler);
     return () => {
-      client.off('statsUpdate', handler);
+      client.statsController.unsubscribeStatsUpdated(handler);
       client.inventoryController.unsubscribeInventoryChanged(handler);
-      client.off('equipmentChanged', handler);
+      client.inventoryController.unsubscribeEquipmentChanged(handler);
     };
   }, [client]);
 

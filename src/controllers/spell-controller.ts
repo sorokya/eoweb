@@ -43,8 +43,24 @@ export class SpellController {
   spellTargetId = 0;
   spellCooldownTicks = 0;
 
+  private spellQueuedSubscribers: (() => void)[] = [];
+
   constructor(client: Client) {
     this.client = client;
+  }
+
+  subscribeSpellQueued(cb: () => void): void {
+    this.spellQueuedSubscribers.push(cb);
+  }
+
+  unsubscribeSpellQueued(cb: () => void): void {
+    this.spellQueuedSubscribers = this.spellQueuedSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  private notifySpellQueued(): void {
+    for (const cb of this.spellQueuedSubscribers) cb();
   }
 
   useHotbarSlot(index: number): void {
@@ -99,7 +115,7 @@ export class SpellController {
       }
 
       this.selectedSpellId = slot.typeId;
-      this.client.emit('spellQueued', undefined);
+      this.notifySpellQueued();
       this.client.audioController.playById(SfxId.SpellActivate);
     }
   }

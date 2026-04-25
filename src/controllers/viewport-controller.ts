@@ -92,6 +92,5 @@ export class ViewportController {
 
     this.setGameSize(w, h);
     this.mobile = isMobile();
-    this.client.emit('resize', undefined);
   }
 }

@@ -30,7 +30,7 @@ export class CommandController {
         const coords = this.client.getPlayerCoords();
         const message = `${this.client.getResourceString(EOResourceID.STATUS_LABEL_YOUR_LOCATION_IS_AT)} ${this.client.mapId} x:${coords.x} y:${coords.y}`;
         this.client.audioController.playById(SfxId.ServerMessage);
-        this.client.emit('serverChat', {
+        this.client.chatController.notifyServerChat({
           message,
         });
         this.client.toastController.show(message);
@@ -45,10 +45,10 @@ export class CommandController {
 
         this.client.audioController.playById(SfxId.ServerMessage);
 
-        this.client.emit('serverChat', {
+        this.client.chatController.notifyServerChat({
           message: messages[0],
         });
-        this.client.emit('serverChat', {
+        this.client.chatController.notifyServerChat({
           message: messages[1],
         });
 
@@ -65,7 +65,7 @@ export class CommandController {
           ? `usage: ${hours}hrs. ${minutes}min.`
           : `usage: ${minutes}min.`;
         this.client.toastController.show(message);
-        this.client.emit('serverChat', {
+        this.client.chatController.notifyServerChat({
           message,
         });
         return true;

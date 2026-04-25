@@ -224,7 +224,7 @@ export class MouseController {
               this.client.menuPlayerId,
             );
             if (character) {
-              this.client.emit('setChat', `!${character.name} `);
+              this.client.chatController.notifySetChat(`!${character.name} `);
             }
             break;
           }

@@ -261,7 +261,9 @@ function InGameContent() {
         return !open;
       });
     };
-    client.on('toggleCommandPalette', handleToggleCommandPalette);
+    client.keyboardController.subscribeToggleCommandPalette(
+      handleToggleCommandPalette,
+    );
 
     return () => {
       client.socialController.unsubscribePaperdollOpened(onPaperdollOpened);
@@ -284,7 +286,9 @@ function InGameContent() {
       client.questController.unsubscribeDialogOpened(handleQuestDialogOpened);
       client.tradeController.unsubscribe(handleTradeOpened);
       client.movementController.unsubscribeWalked(handleWalked);
-      client.off('toggleCommandPalette', handleToggleCommandPalette);
+      client.keyboardController.unsubscribeToggleCommandPalette(
+        handleToggleCommandPalette,
+      );
     };
   }, [client, setCommandPaletteOpen, openDialog, closeDialog]);
 

@@ -64,6 +64,18 @@ export const ChatInput = forwardRef<HTMLInputElement, Props>(function ChatInput(
     }
   }, [readOnly, tab.id, autoFocus]);
 
+  useEffect(() => {
+    if (readOnly) return;
+    const handleSetChat = (text: string) => {
+      setInput(text);
+      internalRef.current?.focus();
+    };
+    client.chatController.subscribeSetChat(handleSetChat);
+    return () => {
+      client.chatController.unsubscribeSetChat(handleSetChat);
+    };
+  }, [client, readOnly]);
+
   const handleSend = useCallback(() => {
     if (readOnly) return;
     const text = input.trim();

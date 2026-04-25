@@ -71,7 +71,7 @@ function handleItemGet(client: Client, reader: EoReader) {
   client.toastController.show(
     `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record!.name}`,
   );
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.System,
     icon: ChatIcon.UpArrow,
     message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.takenItem.amount} ${record!.name}`,
@@ -98,7 +98,7 @@ function handleItemDrop(client: Client, reader: EoReader) {
   client.toastController.show(
     `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record!.name}`,
   );
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.System,
     icon: ChatIcon.DownArrow,
     message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_DROP_YOU_DROPPED)} ${packet.droppedItem.amount} ${record!.name}`,
@@ -129,7 +129,7 @@ function handleItemReply(client: Client, reader: EoReader) {
           new HealthBar(percent, 0, data.hpGain),
         );
       }
-      client.emit('statsUpdate', undefined);
+      client.statsController.notifyStatsUpdated();
       break;
     }
     case ItemType.EffectPotion: {
@@ -190,7 +190,7 @@ function handleItemReply(client: Client, reader: EoReader) {
         client.skillPoints = data.skillPoints;
       }
 
-      client.emit('statsUpdate', undefined);
+      client.statsController.notifyStatsUpdated();
       break;
     }
     case ItemType.CureCurse: {
@@ -211,7 +211,7 @@ function handleItemReply(client: Client, reader: EoReader) {
       client.maxTp = data.stats.maxTp;
       client.hp = Math.min(client.hp, client.maxHp);
       client.tp = Math.min(client.tp, client.maxTp);
-      client.emit('statsUpdate', undefined);
+      client.statsController.notifyStatsUpdated();
 
       const cursedEquipmentSlots: EquipmentSlot[] = [];
       const equipmentArray = client.inventoryController.getEquipmentArray();
@@ -310,7 +310,7 @@ function handleItemKick(client: Client, reader: EoReader) {
     client.toastController.show(
       `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.item.amount} ${record.name}`,
     );
-    client.emit('chat', {
+    client.chatController.notifyChat({
       channel: ChatChannels.System,
       icon: ChatIcon.UpArrow,
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_PICKUP_YOU_PICKED_UP)} ${packet.item.amount} ${record.name}`,
@@ -346,7 +346,7 @@ function handleItemJunk(client: Client, reader: EoReader) {
     client.toastController.show(
       `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,
     );
-    client.emit('chat', {
+    client.chatController.notifyChat({
       channel: ChatChannels.System,
       icon: ChatIcon.DownArrow,
       message: `${client.getResourceString(EOResourceID.STATUS_LABEL_ITEM_JUNK_YOU_JUNKED)} ${packet.junkedItem.amount} ${record.name}`,

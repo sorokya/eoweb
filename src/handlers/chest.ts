@@ -40,7 +40,10 @@ function handleChestGet(client: Client, reader: EoReader) {
     .replace('{amount}', String(packet.takenItem.amount))
     .replace('{name}', name);
   client.toastController.show(msg);
-  client.emit('serverChat', { message: msg, icon: ChatIcon.DownArrow });
+  client.chatController.notifyServerChat({
+    message: msg,
+    icon: ChatIcon.DownArrow,
+  });
 }
 
 function handleChestReply(client: Client, reader: EoReader) {
@@ -63,7 +66,10 @@ function handleChestReply(client: Client, reader: EoReader) {
     .replace('{amount}', String(depositedAmount > 0 ? depositedAmount : 1))
     .replace('{name}', name);
   client.toastController.show(msg);
-  client.emit('serverChat', { message: msg, icon: ChatIcon.UpArrow });
+  client.chatController.notifyServerChat({
+    message: msg,
+    icon: ChatIcon.UpArrow,
+  });
 }
 
 export function registerChestHandlers(client: Client) {

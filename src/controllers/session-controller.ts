@@ -47,27 +47,22 @@ export class SessionController {
       case FileType.Ecf:
         packet.fileTypeData = new WelcomeAgreeClientPacket.FileTypeDataEcf();
         packet.fileTypeData.fileId = id;
-        this.client.emit('debug', 'Loading classes..');
         break;
       case FileType.Eif:
         packet.fileTypeData = new WelcomeAgreeClientPacket.FileTypeDataEif();
         packet.fileTypeData.fileId = id;
-        this.client.emit('debug', 'Loading items..');
         break;
       case FileType.Enf:
         packet.fileTypeData = new WelcomeAgreeClientPacket.FileTypeDataEnf();
         packet.fileTypeData.fileId = id;
-        this.client.emit('debug', 'Loading NPCs..');
         break;
       case FileType.Esf:
         packet.fileTypeData = new WelcomeAgreeClientPacket.FileTypeDataEsf();
         packet.fileTypeData.fileId = id;
-        this.client.emit('debug', 'Loading spells..');
         break;
       case FileType.Emf:
         packet.fileTypeData = new WelcomeAgreeClientPacket.FileTypeDataEmf();
         packet.fileTypeData.fileId = id;
-        this.client.emit('debug', 'Loading map..');
         break;
     }
 

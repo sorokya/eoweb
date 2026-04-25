@@ -72,7 +72,7 @@ export class PartyController {
   notifyAlreadyInAnotherParty(name: string) {
     const message = `${capitalize(name)} ${this.client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_IN_ANOTHER_PARTY)}`;
     this.client.toastController.showWarning(message);
-    this.client.emit('chat', {
+    this.client.chatController.notifyChat({
       channel: ChatChannels.System,
       icon: ChatIcon.Error,
       message,
@@ -82,7 +82,7 @@ export class PartyController {
   notifyAlreadyInYourParty(name: string) {
     const message = `${capitalize(name)} ${this.client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_IS_ALREADY_MEMBER)}`;
     this.client.toastController.showWarning(message);
-    this.client.emit('chat', {
+    this.client.chatController.notifyChat({
       channel: ChatChannels.System,
       icon: ChatIcon.Error,
       message,
@@ -94,7 +94,7 @@ export class PartyController {
       EOResourceID.STATUS_LABEL_PARTY_THE_PARTY_IS_FULL,
     );
     this.client.toastController.showWarning(message);
-    this.client.emit('chat', {
+    this.client.chatController.notifyChat({
       channel: ChatChannels.System,
       icon: ChatIcon.Error,
       message,
@@ -145,7 +145,7 @@ export class PartyController {
       EOResourceID.STATUS_LABEL_PARTY_YOU_JOINED,
     );
     this.client.toastController.show(message);
-    this.client.emit('chat', {
+    this.client.chatController.notifyChat({
       channel: ChatChannels.System,
       icon: ChatIcon.PlayerParty,
       message,
@@ -157,7 +157,7 @@ export class PartyController {
     this.members.push(member);
     const message = `${capitalize(member.name)} ${this.client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_JOINED_YOUR)}`;
     this.client.toastController.show(message);
-    this.client.emit('chat', {
+    this.client.chatController.notifyChat({
       channel: ChatChannels.System,
       icon: ChatIcon.PlayerParty,
       message,
@@ -175,7 +175,7 @@ export class PartyController {
 
     const message = `${capitalize(name)} ${this.client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_LEFT_THE_PARTY)}`;
     this.client.toastController.show(message);
-    this.client.emit('chat', {
+    this.client.chatController.notifyChat({
       channel: ChatChannels.System,
       icon: ChatIcon.PlayerParty,
       message,
@@ -194,7 +194,7 @@ export class PartyController {
     this.members = [];
     const message = `${this.client.locale.wordYou} ${this.client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_LEFT_THE_PARTY)}`;
     this.client.toastController.show(message);
-    this.client.emit('chat', {
+    this.client.chatController.notifyChat({
       channel: ChatChannels.System,
       icon: ChatIcon.Error,
       message,
@@ -229,13 +229,13 @@ export class PartyController {
         );
 
         this.client.toastController.show(message);
-        this.client.emit('chat', {
+        this.client.chatController.notifyChat({
           message,
           icon: ChatIcon.Star,
           channel: ChatChannels.System,
         });
 
-        this.client.emit('statsUpdate', undefined);
+        this.client.statsController.notifyStatsUpdated();
       }
 
       if (gain.levelUp) {

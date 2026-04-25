@@ -16,7 +16,7 @@ function handleMessagePing(client: Client) {
 function handleMessageOpen(client: Client, reader: EoReader) {
   const packet = MessageOpenServerPacket.deserialize(reader);
   client.toastController.show(packet.message);
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.System,
     icon: ChatIcon.QuestMessage,
     message: packet.message,
@@ -31,17 +31,17 @@ function handleMessageClose(client: Client) {
   );
   client.toastController.showWarning(message);
   const chatMessage = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${message}`;
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.Local,
     icon: ChatIcon.Exclamation,
     message: chatMessage,
   });
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.Global,
     icon: ChatIcon.Exclamation,
     message: chatMessage,
   });
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.System,
     icon: ChatIcon.Exclamation,
     message: chatMessage,

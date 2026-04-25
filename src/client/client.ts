@@ -28,7 +28,6 @@ import {
   Version,
   Weight,
 } from 'eolib';
-import mitt, { type Emitter } from 'mitt';
 import { Application, Container } from 'pixi.js';
 import { Atlas } from '@/atlas';
 import { PacketBus } from '@/bus';
@@ -70,6 +69,7 @@ import {
   SocialController,
   SpellController,
   StatSkillController,
+  StatsController,
   ToastController,
   TradeController,
   UsageController,
@@ -108,10 +108,9 @@ import {
   screenToIso,
 } from '@/utils';
 import type { Vector2 } from '@/vector';
-import type { ClientEvents } from './events';
 
 export class Client {
-  private emitter: Emitter<ClientEvents>;
+  private stateChangedSubscribers: ((state: GameState) => void)[] = [];
   container!: HTMLDivElement;
   app!: Application;
   worldContainer!: Container;
@@ -197,6 +196,7 @@ export class Client {
   shopController: ShopController;
   socialController: SocialController;
   statSkillController: StatSkillController;
+  statsController: StatsController;
   itemProtectionController: ItemProtectionController;
   quakeController: QuakeController;
   spellController: SpellController;
@@ -260,7 +260,6 @@ export class Client {
       });
     };
     this.container = document.querySelector('#game-container')!;
-    this.emitter = mitt<ClientEvents>();
     this.version = new Version();
     this.version.major = 0;
     this.version.minor = 0;
@@ -333,6 +332,7 @@ export class Client {
     this.socialController = new SocialController(this);
     this.spellController = new SpellController(this);
     this.statSkillController = new StatSkillController(this);
+    this.statsController = new StatsController();
     this.usageController = new UsageController(this);
     this.tradeController = new TradeController(this);
     this.guildController = new GuildController(this);
@@ -664,32 +664,17 @@ export class Client {
   }
 
   showError(message: string, title = '') {
-    this.emitter.emit('error', { title, message });
+    this.alertController.show(title, message);
   }
 
-  showConfirmation(message: string, title: string, onConfirm: () => void) {
-    this.emitter.emit('confirmation', { title, message, onConfirm });
+  subscribeStateChanged(cb: (state: GameState) => void): void {
+    this.stateChangedSubscribers.push(cb);
   }
 
-  emit<Event extends keyof ClientEvents>(
-    event: Event,
-    data: ClientEvents[Event],
-  ) {
-    this.emitter.emit(event, data);
-  }
-
-  on<Event extends keyof ClientEvents>(
-    event: Event,
-    handler: (data: ClientEvents[Event]) => void,
-  ) {
-    this.emitter.on(event, handler);
-  }
-
-  off<Event extends keyof ClientEvents>(
-    event: Event,
-    handler: (data: ClientEvents[Event]) => void,
-  ) {
-    this.emitter.off(event, handler);
+  unsubscribeStateChanged(cb: (state: GameState) => void): void {
+    this.stateChangedSubscribers = this.stateChangedSubscribers.filter(
+      (s) => s !== cb,
+    );
   }
 
   setState(state: GameState) {
@@ -697,7 +682,6 @@ export class Client {
 
     if (state === GameState.InGame && this.reconnecting) {
       this.reconnecting = false;
-      this.emit('reconnected', undefined);
     }
     this.minimapEnabled = false;
     this.animationController.characterAnimations.clear();
@@ -728,7 +712,7 @@ export class Client {
       this.questController.loadTrackedQuest();
       this.partyController.reset();
     }
-    this.emit('stateChanged', this.state);
+    for (const cb of this.stateChangedSubscribers) cb(this.state);
     this.audioController.handleStateChange(state);
   }
 

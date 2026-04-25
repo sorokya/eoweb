@@ -146,13 +146,11 @@ export function SpellsDialog() {
     const onStatsUpdate = () => {
       setSkillPoints(client.skillPoints);
     };
-    client.on('skillsChanged', onSkillsChanged);
-    client.on('statsUpdate', onStatsUpdate);
     client.statSkillController.subscribeSkillsChanged(onSkillsChanged);
+    client.statsController.subscribeStatsUpdated(onStatsUpdate);
     return () => {
-      client.off('skillsChanged', onSkillsChanged);
-      client.off('statsUpdate', onStatsUpdate);
       client.statSkillController.unsubscribeSkillsChanged(onSkillsChanged);
+      client.statsController.unsubscribeStatsUpdated(onStatsUpdate);
     };
   }, [client]);
 

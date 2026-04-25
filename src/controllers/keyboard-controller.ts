@@ -83,9 +83,39 @@ export class KeyboardController {
   private held: boolean[] = [];
   private lastInputHeld: Input[] = [];
 
+  private toggleDialogSubscribers: ((id: string) => void)[] = [];
+  private toggleCommandPaletteSubscribers: (() => void)[] = [];
+
   constructor(client: Client) {
     this.client = client;
     this.setupListeners();
+  }
+
+  subscribeToggleDialog(cb: (id: string) => void): void {
+    this.toggleDialogSubscribers.push(cb);
+  }
+
+  unsubscribeToggleDialog(cb: (id: string) => void): void {
+    this.toggleDialogSubscribers = this.toggleDialogSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  notifyToggleDialog(id: string): void {
+    for (const cb of this.toggleDialogSubscribers) cb(id);
+  }
+
+  subscribeToggleCommandPalette(cb: () => void): void {
+    this.toggleCommandPaletteSubscribers.push(cb);
+  }
+
+  unsubscribeToggleCommandPalette(cb: () => void): void {
+    this.toggleCommandPaletteSubscribers =
+      this.toggleCommandPaletteSubscribers.filter((s) => s !== cb);
+  }
+
+  notifyToggleCommandPalette(): void {
+    for (const cb of this.toggleCommandPaletteSubscribers) cb();
   }
 
   private setupListeners() {
@@ -116,7 +146,7 @@ export class KeyboardController {
 
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyP') {
         e.preventDefault();
-        this.client.emit('toggleCommandPalette', undefined);
+        this.notifyToggleCommandPalette();
         return;
       }
 
@@ -445,7 +475,7 @@ export class KeyboardController {
       this.isOrWasInputHeld(Input.ViewCharacter) &&
       this.dialogOpenTicks === 0
     ) {
-      this.client.emit('toggleDialog', { id: 'character' });
+      this.notifyToggleDialog('character');
       this.dialogOpenTicks = WALK_TICKS;
     }
 
@@ -453,12 +483,12 @@ export class KeyboardController {
       this.isOrWasInputHeld(Input.ViewInventory) &&
       this.dialogOpenTicks === 0
     ) {
-      this.client.emit('toggleDialog', { id: 'inventory' });
+      this.notifyToggleDialog('inventory');
       this.dialogOpenTicks = WALK_TICKS;
     }
 
     if (this.isOrWasInputHeld(Input.ViewSpells) && this.dialogOpenTicks === 0) {
-      this.client.emit('toggleDialog', { id: 'spells' });
+      this.notifyToggleDialog('spells');
       this.dialogOpenTicks = WALK_TICKS;
     }
 

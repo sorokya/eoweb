@@ -70,7 +70,10 @@ export class LockerController {
       .replace('{amount}', String(takenItemAmount))
       .replace('{name}', name);
     this.client.toastController.show(msg);
-    this.client.emit('serverChat', { message: msg, icon: ChatIcon.DownArrow });
+    this.client.chatController.notifyServerChat({
+      message: msg,
+      icon: ChatIcon.DownArrow,
+    });
   }
 
   notifyLockerItemAdded(
@@ -95,7 +98,10 @@ export class LockerController {
       .replace('{amount}', String(amount))
       .replace('{name}', name);
     this.client.toastController.show(msg);
-    this.client.emit('serverChat', { message: msg, icon: ChatIcon.UpArrow });
+    this.client.chatController.notifyServerChat({
+      message: msg,
+      icon: ChatIcon.UpArrow,
+    });
   }
 
   notifyLockerUpgraded(goldAmount: number, lockerUpgrades: number): void {
@@ -105,7 +111,10 @@ export class LockerController {
 
     const msg = this.client.locale.lockerUpgradedMsg;
     this.client.toastController.showSuccess(msg);
-    this.client.emit('serverChat', { message: msg, icon: ChatIcon.Star });
+    this.client.chatController.notifyServerChat({
+      message: msg,
+      icon: ChatIcon.Star,
+    });
   }
 
   notifyLockerFull(maxItems: number): void {

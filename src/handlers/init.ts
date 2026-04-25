@@ -283,13 +283,13 @@ function handleInitMapMutation(
   client.refresh();
   client.audioController.playById(SfxId.MapMutation);
   const message = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${client.getResourceString(EOResourceID.SERVER_MESSAGE_MAP_MUTATION)}}`;
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.Local,
     icon: ChatIcon.Exclamation,
     message,
   });
 
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.System,
     icon: ChatIcon.Exclamation,
     message,

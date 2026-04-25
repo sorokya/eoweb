@@ -56,21 +56,21 @@ function handlePlayersAgree(client: Client, reader: EoReader) {
 
 function handlePlayersPing(client: Client, reader: EoReader) {
   const packet = PlayersPingServerPacket.deserialize(reader);
-  client.emit('serverChat', {
+  client.chatController.notifyServerChat({
     message: `${packet.name} ${client.getResourceString(EOResourceID.STATUS_LABEL_IS_ONLINE_NOT_FOUND)}`,
   });
 }
 
 function handlePlayersPong(client: Client, reader: EoReader) {
   const packet = PlayersPongServerPacket.deserialize(reader);
-  client.emit('serverChat', {
+  client.chatController.notifyServerChat({
     message: `${packet.name} ${client.getResourceString(EOResourceID.STATUS_LABEL_IS_ONLINE_SAME_MAP)}`,
   });
 }
 
 function handlePlayersNet242(client: Client, reader: EoReader) {
   const packet = PlayersPongServerPacket.deserialize(reader);
-  client.emit('serverChat', {
+  client.chatController.notifyServerChat({
     message: `${packet.name} ${client.getResourceString(EOResourceID.STATUS_LABEL_IS_ONLINE_IN_THIS_WORLD)}`,
   });
 }

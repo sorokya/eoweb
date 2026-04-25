@@ -22,6 +22,7 @@ export class InventoryController {
   private _items: Item[];
 
   private inventoryChangedSubscribers: (() => void)[] = [];
+  private equipmentChangedSubscribers: (() => void)[] = [];
   private inventoryChangeDebounce: number | null = null;
 
   private inventoryUpdated(): void {
@@ -43,6 +44,20 @@ export class InventoryController {
     this.inventoryChangedSubscribers = this.inventoryChangedSubscribers.filter(
       (s) => s !== cb,
     );
+  }
+
+  subscribeEquipmentChanged(cb: () => void): void {
+    this.equipmentChangedSubscribers.push(cb);
+  }
+
+  unsubscribeEquipmentChanged(cb: () => void): void {
+    this.equipmentChangedSubscribers = this.equipmentChangedSubscribers.filter(
+      (s) => s !== cb,
+    );
+  }
+
+  notifyEquipmentChanged(): void {
+    for (const cb of this.equipmentChangedSubscribers) cb();
   }
 
   get items(): Item[] {

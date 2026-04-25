@@ -61,7 +61,6 @@ export class ShopController {
     this.tradeItems = tradeItems;
     this.craftItems = craftItems;
 
-    this.client.emit('shopOpened', { name: shopName, tradeItems, craftItems });
     for (const cb of this.openedSubscribers)
       cb(shopName, tradeItems, craftItems);
   }
@@ -74,7 +73,6 @@ export class ShopController {
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
     this.client.inventoryController.addItem(boughtItem.id, boughtItem.amount);
     this.client.weight.current = weightCurrent;
-    this.client.emit('itemBought', undefined);
     this.client.audioController.playById(SfxId.BuySell);
     for (const cb of this.changedSubscribers) cb();
 
@@ -83,7 +81,10 @@ export class ShopController {
       .replace('{amount}', String(boughtItem.amount))
       .replace('{name}', name);
     this.client.toastController.show(msg);
-    this.client.emit('serverChat', { message: msg, icon: ChatIcon.Star });
+    this.client.chatController.notifyServerChat({
+      message: msg,
+      icon: ChatIcon.Star,
+    });
   }
 
   notifySold(
@@ -98,7 +99,6 @@ export class ShopController {
     );
     this.client.inventoryController.setItem(soldItem.id, soldItem.amount);
     this.client.weight.current = weightCurrent;
-    this.client.emit('itemSold', undefined);
     this.client.audioController.playById(SfxId.BuySell);
     for (const cb of this.changedSubscribers) cb();
 
@@ -108,7 +108,10 @@ export class ShopController {
       .replace('{amount}', String(soldAmount > 0 ? soldAmount : 1))
       .replace('{name}', name);
     this.client.toastController.show(msg);
-    this.client.emit('serverChat', { message: msg, icon: ChatIcon.DownArrow });
+    this.client.chatController.notifyServerChat({
+      message: msg,
+      icon: ChatIcon.DownArrow,
+    });
   }
 
   notifyCrafted(
@@ -129,7 +132,10 @@ export class ShopController {
     const name = this.client.getEifRecordById(craftItemId)?.name ?? '';
     const msg = this.client.locale.shopCraftedMsg.replace('{name}', name);
     this.client.toastController.showSuccess(msg);
-    this.client.emit('serverChat', { message: msg, icon: ChatIcon.Trophy });
+    this.client.chatController.notifyServerChat({
+      message: msg,
+      icon: ChatIcon.Trophy,
+    });
   }
 
   buyItem(itemId: number, maxAmount: number): void {

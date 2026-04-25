@@ -267,12 +267,9 @@ export function ChatManagerProvider({
 
   // Subscribe to client chat events
   useEffect(() => {
-    const handleChat = (data: {
-      channel: ChatChannel;
-      message: string;
-      icon?: number | null;
-      name?: string;
-    }) => {
+    const handleChat: Parameters<
+      typeof client.chatController.subscribeChat
+    >[0] = (data) => {
       addMessage({
         characterId,
         channel: data.channel,
@@ -282,10 +279,9 @@ export function ChatManagerProvider({
         timestampUtc: Date.now(),
       });
     };
-    const handleServerChat = (data: {
-      message: string;
-      icon?: number | null;
-    }) => {
+    const handleServerChat: Parameters<
+      typeof client.chatController.subscribeServerChat
+    >[0] = (data) => {
       addMessage({
         characterId,
         channel: ChatChannels.System,
@@ -294,11 +290,11 @@ export function ChatManagerProvider({
         timestampUtc: Date.now(),
       });
     };
-    client.on('chat', handleChat);
-    client.on('serverChat', handleServerChat);
+    client.chatController.subscribeChat(handleChat);
+    client.chatController.subscribeServerChat(handleServerChat);
     return () => {
-      client.off('chat', handleChat);
-      client.off('serverChat', handleServerChat);
+      client.chatController.unsubscribeChat(handleChat);
+      client.chatController.unsubscribeServerChat(handleServerChat);
     };
   }, [client, characterId, addMessage]);
 

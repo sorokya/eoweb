@@ -39,7 +39,7 @@ export function ClientProvider({ client, children }: ClientProviderProps) {
   >();
 
   useMemo(() => {
-    client.on('stateChanged', setGameState);
+    client.subscribeStateChanged(setGameState);
     client.authenticationController.subscribeCharactersChanged(setCharacters);
     client.socialController.subscribePaperdollOpened(
       ({ details, equipment }) => {
@@ -62,7 +62,7 @@ export function ClientProvider({ client, children }: ClientProviderProps) {
         className: client.ecf?.classes[details.classId - 1]?.name ?? '',
       }));
     });
-    client.on('equipmentChanged', () => {
+    client.inventoryController.subscribeEquipmentChanged(() => {
       setCharacterInfo((prev) =>
         prev ? { ...prev, equipment: client.equipment } : prev,
       );

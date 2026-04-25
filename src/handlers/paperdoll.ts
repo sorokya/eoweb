@@ -49,7 +49,7 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
   }
 
   client.inventoryController.setEquipmentSlot(slot, 0);
-  client.emit('equipmentChanged', undefined);
+  client.inventoryController.notifyEquipmentChanged();
 
   const isVisibleChange =
     client.inventoryController.isVisibleEquipmentChange(slot);
@@ -76,7 +76,7 @@ function handlePaperdollRemove(client: Client, reader: EoReader) {
   client.maxTp = packet.stats.maxTp;
   client.hp = Math.min(client.hp, client.maxHp);
   client.tp = Math.min(client.tp, client.maxTp);
-  client.emit('statsUpdate', undefined);
+  client.statsController.notifyStatsUpdated();
 
   client.inventoryController.addItem(packet.itemId, 1);
 
@@ -114,7 +114,7 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
   }
 
   client.inventoryController.setEquipmentSlot(slot!, packet.itemId);
-  client.emit('equipmentChanged', undefined);
+  client.inventoryController.notifyEquipmentChanged();
 
   if (client.inventoryController.isVisibleEquipmentChange(slot!)) {
     client.inventoryController.setNearbyCharacterEquipment(
@@ -139,7 +139,7 @@ function handlePaperdollAgree(client: Client, reader: EoReader) {
   client.maxTp = packet.stats.maxTp;
   client.hp = Math.min(client.hp, client.maxHp);
   client.tp = Math.min(client.tp, client.maxTp);
-  client.emit('statsUpdate', undefined);
+  client.statsController.notifyStatsUpdated();
 
   client.inventoryController.removeItem(packet.itemId, 1);
   client.audioController.playById(SfxId.InventoryPlace);

@@ -235,21 +235,21 @@ export function WindowManagerProvider({
   }, []);
 
   useEffect(() => {
-    const onToggleDialog = ({ id }: { id: DialogId }) => {
+    const onToggleDialog = (id: string) => {
       playSfxById(SfxId.ButtonClick);
-      if (isOpen(id)) {
-        closeDialog(id);
+      if (isOpen(id as DialogId)) {
+        closeDialog(id as DialogId);
       } else {
         if (id === 'character') {
           client.socialController.requestPaperdoll(client.playerId);
         } else {
-          openDialog(id);
+          openDialog(id as DialogId);
         }
       }
     };
-    client.on('toggleDialog', onToggleDialog);
+    client.keyboardController.subscribeToggleDialog(onToggleDialog);
     return () => {
-      client.off('toggleDialog', onToggleDialog);
+      client.keyboardController.unsubscribeToggleDialog(onToggleDialog);
     };
   }, [client, state.stack, isOpen, openDialog, closeDialog]);
 

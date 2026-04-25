@@ -36,7 +36,7 @@ function handleStatSkillPlayer(client: Client, reader: EoReader) {
   client.secondaryStats.accuracy = packet.stats.secondaryStats.accuracy;
   client.secondaryStats.armor = packet.stats.secondaryStats.armor;
   client.secondaryStats.evade = packet.stats.secondaryStats.evade;
-  client.emit('statsUpdate', undefined);
+  client.statsController.notifyStatsUpdated();
   client.audioController.playById(SfxId.InventoryPickup);
 }
 
@@ -82,14 +82,13 @@ function handleStatSkillTake(client: Client, reader: EoReader) {
   spell.level = 0;
   client.spells.push(spell);
 
-  client.emit('skillsChanged', undefined);
   client.statSkillController.notifySkillsChanged();
   client.audioController.playById(SfxId.LearnNewSpell);
 
   const name = client.getEsfRecordById(packet.spellId)?.name ?? '';
   const msg = client.locale.skillMasterLearnedMsg.replace('{name}', name);
   client.toastController.showSuccess(msg);
-  client.emit('serverChat', { message: msg, icon: ChatIcon.Star });
+  client.chatController.notifyServerChat({ message: msg, icon: ChatIcon.Star });
 }
 
 function handleStatSkillRemove(client: Client, reader: EoReader) {
@@ -100,12 +99,14 @@ function handleStatSkillRemove(client: Client, reader: EoReader) {
     DialogResourceID.SKILL_FORGET_SUCCESS,
   );
   client.alertController.show(strings[0], strings[1]);
-  client.emit('skillsChanged', undefined);
   client.statSkillController.notifySkillsChanged();
 
   const msg = client.locale.skillMasterForgotMsg.replace('{name}', name);
   client.toastController.show(msg);
-  client.emit('serverChat', { message: msg, icon: ChatIcon.DownArrow });
+  client.chatController.notifyServerChat({
+    message: msg,
+    icon: ChatIcon.DownArrow,
+  });
 }
 
 function handleStatSkillJunk(client: Client, reader: EoReader) {
@@ -129,8 +130,7 @@ function handleStatSkillJunk(client: Client, reader: EoReader) {
   client.baseStats.agi = packet.stats.base.agi;
   client.baseStats.con = packet.stats.base.con;
   client.baseStats.cha = packet.stats.base.cha;
-  client.emit('statsUpdate', undefined);
-  client.emit('skillsChanged', undefined);
+  client.statsController.notifyStatsUpdated();
   client.statSkillController.notifySkillsChanged();
   client.audioController.playById(SfxId.LearnNewSpell);
 
@@ -141,7 +141,10 @@ function handleStatSkillJunk(client: Client, reader: EoReader) {
 
   const msg = client.locale.skillMasterResetMsg;
   client.toastController.show(msg);
-  client.emit('serverChat', { message: msg, icon: ChatIcon.Information });
+  client.chatController.notifyServerChat({
+    message: msg,
+    icon: ChatIcon.Information,
+  });
 }
 
 function handleStatSkillAccept(client: Client, reader: EoReader) {
@@ -151,7 +154,6 @@ function handleStatSkillAccept(client: Client, reader: EoReader) {
   if (existing) {
     existing.level = packet.spell.level;
   }
-  client.emit('skillsChanged', undefined);
   client.statSkillController.notifySkillsChanged();
   client.audioController.playById(SfxId.InventoryPickup);
 
@@ -160,7 +162,10 @@ function handleStatSkillAccept(client: Client, reader: EoReader) {
     .replace('{name}', name)
     .replace('{level}', String(packet.spell.level));
   client.toastController.show(msg);
-  client.emit('serverChat', { message: msg, icon: ChatIcon.UpArrow });
+  client.chatController.notifyServerChat({
+    message: msg,
+    icon: ChatIcon.UpArrow,
+  });
 }
 
 export function registerStatSkillHandlers(client: Client) {

@@ -41,7 +41,6 @@ function handleBarberAgree(client: Client, reader: EoReader) {
     client.atlas.refresh();
   }
 
-  client.emit('barberPurchased', undefined);
   client.barberController.notifyPurchased();
   client.audioController.playById(SfxId.BuySell);
 }

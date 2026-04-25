@@ -74,12 +74,15 @@ export class InnController {
       this.currentHomeId = this.behaviorId;
       const msg = this.client.locale.innKeeperBecameCitizenMsg;
       this.client.toastController.showSuccess(msg);
-      this.client.emit('serverChat', { message: msg, icon: ChatIcon.Star });
+      this.client.chatController.notifyServerChat({
+        message: msg,
+        icon: ChatIcon.Star,
+      });
       for (const cb of this.closeSubscribers) cb();
     } else {
       const msg = this.client.locale.innKeeperWrongAnswersMsg;
       this.client.toastController.showError(msg);
-      this.client.emit('serverChat', {
+      this.client.chatController.notifyServerChat({
         message: msg,
         icon: ChatIcon.DotDotDotDot,
       });
@@ -100,10 +103,13 @@ export class InnController {
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
     const msg = this.client.locale.innKeeperSleptMsg;
     this.client.toastController.showSuccess(msg);
-    this.client.emit('serverChat', { message: msg, icon: ChatIcon.Star });
+    this.client.chatController.notifyServerChat({
+      message: msg,
+      icon: ChatIcon.Star,
+    });
     this.client.hp = this.client.maxHp;
     this.client.tp = this.client.maxTp;
-    this.client.emit('statsUpdate', undefined);
+    this.client.statsController.notifyStatsUpdated();
     for (const cb of this.closeSubscribers) cb();
   }
 
@@ -112,12 +118,15 @@ export class InnController {
       this.currentHomeId = 0;
       const msg = this.client.locale.innKeeperGaveUpCitizenshipMsg;
       this.client.toastController.showSuccess(msg);
-      this.client.emit('serverChat', { message: msg, icon: ChatIcon.Star });
+      this.client.chatController.notifyServerChat({
+        message: msg,
+        icon: ChatIcon.Star,
+      });
       for (const cb of this.closeSubscribers) cb();
     } else {
       const msg = this.client.locale.innKeeperNotCitizenMsg;
       this.client.toastController.showError(msg);
-      this.client.emit('serverChat', {
+      this.client.chatController.notifyServerChat({
         message: msg,
         icon: ChatIcon.DotDotDotDot,
       });

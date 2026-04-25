@@ -80,7 +80,6 @@ function handleSelectCharacter(
   client.equipment.ring = data.equipment.ring;
   client.equipment.armlet = data.equipment.armlet;
   client.equipment.bracer = data.equipment.bracer;
-  client.emit('selectCharacter', undefined);
 
   if (
     !client.ecf ||
@@ -145,7 +144,6 @@ function handleEnterGame(
   client.nearby = data.nearby;
   client.usageController.usageTicks = USAGE_TICKS;
   client.setState(GameState.InGame);
-  client.emit('enterGame', { news: data.news });
   client.audioController.updateListenerPosition(client.getPlayerCoords());
   client.audioController.handleMapMusic(
     client.map.musicId,

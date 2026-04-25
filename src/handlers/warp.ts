@@ -69,7 +69,7 @@ function handleWarpAgree(client: Client, reader: EoReader) {
     getEmf(client.warpMapId).then((map) => {
       if (!map) return;
       if (map.name) {
-        client.emit('chat', {
+        client.chatController.notifyChat({
           channel: ChatChannels.System,
           message: `${client.getResourceString(EOResourceID.STATUS_LABEL_YOU_ENTERED)} ${map.name}`,
           icon: ChatIcon.NoteLeftArrow,

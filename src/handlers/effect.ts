@@ -56,7 +56,7 @@ function handleEffectSpec(client: Client, reader: EoReader) {
       packet.mapDamageTypeData as EffectSpecServerPacket.MapDamageTypeDataTpDrain;
     client.tp = data.tp;
     client.audioController.playById(SfxId.MapEffectTPDrain);
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
     return;
   }
 
@@ -70,7 +70,7 @@ function handleEffectSpec(client: Client, reader: EoReader) {
     client.playerId,
     new HealthBar(Math.floor((client.hp / client.maxHp) * 100), damage),
   );
-  client.emit('statsUpdate', undefined);
+  client.statsController.notifyStatsUpdated();
 
   if (!data.hp) {
     client.setCharacterDeathAnimation(client.playerId);

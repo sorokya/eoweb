@@ -73,14 +73,17 @@ export class BankController {
         diff.toLocaleString(),
       );
       this.client.toastController.show(msg);
-      this.client.emit('serverChat', { message: msg, icon: ChatIcon.UpArrow });
+      this.client.chatController.notifyServerChat({
+        message: msg,
+        icon: ChatIcon.UpArrow,
+      });
     } else if (goldBank < previousGoldBank) {
       const msg = this.client.locale.bankWithdrewMsg.replace(
         '{amount}',
         diff.toLocaleString(),
       );
       this.client.toastController.show(msg);
-      this.client.emit('serverChat', {
+      this.client.chatController.notifyServerChat({
         message: msg,
         icon: ChatIcon.DownArrow,
       });

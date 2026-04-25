@@ -56,7 +56,7 @@ function handleNpcPlayer(client: Client, reader: EoReader) {
   for (const attack of packet.attacks) {
     if (attack.playerId === client.playerId) {
       client.hp = Math.max(client.hp - attack.damage, 0);
-      client.emit('statsUpdate', undefined);
+      client.statsController.notifyStatsUpdated();
     }
 
     const npc = client.nearby.npcs.find((n) => attack.npcIndex === n.index);
@@ -155,7 +155,7 @@ function handleNpcSpec(client: Client, reader: EoReader) {
   if (message) {
     client.toastController.show(message);
 
-    client.emit('chat', {
+    client.chatController.notifyChat({
       message,
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
@@ -165,7 +165,7 @@ function handleNpcSpec(client: Client, reader: EoReader) {
 
   if (packet.experience) {
     client.experience = packet.experience;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 }
 
@@ -224,7 +224,7 @@ function handleNpcAccept(client: Client, reader: EoReader) {
   );
   if (message) {
     client.toastController.show(message);
-    client.emit('chat', {
+    client.chatController.notifyChat({
       message: message,
       icon: ChatIcon.Star,
       channel: ChatChannels.System,
@@ -234,7 +234,7 @@ function handleNpcAccept(client: Client, reader: EoReader) {
 
   if (packet.experience) {
     client.experience = packet.experience;
-    client.emit('statsUpdate', undefined);
+    client.statsController.notifyStatsUpdated();
   }
 }
 
@@ -268,7 +268,7 @@ function handleNpcDialog(client: Client, reader: EoReader) {
     npc.index,
     new ChatBubble(client.sans11!, packet.message),
   );
-  client.emit('chat', {
+  client.chatController.notifyChat({
     channel: ChatChannels.Local,
     message: `${packet.message}`,
     name: `${capitalize(record.name)}`,
