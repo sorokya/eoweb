@@ -47,7 +47,7 @@ type GlobalConfig = {
   layerVisibility: Record<number, boolean>;
 };
 
-export const DEFAULT_HUD_WIDGETS: HudWidget[] = [
+const DEFAULT_HUD_WIDGETS: HudWidget[] = [
   { id: 'character', visible: true, position: 'left', order: 0 },
   { id: 'hp', visible: true, position: 'center', order: 0 },
   { id: 'tp', visible: true, position: 'center', order: 1 },

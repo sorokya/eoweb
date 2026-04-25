@@ -31,7 +31,7 @@ export type ChatTabConfig = {
   channels: ChatChannel[];
 };
 
-export type ChatDialogConfig = {
+type ChatDialogConfig = {
   tabs: ChatTabConfig[];
   activeTabId: string;
 };

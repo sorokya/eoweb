@@ -109,9 +109,6 @@ export function setAudioController(ac: SfxPlayer): void {
   _player = ac;
 }
 
-/** @deprecated Volume is now managed internally by AudioController. */
-export function setSfxVolume(_v: number): void {}
-
 export function playSfxById(id: SfxId, volume = 1.0): void {
   _player?.playById(id, volume);
 }

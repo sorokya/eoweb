@@ -5,8 +5,8 @@ import { CHARACTER_HEIGHT } from '@/consts';
 
 // Must be wide enough to match the compositor's 100px frame (HALF_CHARACTER_FRAME_SIZE = 50)
 // so that canvas.width >> 1 == 50 and xOffset/mirroredXOffset values are correct.
-export const CHARACTER_PREVIEW_W = 100;
-export const CHARACTER_PREVIEW_H = CHARACTER_HEIGHT + 40;
+const CHARACTER_PREVIEW_W = 100;
+const CHARACTER_PREVIEW_H = CHARACTER_HEIGHT + 40;
 
 export function drawCharacterPreview(
   client: Client,

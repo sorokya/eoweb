@@ -5,11 +5,7 @@ export { AuthenticationController } from './authentication-controller';
 export { BankController } from './bank-controller';
 export { BarberController } from './barber-controller';
 export { BoardController } from './board-controller';
-export {
-  ChatController,
-  type ChatMessage,
-  type ServerChatMessage,
-} from './chat-controller';
+export { ChatController } from './chat-controller';
 export { ChestController } from './chest-controller';
 export { CleanupController } from './cleanup-controller';
 export { CommandController } from './command-controller';
@@ -21,7 +17,7 @@ export type {
   Language,
   SocialFilter,
 } from './config-controller';
-export { ConfigController, DEFAULT_HUD_WIDGETS } from './config-controller';
+export { ConfigController } from './config-controller';
 export { DrunkController } from './drunk-controller';
 export { GuildController } from './guild-controller';
 export { InnController } from './inn-controller';

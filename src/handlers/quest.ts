@@ -20,15 +20,16 @@ function handleQuestDialog(client: Client, reader: EoReader) {
     return;
   }
 
-  client.sessionId = packet.sessionId;
-
-  client.questController.handleDialogOpened({
-    npcName: record.name,
-    dialogId: packet.dialogId,
-    questId: packet.questId,
-    quests: packet.questEntries,
-    dialogEntries: packet.dialogEntries,
-  });
+  client.questController.handleDialogOpened(
+    {
+      npcName: record.name,
+      dialogId: packet.dialogId,
+      questId: packet.questId,
+      quests: packet.questEntries,
+      dialogEntries: packet.dialogEntries,
+    },
+    packet.sessionId,
+  );
 }
 
 function handleQuestList(client: Client, reader: EoReader) {

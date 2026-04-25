@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
 
-export const REPOSITION_EVENT = 'eoweb:reposition-mode-change';
+const REPOSITION_EVENT = 'eoweb:reposition-mode-change';
 
 let _enabled = false;
 

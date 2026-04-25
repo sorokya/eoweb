@@ -15,13 +15,6 @@ import type {
   RawPixels,
 } from './compositor.worker';
 
-export type {
-  BoundsRequest,
-  BoundsResult,
-  CompositeFaceEmoteSpec,
-  FaceEmoteCompositeResult,
-};
-
 type PendingRequest = {
   resolve: (results: CompositeResult[]) => void;
   reject: (err: unknown) => void;

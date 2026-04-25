@@ -15,7 +15,7 @@ type ClientContextProps = {
   characterInfo?: CharacterInfo;
 };
 
-export const ClientContext = createContext<ClientContextProps | null>(null);
+const ClientContext = createContext<ClientContextProps | null>(null);
 
 type ClientProviderProps = {
   client: Client;

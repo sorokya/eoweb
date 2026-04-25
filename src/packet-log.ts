@@ -17,7 +17,7 @@ export type PacketLogEntry = {
   payload: Uint8Array;
 };
 
-export const SENSITIVE_PACKETS: Array<{
+const SENSITIVE_PACKETS: Array<{
   family: PacketFamily;
   action: PacketAction;
 }> = [

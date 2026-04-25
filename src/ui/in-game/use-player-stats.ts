@@ -4,7 +4,7 @@ import { useClient } from '@/ui/context';
 
 const _GOLD_ITEM_ID = 1;
 
-export type PlayerStats = {
+type PlayerStats = {
   name: string;
   title: string;
   home: string;

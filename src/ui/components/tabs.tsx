@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { useCallback } from 'preact/hooks';
 import { playSfxById, SfxId } from '@/sfx';
 
-export type TabItem = {
+type TabItem = {
   id: string;
   label: ComponentChildren;
 };

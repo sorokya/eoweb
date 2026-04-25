@@ -1,6 +1,7 @@
 import { AdminLevel, type CharacterSelectionListEntry, Direction } from 'eolib';
 import { useCallback, useMemo, useState } from 'preact/hooks';
 import { DialogResourceID } from '@/edf';
+import type { LocaleStrings } from '@/locale';
 import {
   Button,
   CharacterPreview,
@@ -16,7 +17,7 @@ type AdminBadgeColor =
   | 'badge-error';
 
 type AdminBadgeInfo = {
-  label: keyof import('@/locale').LocaleStrings;
+  label: keyof LocaleStrings;
   color: AdminBadgeColor;
 };
 

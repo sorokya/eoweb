@@ -15,7 +15,7 @@ import {
 } from 'eolib';
 export class PacketBus {
   private socket?: WebSocket;
-  private sequencer: PacketSequencer;
+  private sequencer?: PacketSequencer;
   private encodeMultiple = 0;
   private decodeMultiple = 0;
   private handlers: Map<
@@ -37,14 +37,11 @@ export class PacketBus {
     payload: Uint8Array,
   ) => void;
 
-  constructor() {
-    this.sequencer = new PacketSequencer(SequenceStart.zero());
-  }
-
   async connect(url: string, onClose: () => void): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       try {
         this.socket = new WebSocket(url);
+        this.sequencer = new PacketSequencer(SequenceStart.zero());
 
         this.socket.addEventListener('open', () => {
           resolve();
@@ -94,7 +91,7 @@ export class PacketBus {
   }
 
   disconnect() {
-    this.sequencer = new PacketSequencer(SequenceStart.zero());
+    this.sequencer = undefined;
     if (this.socket) {
       this.socket.close();
       this.socket = undefined;
@@ -102,7 +99,7 @@ export class PacketBus {
   }
 
   setSequence(sequence: SequenceStart) {
-    this.sequencer.sequenceStart = sequence;
+    this.sequencer!.sequenceStart = sequence;
   }
 
   setEncryption(encodeMultiple: number, decodeMultiple: number) {
@@ -151,7 +148,7 @@ export class PacketBus {
 
   sendBuf(family: PacketFamily, action: PacketAction, buf: Uint8Array) {
     const data = [...buf];
-    const sequence = this.sequencer.nextSequence();
+    const sequence = this.sequencer!.nextSequence();
 
     if (action !== 0xff && family !== 0xff) {
       const sequenceBytes = encodeNumber(sequence);

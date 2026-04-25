@@ -8,7 +8,7 @@ type LocaleContextProps = {
   setLocaleKey: (localeKey: LocaleKey) => void;
 };
 
-export const LocaleContext = createContext<LocaleContextProps | null>(null);
+const LocaleContext = createContext<LocaleContextProps | null>(null);
 
 type LocaleProviderProps = {
   children: preact.ComponentChildren;

@@ -37,6 +37,8 @@ function trackedQuestKey(characterId: number): string {
 export class QuestController {
   private client: Client;
 
+  private sessionId = 0;
+
   // Current NPC dialog state
   npcName = '';
   questId = 0;
@@ -109,7 +111,11 @@ export class QuestController {
 
   // ── Handlers called by packet handlers ──────────────────────────────────
 
-  handleDialogOpened(data: Omit<QuestDialogState, 'pendingQuests'>): void {
+  handleDialogOpened(
+    data: Omit<QuestDialogState, 'pendingQuests'>,
+    sessionId: number,
+  ): void {
+    this.sessionId = sessionId;
     this.npcName = data.npcName;
     this.questId = data.questId;
     this.dialogId = data.dialogId;
@@ -210,7 +216,7 @@ export class QuestController {
 
   questReply(questId: number, dialogId: number, action: number | null): void {
     const packet = new QuestAcceptClientPacket();
-    packet.sessionId = this.client.sessionId;
+    packet.sessionId = this.sessionId;
     packet.questId = questId;
     packet.npcIndex = this.client.npcController.interactNpcIndex;
     packet.dialogId = dialogId;

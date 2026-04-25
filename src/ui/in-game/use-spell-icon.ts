@@ -12,7 +12,7 @@ import { useClient } from '@/ui/context';
 const SPELL_FRAME_W = 34;
 const SPELL_FRAME_H = 32;
 
-export type SpellIconUrls = { normal: string; active: string };
+type SpellIconUrls = { normal: string; active: string };
 
 const spellIconCache = new Map<number, SpellIconUrls>();
 

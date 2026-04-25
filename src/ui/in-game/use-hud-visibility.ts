@@ -32,19 +32,6 @@ function writeVisibility(key: string, vis: HudVisibility): void {
   }
 }
 
-export function clearAllVisibilityOverrides(): void {
-  const keysToRemove: string[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (k?.startsWith(STORAGE_PREFIX)) {
-      keysToRemove.push(k);
-    }
-  }
-  for (const k of keysToRemove) {
-    localStorage.removeItem(k);
-  }
-}
-
 type HudAutoDefaults = {
   /** Whether this element is visible by default on mobile screens */
   mobile: boolean;

@@ -36,16 +36,11 @@ export enum TradeState {
 export enum GuildDialogState {
   None = 0,
   MainMenu = 1,
-  Create = 2,
   CreateWaiting = 3,
-  Join = 4,
-  Lookup = 5,
   GuildInfo = 6,
   GuildMembers = 7,
   Manage = 8,
   EditDescription = 9,
   EditRanks = 10,
   Bank = 11,
-  KickMember = 12,
-  AssignRank = 13,
 }

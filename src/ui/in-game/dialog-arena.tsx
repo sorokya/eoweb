@@ -129,7 +129,7 @@ function ArenaSlot({ pos, slotRef, children }: ArenaSlotProps) {
 
 // ─── DialogArena ─────────────────────────────────────────────────────────────
 
-export type DialogArenaProps = {
+type DialogArenaProps = {
   ids: DialogId[];
   /** Returns true for dialogs that use manual (fixed) positioning — excluded from layout. */
   isManual: (id: DialogId) => boolean;

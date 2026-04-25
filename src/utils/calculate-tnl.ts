@@ -8,18 +8,6 @@ export function getExpForLevel(level: number): number {
   return EXP_TABLE[level];
 }
 
-export function calculateTnl(experience: number): number {
-  if (!EXP_TABLE.length) {
-    fillExpTable();
-  }
-
-  const experienceRequired = EXP_TABLE.find((exp) => exp > experience);
-  if (experienceRequired === undefined) {
-    return 0;
-  }
-  return experienceRequired - experience;
-}
-
 function fillExpTable() {
   for (let i = 0; i < 254; ++i) {
     EXP_TABLE.push(Math.round(i ** 3 * 133.1));

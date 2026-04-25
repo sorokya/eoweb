@@ -16,14 +16,14 @@ import type { ChatChannel } from '@/ui/enums';
 import { ChatChannels, ChatIcon } from '@/ui/enums';
 import { capitalize, makeDrunk } from '@/utils';
 
-export type ChatMessage = {
+type ChatMessage = {
   channel: ChatChannel;
   message: string;
   icon?: ChatIcon | null;
   name?: string;
 };
 
-export type ServerChatMessage = {
+type ServerChatMessage = {
   message: string;
   sfxId?: SfxId | null;
   icon?: ChatIcon | null;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 
-export type Position = { x: number; y: number };
+type Position = { x: number; y: number };
 
 const STORAGE_PREFIX = 'eoweb:pos:';
 export const RESET_EVENT = 'eoweb:reset-positions';
@@ -20,19 +20,6 @@ function writePosition(key: string, pos: Position): void {
     localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(pos));
   } catch {
     // ignore storage errors
-  }
-}
-
-export function clearAllPositions(): void {
-  const keysToRemove: string[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (k?.startsWith(STORAGE_PREFIX)) {
-      keysToRemove.push(k);
-    }
-  }
-  for (const k of keysToRemove) {
-    localStorage.removeItem(k);
   }
 }
 

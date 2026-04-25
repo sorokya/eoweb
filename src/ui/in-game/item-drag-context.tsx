@@ -11,7 +11,7 @@ import { ItemIcon } from '@/ui/components';
 
 const MIN_DRAG_PX = 5;
 
-export type DragDropResult =
+type DragDropResult =
   | { type: 'cell'; tab: number; x: number; y: number }
   | { type: 'tab'; tab: number }
   | { type: 'equip-slot'; slot: EquipmentSlot }
@@ -23,7 +23,7 @@ export type DragDropResult =
   | { type: 'ground' }
   | { type: 'cancelled' };
 
-export type DragInfo = {
+type DragInfo = {
   source: 'inventory' | 'equipment' | 'spell';
   itemId: number;
   equipSlot?: EquipmentSlot;

@@ -2,11 +2,6 @@
 
 // Chat
 export { ChatDialog } from './chat/chat-dialog';
-export type {
-  ChatDialogConfig,
-  ChatMessage,
-  ChatTabConfig,
-} from './chat/chat-manager';
 export { ChatManagerProvider, useChatManager } from './chat/chat-manager';
 // Command palette
 export { CommandPalette } from './command-palette/command-palette';
@@ -19,7 +14,6 @@ export { BoardDialog } from './dialogs/board-dialog';
 export { CharacterDialog } from './dialogs/character-dialog';
 export { ChatLogDialog } from './dialogs/chat-log-dialog';
 export { ChestDialog } from './dialogs/chest-dialog';
-export { DialogBase } from './dialogs/dialog-base';
 export { GuildDialog } from './dialogs/guild-dialog';
 export { InnKeeperDialog } from './dialogs/inn-keeper-dialog';
 export { InventoryDialog } from './dialogs/inventory-dialog';
@@ -47,34 +41,21 @@ export { QuestTracker } from './hud/quest-tracker';
 export { StatusMessages } from './hud/status-messages';
 export { TouchActionButtons } from './hud/touch-action-buttons';
 export { TouchJoystick } from './hud/touch-joystick';
-export type { DragDropResult, DragInfo } from './item-drag-context';
 // Drag
 export { ItemDragProvider, useItemDrag } from './item-drag-context';
-export { JunkDropZone } from './junk-drop-zone';
 export { useBackdropBlur } from './use-backdrop-blur';
 export { useConfigSetting } from './use-config-setting';
-export {
-  clearAllDialogLayouts,
-  type DialogLayout,
-  getDialogLayoutById,
-} from './use-dialog-layout';
 export { useDrag } from './use-drag';
 export type { HudVisibility } from './use-hud-visibility';
-export {
-  clearAllVisibilityOverrides,
-  useHudVisibility,
-} from './use-hud-visibility';
+export { useHudVisibility } from './use-hud-visibility';
 export {
   useItemGfxUrl,
   usePillowGfxUrl,
   useRawItemGfxUrl,
 } from './use-item-gfx';
-export type { PlayerStats } from './use-player-stats';
 export { usePlayerStats } from './use-player-stats';
-export type { Position } from './use-position';
-export { clearAllPositions, RESET_EVENT, usePosition } from './use-position';
+export { usePosition } from './use-position';
 export { useRepositionMode } from './use-reposition-mode';
-export type { SpellIconUrls } from './use-spell-icon';
 export { useSpellIconUrls } from './use-spell-icon';
 export { applyUiScale, UI_SCALE_OPTIONS, useUiScale } from './use-ui-scale';
 export { useViewport } from './use-viewport';
