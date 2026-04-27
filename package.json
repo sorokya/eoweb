@@ -14,7 +14,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.4.13",
     "@preact/preset-vite": "^2.10.5",
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/vite": "^4.2.4",
     "@types/howler": "^2.2.12",
     "@types/node": "^25.6.0",
     "daisyui": "^5.5.19",
