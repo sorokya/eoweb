@@ -161,7 +161,7 @@ function PaperdollTab() {
   const slots: SlotConfig[] = [
     {
       key: 'hat',
-      label: locale.slotHat,
+      label: locale.equipment.hat,
       itemId: info?.equipment?.hat ?? 0,
       slot: EquipmentSlot.Hat,
       gridColumn: '3 / span 2',
@@ -169,7 +169,7 @@ function PaperdollTab() {
     },
     {
       key: 'necklace',
-      label: locale.slotNecklace,
+      label: locale.equipment.necklace,
       itemId: info?.equipment?.necklace ?? 0,
       slot: EquipmentSlot.Necklace,
       gridColumn: '5 / span 2',
@@ -177,7 +177,7 @@ function PaperdollTab() {
     },
     {
       key: 'weapon',
-      label: locale.slotWeapon,
+      label: locale.equipment.weapon,
       itemId: info?.equipment?.weapon ?? 0,
       slot: EquipmentSlot.Weapon,
       gridColumn: '1 / span 2',
@@ -185,7 +185,7 @@ function PaperdollTab() {
     },
     {
       key: 'armor',
-      label: locale.slotArmor,
+      label: locale.equipment.armor,
       itemId: info?.equipment?.armor ?? 0,
       slot: EquipmentSlot.Armor,
       gridColumn: '3 / span 2',
@@ -193,7 +193,7 @@ function PaperdollTab() {
     },
     {
       key: 'shield',
-      label: locale.slotShield,
+      label: locale.equipment.shield,
       itemId: info?.equipment?.shield ?? 0,
       slot: EquipmentSlot.Shield,
       gridColumn: '5 / span 2',
@@ -201,7 +201,7 @@ function PaperdollTab() {
     },
     {
       key: 'gloves',
-      label: locale.slotGloves,
+      label: locale.equipment.gloves,
       itemId: info?.equipment?.gloves ?? 0,
       slot: EquipmentSlot.Gloves,
       gridColumn: '1 / span 2',
@@ -209,7 +209,7 @@ function PaperdollTab() {
     },
     {
       key: 'belt',
-      label: locale.slotBelt,
+      label: locale.equipment.belt,
       itemId: info?.equipment?.belt ?? 0,
       slot: EquipmentSlot.Belt,
       gridColumn: '3 / span 2',
@@ -217,7 +217,7 @@ function PaperdollTab() {
     },
     {
       key: 'ring1',
-      label: locale.slotRing1,
+      label: locale.equipment.ring1,
       itemId: info?.equipment?.ring[0] ?? 0,
       slot: EquipmentSlot.Ring1,
       gridColumn: '5',
@@ -225,7 +225,7 @@ function PaperdollTab() {
     },
     {
       key: 'ring2',
-      label: locale.slotRing2,
+      label: locale.equipment.ring2,
       itemId: info?.equipment?.ring[1] ?? 0,
       slot: EquipmentSlot.Ring2,
       gridColumn: '6',
@@ -233,7 +233,7 @@ function PaperdollTab() {
     },
     {
       key: 'armlet1',
-      label: locale.slotArmlet1,
+      label: locale.equipment.armlet1,
       itemId: info?.equipment?.armlet[0] ?? 0,
       slot: EquipmentSlot.Armlet1,
       gridColumn: '5',
@@ -241,7 +241,7 @@ function PaperdollTab() {
     },
     {
       key: 'armlet2',
-      label: locale.slotArmlet2,
+      label: locale.equipment.armlet2,
       itemId: info?.equipment?.armlet[1] ?? 0,
       slot: EquipmentSlot.Armlet2,
       gridColumn: '6',
@@ -249,7 +249,7 @@ function PaperdollTab() {
     },
     {
       key: 'boots',
-      label: locale.slotBoots,
+      label: locale.equipment.boots,
       itemId: info?.equipment?.boots ?? 0,
       slot: EquipmentSlot.Boots,
       gridColumn: '3 / span 2',
@@ -257,7 +257,7 @@ function PaperdollTab() {
     },
     {
       key: 'accessory',
-      label: locale.slotAccessory,
+      label: locale.equipment.accessory,
       itemId: info?.equipment?.accessory ?? 0,
       slot: EquipmentSlot.Accessory,
       gridColumn: '2',
@@ -265,7 +265,7 @@ function PaperdollTab() {
     },
     {
       key: 'bracer1',
-      label: locale.slotBracer1,
+      label: locale.equipment.bracer1,
       itemId: info?.equipment?.bracer[0] ?? 0,
       slot: EquipmentSlot.Bracer1,
       gridColumn: '5',
@@ -273,7 +273,7 @@ function PaperdollTab() {
     },
     {
       key: 'bracer2',
-      label: locale.slotBracer2,
+      label: locale.equipment.bracer2,
       itemId: info?.equipment?.bracer[1] ?? 0,
       slot: EquipmentSlot.Bracer2,
       gridColumn: '6',
@@ -282,16 +282,16 @@ function PaperdollTab() {
   ];
 
   const infoRows: [string, string][] = [
-    [locale.charLabelName, info ? capitalize(info.details.name) : '—'],
-    [locale.charLabelHome, info ? info.details.home : '—'],
-    [locale.charLabelClass, info ? info.className : '—'],
+    [locale.character.labelName, info ? capitalize(info.details.name) : '—'],
+    [locale.character.labelHome, info ? info.details.home : '—'],
+    [locale.character.labelClass, info ? info.className : '—'],
     [
-      locale.charLabelPartner,
+      locale.character.labelPartner,
       info?.details.partner ? capitalize(info.details.partner) : '—',
     ],
-    [locale.charLabelTitle, info?.details.title || '—'],
-    [locale.charLabelGuild, info?.details.guild || '—'],
-    [locale.charLabelRank, info?.details.guildRank || '—'],
+    [locale.character.labelTitle, info?.details.title || '—'],
+    [locale.character.labelGuild, info?.details.guild || '—'],
+    [locale.character.labelRank, info?.details.guildRank || '—'],
   ];
 
   return (
@@ -344,28 +344,28 @@ function StatsTab() {
     [client],
   );
 
-  const statPointsLabel = locale.statsStatPoints.replace(
+  const statPointsLabel = locale.stats.statPoints.replace(
     '{count}',
     String(statPoints),
   );
 
   const baseRows: [string, number, StatId][] = [
-    [locale.statsLabelStr, base.str, StatId.Str],
-    [locale.statsLabelInt, base.intl, StatId.Int],
-    [locale.statsLabelWis, base.wis, StatId.Wis],
-    [locale.statsLabelAgi, base.agi, StatId.Agi],
-    [locale.statsLabelCon, base.con, StatId.Con],
-    [locale.statsLabelCha, base.cha, StatId.Cha],
+    [locale.stats.labelStr, base.str, StatId.Str],
+    [locale.stats.labelInt, base.intl, StatId.Int],
+    [locale.stats.labelWis, base.wis, StatId.Wis],
+    [locale.stats.labelAgi, base.agi, StatId.Agi],
+    [locale.stats.labelCon, base.con, StatId.Con],
+    [locale.stats.labelCha, base.cha, StatId.Cha],
   ];
 
   const derivedRows: [string, string][] = [
     [
-      locale.statsLabelDmg,
+      locale.stats.labelDmg,
       `${secondary.minDamage.toLocaleString()} - ${secondary.maxDamage.toLocaleString()}`,
     ],
-    [locale.statsLabelAccuracy, secondary.accuracy.toLocaleString()],
-    [locale.statsLabelEvade, secondary.evade.toLocaleString()],
-    [locale.statsLabelArmor, secondary.armor.toLocaleString()],
+    [locale.stats.labelAccuracy, secondary.accuracy.toLocaleString()],
+    [locale.stats.labelEvade, secondary.evade.toLocaleString()],
+    [locale.stats.labelArmor, secondary.armor.toLocaleString()],
   ];
 
   return (
@@ -506,20 +506,20 @@ export function CharacterDialog() {
   const TABS = useMemo(() => {
     if (info?.details.playerId === client.playerId) {
       return [
-        { id: 'paperdoll', label: locale.charTabPaperdoll },
-        { id: 'stats', label: locale.charTabStats },
-        { id: 'book', label: locale.charTabBook },
+        { id: 'paperdoll', label: locale.character.tabPaperdoll },
+        { id: 'stats', label: locale.character.tabStats },
+        { id: 'book', label: locale.character.tabBook },
       ] as const;
     }
 
     return [
-      { id: 'paperdoll', label: locale.charTabPaperdoll },
-      { id: 'book', label: locale.charTabBook },
+      { id: 'paperdoll', label: locale.character.tabPaperdoll },
+      { id: 'book', label: locale.character.tabBook },
     ] as const;
   }, [info, client, locale]);
 
   return (
-    <DialogBase id='character' title={locale.charDialogTitle} size='md'>
+    <DialogBase id='character' title={locale.character.title} size='md'>
       <div class='flex flex-col gap-3'>
         <Tabs
           items={TABS as unknown as { id: string; label: string }[]}

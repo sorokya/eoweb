@@ -68,7 +68,7 @@ export function AmountDialog({
             {actionLabel}
           </Button>
           <Button variant='ghost' onClick={onCancel}>
-            {locale.btnCancel}
+            {locale.shared.btnCancel}
           </Button>
         </div>
       </div>

@@ -187,7 +187,7 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
             ref={inputRef}
             class='input input-bordered w-full'
             type='text'
-            placeholder={locale.cmdSearchPlaceholder}
+            placeholder={locale.cmdPalette.searchPlaceholder}
             value={query}
             onInput={(e) => setQuery((e.target as HTMLInputElement).value)}
             onKeyDown={handleKeyDown}
@@ -198,13 +198,13 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
         <div class='flex items-center gap-3 px-4 pb-2 text-xs opacity-50'>
           <span>
             <kbd class='kbd kbd-xs'>↑</kbd>
-            <kbd class='kbd kbd-xs'>↓</kbd> {locale.cmdNavigate}
+            <kbd class='kbd kbd-xs'>↓</kbd> {locale.cmdPalette.navigate}
           </span>
           <span>
-            <kbd class='kbd kbd-xs'>↵</kbd> {locale.cmdRun}
+            <kbd class='kbd kbd-xs'>↵</kbd> {locale.cmdPalette.run}
           </span>
           <span>
-            <kbd class='kbd kbd-xs'>Esc</kbd> {locale.cmdClose}
+            <kbd class='kbd kbd-xs'>Esc</kbd> {locale.cmdPalette.close}
           </span>
         </div>
 
@@ -214,18 +214,18 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
         <ul class='menu max-h-72 overflow-y-auto p-2'>
           {navList.length === 0 && (
             <li class='py-4 text-center text-sm opacity-50'>
-              {locale.cmdNoResults}
+              {locale.cmdPalette.noResults}
             </li>
           )}
           <CommandSection
-            title={locale.cmdRecentlyUsed}
+            title={locale.cmdPalette.recentlyUsed}
             commands={recentCommands}
             activeId={activeId}
             onHover={setActiveId}
             onSelect={execute}
           />
           <CommandSection
-            title={query ? locale.cmdResults : locale.cmdAll}
+            title={query ? locale.cmdPalette.results : locale.cmdPalette.all}
             commands={otherCommands}
             activeId={activeId}
             onHover={setActiveId}

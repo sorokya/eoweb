@@ -31,33 +31,33 @@ export function Login() {
   return (
     <div class='card w-96 bg-base-100 shadow-sm'>
       <div class='card-body'>
-        <div class='card-title'>{locale.loginTitle}</div>
+        <div class='card-title'>{locale.login.title}</div>
         <form onSubmit={onSubmit} class='flex flex-col gap-4'>
           <Input
-            label={locale.loginUsername}
+            label={locale.login.username}
             name='username'
             value={username}
             onChange={(val) => setUsername(val)}
             autofocus
           />
           <Input
-            label={locale.loginPassword}
+            label={locale.login.password}
             name='password'
             value={password}
             type='password'
             onChange={(val) => setPassword(val)}
           />
           <Checkbox
-            label={locale.loginRemember}
+            label={locale.login.remember}
             checked={rememberMe}
             onChange={setRememberMe}
           />
           <div class='card-actions'>
             <Button type='submit' variant='primary'>
-              {locale.btnLoginConnect}
+              {locale.login.btnConnect}
             </Button>
             <Button variant='ghost' onClick={cancel}>
-              {locale.btnCancel}
+              {locale.shared.btnCancel}
             </Button>
           </div>
         </form>

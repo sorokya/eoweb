@@ -95,7 +95,7 @@ function PingChart() {
     <div class='relative h-20 w-full'>
       {!hasData && (
         <div class='absolute inset-0 flex items-center justify-center text-xs opacity-50'>
-          {locale.pingDialogNoData}
+          {locale.ping.dialogNoData}
         </div>
       )}
       <canvas ref={canvasRef} class='h-full w-full' />
@@ -126,13 +126,13 @@ export function PingDialog() {
   }, [client.pingController]);
 
   const statItems = [
-    { label: locale.pingDialogMin, value: stats.min },
-    { label: locale.pingDialogAvg, value: stats.avg },
-    { label: locale.pingDialogMax, value: stats.max },
+    { label: locale.ping.dialogMin, value: stats.min },
+    { label: locale.ping.dialogAvg, value: stats.avg },
+    { label: locale.ping.dialogMax, value: stats.max },
   ];
 
   return (
-    <DialogBase id='ping' title={locale.pingDialogTitle} size='sm'>
+    <DialogBase id='ping' title={locale.ping.dialogTitle} size='sm'>
       <div class='flex flex-col gap-2 p-2'>
         <PingChart />
         <div class='grid grid-cols-3 gap-1'>
@@ -149,7 +149,7 @@ export function PingDialog() {
                 >
                   {stats.hasData ? value : '---'}
                 </span>
-                <span class='text-[9px] opacity-40'>{locale.pingMs}</span>
+                <span class='text-[9px] opacity-40'>{locale.ping.ms}</span>
               </div>
             );
           })}

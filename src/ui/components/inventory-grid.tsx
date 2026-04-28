@@ -144,7 +144,7 @@ function JunkZone() {
       onPointerLeave={() => setIsOver(false)}
     >
       <FaTrash size={11} />
-      {locale.junkDropZone}
+      {locale.inventory.junkDropZone}
     </div>
   );
 }
@@ -417,10 +417,10 @@ export function InventoryGrid({ itemIds }: Props) {
               const itemName =
                 client.getEifRecordById(item.id)?.name ?? String(item.id);
               client.alertController.showAmount(
-                locale.tradeDropHowMany,
+                locale.trade.dropHowMany,
                 itemName,
                 invItem.amount,
-                locale.tradeDrop,
+                locale.trade.drop,
                 (amount) => {
                   if (amount !== null && amount > 0) {
                     client.tradeController.addItem(item.id, amount);
@@ -452,7 +452,7 @@ export function InventoryGrid({ itemIds }: Props) {
     return [record.name + qty, ...meta];
   };
 
-  const TAB_LABELS = [locale.inventoryTab1, locale.inventoryTab2];
+  const TAB_LABELS = [locale.inventory.tab1, locale.inventory.tab2];
 
   return (
     <div class='flex flex-col gap-1'>

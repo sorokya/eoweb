@@ -77,7 +77,7 @@ export class ShopController {
     for (const cb of this.changedSubscribers) cb();
 
     const name = this.client.getEifRecordById(boughtItem.id)?.name ?? '';
-    const msg = this.client.locale.shopBoughtMsg
+    const msg = this.client.locale.shop.boughtMsg
       .replace('{amount}', String(boughtItem.amount))
       .replace('{name}', name);
     this.client.toastController.show(msg);
@@ -104,7 +104,7 @@ export class ShopController {
 
     const soldAmount = prevAmount - (soldItem.amount ?? 0);
     const name = this.client.getEifRecordById(soldItem.id)?.name ?? '';
-    const msg = this.client.locale.shopSoldMsg
+    const msg = this.client.locale.shop.soldMsg
       .replace('{amount}', String(soldAmount > 0 ? soldAmount : 1))
       .replace('{name}', name);
     this.client.toastController.show(msg);
@@ -130,7 +130,7 @@ export class ShopController {
     for (const cb of this.changedSubscribers) cb();
 
     const name = this.client.getEifRecordById(craftItemId)?.name ?? '';
-    const msg = this.client.locale.shopCraftedMsg.replace('{name}', name);
+    const msg = this.client.locale.shop.craftedMsg.replace('{name}', name);
     this.client.toastController.showSuccess(msg);
     this.client.chatController.notifyServerChat({
       message: msg,
@@ -154,11 +154,11 @@ export class ShopController {
         title,
         this.getItemName(itemId),
         maxAmount,
-        this.client.locale.shopBuyAction,
+        this.client.locale.shop.buyAction,
         (amount) => {
           if (amount !== null) send(amount);
         },
-        this.client.locale.shopBuyAgainAction,
+        this.client.locale.shop.buyAgainAction,
       );
       return;
     }
@@ -182,7 +182,7 @@ export class ShopController {
         title,
         this.getItemName(itemId),
         maxAmount,
-        this.client.locale.shopSellAction,
+        this.client.locale.shop.sellAction,
         (amount) => {
           if (amount !== null) send(amount);
         },
@@ -240,6 +240,9 @@ export class ShopController {
   private getItemName(itemId: number): string {
     const record = this.client.getEifRecordById(itemId);
     if (record?.name) return record.name;
-    return this.client.locale.itemFallbackName.replace('{id}', String(itemId));
+    return this.client.locale.shared.itemFallbackName.replace(
+      '{id}',
+      String(itemId),
+    );
   }
 }

@@ -90,7 +90,7 @@ function ChatPreview({ messages, now, onFocus, position }: PreviewProps) {
       onPointerDown={(e) => e.stopPropagation()}
     >
       <span class='text-base-content/50 text-xs'>
-        {isMobile ? locale.chatTapToChat : locale.chatPressEnterToChat}
+        {isMobile ? locale.chat.tapToChat : locale.chat.pressEnterToChat}
       </span>
     </button>
   );
@@ -159,7 +159,7 @@ function ChatLogButton() {
     <button
       type='button'
       class='btn btn-ghost btn-xs btn-circle opacity-60 hover:opacity-100'
-      aria-label={locale.chatLogAriaLabel}
+      aria-label={locale.chat.logAriaLabel}
       onClick={handleClick}
     >
       <LuSearch size={13} />
@@ -207,7 +207,7 @@ function AddTabButton() {
       <button
         type='button'
         class='btn btn-ghost btn-xs btn-circle opacity-60 hover:opacity-100'
-        title={locale.chatOpenChannelInNewTab}
+        title={locale.chat.openChannelInNewTab}
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();

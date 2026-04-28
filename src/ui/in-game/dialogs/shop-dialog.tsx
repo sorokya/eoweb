@@ -18,7 +18,7 @@ type ShopTabId = 'buy' | 'sell' | 'craft';
 function getDisplayName(client: Client, itemId: number): string {
   return (
     client.getEifRecordById(itemId)?.name ??
-    client.locale.itemFallbackName.replace('{id}', String(itemId))
+    client.locale.shared.itemFallbackName.replace('{id}', String(itemId))
   );
 }
 
@@ -119,7 +119,7 @@ export function ShopDialog() {
       label: (
         <span class='flex items-center gap-1'>
           <FaShoppingCart size={11} />
-          {locale.shopTabBuy}
+          {locale.shop.tabBuy}
         </span>
       ),
     },
@@ -128,7 +128,7 @@ export function ShopDialog() {
       label: (
         <span class='flex items-center gap-1'>
           <FaDollarSign size={11} />
-          {locale.shopTabSell}
+          {locale.shop.tabSell}
         </span>
       ),
     },
@@ -137,15 +137,15 @@ export function ShopDialog() {
       label: (
         <span class='flex items-center gap-1'>
           <FaHammer size={11} />
-          {locale.shopTabCraft}
+          {locale.shop.tabCraft}
         </span>
       ),
     },
   ];
 
   const title = shopName.trim()
-    ? `${locale.shopTitle} - ${shopName}`
-    : locale.shopTitle;
+    ? `${locale.shop.title} - ${shopName}`
+    : locale.shop.title;
 
   return (
     <DialogBase id='shop' title={title} size='lg'>
@@ -169,7 +169,7 @@ export function ShopDialog() {
           <div class='p-2'>
             {buyItems.length === 0 && (
               <p class='py-4 text-center text-base-content/50 text-sm'>
-                {locale.shopBuyEmpty}
+                {locale.shop.buyEmpty}
               </p>
             )}
 
@@ -203,7 +203,7 @@ export function ShopDialog() {
                         {getDisplayName(client, tradeItem.itemId)}
                       </p>
                       <p class='w-full text-center text-base-content/60 text-xs'>
-                        {locale.shopBuyPrice}:{' '}
+                        {locale.shop.buyPrice}:{' '}
                         {tradeItem.buyPrice.toLocaleString()}
                       </p>
                       <Button
@@ -218,7 +218,7 @@ export function ShopDialog() {
                         disabled={!canBuy}
                       >
                         <FaShoppingCart size={11} />
-                        {locale.shopBuyAction}
+                        {locale.shop.buyAction}
                       </Button>
                     </div>
                   </div>
@@ -232,7 +232,7 @@ export function ShopDialog() {
           <div class='p-2'>
             {sellItems.length === 0 && (
               <p class='py-4 text-center text-base-content/50 text-sm'>
-                {locale.shopSellEmpty}
+                {locale.shop.sellEmpty}
               </p>
             )}
 
@@ -261,10 +261,10 @@ export function ShopDialog() {
                         {getDisplayName(client, inventoryItem.id)}
                       </p>
                       <p class='w-full text-center text-base-content/60 text-xs'>
-                        {locale.shopSellPrice}:{' '}
+                        {locale.shop.sellPrice}:{' '}
                         {(tradeItem?.sellPrice ?? 0).toLocaleString()}
                         <br />
-                        {locale.shopYouHave}:{' '}
+                        {locale.shop.youHave}:{' '}
                         {inventoryItem.amount.toLocaleString()}
                       </p>
                       <Button
@@ -278,7 +278,7 @@ export function ShopDialog() {
                         }
                       >
                         <FaDollarSign size={11} />
-                        {locale.shopSellAction}
+                        {locale.shop.sellAction}
                       </Button>
                       <Button
                         variant={['xs', 'outline']}
@@ -288,7 +288,7 @@ export function ShopDialog() {
                         }
                       >
                         <FaShoppingBasket size={11} />
-                        {locale.shopSellAllAction}
+                        {locale.shop.sellAllAction}
                       </Button>
                     </div>
                   </div>
@@ -302,7 +302,7 @@ export function ShopDialog() {
           <div class='space-y-1 p-2'>
             {craftItems.length === 0 && (
               <p class='py-4 text-center text-base-content/50 text-sm'>
-                {locale.shopCraftEmpty}
+                {locale.shop.craftEmpty}
               </p>
             )}
 
@@ -342,17 +342,17 @@ export function ShopDialog() {
                         disabled={!canCraft}
                       >
                         <FaHammer size={11} />
-                        {locale.shopCraftAction}
+                        {locale.shop.craftAction}
                       </Button>
                     </div>
 
                     <div class='space-y-1'>
                       <p class='text-base-content/60 text-xs'>
-                        {locale.shopIngredients}
+                        {locale.shop.ingredients}
                       </p>
                       {ingredients.length === 0 ? (
                         <p class='text-base-content/50 text-xs'>
-                          {locale.shopNoIngredients}
+                          {locale.shop.noIngredients}
                         </p>
                       ) : (
                         <table class='table-zebra table-xs table w-full rounded border border-base-content/10'>

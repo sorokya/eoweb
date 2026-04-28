@@ -19,10 +19,10 @@ export function Confirm({ title, message, onYes, onNo }: ConfirmProps) {
         <p class='py-4'>{message}</p>
         <div class='modal-action'>
           <Button variant='primary' onClick={onYes}>
-            {locale.btnYes}
+            {locale.shared.btnYes}
           </Button>
           <Button variant='ghost' onClick={onNo}>
-            {locale.btnNo}
+            {locale.shared.btnNo}
           </Button>
         </div>
       </div>

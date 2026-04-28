@@ -50,7 +50,7 @@ function handleTalkServer(client: Client, reader: EoReader) {
     message: packet.message,
   });
   client.toastController.show(
-    `${client.locale.packetLogServer}: ${packet.message}`,
+    `${client.locale.packetLog.server}: ${packet.message}`,
   );
   client.audioController.playById(SfxId.ServerMessage);
 }

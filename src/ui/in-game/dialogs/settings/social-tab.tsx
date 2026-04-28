@@ -8,9 +8,9 @@ export function SocialTab() {
   const { locale } = useLocale();
 
   const socialOptions = [
-    { value: 'all', label: locale.settingsSocialAll },
-    { value: 'friends', label: locale.settingsSocialFriends },
-    { value: 'none', label: locale.settingsSocialNone },
+    { value: 'all', label: locale.settings.socialAll },
+    { value: 'friends', label: locale.settings.socialFriends },
+    { value: 'none', label: locale.settings.socialNone },
   ];
 
   const [whispers, setWhispers] = useConfigSetting<SocialFilter>(
@@ -46,7 +46,7 @@ export function SocialTab() {
   return (
     <div class='flex flex-col gap-3 p-2'>
       <Select
-        label={locale.settingsWhispers}
+        label={locale.settings.whispers}
         value={whispers}
         options={socialOptions}
         onChange={(v) => setWhispers(v as SocialFilter)}
@@ -54,7 +54,7 @@ export function SocialTab() {
       />
       <div class='divider my-0' />
       <Select
-        label={locale.settingsTradeRequests}
+        label={locale.settings.tradeRequests}
         value={tradeRequests}
         options={socialOptions}
         onChange={(v) => setTradeRequests(v as SocialFilter)}
@@ -62,14 +62,14 @@ export function SocialTab() {
       />
       <div class='divider my-0' />
       <Select
-        label={locale.settingsPartyRequests}
+        label={locale.settings.partyRequests}
         value={partyRequests}
         options={socialOptions}
         onChange={(v) => setPartyRequests(v as SocialFilter)}
         variant='sm'
       />
       <div class='divider my-0' />
-      <SettingRow label={locale.settingsProfanityFilter} asLabel>
+      <SettingRow label={locale.settings.profanityFilter} asLabel>
         <input
           type='checkbox'
           class='checkbox checkbox-sm'
@@ -80,7 +80,7 @@ export function SocialTab() {
         />
       </SettingRow>
       <div class='divider my-0' />
-      <SettingRow label={locale.settingsChatLog} asLabel>
+      <SettingRow label={locale.settings.chatLog} asLabel>
         <input
           type='checkbox'
           class='checkbox checkbox-sm'

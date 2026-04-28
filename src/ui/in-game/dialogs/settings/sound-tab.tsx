@@ -39,30 +39,30 @@ export function SoundTab() {
   return (
     <div class='flex flex-col gap-3 p-2'>
       <SliderInput
-        label={locale.settingsMasterVolume}
+        label={locale.settings.masterVolume}
         value={master}
         onChange={setMaster}
       />
       <div class='divider my-0' />
       <SliderInput
-        label={locale.settingsEffectVolume}
+        label={locale.settings.effectVolume}
         value={effect}
         onChange={setEffect}
       />
       <div class='divider my-0' />
       <SliderInput
-        label={locale.settingsAmbientVolume}
+        label={locale.settings.ambientVolume}
         value={ambient}
         onChange={setAmbient}
       />
       <div class='divider my-0' />
       <SliderInput
-        label={locale.settingsMusicVolume}
+        label={locale.settings.musicVolume}
         value={music}
         onChange={setMusic}
       />
       <div class='divider my-0' />
-      <SettingRow label={locale.settingsMusicForceLoop} asLabel>
+      <SettingRow label={locale.settings.musicForceLoop} asLabel>
         <input
           type='checkbox'
           class='checkbox checkbox-sm'

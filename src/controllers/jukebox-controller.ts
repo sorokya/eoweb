@@ -77,7 +77,7 @@ export class JukeboxController {
       );
       this.client.alertController.show(
         strings[0],
-        `${strings[1]} ${this.client.locale.wordGold}`,
+        `${strings[1]} ${this.client.locale.shared.wordGold}`,
       );
       return;
     }
@@ -85,7 +85,7 @@ export class JukeboxController {
     const confirmTitle = this.client.getResourceString(
       EOResourceID.JUKEBOX_REQUEST_SONG,
     );
-    const confirmMsg = `${this.client.getResourceString(EOResourceID.JUKEBOX_REQUEST_SONG_FOR)} ${JUKEBOX_COST} ${this.client.locale.wordGold}?`;
+    const confirmMsg = `${this.client.getResourceString(EOResourceID.JUKEBOX_REQUEST_SONG_FOR)} ${JUKEBOX_COST} ${this.client.locale.shared.wordGold}?`;
 
     this.client.alertController.showConfirm(
       confirmTitle,
@@ -123,8 +123,9 @@ export class JukeboxController {
     this.trackId = trackId;
     this.client.audioController.playJukeboxMusic(trackId);
     this.client.toastController.show(
-      formatLocaleString(this.client.locale.jukeboxNowPlaying, {
-        track: this.tracks[trackId - 1] ?? this.client.locale.wordUnknown,
+      formatLocaleString(this.client.locale.jukebox.nowPlaying, {
+        track:
+          this.tracks[trackId - 1] ?? this.client.locale.shared.wordUnknown,
       }),
     );
 

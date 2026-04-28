@@ -6,12 +6,7 @@ import { Button } from '@/ui/components';
 import { UI_ITEM_BG, UI_PANEL_BORDER, UI_STICKY_BG } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
-import {
-  useBackdropBlur,
-  useHotbar,
-  useItemDrag,
-  useSpellIconUrls,
-} from '@/ui/in-game';
+import { useBackdropBlur, useItemDrag, useSpellIconUrls } from '@/ui/in-game';
 import { DialogBase } from './dialog-base';
 
 // ---------------------------------------------------------------------------
@@ -27,12 +22,12 @@ function SpellCard({ spell, skillPoints }: SpellCardProps) {
   const client = useClient();
   const { locale } = useLocale();
   const { startDrag } = useItemDrag();
-  const { setSlot } = useHotbar();
 
   const record = client.getEsfRecordById(spell.id);
   const iconId = record?.iconId ?? null;
   const name =
-    record?.name ?? locale.itemFallbackName.replace('{id}', String(spell.id));
+    record?.name ??
+    locale.shared.itemFallbackName.replace('{id}', String(spell.id));
   const maxLevel = record?.maxSkillLevel ?? 0;
 
   const spellUrls = useSpellIconUrls(iconId);
@@ -66,20 +61,26 @@ function SpellCard({ spell, skillPoints }: SpellCardProps) {
         },
         onResolve: (result) => {
           if (result.type === 'hotbar-slot') {
-            setSlot(result.index, { type: SlotType.Skill, typeId: spell.id });
+            client.hotbarController.setSlot(result.index, {
+              type: SlotType.Skill,
+              typeId: spell.id,
+            });
             playSfxById(SfxId.InventoryPlace);
           }
         },
       });
     },
-    [spell.id, spellUrls, startDrag, setSlot],
+    [spell.id, spellUrls, startDrag, client],
   );
 
   const handleTrain = useCallback(() => {
     client.statSkillController.trainSkill(spell.id);
   }, [client, spell.id]);
 
-  const levelLabel = locale.spellsLevel.replace('{level}', String(spell.level));
+  const levelLabel = locale.spells.level.replace(
+    '{level}',
+    String(spell.level),
+  );
 
   return (
     <div
@@ -120,7 +121,7 @@ function SpellCard({ spell, skillPoints }: SpellCardProps) {
         onClick={handleTrain}
       >
         <FaArrowUp size={10} />
-        {locale.spellsTrainBtn}
+        {locale.spells.trainBtn}
       </Button>
     </div>
   );
@@ -154,13 +155,13 @@ export function SpellsDialog() {
     };
   }, [client]);
 
-  const skillPointsLabel = locale.spellsSkillPoints.replace(
+  const skillPointsLabel = locale.spells.skillPoints.replace(
     '{count}',
     String(skillPoints),
   );
 
   return (
-    <DialogBase id='spells' title={locale.spellsTitle} size='md' avoidBottom>
+    <DialogBase id='spells' title={locale.spells.title} size='md' avoidBottom>
       {/* Skill points header */}
       <div
         class={`sticky top-0 z-10 ${UI_PANEL_BORDER} border-b ${UI_STICKY_BG} px-3 py-1.5 ${blur}`}
@@ -172,7 +173,7 @@ export function SpellsDialog() {
 
       {spells.length === 0 ? (
         <p class='py-6 text-center text-base-content/50 text-sm'>
-          {locale.spellsNoSpells}
+          {locale.spells.noSpells}
         </p>
       ) : (
         <div class='grid max-h-80 grid-cols-2 gap-2 overflow-y-auto p-2 sm:grid-cols-3'>

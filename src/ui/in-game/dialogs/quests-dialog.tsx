@@ -42,7 +42,9 @@ function ActiveTab({
 
   if (entries.length === 0) {
     return (
-      <p class='py-4 text-center text-sm opacity-60'>{locale.questNoActive}</p>
+      <p class='py-4 text-center text-sm opacity-60'>
+        {locale.quests.noActive}
+      </p>
     );
   }
 
@@ -73,7 +75,7 @@ function ActiveTab({
                       checked={isTracked}
                       onChange={() => onTrack(entry.name)}
                     />
-                    {locale.questTrack}
+                    {locale.quests.track}
                   </label>
                 </div>
                 {entry.description && (
@@ -161,12 +163,12 @@ export function QuestsDialog() {
   };
 
   const TABS = [
-    { id: 'active', label: locale.questTabActive },
-    { id: 'history', label: locale.questTabHistory },
+    { id: 'active', label: locale.quests.tabActive },
+    { id: 'history', label: locale.quests.tabHistory },
   ] as const;
 
   return (
-    <DialogBase id='quests' title={locale.questsTitle} size='md'>
+    <DialogBase id='quests' title={locale.quests.title} size='md'>
       <div class='flex max-h-80 flex-col gap-2 overflow-y-auto p-1'>
         <Tabs
           items={TABS as unknown as { id: string; label: string }[]}

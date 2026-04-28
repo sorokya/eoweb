@@ -37,13 +37,13 @@ export function GraphicsTab() {
 
   const fpsLabel = (i: number) => {
     const v = FPS_OPTIONS[i];
-    return v === 0 ? locale.settingsFpsUnlimited : String(v);
+    return v === 0 ? locale.settings.fpsUnlimited : String(v);
   };
 
   return (
     <div class='flex flex-col gap-3 p-2'>
       <CycleInput
-        label={locale.settingsFpsLimit}
+        label={locale.settings.fpsLimit}
         value={fpsIndex}
         min={0}
         max={FPS_OPTIONS.length - 1}
@@ -51,7 +51,7 @@ export function GraphicsTab() {
         onChange={setFpsIndex}
       />
       <div class='divider my-0' />
-      <SettingRow label={locale.settingsInterpolation} asLabel>
+      <SettingRow label={locale.settings.interpolation} asLabel>
         <input
           type='checkbox'
           class='checkbox checkbox-sm'
@@ -62,23 +62,23 @@ export function GraphicsTab() {
         />
       </SettingRow>
       <div class='divider my-0' />
-      <SettingRow label={locale.settingsZoom}>
+      <SettingRow label={locale.settings.zoom}>
         <button
           type='button'
           class='btn btn-xs btn-ghost'
           onClick={zoomOut}
-          aria-label={locale.settingsZoomOut}
+          aria-label={locale.settings.zoomOut}
         >
           −
         </button>
         <button type='button' class='btn btn-xs btn-ghost' onClick={zoomReset}>
-          {locale.settingsZoomReset}
+          {locale.settings.zoomReset}
         </button>
         <button
           type='button'
           class='btn btn-xs btn-ghost'
           onClick={zoomIn}
-          aria-label={locale.settingsZoomIn}
+          aria-label={locale.settings.zoomIn}
         >
           +
         </button>

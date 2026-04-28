@@ -90,7 +90,7 @@ export function CharacterSelect() {
   return (
     <div class='card max-h-[90dvh] w-11/12 bg-base-100 shadow-sm'>
       <div class='card-body flex min-h-0 flex-col'>
-        <div class='card-title shrink-0'>{locale.characterSelectTitle}</div>
+        <div class='card-title shrink-0'>{locale.characterSelect.title}</div>
         <div class='flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:flex-row'>
           {[0, 1, 2].map((slot) => (
             <Character key={slot} character={characters[slot]} />
@@ -98,13 +98,13 @@ export function CharacterSelect() {
         </div>
         <div class='card-actions shrink-0'>
           <Button variant='primary' onClick={createCharacter}>
-            {locale.btnNewCharacter}
+            {locale.characterSelect.btnNew}
           </Button>
           <Button variant='ghost' onClick={changePassword}>
-            {locale.btnChangePassword}
+            {locale.changePassword.btn}
           </Button>
           <Button variant='ghost' onClick={cancel}>
-            {locale.btnCancel}
+            {locale.shared.btnCancel}
           </Button>
         </div>
       </div>

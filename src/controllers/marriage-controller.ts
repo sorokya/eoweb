@@ -134,7 +134,7 @@ export class MarriageController {
     );
     this.client.alertController.show(
       strings[0],
-      `${strings[1]}${replyCode === MarriageReply.NotEnoughGold ? ` ${this.client.locale.wordGold}` : ''}`,
+      `${strings[1]}${replyCode === MarriageReply.NotEnoughGold ? ` ${this.client.locale.shared.wordGold}` : ''}`,
     );
   }
 

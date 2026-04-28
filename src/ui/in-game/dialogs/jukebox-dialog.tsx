@@ -17,7 +17,7 @@ export function JukeboxDialog() {
 
   useEffect(() => {
     const handleSongPlayed = (trackId: number) => {
-      setPlayerName(locale.wordUnknown);
+      setPlayerName(locale.shared.wordUnknown);
       setSongIndex(trackId - 1);
     };
     client.jukeboxController.subscribeSongPlayed(handleSongPlayed);
@@ -68,7 +68,7 @@ export function JukeboxDialog() {
           ))}
           {client.jukeboxController.tracks.length === 0 && (
             <li class='menu-title text-center text-primary/60'>
-              {locale.jukeboxNoSongs}
+              {locale.jukebox.noSongs}
             </li>
           )}
         </ul>

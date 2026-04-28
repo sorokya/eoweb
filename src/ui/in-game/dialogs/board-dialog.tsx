@@ -64,8 +64,8 @@ export function BoardDialog() {
   const handleDelete = useCallback(
     (postId: number) => {
       client.alertController.showConfirm(
-        locale.boardDeleteConfirmTitle,
-        locale.boardDeleteConfirmMsg,
+        locale.board.deleteConfirmTitle,
+        locale.board.deleteConfirmMsg,
         (confirmed) => {
           if (!confirmed) return;
           client.boardController.deletePost(postId);
@@ -87,7 +87,7 @@ export function BoardDialog() {
   }, [client, subject, body]);
 
   return (
-    <DialogBase id='board' title={locale.boardTitle} size='md'>
+    <DialogBase id='board' title={locale.board.title} size='md'>
       <div class='flex flex-col'>
         {view === 'list' && (
           <>
@@ -101,13 +101,13 @@ export function BoardDialog() {
                 }}
               >
                 <FaPlus size={10} />
-                {locale.boardNewPost}
+                {locale.board.newPost}
               </Button>
             </div>
 
             {posts.length === 0 ? (
               <p class='py-6 text-center text-base-content/50 text-sm'>
-                {locale.boardNoPosts}
+                {locale.board.noPosts}
               </p>
             ) : (
               <div class='divide-y divide-base-content/10'>
@@ -125,7 +125,7 @@ export function BoardDialog() {
                         {post.subject}
                       </p>
                       <p class='text-base-content/50 text-xs'>
-                        {locale.boardPostBy.replace('{author}', post.author)}
+                        {locale.board.postBy.replace('{author}', post.author)}
                       </p>
                     </button>
 
@@ -138,7 +138,7 @@ export function BoardDialog() {
                           variant={['xs', 'error', 'outline']}
                           class='shrink-0'
                           onClick={() => handleDelete(post.postId)}
-                          aria-label={locale.boardDeletePost}
+                          aria-label={locale.board.deletePost}
                         >
                           <FaTrash size={10} />
                         </Button>
@@ -157,10 +157,10 @@ export function BoardDialog() {
               <Button
                 variant={['xs', 'ghost']}
                 onClick={() => setView('list')}
-                aria-label={locale.boardPostBack}
+                aria-label={locale.board.postBack}
               >
                 <FaArrowLeft size={10} />
-                {locale.boardPostBack}
+                {locale.board.postBack}
               </Button>
 
               {isAdmin && (
@@ -170,7 +170,7 @@ export function BoardDialog() {
                   onClick={() => handleDelete(postView.post.postId)}
                 >
                   <FaTrash size={10} />
-                  {locale.boardDeletePost}
+                  {locale.board.deletePost}
                 </Button>
               )}
             </div>
@@ -180,7 +180,7 @@ export function BoardDialog() {
                 {postView.post.subject}
               </p>
               <p class='text-base-content/50 text-xs'>
-                {locale.boardPostBy.replace('{author}', postView.post.author)}
+                {locale.board.postBy.replace('{author}', postView.post.author)}
               </p>
             </div>
 
@@ -199,7 +199,7 @@ export function BoardDialog() {
                 for='board-subject'
                 class='mb-1 block text-base-content/70 text-xs'
               >
-                {locale.boardPostSubject}
+                {locale.board.postSubject}
               </label>
               <input
                 id='board-subject'
@@ -218,7 +218,7 @@ export function BoardDialog() {
                 for='board-body'
                 class='mb-1 block text-base-content/70 text-xs'
               >
-                {locale.boardPostBody}
+                {locale.board.postBody}
               </label>
               <textarea
                 id='board-body'
@@ -238,7 +238,7 @@ export function BoardDialog() {
                 class='flex-1'
                 onClick={() => setView('list')}
               >
-                {locale.boardPostCancel}
+                {locale.board.postCancel}
               </Button>
               <Button
                 variant={['sm', 'primary']}
@@ -246,7 +246,7 @@ export function BoardDialog() {
                 disabled={!subject.trim() || !body.trim()}
                 onClick={handleSubmitPost}
               >
-                {locale.boardPostSubmit}
+                {locale.board.postSubmit}
               </Button>
             </div>
           </div>

@@ -68,7 +68,7 @@ export class BankController {
 
     const diff = Math.abs(goldBank - previousGoldBank);
     if (goldBank > previousGoldBank) {
-      const msg = this.client.locale.bankDepositedMsg.replace(
+      const msg = this.client.locale.bank.depositedMsg.replace(
         '{amount}',
         diff.toLocaleString(),
       );
@@ -78,7 +78,7 @@ export class BankController {
         icon: ChatIcon.UpArrow,
       });
     } else if (goldBank < previousGoldBank) {
-      const msg = this.client.locale.bankWithdrewMsg.replace(
+      const msg = this.client.locale.bank.withdrewMsg.replace(
         '{amount}',
         diff.toLocaleString(),
       );
@@ -210,7 +210,7 @@ export class BankController {
         DialogResourceID.WARNING_YOU_HAVE_NOT_ENOUGH,
       );
       const message = strings[1]
-        ? `${strings[1]} ${this.client.locale.wordGold}`
+        ? `${strings[1]} ${this.client.locale.shared.wordGold}`
         : `You need ${upgradeCost?.toLocaleString() ?? 0} gold.`;
       this.client.alertController.show(strings[0] || 'Bank Locker', message);
       return;

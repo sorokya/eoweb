@@ -7,7 +7,7 @@ export function InventoryDialog() {
   return (
     <DialogBase
       id='inventory'
-      title={locale.inventoryTitle}
+      title={locale.inventory.title}
       width={INVENTORY_GRID_WIDTH + 10}
       avoidBottom
     >

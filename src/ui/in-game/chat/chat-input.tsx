@@ -120,17 +120,17 @@ export const ChatInput = forwardRef<HTMLInputElement, Props>(function ChatInput(
   if (readOnly) {
     return (
       <div class='flex border-base-content/10 border-t px-2 py-1 text-xs italic opacity-40'>
-        {locale.chatReadOnly}
+        {locale.chat.readOnly}
       </div>
     );
   }
 
   const placeholder =
     sendChannel && isPMChannel(sendChannel)
-      ? formatLocaleString(locale.chatSendTo, {
+      ? formatLocaleString(locale.chat.sendTo, {
           name: pmChannelName(sendChannel),
         })
-      : locale.chatSaySomething;
+      : locale.chat.saySomething;
 
   return (
     <div class='flex rounded-b-large border-base-content/10 border-t'>

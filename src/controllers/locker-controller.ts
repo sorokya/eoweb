@@ -66,7 +66,7 @@ export class LockerController {
     for (const cb of this.changedSubscribers) cb(lockerItems);
 
     const name = this.client.getEifRecordById(takenItemId)?.name ?? '';
-    const msg = this.client.locale.lockerTookMsg
+    const msg = this.client.locale.locker.tookMsg
       .replace('{amount}', String(takenItemAmount))
       .replace('{name}', name);
     this.client.toastController.show(msg);
@@ -94,7 +94,7 @@ export class LockerController {
 
     const name = this.client.getEifRecordById(depositedItemId)?.name ?? '';
     const amount = depositedAmount > 0 ? depositedAmount : 1;
-    const msg = this.client.locale.lockerDepositedMsg
+    const msg = this.client.locale.locker.depositedMsg
       .replace('{amount}', String(amount))
       .replace('{name}', name);
     this.client.toastController.show(msg);
@@ -109,7 +109,7 @@ export class LockerController {
     this.client.bankController.lockerUpgrades = lockerUpgrades;
     this.client.audioController.playById(SfxId.BuySell);
 
-    const msg = this.client.locale.lockerUpgradedMsg;
+    const msg = this.client.locale.locker.upgradedMsg;
     this.client.toastController.showSuccess(msg);
     this.client.chatController.notifyServerChat({
       message: msg,
@@ -182,7 +182,7 @@ export class LockerController {
         title,
         itemName,
         inventoryItem.amount,
-        this.client.locale.lockerDeposit,
+        this.client.locale.locker.deposit,
         (amount) => {
           if (amount !== null && amount > 0) send(amount);
         },

@@ -14,7 +14,7 @@ export function InnKeeperDialog() {
   const { closeDialog } = useWindowManager();
 
   const [npcName, setNpcName] = useState(
-    () => client.innController.npcName || locale.innKeeperTitle,
+    () => client.innController.npcName || locale.innKeeper.title,
   );
   const [currentHomeId, setCurrentHomeId] = useState(
     () => client.innController.currentHomeId,
@@ -31,7 +31,7 @@ export function InnKeeperDialog() {
       newCurrentHomeId: number,
       newQuestions: string[],
     ) => {
-      setNpcName(name || locale.innKeeperTitle);
+      setNpcName(name || locale.innKeeper.title);
       setCurrentHomeId(newCurrentHomeId);
       setQuestions(newQuestions);
       setView('main');
@@ -44,7 +44,7 @@ export function InnKeeperDialog() {
       client.innController.unsubscribeOpened(handleOpened);
       client.innController.unsubscribeClose(handleClose);
     };
-  }, [client, closeDialog, locale.innKeeperTitle]);
+  }, [client, closeDialog, locale.innKeeper.title]);
 
   const isCitizen = currentHomeId > 0;
 
@@ -72,7 +72,7 @@ export function InnKeeperDialog() {
                 onClick={handleGiveUp}
               >
                 <FaTimesCircle size={12} />
-                {locale.innKeeperGiveUpCitizenship}
+                {locale.innKeeper.giveUpCitizenship}
               </Button>
             ) : (
               <Button
@@ -81,7 +81,7 @@ export function InnKeeperDialog() {
                 onClick={() => setView('becomeCitizen')}
               >
                 <FaHome size={12} />
-                {locale.innKeeperBecomeCitizen}
+                {locale.innKeeper.becomeCitizen}
               </Button>
             )}
             <Button
@@ -90,7 +90,7 @@ export function InnKeeperDialog() {
               onClick={handleSleep}
             >
               <FaBed size={12} />
-              {locale.innKeeperSleep}
+              {locale.innKeeper.sleep}
             </Button>
           </>
         )}
@@ -130,14 +130,14 @@ export function InnKeeperDialog() {
                 class='flex-1'
                 onClick={() => setView('main')}
               >
-                {locale.wordBack}
+                {locale.shared.wordBack}
               </Button>
               <Button
                 variant={['sm', 'primary']}
                 class='flex-1'
                 onClick={handleSubmitAnswers}
               >
-                {locale.wordSubmit}
+                {locale.shared.wordSubmit}
               </Button>
             </div>
           </>

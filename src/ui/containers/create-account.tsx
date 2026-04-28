@@ -82,10 +82,10 @@ export function CreateAccount() {
   return (
     <div class='card w-96 bg-base-100 shadow-sm'>
       <div class='card-body'>
-        <div class='card-title'>{locale.createAccountTitle}</div>
+        <div class='card-title'>{locale.createAccount.title}</div>
         <form onSubmit={onSubmit} class='flex flex-col gap-3'>
           <Input
-            label={locale.createAccountUsername}
+            label={locale.createAccount.username}
             name='username'
             value={username}
             onChange={setUsername}
@@ -93,7 +93,7 @@ export function CreateAccount() {
             autofocus
           />
           <Input
-            label={locale.createAccountPassword}
+            label={locale.createAccount.password}
             name='password'
             type='password'
             value={password}
@@ -101,7 +101,7 @@ export function CreateAccount() {
             maxlength={MAX_PASSWORD_LENGTH}
           />
           <Input
-            label={locale.createAccountConfirmPassword}
+            label={locale.createAccount.confirmPassword}
             name='confirm-password'
             type='password'
             value={confirmPassword}
@@ -109,19 +109,19 @@ export function CreateAccount() {
             maxlength={MAX_PASSWORD_LENGTH}
           />
           <Input
-            label={locale.createAccountFullName}
+            label={locale.createAccount.fullName}
             name='full-name'
             value={fullName}
             onChange={setFullName}
           />
           <Input
-            label={locale.createAccountLocation}
+            label={locale.createAccount.location}
             name='location'
             value={location}
             onChange={setLocation}
           />
           <Input
-            label={locale.createAccountEmail}
+            label={locale.createAccount.email}
             name='email'
             type='email'
             value={email}
@@ -129,10 +129,10 @@ export function CreateAccount() {
           />
           <div class='card-actions'>
             <Button type='submit' variant='primary'>
-              {locale.btnCreateAccount}
+              {locale.mainMenu.btnCreateAccount}
             </Button>
             <Button variant='ghost' onClick={cancel}>
-              {locale.btnCancel}
+              {locale.shared.btnCancel}
             </Button>
           </div>
         </form>

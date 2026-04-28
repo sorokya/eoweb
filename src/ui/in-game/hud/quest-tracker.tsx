@@ -85,7 +85,7 @@ export function QuestTracker() {
         onClick={() => setCollapsed((c) => !c)}
       >
         <span class='truncate font-semibold text-primary/80 text-xs'>
-          {locale.questTrackerTitle}
+          {locale.quests.trackerTitle}
         </span>
         <span class='shrink-0 text-primary/60'>
           {collapsed ? <FaChevronDown size={9} /> : <FaChevronUp size={9} />}

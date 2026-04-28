@@ -54,7 +54,7 @@ export function BankDialog() {
   }, [client]);
 
   return (
-    <DialogBase id='bank' title={locale.bankTitle} size='sm'>
+    <DialogBase id='bank' title={locale.bank.title} size='sm'>
       <div class='space-y-2 p-2'>
         <div class={`rounded border ${UI_PANEL_BORDER} ${UI_ITEM_BG} p-2`}>
           <div class='flex items-center justify-between text-sm'>
@@ -62,7 +62,7 @@ export function BankDialog() {
               <span class='text-warning'>
                 <FaCoins size={11} />
               </span>
-              {locale.bankBalance}
+              {locale.bank.balance}
             </span>
             <span class='font-semibold text-warning tabular-nums'>
               {goldBank.toLocaleString()}
@@ -73,7 +73,7 @@ export function BankDialog() {
               <span class='text-warning/70'>
                 <FaCoins size={10} />
               </span>
-              {locale.bankOnHand}
+              {locale.bank.onHand}
             </span>
             <span class='text-warning/70 tabular-nums'>
               {goldOnHand.toLocaleString()}
@@ -88,7 +88,7 @@ export function BankDialog() {
             onClick={() => client.bankController.depositGold()}
           >
             <FaArrowDown size={11} />
-            {locale.bankDeposit}
+            {locale.bank.deposit}
           </Button>
           <Button
             variant={['sm', 'secondary']}
@@ -96,7 +96,7 @@ export function BankDialog() {
             onClick={() => client.bankController.withdrawGold()}
           >
             <FaArrowUp size={11} />
-            {locale.bankWithdraw}
+            {locale.bank.withdraw}
           </Button>
         </div>
 
@@ -106,14 +106,14 @@ export function BankDialog() {
               <span class='text-primary'>
                 <FaLock size={11} />
               </span>
-              {locale.bankLockerUpgrades}
+              {locale.bank.lockerUpgrades}
             </span>
             <span class='font-semibold tabular-nums'>
               {lockerUpgrades}/{MAX_LOCKER_UPGRADES}
             </span>
           </div>
           <div class='mt-1 flex items-center justify-between text-primary/50 text-xs'>
-            <span>{locale.bankNextUpgradeCost}</span>
+            <span>{locale.bank.nextUpgradeCost}</span>
             <span class='text-base-content/70 tabular-nums'>
               {nextUpgradeCost === null
                 ? 'MAX'
@@ -121,7 +121,7 @@ export function BankDialog() {
             </span>
           </div>
           <div class='mt-1 flex items-center justify-between text-primary/50 text-xs'>
-            <span>{locale.bankMaxLockerItems}</span>
+            <span>{locale.bank.maxLockerItems}</span>
             <span class='text-base-content/70 tabular-nums'>
               {LOCKER_MAX_ITEM_AMOUNT}
             </span>
@@ -136,7 +136,7 @@ export function BankDialog() {
             }}
           >
             <FaLock size={11} />
-            {locale.bankBuyUpgrade}
+            {locale.bank.buyUpgrade}
           </Button>
         </div>
       </div>

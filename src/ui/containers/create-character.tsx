@@ -121,8 +121,8 @@ export function CreateCharacter() {
   const formatGender = useCallback(
     (value: number) =>
       value === Gender.Female
-        ? locale.createCharacterFemale
-        : locale.createCharacterMale,
+        ? locale.createCharacter.female
+        : locale.createCharacter.male,
     [locale],
   );
 
@@ -131,7 +131,7 @@ export function CreateCharacter() {
   return (
     <div class='card bg-base-100 shadow-sm'>
       <div class='card-body'>
-        <div class='card-title'>{locale.createCharacterTitle}</div>
+        <div class='card-title'>{locale.createCharacter.title}</div>
         <div class='flex gap-4'>
           <button
             type='button'
@@ -142,14 +142,14 @@ export function CreateCharacter() {
           </button>
           <form onSubmit={onSubmit} class='flex min-w-0 flex-1 flex-col gap-3'>
             <Input
-              label={locale.createCharacterName}
+              label={locale.createCharacter.name}
               name='name'
               value={name}
               onChange={setName}
               autofocus
             />
             <CycleInput
-              label={locale.createCharacterGender}
+              label={locale.createCharacter.gender}
               value={gender}
               min={MIN_GENDER}
               max={MAX_GENDER}
@@ -157,14 +157,14 @@ export function CreateCharacter() {
               onChange={(v) => setGender(v as Gender)}
             />
             <CycleInput
-              label={locale.createCharacterHairStyle}
+              label={locale.createCharacter.hairStyle}
               value={hairStyle}
               min={MIN_HAIR_STYLE}
               max={MAX_HAIR_STYLE}
               onChange={setHairStyle}
             />
             <CycleInput
-              label={locale.createCharacterHairColor}
+              label={locale.createCharacter.hairColor}
               value={hairColor}
               min={MIN_HAIR_COLOR}
               max={MAX_HAIR_COLOR - 1}
@@ -172,7 +172,7 @@ export function CreateCharacter() {
               onChange={setHairColor}
             />
             <CycleInput
-              label={locale.createCharacterSkin}
+              label={locale.createCharacter.skin}
               value={skin}
               min={MIN_SKIN}
               max={MAX_SKIN - 1}
@@ -181,10 +181,10 @@ export function CreateCharacter() {
             />
             <div class='card-actions'>
               <Button type='submit' variant='primary'>
-                {locale.btnCreateCharacter}
+                {locale.createCharacter.btn}
               </Button>
               <Button variant='ghost' onClick={cancel}>
-                {locale.btnCancel}
+                {locale.shared.btnCancel}
               </Button>
             </div>
           </form>

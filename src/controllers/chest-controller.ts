@@ -144,7 +144,7 @@ export class ChestController {
         title,
         itemName,
         inventoryItem.amount,
-        this.client.locale.chestDeposit,
+        this.client.locale.chest.deposit,
         (amount) => {
           if (amount !== null && amount > 0) send(amount);
         },

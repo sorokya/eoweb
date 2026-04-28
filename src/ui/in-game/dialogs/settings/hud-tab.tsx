@@ -70,13 +70,13 @@ export function HudTab() {
 
   const widgetLabel = (id: HudWidgetId): string => {
     const map: Record<HudWidgetId, string> = {
-      character: locale.settingsHudWidgetCharacter,
-      hp: locale.settingsHudWidgetHp,
-      tp: locale.settingsHudWidgetTp,
-      tnl: locale.settingsHudWidgetTnl,
-      weight: locale.settingsHudWidgetWeight,
-      gold: locale.wordGold,
-      ping: locale.settingsHudWidgetPing,
+      character: locale.settings.hudWidgetCharacter,
+      hp: locale.settings.hudWidgetHp,
+      tp: locale.settings.hudWidgetTp,
+      tnl: locale.settings.hudWidgetTnl,
+      weight: locale.settings.hudWidgetWeight,
+      gold: locale.shared.wordGold,
+      ping: locale.settings.hudWidgetPing,
     };
     return map[id];
   };
@@ -85,10 +85,10 @@ export function HudTab() {
     value: p,
     label:
       p === 'left'
-        ? locale.settingsHudLeft
+        ? locale.settings.hudLeft
         : p === 'center'
-          ? locale.settingsHudCenter
-          : locale.settingsHudRight,
+          ? locale.settings.hudCenter
+          : locale.settings.hudRight,
   }));
 
   const sortedWidgets = [...widgets].sort((a, b) => {
@@ -99,14 +99,14 @@ export function HudTab() {
 
   return (
     <div class='flex flex-col gap-2 p-2'>
-      <p class='text-xs opacity-50'>{locale.settingsHudPerCharNote}</p>
+      <p class='text-xs opacity-50'>{locale.settings.hudPerCharNote}</p>
       <div class='divider my-0' />
       {/* Header */}
       <div class='grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 font-semibold text-xs opacity-60'>
-        <span>{locale.settingsHudWidget}</span>
-        <span class='text-center'>{locale.settingsHudVisible}</span>
-        <span>{locale.settingsHudPosition}</span>
-        <span>{locale.settingsHudOrder}</span>
+        <span>{locale.settings.hudWidget}</span>
+        <span class='text-center'>{locale.settings.hudVisible}</span>
+        <span>{locale.settings.hudPosition}</span>
+        <span>{locale.settings.hudOrder}</span>
       </div>
       {sortedWidgets.map((w) => {
         const peers = sortedWidgets.filter((p) => p.position === w.position);
@@ -140,7 +140,7 @@ export function HudTab() {
                 class='btn btn-xs btn-ghost p-0.5'
                 disabled={!canMoveUp}
                 onClick={() => moveOrder(w.id, -1)}
-                aria-label={locale.settingsMoveUp}
+                aria-label={locale.settings.moveUp}
               >
                 <FaArrowUp size={10} />
               </button>
@@ -149,7 +149,7 @@ export function HudTab() {
                 class='btn btn-xs btn-ghost p-0.5'
                 disabled={!canMoveDown}
                 onClick={() => moveOrder(w.id, 1)}
-                aria-label={locale.settingsMoveDown}
+                aria-label={locale.settings.moveDown}
               >
                 <FaArrowDown size={10} />
               </button>

@@ -54,7 +54,7 @@ function CharacterWidget({ stats }: WidgetProps) {
         {capitalize(stats.name)}
       </span>
       <span class={`text-[10px] leading-tight ${HUD_TEXT_MUTED}`}>
-        {locale.hudLvl} {stats.level}
+        {locale.hud.lvl} {stats.level}
       </span>
     </div>
   );
@@ -73,7 +73,7 @@ function HpWidget({ stats }: WidgetProps) {
           <FaHeart size={12} />
         </span>
       }
-      label={locale.hudHP}
+      label={locale.hud.hp}
       color={hpColor(hpPct)}
     />
   );
@@ -92,7 +92,7 @@ function TpWidget({ stats }: WidgetProps) {
           <GrMagic size={12} />
         </span>
       }
-      label={locale.hudTP}
+      label={locale.hud.tp}
       color={tpColor(tpPct)}
     />
   );
@@ -113,7 +113,7 @@ function TnlWidget({ stats }: WidgetProps) {
           <BiSolidStar size={12} />
         </span>
       }
-      label={locale.hudTNL}
+      label={locale.hud.tnl}
       color='warning'
     />
   );
@@ -151,7 +151,7 @@ function GoldWidget({ stats }: WidgetProps) {
         <FaCoins size={12} />
       </span>
       {formatBigNumber(stats.gold)}
-      <span class='hidden md:inline'>{locale.wordGold}</span>
+      <span class='hidden md:inline'>{locale.shared.wordGold}</span>
     </div>
   );
 }
@@ -202,7 +202,7 @@ function PingWidget() {
       </span>
       <span class={colorClass}>
         {ping !== null ? ping : '---'}
-        {locale.pingMs}
+        {locale.ping.ms}
       </span>
     </button>
   );

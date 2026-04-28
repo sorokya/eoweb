@@ -63,7 +63,7 @@ export class InnController {
       this.client.npcController.interactNpcIndex,
     );
     const record = npc ? this.client.getEnfRecordById(npc.id) : null;
-    this.npcName = record?.name ?? this.client.locale.innKeeperTitle;
+    this.npcName = record?.name ?? this.client.locale.innKeeper.title;
 
     for (const cb of this.openedSubscribers)
       cb(this.npcName, currentHomeId, questions);
@@ -72,7 +72,7 @@ export class InnController {
   handleCitizenshipResult(questionsWrong: number): void {
     if (questionsWrong === 0) {
       this.currentHomeId = this.behaviorId;
-      const msg = this.client.locale.innKeeperBecameCitizenMsg;
+      const msg = this.client.locale.innKeeper.becameCitizenMsg;
       this.client.toastController.showSuccess(msg);
       this.client.chatController.notifyServerChat({
         message: msg,
@@ -80,7 +80,7 @@ export class InnController {
       });
       for (const cb of this.closeSubscribers) cb();
     } else {
-      const msg = this.client.locale.innKeeperWrongAnswersMsg;
+      const msg = this.client.locale.innKeeper.wrongAnswersMsg;
       this.client.toastController.showError(msg);
       this.client.chatController.notifyServerChat({
         message: msg,
@@ -92,7 +92,7 @@ export class InnController {
   handleSleepCost(cost: number): void {
     this.client.alertController.showConfirm(
       this.client.getResourceString(EOResourceID.INN_SLEEP),
-      `${this.client.getResourceString(EOResourceID.INN_A_GOOD_NIGHT_REST_WILL_COST_YOU)} ${cost.toLocaleString()} ${this.client.locale.wordGold}?`,
+      `${this.client.getResourceString(EOResourceID.INN_A_GOOD_NIGHT_REST_WILL_COST_YOU)} ${cost.toLocaleString()} ${this.client.locale.shared.wordGold}?`,
       (ok) => {
         if (ok) this.sleepAccept();
       },
@@ -101,7 +101,7 @@ export class InnController {
 
   handleSleepConfirmed(goldAmount: number): void {
     this.client.inventoryController.setItem(GOLD_ITEM_ID, goldAmount);
-    const msg = this.client.locale.innKeeperSleptMsg;
+    const msg = this.client.locale.innKeeper.sleptMsg;
     this.client.toastController.showSuccess(msg);
     this.client.chatController.notifyServerChat({
       message: msg,
@@ -116,7 +116,7 @@ export class InnController {
   handleRemoved(replyCode: InnUnsubscribeReply): void {
     if (replyCode === InnUnsubscribeReply.Unsubscribed) {
       this.currentHomeId = 0;
-      const msg = this.client.locale.innKeeperGaveUpCitizenshipMsg;
+      const msg = this.client.locale.innKeeper.gaveUpCitizenshipMsg;
       this.client.toastController.showSuccess(msg);
       this.client.chatController.notifyServerChat({
         message: msg,
@@ -124,7 +124,7 @@ export class InnController {
       });
       for (const cb of this.closeSubscribers) cb();
     } else {
-      const msg = this.client.locale.innKeeperNotCitizenMsg;
+      const msg = this.client.locale.innKeeper.notCitizenMsg;
       this.client.toastController.showError(msg);
       this.client.chatController.notifyServerChat({
         message: msg,
@@ -143,8 +143,8 @@ export class InnController {
 
   giveUpCitizenship(): void {
     this.client.alertController.showConfirm(
-      this.client.locale.innKeeperConfirmGiveUpTitle,
-      this.client.locale.innKeeperConfirmGiveUpMsg,
+      this.client.locale.innKeeper.confirmGiveUpTitle,
+      this.client.locale.innKeeper.confirmGiveUpMsg,
       (confirmed) => {
         if (confirmed) {
           const packet = new CitizenRemoveClientPacket();

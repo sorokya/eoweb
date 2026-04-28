@@ -827,7 +827,7 @@ export class Client {
   ): string | null {
     let killerName: string | undefined;
     if (data.killerId === this.playerId) {
-      killerName = this.locale.wordYou;
+      killerName = this.locale.shared.wordYou;
     } else {
       killerName = this.partyController.members.find(
         (m) => m.playerId === data.killerId,
@@ -849,7 +849,7 @@ export class Client {
     }
 
     const messages = [
-      formatLocaleString(this.locale.killedNpc, {
+      formatLocaleString(this.locale.messages.killedNpc, {
         killer: killerName,
         npc: npcName,
       }),
@@ -857,7 +857,7 @@ export class Client {
 
     if (data.killerId === this.playerId && exp > 0) {
       messages.push(
-        formatLocaleString(this.locale.gainedExp, {
+        formatLocaleString(this.locale.messages.gainedExp, {
           exp: exp.toLocaleString(),
         }),
       );
@@ -865,7 +865,7 @@ export class Client {
 
     if (levelUp) {
       messages.push(
-        formatLocaleString(this.locale.levelUp, {
+        formatLocaleString(this.locale.messages.levelUp, {
           level: this.level.toLocaleString(),
         }),
       );
@@ -873,12 +873,12 @@ export class Client {
 
     if (data.dropId && data.dropAmount) {
       const itemRecord = this.getEifRecordById(data.dropId);
-      const itemName = itemRecord?.name ?? this.locale.wordUnknown;
+      const itemName = itemRecord?.name ?? this.locale.shared.wordUnknown;
       if (itemName) {
         const amountText =
           data.dropAmount > 1 ? `${data.dropAmount.toLocaleString()} ` : '';
         messages.push(
-          formatLocaleString(this.locale.npcDrop, {
+          formatLocaleString(this.locale.messages.npcDrop, {
             item: `${amountText}${itemName}`,
           }),
         );
@@ -890,14 +890,14 @@ export class Client {
 
   getExpShareMessage(exp: number, levelUp = false): string {
     const messages = [
-      formatLocaleString(this.locale.expShare, {
+      formatLocaleString(this.locale.messages.expShare, {
         exp: exp.toLocaleString(),
       }),
     ];
 
     if (levelUp) {
       messages.push(
-        formatLocaleString(this.locale.levelUp, {
+        formatLocaleString(this.locale.messages.levelUp, {
           level: this.level.toLocaleString(),
         }),
       );

@@ -35,10 +35,10 @@ export function InputDialog({
         </div>
         <div class='modal-action'>
           <Button variant='primary' onClick={() => onConfirm(value)}>
-            {locale.btnOK}
+            {locale.shared.btnOK}
           </Button>
           <Button variant='ghost' onClick={onCancel}>
-            {locale.btnCancel}
+            {locale.shared.btnCancel}
           </Button>
         </div>
       </div>

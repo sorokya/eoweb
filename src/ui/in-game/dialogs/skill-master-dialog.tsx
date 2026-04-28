@@ -80,7 +80,7 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
   if (skills.length === 0) {
     return (
       <p class='py-6 text-center text-base-content/50 text-sm'>
-        {locale.skillMasterNoSkillsToLearn}
+        {locale.skillMaster.noSkillsToLearn}
       </p>
     );
   }
@@ -92,7 +92,7 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
         const iconId = record?.iconId ?? null;
         const name =
           record?.name ??
-          locale.itemFallbackName.replace('{id}', String(skill.id));
+          locale.shared.itemFallbackName.replace('{id}', String(skill.id));
 
         const playerLevel = client.level;
         const playerClassId = client.classId;
@@ -143,7 +143,7 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
 
         if (skill.levelRequirement > 0) {
           reqs.push({
-            label: locale.skillMasterLevelReq,
+            label: locale.skillMaster.levelReq,
             value: String(skill.levelRequirement),
             met: levelOk,
           });
@@ -153,44 +153,44 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
             client.getEcfRecordById(skill.classRequirement)?.name ??
             `Class ${skill.classRequirement}`;
           reqs.push({
-            label: locale.skillMasterClassReq,
+            label: locale.skillMaster.classReq,
             value: className,
             met: classOk,
           });
         }
         if (stats.str > 0)
           reqs.push({
-            label: locale.skillMasterStatStr,
+            label: locale.skillMaster.statStr,
             value: String(stats.str),
             met: strOk,
           });
         if (stats.intl > 0)
           reqs.push({
-            label: locale.skillMasterStatIntl,
+            label: locale.skillMaster.statIntl,
             value: String(stats.intl),
             met: intlOk,
           });
         if (stats.wis > 0)
           reqs.push({
-            label: locale.skillMasterStatWis,
+            label: locale.skillMaster.statWis,
             value: String(stats.wis),
             met: wisOk,
           });
         if (stats.agi > 0)
           reqs.push({
-            label: locale.skillMasterStatAgi,
+            label: locale.skillMaster.statAgi,
             value: String(stats.agi),
             met: agiOk,
           });
         if (stats.con > 0)
           reqs.push({
-            label: locale.skillMasterStatCon,
+            label: locale.skillMaster.statCon,
             value: String(stats.con),
             met: conOk,
           });
         if (stats.cha > 0)
           reqs.push({
-            label: locale.skillMasterStatCha,
+            label: locale.skillMaster.statCha,
             value: String(stats.cha),
             met: chaOk,
           });
@@ -221,7 +221,7 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
                     disabled={!canLearn}
                   >
                     <FaBook size={11} />
-                    {locale.skillMasterLearnBtn}
+                    {locale.skillMaster.learnBtn}
                   </Button>
                 )}
               </div>
@@ -232,12 +232,12 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
                 {skill.cost > 0 && (
                   <div class='flex items-center gap-1'>
                     <span class='text-base-content/60 text-xs'>
-                      {locale.skillMasterCost}:
+                      {locale.skillMaster.cost}:
                     </span>
                     <span
                       class={`font-medium text-xs tabular-nums ${goldOk ? 'text-success' : 'text-error'}`}
                     >
-                      {skill.cost.toLocaleString()} {locale.skillMasterGold}
+                      {skill.cost.toLocaleString()} {locale.skillMaster.gold}
                     </span>
                   </div>
                 )}
@@ -266,13 +266,16 @@ function LearnTab({ skills }: { skills: SkillLearn[] }) {
                 {prereqSkillIds.length > 0 && (
                   <div class='space-y-0.5'>
                     <p class='text-base-content/60 text-xs'>
-                      {locale.skillMasterSkillReq}:
+                      {locale.skillMaster.skillReq}:
                     </p>
                     {prereqSkillIds.map((reqId) => {
                       const reqRecord = client.getEsfRecordById(reqId);
                       const reqName =
                         reqRecord?.name ??
-                        locale.itemFallbackName.replace('{id}', String(reqId));
+                        locale.shared.itemFallbackName.replace(
+                          '{id}',
+                          String(reqId),
+                        );
                       const reqIconId = reqRecord?.iconId ?? null;
                       const reqMet = client.spells.some((s) => s.id === reqId);
                       return (
@@ -346,7 +349,7 @@ function ForgetTab() {
     <div class='flex flex-col gap-2 p-2'>
       {spells.length === 0 ? (
         <p class='py-6 text-center text-base-content/50 text-sm'>
-          {locale.skillMasterNoSkillsLearned}
+          {locale.skillMaster.noSkillsLearned}
         </p>
       ) : (
         <div class='space-y-1'>
@@ -355,7 +358,7 @@ function ForgetTab() {
             const iconId = record?.iconId ?? null;
             const name =
               record?.name ??
-              locale.itemFallbackName.replace('{id}', String(spell.id));
+              locale.shared.itemFallbackName.replace('{id}', String(spell.id));
 
             return (
               <div
@@ -371,7 +374,7 @@ function ForgetTab() {
                   onClick={() => handleForget(spell.id)}
                 >
                   <FaTimesCircle size={11} />
-                  {locale.skillMasterForgetBtn}
+                  {locale.skillMaster.forgetBtn}
                 </Button>
               </div>
             );
@@ -387,7 +390,7 @@ function ForgetTab() {
           onClick={handleReset}
         >
           <FaRecycle size={12} />
-          {locale.skillMasterResetBtn}
+          {locale.skillMaster.resetBtn}
         </Button>
       </div>
     </div>
@@ -430,7 +433,7 @@ export function SkillMasterDialog() {
       label: (
         <span class='flex items-center gap-1'>
           <FaBook size={11} />
-          {locale.skillMasterLearnTab} ({learnCount})
+          {locale.skillMaster.learnTab} ({learnCount})
         </span>
       ),
     },
@@ -439,7 +442,7 @@ export function SkillMasterDialog() {
       label: (
         <span class='flex items-center gap-1'>
           <FaSkullCrossbones size={11} />
-          {locale.skillMasterForgetTab}
+          {locale.skillMaster.forgetTab}
         </span>
       ),
     },
@@ -448,7 +451,7 @@ export function SkillMasterDialog() {
   return (
     <DialogBase
       id='skillMaster'
-      title={masterName || locale.skillMasterLearnTab}
+      title={masterName || locale.skillMaster.learnTab}
       size='md'
     >
       <div

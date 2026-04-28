@@ -75,7 +75,8 @@ function ChestItemSlot({ item, onTake }: ChestItemSlotProps) {
   })();
 
   const name =
-    record?.name ?? locale.itemFallbackName.replace('{id}', String(item.id));
+    record?.name ??
+    locale.shared.itemFallbackName.replace('{id}', String(item.id));
 
   return (
     <div
@@ -183,7 +184,7 @@ export function ChestDialog() {
   const isDragTarget = !!currentDrag && currentDrag.source === 'inventory';
 
   return (
-    <DialogBase id='chest' title={locale.chestTitle} size='md'>
+    <DialogBase id='chest' title={locale.chest.title} size='md'>
       <div
         data-chest-drop
         class={`relative min-h-20 p-2 transition-colors ${
@@ -193,7 +194,9 @@ export function ChestDialog() {
         }`}
       >
         {items.length === 0 ? (
-          <p class='py-4 text-center text-sm opacity-50'>{locale.chestEmpty}</p>
+          <p class='py-4 text-center text-sm opacity-50'>
+            {locale.chest.empty}
+          </p>
         ) : (
           <div class='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'>
             {items.map((item, i) => (
@@ -209,7 +212,7 @@ export function ChestDialog() {
         {isDragTarget && (
           <div class='pointer-events-none absolute inset-0 flex items-center justify-center'>
             <span class='rounded bg-primary/20 px-2 py-1 font-semibold text-primary text-xs'>
-              {locale.chestDeposit}
+              {locale.chest.deposit}
             </span>
           </div>
         )}

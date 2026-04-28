@@ -94,7 +94,7 @@ function RegistrationTab() {
       <div class='flex flex-col gap-4 p-2'>
         <div class={`rounded-lg border ${UI_PANEL_BORDER} p-3`}>
           <p class='mb-1 font-medium text-base-content/70 text-xs'>
-            {locale.guildCurrentGuild}
+            {locale.guild.currentGuild}
           </p>
           <p class='font-bold text-sm'>{client.guildName}</p>
           <p class='text-base-content/70 text-xs'>
@@ -107,8 +107,8 @@ function RegistrationTab() {
             class='w-full'
             onClick={() => {
               client.alertController.showConfirm(
-                locale.guildLeaveConfirmTitle,
-                locale.guildLeaveConfirmMessage,
+                locale.guild.leaveConfirmTitle,
+                locale.guild.leaveConfirmMessage,
                 (confirmed) => {
                   if (confirmed) client.guildController.leaveGuild();
                 },
@@ -116,7 +116,7 @@ function RegistrationTab() {
             }}
           >
             <FaSignOutAlt size={12} />
-            {locale.guildLeave}
+            {locale.guild.leave}
           </Button>
           {client.guildRank === 0 && (
             <Button
@@ -124,8 +124,8 @@ function RegistrationTab() {
               class='w-full'
               onClick={() => {
                 client.alertController.showConfirm(
-                  locale.guildDisbandConfirmTitle,
-                  locale.guildDisbandConfirmMessage,
+                  locale.guild.disbandConfirmTitle,
+                  locale.guild.disbandConfirmMessage,
                   (confirmed) => {
                     if (confirmed) client.guildController.disbandGuild();
                   },
@@ -133,7 +133,7 @@ function RegistrationTab() {
               }}
             >
               <FaTrash size={12} />
-              {locale.guildDisband}
+              {locale.guild.disband}
             </Button>
           )}
         </div>
@@ -144,11 +144,11 @@ function RegistrationTab() {
   return (
     <div class='flex flex-col gap-4 p-2'>
       <section class={`rounded-lg border ${UI_PANEL_BORDER} p-3`}>
-        <p class='mb-2 font-semibold text-sm'>{locale.guildJoinTitle}</p>
+        <p class='mb-2 font-semibold text-sm'>{locale.guild.joinTitle}</p>
         <div class='flex flex-col gap-2'>
           <LabeledInput
             id='guild-join-tag'
-            label={locale.guildJoinTag}
+            label={locale.guild.joinTag}
             value={joinTag}
             maxLength={3}
             filterRegex={/[A-Z]/}
@@ -156,7 +156,7 @@ function RegistrationTab() {
           />
           <LabeledInput
             id='guild-join-recruiter'
-            label={locale.guildJoinRecruiter}
+            label={locale.guild.joinRecruiter}
             value={joinRecruiter}
             onChange={setJoinRecruiter}
           />
@@ -170,7 +170,7 @@ function RegistrationTab() {
               setJoinRecruiter('');
             }}
           >
-            {locale.guildJoinSubmit}
+            {locale.guild.joinSubmit}
           </Button>
         </div>
       </section>
@@ -196,13 +196,13 @@ function CreateTab() {
   if (client.guildController.state === GuildDialogState.CreateWaiting) {
     return (
       <div class='flex flex-col gap-3 p-2'>
-        <p class='font-semibold text-sm'>{locale.guildCreatingTitle}</p>
+        <p class='font-semibold text-sm'>{locale.guild.creatingTitle}</p>
         <p class='text-base-content/70 text-xs'>
-          {locale.guildCreatingWaiting}
+          {locale.guild.creatingWaiting}
         </p>
         <div>
           <p class='mb-1 font-medium text-base-content/70 text-xs'>
-            {locale.guildCreatingMembers}
+            {locale.guild.creatingMembers}
           </p>
           <ul class='flex flex-col gap-1'>
             {client.guildController.createMembers.map((m) => (
@@ -219,11 +219,11 @@ function CreateTab() {
   return (
     <div class='flex flex-col gap-4 p-2'>
       <section class={`rounded-lg border ${UI_PANEL_BORDER} p-3`}>
-        <p class='mb-2 font-semibold text-sm'>{locale.guildCreateTitle}</p>
+        <p class='mb-2 font-semibold text-sm'>{locale.guild.createTitle}</p>
         <div class='flex flex-col gap-2'>
           <LabeledInput
             id='guild-create-tag'
-            label={locale.guildCreateTag}
+            label={locale.guild.createTag}
             value={createTag}
             maxLength={3}
             filterRegex={/[a-zA-Z]/}
@@ -231,7 +231,7 @@ function CreateTab() {
           />
           <LabeledInput
             id='guild-create-name'
-            label={locale.guildCreateName}
+            label={locale.guild.createName}
             value={createName}
             onChange={setCreateName}
           />
@@ -240,7 +240,7 @@ function CreateTab() {
               for='guild-create-desc'
               class='mb-1 block text-base-content/70 text-xs'
             >
-              {locale.guildCreateDescription}
+              {locale.guild.createDescription}
             </label>
             <textarea
               id='guild-create-desc'
@@ -272,7 +272,7 @@ function CreateTab() {
               setCreateDescription('');
             }}
           >
-            {locale.guildCreateSubmit}
+            {locale.guild.createSubmit}
           </Button>
         </div>
       </section>
@@ -361,7 +361,7 @@ function ManagementTab() {
   if (!isInGuild) {
     return (
       <div class='flex items-center justify-center p-8 text-base-content/50 text-sm'>
-        {locale.guildNotMember}
+        {locale.guild.notMember}
       </div>
     );
   }
@@ -374,7 +374,7 @@ function ManagementTab() {
             for='guild-desc'
             class='mb-1 block text-base-content/70 text-xs'
           >
-            {locale.guildManageDescription}
+            {locale.guild.manageDescription}
           </label>
           <textarea
             id='guild-desc'
@@ -397,7 +397,7 @@ function ManagementTab() {
             }}
           >
             <FaArrowLeft size={11} />
-            {locale.guildBack}
+            {locale.guild.back}
           </Button>
           <Button
             variant={['sm', 'primary']}
@@ -408,7 +408,7 @@ function ManagementTab() {
               setView('menu');
             }}
           >
-            {locale.guildSave}
+            {locale.guild.save}
           </Button>
         </div>
       </div>
@@ -422,7 +422,7 @@ function ManagementTab() {
           {ranks.map((r, i) => (
             <div key={i} class='flex items-center gap-2'>
               <span class='w-14 shrink-0 text-base-content/70 text-xs'>
-                {locale.guildRankLabel.replace('{n}', String(i + 1))}
+                {locale.guild.rankLabel.replace('{n}', String(i + 1))}
               </span>
               <input
                 type='text'
@@ -448,7 +448,7 @@ function ManagementTab() {
             }}
           >
             <FaArrowLeft size={11} />
-            {locale.guildBack}
+            {locale.guild.back}
           </Button>
           <Button
             variant={['sm', 'primary']}
@@ -459,7 +459,7 @@ function ManagementTab() {
               setView('menu');
             }}
           >
-            {locale.guildSave}
+            {locale.guild.save}
           </Button>
         </div>
       </div>
@@ -474,12 +474,12 @@ function ManagementTab() {
     return (
       <div class='flex flex-col gap-3 p-2'>
         <div class={`rounded-lg border ${UI_PANEL_BORDER} p-3`}>
-          <p class='text-base-content/70 text-xs'>{locale.guildBankBalance}</p>
+          <p class='text-base-content/70 text-xs'>{locale.guild.bankBalance}</p>
           <p class='font-bold text-sm'>{bankGold.toLocaleString()}</p>
         </div>
         <LabeledInput
           id='guild-deposit'
-          label={`${locale.guildBankAmount} (min ${GUILD_MIN_DEPOSIT.toLocaleString()})`}
+          label={`${locale.guild.bankAmount} (min ${GUILD_MIN_DEPOSIT.toLocaleString()})`}
           value={depositAmount}
           type='number'
           onChange={setDepositAmount}
@@ -494,7 +494,7 @@ function ManagementTab() {
             }}
           >
             <FaArrowLeft size={11} />
-            {locale.guildBack}
+            {locale.guild.back}
           </Button>
           <Button
             variant={['sm', 'primary']}
@@ -506,7 +506,7 @@ function ManagementTab() {
             }}
           >
             <FaCoins size={11} />
-            {locale.guildBankDeposit}
+            {locale.guild.bankDeposit}
           </Button>
         </div>
       </div>
@@ -521,7 +521,7 @@ function ManagementTab() {
             for='guild-kick-name'
             class='mb-1 block text-base-content/70 text-xs'
           >
-            {locale.guildKickName}
+            {locale.guild.kickName}
           </label>
           <select
             id='guild-kick-name'
@@ -544,7 +544,7 @@ function ManagementTab() {
             onClick={() => setView('menu')}
           >
             <FaArrowLeft size={11} />
-            {locale.guildBack}
+            {locale.guild.back}
           </Button>
           <Button
             variant={['sm', 'error']}
@@ -552,7 +552,7 @@ function ManagementTab() {
             disabled={!kickName.trim()}
             onClick={() => {
               client.alertController.showConfirm(
-                locale.guildManageKick,
+                locale.guild.manageKick,
                 kickName,
                 (confirmed) => {
                   if (confirmed) {
@@ -565,7 +565,7 @@ function ManagementTab() {
             }}
           >
             <FaUserMinus size={11} />
-            {locale.guildKickSubmit}
+            {locale.guild.kickSubmit}
           </Button>
         </div>
       </div>
@@ -583,7 +583,7 @@ function ManagementTab() {
             for='guild-assign-name'
             class='mb-1 block text-base-content/70 text-xs'
           >
-            {locale.guildAssignRankName}
+            {locale.guild.assignRankName}
           </label>
           <select
             id='guild-assign-name'
@@ -606,7 +606,7 @@ function ManagementTab() {
             for='guild-assign-rank'
             class='mb-1 block text-base-content/70 text-xs'
           >
-            {locale.guildAssignRankValue}
+            {locale.guild.assignRankValue}
           </label>
           <select
             id='guild-assign-rank'
@@ -637,7 +637,7 @@ function ManagementTab() {
             onClick={() => setView('menu')}
           >
             <FaArrowLeft size={11} />
-            {locale.guildBack}
+            {locale.guild.back}
           </Button>
           <Button
             variant={['sm', 'primary']}
@@ -651,7 +651,7 @@ function ManagementTab() {
             }}
           >
             <FaUserShield size={11} />
-            {locale.guildAssignRankSubmit}
+            {locale.guild.assignRankSubmit}
           </Button>
         </div>
       </div>
@@ -667,7 +667,7 @@ function ManagementTab() {
         onClick={() => client.guildController.requestDescriptionInfo()}
       >
         <FaBuilding size={16} />
-        <span class='text-xs'>{locale.guildManageDescription}</span>
+        <span class='text-xs'>{locale.guild.manageDescription}</span>
       </Button>
       <Button
         variant={['sm', 'ghost']}
@@ -678,7 +678,7 @@ function ManagementTab() {
         }}
       >
         <FaStar size={16} />
-        <span class='text-xs'>{locale.guildManageRanks}</span>
+        <span class='text-xs'>{locale.guild.manageRanks}</span>
       </Button>
       <Button
         variant={['sm', 'ghost']}
@@ -686,7 +686,7 @@ function ManagementTab() {
         onClick={() => client.guildController.requestBankInfo()}
       >
         <FaCoins size={16} />
-        <span class='text-xs'>{locale.guildManageBank}</span>
+        <span class='text-xs'>{locale.guild.manageBank}</span>
       </Button>
       <Button
         variant={['sm', 'ghost']}
@@ -697,7 +697,7 @@ function ManagementTab() {
         }}
       >
         <FaUserMinus size={16} />
-        <span class='text-xs'>{locale.guildManageKick}</span>
+        <span class='text-xs'>{locale.guild.manageKick}</span>
       </Button>
       <Button
         variant={['sm', 'ghost']}
@@ -713,7 +713,7 @@ function ManagementTab() {
         }}
       >
         <FaUserShield size={16} />
-        <span class='text-xs'>{locale.guildManageAssignRank}</span>
+        <span class='text-xs'>{locale.guild.manageAssignRank}</span>
       </Button>
     </div>
   );
@@ -742,7 +742,7 @@ function LookupTab() {
         <input
           type='text'
           class={`input input-sm input-bordered flex-1 border ${UI_PANEL_BORDER}`}
-          placeholder={locale.guildLookupSearch}
+          placeholder={locale.guild.lookupSearch}
           value={search}
           onKeyDown={(e) => e.stopPropagation()}
           onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
@@ -753,7 +753,7 @@ function LookupTab() {
           onClick={() => client.guildController.requestGuildInfo(search)}
         >
           <FaSearch size={11} />
-          {locale.guildLookupInfo}
+          {locale.guild.lookupInfo}
         </Button>
         <Button
           variant={['sm', 'ghost']}
@@ -761,7 +761,7 @@ function LookupTab() {
           onClick={() => client.guildController.requestMemberList(search)}
         >
           <FaList size={11} />
-          {locale.guildLookupMembers}
+          {locale.guild.lookupMembers}
         </Button>
       </div>
 
@@ -776,21 +776,21 @@ function LookupTab() {
             </div>
             <div class='text-right'>
               <p class='text-base-content/70 text-xs'>
-                {locale.guildLookupCreated}
+                {locale.guild.lookupCreated}
               </p>
               <p class='text-xs'>{cachedInfo.createDate}</p>
             </div>
           </div>
           <div>
             <p class='mb-1 text-base-content/70 text-xs'>
-              {locale.guildLookupDescription}
+              {locale.guild.lookupDescription}
             </p>
             <p class='text-xs'>{cachedInfo.description}</p>
           </div>
           <div class='flex gap-4 text-xs'>
             <span>
               <span class='text-base-content/70'>
-                {locale.guildLookupWealth}:{' '}
+                {locale.guild.lookupWealth}:{' '}
               </span>
               {cachedInfo.wealth}
             </span>
@@ -798,7 +798,7 @@ function LookupTab() {
           {cachedInfo.ranks.length > 0 && (
             <div>
               <p class='mb-1 text-base-content/70 text-xs'>
-                {locale.guildLookupStaff}
+                {locale.guild.lookupStaff}
               </p>
               <div class='flex flex-col gap-0.5'>
                 {cachedInfo.staff.map((s, i) => (
@@ -820,8 +820,8 @@ function LookupTab() {
           <table class='table-xs table w-full'>
             <thead class={`sticky top-0 ${UI_STICKY_BG}`}>
               <tr>
-                <th>{locale.guildLookupMember}</th>
-                <th>{locale.guildLookupRank}</th>
+                <th>{locale.guild.lookupMember}</th>
+                <th>{locale.guild.lookupRank}</th>
               </tr>
             </thead>
             <tbody>
@@ -870,7 +870,7 @@ export function GuildDialog() {
       label: (
         <span class='flex items-center gap-1'>
           <FaUsers size={11} />
-          {locale.guildTabRegistration}
+          {locale.guild.tabRegistration}
         </span>
       ),
     },
@@ -881,7 +881,7 @@ export function GuildDialog() {
             label: (
               <span class='flex items-center gap-1'>
                 <FaPlus size={11} />
-                {locale.guildTabCreate}
+                {locale.guild.tabCreate}
               </span>
             ),
           },
@@ -894,7 +894,7 @@ export function GuildDialog() {
             label: (
               <span class='flex items-center gap-1'>
                 <FaCog size={11} />
-                {locale.guildTabManagement}
+                {locale.guild.tabManagement}
               </span>
             ),
           },
@@ -905,14 +905,14 @@ export function GuildDialog() {
       label: (
         <span class='flex items-center gap-1'>
           <FaSearch size={11} />
-          {locale.guildTabLookup}
+          {locale.guild.tabLookup}
         </span>
       ),
     },
   ];
 
   return (
-    <DialogBase id='guild' title={locale.guildTitle} size='md'>
+    <DialogBase id='guild' title={locale.guild.title} size='md'>
       <Tabs
         items={allTabs}
         activeId={activeTab}

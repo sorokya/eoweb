@@ -85,7 +85,8 @@ function LockerItemSlot({ item, onTake }: LockerItemSlotProps) {
   const lastTapRef = useRef(0);
 
   const name =
-    record?.name ?? locale.itemFallbackName.replace('{id}', String(item.id));
+    record?.name ??
+    locale.shared.itemFallbackName.replace('{id}', String(item.id));
 
   const tooltipLines = (() => {
     if (!record) return [];
@@ -204,17 +205,17 @@ function useCategoryLabel(category: FilterCategory) {
   const { locale } = useLocale();
   switch (category) {
     case 'all':
-      return locale.lockerFilterAll;
+      return locale.locker.filterAll;
     case 'weapon':
-      return locale.lockerFilterWeapon;
+      return locale.locker.filterWeapon;
     case 'armor':
-      return locale.lockerFilterArmor;
+      return locale.locker.filterArmor;
     case 'accessory':
-      return locale.lockerFilterAccessory;
+      return locale.locker.filterAccessory;
     case 'consumable':
-      return locale.lockerFilterConsumable;
+      return locale.locker.filterConsumable;
     case 'other':
-      return locale.lockerFilterOther;
+      return locale.locker.filterOther;
   }
 }
 
@@ -309,7 +310,7 @@ export function LockerDialog() {
   const isDragTarget = !!currentDrag && currentDrag.source === 'inventory';
 
   return (
-    <DialogBase id='locker' title={locale.lockerTitle} size='md'>
+    <DialogBase id='locker' title={locale.locker.title} size='md'>
       {/* Search + filter bar */}
       <div
         class={`flex flex-col gap-1 ${UI_PANEL_BORDER} border-b px-2 pt-1 pb-2`}
@@ -318,7 +319,7 @@ export function LockerDialog() {
           <FaSearch size={10} />
           <input
             type='search'
-            placeholder={locale.lockerSearchPlaceholder}
+            placeholder={locale.locker.searchPlaceholder}
             value={search}
             onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
             onKeyDown={(e) => e.stopPropagation()}
@@ -352,7 +353,7 @@ export function LockerDialog() {
       >
         {filteredItems.length === 0 ? (
           <p class='py-4 text-center text-sm opacity-50'>
-            {items.length === 0 ? locale.lockerEmpty : locale.lockerFilterAll}
+            {items.length === 0 ? locale.locker.empty : locale.locker.filterAll}
           </p>
         ) : (
           <div class='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'>
@@ -365,7 +366,7 @@ export function LockerDialog() {
         {isDragTarget && (
           <div class='pointer-events-none absolute inset-0 flex items-center justify-center'>
             <span class='rounded bg-primary/20 px-2 py-1 font-semibold text-primary text-xs'>
-              {locale.lockerDeposit}
+              {locale.locker.deposit}
             </span>
           </div>
         )}
