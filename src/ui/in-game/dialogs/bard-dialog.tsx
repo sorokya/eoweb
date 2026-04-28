@@ -54,15 +54,15 @@ export function BardDialog() {
 
   return (
     <DialogBase id='bard' title={locale.bard.title} size='sm' avoidBottom>
-      <div class='grid grid-cols-12 gap-1 p-2'>
+      <div class='grid grid-cols-12 p-2'>
         {NOTES.map((label, i) => (
           <button
             key={i}
             type='button'
-            class='btn btn-outline btn-xs h-8 min-h-0 font-mono'
+            class='btn btn-ghost btn-xs h-8 min-h-0 font-mono'
             onClick={() => handlePlay(i + 1)}
           >
-            {label}
+            {label.substring(0, 2)}
           </button>
         ))}
       </div>

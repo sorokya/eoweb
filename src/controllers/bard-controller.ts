@@ -1,15 +1,10 @@
 import { ItemType, JukeboxUseClientPacket } from 'eolib';
-
 import type { Client } from '@/client';
+import { BARD_EMOTE_ID } from '@/consts';
 import { CharacterRangedAttackAnimation, Emote } from '@/render';
-
-type NotePlayedSubscriber = (noteId: number) => void;
-
-const BARD_EMOTE_ID = 15;
 
 export class BardController {
   private client: Client;
-  private notePlayedSubscribers: NotePlayedSubscriber[] = [];
 
   constructor(client: Client) {
     this.client = client;
@@ -57,23 +52,9 @@ export class BardController {
 
     this.client.animationController.characterEmotes.set(
       playerId,
-      new Emote(BARD_EMOTE_ID as unknown as never),
+      new Emote(BARD_EMOTE_ID),
     );
 
     this.client.audioController.playNoteSfx(instrumentId, noteId);
-
-    for (const sub of this.notePlayedSubscribers) {
-      sub(noteId);
-    }
-  }
-
-  subscribeNotePlayed(cb: NotePlayedSubscriber): void {
-    this.notePlayedSubscribers.push(cb);
-  }
-
-  unsubscribeNotePlayed(cb: NotePlayedSubscriber): void {
-    this.notePlayedSubscribers = this.notePlayedSubscribers.filter(
-      (s) => s !== cb,
-    );
   }
 }
