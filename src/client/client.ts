@@ -49,6 +49,7 @@ import {
   ConfigController,
   DrunkController,
   GuildController,
+  HotbarController,
   InnController,
   InventoryController,
   ItemProtectionController,
@@ -203,6 +204,7 @@ export class Client {
   usageController: UsageController;
   tradeController: TradeController;
   guildController: GuildController;
+  hotbarController: HotbarController;
   innController: InnController;
   alertController: AlertController;
   toastController: ToastController;
@@ -339,6 +341,7 @@ export class Client {
     this.usageController = new UsageController(this);
     this.tradeController = new TradeController(this);
     this.guildController = new GuildController(this);
+    this.hotbarController = new HotbarController(this);
     this.innController = new InnController(this);
     this.marriageController = new MarriageController(this);
     this.partyController = new PartyController(this);

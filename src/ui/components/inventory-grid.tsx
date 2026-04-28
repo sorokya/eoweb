@@ -7,7 +7,7 @@ import { playSfxById, SfxId } from '@/sfx';
 import { UI_ITEM_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
-import { useHotbar, useItemDrag } from '@/ui/in-game';
+import { useItemDrag } from '@/ui/in-game';
 import { getItemMeta } from '@/utils';
 import { ItemIcon } from './item-icon';
 import { Tabs } from './tabs';
@@ -153,7 +153,6 @@ export function InventoryGrid({ itemIds }: Props) {
   const client = useClient();
   const { locale } = useLocale();
   const { startDrag, currentDrag } = useItemDrag();
-  const { setSlot } = useHotbar();
   const [activeTab, setActiveTab] = useState(0);
   const [positions, setPositions] = useState<ItemPosition[]>([]);
   const [tooltip, setTooltip] = useState<{
@@ -398,7 +397,10 @@ export function InventoryGrid({ itemIds }: Props) {
           } else if (result.type === 'hotbar-slot') {
             const record = client.getEifRecordById(item.id);
             if (record) {
-              setSlot(result.index, { type: SlotType.Item, typeId: item.id });
+              client.hotbarController.setSlot(result.index, {
+                type: SlotType.Item,
+                typeId: item.id,
+              });
             }
           } else if (result.type === 'ground') {
             if (!client.mapController.cursorInDropRange()) return;

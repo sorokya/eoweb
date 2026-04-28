@@ -138,6 +138,7 @@ function handleEnterGame(
   data: WelcomeReplyServerPacket.WelcomeCodeDataEnterGame,
 ) {
   client.motd = data.news[0];
+  client.hotbarController.load(client.name);
   client.inventoryController.items = data.items;
   client.spells = data.spells;
   client.weight = data.weight;

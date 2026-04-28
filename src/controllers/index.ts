@@ -20,6 +20,7 @@ export type {
 export { ConfigController } from './config-controller';
 export { DrunkController } from './drunk-controller';
 export { GuildController } from './guild-controller';
+export { HotbarController } from './hotbar-controller';
 export { InnController } from './inn-controller';
 export { InventoryController } from './inventory-controller';
 export { ItemProtectionController } from './item-protection-controller';

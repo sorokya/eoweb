@@ -24,7 +24,6 @@ import {
   DialogArena,
   GuildDialog,
   HotBar,
-  HotbarProvider,
   InnKeeperDialog,
   InventoryDialog,
   ItemDragProvider,
@@ -380,13 +379,11 @@ export function InGame() {
   const client = useClient();
   return (
     <ItemDragProvider>
-      <HotbarProvider>
-        <WindowManagerProvider>
-          <ChatManagerProvider characterId={client.characterId}>
-            <InGameContent />
-          </ChatManagerProvider>
-        </WindowManagerProvider>
-      </HotbarProvider>
+      <WindowManagerProvider>
+        <ChatManagerProvider characterId={client.characterId}>
+          <InGameContent />
+        </ChatManagerProvider>
+      </WindowManagerProvider>
     </ItemDragProvider>
   );
 }

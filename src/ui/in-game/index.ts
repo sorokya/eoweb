@@ -33,7 +33,6 @@ export { TradeDialog } from './dialogs/trade-dialog';
 // HUD components
 export { DesktopEmoteButton } from './hud/desktop-emote-button';
 export { HotBar } from './hud/hot-bar';
-export { HotbarProvider, useHotbar } from './hud/hotbar-context';
 export { MobileNav, NavSidebar } from './hud/nav-sidebar';
 export { PartyPanel } from './hud/party-panel';
 export { PlayerHud } from './hud/player-hud';
