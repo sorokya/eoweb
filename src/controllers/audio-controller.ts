@@ -21,7 +21,7 @@ const SPATIAL_PANNER: PannerAttributes = {
 
 export class AudioController {
   private client: Client;
-  private sfxCache = new Map<number, Howl>();
+  private sfxCache = new Map<string, Howl>();
   private spatialCache = new Map<string, Howl>();
   private ambientHowl: Howl | null = null;
 
@@ -137,7 +137,28 @@ export class AudioController {
   }
 
   /** Play a bard note SFX by instrument and note ID */
-  playNoteSfx(instrumentId: number, noteId: number, coords: Vector2): void {
+  playNoteSfx(instrumentId: number, noteId: number): void {
+    const prefix = getInstrumentSfxPrefix(instrumentId);
+    if (!prefix) return;
+
+    const key = `${prefix}${noteId}`;
+    let howl = this.sfxCache.get(key);
+    if (!howl) {
+      howl = new Howl({
+        src: [`/sfx/${prefix}${padWithZeros(noteId, 3)}.wav`],
+      });
+      this.sfxCache.set(key, howl);
+    }
+
+    const soundId = howl.play();
+    howl.volume(this.client.configController.effectVolume, soundId);
+  }
+
+  playNoteSfxAtPosition(
+    instrumentId: number,
+    noteId: number,
+    coords: Vector2,
+  ): void {
     const prefix = getInstrumentSfxPrefix(instrumentId);
     if (!prefix) return;
 
@@ -158,10 +179,11 @@ export class AudioController {
 
   /** Play a non-positional (global) sound effect. */
   playById(id: SfxId, volume = 1.0): void {
-    let howl = this.sfxCache.get(id);
+    const key = id.toString();
+    let howl = this.sfxCache.get(key);
     if (!howl) {
       howl = new Howl({ src: [this.sfxUrl(id)] });
-      this.sfxCache.set(id, howl);
+      this.sfxCache.set(key, howl);
     }
 
     const soundId = howl.play();

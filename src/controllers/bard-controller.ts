@@ -65,7 +65,12 @@ export class BardController {
       );
     }
 
-    this.client.audioController.playNoteSfx(
+    if (playerId === this.client.playerId) {
+      this.client.audioController.playNoteSfx(instrumentId, noteId);
+      return;
+    }
+
+    this.client.audioController.playNoteSfxAtPosition(
       instrumentId,
       noteId,
       character.coords,
