@@ -45,15 +45,20 @@ export class BardController {
   }
 
   playBardEffect(playerId: number, instrumentId: number, noteId: number): void {
-    this.client.animationController.characterAnimations.set(
-      playerId,
-      new CharacterRangedAttackAnimation(),
-    );
+    const existing =
+      this.client.animationController.characterAnimations.get(playerId);
 
-    this.client.animationController.characterEmotes.set(
-      playerId,
-      new Emote(BARD_EMOTE_ID),
-    );
+    if (!existing) {
+      this.client.animationController.characterAnimations.set(
+        playerId,
+        new CharacterRangedAttackAnimation(),
+      );
+
+      this.client.animationController.characterEmotes.set(
+        playerId,
+        new Emote(BARD_EMOTE_ID),
+      );
+    }
 
     this.client.audioController.playNoteSfx(instrumentId, noteId);
   }
