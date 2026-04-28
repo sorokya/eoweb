@@ -114,8 +114,8 @@ export function playSfxById(id: SfxId, volume = 1.0): void {
 }
 
 const INSTRUMENT_SFX_PREFIX: Record<number, string> = {
-  1: 'har',
-  2: 'gui',
+  49: 'har',
+  50: 'gui',
 };
 
 export function getInstrumentSfxPrefix(
