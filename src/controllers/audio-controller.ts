@@ -9,21 +9,20 @@ import { padWithZeros } from '@/utils';
 import type { Vector2 } from '@/vector';
 
 const SPATIAL_PANNER: PannerAttributes = {
-  panningModel: 'equalpower',
-  distanceModel: 'linear',
-  refDistance: 0,
-  maxDistance: 25,
+  panningModel: 'HRTF',
+  distanceModel: 'inverse',
+  refDistance: 1,
+  maxDistance: 50,
   rolloffFactor: 1,
   coneInnerAngle: 360,
-  coneOuterAngle: 0,
+  coneOuterAngle: 360,
   coneOuterGain: 0,
 };
 
 export class AudioController {
   private client: Client;
   private sfxCache = new Map<number, Howl>();
-  private spatialCache = new Map<number, Howl>();
-  private noteSfxCache = new Map<string, Howl>();
+  private spatialCache = new Map<string, Howl>();
   private ambientHowl: Howl | null = null;
 
   // MIDI state
@@ -138,21 +137,23 @@ export class AudioController {
   }
 
   /** Play a bard note SFX by instrument and note ID */
-  playNoteSfx(instrumentId: number, noteId: number, volume = 1.0): void {
+  playNoteSfx(instrumentId: number, noteId: number, coords: Vector2): void {
     const prefix = getInstrumentSfxPrefix(instrumentId);
     if (!prefix) return;
 
     const key = `${prefix}${noteId}`;
-    let howl = this.noteSfxCache.get(key);
+    let howl = this.spatialCache.get(key);
     if (!howl) {
       howl = new Howl({
         src: [`/sfx/${prefix}${padWithZeros(noteId, 3)}.wav`],
       });
-      this.noteSfxCache.set(key, howl);
+      howl.pannerAttr(SPATIAL_PANNER);
+      this.spatialCache.set(key, howl);
     }
 
     const soundId = howl.play();
-    howl.volume(volume * this.client.configController.effectVolume, soundId);
+    howl.volume(this.client.configController.effectVolume, soundId);
+    howl.pos(coords.x, 0, coords.y, soundId);
   }
 
   /** Play a non-positional (global) sound effect. */
@@ -169,11 +170,11 @@ export class AudioController {
 
   /** Play a positional sound at the given map tile coordinates. */
   playAtPosition(id: SfxId, coords: Vector2): void {
-    let howl = this.spatialCache.get(id);
+    let howl = this.spatialCache.get(`${id}`);
     if (!howl) {
       howl = new Howl({ src: [this.sfxUrl(id)] });
       howl.pannerAttr(SPATIAL_PANNER);
-      this.spatialCache.set(id, howl);
+      this.spatialCache.set(`${id}`, howl);
     }
 
     const soundId = howl.play();

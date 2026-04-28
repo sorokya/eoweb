@@ -45,6 +45,11 @@ export class BardController {
   }
 
   playBardEffect(playerId: number, instrumentId: number, noteId: number): void {
+    const character = this.client.getCharacterById(playerId);
+    if (!character) {
+      return;
+    }
+
     const existing =
       this.client.animationController.characterAnimations.get(playerId);
 
@@ -60,6 +65,10 @@ export class BardController {
       );
     }
 
-    this.client.audioController.playNoteSfx(instrumentId, noteId);
+    this.client.audioController.playNoteSfx(
+      instrumentId,
+      noteId,
+      character.coords,
+    );
   }
 }
