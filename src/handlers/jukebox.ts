@@ -1,6 +1,7 @@
 import {
   type EoReader,
   JukeboxAgreeServerPacket,
+  JukeboxMsgServerPacket,
   JukeboxOpenServerPacket,
   JukeboxPlayerServerPacket,
   JukeboxReplyServerPacket,
@@ -35,6 +36,15 @@ function handleJukeboxUse(client: Client, reader: EoReader) {
   client.jukeboxController.notifySongPlayed(packet.trackId);
 }
 
+function handleJukeboxMsg(client: Client, reader: EoReader) {
+  const packet = JukeboxMsgServerPacket.deserialize(reader);
+  client.bardController.playBardEffect(
+    packet.playerId,
+    packet.instrumentId,
+    packet.noteId,
+  );
+}
+
 export function registerJukeboxHandlers(client: Client) {
   client.bus!.registerPacketHandler(
     PacketFamily.Jukebox,
@@ -64,5 +74,11 @@ export function registerJukeboxHandlers(client: Client) {
     PacketFamily.Jukebox,
     PacketAction.Use,
     (reader) => handleJukeboxUse(client, reader),
+  );
+
+  client.bus!.registerPacketHandler(
+    PacketFamily.Jukebox,
+    PacketAction.Msg,
+    (reader) => handleJukeboxMsg(client, reader),
   );
 }

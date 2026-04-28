@@ -41,6 +41,7 @@ import {
   AuthenticationController,
   BankController,
   BarberController,
+  BardController,
   BoardController,
   ChatController,
   ChestController,
@@ -179,6 +180,7 @@ export class Client {
   audioController: AudioController;
   authenticationController: AuthenticationController;
   bankController: BankController;
+  bardController: BardController;
   barberController: BarberController;
   boardController: BoardController;
   chatController: ChatController;
@@ -316,6 +318,7 @@ export class Client {
     setAudioController(this.audioController);
     this.authenticationController = new AuthenticationController(this);
     this.bankController = new BankController(this);
+    this.bardController = new BardController(this);
     this.barberController = new BarberController(this);
     this.boardController = new BoardController(this);
     this.chatController = new ChatController(this);

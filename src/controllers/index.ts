@@ -4,6 +4,7 @@ export { AudioController } from './audio-controller';
 export { AuthenticationController } from './authentication-controller';
 export { BankController } from './bank-controller';
 export { BarberController } from './barber-controller';
+export { BardController } from './bard-controller';
 export { BoardController } from './board-controller';
 export { ChatController } from './chat-controller';
 export { ChestController } from './chest-controller';

@@ -13,6 +13,7 @@ import type { DialogId } from '@/ui/in-game';
 import {
   BankDialog,
   BarberDialog,
+  BardDialog,
   BoardDialog,
   CharacterDialog,
   ChatDialog,
@@ -55,6 +56,7 @@ import {
 
 const ALL_DIALOG_IDS: DialogId[] = [
   'bank',
+  'bard',
   'barber',
   'board',
   'guild',
@@ -82,6 +84,8 @@ function DialogById({ id }: { id: DialogId }) {
   switch (id) {
     case 'bank':
       return <BankDialog />;
+    case 'bard':
+      return <BardDialog />;
     case 'barber':
       return <BarberDialog />;
     case 'board':

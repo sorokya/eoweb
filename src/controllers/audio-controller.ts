@@ -4,7 +4,7 @@ import { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
 import processorUrl from 'spessasynth_lib/dist/spessasynth_processor.min.js?url';
 import type { Client } from '@/client';
 import { GameState } from '@/game-state';
-import type { SfxId } from '@/sfx';
+import { getInstrumentSfxPrefix, type SfxId } from '@/sfx';
 import { padWithZeros } from '@/utils';
 import type { Vector2 } from '@/vector';
 
@@ -23,6 +23,7 @@ export class AudioController {
   private client: Client;
   private sfxCache = new Map<number, Howl>();
   private spatialCache = new Map<number, Howl>();
+  private noteSfxCache = new Map<string, Howl>();
   private ambientHowl: Howl | null = null;
 
   // MIDI state
@@ -134,6 +135,24 @@ export class AudioController {
     }
 
     return nearest;
+  }
+
+  /** Play a bard note SFX by instrument and note ID */
+  playNoteSfx(instrumentId: number, noteId: number, volume = 1.0): void {
+    const prefix = getInstrumentSfxPrefix(instrumentId);
+    if (!prefix) return;
+
+    const key = `${prefix}${noteId}`;
+    let howl = this.noteSfxCache.get(key);
+    if (!howl) {
+      howl = new Howl({
+        src: [`/sfx/${prefix}${padWithZeros(noteId, 3)}.wav`],
+      });
+      this.noteSfxCache.set(key, howl);
+    }
+
+    const soundId = howl.play();
+    howl.volume(volume * this.client.configController.effectVolume, soundId);
   }
 
   /** Play a non-positional (global) sound effect. */

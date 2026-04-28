@@ -112,3 +112,14 @@ export function setAudioController(ac: SfxPlayer): void {
 export function playSfxById(id: SfxId, volume = 1.0): void {
   _player?.playById(id, volume);
 }
+
+const INSTRUMENT_SFX_PREFIX: Record<number, string> = {
+  1: 'har',
+  2: 'gui',
+};
+
+export function getInstrumentSfxPrefix(
+  instrumentId: number,
+): string | undefined {
+  return INSTRUMENT_SFX_PREFIX[instrumentId];
+}
