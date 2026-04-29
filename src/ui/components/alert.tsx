@@ -18,7 +18,7 @@ export function Alert({ title, message, onClose }: AlertProps) {
         <p class='py-4'>{message}</p>
         <div class='modal-action'>
           <Button variant='primary' onClick={onClose}>
-            {locale.btnOK}
+            {locale.shared.btnOK}
           </Button>
         </div>
       </div>

@@ -139,7 +139,7 @@ function PlayerMenu({ actions }: { actions: RowActions }) {
                     close();
                   }}
                 >
-                  {locale.socialWhisper}
+                  {locale.social.whisper}
                 </button>
               </li>
               <li>
@@ -153,8 +153,8 @@ function PlayerMenu({ actions }: { actions: RowActions }) {
                   }}
                 >
                   {actions.isFriend
-                    ? locale.socialRemoveFriend
-                    : locale.socialAddFriend}
+                    ? locale.social.removeFriend
+                    : locale.social.addFriend}
                 </button>
               </li>
               <li>
@@ -168,8 +168,8 @@ function PlayerMenu({ actions }: { actions: RowActions }) {
                   }}
                 >
                   {actions.isIgnored
-                    ? locale.socialUnignore
-                    : locale.socialIgnore}
+                    ? locale.social.unignore
+                    : locale.social.ignore}
                 </button>
               </li>
             </ul>
@@ -196,7 +196,11 @@ function PlayerRow({
   const isGm =
     player.icon === CharacterIcon.Gm || player.icon === CharacterIcon.GmParty;
 
-  const subtitle = [`${locale.hudLvl} ${player.level}`, className, player.title]
+  const subtitle = [
+    `${locale.hud.lvl} ${player.level}`,
+    className,
+    player.title,
+  ]
     .filter(Boolean)
     .join(' · ');
 
@@ -217,12 +221,12 @@ function PlayerRow({
             <span class='font-semibold text-sm'>{capitalize(player.name)}</span>
             {isHgm && (
               <span class='badge badge-warning badge-xs shrink-0'>
-                {locale.adminBadgeHighGameMaster}
+                {locale.admin.badgeHighGameMaster}
               </span>
             )}
             {isGm && (
               <span class='badge badge-accent badge-xs shrink-0'>
-                {locale.adminBadgeGameMaster}
+                {locale.admin.badgeGameMaster}
               </span>
             )}
             {player.guildTag?.trim() && (
@@ -477,7 +481,7 @@ export function SocialDialog() {
         label: (
           <TabLabel
             icon={<FaEarthAmericas size={12} />}
-            text={formatLocaleString(locale.socialOnline, {
+            text={formatLocaleString(locale.social.online, {
               count: String(playerList.length),
             })}
           />
@@ -488,7 +492,7 @@ export function SocialDialog() {
         label: (
           <TabLabel
             icon={<FaUserCheck size={12} />}
-            text={formatLocaleString(locale.socialFriends, {
+            text={formatLocaleString(locale.social.friends, {
               count: String(onlineFriendCount),
             })}
           />
@@ -499,7 +503,7 @@ export function SocialDialog() {
         label: (
           <TabLabel
             icon={<FaUsers size={12} />}
-            text={formatLocaleString(locale.socialGuild, {
+            text={formatLocaleString(locale.social.guild, {
               count: String(guildPlayers.length),
             })}
           />
@@ -510,7 +514,7 @@ export function SocialDialog() {
         label: (
           <TabLabel
             icon={<FaUserSlash size={12} />}
-            text={formatLocaleString(locale.socialIgnored, {
+            text={formatLocaleString(locale.social.ignored, {
               count: String(onlineIgnoreCount),
             })}
           />
@@ -527,7 +531,7 @@ export function SocialDialog() {
   );
 
   return (
-    <DialogBase id='social' title={locale.socialTitle} size='md'>
+    <DialogBase id='social' title={locale.social.title} size='md'>
       <div class='flex flex-col'>
         <div class='overflow-x-auto'>
           <Tabs

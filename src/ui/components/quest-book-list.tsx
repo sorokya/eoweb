@@ -10,7 +10,9 @@ export function QuestBookList({ questNames }: Props) {
 
   if (questNames.length === 0) {
     return (
-      <p class='py-4 text-center text-sm opacity-60'>{locale.questNoHistory}</p>
+      <p class='py-4 text-center text-sm opacity-60'>
+        {locale.quests.noHistory}
+      </p>
     );
   }
 

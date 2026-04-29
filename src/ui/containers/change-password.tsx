@@ -38,31 +38,31 @@ export function ChangePassword() {
   return (
     <div class='card w-96 bg-base-100 shadow-sm'>
       <div class='card-body'>
-        <div class='card-title'>{locale.changePasswordTitle}</div>
+        <div class='card-title'>{locale.changePassword.title}</div>
         <form onSubmit={onSubmit} class='flex flex-col gap-4'>
           <Input
-            label={locale.changePasswordUsername}
+            label={locale.changePassword.username}
             name='username'
             value={username}
             onChange={(val) => setUsername(val)}
             autofocus
           />
           <Input
-            label={locale.changePasswordOldPassword}
+            label={locale.changePassword.oldPassword}
             name='old-password'
             value={oldPassword}
             type='password'
             onChange={(val) => setOldPassword(val)}
           />
           <Input
-            label={locale.changePasswordNewPassword}
+            label={locale.changePassword.newPassword}
             name='new-password'
             value={newPassword}
             type='password'
             onChange={(val) => setNewPassword(val)}
           />
           <Input
-            label={locale.changePasswordConfirmPassword}
+            label={locale.changePassword.confirmPassword}
             name='confirm-password'
             value={confirmPassword}
             type='password'
@@ -70,10 +70,10 @@ export function ChangePassword() {
           />
           <div class='card-actions'>
             <Button type='submit' variant='primary'>
-              {locale.btnChangePassword}
+              {locale.changePassword.btn}
             </Button>
             <Button variant='ghost' onClick={cancel}>
-              {locale.btnCancel}
+              {locale.shared.btnCancel}
             </Button>
           </div>
         </form>

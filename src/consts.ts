@@ -93,3 +93,6 @@ export const DIVORCE_COST = 10000;
 export const GOLD_ITEM_ID = 1;
 
 export const DEFRAG_FILL_THRESHOLD = 0.85;
+
+// TODO: This should be in eo-protocol
+export const BARD_EMOTE_ID = 15;

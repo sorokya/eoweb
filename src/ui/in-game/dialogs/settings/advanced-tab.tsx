@@ -75,7 +75,7 @@ export function AdvancedTab() {
   }, [refresh]);
 
   const handleClear = useCallback(async () => {
-    if (!window.confirm(locale.settingsAdvancedClearConfirm)) {
+    if (!window.confirm(locale.settings.advancedClearConfirm)) {
       return;
     }
     setClearing(true);
@@ -92,7 +92,7 @@ export function AdvancedTab() {
     <div class='flex flex-col gap-4 p-2'>
       <div class='flex flex-col gap-2'>
         <p class='font-semibold text-sm opacity-70'>
-          {locale.settingsAdvancedStorage}
+          {locale.settings.advancedStorage}
         </p>
         {storage === null ? (
           <span class='loading loading-sm' />
@@ -100,7 +100,7 @@ export function AdvancedTab() {
           <div class='rounded-box bg-base-300 p-3 text-xs'>
             <div class='flex justify-between py-0.5'>
               <span class='opacity-70'>
-                {locale.settingsAdvancedLocalStorage}
+                {locale.settings.advancedLocalStorage}
               </span>
               <span class='font-mono'>
                 {formatBytes(storage.localStorageBytes)}
@@ -109,7 +109,7 @@ export function AdvancedTab() {
             {storage.idbSupported && (
               <div class='flex justify-between py-0.5'>
                 <span class='opacity-70'>
-                  {locale.settingsAdvancedIndexedDB}
+                  {locale.settings.advancedIndexedDB}
                 </span>
                 <span class='font-mono'>
                   {storage.idbBytes !== null
@@ -125,17 +125,17 @@ export function AdvancedTab() {
           class='btn btn-xs btn-ghost self-start'
           onClick={refresh}
         >
-          {locale.settingsAdvancedRefresh}
+          {locale.settings.advancedRefresh}
         </button>
       </div>
 
       <div class='divider my-0' />
 
       <div class='flex flex-col gap-2'>
-        <p class='text-xs opacity-50'>{locale.settingsAdvancedClearHint}</p>
+        <p class='text-xs opacity-50'>{locale.settings.advancedClearHint}</p>
         {cleared && (
           <div class='alert alert-success py-2 text-xs'>
-            {locale.settingsAdvancedCleared}
+            {locale.settings.advancedCleared}
           </div>
         )}
         <button
@@ -147,7 +147,7 @@ export function AdvancedTab() {
           {clearing ? (
             <span class='loading loading-xs' />
           ) : (
-            locale.settingsAdvancedClearCache
+            locale.settings.advancedClearCache
           )}
         </button>
       </div>

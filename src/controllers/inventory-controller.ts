@@ -221,12 +221,12 @@ export class InventoryController {
         },
       );
     } else {
-      const message = this.client.locale.junkConfirmMessage.replace(
+      const message = this.client.locale.inventory.junkConfirmMessage.replace(
         '{name}',
         itemName,
       );
       this.client.alertController.showConfirm(
-        this.client.locale.junkConfirmTitle,
+        this.client.locale.inventory.junkConfirmTitle,
         message,
         (confirmed) => {
           if (confirmed) send(1);

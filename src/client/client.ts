@@ -41,6 +41,7 @@ import {
   AuthenticationController,
   BankController,
   BarberController,
+  BardController,
   BoardController,
   ChatController,
   ChestController,
@@ -49,6 +50,7 @@ import {
   ConfigController,
   DrunkController,
   GuildController,
+  HotbarController,
   InnController,
   InventoryController,
   ItemProtectionController,
@@ -178,6 +180,7 @@ export class Client {
   audioController: AudioController;
   authenticationController: AuthenticationController;
   bankController: BankController;
+  bardController: BardController;
   barberController: BarberController;
   boardController: BoardController;
   chatController: ChatController;
@@ -203,6 +206,7 @@ export class Client {
   usageController: UsageController;
   tradeController: TradeController;
   guildController: GuildController;
+  hotbarController: HotbarController;
   innController: InnController;
   alertController: AlertController;
   toastController: ToastController;
@@ -314,6 +318,7 @@ export class Client {
     setAudioController(this.audioController);
     this.authenticationController = new AuthenticationController(this);
     this.bankController = new BankController(this);
+    this.bardController = new BardController(this);
     this.barberController = new BarberController(this);
     this.boardController = new BoardController(this);
     this.chatController = new ChatController(this);
@@ -339,6 +344,7 @@ export class Client {
     this.usageController = new UsageController(this);
     this.tradeController = new TradeController(this);
     this.guildController = new GuildController(this);
+    this.hotbarController = new HotbarController(this);
     this.innController = new InnController(this);
     this.marriageController = new MarriageController(this);
     this.partyController = new PartyController(this);
@@ -827,7 +833,7 @@ export class Client {
   ): string | null {
     let killerName: string | undefined;
     if (data.killerId === this.playerId) {
-      killerName = this.locale.wordYou;
+      killerName = this.locale.shared.wordYou;
     } else {
       killerName = this.partyController.members.find(
         (m) => m.playerId === data.killerId,
@@ -849,7 +855,7 @@ export class Client {
     }
 
     const messages = [
-      formatLocaleString(this.locale.killedNpc, {
+      formatLocaleString(this.locale.messages.killedNpc, {
         killer: killerName,
         npc: npcName,
       }),
@@ -857,7 +863,7 @@ export class Client {
 
     if (data.killerId === this.playerId && exp > 0) {
       messages.push(
-        formatLocaleString(this.locale.gainedExp, {
+        formatLocaleString(this.locale.messages.gainedExp, {
           exp: exp.toLocaleString(),
         }),
       );
@@ -865,7 +871,7 @@ export class Client {
 
     if (levelUp) {
       messages.push(
-        formatLocaleString(this.locale.levelUp, {
+        formatLocaleString(this.locale.messages.levelUp, {
           level: this.level.toLocaleString(),
         }),
       );
@@ -873,12 +879,12 @@ export class Client {
 
     if (data.dropId && data.dropAmount) {
       const itemRecord = this.getEifRecordById(data.dropId);
-      const itemName = itemRecord?.name ?? this.locale.wordUnknown;
+      const itemName = itemRecord?.name ?? this.locale.shared.wordUnknown;
       if (itemName) {
         const amountText =
           data.dropAmount > 1 ? `${data.dropAmount.toLocaleString()} ` : '';
         messages.push(
-          formatLocaleString(this.locale.npcDrop, {
+          formatLocaleString(this.locale.messages.npcDrop, {
             item: `${amountText}${itemName}`,
           }),
         );
@@ -890,14 +896,14 @@ export class Client {
 
   getExpShareMessage(exp: number, levelUp = false): string {
     const messages = [
-      formatLocaleString(this.locale.expShare, {
+      formatLocaleString(this.locale.messages.expShare, {
         exp: exp.toLocaleString(),
       }),
     ];
 
     if (levelUp) {
       messages.push(
-        formatLocaleString(this.locale.levelUp, {
+        formatLocaleString(this.locale.messages.levelUp, {
           level: this.level.toLocaleString(),
         }),
       );

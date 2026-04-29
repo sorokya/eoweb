@@ -29,8 +29,8 @@ export class BarberController {
   confirmBuyHairStyle(hairStyle: number, hairColor: number): void {
     const locale = this.client.locale;
     this.client.alertController.showConfirm(
-      locale.barberConfirmTitle,
-      locale.barberConfirmMessage,
+      locale.barber.confirmTitle,
+      locale.barber.confirmMessage,
       (confirmed) => {
         if (confirmed) this.buyHairStyle(hairStyle, hairColor);
       },

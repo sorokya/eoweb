@@ -49,15 +49,7 @@ const DAISYUI_THEMES = [
   'silk',
 ];
 
-const LANGUAGES: {
-  value: Language;
-  labelKey: keyof ReturnType<typeof useLocale>['locale'];
-}[] = [
-  { value: 'en', labelKey: 'langEn' },
-  { value: 'nl', labelKey: 'langNl' },
-  { value: 'sv', labelKey: 'langSv' },
-  { value: 'pt', labelKey: 'langPt' },
-];
+const LANGUAGES: Language[] = ['en', 'nl', 'sv', 'pt'];
 
 const VIS_VALUES: HudVisibility[] = ['auto', 'always', 'never'];
 
@@ -114,8 +106,8 @@ export function InterfaceTab() {
 
   const themeOptions = DAISYUI_THEMES.map((t) => ({ value: t, label: t }));
   const langOptions = LANGUAGES.map((l) => ({
-    value: l.value,
-    label: locale[l.labelKey] as string,
+    value: l,
+    label: locale.lang[l as keyof typeof locale.lang],
   }));
 
   const handleThemeChange = (v: string) => {
@@ -127,7 +119,7 @@ export function InterfaceTab() {
   return (
     <div class='flex flex-col gap-3 p-2'>
       <CycleInput
-        label={locale.settingsUiScale}
+        label={locale.settings.uiScale}
         value={scaleIndex}
         min={0}
         max={UI_SCALE_OPTIONS.length - 1}
@@ -136,7 +128,7 @@ export function InterfaceTab() {
       />
       <div class='divider my-0' />
       <Select
-        label={locale.settingsTheme}
+        label={locale.settings.theme}
         value={theme}
         options={themeOptions}
         onChange={handleThemeChange}
@@ -144,14 +136,14 @@ export function InterfaceTab() {
       />
       <div class='divider my-0' />
       <Select
-        label={locale.settingsLanguage}
+        label={locale.settings.language}
         value={language}
         options={langOptions}
         onChange={(v) => setLanguage(v as Language)}
         variant='sm'
       />
       <div class='divider my-0' />
-      <SettingRow label={locale.settingsBackdropBlur} asLabel>
+      <SettingRow label={locale.settings.backdropBlur} asLabel>
         <input
           type='checkbox'
           class='checkbox checkbox-sm'
@@ -164,9 +156,9 @@ export function InterfaceTab() {
       <div class='divider my-0' />
       <div>
         <p class='mb-1 text-xs opacity-50'>
-          {locale.settingsTouchRepositionHint}
+          {locale.settings.touchRepositionHint}
         </p>
-        <SettingRow label={locale.settingsTouchReposition} asLabel>
+        <SettingRow label={locale.settings.touchReposition} asLabel>
           <input
             type='checkbox'
             class='checkbox checkbox-sm'
@@ -180,32 +172,47 @@ export function InterfaceTab() {
       <div class='divider my-0' />
       <div class='flex flex-col gap-2'>
         <p class='font-semibold text-xs opacity-70'>
-          {locale.settingsMobileControls}
+          {locale.settings.mobileControls}
         </p>
         <VisibilityCycle
-          label={locale.settingsMobileJoystick}
+          label={locale.settings.mobileJoystick}
           visKey='touch-joystick'
           autoDefaults={{ mobile: true, desktop: false }}
           formatLabel={(v) =>
-            locale[`settingsVisibility_${v}` as keyof typeof locale] as string
+            locale.settings[
+              `visibility_${v}` as
+                | 'visibility_auto'
+                | 'visibility_always'
+                | 'visibility_never'
+            ]
           }
         />
         <VisibilityCycle
-          label={locale.settingsMobileActionButtons}
+          label={locale.settings.mobileActionButtons}
           visKey='touch-actions'
           autoDefaults={{ mobile: true, desktop: false }}
           formatLabel={(v) =>
-            locale[`settingsVisibility_${v}` as keyof typeof locale] as string
+            locale.settings[
+              `visibility_${v}` as
+                | 'visibility_auto'
+                | 'visibility_always'
+                | 'visibility_never'
+            ]
           }
         />
       </div>
       <div class='divider my-0' />
       <VisibilityCycle
-        label={locale.settingsDesktopEmoteButton}
+        label={locale.settings.desktopEmoteButton}
         visKey='desktop-emote'
         autoDefaults={{ mobile: false, desktop: true }}
         formatLabel={(v) =>
-          locale[`settingsVisibility_${v}` as keyof typeof locale] as string
+          locale.settings[
+            `visibility_${v}` as
+              | 'visibility_auto'
+              | 'visibility_always'
+              | 'visibility_never'
+          ]
         }
       />
     </div>

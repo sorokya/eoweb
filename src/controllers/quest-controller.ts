@@ -228,10 +228,22 @@ export class QuestController {
   }
 
   questReply(questId: number, dialogId: number, action: number | null): void {
+    const npc = this.client.getNpcByIndex(
+      this.client.npcController.interactNpcIndex,
+    );
+    if (!npc) {
+      return;
+    }
+
+    const record = this.client.getEnfRecordById(npc.id);
+    if (!record) {
+      return;
+    }
+
     const packet = new QuestAcceptClientPacket();
     packet.sessionId = this.sessionId;
     packet.questId = questId;
-    packet.npcIndex = this.client.npcController.interactNpcIndex;
+    packet.npcIndex = record.behaviorId;
     packet.dialogId = dialogId;
     packet.replyType = action !== null ? DialogReply.Link : DialogReply.Ok;
     if (action !== null) {

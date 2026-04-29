@@ -8,6 +8,7 @@ import {
   ItemJunkServerPacket,
   ItemKickServerPacket,
   ItemMapInfo,
+  ItemObtainServerPacket,
   ItemRemoveServerPacket,
   ItemReplyServerPacket,
   ItemSpecial,
@@ -300,6 +301,13 @@ function handleItemReply(client: Client, reader: EoReader) {
   }
 }
 
+function handleItemObtain(client: Client, reader: EoReader) {
+  const packet = ItemObtainServerPacket.deserialize(reader);
+  client.weight.current = packet.currentWeight;
+
+  client.inventoryController.addItem(packet.item.id, packet.item.amount);
+}
+
 function handleItemKick(client: Client, reader: EoReader) {
   const packet = ItemKickServerPacket.deserialize(reader);
   client.weight.current = packet.currentWeight;
@@ -391,6 +399,11 @@ export function registerItemHandlers(client: Client) {
     PacketFamily.Item,
     PacketAction.Reply,
     (reader) => handleItemReply(client, reader),
+  );
+  client.bus!.registerPacketHandler(
+    PacketFamily.Item,
+    PacketAction.Obtain,
+    (reader) => handleItemObtain(client, reader),
   );
   client.bus!.registerPacketHandler(
     PacketFamily.Item,

@@ -90,6 +90,7 @@ export class SpellController {
 
       // TODO: Bard
       if (record.type === SkillType.Bard) {
+        this.client.bardController.openDialog();
         return;
       }
 

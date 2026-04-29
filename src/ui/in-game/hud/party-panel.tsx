@@ -67,8 +67,8 @@ function MemberFrame({
   const showX = isLocalLeader || isLocalPlayer;
   const title =
     isLocalLeader && !isLocalPlayer
-      ? locale.partyPanelKick
-      : locale.partyPanelLeave;
+      ? locale.party.panelKick
+      : locale.party.panelLeave;
   const hp = Math.max(0, Math.min(100, member.hpPercentage ?? 0));
 
   return (
@@ -79,7 +79,7 @@ function MemberFrame({
       {/* Row: crown + name + X */}
       <div class='flex items-center gap-0.5'>
         {member.leader ? (
-          <span class='shrink-0 text-warning' title={locale.partyPanelLeader}>
+          <span class='shrink-0 text-warning' title={locale.party.leader}>
             <FaCrown size={8} />
           </span>
         ) : (
@@ -105,7 +105,7 @@ function MemberFrame({
 
       {/* Level */}
       <span class={`text-[9px] leading-none opacity-60 ${HUD_TEXT}`}>
-        {locale.hudLvl} {member.level}
+        {locale.hud.lvl} {member.level}
       </span>
 
       {/* HP bar */}
@@ -183,7 +183,7 @@ export function PartyPanel() {
         onClick={() => setCollapsed((c) => !c)}
       >
         <span class='truncate font-semibold text-primary/80 text-xs'>
-          {locale.partyPanelTitle}
+          {locale.party.panelTitle}
         </span>
 
         {!collapsed && (

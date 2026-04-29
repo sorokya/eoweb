@@ -13,6 +13,7 @@ import type { DialogId } from '@/ui/in-game';
 import {
   BankDialog,
   BarberDialog,
+  BardDialog,
   BoardDialog,
   CharacterDialog,
   ChatDialog,
@@ -24,7 +25,6 @@ import {
   DialogArena,
   GuildDialog,
   HotBar,
-  HotbarProvider,
   InnKeeperDialog,
   InventoryDialog,
   ItemDragProvider,
@@ -56,6 +56,7 @@ import {
 
 const ALL_DIALOG_IDS: DialogId[] = [
   'bank',
+  'bard',
   'barber',
   'board',
   'guild',
@@ -83,6 +84,8 @@ function DialogById({ id }: { id: DialogId }) {
   switch (id) {
     case 'bank':
       return <BankDialog />;
+    case 'bard':
+      return <BardDialog />;
     case 'barber':
       return <BarberDialog />;
     case 'board':
@@ -380,13 +383,11 @@ export function InGame() {
   const client = useClient();
   return (
     <ItemDragProvider>
-      <HotbarProvider>
-        <WindowManagerProvider>
-          <ChatManagerProvider characterId={client.characterId}>
-            <InGameContent />
-          </ChatManagerProvider>
-        </WindowManagerProvider>
-      </HotbarProvider>
+      <WindowManagerProvider>
+        <ChatManagerProvider characterId={client.characterId}>
+          <InGameContent />
+        </ChatManagerProvider>
+      </WindowManagerProvider>
     </ItemDragProvider>
   );
 }

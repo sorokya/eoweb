@@ -7,7 +7,7 @@ import { playSfxById, SfxId } from '@/sfx';
 import { UI_ITEM_BG, UI_PANEL_BORDER } from '@/ui/consts';
 import { useClient, useLocale } from '@/ui/context';
 import { SlotType } from '@/ui/enums';
-import { useHotbar, useItemDrag } from '@/ui/in-game';
+import { useItemDrag } from '@/ui/in-game';
 import { getItemMeta } from '@/utils';
 import { ItemIcon } from './item-icon';
 import { Tabs } from './tabs';
@@ -144,7 +144,7 @@ function JunkZone() {
       onPointerLeave={() => setIsOver(false)}
     >
       <FaTrash size={11} />
-      {locale.junkDropZone}
+      {locale.inventory.junkDropZone}
     </div>
   );
 }
@@ -153,7 +153,6 @@ export function InventoryGrid({ itemIds }: Props) {
   const client = useClient();
   const { locale } = useLocale();
   const { startDrag, currentDrag } = useItemDrag();
-  const { setSlot } = useHotbar();
   const [activeTab, setActiveTab] = useState(0);
   const [positions, setPositions] = useState<ItemPosition[]>([]);
   const [tooltip, setTooltip] = useState<{
@@ -398,7 +397,10 @@ export function InventoryGrid({ itemIds }: Props) {
           } else if (result.type === 'hotbar-slot') {
             const record = client.getEifRecordById(item.id);
             if (record) {
-              setSlot(result.index, { type: SlotType.Item, typeId: item.id });
+              client.hotbarController.setSlot(result.index, {
+                type: SlotType.Item,
+                typeId: item.id,
+              });
             }
           } else if (result.type === 'ground') {
             if (!client.mapController.cursorInDropRange()) return;
@@ -417,10 +419,10 @@ export function InventoryGrid({ itemIds }: Props) {
               const itemName =
                 client.getEifRecordById(item.id)?.name ?? String(item.id);
               client.alertController.showAmount(
-                locale.tradeDropHowMany,
+                locale.trade.dropHowMany,
                 itemName,
                 invItem.amount,
-                locale.tradeDrop,
+                locale.trade.drop,
                 (amount) => {
                   if (amount !== null && amount > 0) {
                     client.tradeController.addItem(item.id, amount);
@@ -452,7 +454,7 @@ export function InventoryGrid({ itemIds }: Props) {
     return [record.name + qty, ...meta];
   };
 
-  const TAB_LABELS = [locale.inventoryTab1, locale.inventoryTab2];
+  const TAB_LABELS = [locale.inventory.tab1, locale.inventory.tab2];
 
   return (
     <div class='flex flex-col gap-1'>

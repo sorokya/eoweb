@@ -17,14 +17,14 @@ export function LawDialog() {
   const { closeDialog } = useWindowManager();
 
   const [npcName, setNpcName] = useState(
-    () => client.marriageController.npcName || locale.lawTitle,
+    () => client.marriageController.npcName || locale.law.title,
   );
   const [view, setView] = useState<LawView>('main');
   const [partnerName, setPartnerName] = useState('');
 
   useEffect(() => {
     const handleOpened = (name: string) => {
-      setNpcName(name || locale.lawTitle);
+      setNpcName(name || locale.law.title);
       setView('main');
       setPartnerName('');
     };
@@ -37,7 +37,7 @@ export function LawDialog() {
       client.marriageController.unsubscribeLawyerOpen(handleOpened);
       client.marriageController.unsubscribeWeddingApproval(handleApproved);
     };
-  }, [client, locale.lawTitle]);
+  }, [client, locale.law.title]);
 
   const handleMarriageSubmit = useCallback(() => {
     if (!partnerName.trim()) return;
@@ -56,7 +56,7 @@ export function LawDialog() {
     setView(newView);
   }, []);
 
-  const goldLabel = locale.wordGold;
+  const goldLabel = locale.shared.wordGold;
 
   return (
     <DialogBase id='law' title={npcName} size='sm'>
@@ -140,7 +140,7 @@ export function LawDialog() {
                 class='flex-1'
                 onClick={() => handleViewChange('main')}
               >
-                {locale.wordBack}
+                {locale.shared.wordBack}
               </Button>
               <Button
                 variant={['sm', 'primary']}
@@ -148,7 +148,7 @@ export function LawDialog() {
                 onClick={handleMarriageSubmit}
                 disabled={!partnerName.trim()}
               >
-                {locale.wordSubmit}
+                {locale.shared.wordSubmit}
               </Button>
             </div>
           </>
@@ -187,7 +187,7 @@ export function LawDialog() {
                 class='flex-1'
                 onClick={() => handleViewChange('main')}
               >
-                {locale.wordBack}
+                {locale.shared.wordBack}
               </Button>
               <Button
                 variant={['sm', 'warning']}
@@ -195,7 +195,7 @@ export function LawDialog() {
                 onClick={handleDivorceSubmit}
                 disabled={!partnerName.trim()}
               >
-                {locale.wordSubmit}
+                {locale.shared.wordSubmit}
               </Button>
             </div>
           </>

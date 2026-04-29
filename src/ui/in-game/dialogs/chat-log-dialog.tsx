@@ -35,24 +35,26 @@ const PM_CHANNELS_VALUE = '__pm__';
 type ChannelOption = { value: string; label: string };
 
 function buildChannelOptions(locale: {
-  chatLogAllChannels: string;
-  chatLogLocal: string;
-  chatLogGlobal: string;
-  chatLogParty: string;
-  chatLogGuild: string;
-  chatLogAdmin: string;
-  chatLogSystem: string;
-  chatLogPrivate: string;
+  chatLog: {
+    allChannels: string;
+    local: string;
+    global: string;
+    party: string;
+    guild: string;
+    admin: string;
+    system: string;
+    private: string;
+  };
 }): ChannelOption[] {
   return [
-    { value: ALL_CHANNELS_VALUE, label: locale.chatLogAllChannels },
-    { value: ChatChannels.Local, label: locale.chatLogLocal },
-    { value: ChatChannels.Global, label: locale.chatLogGlobal },
-    { value: ChatChannels.Party, label: locale.chatLogParty },
-    { value: ChatChannels.Guild, label: locale.chatLogGuild },
-    { value: ChatChannels.Admin, label: locale.chatLogAdmin },
-    { value: ChatChannels.System, label: locale.chatLogSystem },
-    { value: PM_CHANNELS_VALUE, label: locale.chatLogPrivate },
+    { value: ALL_CHANNELS_VALUE, label: locale.chatLog.allChannels },
+    { value: ChatChannels.Local, label: locale.chatLog.local },
+    { value: ChatChannels.Global, label: locale.chatLog.global },
+    { value: ChatChannels.Party, label: locale.chatLog.party },
+    { value: ChatChannels.Guild, label: locale.chatLog.guild },
+    { value: ChatChannels.Admin, label: locale.chatLog.admin },
+    { value: ChatChannels.System, label: locale.chatLog.system },
+    { value: PM_CHANNELS_VALUE, label: locale.chatLog.private },
   ];
 }
 
@@ -145,7 +147,7 @@ function ExportDropdown({ onExport }: ExportDropdownProps) {
         onClick={() => setOpen((o) => !o)}
       >
         <LuDownload size={13} />
-        {locale.chatLogExport}
+        {locale.chatLog.export}
       </Button>
       {open && (
         <ul
@@ -159,7 +161,7 @@ function ExportDropdown({ onExport }: ExportDropdownProps) {
                 setOpen(false);
               }}
             >
-              {locale.chatLogPlainText}
+              {locale.chatLog.plainText}
             </button>
           </li>
           <li>
@@ -170,7 +172,7 @@ function ExportDropdown({ onExport }: ExportDropdownProps) {
                 setOpen(false);
               }}
             >
-              {locale.chatLogJson}
+              {locale.chatLog.json}
             </button>
           </li>
           <li>
@@ -181,7 +183,7 @@ function ExportDropdown({ onExport }: ExportDropdownProps) {
                 setOpen(false);
               }}
             >
-              {locale.chatLogCsv}
+              {locale.chatLog.csv}
             </button>
           </li>
         </ul>
@@ -338,11 +340,11 @@ export function ChatLogDialog() {
   const channelOptions = buildChannelOptions(locale);
 
   return (
-    <DialogBase id='chat-log' title={locale.chatLogTitle} size='lg'>
+    <DialogBase id='chat-log' title={locale.chatLog.title} size='lg'>
       {confirmClearAll && (
         <Confirm
-          title={locale.chatLogClearTitle}
-          message={locale.chatLogClearMessage}
+          title={locale.chatLog.clearTitle}
+          message={locale.chatLog.clearMessage}
           onYes={handleClearAll}
           onNo={() => setConfirmClearAll(false)}
         />
@@ -353,7 +355,7 @@ export function ChatLogDialog() {
         <input
           class='input input-xs flex-1'
           type='text'
-          placeholder={locale.chatLogSearchPlaceholder}
+          placeholder={locale.chatLog.searchPlaceholder}
           value={search}
           onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
           onKeyDown={(e) => e.stopPropagation()}
@@ -370,15 +372,15 @@ export function ChatLogDialog() {
           class='btn btn-ghost btn-xs shrink-0 gap-1'
           title={
             sortDir === 'asc'
-              ? locale.chatLogSortOldestFirst
-              : locale.chatLogSortNewestFirst
+              ? locale.chatLog.sortOldestFirst
+              : locale.chatLog.sortNewestFirst
           }
           onClick={toggleSortDir}
         >
           <LuArrowDownUp size={13} />
           {sortDir === 'asc'
-            ? locale.chatLogSortOldest
-            : locale.chatLogSortNewest}
+            ? locale.chatLog.sortOldest
+            : locale.chatLog.sortNewest}
         </button>
       </div>
 
@@ -388,12 +390,12 @@ export function ChatLogDialog() {
       >
         {loading && (
           <p class='py-4 text-center text-xs opacity-60'>
-            {locale.chatLogLoading}
+            {locale.chatLog.loading}
           </p>
         )}
         {!loading && result.messages.length === 0 && (
           <p class='py-4 text-center text-xs opacity-60'>
-            {locale.chatLogNoMessages}
+            {locale.chatLog.noMessages}
           </p>
         )}
         {!loading &&
@@ -421,7 +423,7 @@ export function ChatLogDialog() {
                   <button
                     type='button'
                     class='btn btn-ghost btn-xs shrink-0 opacity-60 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:hover:opacity-100! [@media(hover:hover)]:group-hover:opacity-60'
-                    aria-label={locale.chatLogDeleteMessage}
+                    aria-label={locale.chatLog.deleteMessage}
                     onClick={() => handleDelete(msg.id)}
                   >
                     <LuTrash2 size={11} />
@@ -444,8 +446,8 @@ export function ChatLogDialog() {
         </button>
         <span class='text-xs opacity-60'>
           {result.total === 0
-            ? locale.chatLogNoMessagesShort
-            : formatLocaleString(locale.chatLogPagination, {
+            ? locale.chatLog.noMessagesShort
+            : formatLocaleString(locale.chatLog.pagination, {
                 page: String(page),
                 totalPages: String(result.totalPages),
                 total: String(result.total),
@@ -473,7 +475,7 @@ export function ChatLogDialog() {
           onClick={() => setConfirmClearAll(true)}
         >
           <LuTrash2 size={13} />
-          {locale.chatLogClearAll}
+          {locale.chatLog.clearAll}
         </Button>
       </div>
     </DialogBase>

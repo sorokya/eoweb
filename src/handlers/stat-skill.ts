@@ -86,7 +86,7 @@ function handleStatSkillTake(client: Client, reader: EoReader) {
   client.audioController.playById(SfxId.LearnNewSpell);
 
   const name = client.getEsfRecordById(packet.spellId)?.name ?? '';
-  const msg = client.locale.skillMasterLearnedMsg.replace('{name}', name);
+  const msg = client.locale.skillMaster.learnedMsg.replace('{name}', name);
   client.toastController.showSuccess(msg);
   client.chatController.notifyServerChat({ message: msg, icon: ChatIcon.Star });
 }
@@ -101,7 +101,7 @@ function handleStatSkillRemove(client: Client, reader: EoReader) {
   client.alertController.show(strings[0], strings[1]);
   client.statSkillController.notifySkillsChanged();
 
-  const msg = client.locale.skillMasterForgotMsg.replace('{name}', name);
+  const msg = client.locale.skillMaster.forgotMsg.replace('{name}', name);
   client.toastController.show(msg);
   client.chatController.notifyServerChat({
     message: msg,
@@ -139,7 +139,7 @@ function handleStatSkillJunk(client: Client, reader: EoReader) {
   );
   client.alertController.show(strings[0], strings[1]);
 
-  const msg = client.locale.skillMasterResetMsg;
+  const msg = client.locale.skillMaster.resetMsg;
   client.toastController.show(msg);
   client.chatController.notifyServerChat({
     message: msg,
@@ -158,7 +158,7 @@ function handleStatSkillAccept(client: Client, reader: EoReader) {
   client.audioController.playById(SfxId.InventoryPickup);
 
   const name = client.getEsfRecordById(packet.spell.id)?.name ?? '';
-  const msg = client.locale.spellTrainedMsg
+  const msg = client.locale.spells.trainedMsg
     .replace('{name}', name)
     .replace('{level}', String(packet.spell.level));
   client.toastController.show(msg);

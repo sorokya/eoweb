@@ -71,7 +71,7 @@ export function ChatTabBar({ tabs, activeTabId, onFocusInput }: Props) {
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => handleCloseClick(e, tab.id)}
                 tabIndex={-1}
-                aria-label={formatLocaleString(locale.chatCloseTab, {
+                aria-label={formatLocaleString(locale.chat.closeTab, {
                   name: tab.name,
                 })}
               >

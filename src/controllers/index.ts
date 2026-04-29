@@ -4,6 +4,7 @@ export { AudioController } from './audio-controller';
 export { AuthenticationController } from './authentication-controller';
 export { BankController } from './bank-controller';
 export { BarberController } from './barber-controller';
+export { BardController } from './bard-controller';
 export { BoardController } from './board-controller';
 export { ChatController } from './chat-controller';
 export { ChestController } from './chest-controller';
@@ -20,6 +21,7 @@ export type {
 export { ConfigController } from './config-controller';
 export { DrunkController } from './drunk-controller';
 export { GuildController } from './guild-controller';
+export { HotbarController } from './hotbar-controller';
 export { InnController } from './inn-controller';
 export { InventoryController } from './inventory-controller';
 export { ItemProtectionController } from './item-protection-controller';

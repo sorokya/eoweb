@@ -36,7 +36,7 @@ function handleChestGet(client: Client, reader: EoReader) {
   client.chestController.handleChanged(packet.items);
 
   const name = client.getEifRecordById(packet.takenItem.id)?.name ?? '';
-  const msg = client.locale.chestTookMsg
+  const msg = client.locale.chest.tookMsg
     .replace('{amount}', String(packet.takenItem.amount))
     .replace('{name}', name);
   client.toastController.show(msg);
@@ -62,7 +62,7 @@ function handleChestReply(client: Client, reader: EoReader) {
 
   const depositedAmount = prevAmount - packet.remainingAmount;
   const name = client.getEifRecordById(packet.addedItemId)?.name ?? '';
-  const msg = client.locale.chestDepositedMsg
+  const msg = client.locale.chest.depositedMsg
     .replace('{amount}', String(depositedAmount > 0 ? depositedAmount : 1))
     .replace('{name}', name);
   client.toastController.show(msg);

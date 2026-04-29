@@ -55,7 +55,7 @@ export function SettingsDialog() {
       label: (
         <TabLabel
           icon={<FaDesktop size={12} />}
-          text={locale.settingsTabGraphics}
+          text={locale.settings.tabGraphics}
         />
       ),
     },
@@ -64,7 +64,7 @@ export function SettingsDialog() {
       label: (
         <TabLabel
           icon={<FaPalette size={12} />}
-          text={locale.settingsTabInterface}
+          text={locale.settings.tabInterface}
         />
       ),
     },
@@ -73,7 +73,7 @@ export function SettingsDialog() {
       label: (
         <TabLabel
           icon={<FaVolumeUp size={12} />}
-          text={locale.settingsTabSound}
+          text={locale.settings.tabSound}
         />
       ),
     },
@@ -82,7 +82,7 @@ export function SettingsDialog() {
       label: (
         <TabLabel
           icon={<FaUsers size={12} />}
-          text={locale.settingsTabSocial}
+          text={locale.settings.tabSocial}
         />
       ),
     },
@@ -91,14 +91,14 @@ export function SettingsDialog() {
       label: (
         <TabLabel
           icon={<MdSpaceDashboard size={12} />}
-          text={locale.settingsTabHud}
+          text={locale.settings.tabHud}
         />
       ),
     },
     {
       id: 'debug',
       label: (
-        <TabLabel icon={<FaBug size={12} />} text={locale.settingsTabDebug} />
+        <TabLabel icon={<FaBug size={12} />} text={locale.settings.tabDebug} />
       ),
     },
     {
@@ -106,14 +106,14 @@ export function SettingsDialog() {
       label: (
         <TabLabel
           icon={<FaDatabase size={12} />}
-          text={locale.settingsTabAdvanced}
+          text={locale.settings.tabAdvanced}
         />
       ),
     },
   ];
 
   return (
-    <DialogBase id='settings' title={locale.settingsTitle} size='md'>
+    <DialogBase id='settings' title={locale.settings.title} size='md'>
       <div class='flex flex-col'>
         <div class='overflow-x-auto'>
           <Tabs

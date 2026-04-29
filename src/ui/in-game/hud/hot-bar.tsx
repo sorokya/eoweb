@@ -15,7 +15,6 @@ import {
   usePillowGfxUrl,
   useSpellIconUrls,
 } from '@/ui/in-game';
-import { useHotbar } from './hotbar-context';
 
 const SLOT_COUNT = 6;
 const SLOT_SIZE = '3rem';
@@ -32,13 +31,19 @@ type SlotProps = {
 
 function HotBarSlot({ index, pillow }: SlotProps) {
   const client = useClient();
-  const { slots, clearSlot } = useHotbar();
+  const [slots, setSlots] = useState(() => [...client.hotbarSlots]);
   const { currentDrag } = useItemDrag();
+
+  useEffect(() => {
+    return client.hotbarController.subscribe(() => {
+      setSlots([...client.hotbarSlots]);
+    });
+  }, [client]);
+
   const slot = slots[index] ?? { type: SlotType.Empty, typeId: 0 };
   const isItem = slot.type === SlotType.Item;
   const isSkill = slot.type === SlotType.Skill;
 
-  // Get graphic IDs for the assigned slot
   const itemGraphicId = isItem
     ? (client.getEifRecordById(slot.typeId)?.graphicId ?? null)
     : null;
@@ -49,7 +54,6 @@ function HotBarSlot({ index, pillow }: SlotProps) {
   const itemUrl = useItemGfxUrl(itemGraphicId, { shadow: true });
   const spellUrls = useSpellIconUrls(spellIconId);
 
-  // Track whether this spell is currently selected/armed
   const [isSpellActive, setIsSpellActive] = useState(false);
   useEffect(() => {
     if (!isSkill) {
@@ -65,9 +69,8 @@ function HotBarSlot({ index, pillow }: SlotProps) {
     };
   }, [client, isSkill, slot.typeId]);
 
-  // Track pointer-down position; on pointer-up, if moved far enough → clear slot
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
-  const CLEAR_THRESHOLD = 30; // px
+  const CLEAR_THRESHOLD = 30;
 
   const handlePointerDown = useCallback(
     (e: PointerEvent) => {
@@ -75,8 +78,6 @@ function HotBarSlot({ index, pillow }: SlotProps) {
       e.preventDefault();
       if (slot.type === SlotType.Empty) return;
       pointerStart.current = { x: e.clientX, y: e.clientY };
-      // Capture the pointer so pointerup fires on this element even if the
-      // user releases outside the slot (i.e. after dragging away).
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       playSfxById(SfxId.InventoryPickup);
     },
@@ -91,12 +92,13 @@ function HotBarSlot({ index, pillow }: SlotProps) {
       if (!start || slot.type === SlotType.Empty) return;
       const dist = Math.hypot(e.clientX - start.x, e.clientY - start.y);
       if (dist >= CLEAR_THRESHOLD) {
-        clearSlot(index);
+        client.hotbarController.clearSlot(index);
+        playSfxById(SfxId.InventoryPlace);
       } else {
         client.spellController.useHotbarSlot(index);
       }
     },
-    [client, slot.type, index, clearSlot],
+    [client, slot.type, index],
   );
 
   const isDropTarget =

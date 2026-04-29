@@ -255,7 +255,7 @@ export function ChatMessageList({ messages, heightClass = 'max-h-40' }: Props) {
         );
       })}
       {messages.length === 0 && (
-        <div class='italic opacity-40'>{locale.chatNoMessages}</div>
+        <div class='italic opacity-40'>{locale.chat.noMessages}</div>
       )}
     </div>
   );

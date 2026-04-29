@@ -16,7 +16,7 @@ function getDisplayName(
 ): string {
   return (
     client.getEifRecordById(itemId)?.name ??
-    client.locale.itemFallbackName.replace('{id}', String(itemId))
+    client.locale.shared.itemFallbackName.replace('{id}', String(itemId))
   );
 }
 
@@ -181,11 +181,11 @@ function ItemPickerModal({ onClose, onSelect }: ItemPickerModalProps) {
         class={`modal-box ${UI_MODAL_BG} ${UI_BLUR} flex flex-col gap-2 p-4`}
       >
         <div class='flex items-center justify-between'>
-          <h3 class='font-bold text-lg'>{locale.tradeAddItem}</h3>
+          <h3 class='font-bold text-lg'>{locale.trade.addItem}</h3>
           <Button
             variant={['xs', 'ghost']}
             onClick={onClose}
-            aria-label={locale.dialogClose}
+            aria-label={locale.shared.dialogClose}
           >
             <FaTimes size={16} />
           </Button>
@@ -197,7 +197,7 @@ function ItemPickerModal({ onClose, onSelect }: ItemPickerModalProps) {
           <input
             type='text'
             class='input input-bordered input-sm w-full pl-9'
-            placeholder={locale.tradeSearchPlaceholder}
+            placeholder={locale.trade.searchPlaceholder}
             value={search}
             onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
             autoFocus
@@ -206,7 +206,7 @@ function ItemPickerModal({ onClose, onSelect }: ItemPickerModalProps) {
         <div class='max-h-64 overflow-y-auto'>
           {filteredItems.length === 0 ? (
             <p class='py-4 text-center text-base-content/50 text-sm'>
-              {search ? locale.cmdNoResults : locale.chestEmpty}
+              {search ? locale.cmdPalette.noResults : locale.chest.empty}
             </p>
           ) : (
             <div class='grid grid-cols-2 gap-2 sm:grid-cols-3'>
@@ -299,13 +299,13 @@ export function TradeDialog() {
       };
 
       if (invItem.amount > 1) {
-        const title = locale.tradeDropHowMany;
+        const title = locale.trade.dropHowMany;
         const itemName = getDisplayName(client, itemId);
         client.alertController.showAmount(
           title,
           itemName,
           invItem.amount,
-          locale.tradeDrop,
+          locale.trade.drop,
           (amount) => {
             if (amount !== null && amount > 0) send(amount);
           },
@@ -337,15 +337,15 @@ export function TradeDialog() {
   }, [tc, state.playerAgreed]);
 
   const title = state.partnerName
-    ? `${locale.tradeTitle} - ${capitalize(state.partnerName)}`
-    : locale.tradeTitle;
+    ? `${locale.trade.title} - ${capitalize(state.partnerName)}`
+    : locale.trade.title;
 
   return (
     <DialogBase id='trade' title={title} size='md' avoidBottom>
       <div class='flex flex-col gap-3 p-2'>
         {state.scam && (
           <div class='alert alert-error py-2 text-sm' role='alert'>
-            <span>{locale.tradeScamWarning}</span>
+            <span>{locale.trade.scamWarning}</span>
           </div>
         )}
 
@@ -357,14 +357,14 @@ export function TradeDialog() {
             {state.partnerAgreed && (
               <span class='badge badge-success gap-1 py-1'>
                 <FaCheck size={10} />
-                {locale.tradeAgreed}
+                {locale.trade.agreed}
               </span>
             )}
           </div>
           <div class='min-h-16 rounded border border-base-content/10 bg-base-300/50 p-2'>
             {state.partnerItems.length === 0 ? (
               <p class='py-2 text-center text-base-content/50 text-sm'>
-                {formatLocaleString(locale.tradePartnerNoItems, {
+                {formatLocaleString(locale.trade.partnerNoItems, {
                   name: capitalize(state.partnerName),
                 })}
               </p>
@@ -384,11 +384,11 @@ export function TradeDialog() {
 
         <div class='flex flex-col gap-2'>
           <div class='flex items-center gap-2'>
-            <span class='font-medium text-sm'>{locale.tradeYourItems}</span>
+            <span class='font-medium text-sm'>{locale.trade.yourItems}</span>
             {state.playerAgreed && (
               <span class='badge badge-success gap-1 py-1'>
                 <FaCheck size={10} />
-                {locale.tradeAgreed}
+                {locale.trade.agreed}
               </span>
             )}
           </div>
@@ -398,7 +398,7 @@ export function TradeDialog() {
           >
             {state.playerItems.length === 0 ? (
               <p class='py-2 text-center text-base-content/50 text-sm'>
-                {locale.tradeYourNoItems}
+                {locale.trade.yourNoItems}
               </p>
             ) : (
               <div class='grid grid-cols-3 gap-2 sm:grid-cols-4'>
@@ -418,20 +418,22 @@ export function TradeDialog() {
             class='w-full'
             onClick={() => setShowItemPicker(true)}
           >
-            {locale.tradeAddItem}
+            {locale.trade.addItem}
           </Button>
         </div>
 
         <div class='flex justify-end gap-2'>
           <Button variant='outline' onClick={handleCancel}>
-            {state.playerAgreed ? locale.btnUnagree : locale.btnCancel}
+            {state.playerAgreed
+              ? locale.trade.btnUnagree
+              : locale.shared.btnCancel}
           </Button>
           <Button
             variant='primary'
             onClick={handleAgree}
             disabled={state.playerAgreed || state.playerItems.length === 0}
           >
-            {locale.tradeAgree}
+            {locale.trade.agree}
           </Button>
         </div>
       </div>

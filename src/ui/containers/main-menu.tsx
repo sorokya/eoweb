@@ -38,19 +38,21 @@ export function MainMenu() {
 
   return (
     <div class='flex h-full w-full flex-col items-center justify-center gap-4 align-center'>
-      <img src='/logo.png' alt={locale.logoAlt} />
+      <img src='/logo.png' alt={locale.mainMenu.logoAlt} />
       <div class='flex flex-col gap-2'>
         {!client.config.staticHost && (
           <Input
             type='text'
-            placeholder={locale.inputHost}
+            placeholder={locale.mainMenu.inputHost}
             value={host}
             onChange={(val) => handleHostChange(val)}
           />
         )}
-        <Button onClick={createAccount}>{locale.btnCreateAccount}</Button>
-        <Button onClick={playGame}>{locale.btnPlayGame}</Button>
-        <Button onClick={viewCredits}>{locale.btnViewCredits}</Button>
+        <Button onClick={createAccount}>
+          {locale.mainMenu.btnCreateAccount}
+        </Button>
+        <Button onClick={playGame}>{locale.mainMenu.btnPlayGame}</Button>
+        <Button onClick={viewCredits}>{locale.mainMenu.btnViewCredits}</Button>
       </div>
     </div>
   );

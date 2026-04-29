@@ -192,7 +192,7 @@ export class PartyController {
 
   notifyLeftParty() {
     this.members = [];
-    const message = `${this.client.locale.wordYou} ${this.client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_LEFT_THE_PARTY)}`;
+    const message = `${this.client.locale.shared.wordYou} ${this.client.getResourceString(EOResourceID.STATUS_LABEL_PARTY_LEFT_THE_PARTY)}`;
     this.client.toastController.show(message);
     this.client.chatController.notifyChat({
       channel: ChatChannels.System,

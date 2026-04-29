@@ -18,26 +18,26 @@ type AdminBadgeColor =
   | 'badge-error';
 
 type AdminBadgeInfo = {
-  label: keyof LocaleStrings;
+  label: keyof LocaleStrings['admin'];
   color: AdminBadgeColor;
 };
 
 const ADMIN_BADGES: Partial<Record<AdminLevel, AdminBadgeInfo>> = {
-  [AdminLevel.Spy]: { label: 'adminBadgeSpy', color: 'badge-ghost' },
+  [AdminLevel.Spy]: { label: 'badgeSpy', color: 'badge-ghost' },
   [AdminLevel.LightGuide]: {
-    label: 'adminBadgeLightGuide',
+    label: 'badgeLightGuide',
     color: 'badge-info',
   },
   [AdminLevel.Guardian]: {
-    label: 'adminBadgeGuardian',
+    label: 'badgeGuardian',
     color: 'badge-success',
   },
   [AdminLevel.GameMaster]: {
-    label: 'adminBadgeGameMaster',
+    label: 'badgeGameMaster',
     color: 'badge-warning',
   },
   [AdminLevel.HighGameMaster]: {
-    label: 'adminBadgeHighGameMaster',
+    label: 'badgeHighGameMaster',
     color: 'badge-error',
   },
 };
@@ -110,7 +110,7 @@ export function Character({ character }: CharacterProps) {
           <CharacterPreview previewUrl={undefined} alt='' />
         </div>
         <div class='mt-auto flex shrink-0 justify-center pt-3'>
-          <span class='text-xs'>{locale.characterEmptySlot}</span>
+          <span class='text-xs'>{locale.characterSelect.emptySlot}</span>
         </div>
       </div>
     );
@@ -125,7 +125,7 @@ export function Character({ character }: CharacterProps) {
         <span class='text-base-content/60 text-xs'>Lvl {character.level}</span>
         {adminBadge && (
           <span class={`badge badge-xs ${adminBadge.color}`}>
-            {locale[adminBadge.label]}
+            {locale.admin[adminBadge.label]}
           </span>
         )}
       </div>
@@ -138,10 +138,10 @@ export function Character({ character }: CharacterProps) {
       </button>
       <div class='mt-auto flex shrink-0 justify-center gap-2'>
         <Button variant={['primary', 'xs']} onClick={login}>
-          {locale.btnLogin}
+          {locale.characterSelect.btnLogin}
         </Button>
         <Button variant={['error', 'ghost', 'xs']} onClick={onDeleteClick}>
-          {locale.btnDeleteCharacter}
+          {locale.characterSelect.btnDelete}
           {deleteConfirmed && ' ✓'}
         </Button>
       </div>

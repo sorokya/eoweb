@@ -1,13 +1,12 @@
-import type { Emote as EmoteType } from 'eolib';
 import { EMOTE_ANIMATION_TICKS } from '@/consts';
 
 export class Emote {
   ticks = EMOTE_ANIMATION_TICKS - 1;
-  type: EmoteType;
+  type: number;
   animationFrame = 0;
   renderedFirstFrame = false;
 
-  constructor(type: EmoteType) {
+  constructor(type: number) {
     this.type = type;
   }
 

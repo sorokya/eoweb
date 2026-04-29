@@ -131,9 +131,9 @@ function DetailPanel({
       class={`flex flex-col gap-2 rounded-lg border ${UI_PANEL_BORDER} p-3 text-sm`}
     >
       <div class='flex items-center justify-between'>
-        <span class='font-semibold'>{locale.packetLogDetailTitle}</span>
+        <span class='font-semibold'>{locale.packetLog.detailTitle}</span>
         <Button variant={['xs', 'ghost']} onClick={onClose}>
-          {locale.packetLogDetailClose}
+          {locale.packetLog.detailClose}
         </Button>
       </div>
 
@@ -142,8 +142,8 @@ function DetailPanel({
         {' — '}
         <span class={entry.source === 'client' ? 'text-info' : 'text-success'}>
           {entry.source === 'client'
-            ? locale.packetLogClient
-            : locale.packetLogServer}
+            ? locale.packetLog.client
+            : locale.packetLog.server}
         </span>
         {' — '}
         {PacketFamily[entry.family]} / {PacketAction[entry.action]}
@@ -156,21 +156,21 @@ function DetailPanel({
           class={`tab${tab === 'hex' ? 'tab-active' : ''}`}
           onClick={() => setTab('hex')}
         >
-          {locale.packetLogDetailHex}
+          {locale.packetLog.detailHex}
         </button>
         <button
           type='button'
           class={`tab${tab === 'json' ? 'tab-active' : ''}`}
           onClick={() => setTab('json')}
         >
-          {locale.packetLogDetailJson}
+          {locale.packetLog.detailJson}
         </button>
       </div>
 
       {tab === 'hex' &&
         (masked ? (
           <p class='text-base-content/50 text-xs italic'>
-            {locale.packetLogSensitive}
+            {locale.packetLog.sensitive}
           </p>
         ) : (
           <HexDump bytes={entry.rawBytes} maxHeight='220px' />
@@ -179,7 +179,7 @@ function DetailPanel({
       {tab === 'json' &&
         (masked ? (
           <p class='text-base-content/50 text-xs italic'>
-            {locale.packetLogSensitive}
+            {locale.packetLog.sensitive}
           </p>
         ) : jsonText ? (
           <pre class='max-h-56 overflow-auto whitespace-pre-wrap break-all rounded bg-base-300 p-2 text-xs'>
@@ -187,7 +187,7 @@ function DetailPanel({
           </pre>
         ) : (
           <p class='text-base-content/50 text-xs italic'>
-            {locale.packetLogUnknownPacket}
+            {locale.packetLog.unknownPacket}
           </p>
         ))}
     </div>
@@ -233,7 +233,7 @@ export function PacketLogDialog() {
     String(ts.getMilliseconds()).padStart(3, '0');
 
   return (
-    <DialogBase id='packet-log' title={locale.packetLogTitle} size='xl'>
+    <DialogBase id='packet-log' title={locale.packetLog.title} size='xl'>
       {/* Toolbar */}
       <div
         class={`flex items-center gap-2 border-b ${UI_PANEL_BORDER} px-3 py-1.5 ${UI_STICKY_BG}`}
@@ -256,8 +256,8 @@ export function PacketLogDialog() {
         >
           {showSensitive ? <FaEyeSlash size={12} /> : <FaEye size={12} />}
           {showSensitive
-            ? locale.packetLogHideSensitive
-            : locale.packetLogShowSensitive}
+            ? locale.packetLog.hideSensitive
+            : locale.packetLog.showSensitive}
         </Button>
 
         <div class='flex-1' />
@@ -272,7 +272,7 @@ export function PacketLogDialog() {
           }}
         >
           <FaTrash size={11} />
-          {locale.packetLogClear}
+          {locale.packetLog.clear}
         </Button>
       </div>
 
@@ -289,18 +289,18 @@ export function PacketLogDialog() {
         {/* Table */}
         {sorted.length === 0 ? (
           <p class='p-4 text-center text-base-content/50 text-xs'>
-            {locale.packetLogEmpty}
+            {locale.packetLog.empty}
           </p>
         ) : (
           <div class='overflow-x-auto'>
             <table class='table-xs table w-full'>
               <thead class={`${UI_STICKY_BG} sticky top-0 z-10`}>
                 <tr>
-                  <th class='w-16'>{locale.packetLogSource}</th>
-                  <th>{locale.packetLogFamily}</th>
-                  <th>{locale.packetLogAction}</th>
-                  <th class='w-24'>{locale.packetLogTime}</th>
-                  <th>{locale.packetLogData}</th>
+                  <th class='w-16'>{locale.packetLog.source}</th>
+                  <th>{locale.packetLog.family}</th>
+                  <th>{locale.packetLog.action}</th>
+                  <th class='w-24'>{locale.packetLog.time}</th>
+                  <th>{locale.packetLog.data}</th>
                 </tr>
               </thead>
               <tbody>
@@ -322,8 +322,8 @@ export function PacketLogDialog() {
                           class={`badge badge-xs ${entry.source === 'client' ? 'badge-info' : 'badge-success'}`}
                         >
                           {entry.source === 'client'
-                            ? locale.packetLogClient
-                            : locale.packetLogServer}
+                            ? locale.packetLog.client
+                            : locale.packetLog.server}
                         </span>
                       </td>
                       <td class='font-mono text-xs'>
@@ -338,7 +338,7 @@ export function PacketLogDialog() {
                       <td>
                         {masked ? (
                           <span class='text-base-content/40 text-xs italic'>
-                            {locale.packetLogSensitive}
+                            {locale.packetLog.sensitive}
                           </span>
                         ) : (
                           <InlineHex bytes={entry.rawBytes} limit={16} />

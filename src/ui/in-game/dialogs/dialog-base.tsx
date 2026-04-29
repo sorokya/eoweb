@@ -182,7 +182,7 @@ export function DialogBase({
                 onClick={() => {
                   setLayout(id, 'center');
                 }}
-                aria-label={locale.dialogRestore}
+                aria-label={locale.shared.dialogRestore}
               >
                 <FaWindowRestore size={13} />
               </Button>
@@ -194,7 +194,7 @@ export function DialogBase({
                 if (onClose) onClose();
                 else closeDialog(id);
               }}
-              aria-label={locale.dialogClose}
+              aria-label={locale.shared.dialogClose}
             >
               <FaWindowClose size={13} />
             </Button>

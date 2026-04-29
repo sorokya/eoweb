@@ -155,7 +155,7 @@ export function QuestNpcDialog() {
               class='btn btn-ghost btn-sm'
               onClick={handleBack}
             >
-              {locale.wordBack}
+              {locale.shared.wordBack}
             </Button>
           ) : canSwitch && !showQuestList ? (
             <Button
@@ -163,7 +163,7 @@ export function QuestNpcDialog() {
               class='btn btn-ghost btn-sm'
               onClick={() => setShowQuestList(true)}
             >
-              {locale.questNpcSwitch}
+              {locale.quests.npcSwitch}
             </Button>
           ) : (
             <span />
@@ -174,7 +174,7 @@ export function QuestNpcDialog() {
               class='btn btn-primary btn-sm'
               onClick={handleOk}
             >
-              {locale.questNpcOk}
+              {locale.quests.npcOk}
             </Button>
           )}
         </div>

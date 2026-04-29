@@ -4,16 +4,18 @@ import { useWindowManager } from '@/ui/in-game';
 import { SettingRow } from './setting-row';
 
 const LAYER_NAMES = [
-  'settingsDebugLayerGround',
-  'settingsDebugLayerObjects',
-  'settingsDebugLayerOverlay',
-  'settingsDebugLayerDownWall',
-  'settingsDebugLayerRightWall',
-  'settingsDebugLayerRoof',
-  'settingsDebugLayerTop',
-  'settingsDebugLayerShadow',
-  'settingsDebugLayerOverlay2',
-] as const;
+  'debugLayerGround',
+  'debugLayerObjects',
+  'debugLayerOverlay',
+  'debugLayerDownWall',
+  'debugLayerRightWall',
+  'debugLayerRoof',
+  'debugLayerTop',
+  'debugLayerShadow',
+  'debugLayerOverlay2',
+] as const satisfies ReadonlyArray<
+  keyof ReturnType<typeof useLocale>['locale']['settings']
+>;
 
 export function DebugTab() {
   const { locale } = useLocale();
@@ -37,10 +39,10 @@ export function DebugTab() {
   return (
     <div class='flex flex-col gap-3 p-2'>
       <p class='font-semibold text-sm opacity-70'>
-        {locale.settingsDebugMapLayers}
+        {locale.settings.debugMapLayers}
       </p>
       {LAYER_NAMES.map((key, layer) => (
-        <SettingRow key={layer} label={locale[key]} asLabel>
+        <SettingRow key={layer} label={locale.settings[key]} asLabel>
           <input
             type='checkbox'
             class='checkbox checkbox-sm'
@@ -55,7 +57,7 @@ export function DebugTab() {
         class='btn btn-sm w-full'
         onClick={() => toggleDialog('packet-log')}
       >
-        {locale.settingsDebugPacketLog}
+        {locale.settings.debugPacketLog}
       </button>
     </div>
   );

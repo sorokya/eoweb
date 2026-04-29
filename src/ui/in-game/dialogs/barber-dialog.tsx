@@ -121,7 +121,7 @@ export function BarberDialog() {
   }, []);
 
   const formatHairStyle = useCallback(
-    (value: number) => (value === 0 ? locale.barberBald : String(value)),
+    (value: number) => (value === 0 ? locale.barber.bald : String(value)),
     [locale],
   );
 
@@ -145,7 +145,7 @@ export function BarberDialog() {
   }, [client, hairStyle, hairColor]);
 
   return (
-    <DialogBase id='barber' title={locale.barberTitle} size='sm'>
+    <DialogBase id='barber' title={locale.barber.title} size='sm'>
       <div class='flex gap-4 p-2'>
         <button
           type='button'
@@ -157,7 +157,7 @@ export function BarberDialog() {
 
         <div class='flex min-w-0 flex-1 flex-col gap-3'>
           <CycleInput
-            label={locale.barberHairStyle}
+            label={locale.barber.hairStyle}
             value={hairStyle}
             min={MIN_BARBER_HAIR_STYLE}
             max={MAX_HAIR_STYLE}
@@ -165,7 +165,7 @@ export function BarberDialog() {
             onChange={setHairStyle}
           />
           <CycleInput
-            label={locale.barberHairColor}
+            label={locale.barber.hairColor}
             value={hairColor}
             min={MIN_HAIR_COLOR}
             max={MAX_HAIR_COLOR - 1}
@@ -180,15 +180,15 @@ export function BarberDialog() {
                 setShowHat((e.target as HTMLInputElement).checked)
               }
             />
-            {locale.barberShowHat}
+            {locale.barber.showHat}
           </label>
 
           <p class='text-base-content/60 text-xs'>
-            {locale.barberCost}:{' '}
+            {locale.barber.cost}:{' '}
             <span class='font-semibold text-base-content'>
               {cost.toLocaleString()}
             </span>{' '}
-            {locale.wordGold}
+            {locale.shared.wordGold}
           </p>
 
           <Button
@@ -197,7 +197,7 @@ export function BarberDialog() {
             disabled={!canAfford}
           >
             <FaCut size={11} />
-            {locale.barberBuy}
+            {locale.barber.buy}
           </Button>
         </div>
       </div>

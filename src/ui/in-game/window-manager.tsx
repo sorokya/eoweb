@@ -13,6 +13,7 @@ const BASE_Z_INDEX = 20;
 
 export type DialogId =
   | 'bank'
+  | 'bard'
   | 'shop'
   | 'inventory'
   | 'spells'
