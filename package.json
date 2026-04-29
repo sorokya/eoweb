@@ -14,22 +14,22 @@
   "devDependencies": {
     "@biomejs/biome": "2.4.13",
     "@preact/preset-vite": "^2.10.5",
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/vite": "^4.2.4",
     "@types/howler": "^2.2.12",
     "@types/node": "^25.6.0",
     "daisyui": "^5.5.19",
     "knip": "^6.6.3",
     "lefthook": "^2.1.6",
-    "tailwindcss": "^4.2.2",
-    "typescript": "~6.0.2",
+    "tailwindcss": "^4.2.4",
+    "typescript": "~6.0.3",
     "vite": "^8.0.10"
   },
   "dependencies": {
     "eolib": "^2.0.1",
     "howler": "^2.2.4",
     "idb": "^8.0.3",
-    "pixi.js": "^8.17.1",
-    "preact": "^10.29.0",
+    "pixi.js": "^8.18.1",
+    "preact": "^10.29.1",
     "react-icons": "^5.6.0",
     "spessasynth_lib": "^4.2.13"
   },
