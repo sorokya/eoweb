@@ -27,8 +27,8 @@ importers:
         specifier: ^5.6.0
         version: 5.6.0(react@19.2.4)
       spessasynth_lib:
-        specifier: ^4.2.13
-        version: 4.2.13
+        specifier: ^4.2.15
+        version: 4.2.15
     devDependencies:
       '@biomejs/biome':
         specifier: 2.4.13
@@ -1683,8 +1683,8 @@ packages:
   spessasynth_core@4.2.13:
     resolution: {integrity: sha512-IB3K1MZBsvgufvjuaB0FT71+btQfwBsNJt0iQFGG/iaprlRbKkgQ5IYvZ9+y9vsKLgJryOlt/mtlGomt0hRSjQ==}
 
-  spessasynth_lib@4.2.13:
-    resolution: {integrity: sha512-eaRWvcXY30HHCwo9FJkNE3yv81z1czXJj+xcSuM+Q5KZjzZVvOqGpj1PA4+KB2JDyB0NuF8TSb9kyD1YfsXk7A==}
+  spessasynth_lib@4.2.15:
+    resolution: {integrity: sha512-3QEOkzws6J/z/hkYS4jTO9uxM99NwoPH1J/L61+DAAxoedeBZopY3M5Ebql/r+4DOy1rcULnQYExucEjVp0C8w==}
 
   stack-trace@1.0.0-pre2:
     resolution: {integrity: sha512-2ztBJRek8IVofG9DBJqdy2N5kulaacX30Nz7xmkYF6ale9WBVmIy6mFBchvGX7Vx/MyjBhx+Rcxqrj+dbOnQ6A==}
@@ -3155,7 +3155,7 @@ snapshots:
 
   spessasynth_core@4.2.13: {}
 
-  spessasynth_lib@4.2.13:
+  spessasynth_lib@4.2.15:
     dependencies:
       spessasynth_core: 4.2.13
 
