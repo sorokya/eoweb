@@ -126,15 +126,18 @@ function handleInitOk(
 
   if (
     client.postConnectState === GameState.Login &&
-    client.authenticationController.autoLogin()
+    client.authenticationController.shouldAutoLogin()
   ) {
+    client.authenticationController.autoLogin();
     return;
   }
 
-  if (client.postConnectState) {
-    client.setState(client.postConnectState);
-    client.postConnectState = undefined;
+  if (!client.postConnectState) {
+    return;
   }
+
+  client.setState(client.postConnectState);
+  client.postConnectState = undefined;
 }
 
 function handleInitPlayersList(
