@@ -192,6 +192,8 @@ const WALK_OFFSETS = [
   },
 ];
 
+const JUMP_OFFSETS = [-8, -16, -16, -8];
+
 export class MapRenderer {
   client: Client;
   animationFrame = 0;
@@ -1000,9 +1002,22 @@ export class MapRenderer {
               animation.direction,
             );
         coords = animation.from;
+
+        const frame = animation.jump ? 0 : animation.animationFrame;
         characterFrame = downRight
-          ? CharacterFrame.WalkingDownRight1 + animation.animationFrame
-          : CharacterFrame.WalkingUpLeft1 + animation.animationFrame;
+          ? CharacterFrame.WalkingDownRight1 + frame
+          : CharacterFrame.WalkingUpLeft1 + frame;
+
+        if (animation.jump) {
+          const prevJumpOffset =
+            animation.animationFrame > 0
+              ? JUMP_OFFSETS[animation.animationFrame - 1]
+              : 0;
+          const jumpOffset = JUMP_OFFSETS[animation.animationFrame];
+          walkOffset.y += Math.floor(
+            prevJumpOffset + (jumpOffset - prevJumpOffset) * this.interpolation,
+          );
+        }
         break;
       }
       case animation instanceof CharacterAttackAnimation:

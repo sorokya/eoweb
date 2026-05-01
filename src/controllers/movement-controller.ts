@@ -51,7 +51,12 @@ export class MovementController {
     this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
   }
 
-  walk(direction: Direction, coords: Vector2, timestamp: number): void {
+  walk(
+    direction: Direction,
+    from: Vector2,
+    to: Vector2,
+    timestamp: number,
+  ): void {
     const packet = this.client.commandController.nowall
       ? new WalkAdminClientPacket()
       : new WalkPlayerClientPacket();
@@ -60,20 +65,29 @@ export class MovementController {
       this.client.audioController.playById(SfxId.GhostPlayer);
     }
 
-    const spec = this.client.mapRenderer.getTileSpecAt(coords);
+    const isJump = this.client.animationController.isJump([from, to]);
+    const spec = this.client.mapRenderer.getTileSpecAt(to);
+
+    this.client.animationController.characterAnimations.set(
+      this.client.playerId,
+      new CharacterWalkAnimation(from, to, direction, isJump),
+    );
+
     if (spec && spec === MapTileSpec.Water) {
       this.client.animationController.playSplooshieEffect(this.client.playerId);
+    } else if (isJump) {
+      this.client.audioController.playById(SfxId.JumpStone);
     }
 
     packet.walkAction = new WalkAction();
     packet.walkAction.direction = direction;
     packet.walkAction.coords = new Coords();
-    packet.walkAction.coords.x = coords.x;
-    packet.walkAction.coords.y = coords.y;
+    packet.walkAction.coords.x = to.x;
+    packet.walkAction.coords.y = to.y;
     packet.walkAction.timestamp = timestamp;
     this.client.bus!.send(packet);
     this.client.usageController.idleTicks = INITIAL_IDLE_TICKS;
-    this.client.audioController.updateListenerPosition(coords);
+    this.client.audioController.updateListenerPosition(to);
     this.notifyWalked();
   }
 
@@ -167,14 +181,11 @@ export class MovementController {
     } else {
       direction = diffY > 0 ? Direction.Down : Direction.Up;
     }
-    this.client.animationController.characterAnimations.set(
-      this.client.playerId,
-      new CharacterWalkAnimation(current, next, direction),
-    );
+
     character!.coords.x = next.x;
     character!.coords.y = next.y;
     character!.direction = direction;
-    this.walk(direction, next, getTimestamp());
+    this.walk(direction, current, next, getTimestamp());
   }
 }
 

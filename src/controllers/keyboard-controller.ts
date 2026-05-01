@@ -654,15 +654,12 @@ export class KeyboardController {
           return;
         }
 
-        this.client.animationController.characterAnimations.set(
-          character.playerId,
-          new CharacterWalkAnimation(from, to, lastDirectionHeld),
-        );
         character.direction = lastDirectionHeld;
         character.coords.x = to.x;
         character.coords.y = to.y;
         this.client.movementController.walk(
           lastDirectionHeld,
+          from,
           to,
           getTimestamp(),
         );

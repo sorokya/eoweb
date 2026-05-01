@@ -7,13 +7,15 @@ export class CharacterWalkAnimation extends Animation {
   from: Vector2;
   to: Vector2;
   direction: Direction;
+  jump: boolean;
 
-  constructor(from: Vector2, to: Vector2, direction: Direction) {
+  constructor(from: Vector2, to: Vector2, direction: Direction, jump: boolean) {
     super();
     this.ticks = WALK_TICKS - 1;
     this.from = from;
     this.to = to;
     this.direction = direction;
+    this.jump = jump;
   }
 
   tick() {
