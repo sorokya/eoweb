@@ -9,6 +9,7 @@ import {
 } from 'eolib';
 import type { Client } from '@/client';
 import { CharacterWalkAnimation } from '@/render';
+import { SfxId } from '@/sfx';
 import { getPrevCoords } from '@/utils';
 
 function handleWalkPlayer(client: Client, reader: EoReader) {
@@ -21,27 +22,34 @@ function handleWalkPlayer(client: Client, reader: EoReader) {
     return;
   }
 
-  client.animationController.pendingCharacterAnimations.set(
-    packet.playerId,
-    new CharacterWalkAnimation(
-      getPrevCoords(
-        packet.coords,
-        packet.direction,
-        client.map.width,
-        client.map.height,
-      ),
-      packet.coords,
-      packet.direction,
-    ),
-  );
-
   if (character.invisible && client.admin === AdminLevel.Player) {
     return;
   }
 
+  const prevCoords = getPrevCoords(
+    packet.coords,
+    packet.direction,
+    client.map.width,
+    client.map.height,
+  );
+
+  const isJump = client.animationController.isJump([prevCoords, packet.coords]);
+
+  client.animationController.pendingCharacterAnimations.set(
+    packet.playerId,
+    new CharacterWalkAnimation(
+      prevCoords,
+      packet.coords,
+      packet.direction,
+      isJump,
+    ),
+  );
+
   const spec = client.mapRenderer.getTileSpecAt(packet.coords);
-  if (spec && spec === MapTileSpec.Water) {
+  if (spec === MapTileSpec.Water) {
     client.animationController.playSplooshieEffect(packet.playerId);
+  } else if (isJump) {
+    client.audioController.playAtPosition(SfxId.JumpStone, packet.coords);
   }
 }
 

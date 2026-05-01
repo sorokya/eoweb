@@ -1,3 +1,4 @@
+import { MapTileSpec } from 'eolib';
 import type { Client } from '@/client';
 import { SPELL_COOLDOWN_TICKS, SPLOOSHIE_EFFECT_ID } from '@/consts';
 import type { ChatBubble } from '@/render';
@@ -16,6 +17,7 @@ import {
 } from '@/render';
 import { SfxId } from '@/sfx';
 import type { EffectMetadata } from '@/utils';
+import type { Vector2 } from '@/vector';
 
 export class AnimationController {
   private client: Client;
@@ -64,6 +66,17 @@ export class AnimationController {
     if (position) {
       this.client.audioController.playAtPosition(SfxId.Water, position);
     }
+  }
+
+  isJump(coords: Vector2[]): boolean {
+    for (const c of coords) {
+      const spec = this.client.mapRenderer.getTileSpecAt(c);
+      if (spec === MapTileSpec.Jump) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   tick(
