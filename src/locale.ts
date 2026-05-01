@@ -142,6 +142,7 @@ export const locales = {
       junkConfirmTitle: 'Junk Item',
       junkConfirmMessage: 'Are you sure you want to junk {name}?',
       junkDropZone: 'Junk Item',
+      dropZone: 'Drop Item',
     },
     settings: {
       title: 'Settings',
@@ -715,6 +716,7 @@ export const locales = {
       junkConfirmTitle: 'Item weggooien',
       junkConfirmMessage: 'Weet je zeker dat je {name} wilt weggooien?',
       junkDropZone: 'Item weggooien',
+      dropZone: 'Item droppen',
     },
     settings: {
       title: 'Instellingen',
@@ -1291,6 +1293,7 @@ export const locales = {
       junkConfirmTitle: 'Skräpa föremål',
       junkConfirmMessage: 'Är du säker på att du vill skräpa {name}?',
       junkDropZone: 'Skräpa föremål',
+      dropZone: 'Släpp föremål',
     },
     settings: {
       title: 'Inställningar',
@@ -1867,6 +1870,7 @@ export const locales = {
       junkConfirmTitle: 'Descartar Item',
       junkConfirmMessage: 'Tem certeza que deseja descartar {name}?',
       junkDropZone: 'Descartar Item',
+      dropZone: 'Jogar fora Item',
     },
     settings: {
       title: 'Configurações',

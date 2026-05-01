@@ -21,6 +21,7 @@ type DragDropResult =
   | { type: 'locker' }
   | { type: 'trade' }
   | { type: 'junk' }
+  | { type: 'drop' }
   | { type: 'ground' }
   | { type: 'cancelled' };
 
@@ -222,8 +223,11 @@ export function ItemDragProvider({
         '[data-junk-drop]',
       );
       if (junkEl) {
-        resolve({ type: 'junk' });
-        return;
+        const type = junkEl.getAttribute('data-junk-drop');
+        if (type === 'junk' || type === 'drop') {
+          resolve({ type });
+          return;
+        }
       }
 
       resolve({ type: 'ground' });

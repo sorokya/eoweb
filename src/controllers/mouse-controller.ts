@@ -264,64 +264,8 @@ export class MouseController {
     }
 
     if (this.client.mouseCoords) {
-      // Check for items first
-      const itemsAtCoords = this.client.nearby.items.filter(
-        (i) =>
-          i.coords.x === this.client.mouseCoords!.x &&
-          i.coords.y === this.client.mouseCoords!.y,
-      );
-
-      if (itemsAtCoords.length) {
-        itemsAtCoords.sort((a, b) => b.uid - a.uid);
-
-        const protectedItems = itemsAtCoords.filter((i) => {
-          const p =
-            this.client.itemProtectionController.itemProtectionTimers.get(
-              i.uid,
-            );
-          return p && p.ticks > 0 && p.ownerId !== this.client.playerId;
-        });
-
-        if (protectedItems.length < itemsAtCoords.length) {
-          const item = itemsAtCoords.find((i) => {
-            const p =
-              this.client.itemProtectionController.itemProtectionTimers.get(
-                i.uid,
-              );
-            return !p || p.ticks === 0 || p.ownerId === this.client.playerId;
-          });
-
-          if (item) {
-            const packet = new ItemGetClientPacket();
-            packet.itemIndex = item.uid;
-            this.client.bus!.send(packet);
-          }
-
-          return;
-        }
-
-        const protectedItem = protectedItems[0];
-        const protection =
-          this.client.itemProtectionController.itemProtectionTimers.get(
-            protectedItem.uid,
-          );
-
-        if (protection) {
-          const owner = protection.ownerId
-            ? this.client.getCharacterById(protection.ownerId)
-            : undefined;
-
-          const message = owner
-            ? `${this.client.getResourceString(
-                EOResourceID.STATUS_LABEL_ITEM_PICKUP_PROTECTED_BY,
-              )} ${capitalize(owner.name)}`
-            : this.client.getResourceString(
-                EOResourceID.STATUS_LABEL_ITEM_PICKUP_PROTECTED,
-              );
-
-          this.client.toastController.showWarning(message);
-          return;
-        }
+      if (this.clickItem()) {
+        return;
       }
 
       // Check tile specs for chests and chairs
@@ -418,6 +362,71 @@ export class MouseController {
         this.client.movementController.autoWalkPath = path;
       }
     }
+  }
+
+  private clickItem(): boolean {
+    if (!this.client.mapController.cursorInDropRange()) return false;
+
+    // Check for items first
+    const itemsAtCoords = this.client.nearby.items.filter(
+      (i) =>
+        i.coords.x === this.client.mouseCoords!.x &&
+        i.coords.y === this.client.mouseCoords!.y,
+    );
+
+    if (itemsAtCoords.length) {
+      itemsAtCoords.sort((a, b) => b.uid - a.uid);
+
+      const protectedItems = itemsAtCoords.filter((i) => {
+        const p = this.client.itemProtectionController.itemProtectionTimers.get(
+          i.uid,
+        );
+        return p && p.ticks > 0 && p.ownerId !== this.client.playerId;
+      });
+
+      if (protectedItems.length < itemsAtCoords.length) {
+        const item = itemsAtCoords.find((i) => {
+          const p =
+            this.client.itemProtectionController.itemProtectionTimers.get(
+              i.uid,
+            );
+          return !p || p.ticks === 0 || p.ownerId === this.client.playerId;
+        });
+
+        if (item) {
+          const packet = new ItemGetClientPacket();
+          packet.itemIndex = item.uid;
+          this.client.bus!.send(packet);
+        }
+
+        return true;
+      }
+
+      const protectedItem = protectedItems[0];
+      const protection =
+        this.client.itemProtectionController.itemProtectionTimers.get(
+          protectedItem.uid,
+        );
+
+      if (protection) {
+        const owner = protection.ownerId
+          ? this.client.getCharacterById(protection.ownerId)
+          : undefined;
+
+        const message = owner
+          ? `${this.client.getResourceString(
+              EOResourceID.STATUS_LABEL_ITEM_PICKUP_PROTECTED_BY,
+            )} ${capitalize(owner.name)}`
+          : this.client.getResourceString(
+              EOResourceID.STATUS_LABEL_ITEM_PICKUP_PROTECTED,
+            );
+
+        this.client.toastController.showWarning(message);
+        return true;
+      }
+    }
+
+    return false;
   }
 
   handleRightClick(e: MouseEvent): void {

@@ -131,20 +131,34 @@ type Props = {
   itemIds?: number[];
 };
 
-function JunkZone() {
+type JunkDropZoneProps = {
+  zone: 'drop' | 'junk';
+};
+
+function JunkDropZone({ zone }: JunkDropZoneProps) {
   const { currentDrag } = useItemDrag();
   const { locale } = useLocale();
   const [isOver, setIsOver] = useState(false);
   if (currentDrag?.source !== 'inventory') return null;
   return (
     <div
-      data-junk-drop
+      data-junk-drop={zone}
       class={`flex h-full cursor-pointer items-center gap-1 whitespace-nowrap rounded border-2 border-dashed px-2 py-0.5 text-xs transition-colors ${isOver ? 'border-error bg-error/20 text-error' : 'border-base-content/20 text-base-content/40'}`}
       onPointerEnter={() => setIsOver(true)}
       onPointerLeave={() => setIsOver(false)}
     >
-      <FaTrash size={11} />
-      {locale.inventory.junkDropZone}
+      {zone === 'junk' && (
+        <>
+          <FaTrash size={11} />
+          {locale.inventory.junkDropZone}
+        </>
+      )}
+      {zone === 'drop' && (
+        <>
+          <FaTrash size={11} />
+          {locale.inventory.dropZone}
+        </>
+      )}
     </div>
   );
 }
@@ -408,6 +422,9 @@ export function InventoryGrid({ itemIds }: Props) {
             client.inventoryController.dropItem(item.id, coords);
           } else if (result.type === 'junk') {
             client.inventoryController.junkItem(item.id);
+          } else if (result.type === 'drop') {
+            const coords = client.getPlayerCharacter()?.coords;
+            if (coords) client.inventoryController.dropItem(item.id, coords);
           } else if (result.type === 'chest') {
             client.chestController.addItem(item.id);
           } else if (result.type === 'locker') {
@@ -471,7 +488,8 @@ export function InventoryGrid({ itemIds }: Props) {
           style='border'
           size='sm'
         />
-        <JunkZone />
+        <JunkDropZone zone='drop' />
+        <JunkDropZone zone='junk' />
       </div>
       {/* Grid */}
       <div
