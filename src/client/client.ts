@@ -638,6 +638,16 @@ export class Client {
   }
 
   setMap(map: Emf) {
+    if (
+      this.map &&
+      (this.map.rid[0] !== map.rid[0] ||
+        this.map.rid[1] !== map.rid[1] ||
+        this.map.byteSize !== map.byteSize)
+    ) {
+      this.atlas.reset();
+      this.atlas.mapId = -1;
+    }
+
     this.map = map;
     this.animationController.characterChats.clear();
     this.animationController.npcChats.clear();
