@@ -30,7 +30,7 @@ import { SfxId } from '@/sfx';
 
 const SESSIONS_KEY = 'eoweb:sessions';
 
-type SavedSession = {
+export type SavedSession = {
   username: string;
   token: string;
   lastCharacterId: number;
