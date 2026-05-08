@@ -16,7 +16,7 @@
     "@preact/preset-vite": "^2.10.5",
     "@tailwindcss/vite": "^4.2.4",
     "@types/howler": "^2.2.12",
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.6.2",
     "daisyui": "^5.5.19",
     "knip": "^6.10.0",
     "lefthook": "^2.1.6",
