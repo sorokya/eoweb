@@ -126,15 +126,18 @@ function handleInitOk(
 
   if (
     client.postConnectState === GameState.Login &&
-    client.authenticationController.autoLogin()
+    client.authenticationController.shouldAutoLogin()
   ) {
+    client.authenticationController.autoLogin();
     return;
   }
 
-  if (client.postConnectState) {
-    client.setState(client.postConnectState);
-    client.postConnectState = undefined;
+  if (!client.postConnectState) {
+    return;
   }
+
+  client.setState(client.postConnectState);
+  client.postConnectState = undefined;
 }
 
 function handleInitPlayersList(
@@ -279,7 +282,6 @@ function handleInitMapMutation(
   const map = Emf.deserialize(reader);
   saveEmf(client.warpMapId, map);
   client.setMap(map);
-  client.atlas.mapId = 0; // Force atlas to reload map data
   client.refresh();
   client.audioController.playById(SfxId.MapMutation);
   const message = `${client.getResourceString(EOResourceID.STRING_SERVER)} ${client.getResourceString(EOResourceID.SERVER_MESSAGE_MAP_MUTATION)}}`;

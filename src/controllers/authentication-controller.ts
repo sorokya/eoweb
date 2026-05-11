@@ -28,6 +28,15 @@ import { DialogResourceID } from '@/edf';
 import { GameState } from '@/game-state';
 import { SfxId } from '@/sfx';
 
+const SESSIONS_KEY = 'eoweb:sessions';
+
+export type SavedSession = {
+  username: string;
+  token: string;
+  lastCharacterId: number;
+  lastLoginAt: number;
+};
+
 type AccountCreateData = {
   username: string;
   password: string;
@@ -77,9 +86,10 @@ const CHARACTER_REPLY_DIALOG_IDS: Partial<
 
 export class AuthenticationController {
   private client: Client;
-  private loginToken: string | null = localStorage.getItem('login-token');
-  private lastCharacterId =
-    Number.parseInt(localStorage.getItem('last-character-id') ?? '', 10) || 0;
+  private loginToken: string | null = null;
+  private lastCharacterId = 0;
+  private pendingUsername: string | null = null;
+  private _skipAutoLogin = false;
   accountCreateData: AccountCreateData | null = null;
   characterCreateData: CharacterCreateData | null = null;
 
@@ -91,13 +101,109 @@ export class AuthenticationController {
 
   constructor(client: Client) {
     this.client = client;
+    this.migrateLegacySessions();
+    const sessions = this.getSessions();
+    if (sessions.length === 1) {
+      this.loginToken = sessions[0].token;
+      this.lastCharacterId = sessions[0].lastCharacterId;
+    }
+  }
+
+  private migrateLegacySessions(): void {
+    const existing = localStorage.getItem(SESSIONS_KEY);
+    if (existing) return;
+
+    const legacyToken = localStorage.getItem('login-token');
+    if (!legacyToken) return;
+
+    const legacyCharId =
+      Number.parseInt(localStorage.getItem('last-character-id') ?? '', 10) || 0;
+
+    const session: SavedSession = {
+      username: this.client.locale.shared.wordUnknown,
+      token: legacyToken,
+      lastCharacterId: legacyCharId,
+      lastLoginAt: Date.now(),
+    };
+    localStorage.setItem(SESSIONS_KEY, JSON.stringify([session]));
+    localStorage.removeItem('login-token');
+    localStorage.removeItem('last-character-id');
   }
 
   clearSession(): void {
+    if (this.pendingUsername) {
+      this.removeSession(this.pendingUsername);
+    }
     this.loginToken = null;
     this.lastCharacterId = 0;
-    localStorage.removeItem('login-token');
-    localStorage.removeItem('last-character-id');
+    this.pendingUsername = null;
+  }
+
+  getSessions(): SavedSession[] {
+    try {
+      const raw = localStorage.getItem(SESSIONS_KEY);
+      if (!raw) return [];
+      return JSON.parse(raw) as SavedSession[];
+    } catch {
+      return [];
+    }
+  }
+
+  private persistSessions(sessions: SavedSession[]): void {
+    localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions));
+  }
+
+  saveSession(username: string, token: string): void {
+    const sessions = this.getSessions();
+    const existing = sessions.find((s) => s.username === username);
+    if (existing) {
+      existing.token = token;
+      existing.lastLoginAt = Date.now();
+    } else {
+      sessions.push({
+        username,
+        token,
+        lastCharacterId: 0,
+        lastLoginAt: Date.now(),
+      });
+    }
+    this.persistSessions(sessions);
+  }
+
+  removeSession(username: string): void {
+    const sessions = this.getSessions().filter((s) => s.username !== username);
+    this.persistSessions(sessions);
+    if (this.pendingUsername === username) {
+      this.loginToken = null;
+      this.lastCharacterId = 0;
+      this.pendingUsername = null;
+    }
+  }
+
+  selectSession(username: string): boolean {
+    const session = this.getSessions().find((s) => s.username === username);
+    if (!session) return false;
+    this.loginToken = session.token;
+    this.lastCharacterId = session.lastCharacterId;
+    this.pendingUsername = session.username;
+    this._skipAutoLogin = false;
+    return true;
+  }
+
+  getPendingUsername(): string | null {
+    return this.pendingUsername;
+  }
+
+  skipAutoLogin(): void {
+    this._skipAutoLogin = true;
+  }
+
+  resetSkipAutoLogin(): void {
+    this._skipAutoLogin = false;
+  }
+
+  shouldAutoLogin(): boolean {
+    return !this._skipAutoLogin && this.loginToken !== null;
   }
 
   autoLogin(): boolean {
@@ -331,6 +437,7 @@ export class AuthenticationController {
   }
 
   login(username: string, password: string, rememberMe: boolean): void {
+    this.pendingUsername = username;
     const writer = new EoWriter();
     const packet = new LoginRequestClientPacket();
     packet.username = username;
@@ -354,7 +461,14 @@ export class AuthenticationController {
     this.client.bus!.send(packet);
 
     this.lastCharacterId = characterId;
-    localStorage.setItem('last-character-id', `${characterId}`);
+    if (this.pendingUsername) {
+      const sessions = this.getSessions();
+      const session = sessions.find((s) => s.username === this.pendingUsername);
+      if (session) {
+        session.lastCharacterId = characterId;
+        this.persistSessions(sessions);
+      }
+    }
   }
 
   requestCharacterDeletion(characterId: number): void {

@@ -151,11 +151,6 @@ function handleEnterGame(
     client.map.musicControl,
   );
   client.bus!.send(new GlobalOpenClientPacket());
-  const diffMap = client.atlas.mapId !== client.mapId;
-  client.atlas.reset();
-  if (diffMap) {
-    client.atlas.mapId = -1;
-  }
   client.atlas.refresh();
 }
 

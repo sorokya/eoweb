@@ -66,6 +66,7 @@ import {
   PingController,
   QuakeController,
   QuestController,
+  type SavedSession,
   SessionController,
   ShopController,
   SocialController,
@@ -238,6 +239,9 @@ export class Client {
   minimapRenderer: MinimapRenderer;
   onlinePlayers: OnlinePlayer[] = [];
   playerTriggeredDisconnect = false;
+  reconnectAttempts = 0;
+  maxReconnectAttempts = 3;
+  reconnectTimer?: number;
   locale = locales[defaultLocale];
   configController = new ConfigController();
   // Persistent Sets reused each tick to avoid per-tick allocation
@@ -634,6 +638,16 @@ export class Client {
   }
 
   setMap(map: Emf) {
+    if (
+      this.map &&
+      (this.map.rid[0] !== map.rid[0] ||
+        this.map.rid[1] !== map.rid[1] ||
+        this.map.byteSize !== map.byteSize)
+    ) {
+      this.atlas.reset();
+      this.atlas.mapId = -1;
+    }
+
     this.map = map;
     this.animationController.characterChats.clear();
     this.animationController.npcChats.clear();
@@ -694,6 +708,8 @@ export class Client {
 
     if (state === GameState.InGame && this.reconnecting) {
       this.reconnecting = false;
+      this.reconnectAttempts = 0;
+      this.toastController.showSuccess('Auto-reconnected!');
     }
     this.minimapEnabled = false;
     this.animationController.characterAnimations.clear();
@@ -751,11 +767,62 @@ export class Client {
       return;
     }
 
-    const strings = this.getDialogStrings(
-      DialogResourceID.CONNECTION_LOST_CONNECTION,
-    );
-    this.alertController.show(strings[0], strings[1]);
-    this.setState(GameState.Initial);
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = undefined;
+    }
+
+    const session = this.getSavedSessionForCurrentCharacter();
+    if (!session) {
+      this.reconnecting = false;
+      const strings = this.getDialogStrings(
+        DialogResourceID.CONNECTION_LOST_CONNECTION,
+      );
+      this.alertController.show(strings[0], strings[1]);
+      this.setState(GameState.Initial);
+      return;
+    }
+
+    this.attemptReconnect(session);
+  }
+
+  private attemptReconnect(session: SavedSession) {
+    this.reconnectAttempts++;
+
+    if (this.reconnectAttempts > this.maxReconnectAttempts) {
+      this.reconnecting = false;
+      this.toastController.showError('Auto-reconnect failed after 3 attempts');
+      this.setState(GameState.Initial);
+      this.authenticationController.clearSession();
+      this.reconnectAttempts = 0;
+      return;
+    }
+
+    this.reconnecting = true;
+    this.authenticationController.selectSession(session.username);
+    this.postConnectState = GameState.Login;
+    this.bus
+      .connect(this.config.host, () => this.handleConnectionClose())
+      .then(() => {
+        this.beginHandshake();
+      })
+      .catch(() => {
+        this.toastController.showWarning(
+          `Auto-reconnect failed: Retrying.. Attempt #${this.reconnectAttempts}`,
+        );
+        this.reconnectTimer = window.setTimeout(() => {
+          this.attemptReconnect(session);
+        }, 2000);
+      });
+  }
+
+  private getSavedSessionForCurrentCharacter(): SavedSession | null {
+    if (this.characterId === 0) {
+      return null;
+    }
+
+    const sessions = this.authenticationController.getSessions();
+    return sessions.find((s) => s.lastCharacterId === this.characterId) ?? null;
   }
 
   private beginHandshake() {
@@ -768,6 +835,12 @@ export class Client {
 
   disconnect() {
     this.playerTriggeredDisconnect = true;
+    this.reconnecting = false;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = undefined;
+    }
+    this.reconnectAttempts = 0;
     this.setState(GameState.Initial);
     this.authenticationController.clearSession();
     if (this.bus) {

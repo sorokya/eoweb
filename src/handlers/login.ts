@@ -16,8 +16,13 @@ function handleLoginReply(client: Client, reader: EoReader) {
 
   if (reader.remaining > 0) {
     const token = reader.getFixedString(reader.remaining);
-    localStorage.setItem('login-token', token);
+    const username = client.authenticationController.getPendingUsername();
+    if (username) {
+      client.authenticationController.saveSession(username, token);
+    }
   }
+
+  client.authenticationController.resetSkipAutoLogin();
 
   const data = packet.replyCodeData as LoginReplyServerPacket.ReplyCodeDataOk;
   if (client.authenticationController.autoSelectCharacter(data.characters)) {
