@@ -16,13 +16,13 @@
     "@preact/preset-vite": "^2.10.5",
     "@tailwindcss/vite": "^4.3.0",
     "@types/howler": "^2.2.12",
-    "@types/node": "^25.6.2",
+    "@types/node": "^25.8.0",
     "daisyui": "^5.5.19",
-    "knip": "^6.12.2",
+    "knip": "^6.13.1",
     "lefthook": "^2.1.6",
-    "tailwindcss": "^4.2.4",
+    "tailwindcss": "^4.3.0",
     "typescript": "~6.0.3",
-    "vite": "^8.0.12"
+    "vite": "^8.0.13"
   },
   "dependencies": {
     "eolib": "^2.0.1",
