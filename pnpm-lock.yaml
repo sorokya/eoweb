@@ -40,8 +40,8 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.2)(jiti@2.7.0)(sass-embedded@1.93.3)(sass@1.93.3)(yaml@2.9.0))
       '@types/howler':
-        specifier: ^2.2.12
-        version: 2.2.12
+        specifier: ^2.2.13
+        version: 2.2.13
       '@types/node':
         specifier: ^25.8.0
         version: 25.8.0
@@ -1110,8 +1110,8 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
-  '@types/howler@2.2.12':
-    resolution: {integrity: sha512-hy769UICzOSdK0Kn1FBk4gN+lswcj1EKRkmiDtMkUGvFfYJzgaDXmVXkSShS2m89ERAatGIPnTUlp2HhfkVo5g==}
+  '@types/howler@2.2.13':
+    resolution: {integrity: sha512-40+EBjqIHHrC4VShlz/7i0lBUsE3QkgzZinQQji74Hd8sBkJZUBaT7LWFLK6rcabsDOOQpoMbEJvtaFQwxOu/g==}
 
   '@types/node@25.8.0':
     resolution: {integrity: sha512-TCFSk8IZh+iLX1xtksoBVtdmgL+1IX0fC9BeU4QqFSuNdN/K+HUlhqOzEmSYYpZUVsLYcPqc9KX+60iDuninSQ==}
@@ -1674,11 +1674,12 @@ packages:
     resolution: {integrity: sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==}
     engines: {node: '>= 12'}
 
-  spessasynth_core@4.2.13:
-    resolution: {integrity: sha512-IB3K1MZBsvgufvjuaB0FT71+btQfwBsNJt0iQFGG/iaprlRbKkgQ5IYvZ9+y9vsKLgJryOlt/mtlGomt0hRSjQ==}
+  spessasynth_core@4.3.1:
+    resolution: {integrity: sha512-uDg2nVw0DZLZRn16EmchRWqrQiF7kdgwVEDJ9cEOV3ovusey+8A8nsvsnRce9ScQvR6iLOS1qUDWkx6y+XNgzA==}
 
   spessasynth_lib@4.2.15:
     resolution: {integrity: sha512-3QEOkzws6J/z/hkYS4jTO9uxM99NwoPH1J/L61+DAAxoedeBZopY3M5Ebql/r+4DOy1rcULnQYExucEjVp0C8w==}
+    deprecated: Versions below 4.3.0 are no longer supported.
 
   stack-trace@1.0.0-pre2:
     resolution: {integrity: sha512-2ztBJRek8IVofG9DBJqdy2N5kulaacX30Nz7xmkYF6ale9WBVmIy6mFBchvGX7Vx/MyjBhx+Rcxqrj+dbOnQ6A==}
@@ -2543,7 +2544,7 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
-  '@types/howler@2.2.12': {}
+  '@types/howler@2.2.13': {}
 
   '@types/node@25.8.0':
     dependencies:
@@ -3129,11 +3130,11 @@ snapshots:
 
   source-map@0.7.6: {}
 
-  spessasynth_core@4.2.13: {}
+  spessasynth_core@4.3.1: {}
 
   spessasynth_lib@4.2.15:
     dependencies:
-      spessasynth_core: 4.2.13
+      spessasynth_core: 4.3.1
 
   stack-trace@1.0.0-pre2: {}
 
