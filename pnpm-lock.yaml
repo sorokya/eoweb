@@ -27,8 +27,8 @@ importers:
         specifier: ^5.6.0
         version: 5.6.0(react@19.2.4)
       spessasynth_lib:
-        specifier: ^4.3.4
-        version: 4.3.4
+        specifier: ^4.3.5
+        version: 4.3.5
     devDependencies:
       '@biomejs/biome':
         specifier: 2.4.15
@@ -1677,11 +1677,11 @@ packages:
     resolution: {integrity: sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==}
     engines: {node: '>= 12'}
 
-  spessasynth_core@4.3.5:
-    resolution: {integrity: sha512-oHSo43RlnQ8e/Cu7dA1fV/QHit2XbH/iGap9QqwencqS0xEL45AvfVZhnoHTP/e+kSS53qYyO4b8GqZkSw2dSQ==}
+  spessasynth_core@4.3.6:
+    resolution: {integrity: sha512-jZaHhFe2nMgYlrFo0dVRQg+ZxJ7uVl/bo5Woh8cbxauNXPXmaRc89HYM07EDfDkic0S5ikSFpjV+uROHaKMqCQ==}
 
-  spessasynth_lib@4.3.4:
-    resolution: {integrity: sha512-TGnC4XJu+Dyu4ArdqPOanNLZCi1qtcyGJn8FcdKfdxqESzu/dfp+4N9aSgzkyrVkKQAc4urJv/jy4wFtwIDoPg==}
+  spessasynth_lib@4.3.5:
+    resolution: {integrity: sha512-2QXriNAcVeiC3kI8SQpr0BT8TOblLsWgzMaEQDhzMOM4QPyUvv67uVtMjkpcLtyuUwdYrFehAUl/QuBADubCNw==}
 
   stack-trace@1.0.0-pre2:
     resolution: {integrity: sha512-2ztBJRek8IVofG9DBJqdy2N5kulaacX30Nz7xmkYF6ale9WBVmIy6mFBchvGX7Vx/MyjBhx+Rcxqrj+dbOnQ6A==}
@@ -3134,11 +3134,11 @@ snapshots:
 
   source-map@0.7.6: {}
 
-  spessasynth_core@4.3.5: {}
+  spessasynth_core@4.3.6: {}
 
-  spessasynth_lib@4.3.4:
+  spessasynth_lib@4.3.5:
     dependencies:
-      spessasynth_core: 4.3.5
+      spessasynth_core: 4.3.6
 
   stack-trace@1.0.0-pre2: {}
 
