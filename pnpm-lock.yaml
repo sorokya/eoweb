@@ -18,8 +18,8 @@ importers:
         specifier: ^8.0.3
         version: 8.0.3
       pixi.js:
-        specifier: ^8.18.1
-        version: 8.18.1
+        specifier: ^8.19.0
+        version: 8.19.0
       preact:
         specifier: ^10.29.2
         version: 10.29.2
@@ -1119,8 +1119,8 @@ packages:
   '@types/node@25.9.1':
     resolution: {integrity: sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg==}
 
-  '@webgpu/types@0.1.69':
-    resolution: {integrity: sha512-RPmm6kgRbI8e98zSD3RVACvnuktIja5+yLgDAkTmxLr90BEwdTXRQWNLF3ETTTyH/8mKhznZuN5AveXYFEsMGQ==}
+  '@webgpu/types@0.1.70':
+    resolution: {integrity: sha512-LFiNHHKMvmAEvwVew3JLJmTdShhbdwRFSImUshGhE2mGE8ybQzIo63l5uRp+YKnNx+8Qno8Kf6gN+DKMreIJCA==}
 
   '@xmldom/xmldom@0.8.13':
     resolution: {integrity: sha512-KRYzxepc14G/CEpEGc3Yn+JKaAeT63smlDr+vjB8jRfgTBBI9wRj/nkQEO+ucV8p8I9bfKLWp37uHgFrbntPvw==}
@@ -1277,8 +1277,8 @@ packages:
   idb@8.0.3:
     resolution: {integrity: sha512-LtwtVyVYO5BqRvcsKuB2iUMnHwPVByPCXFXOpuU96IZPPoPN6xjOGxZQ74pgSVVLQWtUOYgyeL4GE98BY5D3wg==}
 
-  immutable@5.1.5:
-    resolution: {integrity: sha512-t7xcm2siw+hlUM68I+UEOK+z84RzmN59as9DZ7P1l0994DKUWV7UXBMQZVxaoMSRQ+PBZbHCOoBt7a2wxOMt+A==}
+  immutable@5.1.6:
+    resolution: {integrity: sha512-q1swsS8K7L8usSHuOqF2TAoCCkonYz0SG38wLAggaa4Wml70zixIvt2ql4coQ2C2B3hTjltJry4r6bULwgAXLQ==}
 
   is-extglob@2.1.1:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
@@ -1483,8 +1483,8 @@ packages:
   oxc-resolver@11.19.1:
     resolution: {integrity: sha512-qE/CIg/spwrTBFt5aKmwe3ifeDdLfA2NESN30E42X/lII5ClF8V7Wt6WIJhcGZjp0/Q+nQ+9vgxGk//xZNX2hg==}
 
-  parse-svg-path@0.1.2:
-    resolution: {integrity: sha512-JyPSBnkTJ0AI8GGJLfMXvKq42cj5c006fnLz6fXy6zfoVjJizi8BNTpu8on8ziI1cKy9d9DGNuY17Ce7wuejpQ==}
+  parse-svg-path@0.2.0:
+    resolution: {integrity: sha512-Tf7FFIrguPKQwzD4pWnYkR2VOv3raoHeKED80Bm+BYHI3KxC8KsgsGC5+fSMzAGDA6UEk4bHvmi+RsjmL3khpg==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -1497,8 +1497,8 @@ packages:
     resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
     engines: {node: '>=12'}
 
-  pixi.js@8.18.1:
-    resolution: {integrity: sha512-6LUPWYgulZhp/w4kam2XHXB0QedISZIqrJbRdHLLQ3csn5a38uzKxAp6B5j6s89QFYaIJbg95kvgTRcbgpO1ow==}
+  pixi.js@8.19.0:
+    resolution: {integrity: sha512-pq1O6emA/GFjjeF+8d3Pb5t7knD8FsnfWGqQcRjYjsqFZ7QdzG1XgjLDUu0DFJRbafjV5+g8iNLFBx0b9649lg==}
 
   postcss@8.5.15:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
@@ -1677,8 +1677,8 @@ packages:
     resolution: {integrity: sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==}
     engines: {node: '>= 12'}
 
-  spessasynth_core@4.3.6:
-    resolution: {integrity: sha512-jZaHhFe2nMgYlrFo0dVRQg+ZxJ7uVl/bo5Woh8cbxauNXPXmaRc89HYM07EDfDkic0S5ikSFpjV+uROHaKMqCQ==}
+  spessasynth_core@4.3.7:
+    resolution: {integrity: sha512-ut9KOPUPjm9n1n4kD4utAluA4pRpFRNtaObR4ocPmhjRnUoGCGtOCkAZod58YoHVEmcXjDtHVz0cmGfjSJEYPg==}
 
   spessasynth_lib@4.3.5:
     resolution: {integrity: sha512-2QXriNAcVeiC3kI8SQpr0BT8TOblLsWgzMaEQDhzMOM4QPyUvv67uVtMjkpcLtyuUwdYrFehAUl/QuBADubCNw==}
@@ -2554,7 +2554,7 @@ snapshots:
     dependencies:
       undici-types: 7.24.6
 
-  '@webgpu/types@0.1.69': {}
+  '@webgpu/types@0.1.70': {}
 
   '@xmldom/xmldom@0.8.13': {}
 
@@ -2710,7 +2710,7 @@ snapshots:
 
   idb@8.0.3: {}
 
-  immutable@5.1.5:
+  immutable@5.1.6:
     optional: true
 
   is-extglob@2.1.1:
@@ -2926,7 +2926,7 @@ snapshots:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  parse-svg-path@0.1.2: {}
+  parse-svg-path@0.2.0: {}
 
   picocolors@1.1.1: {}
 
@@ -2934,17 +2934,17 @@ snapshots:
 
   picomatch@4.0.4: {}
 
-  pixi.js@8.18.1:
+  pixi.js@8.19.0:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/earcut': 3.0.0
-      '@webgpu/types': 0.1.69
+      '@webgpu/types': 0.1.70
       '@xmldom/xmldom': 0.8.13
       earcut: 3.0.2
       eventemitter3: 5.0.4
       gifuct-js: 2.1.2
       ismobilejs: 1.1.1
-      parse-svg-path: 0.1.2
+      parse-svg-path: 0.2.0
       tiny-lru: 11.4.7
 
   postcss@8.5.15:
@@ -3087,7 +3087,7 @@ snapshots:
       '@bufbuild/protobuf': 2.12.0
       buffer-builder: 0.2.0
       colorjs.io: 0.5.2
-      immutable: 5.1.5
+      immutable: 5.1.6
       rxjs: 7.8.2
       supports-color: 8.1.1
       sync-child-process: 1.0.2
@@ -3116,7 +3116,7 @@ snapshots:
   sass@1.93.3:
     dependencies:
       chokidar: 4.0.3
-      immutable: 5.1.5
+      immutable: 5.1.6
       source-map-js: 1.2.1
     optionalDependencies:
       '@parcel/watcher': 2.5.6
@@ -3134,11 +3134,11 @@ snapshots:
 
   source-map@0.7.6: {}
 
-  spessasynth_core@4.3.6: {}
+  spessasynth_core@4.3.7: {}
 
   spessasynth_lib@4.3.5:
     dependencies:
-      spessasynth_core: 4.3.6
+      spessasynth_core: 4.3.7
 
   stack-trace@1.0.0-pre2: {}
 
